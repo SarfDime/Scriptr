@@ -1,28 +1,27 @@
 {
-	"name": "scriptr",
-	"private": true,
-	"workspaces": [
-		"app",
-		"api"
-	],
-	"scripts": {
-		"dev": "npm run dev:app & npm run dev:api",
-		"dev:app": "npm run dev --workspace app",
-		"dev:api": "npm run dev --workspace api",
-		"build": "npm run build --workspace app",
-		"start": "npm run start --workspace app",
-		"check-types": "npm run check-types --workspace app && npm run check-types --workspace api",
-		"format": "biome check --write .",
-		"lint": "biome check .",
-		"clean": "rm -rf app/node_modules api/node_modules node_modules app/.next app/.sanity"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "2.5.11",
-		"@types/node": "^26.4.0",
-		"typescript": "^7.0.2"
-	},
-	"allowScripts": {
-		"@sentry/cli@2.58.6": true,
-		"esbuild@0.28.2": true
-	}
+  "name": "scriptr",
+  "private": true,
+  "workspaces": [
+    "next",
+    "hono"
+  ],
+  "scripts": {
+    "dev": "npm run dev:next & npm run dev:api",
+    "dev:next": "npm run dev --workspace next",
+    "dev:api": "npm run dev --workspace hono",
+    "build": "npm run build --workspace next",
+    "start": "npm run start --workspace next",
+    "check-types": "npm run check-types --workspace hono && npm run check-types --workspace next",
+    "format": "biome check --write --unsafe .",
+    "lint": "biome check .",
+    "clean": "rm -rf next/node_modules hono/node_modules node_modules next/.next next/.sanity"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.11",
+    "@types/node": "^26.4.0",
+    "typescript": "^7.0.2"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  }
 }

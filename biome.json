@@ -1,13 +1,261 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.5.11/schema.json",
-	"files": {
-		"includes": ["**", "!!**/.next", "!!**/node_modules"]
-	},
-	"javascript": {
-		"formatter": {
-			"quoteStyle": "single",
-			"semicolons": "asNeeded",
-			"indentStyle": "space"
-		}
-	}
+  "$schema": "https://biomejs.dev/schemas/2.5.11/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true,
+    "defaultBranch": "main"
+  },
+  "files": {
+    "ignoreUnknown": false,
+    "includes": [
+      "**",
+      "!.vscode/**/*",
+      "!**/node_modules/**/*",
+      "!**/public/**/*",
+      "!**/.next/**/*",
+      "!**/.sanity/**/*",
+      "!**/.cache/**/*",
+      "!**/.turbo/**/*",
+      "!**/.vercel/**/*",
+      "!**/.netlify/**/*",
+      "!**/out/**/*",
+      "!**/dist/**/*",
+      "!**/coverage/**/*",
+      "!**/coverage-ts/**/*"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "useEditorconfig": true,
+    "formatWithErrors": false,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "lineWidth": 80,
+    "attributePosition": "auto",
+    "bracketSpacing": true
+  },
+  "javascript": {
+    "formatter": {
+      "jsxQuoteStyle": "single",
+      "quoteProperties": "asNeeded",
+      "trailingCommas": "es5",
+      "semicolons": "asNeeded",
+      "arrowParentheses": "always",
+      "bracketSameLine": false,
+      "quoteStyle": "single",
+      "attributePosition": "auto",
+      "bracketSpacing": true
+    }
+  },
+  "css": {
+    "formatter": {
+      "enabled": true
+    }
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "complexity": {
+        "noForEach": "off",
+        "noImportantStyles": "off",
+        "noVoid": "error"
+      },
+      "correctness": {
+        "noChildrenProp": "error",
+        "noReactPropAssignments": "error",
+        "noUndeclaredVariables": "error",
+        "noUnusedImports": "error",
+        "noUnusedVariables": "error",
+        "useExhaustiveDependencies": "warn",
+        "useHookAtTopLevel": "error"
+      },
+      "suspicious": {
+        "noArrayIndexKey": "off",
+        "noConsole": "warn",
+        "noEmptyBlockStatements": "error",
+        "noUnknownAtRules": "off"
+      },
+      "style": {
+        "noDefaultExport": "error",
+        "noNestedTernary": "error",
+        "noNamespace": "error",
+        "noParameterAssign": "warn",
+        "noParameterProperties": "error",
+        "useBlockStatements": "off",
+        "useConsistentObjectDefinitions": "warn",
+        "useImportType": "error",
+        "useNodejsImportProtocol": "off",
+        "useSelfClosingElements": "error"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.d.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noNamespace": "off",
+            "useNamingConvention": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "**/*.ts",
+        "**/*.tsx",
+        "!**/*.d.ts",
+        "!hono/src/types/supabase.ts"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "useConsistentArrayType": {
+              "level": "error",
+              "options": {
+                "syntax": "generic"
+              }
+            },
+            "useNamingConvention": {
+              "level": "error",
+              "options": {
+                "strictCase": false,
+                "conventions": [
+                  {
+                    "selector": {
+                      "kind": "const",
+                      "scope": "any"
+                    },
+                    "formats": ["camelCase", "CONSTANT_CASE", "PascalCase"]
+                  },
+                  {
+                    "selector": {
+                      "kind": "let",
+                      "scope": "any"
+                    },
+                    "formats": ["camelCase"]
+                  },
+                  {
+                    "selector": {
+                      "kind": "var",
+                      "scope": "any"
+                    },
+                    "formats": ["camelCase"]
+                  },
+                  {
+                    "selector": {
+                      "kind": "function",
+                      "scope": "any"
+                    },
+                    "formats": ["camelCase", "PascalCase"]
+                  },
+                  {
+                    "selector": {
+                      "kind": "functionParameter",
+                      "scope": "any"
+                    },
+                    "formats": ["camelCase"]
+                  },
+                  {
+                    "selector": {
+                      "kind": "typeLike",
+                      "scope": "any"
+                    },
+                    "formats": ["PascalCase"]
+                  },
+                  {
+                    "selector": {
+                      "kind": "enum",
+                      "scope": "any"
+                    },
+                    "formats": ["PascalCase"]
+                  },
+                  {
+                    "selector": {
+                      "kind": "enumMember",
+                      "scope": "any"
+                    },
+                    "formats": ["PascalCase", "CONSTANT_CASE"]
+                  },
+                  {
+                    "selector": {
+                      "kind": "typeProperty",
+                      "scope": "any"
+                    },
+                    "formats": ["camelCase", "snake_case"]
+                  },
+                  {
+                    "selector": {
+                      "kind": "objectLiteralMember",
+                      "scope": "any"
+                    },
+                    "formats": [
+                      "camelCase",
+                      "snake_case",
+                      "CONSTANT_CASE",
+                      "PascalCase"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.tsx", "**/*.jsx"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "useUniqueElementIds": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["next/types/common.types.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useNamingConvention": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "next/app/**/*",
+        "next/next.config.ts",
+        "next/postcss.config.mjs",
+        "hono/**/*"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noDefaultExport": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["next/styles/**/*.css"],
+      "css": {
+        "parser": {
+          "tailwindDirectives": true
+        }
+      }
+    }
+  ]
 }
