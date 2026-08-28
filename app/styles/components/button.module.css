@@ -1,0 +1,48 @@
+@layer components {
+  .button {
+    &.transparent {
+      @apply text-brand outline-brand/80 md:hover:bg-brand-50 md:hover:text-brand md:hover:shadow-brand-transparent text-base font-semibold outline-1;
+
+      &.alternate {
+        @apply text-background-100 outline-background-100/80 md:hover:bg-brand-50/90 md:hover:text-brand md:hover:shadow-brand-transparent outline-1;
+      }
+    }
+
+    &.solid {
+      @apply bg-brand text-background-100 md:hover:shadow-brand-light text-base font-semibold shadow-sm md:hover:opacity-90;
+
+      &.inverted {
+        @apply bg-background-100 text-brand md:hover:shadow-brand-transparent;
+      }
+    }
+
+    &.subtle {
+      @apply bg-grey-200 text-grey-550 outline-(--outline-light) md:hover:bg-brand-50 md:hover:shadow-brand-transparent text-base font-semibold shadow-sm outline-1;
+    }
+
+    &.golden {
+      @apply w-38 bg-golden-yellow text-brand-750 md:hover:bg-brand-50 mt-2.5 text-base;
+    }
+
+    &.success {
+      @apply bg-jade text-background-100 md:hover:shadow-brand-light text-base font-semibold shadow-sm md:hover:opacity-90;
+    }
+
+    &.error {
+      @apply bg-error-red text-background-100 md:hover:shadow-brand-light text-base font-semibold shadow-sm md:hover:opacity-90;
+    }
+  }
+
+  button,
+  .button {
+    @apply flex items-center justify-center rounded-full px-6 py-3 transition-all;
+  }
+
+  button:not(:disabled) {
+    @apply cursor-pointer transition duration-[0.25s] ease-linear;
+  }
+
+  button:disabled {
+    @apply pointer-events-none grayscale filter;
+  }
+}

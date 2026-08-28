@@ -1,0 +1,64 @@
+@layer components {
+  @theme {
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+  }
+
+  .roundedImage {
+    /* border-radius: var(--cornerRadius); */
+    img {
+      clip-path: ellipse(var(--cornerRadius) 120%);
+    }
+  }
+
+  @apply placeholder:select-none;
+
+  .fadeInElement {
+    @apply animate-[fadeIn_0.2s_ease-in-out_1.5s_forwards];
+  }
+
+  .opacity-start {
+    @apply starting:opacity-0 transition-opacity duration-300;
+  }
+  ::selection {
+    background: var(--color-brand-100);
+  }
+
+  .person {
+    box-shadow:
+      rgba(0, 0, 0, 0.25) 0px 0.0625em 0.0625em,
+      rgba(0, 0, 0, 0.25) 0px 0.125em 0.5em,
+      rgba(255, 255, 255, 0.1) 0px 0px 0px 1px inset;
+    .aiImage {
+      opacity: 0;
+    }
+
+    @media only screen and (min-width: 768px) {
+      &:hover {
+        .aiImage {
+          opacity: 1;
+        }
+      }
+    }
+  }
+
+  .content-block {
+    @apply px-8 md:px-[16.5%];
+  }
+}
+
+@layer nav {
+  @theme {
+    --nav-height: 5.4rem;
+    --nav-height-offset: calc(100dvh - 5.4rem);
+  }
+  .nav-box-shadow {
+    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.2);
+  }
+}

@@ -1,0 +1,28 @@
+{
+	"name": "scriptr",
+	"private": true,
+	"workspaces": [
+		"app",
+		"api"
+	],
+	"scripts": {
+		"dev": "npm run dev:app & npm run dev:api",
+		"dev:app": "npm run dev --workspace app",
+		"dev:api": "npm run dev --workspace api",
+		"build": "npm run build --workspace app",
+		"start": "npm run start --workspace app",
+		"check-types": "npm run check-types --workspace app && npm run check-types --workspace api",
+		"format": "biome check --write .",
+		"lint": "biome check .",
+		"clean": "rm -rf app/node_modules api/node_modules node_modules app/.next app/.sanity"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.5.11",
+		"@types/node": "^26.4.0",
+		"typescript": "^7.0.2"
+	},
+	"allowScripts": {
+		"@sentry/cli@2.58.6": true,
+		"esbuild@0.28.2": true
+	}
+}

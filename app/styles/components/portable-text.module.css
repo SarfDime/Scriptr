@@ -1,0 +1,139 @@
+@layer components {
+  .markdown-defaults {
+    @apply relative;
+
+    a {
+      @apply text-brand font-semibold underline;
+    }
+
+    p {
+      @apply text-fg leading-7 md:leading-8;
+    }
+
+    .item-container {
+      @apply text-fg leading-7 md:leading-8;
+    }
+
+    h1 {
+      @apply text-fg text-4xl font-bold leading-9 md:text-5xl md:leading-11;
+    }
+
+    h2 {
+      @apply text-fg text-2xl font-bold leading-8 md:text-3xl md:leading-10;
+    }
+
+    h3 {
+      @apply text-fg mt-2 text-2xl font-semibold leading-7;
+    }
+
+    h4 {
+      @apply text-fg mt-2 text-xl font-semibold;
+    }
+
+    li {
+      @apply text-fg my-2 list-none pl-8 ml-3;
+      background: url("/assets/images/tontine-bullet-icon.svg") no-repeat;
+      @apply bg-size-[17px] bg-position-[3px_5px];
+
+      li {
+        background: unset;
+        list-style: circle;
+        margin-left: 1.5rem;
+        padding-left: 0;
+      }
+    }
+
+    p:has(+ ul),
+    h4:has(+ ul) {
+      @apply mt-4;
+    }
+
+    &.inv-content {
+      p:has(+ ul),
+      h4:has(+ ul) {
+        @apply mt-0;
+      }
+    }
+
+    svg {
+      @apply inline h-6 w-6 md:h-8 md:w-8 xl:h-10 xl:w-10;
+    }
+
+    .list-checkmark {
+      li {
+        background: url("https://cdn.sanity.io/images/hl9czw39/production/a1fa88603a6a4434c647fbf72bc49e91c560edee-24x24.svg");
+      }
+    }
+
+    .list-blue-bullet {
+      li {
+        background: url("https://cdn.sanity.io/images/hl9czw39/production/4d5a0f5712be126c174a927b3989c46ea084fce6-24x24.svg");
+      }
+    }
+
+    .list-checkmark,
+    .list-blue-bullet {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+
+      li {
+        margin-left: 1.75rem;
+        padding-top: 0.25rem;
+        background-repeat: no-repeat;
+
+        @apply mt-0.5 mb-0.5 list-none pl-7.5 -ml-0.5;
+        @apply bg-size-[25px];
+        background-position:
+          0px 3px,
+          -5px 0;
+
+        li {
+          background: unset;
+          list-style: circle;
+          margin-left: 1.5rem;
+          padding-left: 0;
+        }
+      }
+    }
+
+    .inv-strat {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+
+      &::before {
+        display: inline-flex;
+        height: 23px;
+        width: 23px;
+      }
+
+      &.gold-inv::before {
+        content: url("https://cdn.sanity.io/images/hl9czw39/production/0652e16815fa4857b2d909129e9eda1b86cb8576-23x23.svg");
+      }
+
+      &.silver-inv::before {
+        content: url("https://cdn.sanity.io/images/hl9czw39/production/24c3138a2ba99c1035d26a7fdc831dd8af1741be-23x23.svg");
+      }
+
+      &.copper-inv::before {
+        content: url("https://cdn.sanity.io/images/hl9czw39/production/dbee38697af48df892b28b93789efa514e867feb-23x23.svg");
+      }
+
+      &.bitcoin-inv::before {
+        content: url("https://cdn.sanity.io/images/hl9czw39/production/df2fb09b83c483480d4f03046f446f486bab7f10-23x23.svg");
+      }
+
+      &.bold-inv::before {
+        content: url("https://cdn.sanity.io/images/hl9czw39/production/3e913ed83df680aabf1e961998609eb0b8caa5c9-23x23.svg");
+      }
+
+      &.benji-inv::before {
+        content: url("https://cdn.sanity.io/images/hl9czw39/production/5c2a63ea0e982881a70cdf5c4a36485398065606-72x72.png");
+        border-radius: 50%;
+        overflow: hidden;
+      }
+    }
+  }
+}

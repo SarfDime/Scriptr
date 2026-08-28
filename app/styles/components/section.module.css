@@ -1,0 +1,36 @@
+@layer components {
+  .content-section-width {
+    @apply mx-auto w-fit sm:w-fit md:w-[85%] md:grid-cols-2 lg:w-[80%] lg:grid-cols-2 xl:w-[80%];
+  }
+  .section-width {
+    @apply mx-auto w-full max-w-450 px-8 md:w-[90%] lg:w-[80%];
+  }
+
+  .sectionWrapper {
+    min-height: var(--nav-height-offset);
+  }
+
+  .section,
+  section {
+    max-width: 125rem;
+    margin-inline: auto;
+    scroll-margin-top: var(--nav-height);
+    &.heading {
+      font-weight: 600;
+      text-align: center;
+      font-size: 1.8rem;
+      line-height: 1.875rem;
+      color: var(--color-brand);
+    }
+
+    &.wrapper {
+      margin-block: 2rem;
+    }
+
+    &.sub-heading {
+      text-align: center;
+      font-size: 1.3rem;
+      color: var(--description-dark-gray);
+    }
+  }
+}

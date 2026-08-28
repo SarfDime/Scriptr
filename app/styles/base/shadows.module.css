@@ -1,0 +1,17 @@
+@layer shadows {
+  @theme {
+    --single: 1fr;
+    --repeat-2: repeat(2, 1fr);
+    --repeat-3: repeat(3, 1fr);
+
+    --shadow-sm: 0px 1px 4px rgba(0, 0, 0, 0.1);
+    --shadow-smx: 0px 2px 4px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0px 2px 5px rgba(0, 0, 0, 0.2);
+    --shadow-mdx: 0px 2px 4px 0px rgba(0, 0, 0, 0.2);
+    --shadow-brand-transparent: 0px 0px 10px 0px #2975bf40;
+    --shadow-brand-light: 0px 0px 10px 0px #2975bf70;
+    --outline-light: rgba(0, 0, 0, 0.05);
+
+    --drop-shadow-md: 0px 2px 4px rgba(0, 0, 0, 0.5);
+  }
+}
