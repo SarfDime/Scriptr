@@ -5,17 +5,43 @@ import type { HonoEnv } from '../types/env.types'
 
 const scripts = new Hono<HonoEnv>()
 
+async function getSelectedFacultyScope(
+  supabase: ReturnType<typeof createSupabaseClient>
+) {
+  const { data: sessionData } = await supabase.auth.getUser()
+
+  if (!sessionData.user) {
+    return null
+  }
+
+  const { data } = await supabase
+    .from('profile_faculties')
+    .select('faculty_id')
+    .eq('profile_id', sessionData.user.id)
+
+  return data?.map(({ faculty_id }) => faculty_id) ?? []
+}
+
 /** Get all scripts (public) */
 scripts.get('/', async (c) => {
   const supabase = createSupabaseClient(c)
-  const { data, error } = await supabase
+  const selectedFacultyIds = await getSelectedFacultyScope(supabase)
+
+  let query = supabase
     .from('scripts')
     .select(`
       *,
       author:profiles(username, full_name),
-      subject:subjects(name, year, exam_session)
+      subject:subjects(name, year, exam_session, faculty:faculties(id, name, university:universities(id, name))),
+      faculty:faculties(id, name, university:universities(id, name))
     `)
     .order('created_at', { ascending: false })
+
+  if (selectedFacultyIds && selectedFacultyIds.length > 0) {
+    query = query.in('faculty_id', selectedFacultyIds)
+  }
+
+  const { data, error } = await query
 
   if (error) return c.json({ error: error.message }, 500)
   return c.json(data)
@@ -25,16 +51,24 @@ scripts.get('/', async (c) => {
 scripts.get('/subject/:subjectId', async (c) => {
   const subjectId = requiredParam(c, 'subjectId')
   const supabase = createSupabaseClient(c)
+  const selectedFacultyIds = await getSelectedFacultyScope(supabase)
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('scripts')
     .select(`
       *,
       author:profiles(username, full_name),
-      subject:subjects(name, year, exam_session)
+      subject:subjects(name, year, exam_session, faculty:faculties(id, name, university:universities(id, name))),
+      faculty:faculties(id, name, university:universities(id, name))
     `)
     .eq('subject_id', subjectId)
     .order('vote_score', { ascending: false })
+
+  if (selectedFacultyIds && selectedFacultyIds.length > 0) {
+    query = query.in('faculty_id', selectedFacultyIds)
+  }
+
+  const { data, error } = await query
 
   if (error) return c.json({ error: error.message }, 500)
   return c.json(data)
@@ -44,16 +78,24 @@ scripts.get('/subject/:subjectId', async (c) => {
 scripts.get('/top', async (c) => {
   const limit = parseInt(c.req.query('limit') || '10', 10)
   const supabase = createSupabaseClient(c)
+  const selectedFacultyIds = await getSelectedFacultyScope(supabase)
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('scripts')
     .select(`
       *,
       author:profiles(username, full_name),
-      subject:subjects(name, year)
+      subject:subjects(name, year, faculty:faculties(id, name, university:universities(id, name))),
+      faculty:faculties(id, name, university:universities(id, name))
     `)
     .order('vote_score', { ascending: false })
     .limit(limit)
+
+  if (selectedFacultyIds && selectedFacultyIds.length > 0) {
+    query = query.in('faculty_id', selectedFacultyIds)
+  }
+
+  const { data, error } = await query
 
   if (error) return c.json({ error: error.message }, 500)
   return c.json(data)
@@ -63,16 +105,24 @@ scripts.get('/top', async (c) => {
 scripts.get('/popular', async (c) => {
   const limit = parseInt(c.req.query('limit') || '10', 10)
   const supabase = createSupabaseClient(c)
+  const selectedFacultyIds = await getSelectedFacultyScope(supabase)
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('scripts')
     .select(`
       *,
       author:profiles(username, full_name),
-      subject:subjects(name, year)
+      subject:subjects(name, year, faculty:faculties(id, name, university:universities(id, name))),
+      faculty:faculties(id, name, university:universities(id, name))
     `)
     .order('download_count', { ascending: false })
     .limit(limit)
+
+  if (selectedFacultyIds && selectedFacultyIds.length > 0) {
+    query = query.in('faculty_id', selectedFacultyIds)
+  }
+
+  const { data, error } = await query
 
   if (error) return c.json({ error: error.message }, 500)
   return c.json(data)
@@ -83,38 +133,62 @@ scripts.get('/:id', async (c) => {
   const scriptId = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)
 
-  const { data, error } = await supabase
-    .from('scripts')
-    .select(`
-      *,
-      author:profiles(username, full_name, id),
-      subject:subjects(name, year, exam_session)
-    `)
-    .eq('id', scriptId)
-    .single()
-
-  if (error) return c.json({ error: error.message }, 404)
-  return c.json(data)
-})
-
-/** Search scripts */
-scripts.get('/search', async (c) => {
-  const query = c.req.query('q')
-  const supabase = createSupabaseClient(c)
-
-  if (!query) {
-    return c.json({ error: 'Search query is required' }, 400)
-  }
+  const selectedFacultyIds = await getSelectedFacultyScope(supabase)
 
   const { data, error } = await supabase
     .from('scripts')
     .select(`
       *,
       author:profiles(username, full_name),
-      subject:subjects(name, year)
+      subject:subjects(name, year, exam_session, faculty:faculties(id, name, university:universities(id, name))),
+      faculty:faculties(id, name, university:universities(id, name))
     `)
-    .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
+    .eq('id', scriptId)
+    .single()
+
+  if (error) return c.json({ error: error.message }, 404)
+
+  if (
+    selectedFacultyIds &&
+    selectedFacultyIds.length > 0 &&
+    data.faculty_id &&
+    !selectedFacultyIds.includes(data.faculty_id)
+  ) {
+    return c.json(
+      { error: 'Script not available in your selected faculties' },
+      404
+    )
+  }
+
+  return c.json(data)
+})
+
+/** Search scripts */
+scripts.get('/search', async (c) => {
+  const queryParam = c.req.query('q')
+  const supabase = createSupabaseClient(c)
+  const selectedFacultyIds = await getSelectedFacultyScope(supabase)
+
+  if (!queryParam) {
+    return c.json({ error: 'Search query is required' }, 400)
+  }
+
+  let query = supabase
+    .from('scripts')
+    .select(`
+      *,
+      author:profiles(username, full_name),
+      subject:subjects(name, year, faculty:faculties(id, name, university:universities(id, name))),
+      faculty:faculties(id, name, university:universities(id, name))
+    `)
+    .or(`title.ilike.%${queryParam}%,description.ilike.%${queryParam}%`)
     .order('vote_score', { ascending: false })
+
+  if (selectedFacultyIds && selectedFacultyIds.length > 0) {
+    query = query.in('faculty_id', selectedFacultyIds)
+  }
+
+  const { data, error } = await query
 
   if (error) return c.json({ error: error.message }, 500)
   return c.json(data)
@@ -125,14 +199,27 @@ scripts.post('/', authMiddleware, async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)
 
-  const { title, description, fileKey, subjectId, professorId, fileType } =
-    await c.req.json()
+  const body = await c.req.json()
+  const title = body.title
+  const description = body.description ?? ''
+  const fileKey = body.fileKey ?? body.file_url
+  const subjectId = body.subject_id ?? body.subjectId
+  const professorId = body.professor_id ?? body.professorId
+  const facultyId = body.faculty_id ?? body.facultyId
+  const fileType = body.fileType ?? body.file_type
 
-  if (!title || !subjectId || !professorId || !fileKey || !fileType) {
+  if (
+    !title ||
+    !subjectId ||
+    !professorId ||
+    !fileKey ||
+    !fileType ||
+    !facultyId
+  ) {
     return c.json(
       {
         error:
-          'title, subjectId, professorId, fileKey, and fileType are required',
+          'title, subjectId, professorId, facultyId, fileKey, and fileType are required',
       },
       400
     )
@@ -146,11 +233,12 @@ scripts.post('/', authMiddleware, async (c) => {
     .from('scripts')
     .insert({
       title,
-      description: description || '',
+      description,
       file_url: fileKey,
       file_type: fileType || 'pdf',
       subject_id: subjectId,
       professor_id: professorId,
+      faculty_id: facultyId,
       author_id: user.id,
       vote_score: 0,
       download_count: 0,
@@ -158,7 +246,8 @@ scripts.post('/', authMiddleware, async (c) => {
     .select(`
       *,
       author:profiles(username, full_name),
-      subject:subjects(name, year)
+      subject:subjects(name, year, faculty:faculties(id, name, university:universities(id, name))),
+      faculty:faculties(id, name, university:universities(id, name))
     `)
     .single()
 

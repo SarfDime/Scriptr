@@ -90,11 +90,9 @@ auth.post('/logout', authMiddleware, async (c) => {
 
 // Get current session from cookies
 auth.get('/session', async (c) => {
-  // TODO: See if needed
   const supabase = createSupabaseClient(c)
 
   try {
-    // Get session from cookies (automatic)
     const {
       data: { session },
       error,
@@ -104,17 +102,25 @@ auth.get('/session', async (c) => {
       return c.json({ user: null, session: null })
     }
 
-    // Get user profile
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('username, role')
-      .eq('id', session.user.id)
-      .single()
-
-    const { data: completedSubjects } = await supabase
-      .from('profile_completed_subjects')
-      .select('subject_id')
-      .eq('profile_id', session.user.id)
+    const [
+      { data: profile },
+      { data: completedSubjects },
+      { data: facultySelections },
+    ] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('username, role')
+        .eq('id', session.user.id)
+        .single(),
+      supabase
+        .from('profile_completed_subjects')
+        .select('subject_id')
+        .eq('profile_id', session.user.id),
+      supabase
+        .from('profile_faculties')
+        .select('faculty_id')
+        .eq('profile_id', session.user.id),
+    ])
 
     return c.json({
       user: {
@@ -124,6 +130,8 @@ auth.get('/session', async (c) => {
         role: profile?.role || 'student',
         completed_subject_ids:
           completedSubjects?.map(({ subject_id }) => subject_id) || [],
+        selected_faculty_ids:
+          facultySelections?.map(({ faculty_id }) => faculty_id) || [],
       },
     })
   } catch (_error) {

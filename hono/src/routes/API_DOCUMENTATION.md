@@ -6,6 +6,7 @@ All endpoints in this document are relative to the API base path `/api`. For
 local development, the full URL is `http://localhost:8787/api`.
 
 ## Table of Contents
+- [Catalog](#catalog)
 - [Professors](#professors)
 - [Subjects](#subjects)
 - [Scripts](#scripts)
@@ -13,6 +14,60 @@ local development, the full URL is `http://localhost:8787/api`.
 - [Flags](#flags)
 - [Profiles](#profiles)
 - [Votes](#votes)
+- [Internal Admin](#internal-admin)
+
+---
+
+## Catalog
+
+### Public read-only endpoints
+
+#### `GET /universities`
+Get all universities with faculties.
+- **Auth**: Not required
+- **Response**: Array of universities
+
+#### `GET /universities/:id`
+Get a single university by ID.
+- **Auth**: Not required
+- **Response**: University with faculties
+
+#### `GET /faculties`
+Get all faculties with university metadata.
+- **Auth**: Not required
+- **Response**: Array of faculties
+
+#### `GET /faculties/:id`
+Get a single faculty by ID.
+- **Auth**: Not required
+- **Response**: Faculty details
+
+#### `GET /professors`
+Get all professors with their subjects and faculty metadata.
+- **Auth**: Not required
+- **Response**: Array of professors
+
+#### `GET /professors/:id`
+Get a single professor by ID.
+- **Auth**: Not required
+- **Response**: Professor object with related records
+
+#### `GET /subjects`
+Get all subjects with faculty and professor metadata.
+- **Auth**: Not required
+- **Response**: Array of subjects
+
+#### `GET /subjects/year/:year`
+Get subjects by year.
+- **Auth**: Not required
+- **Response**: Array of subjects
+
+#### `GET /subjects/:id`
+Get a single subject by ID.
+- **Auth**: Not required
+- **Response**: Subject details
+
+> Catalog mutation routes are intentionally not exposed under `/api/universities`, `/api/faculties`, `/api/professors`, or `/api/subjects`. Internal-only writes must use `/api/internal` with the `x-internal-secret` header.
 
 ---
 
@@ -30,24 +85,29 @@ Get a single professor by ID with subjects and comments
 - **Auth**: Not required
 - **Response**: Professor object with subjects and comments
 
-### Moderator Endpoints
+### Internal mutation endpoints (secret-protected)
 
-#### `POST /professors`
-Create a new professor
-- **Auth**: Required (Moderator only)
-- **Body**: `{ name, picture_url?, bio? }`
-- **Response**: Created professor
+These routes are not public. They require the `x-internal-secret` header to match `INTERNAL_API_SECRET`.
 
-#### `PATCH /professors/:id`
-Update a professor
-- **Auth**: Required (Moderator only)
+#### `GET /internal/professors`
+List professors via the internal API.
+
+#### `POST /internal/professors`
+Create a new professor.
+- **Body**: `{ name, picture_url?, bio?, faculty_ids? }`
+
+#### `PATCH /internal/professors/:id`
+Update a professor.
 - **Body**: `{ name?, picture_url?, bio? }`
-- **Response**: Updated professor
 
-#### `DELETE /professors/:id`
-Delete a professor
-- **Auth**: Required (Moderator only)
-- **Response**: Success message
+#### `DELETE /internal/professors/:id`
+Delete a professor.
+
+#### `POST /internal/professors/:id/faculties/:facultyId`
+Assign a professor to a faculty.
+
+#### `DELETE /internal/professors/:id/faculties/:facultyId`
+Remove a professor from a faculty.
 
 ---
 
@@ -70,34 +130,29 @@ Get a single subject with professors and scripts
 - **Auth**: Not required
 - **Response**: Subject object with related data
 
-### Moderator Endpoints
+### Internal mutation endpoints (secret-protected)
 
-#### `POST /subjects`
-Create a new subject
-- **Auth**: Required (Moderator only)
-- **Body**: `{ name, year, exam_session, description?, professor_ids? }`
-- **Response**: Created subject
+These routes are not public. They require the `x-internal-secret` header to match `INTERNAL_API_SECRET`.
 
-#### `PATCH /subjects/:id`
-Update a subject
-- **Auth**: Required (Moderator only)
-- **Body**: `{ name?, year?, exam_session?, description? }`
-- **Response**: Updated subject
+#### `GET /internal/subjects`
+List subjects via the internal API.
 
-#### `DELETE /subjects/:id`
-Delete a subject
-- **Auth**: Required (Moderator only)
-- **Response**: Success message
+#### `POST /internal/subjects`
+Create a new subject.
+- **Body**: `{ name, year, exam_session, faculty_id, description?, professor_ids? }`
 
-#### `POST /subjects/:id/professors/:professorId`
-Assign a professor to a subject
-- **Auth**: Required (Moderator only)
-- **Response**: Success message
+#### `PATCH /internal/subjects/:id`
+Update a subject.
+- **Body**: `{ name?, year?, exam_session?, faculty_id?, description? }`
 
-#### `DELETE /subjects/:id/professors/:professorId`
-Remove a professor from a subject
-- **Auth**: Required (Moderator only)
-- **Response**: Success message
+#### `DELETE /internal/subjects/:id`
+Delete a subject.
+
+#### `POST /internal/subjects/:id/professors/:professorId`
+Assign a professor to a subject.
+
+#### `DELETE /internal/subjects/:id/professors/:professorId`
+Remove a professor from a subject.
 
 ---
 
@@ -229,33 +284,37 @@ Create a new flag (report)
 - **Body**: `{ target_type: 'user'|'script', target_id, reason }` (stored as `target_user_id` or `target_script_id`)
 - **Response**: Created flag
 
-### Moderator Endpoints
+### Moderator read endpoints
+
+These are moderator-only reads:
 
 #### `GET /flags`
-Get all flags
+Get all flags.
 - **Auth**: Required (Moderator only)
 - **Response**: Array of all flags
 
 #### `GET /flags/pending`
-Get pending flags
+Get pending flags.
 - **Auth**: Required (Moderator only)
 - **Response**: Array of pending flags
 
 #### `GET /flags/status/:status`
-Get flags by status (pending, reviewed, dismissed)
+Get flags by status (`pending`, `reviewed`, `dismissed`).
 - **Auth**: Required (Moderator only)
-- **Response**: Array of flags with specified status
+- **Response**: Array of matching flags
+
+### Authenticated user mutation endpoints
 
 #### `PATCH /flags/:id`
-Update flag status
-- **Auth**: Required (Moderator only)
+Update your own flag.
+- **Auth**: Required
 - **Body**: `{ status: 'pending'|'reviewed'|'dismissed' }`
-- **Response**: Updated flag
+- **Restriction**: Only the flag reporter can update their own flag. Moderators cannot update another moderator's flag.
 
 #### `DELETE /flags/:id`
-Delete a flag
-- **Auth**: Required (Moderator only)
-- **Response**: Success message
+Delete your own flag.
+- **Auth**: Required
+- **Restriction**: Only the flag reporter can delete their own flag.
 
 ---
 
@@ -296,19 +355,15 @@ Update current user's profile
 - **Body**: `{ username?, full_name?, completed_subject_ids? }`
 - **Response**: Updated profile
 
-#### `POST /profiles/me/achievements`
-Add achievement to current user
-- **Auth**: Required
-- **Body**: `{ achievement: { name, ...otherFields } }`
-- **Response**: Updated profile with new achievement
+### Internal-only role mutation
 
-### Moderator Endpoints
-
-#### `PATCH /profiles/:id/role`
-Update user role
-- **Auth**: Required (Moderator only)
+#### `PATCH /internal/profiles/:id/role`
+Update a user's role.
+- **Auth**: Not a public auth route; requires `x-internal-secret` header matching `INTERNAL_API_SECRET`
 - **Body**: `{ role: 'student'|'moderator' }`
 - **Response**: Updated profile
+
+> Public role mutation is intentionally not exposed on `/api/profiles`.
 
 ---
 
@@ -370,10 +425,14 @@ user to the request context, and returns `401` when authentication fails.
 
 ## Role-Based Access Control
 
-**Moderator-only endpoints** require:
-1. Valid authentication
-2. User role must be `'moderator'`
-3. Returns 403 if user is not a moderator
+The backend now uses a clear separation of responsibilities:
+1. Public catalog routes are read-only and do not require authentication.
+2. Authenticated user routes require a valid Supabase session.
+3. Moderator-only routes are read-only views of flags and require the user role to be `'moderator'`.
+4. Internal catalog writes and role changes are only exposed under `/api/internal` and require the `x-internal-secret` header.
+5. A moderator may only update/delete their own flags; they cannot mutate flags from other moderators or other users.
+
+Any violation returns `403` with an error payload.
 
 ## Error Responses
 
@@ -408,7 +467,10 @@ When a script is flagged:
 - When all flags are dismissed, `is_flagged` returns to `false`
 
 ### File Types
-Supported file types for scripts: `pdf`, `doc`, `docx`
+Supported file types for scripts: `pdf`, `jpg`, `jpeg`, `png`, `webp`
+
+### Internal writes
+Catalog writes and role changes are intentionally not available on the public API. Use `/api/internal` with the `x-internal-secret` header to mutate internal catalog records or update a profile role.
 
 ### Subjects Passed
 Completed subjects are stored in `profile_completed_subjects` and managed through `completed_subject_ids`.

@@ -6,9 +6,9 @@
     "hono"
   ],
   "scripts": {
-    "dev": "npm run dev:next & npm run dev:api",
+    "dev": "npm run dev:next & npm run dev:hono",
     "dev:next": "npm run dev --workspace next",
-    "dev:api": "npm run dev --workspace hono",
+    "dev:hono": "npm run dev --workspace hono",
     "build": "npm run build --workspace next",
     "start": "npm run start --workspace next",
     "check-types": "npm run check-types --workspace hono && npm run check-types --workspace next",

@@ -22,6 +22,16 @@ export function createSupabaseClient(c: Context<HonoEnv>) {
   )
 }
 
+/** Internal service-role client that bypasses row-level security for trusted server-side mutations. */
+export function createInternalSupabaseClient(c: Context<HonoEnv>) {
+  return createClient<Database>(c.env.SUPABASE_URL, c.env.SUPABASE_SECRET_KEY, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  })
+}
+
 /** Proper cookie storage with full read/write support */
 function createCookieStorage(c: Context<HonoEnv>) {
   return {
@@ -72,10 +82,8 @@ export const authMiddleware = async (
   next: () => Promise<void>
 ) => {
   try {
-    // Create client - it will automatically read cookies
     const supabase = createSupabaseClient(c)
 
-    // Get the current user from the session (cookies)
     const {
       data: { user },
       error,
@@ -85,26 +93,35 @@ export const authMiddleware = async (
       return c.json({ error: 'Not authenticated' }, 401)
     }
 
-    // Get additional profile info
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('username, role')
-      .eq('id', user.id)
-      .single()
-
-    const { data: completedSubjects } = await supabase
-      .from('profile_completed_subjects')
-      .select('subject_id')
-      .eq('profile_id', user.id)
+    const [
+      { data: profile },
+      { data: completedSubjects },
+      { data: facultySelections },
+    ] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('username, role')
+        .eq('id', user.id)
+        .single(),
+      supabase
+        .from('profile_completed_subjects')
+        .select('subject_id')
+        .eq('profile_id', user.id),
+      supabase
+        .from('profile_faculties')
+        .select('faculty_id')
+        .eq('profile_id', user.id),
+    ])
 
     const userProfile = {
       username: profile?.username ?? user?.email,
       role: profile?.role ?? 'student',
       completed_subject_ids:
         completedSubjects?.map(({ subject_id }) => subject_id) ?? [],
+      selected_faculty_ids:
+        facultySelections?.map(({ faculty_id }) => faculty_id) ?? [],
     }
 
-    // Attach user to context
     c.set('user', {
       ...user,
       profile: userProfile,

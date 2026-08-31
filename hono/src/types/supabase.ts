@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.17'
+    PostgrestVersion: '14.5'
   }
   public: {
     Tables: {
@@ -55,6 +55,35 @@ export type Database = {
             columns: ['professor_id']
             isOneToOne: false
             referencedRelation: 'professors'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      faculties: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          university_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          university_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          university_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'faculties_university_id_fkey'
+            columns: ['university_id']
+            isOneToOne: false
+            referencedRelation: 'universities'
             referencedColumns: ['id']
           },
         ]
@@ -124,6 +153,39 @@ export type Database = {
           },
         ]
       }
+      professor_faculties: {
+        Row: {
+          created_at: string
+          faculty_id: string
+          professor_id: string
+        }
+        Insert: {
+          created_at?: string
+          faculty_id: string
+          professor_id: string
+        }
+        Update: {
+          created_at?: string
+          faculty_id?: string
+          professor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'professor_faculties_faculty_id_fkey'
+            columns: ['faculty_id']
+            isOneToOne: false
+            referencedRelation: 'faculties'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'professor_faculties_professor_id_fkey'
+            columns: ['professor_id']
+            isOneToOne: false
+            referencedRelation: 'professors'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       professors: {
         Row: {
           bio: string | null
@@ -181,6 +243,39 @@ export type Database = {
           },
         ]
       }
+      profile_faculties: {
+        Row: {
+          created_at: string
+          faculty_id: string
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          faculty_id: string
+          profile_id: string
+        }
+        Update: {
+          created_at?: string
+          faculty_id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'profile_faculties_faculty_id_fkey'
+            columns: ['faculty_id']
+            isOneToOne: false
+            referencedRelation: 'faculties'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'profile_faculties_profile_id_fkey'
+            columns: ['profile_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       profiles: {
         Row: {
           achievements: Json
@@ -220,6 +315,7 @@ export type Database = {
           created_at: string
           description: string | null
           download_count: number
+          faculty_id: string | null
           file_type: string
           file_url: string
           id: string
@@ -235,6 +331,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           download_count?: number
+          faculty_id?: string | null
           file_type: string
           file_url: string
           id?: string
@@ -250,6 +347,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           download_count?: number
+          faculty_id?: string | null
           file_type?: string
           file_url?: string
           id?: string
@@ -266,6 +364,13 @@ export type Database = {
             columns: ['author_id']
             isOneToOne: false
             referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'scripts_faculty_id_fkey'
+            columns: ['faculty_id']
+            isOneToOne: false
+            referencedRelation: 'faculties'
             referencedColumns: ['id']
           },
           {
@@ -319,6 +424,7 @@ export type Database = {
           created_at: string
           description: string | null
           exam_session: string
+          faculty_id: string | null
           id: string
           name: string
           year: number
@@ -327,6 +433,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           exam_session: string
+          faculty_id?: string | null
           id?: string
           name: string
           year: number
@@ -335,9 +442,36 @@ export type Database = {
           created_at?: string
           description?: string | null
           exam_session?: string
+          faculty_id?: string | null
           id?: string
           name?: string
           year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'subjects_faculty_id_fkey'
+            columns: ['faculty_id']
+            isOneToOne: false
+            referencedRelation: 'faculties'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      universities: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
         }
         Relationships: []
       }

@@ -6,6 +6,7 @@ export type Env = {
   SUPABASE_URL: string
   SUPABASE_PUBLISHABLE_KEY: string
   SUPABASE_SECRET_KEY: string
+  INTERNAL_API_SECRET?: string
   R2_ACCOUNT_ID: string
   R2_ACCESS_KEY_ID: string
   R2_SECRET_ACCESS_KEY: string
@@ -20,6 +21,7 @@ export type AuthUser = User & {
     username?: string
     role?: string
     completed_subject_ids?: Array<string>
+    selected_faculty_ids?: Array<string>
   }
 }
 

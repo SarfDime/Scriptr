@@ -44,7 +44,7 @@ Keep secrets out of source control. The `next/` template uses its own environmen
 
 ```bash
 npm run dev          # Start the API and frontend development processes
-npm run dev:api      # Start the Hono API
+npm run dev:hono     # Start the Hono API
 npm run dev:next     # Start the Next.js template
 npm run check-types  # Type-check both workspaces
 npm run lint         # Run Biome checks

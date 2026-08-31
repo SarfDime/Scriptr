@@ -1,6 +1,10 @@
 import { Hono } from 'hono'
 import { requiredParam } from '../lib/request'
-import { authMiddleware, createSupabaseClient } from '../lib/supabase'
+import {
+  authMiddleware,
+  createInternalSupabaseClient,
+  createSupabaseClient,
+} from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
 const flags = new Hono<HonoEnv>()
@@ -184,21 +188,28 @@ flags.post('/', authMiddleware, async (c) => {
   return c.json({ success: true, flag: data })
 })
 
-/** Update flag status (moderator only) */
+/** Update flag status (only the flag owner may update their own flag) */
 flags.patch('/:id', authMiddleware, async (c) => {
   const user = c.get('user')
   const flagId = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)
+  const adminSupabase = createInternalSupabaseClient(c)
 
-  // Check if user is moderator
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
+  const { data: existingFlag, error: existingFlagError } = await supabase
+    .from('flags')
+    .select('reporter_id, target_script_id')
+    .eq('id', flagId)
     .single()
 
-  if (profile?.role !== 'moderator') {
-    return c.json({ error: 'Unauthorized: Moderator access required' }, 403)
+  if (existingFlagError || !existingFlag) {
+    return c.json({ error: 'Flag not found' }, 404)
+  }
+
+  if (existingFlag.reporter_id !== user.id) {
+    return c.json(
+      { error: 'Forbidden: You can only update your own flags' },
+      403
+    )
   }
 
   const { status } = await c.req.json()
@@ -210,7 +221,7 @@ flags.patch('/:id', authMiddleware, async (c) => {
     )
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await adminSupabase
     .from('flags')
     .update({ status })
     .eq('id', flagId)
@@ -222,17 +233,15 @@ flags.patch('/:id', authMiddleware, async (c) => {
 
   if (error) return c.json({ error: error.message }, 500)
 
-  // If flag is dismissed and target is a script, check if there are other pending flags
   if (status === 'dismissed' && data.target_script_id) {
-    const { data: otherFlags } = await supabase
+    const { data: otherFlags } = await adminSupabase
       .from('flags')
       .select('id')
       .eq('target_script_id', data.target_script_id)
       .eq('status', 'pending')
 
-    // If no other pending flags, remove the flagged status
     if (!otherFlags || otherFlags.length === 0) {
-      await supabase
+      await adminSupabase
         .from('scripts')
         .update({ is_flagged: false })
         .eq('id', data.target_script_id)
@@ -242,24 +251,31 @@ flags.patch('/:id', authMiddleware, async (c) => {
   return c.json({ success: true, flag: data })
 })
 
-/** Delete a flag (moderator only) */
+/** Delete a flag (only the flag owner may delete their own flag) */
 flags.delete('/:id', authMiddleware, async (c) => {
   const user = c.get('user')
   const flagId = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)
+  const adminSupabase = createInternalSupabaseClient(c)
 
-  // Check if user is moderator
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
+  const { data: existingFlag, error: existingFlagError } = await supabase
+    .from('flags')
+    .select('reporter_id')
+    .eq('id', flagId)
     .single()
 
-  if (profile?.role !== 'moderator') {
-    return c.json({ error: 'Unauthorized: Moderator access required' }, 403)
+  if (existingFlagError || !existingFlag) {
+    return c.json({ error: 'Flag not found' }, 404)
   }
 
-  const { error } = await supabase.from('flags').delete().eq('id', flagId)
+  if (existingFlag.reporter_id !== user.id) {
+    return c.json(
+      { error: 'Forbidden: You can only delete your own flags' },
+      403
+    )
+  }
+
+  const { error } = await adminSupabase.from('flags').delete().eq('id', flagId)
 
   if (error) return c.json({ error: error.message }, 500)
   return c.json({ success: true, message: 'Flag deleted successfully' })

@@ -28,7 +28,7 @@ profiles.get('/me', authMiddleware, async (c) => {
   const { data, error } = await supabase
     .from('profiles')
     .select(
-      '*, completed_subjects:profile_completed_subjects(subject_id, passed_at)'
+      '*, completed_subjects:profile_completed_subjects(subject_id, passed_at), selected_faculties:profile_faculties(faculty:faculties(*, university:universities(id, name)))'
     )
     .eq('id', user.id)
     .single()
@@ -104,7 +104,8 @@ profiles.patch('/me', authMiddleware, async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)
 
-  const { username, full_name, completed_subject_ids } = await c.req.json()
+  const { username, full_name, completed_subject_ids, selected_faculty_ids } =
+    await c.req.json()
 
   // Validate username if provided
   if (username) {
@@ -160,43 +161,19 @@ profiles.patch('/me', authMiddleware, async (c) => {
     }
   }
 
-  return c.json({ success: true, profile: data })
-})
+  if (Array.isArray(selected_faculty_ids)) {
+    await supabase.from('profile_faculties').delete().eq('profile_id', user.id)
 
-/** Update user role (moderator only) */
-profiles.patch('/:id/role', authMiddleware, async (c) => {
-  const user = c.get('user')
-  const targetUserId = requiredParam(c, 'id')
-  const supabase = createSupabaseClient(c)
-
-  // Check if user is moderator
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.role !== 'moderator') {
-    return c.json({ error: 'Unauthorized: Moderator access required' }, 403)
+    if (selected_faculty_ids.length > 0) {
+      await supabase.from('profile_faculties').insert(
+        selected_faculty_ids.map((facultyId: string) => ({
+          profile_id: user.id,
+          faculty_id: facultyId,
+        }))
+      )
+    }
   }
 
-  const { role } = await c.req.json()
-
-  if (!['student', 'moderator'].includes(role)) {
-    return c.json(
-      { error: 'Role must be either "student" or "moderator"' },
-      400
-    )
-  }
-
-  const { data, error } = await supabase
-    .from('profiles')
-    .update({ role })
-    .eq('id', targetUserId)
-    .select()
-    .single()
-
-  if (error) return c.json({ error: error.message }, 500)
   return c.json({ success: true, profile: data })
 })
 

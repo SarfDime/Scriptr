@@ -26,6 +26,7 @@ Create `hono/.env` locally. Use deployment secrets in production:
 SUPABASE_URL=your_supabase_url
 SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
 SUPABASE_SECRET_KEY=your_supabase_secret_key
+INTERNAL_API_SECRET=development_secret_key
 R2_ACCOUNT_ID=your_cloudflare_account_id
 R2_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
 R2_ACCESS_KEY_ID=your_access_key
@@ -40,7 +41,7 @@ Never commit `.env` files or storage credentials.
 ## Commands
 
 ```bash
-npm run dev:api
+npm run dev:hono
 npm run check-types --workspace hono
 npm run lint
 ```
@@ -55,16 +56,22 @@ All routes are mounted below `/api`:
 - `/api/votes`
 - `/api/comments`
 - `/api/flags`
-- `/api/professors`
 - `/api/profiles`
+- `/api/universities`
+- `/api/faculties`
+- `/api/professors`
 - `/api/subjects`
+- `/api/internal`
 
 The complete endpoint, authentication, authorization, validation, and error reference is in [API_DOCUMENTATION.md](src/routes/API_DOCUMENTATION.md).
 
 ## Security Notes
 
-- Authenticated routes use the Supabase session stored in HTTP-only cookies.
-- Moderator routes verify the authenticated user's role.
+- Public catalog routes (`/api/universities`, `/api/faculties`, `/api/professors`, `/api/subjects`) are read-only.
+- User-specific write routes require a valid Supabase session cookie.
+- Catalog writes (universities, faculties, professors, subjects, and role changes) are only exposed on `/api/internal` and require the `x-internal-secret` header to match `INTERNAL_API_SECRET`.
+- Role updates are never exposed on the public profile routes.
+- Moderator access is only used for moderator-only reads and for own-flag mutation checks.
 - Route parameters are validated before database operations.
 - Uploads are restricted to PDF, DOC, and DOCX files.
 - R2 and Supabase credentials must be supplied through environment variables.
