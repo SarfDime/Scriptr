@@ -1,0 +1,7 @@
+/* *:not(:disabled) + [data-scheme="light"][data-tone="default"][data-border] {
+  --input-box-shadow: inset 0 0 0 1px #ced2d9;
+}
+
+[data-scheme="light"] [data-ui="Select"] select {
+  box-shadow: inset 0 0 0 1px #ced2d9;
+} */

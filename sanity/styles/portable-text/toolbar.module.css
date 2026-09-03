@@ -1,0 +1,16 @@
+[data-testid="action-button-clear-formatting"] {
+  svg {
+    color: var(--error-red);
+    outline: 1px solid var(--error-red);
+    outline-offset: -2px;
+    outline-style: outset;
+    border-radius: 0.1rem;
+  }
+}
+
+.color-toolbar-icon {
+  outline: 2px solid var(--card-fg-color);
+  outline-offset: -2px;
+  outline-style: outset;
+  border-radius: 50%;
+}

@@ -1,0 +1,129 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  font-size: 20px;
+}
+
+[data-ui="Spinner"] {
+  width: 1.3rem;
+  height: 1.3rem;
+
+  [data-sanity-icon="spinner"] {
+    width: 1.3rem;
+    height: 1.3rem;
+    margin: 0;
+  }
+}
+
+[data-as="form"] > [data-ui="Stack"] {
+  grid-gap: 1.4rem;
+}
+
+[data-ui="Stack"] [data-as="div"] + [data-ui="Text"] span {
+  font-size: 0.8rem;
+  line-height: calc(19 / 13);
+}
+
+.compact-mode {
+  &:root {
+    font-size: 18px;
+  }
+
+  [data-testid="structure-tool-list-pane"] li *,
+  [data-testid="document-list-pane"] * {
+    font-size: 0.85rem;
+
+    svg {
+      height: 1.35rem;
+      width: 1.35rem;
+    }
+  }
+
+  [data-testid="structure-tool-list-pane"],
+  [data-ui="DocumentListPane"] {
+    flex: unset;
+    min-width: 0rem;
+    width: 10rem;
+  }
+
+  [data-ui="DocumentListPane"] {
+    width: 12rem;
+  }
+
+  [data-testid="default-preview"] * {
+    padding: 0;
+    margin: 0;
+    gap: 0.35rem;
+    transform: unset;
+    ::before,
+    ::after {
+      display: none;
+    }
+  }
+
+  [data-testid="default-preview"] {
+    padding-block: 0.3rem;
+    padding-inline: 0rem 0.25rem;
+    height: unset;
+
+    [data-testid="default-preview__header"] {
+      display: block;
+    }
+
+    [data-testid="Media"] {
+      height: 2rem;
+      width: 1.75rem;
+    }
+  }
+
+  [data-testid="structure-tool-list-pane"] {
+    [data-sanity-icon="chevron-right"] {
+      display: none;
+    }
+
+    li:has(hr) {
+      padding: 0.35rem 0.05rem;
+    }
+
+    li:has(hr) * {
+      padding: 0;
+      margin: 0;
+      font-size: 0.75rem;
+    }
+  }
+
+  [data-testid="pane-header"]:not(
+      :is([data-testid="change-connector-root"] [data-testid="pane-header"])
+    ) {
+    padding: 0.75rem 0.5rem;
+
+    * {
+      padding: 0;
+      margin: 0;
+      font-size: 0.75rem;
+    }
+  }
+
+  [data-testid="compact-preview"] {
+    padding: 0.1rem;
+    div {
+      gap: 0.05rem;
+    }
+  }
+
+  [data-testid="compact-preview__status"] {
+    padding: 0rem;
+  }
+
+  [data-ui="Box"]:has(div[offset="0"]) {
+    padding: 0.25rem;
+  }
+
+  [data-ui="Layer"]:empty {
+    pointer-events: none;
+  }
+}

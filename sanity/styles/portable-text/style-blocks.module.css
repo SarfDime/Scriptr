@@ -1,0 +1,25 @@
+span:has(> .style-selector) {
+  padding: 0.25rem;
+}
+
+/* .style-selector:has([data-slate-length="0"]) {
+  &::after {
+    display: none;
+  }
+}  */
+
+button:has(> span > .style-divider) {
+  pointer-events: none;
+  height: 0;
+  margin: 0;
+  border-bottom: 1px solid var(--cerulean-blue);
+
+  * {
+    display: none;
+  }
+}
+
+[data-testid="block-style-select"] {
+  max-width: unset;
+  width: min-content;
+}

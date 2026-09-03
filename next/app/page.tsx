@@ -11,15 +11,11 @@ import type { PortableTextType } from '../types/components/PortableText.types'
 
 const portableExample = [
   {
-    // biome-ignore lint/style/useNamingConvention: Sanity field name
     _key: 'intro',
-    // biome-ignore lint/style/useNamingConvention: Sanity field name
     _type: 'block',
     children: [
       {
-        // biome-ignore lint/style/useNamingConvention: Sanity field name
         _key: 'intro-span',
-        // biome-ignore lint/style/useNamingConvention: Sanity field name
         _type: 'span',
         marks: [],
         text: 'Portable Text gets the same rhythm, links, lists, and readable color tokens as the rest of the app.',
@@ -29,15 +25,11 @@ const portableExample = [
     style: 'normal',
   },
   {
-    // biome-ignore lint/style/useNamingConvention: Sanity field name
     _key: 'list',
-    // biome-ignore lint/style/useNamingConvention: Sanity field name
     _type: 'block',
     children: [
       {
-        // biome-ignore lint/style/useNamingConvention: Sanity field name
         _key: 'list-span',
-        // biome-ignore lint/style/useNamingConvention: Sanity field name
         _type: 'span',
         marks: [],
         text: 'Sanity content can arrive here without page-specific styling.',

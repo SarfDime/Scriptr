@@ -1,0 +1,17 @@
+/* Specific styles for homepageDisclaimer */
+[data-testid="field-homepageDisclaimer"] {
+  [data-ui="Card"] {
+    display: none;
+    margin: 0;
+  }
+
+  [for="homepageDisclaimer"] {
+    border: 1px solid #d8931b8b;
+    border-radius: 6px;
+    color: #ffa200;
+    width: 100%;
+    text-align: center;
+    padding-block: 1rem 0.4rem;
+    margin-block: -2rem;
+  }
+}

@@ -1,0 +1,16 @@
+[data-child-name="horizontalRule"] {
+  * {
+    max-width: unset;
+    background: none;
+    box-shadow: none;
+  }
+}
+
+.portable-hr::before {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: var(--card-border-color);
+  border-radius: 1px;
+}

@@ -46,9 +46,16 @@ Keep secrets out of source control. The `next/` template uses its own environmen
 npm run dev          # Start the API and frontend development processes
 npm run dev:hono     # Start the Hono API
 npm run dev:next     # Start the Next.js template
+npm run dev:sanity   # Start Sanity Studio
+npm run build:sanity # Build Sanity Studio
+npm run gen:api-types # Generate Supabase API types
 npm run check-types  # Type-check both workspaces
+npm run check-types:sanity # Type-check Sanity only
 npm run lint         # Run Biome checks
 npm run format       # Format the repository with Biome
+npm run sanity:typegen # Extract the Sanity schema and generate types
+npm run sanity:schema  # Extract schema.json only
+npm run sanity:types   # Generate TypeScript types only
 ```
 
 ## API

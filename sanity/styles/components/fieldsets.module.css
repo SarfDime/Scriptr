@@ -1,0 +1,49 @@
+/* General fieldset styles */
+
+[data-as="fieldset"] > [data-ui="Box"] > [data-ui="Grid"] > [data-ui="Stack"] {
+  grid-gap: 1.4rem;
+}
+
+fieldset:has(.custom-fieldset) {
+  background-color: #6363630c;
+  border-radius: 6px;
+  padding: 0 1rem 1rem 1rem;
+  border: 2px solid #4287cc59;
+  /* box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.199) !important; */
+
+  /* Hides fieldset title */
+  [data-ui="fieldHeaderContentBox"]:nth-last-child(1) {
+    display: none;
+  }
+
+  /* Adjust width properties for field header content */
+  [data-ui="fieldHeaderContentBox"] {
+    max-width: unset;
+    min-width: 100%;
+  }
+
+  /* Changes options button styling */
+  [data-ui="MenuButton"] {
+    border: 2px solid #85898d3d;
+  }
+
+  /* Remove bottom padding on header to prevent overflow */
+  [data-ui="fieldHeaderContentBox"] {
+    padding-bottom: 0;
+  }
+
+  /* Decrease row gap to prevent overflow */
+  [data-ui="Grid"]:has([data-ui="Stack"]) {
+    row-gap: 0.5rem;
+  }
+
+  /* Remove padding and border for specific child elements */
+  > [data-ui="Box"] {
+    padding: 0;
+    border: 0;
+  }
+}
+
+fieldset:has(.custom-fieldset) div[data-ui="Stack"]:has(> .custom-fieldset) {
+  display: none;
+}

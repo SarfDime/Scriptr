@@ -1,0 +1,172 @@
+/* Alignment decorators
+  * Portable text places alignment decorators nested in spans instead of one big decorator
+  * This will place all aligned text in one line and align it properly.
+*/
+[data-text=""] {
+  &:has(.align-decorator .left) > span {
+    display: flex;
+    justify-content: flex-start;
+  }
+  &:has(.align-decorator .center) > span {
+    display: flex;
+    justify-content: center;
+  }
+  &:has(.align-decorator .right) > span {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  &:not(:has(.pt-inline-object)) {
+    /* &[data-highlights] {
+      &::after {
+        content: attr(data-highlights);
+        display: inline-flex;
+        align-items: center;
+        max-height: 0.5rem;
+        justify-content: center;
+        padding: 0.2rem;
+        border-radius: 1rem;
+        background-color: rgba(148, 163, 184, 0.12);
+        border: 1px solid var(--card-border-color);
+        border-color: color-mix(in srgb, var(--warn-orange) 35%, transparent);
+        color: var(--warn-orange);
+        font-size: 0.65rem;
+        margin-left: 0.1rem;
+        line-height: 1;
+        text-transform: uppercase;
+        pointer-events: none;
+      }
+    } */
+
+    &[data-empty]:first-child {
+      &::after {
+        position: absolute;
+        inset: 0;
+        content: "";
+
+        background-color: color-mix(
+          in srgb,
+          var(--lavender-purple) 45%,
+          transparent
+        );
+        opacity: 0.3;
+        pointer-events: none;
+      }
+    }
+  }
+}
+/* 
+.weight-decorator,
+.color-decorator {
+  &::after {
+    content: attr(data-decorator-label);
+    display: inline-flex;
+    align-items: center;
+    max-height: 0.5rem;
+    justify-content: center;
+    padding: 0.2rem;
+    border-radius: 1rem;
+    background-color: rgba(148, 163, 184, 0.12);
+    border: 1px solid var(--card-border-color);
+    color: inherit;
+    font-size: 0.65rem;
+    margin-left: 0.1rem;
+    line-height: 1;
+    text-transform: uppercase;
+    pointer-events: none;
+  }
+}
+
+.weight-decorator::after {
+  background-color: color-mix(
+    in srgb,
+    var(--warn-light-orange) 18%,
+    transparent
+  );
+  border-color: color-mix(in srgb, var(--warn-orange) 35%, transparent);
+  color: var(--warn-orange);
+}
+
+.align-decorator {
+  &[data-decorator-value*="center"]::before {
+    justify-content: flex-start;
+    text-align: left;
+    padding-left: 2%;
+  }
+  &::before {
+    content: attr(data-decorator-alignment);
+    display: grid;
+    position: absolute;
+    place-content: center;
+    width: 100%;
+    height: 100%;
+    border: 1px solid color-mix(in srgb, var(--jade-green) 35%, transparent);
+    pointer-events: none;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--card-fg-color) 25%, transparent);
+    font-weight: 700;
+    font-size: 90%;
+  }
+}
+ */
+
+/* .align-decorator:has([data-slate-length="0"]),
+.align-decorator:has([data-slate-string]:empty),
+.color-decorator:has([data-slate-length="0"]),
+.color-decorator:has([data-slate-string]:empty),
+.weight-decorator:has([data-slate-length="0"]),
+.weight-decorator:has([data-slate-string]:empty) {
+  &::before,
+  &::after {
+    display: none;
+  }
+} */
+
+.color-decorator {
+  /* &::after {
+    color: transparent;
+    border-radius: 50%;
+    padding-inline: 0.3rem;
+  } */
+
+  &.brand {
+    color: var(--cerulean-blue);
+
+    /* &::after {
+      background-color: var(--cerulean-blue);
+    } */
+  }
+
+  &.brand-light {
+    color: var(--light-cerulean-blue);
+
+    /* &::after {
+      background-color: var(--light-cerulean-blue);
+    } */
+  }
+
+  &.muted {
+    color: var(--text-muted);
+
+    /* &::after {
+      background-color: var(--text-muted);
+    } */
+  }
+
+  &.white {
+    color: var(--card-fg-color);
+
+    /* &::after {
+      background-color: var(--text-light);
+    } */
+  }
+
+  &.dark {
+    color: var(--text-dark);
+
+    /* &::after {
+      background-color: var(--text-dark);
+      border-color: var(--text-light);
+    } */
+  }
+}

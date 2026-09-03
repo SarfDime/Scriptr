@@ -1,0 +1,51 @@
+.custom-array-button {
+  cursor: pointer;
+  span {
+    font-size: 13px;
+    padding: 0.5rem;
+  }
+}
+
+.custom-button {
+  background-color: transparent;
+  box-shadow: none;
+  cursor: pointer;
+
+  span {
+    color: #bbc0ca;
+  }
+
+  &[data-selected] {
+    background-color: #22344d;
+
+    span {
+      color: #acccfd;
+    }
+  }
+
+  &:hover {
+    background-color: #35383d;
+  }
+
+  &.compact-mode-toggle {
+    margin-right: 0.5rem;
+    span {
+      padding: 0.2rem;
+    }
+    .icon {
+      height: 1.65rem;
+      width: 1.65rem;
+    }
+    &[data-selected] {
+      background-color: #244d22;
+
+      span {
+        color: #bffdac;
+      }
+    }
+
+    &:hover {
+      background-color: #383d35;
+    }
+  }
+}

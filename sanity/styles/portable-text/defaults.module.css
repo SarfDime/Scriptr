@@ -1,0 +1,42 @@
+.pt-text-block {
+  max-width: unset;
+}
+
+.rich-text-lite {
+  height: 7rem;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+
+  span,
+  div {
+    max-height: 7rem;
+  }
+}
+
+[data-pt-editor="true"] {
+  > [data-pt-block] {
+    max-width: unset;
+  }
+}
+
+[data-text]:has(.align-decorator):has([data-child-name="buttonReference"]),
+[data-text]:has(.align-decorator):has([data-child-name="image"]) {
+  &:has(.align-decorator.left) {
+    text-align: left;
+  }
+  &:has(.align-decorator.center) {
+    text-align: center;
+  }
+  &:has(.align-decorator.right) {
+    text-align: right;
+  }
+}
+
+[data-text]:has(.portable-hr) {
+  span,
+  div {
+    width: 100%;
+    max-width: unset;
+  }
+}

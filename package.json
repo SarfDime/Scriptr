@@ -3,22 +3,32 @@
   "private": true,
   "workspaces": [
     "next",
-    "hono"
+    "hono",
+    "sanity"
   ],
   "scripts": {
     "dev": "npm run dev:next & npm run dev:hono",
     "dev:next": "npm run dev --workspace next",
     "dev:hono": "npm run dev --workspace hono",
-    "build": "npm run build --workspace next",
-    "start": "npm run start --workspace next",
-    "check-types": "npm run check-types --workspace hono && npm run check-types --workspace next",
+    "dev:sanity": "npm run dev --workspace sanity",
+    "build:next": "npm run build --workspace next",
+    "build:sanity": "npm run build --workspace sanity",
+    "start:next": "npm run start --workspace next",
+    "build": "npm run build:next",
+    "next": "npm run start:next",
+    "gen:api-types": "npm run gen:types --workspace hono",
+    "check-types:sanity": "npm run check-types --workspace sanity",
+    "sanity:schema": "npm run schema:extract --workspace sanity",
+    "sanity:types": "npm run types:generate --workspace sanity",
+    "sanity:typegen": "npm run typegen --workspace sanity",
+    "check-types": "npm run check-types --workspace hono && npm run check-types --workspace next && npm run check-types --workspace sanity",
     "format": "biome check --write --unsafe .",
     "lint": "biome check .",
-    "clean": "rm -rf next/node_modules hono/node_modules node_modules next/.next next/.sanity"
+    "clean": "rm -rf next/node_modules hono/node_modules sanity/node_modules node_modules next/.next sanity/.sanity sanity/tsconfig.tsbuildinfo next/tsconfig.tsbuildinfo hono/tsconfig.tsbuildinfo tsconfig.tsbuildinfo"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.11",
-    "@types/node": "^26.4.0",
+    "@biomejs/biome": "2.5.12",
+    "@types/node": "^26.4.1",
     "typescript": "^7.0.2"
   },
   "allowScripts": {
