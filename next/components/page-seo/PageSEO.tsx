@@ -45,14 +45,14 @@ export function PageSEO({
     openGraph: {
       type: `${openGraphType}` || 'website',
       url,
-      title: seoTitle ?? 'Tontine Trust',
+      title: seoTitle ?? 'Scriptr',
       description: seoDescription ?? '',
       images: [
         {
           url: seoImage ?? '',
           width: 1200,
           height: 630,
-          alt: seoImageAlt || 'Tontine Trust',
+          alt: seoImageAlt || 'Scriptr',
         },
       ],
       siteName: `${siteName}`,
@@ -68,7 +68,7 @@ export function PageSEO({
           url: seoImage || '',
           width: 1200,
           height: 630,
-          alt: seoImageAlt || 'Tontine Trust',
+          alt: seoImageAlt || 'Scriptr',
         },
       ],
     },

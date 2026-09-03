@@ -34,23 +34,124 @@
     --color-yellow: #dfb200;
     --color-jade: #22b573;
     --color-error-red: #e53e3e;
+    --color-rose-pink: #ff69b4;
+    --color-lavender: #b57edc;
 
     --color-brand-50: #f0f5fa;
-    --color-brand-100: #e3f1ff;
-    --color-brand-150: #dceeff;
-    --color-brand-200: #a9c8e5;
-    --color-brand-300: #7facd9;
-    --color-brand-350: #7ebaf7;
-    --color-brand-400: #5fa1d6;
-    --color-brand-450: #5491cc;
+    --color-brand-100: #dce8f2;
+    --color-brand-150: #c7d9e8;
+    --color-brand-200: #a0bdd3;
+    --color-brand-300: #6f9bb9;
+    --color-brand-350: #5b89aa;
+    --color-brand-400: #477897;
+    --color-brand-450: #336784;
 
-    --color-brand: #2975bf;
+    --color-brand: #003366;
 
-    --color-brand-550: #2273bd;
-    --color-brand-600: #215e99;
-    --color-brand-700: #194673;
-    --color-brand-750: #013e59;
-    --color-brand-800: #102f4c;
-    --color-brand-900: #081726;
+    --color-brand-550: #07305d;
+    --color-brand-600: #0b2b53;
+    --color-brand-700: #0a2445;
+    --color-brand-750: #081d38;
+    --color-brand-800: #06162b;
+    --color-brand-900: #030d1c;
   }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-background-100: #17211d;
+    --color-background-200: #141d19;
+    --color-background-300: #111a16;
+    --color-background-400: #0e1713;
+    --color-background: #0b120f;
+    --color-background-600: #52625a;
+    --color-background-700: #78887f;
+    --color-background-800: #a3afa8;
+    --color-background-900: #d2dbd5;
+    --color-background-1000: #f5faf7;
+    --color-fg-400: #9eaaa2;
+    --color-fg: #c1cbc5;
+    --color-fg-600: #d5ded9;
+    --color-fg-700: #edf4ef;
+    --color-grey-200: #202a25;
+    --color-grey-300: #344039;
+    --color-grey-550: #a5b0aa;
+    --color-grey-600: #b9c4bd;
+    --color-grey-700: #d1d9d4;
+    --color-grey-800: #e1e8e3;
+    --color-grey-900: #f1f6f2;
+    --color-brand-50: #0b1d31;
+    --color-brand-100: #102c46;
+    --color-brand-150: #163b5a;
+    --color-brand-200: #225475;
+    --color-brand-300: #376f94;
+    --color-brand-350: #4782a5;
+    --color-brand-400: #5793b5;
+    --color-brand-450: #67a3c2;
+    --color-brand: #3f8fba;
+    --color-brand-550: #519bc2;
+    --color-brand-600: #66a9ca;
+    --color-brand-700: #83bad6;
+    --color-brand-750: #96c5dd;
+    --color-brand-800: #a9d0e3;
+    --color-brand-900: #d8eaf3;
+  }
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-background-100: #ffffff;
+  --color-background-200: #fdfdfb;
+  --color-background-300: #fcfbfa;
+  --color-background-400: #fbfaf8;
+  --color-background: #faf9f6;
+  --color-background-600: #c8c7c5;
+  --color-background-700: #969594;
+  --color-background-800: #646462;
+  --color-background-900: #323231;
+  --color-background-1000: #000000;
+  --color-fg-400: #717477;
+  --color-fg: #4d5155;
+  --color-fg-600: #3e4144;
+  --color-fg-700: #2b2b27;
+  --color-grey-200: #f8f8f8;
+  --color-grey-300: #e6e6e6;
+  --color-grey-550: #6b7280;
+  --color-grey-600: #666666;
+  --color-brand-50: #effcfc;
+  --color-brand-100: #d7f4f4;
+  --color-brand-200: #92dadd;
+  --color-brand: #003366;
+  --color-brand-600: #096a75;
+  --color-brand-700: #07545e;
+  --color-brand-800: #04343c;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-background-100: #17211d;
+  --color-background-200: #141d19;
+  --color-background-300: #111a16;
+  --color-background-400: #0e1713;
+  --color-background: #0b120f;
+  --color-background-600: #52625a;
+  --color-background-700: #78887f;
+  --color-background-800: #a3afa8;
+  --color-background-900: #d2dbd5;
+  --color-background-1000: #f5faf7;
+  --color-fg-400: #9eaaa2;
+  --color-fg: #c1cbc5;
+  --color-fg-600: #d5ded9;
+  --color-fg-700: #edf4ef;
+  --color-grey-200: #202a25;
+  --color-grey-300: #344039;
+  --color-grey-550: #a5b0aa;
+  --color-grey-600: #b9c4bd;
+  --color-brand-50: #092b2f;
+  --color-brand-100: #0d3d42;
+  --color-brand-200: #1c6970;
+  --color-brand: #3f8fba;
+  --color-brand-600: #55cbd0;
+  --color-brand-700: #79d9dc;
+  --color-brand-800: #a4e7e8;
 }

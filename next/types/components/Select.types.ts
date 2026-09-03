@@ -3,7 +3,6 @@ import type { ButtonProps } from '../../components/common/Button'
 
 type SelectOptionType<T = string> = {
   disabled?: boolean
-  href?: string
   value: T
   label: React.ReactNode
 }

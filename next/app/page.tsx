@@ -1,65 +1,169 @@
-import Image from 'next/image'
+import { Box } from '../components/common/Box'
+import { Button } from '../components/common/Button'
+import { PortableTextContent } from '../components/typography/PortableTextContent'
+import { Text } from '../components/typography/Text'
+import { Title } from '../components/typography/Title'
+import { Badge } from '../components/ui/Badge'
+import { Card } from '../components/ui/Card'
+import { Divider } from '../components/ui/Divider'
+import { ThemeToggle } from '../components/ui/ThemeToggle'
+import type { PortableTextType } from '../types/components/PortableText.types'
+
+const portableExample = [
+  {
+    // biome-ignore lint/style/useNamingConvention: Sanity field name
+    _key: 'intro',
+    // biome-ignore lint/style/useNamingConvention: Sanity field name
+    _type: 'block',
+    children: [
+      {
+        // biome-ignore lint/style/useNamingConvention: Sanity field name
+        _key: 'intro-span',
+        // biome-ignore lint/style/useNamingConvention: Sanity field name
+        _type: 'span',
+        marks: [],
+        text: 'Portable Text gets the same rhythm, links, lists, and readable color tokens as the rest of the app.',
+      },
+    ],
+    markDefs: [],
+    style: 'normal',
+  },
+  {
+    // biome-ignore lint/style/useNamingConvention: Sanity field name
+    _key: 'list',
+    // biome-ignore lint/style/useNamingConvention: Sanity field name
+    _type: 'block',
+    children: [
+      {
+        // biome-ignore lint/style/useNamingConvention: Sanity field name
+        _key: 'list-span',
+        // biome-ignore lint/style/useNamingConvention: Sanity field name
+        _type: 'span',
+        marks: [],
+        text: 'Sanity content can arrive here without page-specific styling.',
+      },
+    ],
+    level: 1,
+    listItem: 'bullet',
+    markDefs: [],
+    style: 'normal',
+  },
+] as PortableTextType
 
 export default function Home() {
   return (
-    <div className='flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black'>
-      <main className='flex min-h-screen w-full max-w-3xl flex-col items-center justify-between bg-white px-16 py-32 sm:items-start dark:bg-black'>
-        <Image
-          className='dark:invert'
-          src='/next.svg'
-          alt='Next.js logo'
-          width={100}
-          height={20}
-          priority
-        />
-        <div className='flex flex-col items-center gap-6 text-center sm:items-start sm:text-left'>
-          <h1 className='max-w-xs font-semibold text-3xl text-black leading-10 tracking-tight dark:text-zinc-50'>
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className='max-w-md text-lg text-zinc-600 leading-8 dark:text-zinc-400'>
-            Looking for a starting point or more instructions? Head over to{' '}
-            <a
-              href='https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app'
-              className='font-medium text-zinc-950 dark:text-zinc-50'
-            >
-              Templates
-            </a>{' '}
-            or the{' '}
-            <a
-              href='https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app'
-              className='font-medium text-zinc-950 dark:text-zinc-50'
-            >
-              Learning
-            </a>{' '}
-            center.
-          </p>
-        </div>
-        <div className='flex flex-col gap-4 font-medium text-base sm:flex-row'>
-          <a
-            className='flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] md:w-39.5 dark:hover:bg-[#ccc]'
-            href='https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app'
-            target='_blank'
-            rel='noopener noreferrer'
-          >
-            <Image
-              className='dark:invert'
-              src='/vercel.svg'
-              alt='Vercel logomark'
-              width={16}
-              height={16}
+    <Box as='main' className='ui-section min-h-screen'>
+      <Box className='ui-container ui-stack gap-12'>
+        <Box className='ui-cluster justify-between'>
+          <Box className='ui-stack gap-3'>
+            <Badge colorPalette='brand'>UI foundations</Badge>
+            <Title
+              as='h1'
+              title='Components that stay out of the way.'
+              className='font-semibold text-4xl text-fg-700 tracking-tight md:text-6xl'
             />
-            Deploy Now
-          </a>
-          <a
-            className='flex h-12 w-full items-center justify-center rounded-full border border-black/8 border-solid px-5 transition-colors hover:border-transparent hover:bg-black/4 md:w-39.5 dark:border-white/[.145] dark:hover:bg-[#1a1a1a]'
-            href='https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app'
-            target='_blank'
-            rel='noopener noreferrer'
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+            <Text className='max-w-2xl text-fg text-lg leading-8'>
+              A small, composable surface for Scriptr pages, with sensible
+              defaults and theme-aware content from Sanity.
+            </Text>
+          </Box>
+          <ThemeToggle />
+        </Box>
+
+        <Divider />
+
+        <Box as='section' className='ui-stack' aria-labelledby='surfaces-title'>
+          <Box className='ui-stack gap-2'>
+            <Badge colorPalette='gray' variant='outline'>
+              Surfaces
+            </Badge>
+            <Title
+              className='text-fg-700 text-2xl font-semibold'
+              as='h2'
+              title='Cards compose from familiar parts.'
+              id='surfaces-title'
+            />
+          </Box>
+          <Box className='grid gap-6 md:grid-cols-3'>
+            <Card>
+              <Card.Header>
+                <Badge colorPalette='brand'>Default</Badge>
+              </Card.Header>
+              <Card.Body>
+                <Text>Neutral surfaces are the everyday starting point.</Text>
+              </Card.Body>
+              <Card.Footer>Card.Footer</Card.Footer>
+            </Card>
+            <Card className='ui-palette-success'>
+              <Card.Header>
+                <Badge colorPalette='green'>Success</Badge>
+              </Card.Header>
+              <Card.Body>
+                <Text>
+                  Palette classes change the surface, border, and text.
+                </Text>
+              </Card.Body>
+              <Card.Footer>ui-palette-success</Card.Footer>
+            </Card>
+            <Card className='ui-palette-warning'>
+              <Card.Header>
+                <Badge colorPalette='yellow'>Attention</Badge>
+              </Card.Header>
+              <Card.Body>
+                <Text>
+                  Children inherit the same radius language as the card.
+                </Text>
+              </Card.Body>
+              <Card.Footer>ui-palette-warning</Card.Footer>
+            </Card>
+          </Box>
+        </Box>
+
+        <Card className='ui-stack' aria-labelledby='content-title'>
+          <Box className='ui-cluster justify-between'>
+            <Box className='ui-stack gap-2'>
+              <Badge colorPalette='brand' variant='outline'>
+                Content
+              </Badge>
+              <Title
+                className='text-fg-700 text-2xl font-semibold'
+                as='h2'
+                title='Portable Text, already styled.'
+                id='content-title'
+              />
+            </Box>
+            <Button className='solid' type='button'>
+              Continue
+            </Button>
+          </Box>
+          <Divider />
+          <PortableTextContent
+            portableText={portableExample}
+            renderWrapper
+            className='ui-prose'
+          />
+        </Card>
+
+        <Card className='ui-palette-brand' aria-labelledby='actions-title'>
+          <Card.Header>
+            <Title
+              className='text-fg-700 text-2xl font-semibold'
+              as='h2'
+              title='Use the defaults, then tune locally.'
+              id='actions-title'
+            />
+          </Card.Header>
+          <Card.Body className='ui-stack gap-4'>
+            <Text>
+              Add a component class first. Add Tailwind utilities only for
+              layout decisions that are specific to this page.
+            </Text>
+            <code className='rounded-lg bg-background-100/70 px-3 py-2 text-fg-700 text-sm'>
+              {'<Card className="ui-palette-brand">'}
+            </code>
+          </Card.Body>
+        </Card>
+      </Box>
+    </Box>
   )
 }

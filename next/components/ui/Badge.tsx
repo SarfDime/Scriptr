@@ -25,7 +25,7 @@ export const Badge = ({
       as='span'
       {...rest}
       className={cn(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 font-medium text-xs',
+        'ui-badge inline-flex items-center px-2.5 py-0.5 font-medium text-xs',
         colorStyle,
         className
       )}

@@ -1,7 +1,7 @@
 import { cn } from '../../../lib/common-utils'
 import { Text } from '../../typography/Text'
 import { Badge } from '../Badge'
-import type { FieldProps } from '../Field'
+import type { FieldProps } from './Field'
 
 /** FieldContent is a component that renders a field with the given props.
  *

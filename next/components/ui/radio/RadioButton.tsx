@@ -10,7 +10,6 @@ import { Text } from '../../typography/Text'
  */
 export const Radio = ({
   disabled,
-  id,
   label,
   description,
   onChange,

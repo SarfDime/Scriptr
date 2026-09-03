@@ -1,4 +1,4 @@
-import { TOAST_ICONS } from '@/lib/constants'
+import { TOAST_ICONS } from '@shared/config/next-constants'
 import type { ToastType } from '../../../types/components/Toast.types'
 
 /** A component that renders an icon for a toast notification based on its type. */

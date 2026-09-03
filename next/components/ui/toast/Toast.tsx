@@ -1,6 +1,6 @@
 'use client'
 
-import { TOAST_VARIANTS } from '@/lib/constants'
+import { TOAST_VARIANTS } from '@shared/config/next-constants'
 import { useToastAnimation } from '../../../hooks/useToastAnimation'
 import { cn } from '../../../lib/common-utils'
 import type { ToastComponentProps } from '../../../types/components/Toast.types'

@@ -16,8 +16,26 @@
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "paths": {
+      "@/*": ["./next/*"],
+      "@shared/*": ["./shared/*"]
+    }
   },
   "include": [],
-  "exclude": ["node_modules/**"]
+  "exclude": ["node_modules/**"],
+  "references": [
+    {
+      "path": "./next"
+    },
+    {
+      "path": "./hono"
+    },
+    // { // TODO: Uncomment when sanity is ready to be used in the monorepo
+    //   "path": "./sanity"
+    // },
+    {
+      "path": "./shared"
+    }
+  ]
 }

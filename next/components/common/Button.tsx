@@ -5,7 +5,6 @@ import type { AdditionalComponentAttributes } from '../../types/component.types'
 import { LoadingSpinner } from '../ui/LoadingSpinner'
 
 export type ButtonProps = {
-  label?: string
   type?: ButtonType
   isLoading?: boolean
   isActive?: boolean
@@ -18,7 +17,6 @@ export type ButtonProps = {
  * The component also accepts additional props that are passed to the underlying button element.
  */
 export const Button = ({
-  label,
   children,
   className,
   disabled,
@@ -35,14 +33,14 @@ export const Button = ({
       {...getAttribute(Boolean(isActive), 'data-active', isActive)}
       disabled={disabled ?? isLoading}
       className={cn(
-        'relative overflow-hidden',
+        'ui-button relative overflow-hidden',
         className,
         isLoading && 'pointer-events-none',
         disabled && 'select-none'
       )}
     >
       {isLoading && <LoadingSpinner />}
-      {label || children}
+      {children}
       {icon && icon}
     </button>
   )

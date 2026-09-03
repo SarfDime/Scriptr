@@ -21,7 +21,7 @@
     }
 
     &.golden {
-      @apply w-38 bg-golden-yellow text-brand-750 md:hover:bg-brand-50 mt-2.5 text-base;
+      @apply bg-golden-yellow text-brand-700 md:hover:bg-yellow md:hover:shadow-brand-transparent text-base font-semibold shadow-sm;
     }
 
     &.success {
@@ -35,7 +35,8 @@
 
   button,
   .button {
-    @apply flex items-center justify-center rounded-full px-6 py-3 transition-all;
+    @apply flex items-center justify-center px-6 py-3 transition-all;
+    border-radius: var(--ui-radius, 0.75rem);
   }
 
   button:not(:disabled) {

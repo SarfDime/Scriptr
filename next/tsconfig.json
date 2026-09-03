@@ -5,7 +5,6 @@
     "allowJs": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
     "plugins": [
@@ -15,15 +14,18 @@
     ],
     "paths": {
       "@/*": ["./*"],
-      "@/layouts/*": ["./layouts/*"],
-      "@/components/*": ["./components/*"],
-      "@/styles/*": ["./styles/*"],
-      "@/types/*": ["./types/*"],
-      "@/hooks/*": ["./hooks/*"],
-      "@/lib/*": ["./lib/*"]
+      "@shared/*": ["../shared/*"]
+      // TODO: See if need to keep, imports may work without these paths, but may be useful for IDEs
+      // "@/layouts/*": ["./layouts/*"],
+      // "@/components/*": ["./components/*"],
+      // "@/styles/*": ["./styles/*"],
+      // "@/types/*": ["./types/*"],
+      // "@/hooks/*": ["./hooks/*"],
+      // "@/lib/*": ["./lib/*"]
     }
   },
   "include": [
+    "../shared/**/*.ts",
     "types/env.d.ts",
     "next-env.d.ts",
     "**/*.ts",

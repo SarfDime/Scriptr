@@ -1,12 +1,15 @@
 'use client'
 
 import type { SanityImageSource } from '@sanity/image-url'
+import { IMAGE_QUALITY } from '@shared/config/next-constants'
 import Image, { type ImageProps } from 'next/image'
 import { useState } from 'react'
-import { IMAGE_QUALITY } from '@/lib/constants'
 import type { SkeletonBoxProps } from '@/types/components/Skeleton.types'
 import { cn, urlFor } from '../../lib/common-utils'
-import type { ImageObjectFitType } from '../../types/common.types'
+import type {
+  ImageObjectFitType,
+  ImageObjectPositionType,
+} from '../../types/common.types'
 import { Skeleton } from '../ui/skeleton/Skeleton'
 
 export type SanityImageProps = {
@@ -28,8 +31,8 @@ export type SanityImageProps = {
   }
   fillProp?: boolean
   priority?: boolean
-  objectFitProp?: ImageObjectFitType | undefined
-  objectPositionProp?: string
+  objectFitProp?: ImageObjectFitType
+  objectPositionProp?: ImageObjectPositionType
   skeletonProps?: SkeletonBoxProps
   cornerRadius?: number
   rounded?: number

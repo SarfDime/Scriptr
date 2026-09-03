@@ -13,7 +13,6 @@ type OptionType = {
 
 type RadioGroupProps = {
   disabled?: boolean
-  name: string
   value?: Array<OptionType> | string
   onChange?: (value?: string) => void
   options: ReadonlyArray<OptionType>

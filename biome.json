@@ -74,6 +74,12 @@
         "noChildrenProp": "error",
         "noReactPropAssignments": "error",
         "noUndeclaredVariables": "error",
+        "noUnusedFunctionParameters": {
+          "level": "error",
+          "options": {
+            "ignoreRestSiblings": false
+          }
+        },
         "noUnusedImports": "error",
         "noUnusedVariables": "error",
         "useExhaustiveDependencies": "warn",

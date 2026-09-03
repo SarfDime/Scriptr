@@ -1,6 +1,6 @@
 'use client'
 
-import { TOAST_TIMEOUT } from '@/lib/constants'
+import { TOAST_TIMEOUT } from '@shared/config/next-constants'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 import { Z_INDEX } from '@/styles/style'
 import { cn } from '../../../lib/common-utils'

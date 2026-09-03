@@ -9,7 +9,6 @@ import { Radio } from './RadioButton'
  */
 export const RadioGroup = ({
   disabled,
-  name,
   onChange,
   options,
   className,

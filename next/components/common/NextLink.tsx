@@ -1,15 +1,14 @@
+import LaunchIcon from '@sanity/icons/Launch'
 import Link, { type LinkProps } from 'next/link'
-import type { HTMLAttributes } from 'react'
+import type { HTMLAttributes, ReactNode } from 'react'
 import type { IconProps } from '@/types/component.types'
 import { cn, externalLink } from '../../lib/common-utils'
 
 export type NextLinkProps = {
-  children: React.ReactNode
+  children: ReactNode
   href: string
-  className?: string
-  hideExternalIcon?: boolean
   externalIconProps?: IconProps
-  skipLocalization?: boolean
+  hideExternalIcon?: boolean
 } & LinkProps &
   HTMLAttributes<HTMLAnchorElement>
 
@@ -17,10 +16,9 @@ export type NextLinkProps = {
 export function NextLink({
   href,
   children,
-  onClick,
-  hideExternalIcon,
+  className,
   externalIconProps,
-  skipLocalization,
+  hideExternalIcon,
   ...rest
 }: NextLinkProps) {
   const { attributes, isExternal } = externalLink(href)
@@ -32,10 +30,11 @@ export function NextLink({
       {...rest}
       className={cn(
         isExternal && 'inline-flex items-center justify-center gap-1',
-        rest?.className
+        className
       )}
     >
       {children}
+      {isExternal && !hideExternalIcon && <LaunchIcon {...externalIconProps} />}
     </Link>
   )
 }

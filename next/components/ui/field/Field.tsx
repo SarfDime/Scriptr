@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react'
 
-import { cn, getAttribute } from '../../lib/common-utils'
-import { Box, type BoxProps } from '../common/Box'
-import type { TextProps } from '../typography/Text'
-import type { BadgeProps } from './Badge'
-import { FieldContent } from './field/FieldContent'
-import { Skeleton } from './skeleton/Skeleton'
+import { cn, getAttribute } from '../../../lib/common-utils'
+import { Box, type BoxProps } from '../../common/Box'
+import type { TextProps } from '../../typography/Text'
+import type { BadgeProps } from '../Badge'
+import { Skeleton } from '../skeleton/Skeleton'
+import { FieldContent } from './FieldContent'
 
 export type FieldProps = {
   label?: ReactNode

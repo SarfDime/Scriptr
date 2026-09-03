@@ -13,7 +13,7 @@ export function Divider({
   className,
   ...rest
 }: DividerProps) {
-  const baseStyles = 'border-gray-300 border-0'
+  const baseStyles = 'ui-divider border-0'
   const variantStyles = variant === 'dashed' ? 'border-dashed' : 'border-solid'
   const orientationStyles =
     orientation === 'horizontal' ? 'border-t w-full' : 'border-l h-full'

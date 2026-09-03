@@ -1,7 +1,7 @@
 'use client'
 
+import { TOAST_TIMEOUT } from '@shared/config/next-constants'
 import { createContext, useContext, useState } from 'react'
-import { TOAST_TIMEOUT } from '@/lib/constants'
 
 type ToastType = 'success' | 'error' | 'warning' | 'info'
 

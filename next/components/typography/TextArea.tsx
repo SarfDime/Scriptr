@@ -1,8 +1,8 @@
 import type { ChangeEvent } from 'react'
 import type { AdditionalComponentAttributes } from '@/types/component.types'
 import { cn } from '../../lib/common-utils'
-import type { FieldProps } from '../ui/Field'
-import { Field } from '../ui/Field'
+import type { FieldProps } from '../ui/field/Field'
+import { Field } from '../ui/field/Field'
 
 type TextareaWrapperProps = {
   fieldProps?: FieldProps

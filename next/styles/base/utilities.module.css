@@ -1,19 +1,6 @@
 html {
   @apply scroll-smooth;
 }
-
-body[data-cy="cypress"] * {
-  all: revert !important;
-}
-
-.video-play-button {
-  @apply absolute left-[50%] top-[50%] h-20 w-20 -translate-x-1/2 -translate-y-1/2 transform cursor-pointer rounded-full bg-no-repeat shadow-md;
-  background: url("https://cdn.sanity.io/images/hl9czw39/production/d5a5334866bd6d5a0012fb048bdb601f9370d94e-320x320.png")
-    no-repeat center;
-  background-color: var(--color-grey-100);
-  background-size: contain;
-}
-
 @utility vertical-text {
   writing-mode: vertical-lr;
   text-orientation: mixed;

@@ -1,4 +1,4 @@
-import { IMAGE_QUALITY } from '@/lib/constants'
+import { IMAGE_QUALITY } from '@shared/config/next-constants'
 import { IMAGE_SIZES } from '@/styles/style'
 import type { SanityImageType } from '@/types/common.types'
 import type { PortableTextType } from '@/types/components/PortableText.types'

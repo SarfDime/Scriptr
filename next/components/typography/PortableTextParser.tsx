@@ -7,7 +7,6 @@ import { IMAGE_SIZES } from '@/styles/style'
 import { cn } from '../../lib/common-utils'
 import type { SanityImageSrcType } from '../../types/common.types'
 import type { ComponentParserType } from '../../types/components/PortableText.types'
-import { Box } from '../common/Box'
 import { NextLink } from '../common/NextLink'
 import { SanityImage } from '../common/SanityImage'
 import { Divider } from '../ui/Divider'
@@ -35,7 +34,7 @@ export const portableTextParser = ({
             skeletonProps={{
               style: { aspectRatio: value?.asset?.aspectRatio },
             }}
-            sizes={IMAGE_SIZES.FEATURED_SECTION_IMAGE_OPTIMIZATION}
+            sizes={IMAGE_SIZES.BLOG_POST_IMAGE_OPTIMIZATION}
           />
         )
       },
@@ -52,19 +51,6 @@ export const portableTextParser = ({
           >
             {children}
           </NextLink>
-        )
-      },
-      colorPicker: ({ children, value }: PortableTextMarkComponentProps) => (
-        <span style={{ color: value?.color || 'inherit' }}>{children}</span>
-      ),
-      investmentStrategies: ({
-        value,
-        children,
-      }: PortableTextMarkComponentProps) => {
-        return (
-          <Box as='span' className={cn('inv-strat', value?.color)}>
-            {children}
-          </Box>
         )
       },
     },

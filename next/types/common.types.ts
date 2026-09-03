@@ -1,4 +1,4 @@
-import type { BREAKPOINTS } from '@/lib/constants'
+import type { BREAKPOINTS } from '@shared/config/next-constants'
 
 type PageDomainType = {
   pageDomain: string
@@ -35,7 +35,15 @@ type SanityImageSrcType = {
 
 type ImageObjectFitType = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down'
 
-type ButtonType = 'button' | 'submit' | 'reset' | undefined
+type ImageObjectPositionType =
+  | 'top'
+  | 'bottom'
+  | 'left'
+  | 'right'
+  | 'center'
+  | '[${number}%,${number}%]'
+
+type ButtonType = 'button' | 'submit' | 'reset'
 
 type BreakpointsType = (typeof BREAKPOINTS)[number]
 
@@ -43,6 +51,7 @@ export type {
   BreakpointsType,
   ButtonType,
   ImageObjectFitType,
+  ImageObjectPositionType,
   PageDomainType,
   SanityImageSrcType,
   SanityImageType,

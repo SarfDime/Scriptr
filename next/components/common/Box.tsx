@@ -20,7 +20,7 @@ export const Box = ({
 
   return (
     <BoxTag
-      className={cn('box', className, disabled && 'disabled')}
+      className={cn('ui-box', className, disabled && 'disabled')}
       {...rest}
       {...getAttribute(Boolean(disabled), 'tabIndex', disabled ? -1 : 0)}
       aria-disabled={disabled}

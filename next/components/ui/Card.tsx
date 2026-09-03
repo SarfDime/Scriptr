@@ -1,4 +1,5 @@
 import type { PortableTextType } from '@/types/components/PortableText.types'
+import { cn } from '../../lib/common-utils'
 import type { BoxProps } from '../common/Box'
 import { Box } from '../common/Box'
 import { NextLink, type NextLinkProps } from '../common/NextLink'
@@ -10,7 +11,11 @@ type CardHeaderProps = {
   titleProps?: TitleProps
 } & BoxProps
 
-const CardRoot = (props: BoxProps) => <Box {...props}>{props.children}</Box>
+const CardRoot = ({ className, children, ...rest }: BoxProps) => (
+  <Box className={cn('ui-card', className)} {...rest}>
+    {children}
+  </Box>
+)
 
 /**
  * A CardRoot that can also be a link. If the href is '#', it will render a
@@ -27,9 +32,10 @@ const CardHeader = ({
   title,
   titleProps,
   children,
+  className,
   ...rest
 }: CardHeaderProps) => (
-  <Box {...rest}>
+  <Box className={cn('ui-card-header', className)} {...rest}>
     {children || (
       <Title as='h3' {...titleProps}>
         {title}
@@ -38,9 +44,17 @@ const CardHeader = ({
   </Box>
 )
 
-const CardBody = (props: BoxProps) => <Box {...props}>{props.children}</Box>
+const CardBody = ({ className, children, ...rest }: BoxProps) => (
+  <Box className={cn('ui-card-body', className)} {...rest}>
+    {children}
+  </Box>
+)
 
-const CardFooter = (props: BoxProps) => <Box {...props}>{props.children}</Box>
+const CardFooter = ({ className, children, ...rest }: BoxProps) => (
+  <Box className={cn('ui-card-footer', className)} {...rest}>
+    {children}
+  </Box>
+)
 
 export const Card = Object.assign(CardRoot, {
   Header: CardHeader,

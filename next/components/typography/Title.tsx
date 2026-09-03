@@ -12,9 +12,7 @@ export type TitleProps = {
   title?: ReactNode
 } & Omit<AdditionalComponentAttributes, 'children' | 'title'>
 
-/**
- * Renders a title as a heading element, supporting both static and localized content.
- */
+/** Renders a title as a heading element, */
 export function Title({ children, title, as = 'h4', ...rest }: TitleProps) {
   const HeadingTag = as
   if (title) {

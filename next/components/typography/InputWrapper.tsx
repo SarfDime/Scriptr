@@ -1,15 +1,15 @@
 import { CloseIcon } from '@sanity/icons/Close'
+import { INPUT_MAX_LENGTH } from '@shared/config/next-constants'
 import type {
   ChangeEventHandler,
   DetailedHTMLProps,
   InputHTMLAttributes,
 } from 'react'
-import { INPUT_MAX_LENGTH } from '@/lib/constants'
 import { cn } from '../../lib/common-utils'
 import { Box } from '../common/Box'
 import { Button } from '../common/Button'
-import type { FieldProps } from '../ui/Field'
-import { Field } from '../ui/Field'
+import type { FieldProps } from '../ui/field/Field'
+import { Field } from '../ui/field/Field'
 
 export type InputWrapperProps = {
   inputProps?: DetailedHTMLProps<

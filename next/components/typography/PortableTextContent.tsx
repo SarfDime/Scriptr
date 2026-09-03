@@ -6,7 +6,7 @@ import { Box } from '../common/Box'
 import { portableTextParser } from './PortableTextParser'
 
 /**
- * A component for rendering markdown content using Portable Text.
+ * A component for rendering content using Portable Text.
  * It supports an optional wrapper element, customizable rendering for
  * specific block types, and flexible element overrides.
  */
@@ -25,7 +25,7 @@ export const PortableTextContent = ({
         <Box
           as={as ?? 'article'}
           {...rest}
-          className={cn('markdown markdown-defaults', className)}
+          className={cn('ui-prose pt-text', className)}
         >
           {portableText && (
             <PortableText
