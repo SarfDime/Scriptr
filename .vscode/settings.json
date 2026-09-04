@@ -1,4 +1,36 @@
 {
+  // Tailwind Intellisense power-up
+  // Extend scope of supported attributes with {anything}Classes/Styling/Props etc:
+  "tailwindCSS.classAttributes": [
+    "class",
+    "className",
+    "ngClass",
+    ".className.",
+    ".ClassName.",
+    ".class.",
+    ".Styling.",
+    ".Style.",
+    ".Props.",
+    ".Elements.",
+    ".overrideElements"
+  ],
+  "tailwindCSS.experimental.classRegex": [
+    // tailwind-variants
+    [
+      "tv\\(([^)])\\)",
+      "[\"']([^\"']).?[\"']"
+    ],
+    // Wrap style objects in /*tw*/ before/after comments
+    [
+      "\\/\\tw\\/ ([^]) \\/\\tw\\/",
+      "'([^']*)'"
+    ]
+  ],
+  "tailwindCSS.classFunctions": [
+    "cn",
+    "clsx",
+    "classNames"
+  ],
   "editor.codeActionsOnSave": {
     "source.organizeImports.biome": "explicit",
     "source.addMissingImports.ts": "explicit",
@@ -7,7 +39,7 @@
     "source.removeUnusedImports": "never",
     "source.sortImports": "never",
     "source.fixAll.biome": "explicit",
-    "source.organizeImports": "never"
+    "source.organizeImports": "never",
   },
   "editor.defaultFormatter": "biomejs.biome",
   "[typescript]": {
@@ -19,10 +51,19 @@
   "[json]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
+  "[tailwindcss]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
   "[css]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
   "[postcss]": {
     "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
   },
 }
