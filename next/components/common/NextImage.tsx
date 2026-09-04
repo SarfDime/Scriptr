@@ -12,7 +12,7 @@ import type {
 } from '../../types/common.types'
 import { Skeleton } from '../ui/skeleton/Skeleton'
 
-export type SanityImageProps = {
+export type NextImageProps = {
   alt?: string
   src?: string
   className?: string
@@ -33,13 +33,14 @@ export type SanityImageProps = {
   priority?: boolean
   objectFitProp?: ImageObjectFitType
   objectPositionProp?: ImageObjectPositionType
-  skeletonProps?: SkeletonBoxProps
+  imageProps?: Omit<ImageProps, 'src' | 'alt'>
   cornerRadius?: number
   rounded?: number
   isLoadingExt?: boolean
-} & Omit<ImageProps, 'src' | 'alt'>
+  sizes?: ImageProps['sizes']
+} & Omit<SkeletonBoxProps, 'src' | 'alt'> & { quality?: ImageProps['quality'] }
 
-/** `SanityImage` - Renders an image with optional skeleton loading and custom styling.
+/** `NextImage` - Renders an image with optional skeleton loading and custom styling.
  *
  * Handles the display of images with support for lazy loading, skeleton loading state,
  * and various styling options.
@@ -50,7 +51,7 @@ export type SanityImageProps = {
  * - Supports lazy loading and priority loading.
  * - Allows customization of object fit and position.
  */
-export function SanityImage({
+export function NextImage({
   alt,
   src,
   className,
@@ -58,7 +59,7 @@ export function SanityImage({
   priority,
   objectPositionProp,
   objectFitProp,
-  skeletonProps,
+  imageProps,
   cornerRadius,
   rounded,
   asset,
@@ -66,8 +67,9 @@ export function SanityImage({
   hotspot,
   quality,
   isLoadingExt,
+  sizes,
   ...rest
-}: SanityImageProps) {
+}: NextImageProps) {
   const [isLoading, setIsLoading] = useState(true)
 
   return (
@@ -75,11 +77,11 @@ export function SanityImage({
       {asset || src ? (
         <Skeleton
           loading={isLoadingExt ?? isLoading}
-          {...skeletonProps}
+          {...rest}
           className={cn(
             `relative z-0 h-full w-full ${!isLoadingExt && !isLoading && 'rounded-none'}`,
             priority && 'before:duration-500',
-            skeletonProps?.className,
+            className,
             rounded && cornerRadius && 'roundedImage'
           )}
           style={{
@@ -87,9 +89,9 @@ export function SanityImage({
           }}
         >
           <Image
-            {...rest}
+            {...imageProps}
             className={cn(
-              className,
+              imageProps?.className,
               `object-${
                 objectFitProp ?? 'contain'
               } object-${objectPositionProp ?? 'center'}`
@@ -98,6 +100,7 @@ export function SanityImage({
             alt={alt || 'Data unavailable'}
             src={src || urlFor({ asset, crop, hotspot }).url()}
             fill={Boolean(fillProp)}
+            sizes={sizes}
             priority={priority}
             onLoad={() => setIsLoading(false)}
           />

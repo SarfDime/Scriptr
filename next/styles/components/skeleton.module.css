@@ -3,13 +3,13 @@
     --animate-pulse: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) forwards infinite;
     @keyframes pulse {
       0% {
-        background-color: var(--color-grey-350);
+        background-color: var(--color-brand-800);
       }
       50% {
-        background-color: var(--color-brand-50);
+        background-color: var(--color-brand-600);
       }
       100% {
-        background-color: var(--color-grey-350);
+        background-color: var(--color-background-700);
       }
     }
   }

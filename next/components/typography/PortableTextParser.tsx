@@ -7,8 +7,8 @@ import { IMAGE_SIZES } from '@/styles/style'
 import { cn } from '../../lib/common-utils'
 import type { SanityImageSrcType } from '../../types/common.types'
 import type { ComponentParserType } from '../../types/components/PortableText.types'
+import { NextImage } from '../common/NextImage'
 import { NextLink } from '../common/NextLink'
-import { SanityImage } from '../common/SanityImage'
 import { Divider } from '../ui/Divider'
 
 /** A function that returns a Portable Text parser configuration object.
@@ -27,13 +27,11 @@ export const portableTextParser = ({
         asset: SanityImageSrcType & { aspectRatio: number }
       }>) => {
         return (
-          <SanityImage
+          <NextImage
             src={value?.asset?.src}
             alt={value?.asset?.alt ?? ''}
             fillProp
-            skeletonProps={{
-              style: { aspectRatio: value?.asset?.aspectRatio },
-            }}
+            style={{ aspectRatio: value?.asset?.aspectRatio }}
             sizes={IMAGE_SIZES.BLOG_POST_IMAGE_OPTIMIZATION}
           />
         )

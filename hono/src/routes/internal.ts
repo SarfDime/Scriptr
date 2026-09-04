@@ -371,4 +371,20 @@ internal.delete('/subjects/:id/professors/:professorId', async (c) => {
   return c.json({ success: true, message: 'Professor removed from subject' })
 })
 
+internal.get('/', async (c) => {
+  const supabase = createInternalSupabaseClient(c)
+
+  const { data, error } = await supabase
+    .from('comments')
+    .select(`
+      *,
+      author:profiles(username, full_name),
+      professor:professors(name)
+    `)
+    .order('created_at', { ascending: false })
+
+  if (error) return c.json({ error: error.message }, 500)
+  return c.json(data)
+})
+
 export default internal

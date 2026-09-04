@@ -12,6 +12,13 @@
   color-scheme: dark;
 }
 
+@layer nav {
+  @theme {
+    --nav-width: 17rem;
+    --nav-width-offset: calc(100dvw - var(--nav-width));
+  }
+}
+
 body {
   background: var(--color-background);
   color: var(--color-fg);
@@ -19,4 +26,14 @@ body {
   transition:
     background-color 200ms ease,
     color 200ms ease;
+  display: flex;
+  height: 100dvh;
+  * {
+    @apply text-lg;
+  }
+
+  [data-sanity-icon] {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
 }

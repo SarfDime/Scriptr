@@ -15,7 +15,7 @@ From the repository root:
 
 ```bash
 npm install
-npm run dev:api
+npm run dev:hono
 ```
 
 The API starts on port `8787` by default. Set `PORT` to override it.

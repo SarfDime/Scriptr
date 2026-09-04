@@ -1,161 +1,207 @@
-import { Box } from '../components/common/Box'
-import { Button } from '../components/common/Button'
-import { PortableTextContent } from '../components/typography/PortableTextContent'
-import { Text } from '../components/typography/Text'
-import { Title } from '../components/typography/Title'
-import { Badge } from '../components/ui/Badge'
-import { Card } from '../components/ui/Card'
-import { Divider } from '../components/ui/Divider'
-import { ThemeToggle } from '../components/ui/ThemeToggle'
-import type { PortableTextType } from '../types/components/PortableText.types'
+'use client'
 
-const portableExample = [
+import { useState } from 'react'
+import { ActivityStats } from '@/components/common/ActivityStats'
+import { Box } from '@/components/common/Box'
+import { SubjectsSidebar } from '@/components/Subjects/SubjectsSidebar'
+import type { SortOption } from '@/components/scripts/ScriptFilters'
+import { ScriptsSection } from '@/components/scripts/ScriptSection'
+import { SearchHeader } from '@/components/scripts/SearchHeader'
+import type { Script, Subject } from '@/types/components/Scripts.types'
+
+interface PageDataProps {
+  scripts: Array<Script>
+  subjects: Array<Subject>
+  greeting?: string
+  authoredCount?: number
+  commentCount?: number
+}
+
+const scripts: Array<Script> = [
   {
-    _key: 'intro',
-    _type: 'block',
-    children: [
-      {
-        _key: 'intro-span',
-        _type: 'span',
-        marks: [],
-        text: 'Portable Text gets the same rhythm, links, lists, and readable color tokens as the rest of the app.',
-      },
-    ],
-    markDefs: [],
-    style: 'normal',
+    id: 1,
+    title: 'The Cell Cycle',
+    subject: 'Biology',
+    professor: 'Dr. Elena Park',
+    year: '2nd year',
+    author: 'Maya Chen',
+    updated: 'Today',
+    likes: 38,
+    comments: 6,
+    color: 'rose',
+    saved: true,
+    liked: true,
+    tag: 'Exam prep',
   },
   {
-    _key: 'list',
-    _type: 'block',
-    children: [
-      {
-        _key: 'list-span',
-        _type: 'span',
-        marks: [],
-        text: 'Sanity content can arrive here without page-specific styling.',
-      },
-    ],
-    level: 1,
-    listItem: 'bullet',
-    markDefs: [],
-    style: 'normal',
+    id: 2,
+    title: 'Organic Chemistry Reactions',
+    subject: 'Chemistry',
+    professor: 'Prof. Marcus Bell',
+    year: '2nd year',
+    author: 'Leo Martins',
+    updated: 'Yesterday',
+    likes: 24,
+    comments: 3,
+    color: 'amber',
+    tag: 'Study guide',
+    liked: true,
+    saved: false,
   },
-] as PortableTextType
+  {
+    id: 3,
+    title: 'Macbeth: Ambition & Guilt',
+    subject: 'English',
+    professor: 'Dr. Fiona Shaw',
+    year: '1st year',
+    author: 'Noah Williams',
+    updated: '2 days ago',
+    likes: 51,
+    comments: 11,
+    color: 'rose',
+    saved: true,
+    tag: 'Literature',
+    liked: true,
+  },
+  {
+    id: 4,
+    title: 'Linear Algebra Essentials',
+    subject: 'Mathematics',
+    professor: 'Prof. Adrian Cole',
+    year: '1st year',
+    author: 'Ari Patel',
+    updated: '4 days ago',
+    likes: 19,
+    comments: 4,
+    color: 'blue',
+    tag: 'Reference',
+    liked: false,
+    saved: true,
+  },
+  {
+    id: 5,
+    title: 'European History 1914-1945',
+    subject: 'History',
+    professor: 'Dr. Sofia Rossi',
+    year: '3rd year',
+    author: 'Sofia Rossi',
+    updated: 'Last week',
+    likes: 42,
+    comments: 8,
+    color: 'sky',
+    tag: 'Review',
+    liked: false,
+    saved: true,
+  },
+]
 
-export default function Home() {
+const subjects: Array<Subject> = [
+  {
+    name: 'Biology',
+    code: 'BIO 201',
+    next: 'Lab report due Friday',
+    color: 'rose',
+    progress: 72,
+  },
+  {
+    name: 'Organic Chemistry',
+    code: 'CHEM 204',
+    next: 'Quiz in 3 days',
+    color: 'amber',
+    progress: 48,
+  },
+  {
+    name: 'Linear Algebra',
+    code: 'MATH 221',
+    next: 'Problem set due Monday',
+    color: 'blue',
+    progress: 64,
+  },
+]
+
+const Page = ({
+  greeting = 'Good morning, Nora',
+  authoredCount = 8,
+  commentCount = 14,
+}: PageDataProps) => {
+  const [query, setQuery] = useState('')
+  const [subject, setSubject] = useState('All subjects')
+  const [sort, setSort] = useState<SortOption>('Recently updated')
+  const [saved, setSaved] = useState<Array<number>>(
+    scripts.filter((script) => script.saved).map((script) => script.id)
+  )
+  const [liked, setLiked] = useState<Array<number>>(
+    scripts.filter((script) => script.liked).map((script) => script.id)
+  )
+
+  const subjectOptions = Array.from(
+    new Set(scripts.map((script) => script.subject))
+  )
+
+  const filteredScripts = scripts
+    .filter((script) => {
+      const matchesQuery =
+        `${script.title} ${script.subject} ${script.professor} ${script.author}`
+          .toLowerCase()
+          .includes(query.toLowerCase())
+      const matchesSubject =
+        subject === 'All subjects' || script.subject === subject
+      return matchesQuery && matchesSubject
+    })
+    .sort((a, b) =>
+      sort === 'Title A-Z' ? a.title.localeCompare(b.title) : a.id - b.id
+    )
+
+  const toggleSaved = (id: number) =>
+    setSaved((current) =>
+      current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id]
+    )
+
+  const toggleLiked = (id: number) =>
+    setLiked((current) =>
+      current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id]
+    )
+
   return (
-    <Box as='main' className='ui-section min-h-screen'>
-      <Box className='ui-container ui-stack gap-12'>
-        <Box className='ui-cluster justify-between'>
-          <Box className='ui-stack gap-3'>
-            <Badge colorPalette='brand'>UI foundations</Badge>
-            <Title
-              as='h1'
-              title='Components that stay out of the way.'
-              className='font-semibold text-4xl text-fg-700 tracking-tight md:text-6xl'
-            />
-            <Text className='max-w-2xl text-fg text-lg leading-8'>
-              A small, composable surface for Scriptr pages, with sensible
-              defaults and theme-aware content from Sanity.
-            </Text>
-          </Box>
-          <ThemeToggle />
-        </Box>
+    <>
+      {/* <Box
+      as='main'
+      className='mx-auto max-w-360 ui-stack gap-10 px-5 py-8 lg:px-10 lg:py-12'
+    > */}
+      <SearchHeader
+        greeting={greeting}
+        query={query}
+        onQueryChange={setQuery}
+      />
 
-        <Divider />
-
-        <Box as='section' className='ui-stack' aria-labelledby='surfaces-title'>
-          <Box className='ui-stack gap-2'>
-            <Badge colorPalette='gray' variant='outline'>
-              Surfaces
-            </Badge>
-            <Title
-              className='text-fg-700 text-2xl font-semibold'
-              as='h2'
-              title='Cards compose from familiar parts.'
-              id='surfaces-title'
-            />
-          </Box>
-          <Box className='grid gap-6 md:grid-cols-3'>
-            <Card>
-              <Card.Header>
-                <Badge colorPalette='brand'>Default</Badge>
-              </Card.Header>
-              <Card.Body>
-                <Text>Neutral surfaces are the everyday starting point.</Text>
-              </Card.Body>
-              <Card.Footer>Card.Footer</Card.Footer>
-            </Card>
-            <Card className='ui-palette-success'>
-              <Card.Header>
-                <Badge colorPalette='green'>Success</Badge>
-              </Card.Header>
-              <Card.Body>
-                <Text>
-                  Palette classes change the surface, border, and text.
-                </Text>
-              </Card.Body>
-              <Card.Footer>ui-palette-success</Card.Footer>
-            </Card>
-            <Card className='ui-palette-warning'>
-              <Card.Header>
-                <Badge colorPalette='yellow'>Attention</Badge>
-              </Card.Header>
-              <Card.Body>
-                <Text>
-                  Children inherit the same radius language as the card.
-                </Text>
-              </Card.Body>
-              <Card.Footer>ui-palette-warning</Card.Footer>
-            </Card>
-          </Box>
-        </Box>
-
-        <Card className='ui-stack' aria-labelledby='content-title'>
-          <Box className='ui-cluster justify-between'>
-            <Box className='ui-stack gap-2'>
-              <Badge colorPalette='brand' variant='outline'>
-                Content
-              </Badge>
-              <Title
-                className='text-fg-700 text-2xl font-semibold'
-                as='h2'
-                title='Portable Text, already styled.'
-                id='content-title'
-              />
-            </Box>
-            <Button className='solid' type='button'>
-              Continue
-            </Button>
-          </Box>
-          <Divider />
-          <PortableTextContent
-            portableText={portableExample}
-            renderWrapper
-            className='ui-prose'
-          />
-        </Card>
-
-        <Card className='ui-palette-brand' aria-labelledby='actions-title'>
-          <Card.Header>
-            <Title
-              className='text-fg-700 text-2xl font-semibold'
-              as='h2'
-              title='Use the defaults, then tune locally.'
-              id='actions-title'
-            />
-          </Card.Header>
-          <Card.Body className='ui-stack gap-4'>
-            <Text>
-              Add a component class first. Add Tailwind utilities only for
-              layout decisions that are specific to this page.
-            </Text>
-            <code className='rounded-lg bg-background-100/70 px-3 py-2 text-fg-700 text-sm'>
-              {'<Card className="ui-palette-brand">'}
-            </code>
-          </Card.Body>
-        </Card>
+      <Box className='grid gap-10 xl:grid-cols-[minmax(0,1fr)_340px]'>
+        <ScriptsSection
+          scripts={filteredScripts}
+          subjectOptions={subjectOptions}
+          subject={subject}
+          sort={sort}
+          onSubjectChange={setSubject}
+          onSortChange={setSort}
+          savedIds={saved}
+          likedIds={liked}
+          onToggleSaved={toggleSaved}
+          onToggleLiked={toggleLiked}
+        />
+        <SubjectsSidebar subjects={subjects} />
       </Box>
-    </Box>
+
+      <ActivityStats
+        savedCount={saved.length}
+        authoredCount={authoredCount}
+        commentCount={commentCount}
+      />
+      {/* </Box> */}
+    </>
   )
 }
+
+export default Page

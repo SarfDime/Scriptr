@@ -12,7 +12,7 @@ export function Skeleton({
     <Box
       className={cn(
         'relative overflow-hidden rounded-md',
-        'before:pointer-events-none before:absolute before:inset-0 before:z-50 before:from-grey-350 before:to-brand-50 before:opacity-100',
+        'before:pointer-events-none before:absolute before:inset-0 before:z-50 before:from-brand before:to-brand-700 before:opacity-100',
         loading && 'before:animate-pulse',
         !loading && 'before:opacity-0 before:duration-2000',
         className

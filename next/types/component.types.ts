@@ -7,7 +7,7 @@ import type {
 } from 'react'
 
 type ComponentTags = {
-  box: 'div' | 'section' | 'article' | 'main'
+  box: 'div' | 'section' | 'article' | 'main' | 'aside'
   navigation: 'footer' | 'nav'
   list: 'ul' | 'ol'
   listItem: 'li'
@@ -29,6 +29,9 @@ type ComponentColorPalettes =
   | 'gray'
   | 'yellow'
   | 'brand'
+  | 'rose'
+  | 'sky'
+  | 'amber'
   | 'unstyled'
 
 type ComponentPlacement = {

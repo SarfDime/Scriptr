@@ -1,49 +1,161 @@
-@layer components {
-  .button {
-    &.transparent {
-      @apply text-brand outline-brand/80 md:hover:bg-brand-50 md:hover:text-brand md:hover:shadow-brand-transparent text-base font-semibold outline-1;
+@utility button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 1.5rem;
+  padding-block: 0.75rem;
+  transition: all;
+  border-radius: var(--ui-radius, 0.75rem);
 
-      &.alternate {
-        @apply text-background-100 outline-background-100/80 md:hover:bg-brand-50/90 md:hover:text-brand md:hover:shadow-brand-transparent outline-1;
-      }
-    }
-
-    &.solid {
-      @apply bg-brand text-background-100 md:hover:shadow-brand-light text-base font-semibold shadow-sm md:hover:opacity-90;
-
-      &.inverted {
-        @apply bg-background-100 text-brand md:hover:shadow-brand-transparent;
-      }
-    }
-
-    &.subtle {
-      @apply bg-grey-200 text-grey-550 outline-(--outline-light) md:hover:bg-brand-50 md:hover:shadow-brand-transparent text-base font-semibold shadow-sm outline-1;
-    }
-
-    &.golden {
-      @apply bg-golden-yellow text-brand-700 md:hover:bg-yellow md:hover:shadow-brand-transparent text-base font-semibold shadow-sm;
-    }
-
-    &.success {
-      @apply bg-jade text-background-100 md:hover:shadow-brand-light text-base font-semibold shadow-sm md:hover:opacity-90;
-    }
-
-    &.error {
-      @apply bg-error-red text-background-100 md:hover:shadow-brand-light text-base font-semibold shadow-sm md:hover:opacity-90;
-    }
+  &:not(:disabled) {
+    cursor: pointer;
+    transition: all 0.25s linear;
   }
 
-  button,
-  .button {
-    @apply flex items-center justify-center px-6 py-3 transition-all;
-    border-radius: var(--ui-radius, 0.75rem);
+  &:disabled {
+    pointer-events: none;
+    filter: grayscale(1);
+  }
+}
+
+@utility button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 1.5rem;
+  padding-block: 0.75rem;
+  transition: all;
+  border-radius: var(--ui-radius, 0.75rem);
+
+  &:not(:disabled) {
+    cursor: pointer;
+    transition: all 0.25s linear;
   }
 
-  button:not(:disabled) {
-    @apply cursor-pointer transition duration-[0.25s] ease-linear;
+  &:disabled {
+    pointer-events: none;
+    filter: grayscale(1);
   }
 
-  button:disabled {
-    @apply pointer-events-none grayscale filter;
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+    opacity: 0.85;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+}
+
+@utility transparent {
+  color: var(--color-brand);
+  outline: 1px solid color-mix(in oklab, var(--color-brand) 80%, transparent);
+  font-size: 1rem;
+  font-weight: 600;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background-color: var(--color-brand-50);
+      color: var(--color-brand);
+      box-shadow: var(--shadow-brand-transparent);
+    }
+  }
+}
+
+@utility basic {
+  color: var(--color-background-900);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      color: var(--color-brand);
+      box-shadow: var(--shadow-brand-transparent);
+    }
+  }
+}
+
+@utility solid {
+  background-color: var(--color-brand);
+  color: var(--color-background-100);
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      box-shadow: var(--shadow-brand-light);
+      opacity: 0.9;
+    }
+  }
+}
+
+@utility inverted {
+  background-color: var(--color-background-100);
+  color: var(--color-brand);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      box-shadow: var(--shadow-brand-transparent);
+    }
+  }
+}
+
+@utility subtle {
+  background-color: var(--color-grey-200);
+  color: var(--color-grey-550);
+  outline: 1px solid var(--outline-light);
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background-color: var(--color-brand-50);
+      box-shadow: var(--shadow-brand-transparent);
+    }
+  }
+}
+
+@utility golden {
+  background-color: var(--color-golden-yellow);
+  color: var(--color-brand-700);
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background-color: var(--color-yellow);
+      box-shadow: var(--shadow-brand-transparent);
+    }
+  }
+}
+
+@utility success {
+  background-color: var(--color-jade);
+  color: var(--color-background-100);
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      box-shadow: var(--shadow-brand-light);
+      opacity: 0.9;
+    }
+  }
+}
+
+@utility error {
+  background-color: var(--color-error-red);
+  color: var(--color-background-100);
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      box-shadow: var(--shadow-brand-light);
+      opacity: 0.9;
+    }
   }
 }

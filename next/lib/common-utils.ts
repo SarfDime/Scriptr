@@ -8,7 +8,24 @@ import path from 'path'
 import { twMerge } from 'tailwind-merge'
 import type { PortableTextType } from '@/types/components/PortableText.types'
 import { client } from '../sanityClient'
-import type { ComponentPlacement } from '../types/component.types'
+import type {
+  ComponentColorPalettes,
+  ComponentPlacement,
+} from '../types/component.types'
+
+export const paletteClass = (color: ComponentColorPalettes) =>
+  `ui-palette-${color}`
+
+/** Type Guard: Checks if it's an array and if the first item has Sanity's '_type' property */
+export const isPortableText = (val: unknown): val is PortableTextType => {
+  return (
+    Array.isArray(val) &&
+    val.length > 0 &&
+    typeof val[0] === 'object' &&
+    val[0] !== null &&
+    '_type' in val[0]
+  )
+}
 
 /** A utility function that takes a localized string or content object and returns a plain text version of it. */
 export const convertToPlainText = ({ value }: { value?: PortableTextType }) => {

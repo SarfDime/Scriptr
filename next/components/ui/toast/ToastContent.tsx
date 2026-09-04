@@ -15,7 +15,9 @@ export const ToastContent = ({
   <>
     <Box className='flex w-full items-center gap-1'>
       <ToastIcon type={toast.type} />
-      <Title as='h3' title={toast.title} className='font-semibold text-lg' />
+      <Title as='h3' className='font-semibold text-lg'>
+        {toast.title}
+      </Title>
       {children}
     </Box>
 

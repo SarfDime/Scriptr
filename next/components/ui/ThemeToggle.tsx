@@ -2,6 +2,7 @@
 
 import { cn } from '../../lib/common-utils'
 import { type ThemeMode, useTheme } from '../../providers/theme/ThemeProvider'
+import { Button } from '../common/Button'
 
 const modes: Array<{ value: ThemeMode; label: string }> = [
   { value: 'auto', label: 'Auto' },
@@ -9,22 +10,30 @@ const modes: Array<{ value: ThemeMode; label: string }> = [
   { value: 'dark', label: 'Dark' },
 ]
 
-export function ThemeToggle() {
+export function ThemeToggle({ className }: { className?: string }) {
   const { mode, setMode } = useTheme()
 
   return (
-    <fieldset className='ui-theme-toggle'>
+    <fieldset
+      className={cn(
+        'border-grey-300 border rounded-xl bg-background-100 p-1 gap-1 flex flex-col w-fit mx-auto',
+        className
+      )}
+    >
       <legend className='sr-only'>Color theme</legend>
       {modes.map(({ value, label }) => (
-        <button
-          className={cn('ui-theme-option', mode === value && 'is-active')}
+        <Button
+          className={cn(
+            'button basic grow px-2 py-3 text-sm rounded-lg',
+            mode === value && 'bg-brand-100 text-brand-800'
+          )}
+          isActive={mode === value}
           key={value}
-          type='button'
           aria-pressed={mode === value}
           onClick={() => setMode(value)}
         >
           {label}
-        </button>
+        </Button>
       ))}
     </fieldset>
   )

@@ -1,12 +1,12 @@
 # Scriptr
 
-Scriptr is a script-sharing platform for university courses. The repository currently contains a Hono REST API and a Next.js frontend template.
+Scriptr is a script-sharing platform for university courses. The repository contains a Hono REST API and a Next.js frontend.
 
 ## Repository Layout
 
 - `hono/` - implemented Hono API
-- `next/` - Next.js frontend template and shared UI starting point
-- `supabase/` - local Supabase configuration, when present
+- `next/` - Next.js frontend and shared UI
+- `hono/supabase/` - local Supabase configuration and seed data
 
 ## Requirements
 
@@ -38,14 +38,14 @@ R2_PUBLIC_URL=https://your-public-r2-domain
 PORT=8787
 ```
 
-Keep secrets out of source control. The `next/` template uses its own environment file for frontend configuration.
+Keep secrets out of source control. The `next/` app uses its own environment file for frontend configuration.
 
 ## Commands
 
 ```bash
 npm run dev          # Start the API and frontend development processes
 npm run dev:hono     # Start the Hono API
-npm run dev:next     # Start the Next.js template
+npm run dev:next     # Start the Next.js frontend
 npm run dev:sanity   # Start Sanity Studio
 npm run build:sanity # Build Sanity Studio
 npm run gen:api-types # Generate Supabase API types
@@ -64,4 +64,4 @@ The API is mounted under `/api`. See [hono/README.md](hono/README.md) for setup 
 
 ## Frontend
 
-`next/` is currently a template. It is not presented as a complete product frontend yet, but provides the Next.js structure and reusable UI components for future integration with the API.
+The Next.js app includes simple API test pages at `/api-test` and `/auth` for exercising the Hono API.

@@ -33,6 +33,7 @@
     "sanity-plugin-dashboard-widget-netlify": "^3.0.18",
     "sanity-plugin-iframe-pane": "^5.0.35",
     "sanity-plugin-media": "^6.1.8",
+    "sanity-plugin-mermaid-content-model": "^1.0.1",
     "sanity-plugin-references": "^1.1.0",
     "sanity-plugin-smart-asset-manager": "^2.0.1",
     "styled-components": "6.5.3"

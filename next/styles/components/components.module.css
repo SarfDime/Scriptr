@@ -23,87 +23,6 @@
     background: var(--color-brand-100);
   }
 
-  .ui-container {
-    width: min(100% - 2rem, 80rem);
-    margin-inline: auto;
-  }
-
-  .ui-box {
-    min-width: 0;
-  }
-
-  .ui-section {
-    padding-block: clamp(3rem, 8vw, 6rem);
-  }
-
-  .ui-stack {
-    display: flex;
-    flex-direction: column;
-    gap: var(--ui-gap, 1.5rem);
-  }
-
-  .ui-cluster {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--ui-gap, 1rem);
-  }
-
-  .ui-card {
-    --ui-surface: var(--color-background-100);
-    --ui-border: var(--color-grey-300);
-    --ui-text: var(--color-fg-700);
-    --ui-muted: var(--color-fg-400);
-    --ui-radius: 0.75rem;
-    --ui-padding: 1rem;
-
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    padding: var(--ui-padding);
-    border: 1px solid var(--ui-border);
-    border-radius: var(--ui-radius);
-    background: var(--ui-surface);
-    color: var(--ui-text);
-    box-shadow: 0 0.5rem 1.5rem rgb(16 47 76 / 5%);
-  }
-
-  .ui-button,
-  .ui-badge {
-    border-radius: var(--ui-radius, 0.75rem);
-    width: fit-content;
-  }
-
-  .ui-divider {
-    border-color: var(--color-grey-300);
-  }
-
-  .ui-theme-toggle {
-    display: inline-flex;
-    gap: 0.25rem;
-    border: 1px solid var(--color-grey-300);
-    border-radius: 0.75rem;
-    padding: 0.25rem;
-    background: var(--color-background-100);
-  }
-
-  .ui-theme-option {
-    border-radius: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    color: var(--color-fg-400);
-    font-size: 0.875rem;
-  }
-
-  .ui-theme-option.is-active {
-    background: var(--color-brand-100);
-    color: var(--color-brand-800);
-  }
-
-  .ui-prose {
-    color: var(--color-fg);
-    line-height: 1.75;
-  }
-
   .ui-prose :is(h1, h2, h3, h4, h5, h6) {
     margin-block: 1.5em 0.5em;
     color: var(--color-fg-700);
@@ -158,79 +77,131 @@
     color: inherit;
   }
 
-  .ui-card-header,
-  .ui-card-body,
-  .ui-card-footer {
-    padding-block: var(--ui-padding);
-  }
-
-  .ui-card-header {
-    padding-top: 0;
-    border-bottom: 1px solid var(--ui-border);
-  }
-
-  .ui-card-body {
-    flex: 1;
-  }
-
-  .ui-card-footer {
-    margin-top: auto;
-    padding-bottom: 0;
-    border-top: 1px solid var(--ui-border);
-    color: var(--ui-muted);
-  }
-
-  .ui-card.ui-palette-brand,
-  .ui-card.ui-palette-success,
-  .ui-card.ui-palette-warning,
-  .ui-card.ui-palette-danger {
-    --ui-surface: var(--ui-palette-surface);
-    --ui-border: var(--ui-palette-border);
-    --ui-text: var(--ui-palette-text);
-    --ui-muted: var(--ui-palette-muted);
-  }
-
-  .ui-palette-brand {
-    --ui-palette-surface: var(--color-brand-50);
-    --ui-palette-border: var(--color-brand-200);
-    --ui-palette-text: var(--color-brand-800);
-    --ui-palette-muted: var(--color-brand-600);
-  }
-
-  .ui-palette-success {
-    --ui-palette-surface: color-mix(
-      in srgb,
-      var(--color-jade) 10%,
-      var(--color-background-100)
-    );
-    --ui-palette-border: var(--color-jade);
-    --ui-palette-text: var(--color-fg-700);
-    --ui-palette-muted: var(--color-fg-600);
-  }
-
-  .ui-palette-warning {
-    --ui-palette-surface: color-mix(
-      in srgb,
-      var(--color-golden-yellow) 16%,
-      var(--color-background-100)
-    );
-    --ui-palette-border: var(--color-yellow);
-    --ui-palette-text: var(--color-fg-700);
-    --ui-palette-muted: var(--color-fg-600);
-  }
-
-  .ui-palette-danger {
-    --ui-palette-surface: color-mix(
-      in srgb,
-      var(--color-error-red) 9%,
-      var(--color-background-100)
-    );
-    --ui-palette-border: var(--color-error-red);
-    --ui-palette-text: var(--color-fg-700);
-    --ui-palette-muted: var(--color-fg-600);
-  }
-
   :root[data-theme="dark"] .ui-card {
     box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 18%);
   }
+}
+
+@utility ui-container {
+  max-width: var(--nav-width-offset);
+  flex-grow: 1;
+  min-height: 100dvh;
+  overflow-y: auto;
+  margin-left: auto;
+
+  @media (max-width: 992px) {
+    max-width: unset;
+  }
+}
+
+@utility ui-section {
+  padding-block: clamp(1rem, 5vw, 3rem);
+  padding-inline: clamp(1rem, 5vw, 3rem);
+  flex-grow: 1;
+}
+
+@utility ui-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-gap, 1.5rem);
+}
+
+@utility ui-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-gap, 1rem);
+}
+
+@utility ui-card {
+  --ui-surface: var(--color-background-100);
+  --ui-border: var(--color-grey-300);
+  --ui-text: var(--color-fg-700);
+  --ui-muted: var(--color-fg-400);
+  --ui-radius: 0.75rem;
+  --ui-padding: 1rem;
+
+  display: flex;
+  flex-direction: column;
+  /* overflow: hidden; */
+  padding: var(--ui-padding);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  box-shadow: 0 0.5rem 1.5rem rgb(16 47 76 / 5%);
+}
+
+@utility ui-button {
+  border-radius: var(--ui-radius, 0.75rem);
+  width: fit-content;
+}
+
+@utility ui-badge {
+  border-radius: var(--ui-radius, 0.75rem);
+  width: fit-content;
+}
+
+@utility ui-card-header {
+  padding-block: var(--ui-padding);
+  padding-top: 0;
+  border-bottom: 1px solid var(--ui-border);
+}
+
+@utility ui-card-body {
+  flex: 1;
+  padding-block: var(--ui-padding);
+}
+
+@utility ui-card-footer {
+  margin-top: auto;
+  padding-block: var(--ui-padding);
+  padding-bottom: 0;
+  border-top: 1px solid var(--ui-border);
+  color: var(--ui-muted);
+}
+
+@utility ui-prose {
+  color: var(--color-fg);
+  line-height: 1.75;
+}
+
+@utility ui-palette-brand {
+  --ui-surface: var(--color-brand-50);
+  --ui-border: var(--color-brand-200);
+  --ui-text: var(--color-brand-800);
+  --ui-muted: var(--color-brand-600);
+}
+
+@utility ui-palette-success {
+  --ui-surface: color-mix(
+    in srgb,
+    var(--color-jade) 10%,
+    var(--color-background-100)
+  );
+  --ui-border: var(--color-jade);
+  --ui-text: var(--color-fg-700);
+  --ui-muted: var(--color-fg-600);
+}
+
+@utility ui-palette-warning {
+  --ui-surface: color-mix(
+    in srgb,
+    var(--color-golden-yellow) 16%,
+    var(--color-background-100)
+  );
+  --ui-border: var(--color-yellow);
+  --ui-text: var(--color-fg-700);
+  --ui-muted: var(--color-fg-600);
+}
+
+@utility ui-palette-danger {
+  --ui-surface: color-mix(
+    in srgb,
+    var(--color-error-red) 9%,
+    var(--color-background-100)
+  );
+  --ui-border: var(--color-error-red);
+  --ui-text: var(--color-fg-700);
+  --ui-muted: var(--color-fg-600);
 }

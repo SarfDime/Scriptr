@@ -13,7 +13,7 @@ assignees: ""
 ## Area
 
 - [ ] Hono API
-- [ ] Next.js template
+- [ ] Next.js frontend
 - [ ] Supabase or authentication
 - [ ] Cloudflare R2 or file uploads
 - [ ] Tooling or documentation

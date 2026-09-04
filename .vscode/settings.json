@@ -31,6 +31,7 @@
     "clsx",
     "classNames"
   ],
+  "tailwindCSS.experimental.configFile": "./next/app/globals.css",
   "editor.codeActionsOnSave": {
     "source.organizeImports.biome": "explicit",
     "source.addMissingImports.ts": "explicit",

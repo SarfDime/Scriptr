@@ -22,6 +22,53 @@ async function getSelectedFacultyScope(
   return data?.map(({ faculty_id }) => faculty_id) ?? []
 }
 
+function fuzzyScore(query: string, value: string) {
+  const normalizedQuery = query.toLowerCase().trim()
+  const normalizedValue = value.toLowerCase()
+
+  if (normalizedValue.includes(normalizedQuery)) return 1
+
+  const queryWords = normalizedQuery.split(/\s+/)
+  const valueWords = normalizedValue.split(/[^a-z0-9]+/).filter(Boolean)
+  const wordScores = queryWords.map((queryWord) => {
+    const bestDistance = Math.min(
+      ...valueWords.map((valueWord) =>
+        levenshteinDistance(queryWord, valueWord)
+      )
+    )
+    const length = Math.max(queryWord.length, 1)
+    return 1 - bestDistance / length
+  })
+
+  return (
+    wordScores.reduce((total, score) => total + score, 0) / wordScores.length
+  )
+}
+
+function levenshteinDistance(left: string, right: string) {
+  const previousRow = Array.from(
+    { length: right.length + 1 },
+    (_, index) => index
+  )
+
+  for (let leftIndex = 1; leftIndex <= left.length; leftIndex += 1) {
+    const currentRow = [leftIndex]
+
+    for (let rightIndex = 1; rightIndex <= right.length; rightIndex += 1) {
+      currentRow[rightIndex] = Math.min(
+        (currentRow[rightIndex - 1] ?? leftIndex) + 1,
+        (previousRow[rightIndex] ?? rightIndex) + 1,
+        (previousRow[rightIndex - 1] ?? rightIndex - 1) +
+          (left[leftIndex - 1] === right[rightIndex - 1] ? 0 : 1)
+      )
+    }
+
+    previousRow.splice(0, previousRow.length, ...currentRow)
+  }
+
+  return previousRow[right.length] ?? right.length
+}
+
 /** Get all scripts (public) */
 scripts.get('/', async (c) => {
   const supabase = createSupabaseClient(c)
@@ -128,6 +175,50 @@ scripts.get('/popular', async (c) => {
   return c.json(data)
 })
 
+/** Search scripts */
+scripts.get('/search', async (c) => {
+  const queryParam = c.req.query('q')
+  const supabase = createSupabaseClient(c)
+
+  if (!queryParam) {
+    return c.json({ error: 'Search query is required' }, 400)
+  }
+
+  let query = supabase.from('scripts').select(`
+      *,
+      author:profiles(username, full_name),
+      subject:subjects(name, year, faculty:faculties(id, name, university:universities(id, name))),
+      faculty:faculties(id, name, university:universities(id, name))
+    `)
+  const selectedFacultyIds = await getSelectedFacultyScope(supabase)
+
+  if (selectedFacultyIds && selectedFacultyIds.length > 0) {
+    query = query.in('faculty_id', selectedFacultyIds)
+  }
+
+  const { data, error } = await query
+
+  if (error) return c.json({ error: error.message }, 500)
+
+  const results = data
+    .map((script) => ({
+      script,
+      score: Math.max(
+        fuzzyScore(queryParam, script.title),
+        fuzzyScore(queryParam, script.description ?? '')
+      ),
+    }))
+    .filter(({ score }) => score >= 0.45)
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        right.script.vote_score - left.script.vote_score
+    )
+    .map(({ script }) => script)
+
+  return c.json(results)
+})
+
 /** Get a single script by ID */
 scripts.get('/:id', async (c) => {
   const scriptId = requiredParam(c, 'id')
@@ -160,37 +251,6 @@ scripts.get('/:id', async (c) => {
     )
   }
 
-  return c.json(data)
-})
-
-/** Search scripts */
-scripts.get('/search', async (c) => {
-  const queryParam = c.req.query('q')
-  const supabase = createSupabaseClient(c)
-  const selectedFacultyIds = await getSelectedFacultyScope(supabase)
-
-  if (!queryParam) {
-    return c.json({ error: 'Search query is required' }, 400)
-  }
-
-  let query = supabase
-    .from('scripts')
-    .select(`
-      *,
-      author:profiles(username, full_name),
-      subject:subjects(name, year, faculty:faculties(id, name, university:universities(id, name))),
-      faculty:faculties(id, name, university:universities(id, name))
-    `)
-    .or(`title.ilike.%${queryParam}%,description.ilike.%${queryParam}%`)
-    .order('vote_score', { ascending: false })
-
-  if (selectedFacultyIds && selectedFacultyIds.length > 0) {
-    query = query.in('faculty_id', selectedFacultyIds)
-  }
-
-  const { data, error } = await query
-
-  if (error) return c.json({ error: error.message }, 500)
   return c.json(data)
 })
 

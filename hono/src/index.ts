@@ -1,3 +1,4 @@
+// biome-ignore-all lint/suspicious/noConsole: API request and error logging is intentional.
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { handle } from 'hono/vercel'
@@ -20,6 +21,26 @@ export const app = new Hono<HonoEnv>()
 app.use('*', async (c, next) => {
   c.env = process.env as unknown as HonoEnv['Bindings']
   await next()
+})
+
+app.use('*', async (c, next) => {
+  const startedAt = Date.now()
+  await next()
+
+  const log = {
+    duration_ms: Date.now() - startedAt,
+    method: c.req.method,
+    path: c.req.path,
+    status: c.res.status,
+  }
+
+  if (c.res.status >= 500) {
+    console.error(JSON.stringify({ ...log, level: 'error', type: 'request' }))
+  } else if (c.res.status >= 400) {
+    console.warn(JSON.stringify({ ...log, level: 'warn', type: 'request' }))
+  } else {
+    console.info(JSON.stringify({ ...log, level: 'info', type: 'request' }))
+  }
 })
 
 app.use(
@@ -65,6 +86,16 @@ app.get('/', (c) =>
 )
 
 app.onError((err, c) => {
+  console.error(
+    JSON.stringify({
+      error: err.message,
+      level: 'error',
+      method: c.req.method,
+      path: c.req.path,
+      type: 'unhandled_error',
+    })
+  )
+
   return c.json(
     {
       error: 'Internal server error',

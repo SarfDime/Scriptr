@@ -7,6 +7,7 @@ import { presentationTool } from 'sanity/presentation'
 import { structureTool } from 'sanity/structure'
 import { netlifyWidget } from 'sanity-plugin-dashboard-widget-netlify'
 import { media } from 'sanity-plugin-media'
+import { mermaidContentModel } from 'sanity-plugin-mermaid-content-model'
 import { references } from 'sanity-plugin-references'
 import { smartAssetManager } from 'sanity-plugin-smart-asset-manager'
 import { CustomDuplicateAction } from './actions/customDuplicate'
@@ -47,6 +48,7 @@ export default defineConfig({
     media(),
     visionTool(),
     references(),
+    mermaidContentModel(),
     presentationTool({
       previewUrl: {
         origin: // TODO: Change this when staging is live

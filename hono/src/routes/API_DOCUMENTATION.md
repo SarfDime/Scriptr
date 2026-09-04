@@ -243,18 +243,43 @@ Get comments for a specific professor
 - **Auth**: Not required
 - **Response**: Array of comments
 
+#### `GET /comments/script/:scriptId`
+Get comments for a specific script
+- **Auth**: Not required
+- **Response**: Array of comments
+
 #### `GET /comments/user/:userId`
 Get comments by a specific user
 - **Auth**: Not required
 - **Response**: Array of comments
+
+#### `GET /comments/:commentId/reactions`
+Get reactions for a comment
+- **Auth**: Not required
+- **Response**: Array of reactions
 
 ### Authenticated Endpoints
 
 #### `POST /comments`
 Create a new comment
 - **Auth**: Required
-- **Body**: `{ content, professor_id }`
+- **Body**: `{ content, professor_id? }` or `{ content, script_id? }`
+- **Restriction**: Exactly one of `professor_id` or `script_id` is required.
 - **Response**: Created comment
+
+#### `POST /comments/:commentId/replies`
+Create a reply to a comment
+- **Auth**: Required
+- **Body**: `{ content, professor_id? }` or `{ content, script_id? }`
+- **Restriction**: Exactly one of `professor_id` or `script_id` is required.
+- **Response**: Created reply with `parent_id`
+
+#### `POST /comments/:commentId/reactions`
+Add or change the current user's reaction
+- **Auth**: Required
+- **Body**: `{ reaction_type }`
+- **Note**: Calling this again replaces the user's existing reaction.
+- **Response**: Created or updated reaction
 
 #### `PATCH /comments/:id`
 Update a comment (author only)
@@ -372,48 +397,34 @@ Update a user's role.
 ### Public Endpoints
 
 #### `GET /votes`
-Get all votes
-- **Auth**: Not required
-- **Response**: Array of votes with user and script info
+List all votes.
 
 #### `GET /votes/script/:scriptId`
-Get votes for a specific script
-- **Auth**: Not required
-- **Response**: Array of votes
+List votes for a script.
 
 #### `GET /votes/user/:userId`
-Get votes by a specific user
-- **Auth**: Not required
-- **Response**: Array of votes
+List votes by a user.
 
 #### `GET /votes/script/:scriptId/stats`
-Get vote statistics for a script
-- **Auth**: Not required
-- **Response**: `{ upvotes, downvotes, total, score }`
+Get vote counts and the nonnegative score for a script.
 
-### Authenticated Endpoints
+### Authenticated Read Endpoints
 
 #### `GET /votes/my-votes`
-Get current user's votes
-- **Auth**: Required
-- **Response**: Array of user's votes
+List the current user's votes.
 
 #### `GET /votes/script/:scriptId/my-vote`
-Get current user's vote for a specific script
-- **Auth**: Required
-- **Response**: Vote object or null
+Get the current user's vote for a script, or `null`.
 
-#### `POST /votes/:id/vote`
-Vote on a script (upvote/downvote/remove)
-- **Auth**: Required
-- **Body**: `{ value: 1 | -1 }`
-- **Note**: Clicking same vote removes it, clicking opposite changes vote
-- **Response**: Success message
+### Authenticated Mutation Endpoint
 
-#### `DELETE /votes/:scriptId`
-Remove vote from a script
+#### `POST /votes/:scriptId`
+Toggle the current user's vote for a script.
 - **Auth**: Required
-- **Response**: Success message
+- **Body**: None
+- **Note**: The first request adds one vote. The next request removes that user's vote.
+- **Response**: `{ voted: boolean, vote_score: number }`
+- **Invariant**: `vote_score` never falls below zero.
 
 ---
 
@@ -455,11 +466,9 @@ Common HTTP status codes:
 
 ### Vote System
 The vote system supports:
-- Upvote (+1)
-- Downvote (-1)
-- Toggle (clicking same vote removes it)
-- Change (clicking opposite vote changes it)
-- Automatic vote_score calculation
+- One +1 vote per user and script
+- Toggle behavior: the first POST adds a vote and the next removes it
+- Automatic `vote_score` calculation, clamped at zero
 
 ### Flag System
 When a script is flagged:

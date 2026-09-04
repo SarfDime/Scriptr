@@ -244,15 +244,13 @@ curl -b cookies.txt -X POST http://localhost:8787/api/scripts \
 
 `PATCH /api/scripts/:id` and `DELETE /api/scripts/:id` are author or moderator.
 
-### Broken routes (do not use yet)
+### Search
 
-These are registered **after** `GET /:id`, so the path segment is treated as a script UUID:
+Search is fuzzy and tolerates small spelling mistakes in titles and descriptions.
 
-| Path                             | What happens |
-| -------------------------------- | ------------ |
-| `GET /api/scripts/search?q=data` | 404          |
-| `GET /api/scripts/my-scripts`    | 404          |
-| `GET /api/scripts/flagged/all`   | 404          |
+```bash
+curl "http://localhost:8787/api/scripts/search?q=algoritms" | jq .
+```
 
 ---
 
@@ -261,11 +259,31 @@ These are registered **after** `GET /:id`, so the path segment is treated as a s
 ```bash
 curl http://localhost:8787/api/comments | jq .
 curl http://localhost:8787/api/comments/professor/$PROF | jq .
+curl http://localhost:8787/api/comments/script/$SCRIPT | jq .
 curl http://localhost:8787/api/comments/user/$USER | jq .
+curl http://localhost:8787/api/comments/$COMMENT/reactions | jq .
 
 curl -b cookies.txt -X POST http://localhost:8787/api/comments \
   -H "Content-Type: application/json" \
   -d "{\"content\":\"Great professor, clear lectures.\",\"professor_id\":\"$PROF\"}" | jq .
+```
+
+Use exactly one of `professor_id` or `script_id` when creating a comment.
+
+Replies use the same target rule and keep the parent comment id:
+
+```bash
+curl -b cookies.txt -X POST http://localhost:8787/api/comments/$COMMENT/replies \
+  -H "Content-Type: application/json" \
+  -d "{\"content\":\"Thanks for the clarification.\",\"script_id\":\"$SCRIPT\"}" | jq .
+```
+
+Add or change a reaction with an upsert:
+
+```bash
+curl -b cookies.txt -X POST http://localhost:8787/api/comments/$COMMENT/reactions \
+  -H "Content-Type: application/json" \
+  -d '{"reaction_type":"like"}' | jq .
 ```
 
 `PATCH` / `DELETE /api/comments/:id` are author (delete also allows moderator).
@@ -274,28 +292,25 @@ curl -b cookies.txt -X POST http://localhost:8787/api/comments \
 
 ## Votes
 
+### Read votes
+
 ```bash
 curl http://localhost:8787/api/votes | jq .
 curl http://localhost:8787/api/votes/script/$SCRIPT | jq .
-curl http://localhost:8787/api/votes/script/$SCRIPT/stats | jq .
 curl http://localhost:8787/api/votes/user/$USER | jq .
+curl http://localhost:8787/api/votes/script/$SCRIPT/stats | jq .
 curl -b cookies.txt http://localhost:8787/api/votes/my-votes | jq .
 curl -b cookies.txt http://localhost:8787/api/votes/script/$SCRIPT/my-vote | jq .
 ```
 
-### Vote (currently broken)
+### Vote toggle
 
 ```bash
-curl -b cookies.txt -X POST http://localhost:8787/api/votes/$SCRIPT/vote \
-  -H "Content-Type: application/json" \
-  -d '{"value":1}' | jq .
+curl -b cookies.txt -X POST http://localhost:8787/api/votes/$SCRIPT | jq .
 ```
 
-Returns **500** `permission denied for table scripts`. The handler writes a `votes` row, then updates `scripts.vote_score`; that update is denied. `value` must be `1` or `-1`. Toggle same value to unvote.
-
-```bash
-curl -b cookies.txt -X DELETE http://localhost:8787/api/votes/$SCRIPT | jq .
-```
+The first request adds a `+1` vote. Calling the same endpoint again removes the
+user's vote. Script scores are clamped at zero.
 
 ---
 

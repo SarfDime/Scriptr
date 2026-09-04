@@ -4,8 +4,8 @@ import type { SanityImageType } from '@/types/common.types'
 import type { PortableTextType } from '@/types/components/PortableText.types'
 import { cn, convertToPlainText } from '../../lib/common-utils'
 import type { BoxProps } from './Box'
+import { NextImage, type NextImageProps } from './NextImage'
 import { NextLink, type NextLinkProps } from './NextLink'
-import { SanityImage, type SanityImageProps } from './SanityImage'
 
 type LinkWithImageProps = {
   href: string
@@ -13,7 +13,7 @@ type LinkWithImageProps = {
   comingSoon?: boolean
   linkTitle?: PortableTextType
   hideExternalIcon?: boolean
-  imageProps?: SanityImageProps
+  imageProps?: NextImageProps
   linkProps?: NextLinkProps
   comingSoonProps?: BoxProps
 } & Omit<BoxProps, 'title'>
@@ -38,13 +38,11 @@ export const ImageLink = ({
       className={cn('duration-200 lg:hover:opacity-80', linkProps?.className)}
       aria-label={convertToPlainText({ value: linkTitle })}
     >
-      <SanityImage
+      <NextImage
         {...linkImage}
         fillProp
         {...imageProps}
-        skeletonProps={{
-          className: cn('h-12 w-36', imageProps?.skeletonProps?.className),
-        }}
+        className={cn('h-12 w-36', imageProps?.className)}
         quality={IMAGE_QUALITY.MAXIMUM}
         sizes={IMAGE_SIZES.NEXTJS_IMAGE_DEFAULT_SIZE_PROPERTY}
       />

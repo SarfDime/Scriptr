@@ -285,21 +285,47 @@
       "_type": "request"
     },
     {
+      "_id": "req_script_votes",
+      "parentId": "fld_authenticated",
+      "modified": 0,
+      "created": 0,
+      "name": "Script votes",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "settingStoreCookies": true,
+      "url": "{{ _.base_url }}/api/votes/script/{{ _.script_id }}",
+      "_type": "request"
+    },
+    {
+      "_id": "req_script_vote_stats",
+      "parentId": "fld_authenticated",
+      "modified": 0,
+      "created": 0,
+      "name": "Script vote stats",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "url": "{{ _.base_url }}/api/votes/script/{{ _.script_id }}/stats",
+      "_type": "request"
+    },
+    {
       "_id": "req_vote",
       "parentId": "fld_authenticated",
       "modified": 0,
       "created": 0,
-      "name": "Vote on script",
+      "name": "Toggle vote",
       "method": "POST",
-      "body": {
-        "mimeType": "application/json",
-        "text": "{\n  \"value\": 1\n}"
-      },
+      "body": {},
       "parameters": [],
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "headers": [],
       "authentication": {},
       "settingStoreCookies": true,
-      "url": "{{ _.base_url }}/api/votes/{{ _.script_id }}/vote",
+      "url": "{{ _.base_url }}/api/votes/{{ _.script_id }}",
       "_type": "request"
     },
     {
@@ -311,7 +337,7 @@
       "method": "POST",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"content\": \"Very useful notes.\",\n  \"professor_id\": \"{{ _.professor_id }}\"\n}"
+        "text": "{\n  \"content\": \"Very useful notes.\",\n  \"script_id\": \"{{ _.script_id }}\"\n}"
       },
       "parameters": [],
       "headers": [{ "name": "Content-Type", "value": "application/json" }],

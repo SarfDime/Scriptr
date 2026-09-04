@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      comment_reactions: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          reaction_type: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          reaction_type: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          reaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'comment_reactions_comment_id_fkey'
+            columns: ['comment_id']
+            isOneToOne: false
+            referencedRelation: 'comments'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'comment_reactions_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       comments: {
         Row: {
           author_id: string
@@ -21,7 +60,9 @@ export type Database = {
           created_at: string
           edited: boolean
           id: string
-          professor_id: string
+          parent_id: string | null
+          professor_id: string | null
+          script_id: string | null
           updated_at: string
         }
         Insert: {
@@ -30,7 +71,9 @@ export type Database = {
           created_at?: string
           edited?: boolean
           id?: string
-          professor_id: string
+          parent_id?: string | null
+          professor_id?: string | null
+          script_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -39,7 +82,9 @@ export type Database = {
           created_at?: string
           edited?: boolean
           id?: string
-          professor_id?: string
+          parent_id?: string | null
+          professor_id?: string | null
+          script_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -51,10 +96,24 @@ export type Database = {
             referencedColumns: ['id']
           },
           {
+            foreignKeyName: 'comments_parent_id_fkey'
+            columns: ['parent_id']
+            isOneToOne: false
+            referencedRelation: 'comments'
+            referencedColumns: ['id']
+          },
+          {
             foreignKeyName: 'comments_professor_id_fkey'
             columns: ['professor_id']
             isOneToOne: false
             referencedRelation: 'professors'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'comments_script_id_fkey'
+            columns: ['script_id']
+            isOneToOne: false
+            referencedRelation: 'scripts'
             referencedColumns: ['id']
           },
         ]
