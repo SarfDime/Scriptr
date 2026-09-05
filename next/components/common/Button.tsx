@@ -33,7 +33,7 @@ export const Button = ({
       {...getAttribute(Boolean(isActive), 'data-active', isActive)}
       disabled={disabled ?? isLoading}
       className={cn(
-        'ui-button relative overflow-hidden',
+        'relative overflow-hidden',
         className,
         isLoading && 'pointer-events-none',
         disabled && 'select-none'

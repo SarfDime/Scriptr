@@ -1,28 +1,23 @@
-import type { Subject } from '@/types/components/Scripts.types'
+import { UI_STRINGS } from '@shared/config/strings'
+import type { SubjectsSidebarProps } from '@/types/components/Subjects.types'
 import { Box } from '../common/Box'
 import { Button } from '../common/Button'
 import { StudyTipCard } from '../common/StudyTipCard'
+import { PortableTextContent } from '../typography/PortableTextContent'
 import { Text } from '../typography/Text'
-import { Title } from '../typography/Title'
 import { SubjectCard } from './SubjectCard'
 
-interface SubjectsSidebarProps {
-  subjects: Array<Subject>
-}
-
-export const SubjectsSidebar = ({ subjects }: SubjectsSidebarProps) => {
+export const SubjectsSidebar = ({
+  subjects,
+  content,
+}: SubjectsSidebarProps) => {
   return (
-    <Box as='aside'>
-      <Box className='mb-5 flex items-center justify-between'>
-        <Box>
-          <Title as='h2' className='text-xl font-medium tracking-tight'>
-            Your subjects
-          </Title>
-          <Text className='mt-1 text-sm text-fg-400'>
-            Keep an eye on what is next.
-          </Text>
-        </Box>
-        <Button className='button subtle px-2 py-1 text-xs'>Manage</Button>
+    <Box as='aside' className='ui-stack gap-4'>
+      <Box className='ui-cluster items-start justify-between gap-3'>
+        <PortableTextContent>{content}</PortableTextContent>
+        <Button className='button subtle px-2 py-1 ui-caption'>
+          <Text>{UI_STRINGS.subjects.manage}</Text>
+        </Button>
       </Box>
 
       <Box className='ui-stack gap-3'>

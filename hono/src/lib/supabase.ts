@@ -1,8 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Context } from 'hono'
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie'
-import type { HonoEnv } from '../types/env.types'
-import type { Database } from '../types/supabase'
+import type { Database } from '../../../shared/types/database.types'
+import {
+  isProfileSubjectStatus,
+  isUserRole,
+} from '../../../shared/utils/api.utils'
+import type { AuthUser, HonoEnv } from '../types/env.types'
 
 /** Creates a Supabase client with the given context, using environment variables for the endpoint and credentials.
  * Sessions are handled via HTTP-only cookies for security and persistence.
@@ -34,6 +38,8 @@ export function createInternalSupabaseClient(c: Context<HonoEnv>) {
 
 /** Proper cookie storage with full read/write support */
 function createCookieStorage(c: Context<HonoEnv>) {
+  const secure = c.env.NODE_ENV === 'production'
+
   return {
     getItem: (key: string) => {
       return getCookie(c, key) || null
@@ -52,7 +58,7 @@ function createCookieStorage(c: Context<HonoEnv>) {
         setCookie(c, key, value, {
           path: '/',
           httpOnly: true,
-          secure: false, // TODO: Set to true in production with HTTPS
+          secure,
           sameSite: 'Lax',
           maxAge,
         })
@@ -61,7 +67,7 @@ function createCookieStorage(c: Context<HonoEnv>) {
         setCookie(c, key, value, {
           path: '/',
           httpOnly: true,
-          secure: false,
+          secure,
           sameSite: 'Lax',
           maxAge: 3600,
         })
@@ -75,7 +81,7 @@ function createCookieStorage(c: Context<HonoEnv>) {
 
 /** Authentication middleware that checks for a valid session (cookie) and attaches the user object to the context.
  * If the session is invalid or missing, it returns a 401 error.
- * If the user object is not found in the profiles table, it defaults to a student role with no subjects passed.
+ * If the user object is not found in the profiles table, it defaults to a student role with no subject statuses.
  */
 export const authMiddleware = async (
   c: Context<HonoEnv>,
@@ -95,7 +101,7 @@ export const authMiddleware = async (
 
     const [
       { data: profile },
-      { data: completedSubjects },
+      { data: profileSubjects },
       { data: facultySelections },
     ] = await Promise.all([
       supabase
@@ -104,8 +110,8 @@ export const authMiddleware = async (
         .eq('id', user.id)
         .single(),
       supabase
-        .from('profile_completed_subjects')
-        .select('subject_id')
+        .from('profile_subjects')
+        .select('subject_id, status')
         .eq('profile_id', user.id),
       supabase
         .from('profile_faculties')
@@ -115,17 +121,21 @@ export const authMiddleware = async (
 
     const userProfile = {
       username: profile?.username ?? user?.email,
-      role: profile?.role ?? 'student',
-      completed_subject_ids:
-        completedSubjects?.map(({ subject_id }) => subject_id) ?? [],
+      role: isUserRole(profile?.role) ? profile.role : 'student',
+      subjects:
+        profileSubjects?.flatMap(({ subject_id, status }) =>
+          isProfileSubjectStatus(status) ? [{ subject_id, status }] : []
+        ) ?? [],
       selected_faculty_ids:
         facultySelections?.map(({ faculty_id }) => faculty_id) ?? [],
     }
 
-    c.set('user', {
+    const authenticatedUser: AuthUser = {
       ...user,
       profile: userProfile,
-    })
+    }
+
+    c.set('user', authenticatedUser)
 
     return next()
   } catch (error) {

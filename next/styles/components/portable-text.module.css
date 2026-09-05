@@ -1,61 +1,62 @@
-@layer components {
-  .pt-text {
-    @apply relative;
+@utility pt-text {
+  @apply relative flex flex-col text-fg;
 
-    a {
-      @apply text-brand font-semibold underline;
-    }
+  a {
+    @apply text-brand font-semibold underline;
+  }
 
-    br {
-      display: block;
-      @apply mt-0.5 md:mt-1;
-    }
+  br {
+    display: block;
+    @apply mt-0.5 md:mt-1;
+  }
 
-    p:has(+ ul) {
-      @apply mt-4;
-    }
+  p:has(+ ul) {
+    @apply mt-4;
+  }
 
-    svg:not(.external-link) {
-      @apply inline h-6 w-6 md:h-8 md:w-8 xl:h-10 xl:w-10;
-    }
+  svg:not(.external-link) {
+    @apply inline h-6 w-6 md:h-8 md:w-8 xl:h-10 xl:w-10;
+  }
 
-    :is(h1, h2, h3, h4, h5, h6) {
-      @apply text-fg-700;
-    }
+  :is(h1, h2, h3, h4, h5, h6) {
+    @apply text-fg-700;
+  }
 
-    :is(ul, ol) {
-      @apply my-4 pl-6;
-    }
+  :is(ul, ol) {
+    @apply my-4 pl-6;
+  }
 
-    ul {
-      @apply list-disc;
-    }
+  ul {
+    @apply list-disc;
+  }
 
-    ol {
-      @apply list-decimal;
-    }
+  ol {
+    @apply list-decimal;
+  }
 
-    blockquote {
-      @apply border-brand border-l-4 pl-4 text-fg-600 italic;
-    }
+  blockquote {
+    @apply border-brand border-l-4 pl-4 text-fg-600 italic;
   }
 }
 
-.font-size-sm {
+@utility font-size-xs {
+  @apply text-[0.5rem] sm:text-xs md:text-sm lg:text-base xl:text-lg;
+}
+@utility font-size-sm {
   @apply text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl;
 }
-.font-size-md {
+@utility font-size-md {
   @apply text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl;
 }
-.font-size-lg {
+@utility font-size-lg {
   @apply text-fg text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold;
 }
-.font-size-xl {
+@utility font-size-xl {
   @apply text-fg text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold;
 }
-.font-size-2xl {
+@utility font-size-2xl {
   @apply text-fg text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold;
 }
-.font-size-3xl {
+@utility font-size-3xl {
   @apply text-fg text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold;
 }

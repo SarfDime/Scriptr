@@ -1,19 +1,24 @@
 # Scriptr
 
-Scriptr is a script-sharing platform for university courses. The repository contains a Hono REST API and a Next.js frontend.
+Scriptr is a university script-sharing platform. The repository contains a
+Hono API, a Next.js frontend, and a Sanity Studio in one npm workspace.
 
-## Repository Layout
+## Packages
 
-- `hono/` - implemented Hono API
-- `next/` - Next.js frontend and shared UI
-- `hono/supabase/` - local Supabase configuration and seed data
+| Directory | Responsibility                                        |
+| --------- | ----------------------------------------------------- |
+| `hono/`   | API, Supabase, authentication, and R2 file operations |
+| `next/`   | Frontend, shared UI, and API test screens             |
+| `sanity/` | Sanity Studio and schema tooling                      |
+| `shared/` | Shared TypeScript configuration and types             |
 
 ## Requirements
 
-- Node.js 20 or newer
+- Node.js 20+
 - npm
-- Supabase project credentials
-- Cloudflare R2 credentials for file uploads
+- Supabase credentials for the API
+- Cloudflare R2 credentials for uploads
+- Sanity project credentials for the Studio and frontend
 
 ## Install
 
@@ -23,22 +28,12 @@ npm install
 
 ## Environment
 
-Create `hono/.env` for local API development:
+Copy the relevant `.env.example` files to `.env` or `.env.local`:
 
-```env
-SUPABASE_URL=your_supabase_url
-SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
-SUPABASE_SECRET_KEY=your_supabase_secret_key
-R2_ACCOUNT_ID=your_cloudflare_account_id
-R2_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
-R2_ACCESS_KEY_ID=your_access_key
-R2_SECRET_ACCESS_KEY=your_secret_key
-R2_BUCKET=your_bucket_name
-R2_PUBLIC_URL=https://your-public-r2-domain
-PORT=8787
-```
+- `hono/.env.example` for Supabase, R2, and API settings.
+- `next/.env.example` for the frontend API and Sanity settings.
 
-Keep secrets out of source control. The `next/` app uses its own environment file for frontend configuration.
+Keep secrets out of source control.
 
 ## Commands
 
@@ -49,19 +44,22 @@ npm run dev:next     # Start the Next.js frontend
 npm run dev:sanity   # Start Sanity Studio
 npm run build:sanity # Build Sanity Studio
 npm run gen:api-types # Generate Supabase API types
-npm run check-types  # Type-check both workspaces
+npm run check-types  # Type-check all workspaces
 npm run check-types:sanity # Type-check Sanity only
-npm run lint         # Run Biome checks
-npm run format       # Format the repository with Biome
+npm run format       # Apply Biome formatting and safe fixes
 npm run sanity:typegen # Extract the Sanity schema and generate types
 npm run sanity:schema  # Extract schema.json only
 npm run sanity:types   # Generate TypeScript types only
 ```
 
-## API
+## Documentation
 
-The API is mounted under `/api`. See [hono/README.md](hono/README.md) for setup and [hono/src/routes/API_DOCUMENTATION.md](hono/src/routes/API_DOCUMENTATION.md) for the endpoint reference.
+- [API setup](hono/README.md)
+- [API reference](hono/src/routes/API_DOCUMENTATION.md)
+- [API testing guide](hono/src/routes/API_TESTING_GUIDE.md)
+- [Frontend setup](next/README.md)
+- [Frontend styling guide](next/STYLING_GUIDE.md)
+- [Agent guide](AGENTS.md)
 
-## Frontend
-
-The Next.js app includes simple API test pages at `/api-test` and `/auth` for exercising the Hono API.
+The frontend includes API test pages at `/api-test` and `/auth` for exercising
+the Hono service.

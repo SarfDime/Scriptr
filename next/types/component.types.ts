@@ -32,6 +32,9 @@ type ComponentColorPalettes =
   | 'rose'
   | 'sky'
   | 'amber'
+  | 'success'
+  | 'warning'
+  | 'danger'
   | 'unstyled'
 
 type ComponentPlacement = {

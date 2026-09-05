@@ -17,15 +17,15 @@ export const Badge = ({
 }: BadgeProps) => {
   const colorStyle =
     variant === 'solid'
-      ? colorPalette
-      : cn(colorPalette, 'border border-currentColor')
+      ? `cp-${colorPalette}`
+      : cn(`cp-${colorPalette}`, 'border border-currentColor')
 
   return (
     <Text
       as='span'
       {...rest}
       className={cn(
-        'ui-badge inline-flex items-center px-2.5 py-0.5 font-medium text-xs',
+        'inline-flex items-center px-2.5 py-0.5 font-medium text-xs rounded-xl',
         colorStyle,
         className
       )}

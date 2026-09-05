@@ -1,8 +1,13 @@
 /** biome-ignore-all lint/style/useNamingConvention: <No need for now> */
 import type { User } from '@supabase/supabase-js'
+import type {
+  ProfileSubjectStatus,
+  UserRole,
+} from '../../../shared/types/api.types'
 
 // Define your environment variable types
 export type Env = {
+  NODE_ENV?: 'development' | 'test' | 'production'
   SUPABASE_URL: string
   SUPABASE_PUBLISHABLE_KEY: string
   SUPABASE_SECRET_KEY: string
@@ -19,8 +24,8 @@ export type Env = {
 export type AuthUser = User & {
   profile?: {
     username?: string
-    role?: string
-    completed_subject_ids?: Array<string>
+    role?: UserRole
+    subjects?: Array<{ subject_id: string; status: ProfileSubjectStatus }>
     selected_faculty_ids?: Array<string>
   }
 }

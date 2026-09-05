@@ -1,6 +1,7 @@
 # Next.js Frontend
 
-This directory contains the Next.js frontend, reusable components, styling, and API test pages for Scriptr. The Hono service in `../hono` is the application backend.
+This directory contains the Next.js frontend, reusable components, styling, and
+API test pages. The Hono service in `../hono` is the application backend.
 
 ## Development
 
@@ -11,7 +12,7 @@ npm install
 npm run dev:next
 ```
 
-The app runs with Next.js and connects to the API at `http://localhost:8787` during local development.
+The app runs with Next.js and connects to `http://localhost:8787` by default.
 
 ## Environment
 
@@ -35,6 +36,7 @@ npm run check-types --workspace next
 npm run build:next
 ```
 
-## Status
+## Conventions
 
-The frontend includes simple API test pages at `/api-test` and `/auth` for exercising the Hono service. New screens should use the existing components, styles, and API client while the backend contract is documented in [the Hono API reference](../hono/src/routes/API_DOCUMENTATION.md).
+Use the existing components, styles, and API client for new screens. See the
+[styling guide](STYLING_GUIDE.md) and [Hono API reference](../hono/src/routes/API_DOCUMENTATION.md).

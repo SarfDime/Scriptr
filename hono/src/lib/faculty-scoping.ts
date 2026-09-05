@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '../types/supabase'
+import type { Database } from '../../../shared/types/database.types'
 
 export async function getSelectedFacultyIds(
   supabase: SupabaseClient<Database>,

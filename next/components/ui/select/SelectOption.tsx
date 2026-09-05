@@ -8,19 +8,21 @@ import { Button } from '../../common/Button'
  */
 export const SelectOption = <T,>({
   option,
+  selectedId,
   handleSelect,
   buttonProps,
   ...rest
 }: SelectOptionProps<T>) => {
-  const { label, disabled } = option
+  const { id, label, disabled } = option
   return (
     <Box as='li' {...rest}>
       <Button
+        {...buttonProps}
         disabled={disabled}
-        type='button'
+        isActive={id === selectedId}
         onClick={() => handleSelect?.(option)}
         className={cn(
-          'relative w-full cursor-pointer select-none items-start justify-between rounded-sm px-3.5 py-3 text-left hover:bg-gray-100',
+          'button basic relative w-full cursor-pointer select-none items-start justify-between rounded-sm px-3.5 py-3 text-left',
           buttonProps?.className
         )}
       >

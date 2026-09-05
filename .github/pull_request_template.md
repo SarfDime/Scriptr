@@ -17,7 +17,7 @@
 ## Validation
 
 - [ ] `npm run check-types`
-- [ ] `npm run lint`
+- [ ] `npm run format`
 - [ ] Relevant manual testing completed
 
 ## Security and data considerations

@@ -1,5 +1,6 @@
 'use client'
 
+import type { PortableTextValue } from '@shared/types/portable-text.types'
 import Link from 'next/link'
 import { useState } from 'react'
 
@@ -22,7 +23,7 @@ export function AuthTester() {
 
   const request = async (
     path: string,
-    body?: Record<string, string | number>,
+    body?: Record<string, unknown>,
     method = 'POST'
   ) => {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787'
@@ -225,7 +226,12 @@ export function AuthTester() {
             disabled={loading}
             onClick={() =>
               request('/api/comments', {
-                content: comment,
+                content: [
+                  {
+                    _type: 'block',
+                    children: [{ _type: 'span', text: comment }],
+                  },
+                ] satisfies PortableTextValue,
                 professor_id: professorId,
               })
             }

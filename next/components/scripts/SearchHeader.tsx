@@ -1,14 +1,11 @@
 import Search from '@sanity/icons/Search'
+import { UI_STRINGS } from '@shared/config/strings'
 import { cn } from '@/lib/common-utils'
+import type { SearchHeaderProps } from '@/types/components/Scripts.types'
 import { Box } from '../common/Box'
+import { InputWrapper } from '../typography/InputWrapper'
 import { Text } from '../typography/Text'
 import { Title } from '../typography/Title'
-
-interface SearchHeaderProps {
-  greeting: string
-  query: string
-  onQueryChange: (value: string) => void
-}
 
 export const SearchHeader = ({
   greeting,
@@ -24,14 +21,11 @@ export const SearchHeader = ({
       )}
     >
       <Box className='ui-stack gap-3'>
-        <Text className='text-sm text-brand'>{greeting}</Text>
-        <Title
-          as='h1'
-          className='max-w-2xl text-4xl font-medium tracking-[-0.055em] text-fg-700 md:text-5xl'
-        >
+        <Text className='ui-title text-brand'>{greeting}</Text>
+        <Title as='h1' className='ui-display max-w-2xl'>
           Make studying feel a little lighter.
         </Title>
-        <Text className='max-w-xl text-base leading-7 text-fg-400'>
+        <Text className='ui-subtitle max-w-xl leading-7'>
           Find the notes, scripts, and shared knowledge you need to move through
           this week with confidence.
         </Text>
@@ -48,12 +42,15 @@ export const SearchHeader = ({
           )}
         >
           <Search className='text-fg-400' />
-          <input
-            id='script-search'
-            value={query}
-            onChange={(event) => onQueryChange(event.target.value)}
-            placeholder='Search scripts, subjects, professors...'
-            className='min-w-0 flex-1 bg-transparent text-sm text-fg-700 outline-none placeholder:text-fg-400'
+          <InputWrapper
+            inputVal={query}
+            inputOnChange={(event) => onQueryChange(event.target.value)}
+            inputProps={{
+              id: 'script-search',
+              placeholder: UI_STRINGS.scripts.searchPlaceholder,
+              className:
+                'ui-body min-w-0 flex-1 bg-transparent text-fg-700 outline-none placeholder:text-fg-400',
+            }}
           />
           <kbd className='hidden rounded border border-grey-300 px-1.5 py-0.5 font-mono text-[10px] text-fg-400 sm:block'>
             ⌘ K

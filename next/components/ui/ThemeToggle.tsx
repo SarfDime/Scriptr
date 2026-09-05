@@ -23,10 +23,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       <legend className='sr-only'>Color theme</legend>
       {modes.map(({ value, label }) => (
         <Button
-          className={cn(
-            'button basic grow px-2 py-3 text-sm rounded-lg',
-            mode === value && 'bg-brand-100 text-brand-800'
-          )}
+          className={'button ghost grow px-2 py-3 text-sm rounded-lg'}
           isActive={mode === value}
           key={value}
           aria-pressed={mode === value}

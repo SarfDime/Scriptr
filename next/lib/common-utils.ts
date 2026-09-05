@@ -6,6 +6,7 @@ import { type ClassValue, clsx } from 'clsx'
 import { toPlainText } from 'next-sanity'
 import path from 'path'
 import { twMerge } from 'tailwind-merge'
+import type { LinkSelectorProps } from '@/types/common.types'
 import type { PortableTextType } from '@/types/components/PortableText.types'
 import { client } from '../sanityClient'
 import type {
@@ -13,19 +14,7 @@ import type {
   ComponentPlacement,
 } from '../types/component.types'
 
-export const paletteClass = (color: ComponentColorPalettes) =>
-  `ui-palette-${color}`
-
-/** Type Guard: Checks if it's an array and if the first item has Sanity's '_type' property */
-export const isPortableText = (val: unknown): val is PortableTextType => {
-  return (
-    Array.isArray(val) &&
-    val.length > 0 &&
-    typeof val[0] === 'object' &&
-    val[0] !== null &&
-    '_type' in val[0]
-  )
-}
+export const paletteClass = (color: ComponentColorPalettes) => `cp-${color}`
 
 /** A utility function that takes a localized string or content object and returns a plain text version of it. */
 export const convertToPlainText = ({ value }: { value?: PortableTextType }) => {
@@ -116,7 +105,7 @@ export function replaceString({
  * - `leadingSlash` - Whether to include a leading slash in the path. Defaults to false.
  * - `endsWithSlash` - Whether to include a trailing slash at the end of the path. Defaults to false.
  */
-export const generatePathWithTrailingSlash = ({
+export const generatePath = ({
   segments,
   leadingSlash = false,
   endsWithSlash = false,
@@ -128,6 +117,18 @@ export const generatePathWithTrailingSlash = ({
   const route = segments?.filter(Boolean).join('/')
 
   return path.join(leadingSlash ? '/' : '', route, endsWithSlash ? '/' : '')
+}
+
+/** Generates a slug based on the provided slug data. */
+export const generateSlug = (slugData: LinkSelectorProps) => {
+  if (slugData?.linkType === 'custom') return slugData?.customLink
+
+  return generatePath({
+    segments: [
+      slugData?.pageSlug?.current,
+      slugData?.sectionSlug?.current && `#${slugData?.sectionSlug?.current}`,
+    ].filter(Boolean),
+  })
 }
 
 // Create an image URL builder using the client

@@ -1,4 +1,9 @@
 import { Hono } from 'hono'
+import {
+  isFlagStatus,
+  isFlagTargetType,
+  isUserRole,
+} from '../../../shared/utils/api.utils'
 import { requiredParam } from '../lib/request'
 import {
   authMiddleware,
@@ -21,7 +26,7 @@ flags.get('/', authMiddleware, async (c) => {
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'moderator') {
+  if (!isUserRole(profile?.role) || profile.role !== 'moderator') {
     return c.json({ error: 'Unauthorized: Moderator access required' }, 403)
   }
 
@@ -49,7 +54,7 @@ flags.get('/pending', authMiddleware, async (c) => {
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'moderator') {
+  if (!isUserRole(profile?.role) || profile.role !== 'moderator') {
     return c.json({ error: 'Unauthorized: Moderator access required' }, 403)
   }
 
@@ -73,7 +78,7 @@ flags.get('/status/:status', authMiddleware, async (c) => {
   const supabase = createSupabaseClient(c)
 
   // Validate status
-  if (!['pending', 'reviewed', 'dismissed'].includes(status)) {
+  if (!isFlagStatus(status)) {
     return c.json(
       { error: 'Invalid status. Must be: pending, reviewed, or dismissed' },
       400
@@ -87,7 +92,7 @@ flags.get('/status/:status', authMiddleware, async (c) => {
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'moderator') {
+  if (!isUserRole(profile?.role) || profile.role !== 'moderator') {
     return c.json({ error: 'Unauthorized: Moderator access required' }, 403)
   }
 
@@ -133,7 +138,7 @@ flags.post('/', authMiddleware, async (c) => {
     )
   }
 
-  if (!['user', 'script'].includes(target_type)) {
+  if (!isFlagTargetType(target_type)) {
     return c.json(
       { error: 'target_type must be either "user" or "script"' },
       400
@@ -214,7 +219,7 @@ flags.patch('/:id', authMiddleware, async (c) => {
 
   const { status } = await c.req.json()
 
-  if (!['pending', 'reviewed', 'dismissed'].includes(status)) {
+  if (!isFlagStatus(status)) {
     return c.json(
       { error: 'Invalid status. Must be: pending, reviewed, or dismissed' },
       400

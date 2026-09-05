@@ -4,22 +4,44 @@ import { useState } from 'react'
 import { ActivityStats } from '@/components/common/ActivityStats'
 import { Box } from '@/components/common/Box'
 import { SubjectsSidebar } from '@/components/Subjects/SubjectsSidebar'
-import type { SortOption } from '@/components/scripts/ScriptFilters'
 import { ScriptsSection } from '@/components/scripts/ScriptSection'
 import { SearchHeader } from '@/components/scripts/SearchHeader'
-import type { Script, Subject } from '@/types/components/Scripts.types'
+import { DEFAULT_ACTIVITY_CONTENT } from '@/config/content'
+import type { PortableTextType } from '@/types/components/PortableText.types'
+import type {
+  PageDataProps,
+  Script,
+  ScriptId,
+  SortOption,
+} from '@/types/components/Scripts.types'
+import type { Subject } from '@/types/components/Subjects.types'
 
-interface PageDataProps {
-  scripts: Array<Script>
-  subjects: Array<Subject>
-  greeting?: string
-  authoredCount?: number
-  commentCount?: number
-}
+const scriptSectionContent: PortableTextType = [
+  {
+    _type: 'block',
+    children: [{ _type: 'span', text: 'Continue learning' }],
+  },
+  {
+    _type: 'block',
+    children: [
+      { _type: 'span', text: 'Scripts from your subjects and community.' },
+    ],
+  },
+]
+const subjectsContent: PortableTextType = [
+  {
+    _type: 'block',
+    children: [{ _type: 'span', text: 'Your subjects' }],
+  },
+  {
+    _type: 'block',
+    children: [{ _type: 'span', text: 'Keep an eye on what is next.' }],
+  },
+]
 
 const scripts: Array<Script> = [
   {
-    id: 1,
+    id: 'script-1',
     title: 'The Cell Cycle',
     subject: 'Biology',
     professor: 'Dr. Elena Park',
@@ -34,7 +56,7 @@ const scripts: Array<Script> = [
     tag: 'Exam prep',
   },
   {
-    id: 2,
+    id: 'script-2',
     title: 'Organic Chemistry Reactions',
     subject: 'Chemistry',
     professor: 'Prof. Marcus Bell',
@@ -49,7 +71,7 @@ const scripts: Array<Script> = [
     saved: false,
   },
   {
-    id: 3,
+    id: 'script-3',
     title: 'Macbeth: Ambition & Guilt',
     subject: 'English',
     professor: 'Dr. Fiona Shaw',
@@ -64,7 +86,7 @@ const scripts: Array<Script> = [
     liked: true,
   },
   {
-    id: 4,
+    id: 'script-4',
     title: 'Linear Algebra Essentials',
     subject: 'Mathematics',
     professor: 'Prof. Adrian Cole',
@@ -79,7 +101,7 @@ const scripts: Array<Script> = [
     saved: true,
   },
   {
-    id: 5,
+    id: 'script-5',
     title: 'European History 1914-1945',
     subject: 'History',
     professor: 'Dr. Sofia Rossi',
@@ -123,43 +145,43 @@ const Page = ({
   greeting = 'Good morning, Nora',
   authoredCount = 8,
   commentCount = 14,
+  activityContent = DEFAULT_ACTIVITY_CONTENT,
+  scripts: pageScripts = scripts,
+  subjects: pageSubjects = subjects,
 }: PageDataProps) => {
   const [query, setQuery] = useState('')
-  const [subject, setSubject] = useState('All subjects')
+  const [subject, setSubject] = useState('')
   const [sort, setSort] = useState<SortOption>('Recently updated')
-  const [saved, setSaved] = useState<Array<number>>(
-    scripts.filter((script) => script.saved).map((script) => script.id)
+  const [saved, setSaved] = useState<Array<ScriptId>>(
+    pageScripts.filter((script) => script.saved).map((script) => script.id)
   )
-  const [liked, setLiked] = useState<Array<number>>(
-    scripts.filter((script) => script.liked).map((script) => script.id)
+  const [liked, setLiked] = useState<Array<ScriptId>>(
+    pageScripts.filter((script) => script.liked).map((script) => script.id)
   )
 
   const subjectOptions = Array.from(
-    new Set(scripts.map((script) => script.subject))
+    new Set(pageScripts.map((script) => script.subject))
   )
 
-  const filteredScripts = scripts
+  const filteredScripts = pageScripts
     .filter((script) => {
       const matchesQuery =
         `${script.title} ${script.subject} ${script.professor} ${script.author}`
           .toLowerCase()
           .includes(query.toLowerCase())
-      const matchesSubject =
-        subject === 'All subjects' || script.subject === subject
+      const matchesSubject = subject === '' || script.subject === subject
       return matchesQuery && matchesSubject
     })
-    .sort((a, b) =>
-      sort === 'Title A-Z' ? a.title.localeCompare(b.title) : a.id - b.id
-    )
+    .sort((a, b) => (sort === 'Title A-Z' ? a.title.localeCompare(b.title) : 0))
 
-  const toggleSaved = (id: number) =>
+  const toggleSaved = (id: ScriptId) =>
     setSaved((current) =>
       current.includes(id)
         ? current.filter((item) => item !== id)
         : [...current, id]
     )
 
-  const toggleLiked = (id: number) =>
+  const toggleLiked = (id: ScriptId) =>
     setLiked((current) =>
       current.includes(id)
         ? current.filter((item) => item !== id)
@@ -168,10 +190,6 @@ const Page = ({
 
   return (
     <>
-      {/* <Box
-      as='main'
-      className='mx-auto max-w-360 ui-stack gap-10 px-5 py-8 lg:px-10 lg:py-12'
-    > */}
       <SearchHeader
         greeting={greeting}
         query={query}
@@ -180,6 +198,7 @@ const Page = ({
 
       <Box className='grid gap-10 xl:grid-cols-[minmax(0,1fr)_340px]'>
         <ScriptsSection
+          content={scriptSectionContent}
           scripts={filteredScripts}
           subjectOptions={subjectOptions}
           subject={subject}
@@ -191,15 +210,15 @@ const Page = ({
           onToggleSaved={toggleSaved}
           onToggleLiked={toggleLiked}
         />
-        <SubjectsSidebar subjects={subjects} />
+        <SubjectsSidebar subjects={pageSubjects} content={subjectsContent} />
       </Box>
 
       <ActivityStats
         savedCount={saved.length}
         authoredCount={authoredCount}
         commentCount={commentCount}
+        content={activityContent}
       />
-      {/* </Box> */}
     </>
   )
 }

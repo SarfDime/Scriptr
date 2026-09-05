@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { isUserRole } from '../../../shared/utils/api.utils'
 import { requiredParam } from '../lib/request'
 import { createInternalSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
@@ -21,7 +22,7 @@ internal.patch('/profiles/:id/role', async (c) => {
   const supabase = createInternalSupabaseClient(c)
   const { role } = await c.req.json()
 
-  if (!['student', 'moderator'].includes(role)) {
+  if (!isUserRole(role)) {
     return c.json(
       { error: 'Role must be either "student" or "moderator"' },
       400

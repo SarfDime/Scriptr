@@ -16,7 +16,7 @@
     "start:next": "npm run start --workspace next",
     "build": "npm run build:next",
     "next": "npm run start:next",
-    "gen:api-types": "npm run gen:types --workspace hono",
+    "gen:api-types": "npm run gen:types --workspace hono && npm run format",
     "check-types:sanity": "npm run check-types --workspace sanity",
     "sanity:schema": "npm run schema:extract --workspace sanity",
     "sanity:types": "npm run types:generate --workspace sanity",

@@ -13,6 +13,8 @@ local development, the full URL is `http://localhost:8787/api`.
 - [Comments](#comments)
 - [Flags](#flags)
 - [Profiles](#profiles)
+- [Profile Subjects](#profile-subjects)
+- [Favorites](#favorites)
 - [Votes](#votes)
 - [Internal Admin](#internal-admin)
 
@@ -263,14 +265,14 @@ Get reactions for a comment
 #### `POST /comments`
 Create a new comment
 - **Auth**: Required
-- **Body**: `{ content, professor_id? }` or `{ content, script_id? }`
+- **Body**: `{ content: PortableTextValue, professor_id? }` or `{ content: PortableTextValue, script_id? }`
 - **Restriction**: Exactly one of `professor_id` or `script_id` is required.
 - **Response**: Created comment
 
 #### `POST /comments/:commentId/replies`
 Create a reply to a comment
 - **Auth**: Required
-- **Body**: `{ content, professor_id? }` or `{ content, script_id? }`
+- **Body**: `{ content: PortableTextValue, professor_id? }` or `{ content: PortableTextValue, script_id? }`
 - **Restriction**: Exactly one of `professor_id` or `script_id` is required.
 - **Response**: Created reply with `parent_id`
 
@@ -377,7 +379,7 @@ Get current user's profile
 #### `PATCH /profiles/me`
 Update current user's profile
 - **Auth**: Required
-- **Body**: `{ username?, full_name?, completed_subject_ids? }`
+- **Body**: `{ username?, full_name?, selected_faculty_ids? }`
 - **Response**: Updated profile
 
 ### Internal-only role mutation
@@ -391,6 +393,55 @@ Update a user's role.
 > Public role mutation is intentionally not exposed on `/api/profiles`.
 
 ---
+
+## Profile Subjects
+
+All profile-subject endpoints require authentication and operate on the current
+user's subject status records.
+
+#### `GET /profile-subjects`
+List the current user's subjects and statuses.
+- **Auth**: Required
+- **Response**: Array of `{ subject_id, status, updated_at, subject }`
+
+#### `GET /profile-subjects/:subjectId`
+Get one of the current user's subject status records, or `null` when it is not set.
+- **Auth**: Required
+
+#### `PUT /profile-subjects/:subjectId`
+Create or replace the current user's status for a subject.
+- **Auth**: Required
+- **Body**: `{ status }`
+- **Response**: The saved subject status record
+
+#### `DELETE /profile-subjects/:subjectId`
+Remove the current user's status for a subject.
+- **Auth**: Required
+- **Response**: `{ success: true }`
+
+## Favorites
+
+All favorites endpoints require authentication and use the current user's
+favorite scripts.
+
+#### `GET /favorites`
+List the current user's favorite scripts.
+- **Auth**: Required
+- **Response**: Array of `{ created_at, script }`
+
+#### `GET /favorites/:scriptId`
+Get the current user's favorite record for a script, or `null` when it is not favorited.
+- **Auth**: Required
+
+#### `POST /favorites/:scriptId`
+Add a script to the current user's favorites. Repeating the request is safe.
+- **Auth**: Required
+- **Response**: The favorite record
+
+#### `DELETE /favorites/:scriptId`
+Remove a script from the current user's favorites.
+- **Auth**: Required
+- **Response**: `{ success: true }`
 
 ## Votes
 
@@ -481,5 +532,7 @@ Supported file types for scripts: `pdf`, `jpg`, `jpeg`, `png`, `webp`
 ### Internal writes
 Catalog writes and role changes are intentionally not available on the public API. Use `/api/internal` with the `x-internal-secret` header to mutate internal catalog records or update a profile role.
 
-### Subjects Passed
-Completed subjects are stored in `profile_completed_subjects` and managed through `completed_subject_ids`.
+### User-specific records
+Subject status records are stored in `profile_subjects` and managed through the
+`/profile-subjects` endpoints. Script favorites are stored in
+`script_favorites` and managed through the `/favorites` endpoints.

@@ -4,20 +4,12 @@ import DocumentText from '@sanity/icons/DocumentText'
 import Download from '@sanity/icons/Download'
 import Heart from '@sanity/icons/Heart'
 import { cn, paletteClass } from '@/lib/common-utils'
-import type { Script } from '@/types/components/Scripts.types'
+import type { ScriptCardProps } from '@/types/components/Scripts.types'
 import { Box } from '../common/Box'
 import { Button } from '../common/Button'
 import { Text } from '../typography/Text'
 import { Badge } from '../ui/Badge'
 import { Card } from '../ui/Card'
-
-interface ScriptCardProps {
-  script: Script
-  isSaved: boolean
-  isLiked: boolean
-  onToggleSaved: (id: number) => void
-  onToggleLiked: (id: number) => void
-}
 
 export const ScriptCard = ({
   script,
@@ -29,31 +21,30 @@ export const ScriptCard = ({
   const displayedLikes = script.likes + (isLiked && !script.liked ? 1 : 0)
 
   return (
-    <Card className={cn(paletteClass(script.color), 'p-4')}>
-      <Card.Body className='flex items-start gap-4 p-0'>
-        <Box
-          className={cn(
-            'hidden h-12 w-12 shrink-0 items-center justify-center rounded-lg border text-sm font-semibold sm:flex'
-          )}
-        >
-          <DocumentText strokeWidth={1.5} />
-        </Box>
+    <Card>
+      <Card.Body className='flex items-start gap-3'>
+        <DocumentText
+          className={cn('h-10 w-10 rounded-md p-1', paletteClass(script.color))}
+        />
 
-        <Box className='min-w-0 flex-1'>
+        <Box className='ui-stack min-w-0 flex-1 gap-1'>
           <Box className='flex flex-wrap items-center gap-2'>
-            <Text className='truncate text-sm font-medium text-fg-700'>
-              {script.title}
-            </Text>
-            <Badge colorPalette={script.color}>{script.tag}</Badge>
+            <Text className='ui-title'>{script.title}</Text>
+            {script.tag && (
+              <Badge colorPalette={script.color}>{script.tag}</Badge>
+            )}
           </Box>
-          <Text className='mt-1.5 text-xs text-fg-400'>
-            {script.subject} <span className='px-1 text-grey-400'>•</span>{' '}
-            {script.professor} <span className='px-1 text-grey-400'>•</span>{' '}
+          <Text className='ui-body'>
+            {script.subject} <span>•</span> {script.professor} <span>•</span>{' '}
             {script.year}
           </Text>
-          <Text className='mt-1 text-xs text-fg-400'>
-            Shared by {script.author}{' '}
-            <span className='px-1 text-grey-400'>•</span> {script.updated}
+          <Text className='ui-body'>
+            {script.author}
+            {script.updated && (
+              <>
+                <span className='px-1 text-grey-400'>•</span> {script.updated}
+              </>
+            )}
           </Text>
         </Box>
 
@@ -70,16 +61,12 @@ export const ScriptCard = ({
         </Button>
       </Card.Body>
 
-      <Card.Footer
-        className={cn(
-          'mt-4 flex flex-wrap items-center gap-2 border-t border-grey-300 pt-3'
-        )}
-      >
+      <Card.Footer className={cn('flex flex-wrap items-center gap-2 pt-3')}>
         <Button
           onClick={() => onToggleLiked(script.id)}
           className={cn(
             'button subtle',
-            'gap-1.5 px-2 py-1 text-xs',
+            'gap-1.5 px-2 py-1',
             isLiked && 'text-rose-pink'
           )}
           aria-label={`${isLiked ? 'Unlike' : 'Like'} ${script.title}`}
@@ -88,19 +75,17 @@ export const ScriptCard = ({
           {displayedLikes}
         </Button>
 
-        <Text className='flex items-center gap-1.5 px-2 py-1 text-xs text-fg-400'>
+        <Text className='flex items-center gap-1.5 px-2 py-1'>
           <Comment />
           {script.comments}
         </Text>
 
         <Box className='ml-auto flex items-center gap-2'>
-          <Button
-            className={cn('button basic', 'gap-1.5 px-2.5 py-1.5 text-xs')}
-          >
+          <Button className={cn('button basic', 'gap-1.5 px-2.5 py-1.5')}>
             <Download />
             Download
           </Button>
-          <Button className='button solid px-3 py-1.5 text-xs'>Preview</Button>
+          <Button className='button solid px-3 py-1.5'>Preview</Button>
         </Box>
       </Card.Footer>
     </Card>

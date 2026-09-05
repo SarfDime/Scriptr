@@ -1,4 +1,8 @@
 import { Hono } from 'hono'
+import {
+  isProfileSubjectStatus,
+  isUserRole,
+} from '../../../shared/utils/api.utils'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
@@ -104,7 +108,7 @@ auth.get('/session', async (c) => {
 
     const [
       { data: profile },
-      { data: completedSubjects },
+      { data: profileSubjects },
       { data: facultySelections },
     ] = await Promise.all([
       supabase
@@ -113,8 +117,8 @@ auth.get('/session', async (c) => {
         .eq('id', session.user.id)
         .single(),
       supabase
-        .from('profile_completed_subjects')
-        .select('subject_id')
+        .from('profile_subjects')
+        .select('subject_id, status')
         .eq('profile_id', session.user.id),
       supabase
         .from('profile_faculties')
@@ -127,9 +131,11 @@ auth.get('/session', async (c) => {
         id: session.user.id,
         email: session.user.email,
         username: profile?.username || session.user.user_metadata?.username,
-        role: profile?.role || 'student',
-        completed_subject_ids:
-          completedSubjects?.map(({ subject_id }) => subject_id) || [],
+        role: isUserRole(profile?.role) ? profile.role : 'student',
+        subjects:
+          profileSubjects?.flatMap(({ subject_id, status }) =>
+            isProfileSubjectStatus(status) ? [{ subject_id, status }] : []
+          ) || [],
         selected_faculty_ids:
           facultySelections?.map(({ faculty_id }) => faculty_id) || [],
       },
@@ -139,10 +145,8 @@ auth.get('/session', async (c) => {
   }
 })
 
-// Refresh session (optional)
+// Refresh session
 auth.post('/refresh', async (c) => {
-  // TODO: See if needed
-
   const { refresh_token } = await c.req.json()
 
   if (!refresh_token) {

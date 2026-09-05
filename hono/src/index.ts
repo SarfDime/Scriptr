@@ -5,10 +5,12 @@ import { handle } from 'hono/vercel'
 import auth from './routes/auth'
 import comments from './routes/comments'
 import faculties from './routes/faculties'
+import favorites from './routes/favorites'
 import fileOps from './routes/file-ops'
 import flags from './routes/flags'
 import internal from './routes/internal'
 import professors from './routes/professors'
+import profileSubjects from './routes/profile-subjects'
 import profiles from './routes/profiles'
 import scripts from './routes/scripts'
 import subjects from './routes/subjects'
@@ -74,7 +76,9 @@ app.route('/api/scripts', scripts)
 app.route('/api/votes', votes)
 app.route('/api/comments', comments)
 app.route('/api/flags', flags)
+app.route('/api/favorites', favorites)
 app.route('/api/profiles', profiles)
+app.route('/api/profile-subjects', profileSubjects)
 app.route('/api/internal', internal)
 
 app.get('/', (c) =>

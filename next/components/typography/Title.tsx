@@ -1,5 +1,5 @@
+import { isPortableTextValue } from '@shared/utils/portable-text.utils'
 import type { ReactNode } from 'react'
-import { isPortableText } from '@/lib/common-utils'
 import type { PortableTextType } from '@/types/components/PortableText.types'
 import type {
   AdditionalComponentAttributes,
@@ -24,17 +24,16 @@ export function Title({ children, as = 'h4', ...rest }: TitleProps) {
     return <HeadingTag {...rest}>{children}</HeadingTag>
   }
 
-  if (isPortableText(children)) {
+  if (isPortableTextValue(children)) {
+    // TODO: Fix the type assertion here, as children is already typed as PortableTextType
     return (
       <HeadingTag {...rest}>
-        <PortableTextContent
-          renderDefaultBlock={false}
-          renderWrapper={false}
-          portableText={children}
-        />
+        <PortableTextContent renderDefaultBlock={false} renderWrapper={false}>
+          {children as PortableTextType}
+        </PortableTextContent>
       </HeadingTag>
     )
   }
 
-  return <HeadingTag {...rest}>{children}</HeadingTag>
+  return <HeadingTag {...rest}>{children as ReactNode}</HeadingTag>
 }

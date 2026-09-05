@@ -15,13 +15,6 @@
     "paths": {
       "@/*": ["./*"],
       "@shared/*": ["../shared/*"]
-      // TODO: See if need to keep, imports may work without these paths, but may be useful for IDEs
-      // "@/layouts/*": ["./layouts/*"],
-      // "@/components/*": ["./components/*"],
-      // "@/styles/*": ["./styles/*"],
-      // "@/types/*": ["./types/*"],
-      // "@/hooks/*": ["./hooks/*"],
-      // "@/lib/*": ["./lib/*"]
     }
   },
   "include": [

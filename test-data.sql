@@ -90,11 +90,11 @@ INSERT INTO scripts (id, title, description, file_url, file_type, subject_id, pr
 ON CONFLICT (id) DO NOTHING;
 
 -- ============================================
--- 9. PROFILE_COMPLETED_SUBJECTS
+-- 9. PROFILE_SUBJECTS
 -- ============================================
-INSERT INTO profile_completed_subjects (profile_id, subject_id, passed_at) VALUES
-('00000000-0000-4000-8000-000000000000', 'subj-001', NOW() - INTERVAL '2 months'),
-('00000000-0000-4000-8000-000000000000', 'subj-002', NOW() - INTERVAL '1 month')
+INSERT INTO profile_subjects (profile_id, subject_id, status, updated_at) VALUES
+('00000000-0000-4000-8000-000000000000', 'subj-001', 'completed', NOW() - INTERVAL '2 months'),
+('00000000-0000-4000-8000-000000000000', 'subj-002', 'currently_taking', NOW() - INTERVAL '1 month')
 ON CONFLICT (profile_id, subject_id) DO NOTHING;
 
 -- ============================================

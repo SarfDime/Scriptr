@@ -1,7 +1,9 @@
+import type { ReactNode } from 'react'
 import type { BoxProps } from '../../components/common/Box'
 import type { ButtonProps } from '../../components/common/Button'
 
 type SelectOptionType<T = string> = {
+  id: string
   disabled?: boolean
   value: T
   label: React.ReactNode
@@ -13,11 +15,13 @@ type SelectOptionSelectType<T> = {
 
 type SelectOptionProps<T> = {
   option: SelectOptionType<T>
+  selectedId?: string
   buttonProps?: ButtonProps
 } & SelectOptionSelectType<T>
 
 type SelectOptionListProps<T> = {
   options: Array<SelectOptionType<T>>
+  selectedId?: string
   buttonProps?: ButtonProps
 } & BoxProps &
   SelectOptionSelectType<T>
@@ -32,6 +36,7 @@ type SelectProps<T = string> = {
   triggerProps?: ButtonProps
   buttonProps?: ButtonProps
   hideChevron?: boolean
+  icon?: ReactNode
 } & BoxProps
 
 export type {

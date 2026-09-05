@@ -1,4 +1,8 @@
 import { Hono } from 'hono'
+import {
+  isPortableTextValue,
+  portableTextToPlainText,
+} from '../../../shared/utils/portable-text.utils'
 import { requiredParam } from '../lib/request'
 import {
   authMiddleware,
@@ -96,10 +100,14 @@ comments.post('/:commentId/replies', authMiddleware, async (c) => {
   const user = c.get('user')
   const commentId = requiredParam(c, 'commentId')
   const supabase = createInternalSupabaseClient(c)
-  const { content, professor_id, script_id } = await c.req.json()
+  const { content, professor_id, script_id } = await c.req.json<{
+    content?: unknown
+    professor_id?: string
+    script_id?: string
+  }>()
 
   if (
-    !content ||
+    !isPortableTextValue(content) ||
     (professor_id && script_id) ||
     (!professor_id && !script_id)
   ) {
@@ -112,7 +120,7 @@ comments.post('/:commentId/replies', authMiddleware, async (c) => {
     )
   }
 
-  if (content.trim().length < 3) {
+  if (portableTextToPlainText(content).length < 3) {
     return c.json({ error: 'Reply must be at least 3 characters long' }, 400)
   }
 
@@ -167,10 +175,14 @@ comments.post('/', authMiddleware, async (c) => {
   const user = c.get('user')
   const supabase = createInternalSupabaseClient(c)
 
-  const { content, professor_id, script_id } = await c.req.json()
+  const { content, professor_id, script_id } = await c.req.json<{
+    content?: unknown
+    professor_id?: string
+    script_id?: string
+  }>()
 
   if (
-    !content ||
+    !isPortableTextValue(content) ||
     (professor_id && script_id) ||
     (!professor_id && !script_id)
   ) {
@@ -183,7 +195,7 @@ comments.post('/', authMiddleware, async (c) => {
     )
   }
 
-  if (content.trim().length < 3) {
+  if (portableTextToPlainText(content).length < 3) {
     return c.json({ error: 'Comment must be at least 3 characters long' }, 400)
   }
 
@@ -213,9 +225,12 @@ comments.patch('/:id', authMiddleware, async (c) => {
   const commentId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
 
-  const { content } = await c.req.json()
+  const { content } = await c.req.json<{ content?: unknown }>()
 
-  if (!content || content.trim().length < 3) {
+  if (
+    !isPortableTextValue(content) ||
+    portableTextToPlainText(content).length < 3
+  ) {
     return c.json({ error: 'Comment must be at least 3 characters long' }, 400)
   }
 

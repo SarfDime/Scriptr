@@ -33,28 +33,19 @@ Protected routes use `authMiddleware`, which calls `supabase.auth.getUser()` aga
 Use a cookie jar:
 
 ```bash
-# Login — save the session cookie
+# Login with a local test account and save the session cookie
 curl -c cookies.txt -X POST http://localhost:8787/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
-    "email":"redacted@example.test",
-    "password":"REDACTED_LOCAL_TEST_PASSWORD"
+    "email":"<local-test-email>",
+    "password":"<local-test-password>"
   }' | jq '{success, user: {id: .user.id, email: .user.email}}'
 ```
 
 The JSON body still includes `session.access_token` / `refresh_token`. Those are for `POST /api/auth/refresh` only, not for `Authorization` headers.
 
-### Test account
-
-| Field    | Value                                  |
-| -------- | -------------------------------------- |
-| Email    | `redacted@example.test`                   |
-| Password | `REDACTED_LOCAL_TEST_PASSWORD`                   |
-| Username | `localstudent`                          |
-| User ID  | `00000000-0000-4000-8000-000000000000` |
-| Role     | `student`                              |
-
-Selected faculties after seed: Computer Science + Engineering.
+Create a local test account through Supabase Auth or the register endpoint.
+Do not commit its password, session cookie, or access token.
 
 ### Current session (GET /api/auth/session)
 
@@ -64,7 +55,7 @@ There is **no** `GET /api/auth/me`.
 curl -b cookies.txt http://localhost:8787/api/auth/session | jq .
 ```
 
-Returns `user` with `id`, `email`, `username`, `role`, `completed_subject_ids`, `selected_faculty_ids`. Unauthenticated: `{ "user": null, "session": null }`.
+Returns `user` with `id`, `email`, `username`, `role`, `subjects`, and `selected_faculty_ids`. Unauthenticated: `{ "user": null, "session": null }`.
 
 ### Logout / refresh
 
@@ -86,7 +77,7 @@ Requires `email`, `password`, `username`, `full_name`.
 
 ## Seed IDs (live)
 
-From the loaded seed. Re-fetch lists if your DB was reseeded.
+From the loaded seed. Re-fetch lists if your database was reseeded.
 
 ### Universities (3)
 
@@ -134,7 +125,8 @@ UNI=ea820b10-8c0d-5922-8c32-0e205c3b3b57
 FAC=968000e6-7666-5f9e-9f0e-1634190f176a   # Computer Science
 PROF=9775ee05-547d-5f4a-a8bc-a9e48364a1e7 # Dr. Alice Johnson
 SUBJ=cc1e89dd-75d8-54e8-9ab5-7ba8be923783 # Data Structures
-USER=00000000-0000-4000-8000-000000000000
+USER=<profile-uuid>
+SCRIPT=<script-uuid>
 ```
 
 ---
@@ -169,12 +161,27 @@ curl -b cookies.txt -X PATCH http://localhost:8787/api/profiles/me \
     "selected_faculty_ids": [
       "968000e6-7666-5f9e-9f0e-1634190f176a",
       "f416f208-84ca-5a1d-b017-44d3649a4ee4"
-    ],
-    "completed_subject_ids": [
-      "cc1e89dd-75d8-54e8-9ab5-7ba8be923783",
-      "647c8285-6992-5bcd-a159-cb84aafffb3d"
     ]
   }' | jq .
+```
+
+### Profile subjects
+
+```bash
+curl -b cookies.txt http://localhost:8787/api/profile-subjects | jq .
+curl -b cookies.txt -X PUT http://localhost:8787/api/profile-subjects/$SUBJ \
+  -H "Content-Type: application/json" \
+  -d '{"status":"completed"}' | jq .
+curl -b cookies.txt -X DELETE http://localhost:8787/api/profile-subjects/$SUBJ | jq .
+```
+
+### Favorites
+
+```bash
+curl -b cookies.txt http://localhost:8787/api/favorites | jq .
+curl -b cookies.txt -X POST http://localhost:8787/api/favorites/$SCRIPT | jq .
+curl -b cookies.txt http://localhost:8787/api/favorites/$SCRIPT | jq .
+curl -b cookies.txt -X DELETE http://localhost:8787/api/favorites/$SCRIPT | jq .
 ```
 
 `PATCH /api/profiles/:id/role` does not exist on the public API. Role changes are internal-only and must be sent to `/api/internal/profiles/:id/role` with the `x-internal-secret` header.
@@ -265,7 +272,7 @@ curl http://localhost:8787/api/comments/$COMMENT/reactions | jq .
 
 curl -b cookies.txt -X POST http://localhost:8787/api/comments \
   -H "Content-Type: application/json" \
-  -d "{\"content\":\"Great professor, clear lectures.\",\"professor_id\":\"$PROF\"}" | jq .
+  -d "{\"content\":[{\"_type\":\"block\",\"children\":[{\"_type\":\"span\",\"text\":\"Great professor, clear lectures.\"}]}],\"professor_id\":\"$PROF\"}" | jq .
 ```
 
 Use exactly one of `professor_id` or `script_id` when creating a comment.
@@ -275,7 +282,7 @@ Replies use the same target rule and keep the parent comment id:
 ```bash
 curl -b cookies.txt -X POST http://localhost:8787/api/comments/$COMMENT/replies \
   -H "Content-Type: application/json" \
-  -d "{\"content\":\"Thanks for the clarification.\",\"script_id\":\"$SCRIPT\"}" | jq .
+  -d "{\"content\":[{\"_type\":\"block\",\"children\":[{\"_type\":\"span\",\"text\":\"Thanks for the clarification.\"}]}],\"script_id\":\"$SCRIPT\"}" | jq .
 ```
 
 Add or change a reaction with an upsert:

@@ -1,6 +1,8 @@
 # Scriptr API
 
-The Hono service is the implemented backend for Scriptr. It provides authentication, profiles, professors, subjects, scripts, comments, flags, votes, and Cloudflare R2 file operations.
+The Hono service is Scriptr's backend. It provides authentication, profiles,
+catalog data, scripts, comments, flags, votes, favorites, profile subjects,
+and Cloudflare R2 file operations.
 
 ## Stack
 
@@ -43,8 +45,10 @@ Never commit `.env` files or storage credentials.
 ```bash
 npm run dev:hono
 npm run check-types --workspace hono
-npm run lint
+npm run format
 ```
+
+Formatting is run from the repository root and applies Biome fixes automatically.
 
 ## API Base Path
 
@@ -56,7 +60,9 @@ All routes are mounted below `/api`:
 - `/api/votes`
 - `/api/comments`
 - `/api/flags`
+- `/api/favorites`
 - `/api/profiles`
+- `/api/profile-subjects`
 - `/api/universities`
 - `/api/faculties`
 - `/api/professors`
@@ -73,5 +79,5 @@ The complete endpoint, authentication, authorization, validation, and error refe
 - Role updates are never exposed on the public profile routes.
 - Moderator access is only used for moderator-only reads and for own-flag mutation checks.
 - Route parameters are validated before database operations.
-- Uploads are restricted to PDF, DOC, and DOCX files.
+- Uploads are restricted to the file types documented in the API reference.
 - R2 and Supabase credentials must be supplied through environment variables.

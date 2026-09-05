@@ -1,5 +1,4 @@
-import { generatePathWithTrailingSlash } from '../../lib/common-utils'
-import type { PageDomainType } from '../../types/common.types'
+import { generatePath } from '@/lib/common-utils'
 
 type PageSEOProps = {
   seoTitle?: string
@@ -13,7 +12,8 @@ type PageSEOProps = {
   openGraphType?: string
   param?: string
   keywords?: Array<string>
-} & PageDomainType
+  pageDomain?: string
+}
 
 /**
  * - PageSEO component that adds the NextSeo component from next-seo package
@@ -34,8 +34,8 @@ export function PageSEO({
   keywords,
 }: PageSEOProps) {
   const url: string = param
-    ? `${generatePathWithTrailingSlash({ segments: [pageDomain, param] })}`
-    : `${generatePathWithTrailingSlash({ segments: [pageDomain], endsWithSlash: true })}`
+    ? `${generatePath({ segments: [pageDomain, param] })}`
+    : `${generatePath({ segments: [pageDomain], endsWithSlash: true })}`
   return {
     title: seoTitle,
     description: seoDescription,

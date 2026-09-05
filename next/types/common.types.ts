@@ -1,7 +1,17 @@
 import type { BREAKPOINTS } from '@shared/config/next-constants'
+import type { ComponentColorPalettes } from './component.types'
+import type { PortableTextType } from './components/PortableText.types'
 
-type PageDomainType = {
-  pageDomain: string
+type SlugType = {
+  _type: string
+  current: string
+}
+
+type LinkSelectorProps = {
+  pageSlug: SlugType
+  sectionSlug: SlugType
+  linkType: 'internal' | 'custom'
+  customLink: string
 }
 
 type SanityImageType = {
@@ -33,6 +43,18 @@ type SanityImageSrcType = {
   alt?: string
 }
 
+type SanityButton = {
+  _id: string
+  buttonLabel?: PortableTextType
+  buttonColorVariant?:
+    | 'solid'
+    | 'solid alternate'
+    | 'outline'
+    | 'transparent'
+    | 'transparent alternate'
+    | ComponentColorPalettes
+} & LinkSelectorProps
+
 type ImageObjectFitType = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down'
 
 type ImageObjectPositionType =
@@ -52,7 +74,8 @@ export type {
   ButtonType,
   ImageObjectFitType,
   ImageObjectPositionType,
-  PageDomainType,
+  LinkSelectorProps,
+  SanityButton,
   SanityImageSrcType,
   SanityImageType,
 }

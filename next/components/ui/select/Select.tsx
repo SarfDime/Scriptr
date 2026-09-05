@@ -27,6 +27,7 @@ export const Select = <T = string>({
   buttonProps,
   triggerProps,
   setSelectedValue,
+  icon,
   ...rest
 }: SelectProps<T>) => {
   const [selectedOption, setSelectedOption] =
@@ -51,6 +52,11 @@ export const Select = <T = string>({
   return (
     <Box
       {...rest}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+          setListOpen(false)
+        }
+      }}
       className={cn(
         'group/select relative flex w-full cursor-pointer items-center rounded-md bg-background-100 text-gray-700',
         rest.className
@@ -59,7 +65,6 @@ export const Select = <T = string>({
       data-valid={Boolean(selectedOption)}
     >
       <Button
-        type='button'
         onClick={handleToggle}
         aria-expanded={listOpen}
         {...triggerProps}
@@ -68,6 +73,7 @@ export const Select = <T = string>({
           triggerProps?.className
         )}
       >
+        {icon && <span className='shrink-0'>{icon}</span>}
         {selectedOption ? selectedOption.label : placeholder}
         {!hideChevron && (
           <ChevronDownIcon
@@ -79,7 +85,6 @@ export const Select = <T = string>({
       </Button>
       {clearable && selectedOption && (
         <CloseButton
-          type='button'
           onClick={handleClear}
           className='p-2 text-gray-500 hover:text-gray-700 focus:outline-none'
           iconProps={{
@@ -92,6 +97,7 @@ export const Select = <T = string>({
           {...selectListProps}
           buttonProps={buttonProps}
           options={options}
+          selectedId={selectedOption?.id}
           handleSelect={handleSelect}
         />
       )}

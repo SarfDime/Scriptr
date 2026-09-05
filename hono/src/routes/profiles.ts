@@ -12,7 +12,7 @@ profiles.get('/', async (c) => {
   const { data, error } = await supabase
     .from('profiles')
     .select(
-      'id, username, full_name, role, achievements, avatar_url, created_at, profile_completed_subjects(subject_id, passed_at)'
+      'id, username, full_name, role, achievements, avatar_url, created_at, subjects:profile_subjects(subject_id, status, updated_at)'
     )
     .order('created_at', { ascending: false })
 
@@ -28,7 +28,7 @@ profiles.get('/me', authMiddleware, async (c) => {
   const { data, error } = await supabase
     .from('profiles')
     .select(
-      '*, completed_subjects:profile_completed_subjects(subject_id, passed_at), selected_faculties:profile_faculties(faculty:faculties(*, university:universities(id, name)))'
+      '*, subjects:profile_subjects(subject_id, status, updated_at), selected_faculties:profile_faculties(faculty:faculties(*, university:universities(id, name)))'
     )
     .eq('id', user.id)
     .single()
@@ -50,7 +50,7 @@ profiles.get('/username/:username', async (c) => {
       full_name,
       role,
       achievements,
-      completed_subjects:profile_completed_subjects(subject_id, passed_at),
+      subjects:profile_subjects(subject_id, status, updated_at),
       created_at,
       scripts:scripts(
         id,
@@ -81,7 +81,7 @@ profiles.get('/:id', async (c) => {
       full_name,
       role,
       achievements,
-      completed_subjects:profile_completed_subjects(subject_id, passed_at),
+      subjects:profile_subjects(subject_id, status, updated_at),
       created_at,
       scripts:scripts(
         id,
@@ -104,8 +104,7 @@ profiles.patch('/me', authMiddleware, async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)
 
-  const { username, full_name, completed_subject_ids, selected_faculty_ids } =
-    await c.req.json()
+  const { username, full_name, selected_faculty_ids } = await c.req.json()
 
   // Validate username if provided
   if (username) {
@@ -143,22 +142,6 @@ profiles.patch('/me', authMiddleware, async (c) => {
       return c.json({ error: 'Username already taken' }, 400)
     }
     return c.json({ error: error.message }, 500)
-  }
-
-  if (Array.isArray(completed_subject_ids)) {
-    await supabase
-      .from('profile_completed_subjects')
-      .delete()
-      .eq('profile_id', user.id)
-
-    if (completed_subject_ids.length > 0) {
-      await supabase.from('profile_completed_subjects').insert(
-        completed_subject_ids.map((subjectId: string) => ({
-          profile_id: user.id,
-          subject_id: subjectId,
-        }))
-      )
-    }
   }
 
   if (Array.isArray(selected_faculty_ids)) {

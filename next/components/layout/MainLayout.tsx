@@ -1,5 +1,5 @@
 import { Box } from '../common/Box'
-import { Header } from '../navigation/Navbar'
+import { Header } from '../navigation/Header'
 
 export const MainLayout = ({ children }: { children: React.ReactNode }) => {
   return (

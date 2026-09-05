@@ -20,7 +20,7 @@ type ComponentParserType = {
 type PortableTextType = Array<PortableTextBlock>
 
 type PortableContentProps = {
-  portableText?: PortableTextType
+  children?: PortableTextType
   renderWrapper?: boolean
   as?: ComponentTags['box']
 } & Omit<BoxProps, 'children' | 'as'> &

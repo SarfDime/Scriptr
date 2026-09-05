@@ -8,6 +8,7 @@ import { SelectOption } from './SelectOption'
  */
 export const SelectOptionList = <T,>({
   options,
+  selectedId,
   handleSelect,
   buttonProps,
   ...rest
@@ -21,12 +22,13 @@ export const SelectOptionList = <T,>({
         rest?.className
       )}
     >
-      {options?.map((option, index) => (
+      {options?.map((option, _index) => (
         <SelectOption
-          key={`${index}-select-option-${option?.value}`}
+          key={option.id}
           option={option}
           buttonProps={buttonProps}
           handleSelect={handleSelect}
+          selectedId={selectedId}
         />
       ))}
     </Box>

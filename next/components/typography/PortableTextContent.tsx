@@ -11,9 +11,9 @@ import { portableTextParser } from './PortableTextParser'
  * specific block types, and flexible element overrides.
  */
 export const PortableTextContent = ({
-  portableText,
+  children,
   renderDefaultBlock,
-  renderWrapper = false,
+  renderWrapper = true,
   as,
   className,
   overrideElements = {},
@@ -25,11 +25,11 @@ export const PortableTextContent = ({
         <Box
           as={as ?? 'article'}
           {...rest}
-          className={cn('ui-prose pt-text', className)}
+          className={cn('pt-text', className)}
         >
-          {portableText && (
+          {children && (
             <PortableText
-              value={portableText}
+              value={children}
               components={portableTextParser({
                 overrideElements,
                 renderDefaultBlock,
@@ -40,9 +40,9 @@ export const PortableTextContent = ({
       ) : (
         // biome-ignore lint/complexity/noUselessFragments: <Will cause to show the boolean>
         <>
-          {portableText && (
+          {children && (
             <PortableText
-              value={portableText}
+              value={children}
               components={portableTextParser({
                 renderDefaultBlock,
                 overrideElements,

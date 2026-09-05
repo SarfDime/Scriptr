@@ -1,16 +1,12 @@
-import ChevronDown from '@sanity/icons/ChevronDown'
 import Menu from '@sanity/icons/Menu'
+import { UI_STRINGS } from '@shared/config/strings'
+import type {
+  ScriptFiltersProps,
+  SortOption,
+} from '@/types/components/Scripts.types'
+import type { SelectOptionType } from '@/types/components/Select.types'
 import { Box } from '../common/Box'
-
-export type SortOption = 'Recently updated' | 'Title A-Z'
-
-interface ScriptFiltersProps {
-  subject: string
-  subjects: Array<string>
-  sort: SortOption
-  onSubjectChange: (value: string) => void
-  onSortChange: (value: SortOption) => void
-}
+import { Select } from '../ui/select/Select'
 
 export const ScriptFilters = ({
   subject,
@@ -19,30 +15,59 @@ export const ScriptFilters = ({
   onSubjectChange,
   onSortChange,
 }: ScriptFiltersProps) => {
+  const subjectOptions: Array<SelectOptionType<string>> = [
+    {
+      id: 'all-subjects',
+      label: UI_STRINGS.scripts.filters.allSubjects,
+      value: '',
+    },
+    ...subjects.map((item) => ({
+      id: `subject-${item}`,
+      label: item,
+      value: item,
+    })),
+  ]
+  const sortOptions: Array<SelectOptionType<SortOption>> = [
+    {
+      id: 'recently-updated',
+      label: UI_STRINGS.scripts.filters.recentlyUpdated,
+      value: 'Recently updated',
+    },
+    {
+      id: 'title-a-z',
+      label: UI_STRINGS.scripts.filters.titleAZ,
+      value: 'Title A-Z',
+    },
+  ]
+
   return (
     <Box className='flex items-center gap-2'>
-      <Box className='relative'>
-        <Menu className='pointer-events-none absolute left-3 top-2.5 text-fg-400' />
-        <select
-          value={subject}
-          onChange={(event) => onSubjectChange(event.target.value)}
-          className='appearance-none rounded-lg border border-grey-300 bg-background-200 py-2 pl-9 pr-8 text-xs text-fg-400 outline-none focus:border-brand-300'
-        >
-          <option>All subjects</option>
-          {subjects.map((item) => (
-            <option key={item}>{item}</option>
-          ))}
-        </select>
-        <ChevronDown className='pointer-events-none absolute right-2.5 top-2.5 text-fg-400' />
-      </Box>
-      <select
-        value={sort}
-        onChange={(event) => onSortChange(event.target.value as SortOption)}
-        className='rounded-lg border border-grey-300 bg-background-200 px-3 py-2 text-xs text-fg-400 outline-none focus:border-brand-300'
-      >
-        <option>Recently updated</option>
-        <option>Title A-Z</option>
-      </select>
+      <Select
+        className='w-auto bg-background-200'
+        defaultOption={
+          subjectOptions.find((option) => option.value === subject) ??
+          subjectOptions[0]
+        }
+        options={subjectOptions}
+        icon={<Menu className='text-fg-400' />}
+        setSelectedValue={(value) => onSubjectChange(value || '')}
+        triggerProps={{
+          'aria-label': UI_STRINGS.scripts.filters.subjectLabel,
+          className:
+            'button ghost min-w-36 rounded-lg border border-grey-300 px-3 py-2 ui-caption',
+        }}
+      />
+      <Select<SortOption>
+        className='w-auto bg-background-200'
+        defaultOption={sortOptions.find((option) => option.value === sort)}
+        options={sortOptions}
+        setSelectedValue={onSortChange}
+        triggerProps={{
+          'aria-label': UI_STRINGS.scripts.filters.sortLabel,
+          className:
+            'button ghost min-w-36 rounded-lg border border-grey-300 px-3 py-2 ui-caption',
+        }}
+      />
     </Box>
   )
 }

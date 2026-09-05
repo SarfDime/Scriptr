@@ -4,37 +4,23 @@
   justify-content: center;
   padding-inline: 1.5rem;
   padding-block: 0.75rem;
-  transition: all;
-  border-radius: var(--ui-radius, 0.75rem);
+  border-radius: 0.75rem;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease,
+    opacity 0.2s ease,
+    transform 0.2s ease;
 
   &:not(:disabled) {
     cursor: pointer;
-    transition: all 0.25s linear;
   }
 
   &:disabled {
     pointer-events: none;
     filter: grayscale(1);
-  }
-}
-
-@utility button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding-inline: 1.5rem;
-  padding-block: 0.75rem;
-  transition: all;
-  border-radius: var(--ui-radius, 0.75rem);
-
-  &:not(:disabled) {
-    cursor: pointer;
-    transition: all 0.25s linear;
-  }
-
-  &:disabled {
-    pointer-events: none;
-    filter: grayscale(1);
+    opacity: 0.55;
   }
 
   &:active:not(:disabled) {
@@ -45,6 +31,56 @@
   &:focus-visible {
     outline: 2px solid var(--color-brand);
     outline-offset: 2px;
+  }
+
+  &[data-active="true"]:not(:disabled) {
+    background-color: var(--color-brand-100);
+    color: var(--color-brand-700);
+    box-shadow: var(--shadow-brand-transparent);
+  }
+}
+
+@utility outline {
+  border: 1px solid var(--color-brand-300);
+  background-color: transparent;
+  color: var(--color-brand);
+  font-weight: 600;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      border-color: var(--color-brand-400);
+      background-color: var(--color-brand-50);
+      box-shadow: var(--shadow-brand-transparent);
+    }
+  }
+}
+
+@utility ghost {
+  background-color: transparent;
+  color: var(--color-fg-600);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background-color: var(--color-grey-200);
+      color: var(--color-brand);
+    }
+  }
+}
+
+@utility link {
+  padding: 0;
+  border-radius: 0;
+  background-color: transparent;
+  color: var(--color-brand);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.2em;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      color: var(--color-brand-600);
+      text-decoration-color: currentColor;
+    }
   }
 }
 
@@ -149,6 +185,34 @@
   background-color: var(--color-error-red);
   color: var(--color-background-100);
   font-size: 1rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      box-shadow: var(--shadow-brand-light);
+      opacity: 0.9;
+    }
+  }
+}
+
+@utility warning {
+  background-color: var(--color-golden-yellow);
+  color: var(--color-brand-700);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background-color: var(--color-yellow);
+      box-shadow: var(--shadow-brand-transparent);
+    }
+  }
+}
+
+@utility danger {
+  background-color: var(--color-error-red);
+  color: var(--color-background-100);
   font-weight: 600;
   box-shadow: var(--shadow-sm);
 

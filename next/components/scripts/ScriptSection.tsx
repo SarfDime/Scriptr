@@ -1,27 +1,16 @@
 import ChevronDown from '@sanity/icons/ChevronDown'
+import { UI_STRINGS } from '@shared/config/strings'
 import { cn } from '@/lib/common-utils'
-import type { Script } from '@/types/components/Scripts.types'
+import type { ScriptsSectionProps } from '@/types/components/Scripts.types'
 import { Box } from '../common/Box'
 import { Button } from '../common/Button'
+import { PortableTextContent } from '../typography/PortableTextContent'
 import { Text } from '../typography/Text'
-import { Title } from '../typography/Title'
 import { ScriptCard } from './ScriptCard'
-import { ScriptFilters, type SortOption } from './ScriptFilters'
-
-interface ScriptsSectionProps {
-  scripts: Array<Script>
-  subjectOptions: Array<string>
-  subject: string
-  sort: SortOption
-  onSubjectChange: (value: string) => void
-  onSortChange: (value: SortOption) => void
-  savedIds: Array<number>
-  likedIds: Array<number>
-  onToggleSaved: (id: number) => void
-  onToggleLiked: (id: number) => void
-}
+import { ScriptFilters } from './ScriptFilters'
 
 export const ScriptsSection = ({
+  content,
   scripts,
   subjectOptions,
   subject,
@@ -34,16 +23,9 @@ export const ScriptsSection = ({
   onToggleLiked,
 }: ScriptsSectionProps) => {
   return (
-    <Box as='section'>
-      <Box className='mb-5 flex flex-wrap items-center justify-between gap-3'>
-        <Box>
-          <Title as='h2' className='text-xl font-medium tracking-tight'>
-            Continue learning
-          </Title>
-          <Text className='mt-1 text-sm text-fg-400'>
-            Scripts from your subjects and community.
-          </Text>
-        </Box>
+    <Box as='section' className='ui-stack gap-5'>
+      <Box className='ui-cluster items-start justify-between gap-3'>
+        <PortableTextContent>{content}</PortableTextContent>
         <ScriptFilters
           subject={subject}
           subjects={subjectOptions}
@@ -67,13 +49,13 @@ export const ScriptsSection = ({
       </Box>
 
       {scripts.length === 0 && (
-        <Box className='rounded-xl border border-dashed border-grey-300 px-6 py-14 text-center text-sm text-fg-400'>
-          No scripts match that search.
-        </Box>
+        <Text className='ui-subtitle rounded-xl border border-dashed border-grey-300 px-6 py-14 text-center'>
+          {UI_STRINGS.scripts.emptyState}
+        </Text>
       )}
 
-      <Button className={cn('button basic', 'mt-5 w-full gap-2 py-3 text-sm')}>
-        Browse all scripts <ChevronDown />
+      <Button className={cn('button subtle', 'w-full gap-2 py-3 ui-body')}>
+        <Text>{UI_STRINGS.scripts.browseAll}</Text> <ChevronDown />
       </Button>
     </Box>
   )

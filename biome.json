@@ -125,7 +125,8 @@
         "**/*.ts",
         "**/*.tsx",
         "!**/*.d.ts",
-        "!hono/src/types/supabase.ts"
+        "!hono/src/types/supabase.ts",
+        "!shared/types/database.types.ts"
       ],
       "linter": {
         "rules": {

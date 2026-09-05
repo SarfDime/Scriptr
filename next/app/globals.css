@@ -19,6 +19,10 @@
   }
 }
 
+svg {
+  font-size: 1.75rem;
+}
+
 body {
   background: var(--color-background);
   color: var(--color-fg);
@@ -28,12 +32,4 @@ body {
     color 200ms ease;
   display: flex;
   height: 100dvh;
-  * {
-    @apply text-lg;
-  }
-
-  [data-sanity-icon] {
-    width: 1.75rem;
-    height: 1.75rem;
-  }
 }
