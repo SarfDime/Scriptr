@@ -1,7 +1,7 @@
 import EllipsisVertical from '@sanity/icons/EllipsisVertical'
 import { Box } from '../common/Box'
-import { Button } from '../common/Button'
 import { NextImage } from '../common/NextImage'
+import { NextLink } from '../common/NextLink'
 import { Text } from '../typography/Text'
 
 const UserAvatar = () => (
@@ -19,14 +19,14 @@ export const UserCard = ({
   name: string
   userRole: string
 }) => (
-  <Button className='button subtle w-full gap-3 p-2'>
+  <NextLink href={'/user'} className='button subtle w-full gap-3 p-2'>
     <UserAvatar />
     <Box className='text-left'>
       <Text className='ui-label text-fg-700'>{name}</Text>
       <Text className='ui-caption'>{userRole}</Text>
     </Box>
     <EllipsisVertical className='ml-auto text-fg-400' />
-  </Button>
+  </NextLink>
 )
 
 export const defaultUser = {

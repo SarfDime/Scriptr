@@ -1,3 +1,4 @@
+import type { BoxProps } from '@/components/common/Box'
 import type { ComponentColorPalettes } from '../component.types'
 import type { PortableTextType } from './PortableText.types'
 
@@ -19,4 +20,4 @@ export type SubjectCardProps = {
 export type SubjectsSidebarProps = {
   subjects: Array<Subject>
   content: PortableTextType
-}
+} & Omit<BoxProps, 'content' | 'as'>

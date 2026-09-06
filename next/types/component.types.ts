@@ -22,7 +22,7 @@ type ComponentTags = {
   audio: 'audio'
 }
 
-type ComponentColorPalettes =
+type ComponentColorPalettes = `cp-${
   | 'red'
   | 'green'
   | 'blue'
@@ -35,7 +35,7 @@ type ComponentColorPalettes =
   | 'success'
   | 'warning'
   | 'danger'
-  | 'unstyled'
+  | 'unstyled'}`
 
 type ComponentPlacement = {
   placement: 'left' | 'center' | 'right'

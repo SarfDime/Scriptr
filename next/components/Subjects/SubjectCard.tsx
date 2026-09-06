@@ -1,5 +1,5 @@
 import Menu from '@sanity/icons/Menu'
-import { cn, paletteClass } from '@/lib/common-utils'
+import { cn } from '@/lib/common-utils'
 import type { SubjectCardProps } from '@/types/components/Subjects.types'
 import { Box } from '../common/Box'
 import { Text } from '../typography/Text'
@@ -12,7 +12,7 @@ export const SubjectCard = ({ subject }: SubjectCardProps) => {
         <Box
           className={cn(
             'flex h-9 w-9 items-center justify-center rounded-lg border ui-label',
-            paletteClass(subject.color)
+            subject.color
           )}
         >
           {subject.name.slice(0, 2).toUpperCase()}
@@ -28,10 +28,7 @@ export const SubjectCard = ({ subject }: SubjectCardProps) => {
         <Box className='ui-stack gap-2'>
           <Text className='ui-label'>{subject.next}</Text>
           <Box
-            className={cn(
-              'h-full rounded-full bg-brand-300',
-              paletteClass(subject.color)
-            )}
+            className={cn('h-full rounded-full bg-brand-300', subject.color)}
             style={{ width: `${subject.progress}%` }}
           />
         </Box>

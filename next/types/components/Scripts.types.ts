@@ -3,6 +3,7 @@ import type {
   ProfileSubject,
   ProfileSubjectStatus,
 } from '@shared/types/api.types'
+import type { BoxProps } from '@/components/common/Box'
 import type { ComponentColorPalettes } from '../component.types'
 import type { PortableTextType } from './PortableText.types'
 import type { Subject } from './Subjects.types'
@@ -65,7 +66,7 @@ export type ScriptsSectionProps = {
   likedIds: Array<ScriptId>
   onToggleSaved: (id: ScriptId) => void
   onToggleLiked: (id: ScriptId) => void
-}
+} & Omit<BoxProps, 'content' | 'as'>
 
 export type SearchHeaderProps = {
   greeting: string

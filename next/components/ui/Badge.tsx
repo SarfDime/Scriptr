@@ -10,15 +10,15 @@ export type BadgeProps = {
 
 export const Badge = ({
   children,
-  colorPalette = 'gray',
+  colorPalette = 'cp-gray',
   variant = 'solid',
   className,
   ...rest
 }: BadgeProps) => {
   const colorStyle =
     variant === 'solid'
-      ? `cp-${colorPalette}`
-      : cn(`cp-${colorPalette}`, 'border border-currentColor')
+      ? colorPalette
+      : cn(colorPalette, 'border border-currentColor')
 
   return (
     <Text

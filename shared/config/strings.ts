@@ -3,7 +3,7 @@ export const UI_STRINGS = {
     studyTip: 'Study tip',
   },
   scripts: {
-    emptyState: 'No scripts match that search.',
+    emptyState: 'Nothing found.',
     browseAll: 'Browse all scripts',
     searchPlaceholder: 'Search scripts, subjects, professors...',
     filters: {

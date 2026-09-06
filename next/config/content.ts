@@ -4,7 +4,7 @@ export const DEFAULT_ACTIVITY_CONTENT: PortableTextType = [
   {
     _type: 'block',
     children: [
-      { _type: 'span', text: 'Your activity' },
+      { _type: 'span', text: 'Your activity\n' },
       { _type: 'span', text: 'A quick view of the work you have been making.' },
     ],
   },

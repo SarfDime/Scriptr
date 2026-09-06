@@ -9,12 +9,7 @@ import { twMerge } from 'tailwind-merge'
 import type { LinkSelectorProps } from '@/types/common.types'
 import type { PortableTextType } from '@/types/components/PortableText.types'
 import { client } from '../sanityClient'
-import type {
-  ComponentColorPalettes,
-  ComponentPlacement,
-} from '../types/component.types'
-
-export const paletteClass = (color: ComponentColorPalettes) => `cp-${color}`
+import type { ComponentPlacement } from '../types/component.types'
 
 /** A utility function that takes a localized string or content object and returns a plain text version of it. */
 export const convertToPlainText = ({ value }: { value?: PortableTextType }) => {

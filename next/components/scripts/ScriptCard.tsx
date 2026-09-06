@@ -3,7 +3,7 @@ import Comment from '@sanity/icons/Comment'
 import DocumentText from '@sanity/icons/DocumentText'
 import Download from '@sanity/icons/Download'
 import Heart from '@sanity/icons/Heart'
-import { cn, paletteClass } from '@/lib/common-utils'
+import { cn } from '@/lib/common-utils'
 import type { ScriptCardProps } from '@/types/components/Scripts.types'
 import { Box } from '../common/Box'
 import { Button } from '../common/Button'
@@ -17,6 +17,8 @@ export const ScriptCard = ({
   isLiked,
   onToggleSaved,
   onToggleLiked,
+  // TODO: Script card should handle onSaved, onLiked, isSaved, isLiked,
+  // the only thing that should be passed in is the script itself.
 }: ScriptCardProps) => {
   const displayedLikes = script.likes + (isLiked && !script.liked ? 1 : 0)
 
@@ -24,7 +26,7 @@ export const ScriptCard = ({
     <Card>
       <Card.Body className='flex items-start gap-3'>
         <DocumentText
-          className={cn('h-10 w-10 rounded-md p-1', paletteClass(script.color))}
+          className={cn('h-10 w-10 rounded-md p-1', script.color)}
         />
 
         <Box className='ui-stack min-w-0 flex-1 gap-1'>
@@ -49,7 +51,7 @@ export const ScriptCard = ({
         </Box>
 
         <Button
-          onClick={() => onToggleSaved(script.id)}
+          onClick={() => onToggleSaved?.(script.id)}
           className={cn('button subtle p-2', isSaved && 'text-golden-yellow')}
           aria-label={
             isSaved
@@ -61,9 +63,9 @@ export const ScriptCard = ({
         </Button>
       </Card.Body>
 
-      <Card.Footer className={cn('flex flex-wrap items-center gap-2 pt-3')}>
+      <Card.Footer className={cn('flex flex-wrap items-center gap-2')}>
         <Button
-          onClick={() => onToggleLiked(script.id)}
+          onClick={() => onToggleLiked?.(script.id)}
           className={cn(
             'button subtle',
             'gap-1.5 px-2 py-1',
@@ -84,8 +86,11 @@ export const ScriptCard = ({
           <Button className={cn('button basic', 'gap-1.5 px-2.5 py-1.5')}>
             <Download />
             Download
+            {/* TODO: Download should trigger the download of the script file */}
+            {/* TODO: Add to strings file */}
           </Button>
           <Button className='button solid px-3 py-1.5'>Preview</Button>
+          {/* TODO: Preview should open the script in a preview mode as a modal or new page */}
         </Box>
       </Card.Footer>
     </Card>

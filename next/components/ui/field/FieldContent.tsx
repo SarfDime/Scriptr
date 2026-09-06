@@ -31,12 +31,12 @@ export const FieldContent = ({
         <Text as='label' {...labelProps}>
           {label}
           {required && !valid && (
-            <Badge colorPalette='red' variant='outline' {...badgeProps}>
+            <Badge colorPalette='cp-red' variant='outline' {...badgeProps}>
               {requiredText || 'Required'}
             </Badge>
           )}
           {valid && (
-            <Badge variant='outline' colorPalette='brand' {...badgeProps}>
+            <Badge variant='outline' colorPalette='cp-success' {...badgeProps}>
               {validText || 'Valid'}
             </Badge>
           )}

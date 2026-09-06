@@ -3,14 +3,14 @@ import { UI_STRINGS } from '@shared/config/strings'
 import { cn } from '@/lib/common-utils'
 import type { SearchHeaderProps } from '@/types/components/Scripts.types'
 import { Box } from '../common/Box'
+import { PageHeader } from '../layout/PageHeader'
 import { InputWrapper } from '../typography/InputWrapper'
-import { Text } from '../typography/Text'
-import { Title } from '../typography/Title'
 
 export const SearchHeader = ({
   greeting,
   query,
   onQueryChange,
+  // TODO: Should be totally SOLID
 }: SearchHeaderProps) => {
   return (
     <Box
@@ -20,16 +20,22 @@ export const SearchHeader = ({
         'lg:flex-row lg:items-end lg:justify-between'
       )}
     >
-      <Box className='ui-stack gap-3'>
-        <Text className='ui-title text-brand'>{greeting}</Text>
-        <Title as='h1' className='ui-display max-w-2xl'>
-          Make studying feel a little lighter.
-        </Title>
-        <Text className='ui-subtitle max-w-xl leading-7'>
-          Find the notes, scripts, and shared knowledge you need to move through
-          this week with confidence.
-        </Text>
-      </Box>
+      <PageHeader
+        greeting={greeting}
+        title='Make studying feel a little lighter.'
+        subtitle='Find the notes, scripts, and shared knowledge you need to move through this week with confidence.'
+      >
+        <InputWrapper
+          inputVal={query}
+          inputOnChange={(event) => onQueryChange(event.target.value)}
+          inputProps={{
+            id: 'script-search',
+            placeholder: UI_STRINGS.scripts.searchPlaceholder,
+            className:
+              'ui-body min-w-0 flex-1 bg-transparent text-fg-700 outline-none placeholder:text-fg-400',
+          }}
+        />
+      </PageHeader>
 
       <Box className='w-full max-w-md'>
         <label className='sr-only' htmlFor='script-search'>
