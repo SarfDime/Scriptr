@@ -22,74 +22,82 @@ local development, the full URL is `http://localhost:8787/api`.
 
 ## Catalog
 
-### Public read-only endpoints
+### Internal-only endpoints (secret-protected)
+
+Academic catalog data (universities, faculties, professors, subjects) is
+admin-managed and not exposed to end users. Every route below, including
+reads, requires the `x-internal-secret` header to match `INTERNAL_API_SECRET`,
+even though the routes are mounted at `/api/universities`, `/api/faculties`,
+`/api/professors`, and `/api/subjects`.
 
 #### `GET /universities`
 Get all universities with faculties.
-- **Auth**: Not required
+- **Auth**: `x-internal-secret` required
 - **Response**: Array of universities
 
 #### `GET /universities/:id`
 Get a single university by ID.
-- **Auth**: Not required
+- **Auth**: `x-internal-secret` required
 - **Response**: University with faculties
 
 #### `GET /faculties`
 Get all faculties with university metadata.
-- **Auth**: Not required
+- **Auth**: `x-internal-secret` required
 - **Response**: Array of faculties
 
 #### `GET /faculties/:id`
 Get a single faculty by ID.
-- **Auth**: Not required
+- **Auth**: `x-internal-secret` required
 - **Response**: Faculty details
 
 #### `GET /professors`
 Get all professors with their subjects and faculty metadata.
-- **Auth**: Not required
+- **Auth**: `x-internal-secret` required
 - **Response**: Array of professors
 
 #### `GET /professors/:id`
 Get a single professor by ID.
-- **Auth**: Not required
+- **Auth**: `x-internal-secret` required
 - **Response**: Professor object with related records
 
 #### `GET /subjects`
 Get all subjects with faculty and professor metadata.
-- **Auth**: Not required
+- **Auth**: `x-internal-secret` required
 - **Response**: Array of subjects
 
 #### `GET /subjects/year/:year`
 Get subjects by year.
-- **Auth**: Not required
+- **Auth**: `x-internal-secret` required
 - **Response**: Array of subjects
 
 #### `GET /subjects/:id`
 Get a single subject by ID.
-- **Auth**: Not required
+- **Auth**: `x-internal-secret` required
 - **Response**: Subject details
 
-> Catalog mutation routes are intentionally not exposed under `/api/universities`, `/api/faculties`, `/api/professors`, or `/api/subjects`. Internal-only writes must use `/api/internal` with the `x-internal-secret` header.
+> Catalog mutation routes are separately exposed under `/api/internal` and require the same `x-internal-secret` header. Profile-subjects (`/api/profile-subjects`) remain public/authenticated as normal, since they represent a user's own academic progress rather than catalog data.
 
 ---
 
 ## Professors
 
-### Public Endpoints
+### Internal-only endpoints (secret-protected)
+
+All professor routes, reads included, require the `x-internal-secret` header to match `INTERNAL_API_SECRET`.
 
 #### `GET /professors`
 Get all professors with their subjects
-- **Auth**: Not required
+- **Auth**: `x-internal-secret` required
 - **Response**: Array of professors with related subjects
 
 #### `GET /professors/:id`
 Get a single professor by ID with subjects and comments
-- **Auth**: Not required
+- **Auth**: `x-internal-secret` required
 - **Response**: Professor object with subjects and comments
 
 ### Internal mutation endpoints (secret-protected)
 
-These routes are not public. They require the `x-internal-secret` header to match `INTERNAL_API_SECRET`.
+These routes live under `/api/internal` and require the `x-internal-secret` header to match `INTERNAL_API_SECRET`.
 
 #### `GET /internal/professors`
 List professors via the internal API.
@@ -115,26 +123,28 @@ Remove a professor from a faculty.
 
 ## Subjects
 
-### Public Endpoints
+### Internal-only endpoints (secret-protected)
+
+All subject routes, reads included, require the `x-internal-secret` header to match `INTERNAL_API_SECRET`. This does not apply to `/api/profile-subjects`, which tracks a user's own progress and stays authenticated/public as before.
 
 #### `GET /subjects`
 Get all subjects with professors and script counts
-- **Auth**: Not required
+- **Auth**: `x-internal-secret` required
 - **Response**: Array of subjects
 
 #### `GET /subjects/year/:year`
 Get subjects by year
-- **Auth**: Not required
+- **Auth**: `x-internal-secret` required
 - **Response**: Array of subjects for the specified year
 
 #### `GET /subjects/:id`
 Get a single subject with professors and scripts
-- **Auth**: Not required
+- **Auth**: `x-internal-secret` required
 - **Response**: Subject object with related data
 
 ### Internal mutation endpoints (secret-protected)
 
-These routes are not public. They require the `x-internal-secret` header to match `INTERNAL_API_SECRET`.
+These routes live under `/api/internal` and require the `x-internal-secret` header to match `INTERNAL_API_SECRET`.
 
 #### `GET /internal/subjects`
 List subjects via the internal API.
@@ -165,7 +175,7 @@ Remove a professor from a subject.
 #### `GET /scripts`
 Get all scripts with author and subject info
 - **Auth**: Not required
-- **Response**: Array of scripts
+- **Response**: Array of scripts (excludes the internal `is_flagged` moderation field)
 
 #### `GET /scripts/:id`
 Get a single script by ID
@@ -196,9 +206,12 @@ Search scripts by title or description
 - **Response**: Array of matching scripts
 
 #### `POST /scripts/:id/download`
-Increment download count for a script
+Record a download and increment the public download count, deduplicated per
+requester identity (account first, then IP, then device).
 - **Auth**: Not required
-- **Response**: Success message
+- **Headers**: `x-device-id` (optional fallback identity when IP is unavailable)
+- **Response**: `{ success: true, counted: boolean }` — `counted` is `false`
+  when this identity already downloaded the script.
 
 ### Authenticated Endpoints
 
@@ -235,25 +248,20 @@ Get all flagged scripts (moderator only)
 
 ### Public Endpoints
 
-#### `GET /comments`
-Get all comments
-- **Auth**: Not required
-- **Response**: Array of comments with author and professor info
+#### `GET /comments/script/:scriptId`
+Get comments for a specific script
+- **Auth**: Not required (reaction/like status is included when a session is present)
+- **Response**: Array of comments, each including `reactions_count`, `reactions_by_type`, `likes_count`, `my_reaction`, and `liked_by_me`
 
 #### `GET /comments/professor/:professorId`
 Get comments for a specific professor
-- **Auth**: Not required
-- **Response**: Array of comments
-
-#### `GET /comments/script/:scriptId`
-Get comments for a specific script
-- **Auth**: Not required
-- **Response**: Array of comments
+- **Auth**: Not required (reaction/like status is included when a session is present)
+- **Response**: Array of comments with the same engagement fields as above
 
 #### `GET /comments/user/:userId`
 Get comments by a specific user
-- **Auth**: Not required
-- **Response**: Array of comments
+- **Auth**: Not required (reaction/like status is included when a session is present)
+- **Response**: Array of comments with the same engagement fields as above
 
 #### `GET /comments/:commentId/reactions`
 Get reactions for a comment
@@ -283,6 +291,12 @@ Add or change the current user's reaction
 - **Note**: Calling this again replaces the user's existing reaction.
 - **Response**: Created or updated reaction
 
+#### `POST /comments/:commentId/like`
+Toggle the current user's like on a comment
+- **Auth**: Required
+- **Note**: The first request likes the comment; calling it again removes the like.
+- **Response**: `{ success: true, liked: boolean }`
+
 #### `PATCH /comments/:id`
 Update a comment (author only)
 - **Auth**: Required
@@ -293,6 +307,11 @@ Update a comment (author only)
 Delete a comment (author or moderator)
 - **Auth**: Required
 - **Response**: Success message
+
+#### `GET /comments/flagged/all`
+Get all flagged comments (moderator only)
+- **Auth**: Required (Moderator only)
+- **Response**: Array of flagged comments with flag details
 
 ---
 
@@ -308,7 +327,7 @@ Get current user's submitted flags
 #### `POST /flags`
 Create a new flag (report)
 - **Auth**: Required
-- **Body**: `{ target_type: 'user'|'script', target_id, reason }` (stored as `target_user_id` or `target_script_id`)
+- **Body**: `{ target_type: 'user'|'script'|'comment', target_id, reason }` (stored as `target_user_id`, `target_script_id`, or `target_comment_id`)
 - **Response**: Created flag
 
 ### Moderator read endpoints
@@ -488,7 +507,7 @@ user to the request context, and returns `401` when authentication fails.
 ## Role-Based Access Control
 
 The backend now uses a clear separation of responsibilities:
-1. Public catalog routes are read-only and do not require authentication.
+1. Catalog routes (universities, faculties, professors, subjects) are admin-managed and require the `x-internal-secret` header for every request, including reads.
 2. Authenticated user routes require a valid Supabase session.
 3. Moderator-only routes are read-only views of flags and require the user role to be `'moderator'`.
 4. Internal catalog writes and role changes are only exposed under `/api/internal` and require the `x-internal-secret` header.
@@ -522,7 +541,7 @@ The vote system supports:
 - Automatic `vote_score` calculation, clamped at zero
 
 ### Flag System
-When a script is flagged:
+When a script or comment is flagged:
 - The `is_flagged` field is set to `true`
 - When all flags are dismissed, `is_flagged` returns to `false`
 

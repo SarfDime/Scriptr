@@ -7,6 +7,7 @@ import MasterDetailIcon from '@sanity/icons/MasterDetail'
 import MenuIcon from '@sanity/icons/Menu'
 
 import type { StructureToolTypes } from '../types/common.types'
+import { buildAcademicStructure } from './academic-structure'
 import { createColoredIcon } from './icon-helpers'
 import { buildMiscellaneousStructure } from './misc-structure'
 import { buildPageStructure } from './page-structure'
@@ -69,4 +70,12 @@ export const customStructureTool = (build: StructureToolTypes['Build']) =>
         .icon(createColoredIcon(MasterDetailIcon, 'misc'))
         .title('Miscellaneous')
         .child(buildMiscellaneousStructure(build)),
+
+      build.divider().title('Misc Content'),
+
+      build
+        .listItem()
+        .icon(createColoredIcon(BlockElementIcon, 'sections'))
+        .title('Academic')
+        .child(buildAcademicStructure(build)),
     ])

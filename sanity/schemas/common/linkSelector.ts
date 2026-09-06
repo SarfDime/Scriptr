@@ -1,9 +1,9 @@
 import { defineField } from 'sanity'
-import { CustomLinkInput } from '../../components/CustomLinkInput'
 import { sectionSchemas } from '../../structure-tool/sections-structure'
 import type { FilterParams } from '../../types/schema-prop.types'
 import { filterPageSections } from '../util-functions/schemaFilters'
 import { validationRules } from '../validation'
+import { customLinkField } from './customLink'
 
 // Custom link selector with two options: internal or custom
 // If internal, a reference to a page and section can be set/
@@ -67,14 +67,11 @@ export const linkSelector = [
     validation: validationRules.linkSelectorInternalFieldsValidation as never,
   }),
   defineField({
-    name: 'customLink',
-    title: 'Custom link',
-    description:
-      'Enter a slug or a URL to an external website (e.g. "https://google.com").',
-    type: 'string',
-    components: {
-      field: CustomLinkInput,
-    },
+    ...customLinkField({
+      description:
+        'Enter a slug or a URL to an external website (e.g. "https://google.com").',
+      required: false,
+    }),
     hidden: ({ document }) => document?.linkType !== 'custom',
     validation: validationRules.linkSelectorCustomLinkValidation as never,
   }),

@@ -1,9 +1,46 @@
+import type { Context } from 'hono'
 import { Hono } from 'hono'
 import { requiredParam } from '../lib/request'
-import { authMiddleware, createSupabaseClient } from '../lib/supabase'
+import {
+  authMiddleware,
+  createInternalSupabaseClient,
+  createSupabaseClient,
+} from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
 const scripts = new Hono<HonoEnv>()
+
+// Excludes is_flagged, which is internal moderation state and not for public consumption.
+const PUBLIC_SCRIPT_COLUMNS =
+  'id, title, description, file_url, file_type, subject_id, professor_id, faculty_id, author_id, vote_score, download_count, created_at, updated_at'
+
+/** Resolve the requester's dedupe identity for downloads: account, then IP, then device. */
+async function resolveDownloadIdentity(c: Context<HonoEnv>) {
+  const supabase = createSupabaseClient(c)
+  const { data: sessionData } = await supabase.auth.getUser()
+  const ipAddress =
+    c.req.header('cf-connecting-ip') ??
+    c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ??
+    c.req.header('x-real-ip') ??
+    null
+  const deviceId = c.req.header('x-device-id') ?? null
+
+  let identityKey: string | null = null
+  if (sessionData.user) {
+    identityKey = `account:${sessionData.user.id}`
+  } else if (ipAddress) {
+    identityKey = `ip:${ipAddress}`
+  } else if (deviceId) {
+    identityKey = `device:${deviceId}`
+  }
+
+  return {
+    userId: sessionData.user?.id ?? null,
+    ipAddress,
+    deviceId,
+    identityKey,
+  }
+}
 
 async function getSelectedFacultyScope(
   supabase: ReturnType<typeof createSupabaseClient>
@@ -77,7 +114,7 @@ scripts.get('/', async (c) => {
   let query = supabase
     .from('scripts')
     .select(`
-      *,
+      ${PUBLIC_SCRIPT_COLUMNS},
       author:profiles(username, full_name),
       subject:subjects(name, year, exam_session, faculty:faculties(id, name, university:universities(id, name))),
       faculty:faculties(id, name, university:universities(id, name))
@@ -103,7 +140,7 @@ scripts.get('/subject/:subjectId', async (c) => {
   let query = supabase
     .from('scripts')
     .select(`
-      *,
+      ${PUBLIC_SCRIPT_COLUMNS},
       author:profiles(username, full_name),
       subject:subjects(name, year, exam_session, faculty:faculties(id, name, university:universities(id, name))),
       faculty:faculties(id, name, university:universities(id, name))
@@ -130,7 +167,7 @@ scripts.get('/top', async (c) => {
   let query = supabase
     .from('scripts')
     .select(`
-      *,
+      ${PUBLIC_SCRIPT_COLUMNS},
       author:profiles(username, full_name),
       subject:subjects(name, year, faculty:faculties(id, name, university:universities(id, name))),
       faculty:faculties(id, name, university:universities(id, name))
@@ -157,7 +194,7 @@ scripts.get('/popular', async (c) => {
   let query = supabase
     .from('scripts')
     .select(`
-      *,
+      ${PUBLIC_SCRIPT_COLUMNS},
       author:profiles(username, full_name),
       subject:subjects(name, year, faculty:faculties(id, name, university:universities(id, name))),
       faculty:faculties(id, name, university:universities(id, name))
@@ -185,7 +222,7 @@ scripts.get('/search', async (c) => {
   }
 
   let query = supabase.from('scripts').select(`
-      *,
+      ${PUBLIC_SCRIPT_COLUMNS},
       author:profiles(username, full_name),
       subject:subjects(name, year, faculty:faculties(id, name, university:universities(id, name))),
       faculty:faculties(id, name, university:universities(id, name))
@@ -229,7 +266,7 @@ scripts.get('/:id', async (c) => {
   const { data, error } = await supabase
     .from('scripts')
     .select(`
-      *,
+      ${PUBLIC_SCRIPT_COLUMNS},
       author:profiles(username, full_name),
       subject:subjects(name, year, exam_session, faculty:faculties(id, name, university:universities(id, name))),
       faculty:faculties(id, name, university:universities(id, name))
@@ -415,10 +452,10 @@ scripts.get('/my-scripts', authMiddleware, async (c) => {
   return c.json({ scripts: data })
 })
 
-/** Increment download count */
+/** Record a download, deduplicated per identity (account, then IP, then device) */
 scripts.post('/:id/download', async (c) => {
   const scriptId = requiredParam(c, 'id')
-  const supabase = createSupabaseClient(c)
+  const supabase = createInternalSupabaseClient(c)
 
   const { data: script } = await supabase
     .from('scripts')
@@ -430,13 +467,43 @@ scripts.post('/:id/download', async (c) => {
     return c.json({ error: 'Script not found' }, 404)
   }
 
-  const { error } = await supabase
+  const { userId, ipAddress, deviceId, identityKey } =
+    await resolveDownloadIdentity(c)
+
+  // Without any identity signal we can't dedupe, so just count every request.
+  if (!identityKey) {
+    const { error } = await supabase
+      .from('scripts')
+      .update({ download_count: (script.download_count || 0) + 1 })
+      .eq('id', scriptId)
+
+    if (error) return c.json({ error: error.message }, 500)
+    return c.json({ success: true, counted: true })
+  }
+
+  const { error: insertError } = await supabase.from('download_events').insert({
+    script_id: scriptId,
+    user_id: userId,
+    ip_address: ipAddress,
+    device_id: deviceId,
+    identity_key: identityKey,
+  })
+
+  // A unique violation means this identity already downloaded the script.
+  if (insertError) {
+    if (insertError.code === '23505') {
+      return c.json({ success: true, counted: false })
+    }
+    return c.json({ error: insertError.message }, 500)
+  }
+
+  const { error: updateError } = await supabase
     .from('scripts')
     .update({ download_count: (script.download_count || 0) + 1 })
     .eq('id', scriptId)
 
-  if (error) return c.json({ error: error.message }, 500)
-  return c.json({ success: true })
+  if (updateError) return c.json({ error: updateError.message }, 500)
+  return c.json({ success: true, counted: true })
 })
 
 /** Get flagged scripts (moderator only) */

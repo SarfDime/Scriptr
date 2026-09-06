@@ -9,6 +9,7 @@ import type { HonoEnv } from '../types/env.types'
 
 const votes = new Hono<HonoEnv>()
 
+/** List all votes across all scripts */
 votes.get('/', async (c) => {
   const supabase = createSupabaseClient(c)
   const { data, error } = await supabase
@@ -20,6 +21,7 @@ votes.get('/', async (c) => {
   return c.json(data)
 })
 
+/** List votes for a specific script */
 votes.get('/script/:scriptId', async (c) => {
   const scriptId = requiredParam(c, 'scriptId')
   const supabase = createSupabaseClient(c)
@@ -33,6 +35,7 @@ votes.get('/script/:scriptId', async (c) => {
   return c.json(data)
 })
 
+/** List votes cast by a specific user */
 votes.get('/user/:userId', async (c) => {
   const userId = requiredParam(c, 'userId')
   const supabase = createSupabaseClient(c)
@@ -46,6 +49,7 @@ votes.get('/user/:userId', async (c) => {
   return c.json(data)
 })
 
+/** List the current user's votes */
 votes.get('/my-votes', authMiddleware, async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)
@@ -59,6 +63,7 @@ votes.get('/my-votes', authMiddleware, async (c) => {
   return c.json(data)
 })
 
+/** Get the current user's vote for a script, or null */
 votes.get('/script/:scriptId/my-vote', authMiddleware, async (c) => {
   const user = c.get('user')
   const scriptId = requiredParam(c, 'scriptId')
@@ -74,6 +79,7 @@ votes.get('/script/:scriptId/my-vote', authMiddleware, async (c) => {
   return c.json(data)
 })
 
+/** Get vote counts and the nonnegative score for a script */
 votes.get('/script/:scriptId/stats', async (c) => {
   const scriptId = requiredParam(c, 'scriptId')
   const supabase = createSupabaseClient(c)

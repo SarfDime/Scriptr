@@ -13,71 +13,115 @@ import type { HonoEnv } from '../types/env.types'
 
 const comments = new Hono<HonoEnv>()
 
-/** Get all comments */
-comments.get('/', async (c) => {
-  const supabase = createSupabaseClient(c)
-  const { data, error } = await supabase
-    .from('comments')
-    .select(
-      '*, author:profiles(username, full_name), professor:professors(name), script:scripts(title)'
-    )
-    .order('created_at', { ascending: false })
+// Excludes is_flagged, which is internal moderation state and not for public consumption.
+const PUBLIC_COMMENT_COLUMNS =
+  'id, author_id, content, created_at, edited, parent_id, professor_id, script_id, updated_at'
 
-  if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
-})
+type CommentEngagementRow = { id: string }
+
+/** Attach reaction/like counts and the current user's own status to comment rows */
+async function attachEngagement<T extends CommentEngagementRow>(
+  supabase: ReturnType<typeof createSupabaseClient>,
+  rows: Array<T>,
+  currentUserId?: string
+) {
+  if (rows.length === 0) return []
+
+  const commentIds = rows.map((row) => row.id)
+  const [{ data: reactions }, { data: likes }] = await Promise.all([
+    supabase
+      .from('comment_reactions')
+      .select('comment_id, reaction_type, user_id')
+      .in('comment_id', commentIds),
+    supabase
+      .from('comment_likes')
+      .select('comment_id, user_id')
+      .in('comment_id', commentIds),
+  ])
+
+  return rows.map((row) => {
+    const commentReactions =
+      reactions?.filter((reaction) => reaction.comment_id === row.id) ?? []
+    const commentLikes =
+      likes?.filter((like) => like.comment_id === row.id) ?? []
+    const reactionsByType: Record<string, number> = {}
+    for (const reaction of commentReactions) {
+      reactionsByType[reaction.reaction_type] =
+        (reactionsByType[reaction.reaction_type] ?? 0) + 1
+    }
+
+    return {
+      ...row,
+      reactions_count: commentReactions.length,
+      reactions_by_type: reactionsByType,
+      likes_count: commentLikes.length,
+      my_reaction:
+        (currentUserId &&
+          commentReactions.find(
+            (reaction) => reaction.user_id === currentUserId
+          )?.reaction_type) ||
+        null,
+      liked_by_me: currentUserId
+        ? commentLikes.some((like) => like.user_id === currentUserId)
+        : false,
+    }
+  })
+}
 
 /** Get comments for a specific script */
 comments.get('/script/:scriptId', async (c) => {
   const scriptId = requiredParam(c, 'scriptId')
   const supabase = createSupabaseClient(c)
+  const { data: sessionData } = await supabase.auth.getUser()
 
   const { data, error } = await supabase
     .from('comments')
     .select(
-      '*, author:profiles(username, full_name), professor:professors(name)'
+      `${PUBLIC_COMMENT_COLUMNS}, author:profiles(username, full_name), professor:professors(name)`
     )
     .eq('script_id', scriptId)
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json(await attachEngagement(supabase, data, sessionData.user?.id))
 })
 
 /** Get comments for a specific professor */
 comments.get('/professor/:professorId', async (c) => {
   const professorId = requiredParam(c, 'professorId')
   const supabase = createSupabaseClient(c)
+  const { data: sessionData } = await supabase.auth.getUser()
 
   const { data, error } = await supabase
     .from('comments')
     .select(`
-      *,
+      ${PUBLIC_COMMENT_COLUMNS},
       author:profiles(username, full_name)
     `)
     .eq('professor_id', professorId)
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json(await attachEngagement(supabase, data, sessionData.user?.id))
 })
 
 /** Get comments by a specific user */
 comments.get('/user/:userId', async (c) => {
   const userId = requiredParam(c, 'userId')
   const supabase = createSupabaseClient(c)
+  const { data: sessionData } = await supabase.auth.getUser()
 
   const { data, error } = await supabase
     .from('comments')
     .select(`
-      *,
+      ${PUBLIC_COMMENT_COLUMNS},
       professor:professors(name)
     `)
     .eq('author_id', userId)
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json(await attachEngagement(supabase, data, sessionData.user?.id))
 })
 
 /** Get reactions for a comment */
@@ -134,12 +178,22 @@ comments.post('/:commentId/replies', authMiddleware, async (c) => {
       script_id: script_id ?? null,
     })
     .select(
-      '*, author:profiles(username, full_name), professor:professors(name), script:scripts(title)'
+      `${PUBLIC_COMMENT_COLUMNS}, author:profiles(username, full_name), professor:professors(name), script:scripts(title)`
     )
     .single()
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json({ success: true, reply: data })
+  return c.json({
+    success: true,
+    reply: {
+      ...data,
+      reactions_count: 0,
+      reactions_by_type: {},
+      likes_count: 0,
+      my_reaction: null,
+      liked_by_me: false,
+    },
+  })
 })
 
 /** Add or change the current user's reaction to a comment */
@@ -168,6 +222,38 @@ comments.post('/:commentId/reactions', authMiddleware, async (c) => {
 
   if (error) return c.json({ error: error.message }, 500)
   return c.json({ success: true, reaction: data })
+})
+
+/** Toggle the current user's like on a comment */
+comments.post('/:commentId/like', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const commentId = requiredParam(c, 'commentId')
+  const supabase = createInternalSupabaseClient(c)
+
+  const { data: existingLike } = await supabase
+    .from('comment_likes')
+    .select('comment_id')
+    .eq('comment_id', commentId)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (existingLike) {
+    const { error } = await supabase
+      .from('comment_likes')
+      .delete()
+      .eq('comment_id', commentId)
+      .eq('user_id', user.id)
+
+    if (error) return c.json({ error: error.message }, 500)
+    return c.json({ success: true, liked: false })
+  }
+
+  const { error } = await supabase
+    .from('comment_likes')
+    .insert({ comment_id: commentId, user_id: user.id })
+
+  if (error) return c.json({ error: error.message }, 500)
+  return c.json({ success: true, liked: true })
 })
 
 /** Create a new comment */
@@ -208,7 +294,7 @@ comments.post('/', authMiddleware, async (c) => {
       author_id: user.id,
     })
     .select(`
-      *,
+      ${PUBLIC_COMMENT_COLUMNS},
       author:profiles(username, full_name),
       professor:professors(name),
       script:scripts(title)
@@ -216,7 +302,17 @@ comments.post('/', authMiddleware, async (c) => {
     .single()
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json({ success: true, comment: data })
+  return c.json({
+    success: true,
+    comment: {
+      ...data,
+      reactions_count: 0,
+      reactions_by_type: {},
+      likes_count: 0,
+      my_reaction: null,
+      liked_by_me: false,
+    },
+  })
 })
 
 /** Update a comment (only by author) */
@@ -257,14 +353,15 @@ comments.patch('/:id', authMiddleware, async (c) => {
     })
     .eq('id', commentId)
     .select(`
-      *,
+      ${PUBLIC_COMMENT_COLUMNS},
       author:profiles(username, full_name),
       professor:professors(name)
     `)
     .single()
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json({ success: true, comment: data })
+  const [engaged] = await attachEngagement(supabase, [data], user.id)
+  return c.json({ success: true, comment: engaged })
 })
 
 /** Delete a comment (by author or moderator) */
@@ -291,6 +388,35 @@ comments.delete('/:id', authMiddleware, async (c) => {
 
   if (error) return c.json({ error: error.message }, 500)
   return c.json({ success: true, message: 'Comment deleted successfully' })
+})
+
+/** Get flagged comments (moderator only) */
+comments.get('/flagged/all', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const supabase = createSupabaseClient(c)
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (profile?.role !== 'moderator') {
+    return c.json({ error: 'Unauthorized: Moderator access required' }, 403)
+  }
+
+  const { data, error } = await supabase
+    .from('comments')
+    .select(`
+      ${PUBLIC_COMMENT_COLUMNS},
+      author:profiles(username, full_name),
+      flags:flags(*, reporter:profiles!reporter_id(username))
+    `)
+    .eq('is_flagged', true)
+    .order('created_at', { ascending: false })
+
+  if (error) return c.json({ error: error.message }, 500)
+  return c.json(data)
 })
 
 export default comments

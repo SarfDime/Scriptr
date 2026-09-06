@@ -52,6 +52,7 @@ app.use(
       'https://your-vercel-app.vercel.app',
       'http://localhost:3000',
       'http://localhost:5173',
+      'http://localhost:3333',
     ],
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowHeaders: [
@@ -67,6 +68,8 @@ app.use(
 )
 
 app.route('/api/auth', auth)
+// Catalog routes (universities/faculties/professors/subjects) are admin-managed
+// and require the x-internal-secret header; they are not public despite the mount path.
 app.route('/api/universities', universities)
 app.route('/api/faculties', faculties)
 app.route('/api/professors', professors)

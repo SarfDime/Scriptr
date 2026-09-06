@@ -8,6 +8,7 @@ const profileSubjects = new Hono<HonoEnv>()
 
 profileSubjects.use('*', authMiddleware)
 
+/** List the current user's subjects and their statuses */
 profileSubjects.get('/', async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)
@@ -21,6 +22,7 @@ profileSubjects.get('/', async (c) => {
   return c.json(data)
 })
 
+/** Get one of the current user's subject status records, or null */
 profileSubjects.get('/:subjectId', async (c) => {
   const user = c.get('user')
   const subjectId = requiredParam(c, 'subjectId')
@@ -36,6 +38,7 @@ profileSubjects.get('/:subjectId', async (c) => {
   return c.json(data)
 })
 
+/** Create or replace the current user's status for a subject */
 profileSubjects.put('/:subjectId', async (c) => {
   const user = c.get('user')
   const subjectId = requiredParam(c, 'subjectId')
@@ -62,6 +65,7 @@ profileSubjects.put('/:subjectId', async (c) => {
   return c.json(data)
 })
 
+/** Remove the current user's status for a subject */
 profileSubjects.delete('/:subjectId', async (c) => {
   const user = c.get('user')
   const subjectId = requiredParam(c, 'subjectId')

@@ -10,6 +10,11 @@ import { media } from 'sanity-plugin-media'
 import { mermaidContentModel } from 'sanity-plugin-mermaid-content-model'
 import { references } from 'sanity-plugin-references'
 import { smartAssetManager } from 'sanity-plugin-smart-asset-manager'
+import type { AcademicEntityType } from './actions/academicEntitySync'
+import {
+  createCheckedDeleteAction,
+  createInDatabaseAction,
+} from './actions/academicEntitySync'
 import { CustomDuplicateAction } from './actions/customDuplicate'
 import { CustomToolMenu } from './components/CustomToolMenu'
 import { defaultDocumentNode } from './defaultDocumentNode'
@@ -82,13 +87,26 @@ export default defineConfig({
     comments: {
       enabled: false,
     },
-    actions: (prev) => {
-      const withCustomDuplicate = prev?.map((originalAction) =>
-        originalAction?.action === 'duplicate'
-          ? CustomDuplicateAction
-          : originalAction
-      )
-      return withCustomDuplicate
+    actions: (prev, context) => {
+      const academicEntityTypes: Record<string, AcademicEntityType> = {
+        university: 'university',
+        faculty: 'faculty',
+        professor: 'professor',
+        subject: 'subject',
+      }
+      const entityType = academicEntityTypes[context.schemaType]
+
+      const mapped = prev?.map((originalAction) => {
+        if (originalAction?.action === 'duplicate') return CustomDuplicateAction
+        if (entityType && originalAction?.action === 'delete') {
+          return createCheckedDeleteAction(entityType)
+        }
+        return originalAction
+      })
+
+      return entityType
+        ? [...mapped, createInDatabaseAction(entityType)]
+        : mapped
     },
   },
   releases: {

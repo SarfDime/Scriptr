@@ -160,9 +160,9 @@ export const validationRules = {
     }),
   ],
 
-  urlValidation: (rule: Rule) =>
-    rule.custom((value: string) => {
-      if (!value) return 'Url cannot be empty'
+  urlValidation: (rule: StringRule) =>
+    rule.required().custom((value: string | undefined) => {
+      if (!value) return true
 
       if (!value.startsWith('https:') && !value.startsWith('/')) {
         return 'Only use https urls or internal paths starting with /'
@@ -176,6 +176,8 @@ export const validationRules = {
 
       return true
     }),
+
+  emailValidation: (rule: Rule) => rule.required().email(),
 
   linkSelectorInternalFieldsValidation: (rule: Rule) =>
     rule.custom((value, context) => {

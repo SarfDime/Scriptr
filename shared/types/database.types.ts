@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      comment_likes: {
+        Row: {
+          comment_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'comment_likes_comment_id_fkey'
+            columns: ['comment_id']
+            isOneToOne: false
+            referencedRelation: 'comments'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'comment_likes_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       comment_reactions: {
         Row: {
           comment_id: string
@@ -60,6 +93,7 @@ export type Database = {
           created_at: string
           edited: boolean
           id: string
+          is_flagged: boolean
           parent_id: string | null
           professor_id: string | null
           script_id: string | null
@@ -71,6 +105,7 @@ export type Database = {
           created_at?: string
           edited?: boolean
           id?: string
+          is_flagged?: boolean
           parent_id?: string | null
           professor_id?: string | null
           script_id?: string | null
@@ -82,6 +117,7 @@ export type Database = {
           created_at?: string
           edited?: boolean
           id?: string
+          is_flagged?: boolean
           parent_id?: string | null
           professor_id?: string | null
           script_id?: string | null
@@ -118,23 +154,71 @@ export type Database = {
           },
         ]
       }
+      download_events: {
+        Row: {
+          created_at: string
+          device_id: string | null
+          id: string
+          identity_key: string
+          ip_address: string | null
+          script_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          identity_key: string
+          ip_address?: string | null
+          script_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          identity_key?: string
+          ip_address?: string | null
+          script_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'download_events_script_id_fkey'
+            columns: ['script_id']
+            isOneToOne: false
+            referencedRelation: 'scripts'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'download_events_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       faculties: {
         Row: {
           created_at: string
           id: string
           name: string
+          sanity_id: string | null
           university_id: string
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
+          sanity_id?: string | null
           university_id: string
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
+          sanity_id?: string | null
           university_id?: string
         }
         Relationships: [
@@ -156,6 +240,7 @@ export type Database = {
           reviewed_at: string | null
           reviewed_by: string | null
           status: string
+          target_comment_id: string | null
           target_script_id: string | null
           target_user_id: string | null
         }
@@ -167,6 +252,7 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
+          target_comment_id?: string | null
           target_script_id?: string | null
           target_user_id?: string | null
         }
@@ -178,6 +264,7 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
+          target_comment_id?: string | null
           target_script_id?: string | null
           target_user_id?: string | null
         }
@@ -194,6 +281,13 @@ export type Database = {
             columns: ['reviewed_by']
             isOneToOne: false
             referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'flags_target_comment_id_fkey'
+            columns: ['target_comment_id']
+            isOneToOne: false
+            referencedRelation: 'comments'
             referencedColumns: ['id']
           },
           {
@@ -247,25 +341,22 @@ export type Database = {
       }
       professors: {
         Row: {
-          bio: string | null
           created_at: string
           id: string
           name: string
-          picture_url: string | null
+          sanity_id: string | null
         }
         Insert: {
-          bio?: string | null
           created_at?: string
           id?: string
           name: string
-          picture_url?: string | null
+          sanity_id?: string | null
         }
         Update: {
-          bio?: string | null
           created_at?: string
           id?: string
           name?: string
-          picture_url?: string | null
+          sanity_id?: string | null
         }
         Relationships: []
       }
@@ -517,29 +608,29 @@ export type Database = {
       subjects: {
         Row: {
           created_at: string
-          description: string | null
           exam_session: string
           faculty_id: string | null
           id: string
           name: string
+          sanity_id: string | null
           year: number
         }
         Insert: {
           created_at?: string
-          description?: string | null
           exam_session: string
           faculty_id?: string | null
           id?: string
           name: string
+          sanity_id?: string | null
           year: number
         }
         Update: {
           created_at?: string
-          description?: string | null
           exam_session?: string
           faculty_id?: string | null
           id?: string
           name?: string
+          sanity_id?: string | null
           year?: number
         }
         Relationships: [
@@ -557,16 +648,19 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          sanity_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
+          sanity_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
+          sanity_id?: string | null
         }
         Relationships: []
       }
@@ -614,10 +708,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      increment_download_count: {
-        Args: { p_script_id: string }
-        Returns: undefined
-      }
       is_moderator: { Args: { uid: string }; Returns: boolean }
     }
     Enums: {

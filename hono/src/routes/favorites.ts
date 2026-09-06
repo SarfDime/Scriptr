@@ -7,6 +7,7 @@ const favorites = new Hono<HonoEnv>()
 
 favorites.use('*', authMiddleware)
 
+/** List the current user's favorite scripts */
 favorites.get('/', async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)
@@ -20,6 +21,7 @@ favorites.get('/', async (c) => {
   return c.json(data)
 })
 
+/** Get the current user's favorite record for a script, or null */
 favorites.get('/:scriptId', async (c) => {
   const user = c.get('user')
   const scriptId = requiredParam(c, 'scriptId')
@@ -35,6 +37,7 @@ favorites.get('/:scriptId', async (c) => {
   return c.json(data)
 })
 
+/** Add a script to the current user's favorites (idempotent) */
 favorites.post('/:scriptId', async (c) => {
   const user = c.get('user')
   const scriptId = requiredParam(c, 'scriptId')
@@ -52,6 +55,7 @@ favorites.post('/:scriptId', async (c) => {
   return c.json(data)
 })
 
+/** Remove a script from the current user's favorites */
 favorites.delete('/:scriptId', async (c) => {
   const user = c.get('user')
   const scriptId = requiredParam(c, 'scriptId')

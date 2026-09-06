@@ -5,6 +5,18 @@ import type { HonoEnv } from '../types/env.types'
 
 const professors = new Hono<HonoEnv>()
 
+// Academic catalog data is admin-managed; not exposed to end users directly.
+professors.use('*', async (c, next) => {
+  const secret = c.req.header('x-internal-secret')
+  const expected = c.env.INTERNAL_API_SECRET
+
+  if (!expected || !secret || secret !== expected) {
+    return c.json({ error: 'Forbidden' }, 403)
+  }
+
+  return next()
+})
+
 async function getSelectedFacultyScope(
   supabase: ReturnType<typeof createSupabaseClient>
 ) {

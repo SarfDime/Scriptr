@@ -140,7 +140,7 @@ flags.post('/', authMiddleware, async (c) => {
 
   if (!isFlagTargetType(target_type)) {
     return c.json(
-      { error: 'target_type must be either "user" or "script"' },
+      { error: 'target_type must be "user", "script", or "comment"' },
       400
     )
   }
@@ -149,15 +149,21 @@ flags.post('/', authMiddleware, async (c) => {
     return c.json({ error: 'Reason must be at least 10 characters long' }, 400)
   }
 
+  let targetColumn: 'target_script_id' | 'target_comment_id' | 'target_user_id'
+  if (target_type === 'script') {
+    targetColumn = 'target_script_id'
+  } else if (target_type === 'comment') {
+    targetColumn = 'target_comment_id'
+  } else {
+    targetColumn = 'target_user_id'
+  }
+
   // Check if user already flagged this target
   const { data: existingFlag } = await supabase
     .from('flags')
     .select('id')
     .eq('reporter_id', user.id)
-    .eq(
-      target_type === 'script' ? 'target_script_id' : 'target_user_id',
-      target_id
-    )
+    .eq(targetColumn, target_id)
     .eq('status', 'pending')
     .single()
 
@@ -171,6 +177,7 @@ flags.post('/', authMiddleware, async (c) => {
       reporter_id: user.id,
       target_script_id: target_type === 'script' ? target_id : null,
       target_user_id: target_type === 'user' ? target_id : null,
+      target_comment_id: target_type === 'comment' ? target_id : null,
       reason,
       status: 'pending',
     })
@@ -182,10 +189,15 @@ flags.post('/', authMiddleware, async (c) => {
 
   if (error) return c.json({ error: error.message }, 500)
 
-  // If target is a script, mark it as flagged
+  // Mark the target as flagged for moderator review
   if (target_type === 'script') {
     await supabase
       .from('scripts')
+      .update({ is_flagged: true })
+      .eq('id', target_id)
+  } else if (target_type === 'comment') {
+    await supabase
+      .from('comments')
       .update({ is_flagged: true })
       .eq('id', target_id)
   }
@@ -202,7 +214,7 @@ flags.patch('/:id', authMiddleware, async (c) => {
 
   const { data: existingFlag, error: existingFlagError } = await supabase
     .from('flags')
-    .select('reporter_id, target_script_id')
+    .select('reporter_id, target_script_id, target_comment_id')
     .eq('id', flagId)
     .single()
 
@@ -250,6 +262,21 @@ flags.patch('/:id', authMiddleware, async (c) => {
         .from('scripts')
         .update({ is_flagged: false })
         .eq('id', data.target_script_id)
+    }
+  }
+
+  if (status === 'dismissed' && data.target_comment_id) {
+    const { data: otherFlags } = await adminSupabase
+      .from('flags')
+      .select('id')
+      .eq('target_comment_id', data.target_comment_id)
+      .eq('status', 'pending')
+
+    if (!otherFlags || otherFlags.length === 0) {
+      await adminSupabase
+        .from('comments')
+        .update({ is_flagged: false })
+        .eq('id', data.target_comment_id)
     }
   }
 

@@ -5,6 +5,19 @@ import type { HonoEnv } from '../types/env.types'
 
 const universities = new Hono<HonoEnv>()
 
+// Academic catalog data is admin-managed; not exposed to end users directly.
+universities.use('*', async (c, next) => {
+  const secret = c.req.header('x-internal-secret')
+  const expected = c.env.INTERNAL_API_SECRET
+
+  if (!expected || !secret || secret !== expected) {
+    return c.json({ error: 'Forbidden' }, 403)
+  }
+
+  return next()
+})
+
+/** Get all universities with their faculties */
 universities.get('/', async (c) => {
   const supabase = createSupabaseClient(c)
 
@@ -17,6 +30,7 @@ universities.get('/', async (c) => {
   return c.json(data)
 })
 
+/** Get a single university by ID, with its faculties */
 universities.get('/:id', async (c) => {
   const universityId = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)

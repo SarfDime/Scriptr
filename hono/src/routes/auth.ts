@@ -53,6 +53,7 @@ auth.post('/register', async (c) => {
   })
 })
 
+/** Sign in with email and password */
 auth.post('/login', async (c) => {
   const { email, password } = await c.req.json()
   const supabase = createSupabaseClient(c)

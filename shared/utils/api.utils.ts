@@ -18,7 +18,7 @@ export const isFlagStatus = (value: unknown): value is FlagStatus =>
   value === 'pending' || value === 'reviewed' || value === 'dismissed'
 
 export const isFlagTargetType = (value: unknown): value is FlagTargetType =>
-  value === 'user' || value === 'script'
+  value === 'user' || value === 'script' || value === 'comment'
 
 export const isFileType = (value: unknown): value is FileType =>
   value === 'pdf' ||

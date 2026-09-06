@@ -147,6 +147,8 @@ The first release is intentionally narrow. The goal is to ship the right core pr
 3. The app should record download attempts with account, IP, and device identity information.
 4. The system should detect repeated downloads from the same identity and suppress duplicate counting.
 5. Moderators and admins should still be able to review abuse issues when they arise.
+6. Comments should be flaggable using the same flag workflow as scripts and users.
+7. The comments query should return reaction counts and like counts per comment, plus the current logged-in user's own reaction and like status when authenticated.
 
 ### 4.7 User onboarding and academic profile features
 1. On first visit, the user should be prompted to choose their faculty and current/completed subjects.
@@ -247,6 +249,8 @@ The first release is intentionally narrow. The goal is to ship the right core pr
 2. API routes should be organized by resource and responsibility.
 3. The API should return consistent response shapes for success, validation errors, and system failures.
 4. Search should be built around script discovery first and should not be over-engineered for other content types in v1.
+5. Every endpoint file should carry a short doc comment above each route explaining what it is for.
+6. Professor, subject (excluding profile-subject), faculty, and university routes should be internal-only, gated the same way as `/api/internal`, since this data is admin-managed and not meant for direct public access.
 
 ### 6.2 Backend responsibilities
 1. Handle authentication checks.
@@ -415,6 +419,10 @@ The following items remain out of scope for the first release and should be addr
 2. Add simple suspicious-download review flows.
 3. Add admin action interfaces for academic entity creation, sync, and dependency checks.
 4. Ensure delete and update flows remain safe and auditable.
+5. Make comments flaggable via the existing flags workflow.
+6. Return reaction counts, like counts, and the current user's reaction/like status in the comments query.
+7. Add a short doc comment above each API endpoint explaining its purpose.
+8. Move professor, subject (not profile-subject), faculty, and university routes behind internal-only access.
 
 ### Phase 7: Polish and iteration
 1. Improve UX consistency and mobile behavior.
@@ -428,14 +436,14 @@ The following items remain out of scope for the first release and should be addr
 
 This section is maintained automatically by the commit agent. Update status by including `[ROADMAP: Phase X - Feature Name]` in commit messages.
 
-### Phase 1: Database foundation and backend API [🔲 Planned]
-- Configure the minimal DB schema for runtime identity and script records. [🔲]
-- Design and implement all required database tables: users, scripts, academic_profiles, download_events, and relationship tables. [🔲]
-- Set up database constraints, indexes, and validation rules for data integrity. [🔲]
-- Implement the first version of the script API with create, read, update, delete endpoints. [🔲]
-- Implement authentication and permission checks in the backend. [🔲]
-- Implement download deduplication logic (account → IP → device priority). [🔲]
-- Add backend validation and error handling for all operations. [🔲]
+### Phase 1: Database foundation and backend API [✏️ In Progress]
+- Configure the minimal DB schema for runtime identity and script records. [✅]
+- Design and implement all required database tables: users, scripts, academic_profiles, download_events, and relationship tables. [✅]
+- Set up database constraints, indexes, and validation rules for data integrity. [✅]
+- Implement the first version of the script API with create, read, update, delete endpoints. [✅]
+- Implement authentication and permission checks in the backend. [✅]
+- Implement download deduplication logic (account → IP → device priority). [✅]
+- Add backend validation and error handling for all operations. [✅]
 - Test database schema and API endpoints thoroughly. [🔲]
 
 ### Phase 2: Sanity CMS setup and academic entity management [🔲 Planned]
@@ -473,6 +481,10 @@ This section is maintained automatically by the commit agent. Update status by i
 - Add simple suspicious-download review flows. [🔲]
 - Add admin action interfaces for academic entity creation, sync, and dependency checks. [🔲]
 - Ensure delete and update flows remain safe and auditable. [🔲]
+- Make comments flaggable via the existing flags workflow. [✅]
+- Return reaction counts, like counts, and the current user's reaction/like status in the comments query. [✅]
+- Add a short doc comment above each API endpoint explaining its purpose. [✅]
+- Move professor, subject (not profile-subject), faculty, and university routes behind internal-only access. [✅]
 
 ### Phase 7: Polish and iteration [🔲 Planned]
 - Improve UX consistency and mobile behavior. [🔲]

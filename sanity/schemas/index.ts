@@ -1,4 +1,8 @@
-// Miscellaneous
+// Academic entities (linked to Postgres via dbId)
+import { Faculty } from './academic/faculty'
+import { Professor } from './academic/professor'
+import { Subject } from './academic/subject'
+import { University } from './academic/university'
 import { Button } from './misc/button'
 import { Person } from './misc/person'
 import { NavigationItem } from './navigation/navigationItem'
@@ -30,4 +34,8 @@ export const schemaTypes = [
   InfoHubSection,
   RichText,
   RichTextLite,
+  University,
+  Faculty,
+  Professor,
+  Subject,
 ]
