@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
-import { MainLayout } from '@/components/layout/MainLayout'
 import { NavBar } from '@/components/navigation/Navbar'
 import { ThemeProvider } from '../providers/theme/ThemeProvider'
 
@@ -48,7 +47,7 @@ export default async function RootLayout({
       >
         <ThemeProvider>
           <NavBar {...navMenu} />
-          <MainLayout>{children}</MainLayout>
+          {children}
         </ThemeProvider>
         {isStaging && <SanityLive />}
         {isDraft && isStaging && (

@@ -1,11 +1,6 @@
-import { ApiResourcePage } from '../../components/api-tester/ApiResourcePage'
+import { redirect } from 'next/navigation'
 
 export default function SubjectsPage() {
-  return (
-    <ApiResourcePage
-      description='Fetch subjects with faculty and professor metadata.'
-      endpoint='/api/subjects'
-      title='Subjects'
-    />
-  )
+  // Academic entities are explored hierarchically starting at /universities
+  redirect('/universities')
 }

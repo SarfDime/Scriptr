@@ -21,6 +21,43 @@ type ArrayOf<T> = Array<
 >;
 
 // Source: schema.json
+export type ProfessorReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "professor";
+};
+
+export type FacultyReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "faculty";
+};
+
+export type Subject = {
+  _id: string;
+  _type: "subject";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  name: string;
+  code?: string;
+  description?: RichTextLite;
+  credits?: number;
+  syllabus: string;
+  year: number;
+  semester?: "winter" | "summer";
+  examSession: "january" | "june" | "september";
+  professors: Array<
+    {
+      _key: string;
+    } & ProfessorReference
+  >;
+  faculty: FacultyReference;
+  dbId?: string;
+};
+
 export type SanityImageAssetReference = {
   _ref: string;
   _type: "reference";
@@ -63,7 +100,7 @@ export type RichTextLite = Array<{
   style?: "normal" | "-" | "h1" | "h2" | "h3" | "h4" | "h5" | "base" | "h6";
   listItem?: never;
   markDefs?: Array<{
-    url?: string;
+    url: string;
     _type: "link";
     _key: string;
   }>;
@@ -71,6 +108,108 @@ export type RichTextLite = Array<{
   _type: "block";
   _key: string;
 }>;
+
+export type Professor = {
+  _id: string;
+  _type: "professor";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  name: string;
+  title?: string;
+  picture?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
+  bio?: RichTextLite;
+  office?: string;
+  telephone?: string;
+  email?: string;
+  website: string;
+  faculties: Array<
+    {
+      _key: string;
+    } & FacultyReference
+  >;
+  dbId?: string;
+};
+
+export type SanityImageCrop = {
+  _type: "sanity.imageCrop";
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+};
+
+export type SanityImageHotspot = {
+  _type: "sanity.imageHotspot";
+  x: number;
+  y: number;
+  height: number;
+  width: number;
+};
+
+export type PersonReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "person";
+};
+
+export type UniversityReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "university";
+};
+
+export type Faculty = {
+  _id: string;
+  _type: "faculty";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  name: string;
+  description?: RichTextLite;
+  secretary: string;
+  dean: PersonReference;
+  viceDeans?: Array<
+    {
+      _key: string;
+    } & PersonReference
+  >;
+  streetAddress: string;
+  telephone: string;
+  email: string;
+  website: string;
+  university: UniversityReference;
+  dbId?: string;
+};
+
+export type University = {
+  _id: string;
+  _type: "university";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  name: string;
+  description?: RichTextLite;
+  rector?: PersonReference;
+  viceRectors?: Array<
+    {
+      _key: string;
+    } & PersonReference
+  >;
+  streetAddress: string;
+  telephone?: string;
+  email?: string;
+  website: string;
+  dbId?: string;
+};
 
 export type RichText = Array<{
   children?: Array<
@@ -100,7 +239,7 @@ export type RichText = Array<{
   style?: "normal" | "-" | "h1" | "h2" | "h3" | "h4" | "h5" | "base" | "h6";
   listItem?: "bullet" | "number";
   markDefs?: Array<{
-    url?: string;
+    url: string;
     _type: "link";
     _key: string;
   }>;
@@ -152,8 +291,8 @@ export type Button = {
   _rev: string;
   stringTitle?: string;
   linkType?: "internal" | "custom";
-  allPages?: PageReference;
-  allPageSections?:
+  page?: PageReference;
+  section?:
     | InfoBlockSectionReference
     | InfoHubSectionReference
     | MarkdownSectionReference
@@ -200,27 +339,11 @@ export type Slug = {
   source?: string;
 };
 
-export type SanityImageCrop = {
-  _type: "sanity.imageCrop";
-  top: number;
-  bottom: number;
-  left: number;
-  right: number;
-};
-
-export type SanityImageHotspot = {
-  _type: "sanity.imageHotspot";
-  x: number;
-  y: number;
-  height: number;
-  width: number;
-};
-
-export type NavigationMenuReference = {
+export type NavMenuReference = {
   _ref: string;
   _type: "reference";
   _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "navigationMenu";
+  [internalGroqTypeReferenceTo]?: "navMenu";
 };
 
 export type Website = {
@@ -231,14 +354,17 @@ export type Website = {
   _rev: string;
   websiteTitle?: string;
   navAndFooterFields?: string;
-  navigationMenu: NavigationMenuReference;
-  footer: FooterReference;
+  navMenu: NavMenuReference;
   pagesFields?: string;
-  homepage: PageReference;
   pagesOnWebsite?: Array<
     {
       _key: string;
     } & PageReference
+  >;
+  universities?: Array<
+    {
+      _key: string;
+    } & UniversityReference
   >;
 };
 
@@ -248,23 +374,16 @@ export type Person = {
   _createdAt: string;
   _updatedAt: string;
   _rev: string;
-  personImage?: {
+  image?: {
     asset?: SanityImageAssetReference;
     media?: unknown;
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
     _type: "image";
   };
-  personAlternativeImage?: {
-    asset?: SanityImageAssetReference;
-    media?: unknown;
-    hotspot?: SanityImageHotspot;
-    crop?: SanityImageCrop;
-    _type: "image";
-  };
-  personName: string;
-  personTitle: string;
-  personDescription?: RichTextLite;
+  name: string;
+  title: string;
+  description?: RichTextLite;
 };
 
 export type SubMenuItem = {
@@ -283,8 +402,8 @@ export type SubMenuItem = {
     _type: "image";
   };
   linkType?: "internal" | "custom";
-  allPages?: PageReference;
-  allPageSections?:
+  page?: PageReference;
+  section?:
     | InfoBlockSectionReference
     | InfoHubSectionReference
     | MarkdownSectionReference
@@ -292,40 +411,28 @@ export type SubMenuItem = {
   customLink?: string;
 };
 
-export type SubMenuItemReference = {
-  _ref: string;
-  _type: "reference";
-  _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "subMenuItem";
-};
-
-export type NavigationItem = {
+export type NavItem = {
   _id: string;
-  _type: "navigationItem";
+  _type: "navItem";
   _createdAt: string;
   _updatedAt: string;
   _rev: string;
   stringTitle?: string;
+  icon?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
   linkType?: "internal" | "custom";
-  allPages?: PageReference;
-  allPageSections?:
+  page?: PageReference;
+  section?:
     | InfoBlockSectionReference
     | InfoHubSectionReference
     | MarkdownSectionReference
     | FooterReference;
   customLink?: string;
-  navigationSubMenuItems?: Array<
-    {
-      _key: string;
-    } & SubMenuItemReference
-  >;
-};
-
-export type NavigationItemReference = {
-  _ref: string;
-  _type: "reference";
-  _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "navigationItem";
 };
 
 export type Footer = {
@@ -346,7 +453,7 @@ export type Footer = {
   footerNavigationMenu?: Array<
     {
       _key: string;
-    } & NavigationItemReference
+    } & NavMenuReference
   >;
   copyrightContent?: RichText;
 };
@@ -435,9 +542,16 @@ export type Page = {
   >;
 };
 
-export type NavigationMenu = {
+export type NavItemReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "navItem";
+};
+
+export type NavMenu = {
   _id: string;
-  _type: "navigationMenu";
+  _type: "navMenu";
   _createdAt: string;
   _updatedAt: string;
   _rev: string;
@@ -449,10 +563,10 @@ export type NavigationMenu = {
     crop?: SanityImageCrop;
     _type: "image";
   };
-  navigationItems?: Array<
+  navItems?: Array<
     {
       _key: string;
-    } & NavigationItemReference
+    } & NavItemReference
   >;
 };
 
@@ -580,9 +694,19 @@ export type Geopoint = {
 };
 
 export type AllSanitySchemaTypes =
+  | ProfessorReference
+  | FacultyReference
+  | Subject
   | SanityImageAssetReference
   | ButtonReference
   | RichTextLite
+  | Professor
+  | SanityImageCrop
+  | SanityImageHotspot
+  | PersonReference
+  | UniversityReference
+  | Faculty
+  | University
   | RichText
   | PageReference
   | InfoBlockSectionReference
@@ -592,22 +716,19 @@ export type AllSanitySchemaTypes =
   | Button
   | InfoBlock
   | Slug
-  | SanityImageCrop
-  | SanityImageHotspot
-  | NavigationMenuReference
+  | NavMenuReference
   | Website
   | Person
   | SubMenuItem
-  | SubMenuItemReference
-  | NavigationItem
-  | NavigationItemReference
+  | NavItem
   | Footer
   | MarkdownSection
   | InfoBlockReference
   | InfoHubSection
   | InfoBlockSection
   | Page
-  | NavigationMenu
+  | NavItemReference
+  | NavMenu
   | MediaFolderReference
   | MediaFolder
   | MediaTag
@@ -619,3 +740,292 @@ export type AllSanitySchemaTypes =
   | SanityAssetSourceData
   | SanityImageAsset
   | Geopoint;
+
+// Source: ../next/sanity/queries/academics/faculty.queries.ts
+// Variable: facultyDetailQuery
+// Query: *[_type == "faculty" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {  _id,  _type,  name,  dbId,  description,  secretary,  streetAddress,  telephone,  email,  website,  dean->{    _id,    name,    title,    image  },  viceDeans[]->{    _id,    name,    title,    image  },  university->{    _id,    name,    dbId  },  "professors": *[_type == "professor" && references(^._id)] | order(name asc) {    _id,    name,    dbId,    title,    picture,    email,    office  },  "subjects": *[_type == "subject" && references(^._id)] | order(year asc, name asc) {    _id,    name,    dbId,    year,    examSession,    code,    credits,    semester  }}
+export type FacultyDetailQueryResult = {
+  _id: string;
+  _type: "faculty";
+  name: string;
+  dbId: string | null;
+  description: RichTextLite | null;
+  secretary: string;
+  streetAddress: string;
+  telephone: string;
+  email: string;
+  website: string;
+  dean: {
+    _id: string;
+    name: string;
+    title: string;
+    image: {
+      asset?: SanityImageAssetReference;
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      _type: "image";
+    } | null;
+  };
+  viceDeans: Array<{
+    _id: string;
+    name: string;
+    title: string;
+    image: {
+      asset?: SanityImageAssetReference;
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      _type: "image";
+    } | null;
+  }> | null;
+  university: {
+    _id: string;
+    name: string;
+    dbId: string | null;
+  };
+  professors: Array<{
+    _id: string;
+    name: string;
+    dbId: string | null;
+    title: string | null;
+    picture: {
+      asset?: SanityImageAssetReference;
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      _type: "image";
+    } | null;
+    email: string | null;
+    office: string | null;
+  }>;
+  subjects: Array<{
+    _id: string;
+    name: string;
+    dbId: string | null;
+    year: number;
+    examSession: "january" | "june" | "september";
+    code: string | null;
+    credits: number | null;
+    semester: "summer" | "winter" | null;
+  }>;
+} | null;
+
+// Source: ../next/sanity/queries/academics/faculty.queries.ts
+// Variable: facultyStaticParamsQuery
+// Query: *[_type == "faculty" && !(_id in path("drafts.**"))] {  "slug": _id}
+export type FacultyStaticParamsQueryResult = Array<{
+  slug: string;
+}>;
+
+// Source: ../next/sanity/queries/academics/professor.queries.ts
+// Variable: professorDetailQuery
+// Query: *[_type == "professor" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {  _id,  _type,  name,  dbId,  title,  bio,  picture,  office,  telephone,  email,  website,  faculties[]->{    _id,    name,    dbId,    university->{      _id,      name,      dbId    }  },  "subjects": *[_type == "subject" && references(^._id)] | order(year asc, name asc) {    _id,    name,    dbId,    year,    examSession,    code,    credits,    faculty->{      _id,      name,      dbId    }  }}
+export type ProfessorDetailQueryResult = {
+  _id: string;
+  _type: "professor";
+  name: string;
+  dbId: string | null;
+  title: string | null;
+  bio: RichTextLite | null;
+  picture: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  } | null;
+  office: string | null;
+  telephone: string | null;
+  email: string | null;
+  website: string;
+  faculties: Array<{
+    _id: string;
+    name: string;
+    dbId: string | null;
+    university: {
+      _id: string;
+      name: string;
+      dbId: string | null;
+    };
+  }>;
+  subjects: Array<{
+    _id: string;
+    name: string;
+    dbId: string | null;
+    year: number;
+    examSession: "january" | "june" | "september";
+    code: string | null;
+    credits: number | null;
+    faculty: {
+      _id: string;
+      name: string;
+      dbId: string | null;
+    };
+  }>;
+} | null;
+
+// Source: ../next/sanity/queries/academics/professor.queries.ts
+// Variable: professorStaticParamsQuery
+// Query: *[_type == "professor" && !(_id in path("drafts.**"))] {  "slug": _id}
+export type ProfessorStaticParamsQueryResult = Array<{
+  slug: string;
+}>;
+
+// Source: ../next/sanity/queries/academics/subject.queries.ts
+// Variable: subjectDetailQuery
+// Query: *[_type == "subject" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {  _id,  _type,  name,  dbId,  code,  credits,  year,  semester,  examSession,  description,  syllabus,  faculty->{    _id,    name,    dbId,    university->{      _id,      name,      dbId    }  },  professors[]->{    _id,    name,    dbId,    title,    picture,    email  }}
+export type SubjectDetailQueryResult = {
+  _id: string;
+  _type: "subject";
+  name: string;
+  dbId: string | null;
+  code: string | null;
+  credits: number | null;
+  year: number;
+  semester: "summer" | "winter" | null;
+  examSession: "january" | "june" | "september";
+  description: RichTextLite | null;
+  syllabus: string;
+  faculty: {
+    _id: string;
+    name: string;
+    dbId: string | null;
+    university: {
+      _id: string;
+      name: string;
+      dbId: string | null;
+    };
+  };
+  professors: Array<{
+    _id: string;
+    name: string;
+    dbId: string | null;
+    title: string | null;
+    picture: {
+      asset?: SanityImageAssetReference;
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      _type: "image";
+    } | null;
+    email: string | null;
+  }>;
+} | null;
+
+// Source: ../next/sanity/queries/academics/subject.queries.ts
+// Variable: subjectStaticParamsQuery
+// Query: *[_type == "subject" && !(_id in path("drafts.**"))] {  "slug": _id}
+export type SubjectStaticParamsQueryResult = Array<{
+  slug: string;
+}>;
+
+// Source: ../next/sanity/queries/academics/university.queries.ts
+// Variable: universityGalleryQuery
+// Query: *[_type == "university"] | order(name asc) {  _id,  name,  dbId,  "faculties": *[_type == "faculty" && references(^._id)] | order(name asc) {    _id,    name,    dbId  }}
+export type UniversityGalleryQueryResult = Array<{
+  _id: string;
+  name: string;
+  dbId: string | null;
+  faculties: Array<{
+    _id: string;
+    name: string;
+    dbId: string | null;
+  }>;
+}>;
+
+// Source: ../next/sanity/queries/academics/university.queries.ts
+// Variable: universityDetailQuery
+// Query: *[_type == "university" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {  _id,  _type,  name,  dbId,  description,  streetAddress,  telephone,  email,  website,  rector->{    _id,    name,    title,    image  },  viceRectors[]->{    _id,    name,    title,    image  },  "faculties": *[_type == "faculty" && references(^._id)] | order(name asc) {    _id,    name,    dbId,    email,    telephone,    website,    "subjectCount": count(*[_type == "subject" && references(^._id)]),    "professorCount": count(*[_type == "professor" && references(^._id)])  }}
+export type UniversityDetailQueryResult = {
+  _id: string;
+  _type: "university";
+  name: string;
+  dbId: string | null;
+  description: RichTextLite | null;
+  streetAddress: string;
+  telephone: string | null;
+  email: string | null;
+  website: string;
+  rector: {
+    _id: string;
+    name: string;
+    title: string;
+    image: {
+      asset?: SanityImageAssetReference;
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      _type: "image";
+    } | null;
+  } | null;
+  viceRectors: Array<{
+    _id: string;
+    name: string;
+    title: string;
+    image: {
+      asset?: SanityImageAssetReference;
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      _type: "image";
+    } | null;
+  }> | null;
+  faculties: Array<{
+    _id: string;
+    name: string;
+    dbId: string | null;
+    email: string;
+    telephone: string;
+    website: string;
+    subjectCount: number;
+    professorCount: number;
+  }>;
+} | null;
+
+// Source: ../next/sanity/queries/academics/university.queries.ts
+// Variable: universityStaticParamsQuery
+// Query: *[_type == "university" && !(_id in path("drafts.**"))] {  "slug": _id}
+export type UniversityStaticParamsQueryResult = Array<{
+  slug: string;
+}>;
+
+// Source: ../next/sanity/queries/website.queries.ts
+// Variable: websiteSeoQuery
+// Query: *[_id == $WEBSITE][0]{  "siteName": coalesce(siteName, websiteTitle, "Scriptr"),  "siteUrl": coalesce(siteUrl, ""),  "defaultSeoTitle": coalesce(defaultSeoTitle, websiteTitle, "Scriptr"),  "defaultSeoDescription": coalesce(defaultSeoDescription, ""),  "defaultKeywords": defaultKeywords[]}
+export type WebsiteSeoQueryResult =
+  | {
+      siteName: string | "Scriptr";
+      siteUrl: "";
+      defaultSeoTitle: string | "Scriptr";
+      defaultSeoDescription: "";
+      defaultKeywords: null;
+    }
+  | {
+      siteName: "Scriptr";
+      siteUrl: "";
+      defaultSeoTitle: "Scriptr";
+      defaultSeoDescription: "";
+      defaultKeywords: null;
+    }
+  | null;
+
+// Query TypeMap
+declare global {
+  interface SanityQueries {
+    '\n*[_type == "faculty" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {\n  _id,\n  _type,\n  name,\n  dbId,\n  description,\n  secretary,\n  streetAddress,\n  telephone,\n  email,\n  website,\n  dean->{\n    _id,\n    name,\n    title,\n    image\n  },\n  viceDeans[]->{\n    _id,\n    name,\n    title,\n    image\n  },\n  university->{\n    _id,\n    name,\n    dbId\n  },\n  "professors": *[_type == "professor" && references(^._id)] | order(name asc) {\n    _id,\n    name,\n    dbId,\n    title,\n    picture,\n    email,\n    office\n  },\n  "subjects": *[_type == "subject" && references(^._id)] | order(year asc, name asc) {\n    _id,\n    name,\n    dbId,\n    year,\n    examSession,\n    code,\n    credits,\n    semester\n  }\n}\n': FacultyDetailQueryResult;
+    '\n*[_type == "faculty" && !(_id in path("drafts.**"))] {\n  "slug": _id\n}\n': FacultyStaticParamsQueryResult;
+    '\n*[_type == "professor" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {\n  _id,\n  _type,\n  name,\n  dbId,\n  title,\n  bio,\n  picture,\n  office,\n  telephone,\n  email,\n  website,\n  faculties[]->{\n    _id,\n    name,\n    dbId,\n    university->{\n      _id,\n      name,\n      dbId\n    }\n  },\n  "subjects": *[_type == "subject" && references(^._id)] | order(year asc, name asc) {\n    _id,\n    name,\n    dbId,\n    year,\n    examSession,\n    code,\n    credits,\n    faculty->{\n      _id,\n      name,\n      dbId\n    }\n  }\n}\n': ProfessorDetailQueryResult;
+    '\n*[_type == "professor" && !(_id in path("drafts.**"))] {\n  "slug": _id\n}\n': ProfessorStaticParamsQueryResult;
+    '\n*[_type == "subject" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {\n  _id,\n  _type,\n  name,\n  dbId,\n  code,\n  credits,\n  year,\n  semester,\n  examSession,\n  description,\n  syllabus,\n  faculty->{\n    _id,\n    name,\n    dbId,\n    university->{\n      _id,\n      name,\n      dbId\n    }\n  },\n  professors[]->{\n    _id,\n    name,\n    dbId,\n    title,\n    picture,\n    email\n  }\n}\n': SubjectDetailQueryResult;
+    '\n*[_type == "subject" && !(_id in path("drafts.**"))] {\n  "slug": _id\n}\n': SubjectStaticParamsQueryResult;
+    '\n*[_type == "university"] | order(name asc) {\n  _id,\n  name,\n  dbId,\n  "faculties": *[_type == "faculty" && references(^._id)] | order(name asc) {\n    _id,\n    name,\n    dbId\n  }\n}\n': UniversityGalleryQueryResult;
+    '\n*[_type == "university" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {\n  _id,\n  _type,\n  name,\n  dbId,\n  description,\n  streetAddress,\n  telephone,\n  email,\n  website,\n  rector->{\n    _id,\n    name,\n    title,\n    image\n  },\n  viceRectors[]->{\n    _id,\n    name,\n    title,\n    image\n  },\n  "faculties": *[_type == "faculty" && references(^._id)] | order(name asc) {\n    _id,\n    name,\n    dbId,\n    email,\n    telephone,\n    website,\n    "subjectCount": count(*[_type == "subject" && references(^._id)]),\n    "professorCount": count(*[_type == "professor" && references(^._id)])\n  }\n}\n': UniversityDetailQueryResult;
+    '\n*[_type == "university" && !(_id in path("drafts.**"))] {\n  "slug": _id\n}\n': UniversityStaticParamsQueryResult;
+    '\n*[_id == $WEBSITE][0]{\n  "siteName": coalesce(siteName, websiteTitle, "Scriptr"),\n  "siteUrl": coalesce(siteUrl, ""),\n  "defaultSeoTitle": coalesce(defaultSeoTitle, websiteTitle, "Scriptr"),\n  "defaultSeoDescription": coalesce(defaultSeoDescription, ""),\n  "defaultKeywords": defaultKeywords[]\n}\n': WebsiteSeoQueryResult;
+  }
+}
+// Lets @sanity/client releases that predate the global registry read it too
+declare module "@sanity/client" {
+  interface SanityQueries extends globalThis.SanityQueries {}
+}

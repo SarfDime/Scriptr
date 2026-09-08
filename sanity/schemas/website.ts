@@ -117,6 +117,46 @@ export const Website = defineType({
       group: 'websiteTitleMenu',
       description: 'The title of the website.',
     },
+    {
+      title: 'Site name',
+      name: 'siteName',
+      type: 'string',
+      group: 'websiteTitleMenu',
+      description: 'The brand name used in SEO titles and social metadata.',
+    },
+    {
+      title: 'Site URL',
+      name: 'siteUrl',
+      type: 'url',
+      group: 'websiteTitleMenu',
+      description:
+        'Canonical public URL for the website, e.g. https://example.com',
+    },
+    {
+      title: 'Default SEO title',
+      name: 'defaultSeoTitle',
+      type: 'string',
+      group: 'websiteTitleMenu',
+      description: 'Fallback title used when a page does not specify one.',
+    },
+    {
+      title: 'Default SEO description',
+      name: 'defaultSeoDescription',
+      type: 'text',
+      rows: 3,
+      group: 'websiteTitleMenu',
+      description:
+        'Fallback description used in metadata for pages without their own copy.',
+    },
+    {
+      title: 'Default SEO keywords',
+      name: 'defaultKeywords',
+      type: 'array',
+      of: [{ type: 'string' }],
+      group: 'websiteTitleMenu',
+      description:
+        'Default keywords to append to page metadata when no page-specific keywords are set.',
+    },
 
     ...WebsiteContent,
   ],

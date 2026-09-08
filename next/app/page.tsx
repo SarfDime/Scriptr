@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ActivityStats } from '@/components/common/ActivityStats'
 import { Box } from '@/components/common/Box'
+import { PageLayout } from '@/components/layout/PageLayout'
 import { SubjectsSidebar } from '@/components/Subjects/SubjectsSidebar'
 import { ScriptsSection } from '@/components/scripts/ScriptSection'
 import { SearchHeader } from '@/components/scripts/SearchHeader'
@@ -189,7 +190,7 @@ const Page = ({
     )
 
   return (
-    <>
+    <PageLayout>
       <SearchHeader
         greeting={greeting}
         query={query}
@@ -219,7 +220,7 @@ const Page = ({
         commentCount={commentCount}
         content={activityContent}
       />
-    </>
+    </PageLayout>
   )
 }
 

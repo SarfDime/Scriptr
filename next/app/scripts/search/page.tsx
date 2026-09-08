@@ -1,12 +1,5 @@
-import { ApiResourcePage } from '../../../components/api-tester/ApiResourcePage'
+import { redirect } from 'next/navigation'
 
 export default function ScriptSearchPage() {
-  return (
-    <ApiResourcePage
-      description='Search scripts by title or description.'
-      endpoint='/api/scripts/search'
-      search
-      title='Search scripts'
-    />
-  )
+  redirect('/')
 }

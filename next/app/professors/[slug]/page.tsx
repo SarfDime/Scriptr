@@ -1,11 +1,212 @@
-const Page = async ({ params }: { params: Promise<{ slug: string }> }) => {
+import { Box } from '@/components/common/Box'
+import { NextLink } from '@/components/common/NextLink'
+import { PageLayout } from '@/components/layout/PageLayout'
+import { PortableTextContent } from '@/components/typography/PortableTextContent'
+import { Text } from '@/components/typography/Text'
+import { Title } from '@/components/typography/Title'
+import { Badge } from '@/components/ui/Badge'
+import { Card } from '@/components/ui/Card'
+import {
+  createAcademicMetadata,
+  createAcademicStaticParams,
+  fetchAcademicDetailOrNotFound,
+} from '@/lib/academic-detail-page'
+import { getFacultyPath, getSubjectPath } from '@/lib/academic-routes'
+import {
+  professorDetailQuery,
+  professorStaticParamsQuery,
+} from '@/sanity/queries/academics/professor.queries'
+import type {
+  AcademicDetailPageProps,
+  ProfessorDetail,
+} from '@/types/academics.types'
+
+export const dynamicParams = false
+
+export const generateStaticParams = createAcademicStaticParams(
+  professorStaticParamsQuery,
+  'professors-static-params'
+)
+
+export const generateMetadata = createAcademicMetadata<ProfessorDetail>({
+  query: professorDetailQuery,
+  pageDomain: 'professors',
+  entityLabel: 'Professor',
+  fetchOriginPrefix: 'professor',
+  getDescription: (professor) => professor.bio,
+  descriptionFallback: (professor) =>
+    `Academic profile, courses taught, and contact details for ${professor.name}.`,
+})
+
+export default async function ProfessorDetailPage({
+  params,
+}: AcademicDetailPageProps) {
   const { slug } = await params
 
+  const professor = await fetchAcademicDetailOrNotFound<ProfessorDetail>({
+    query: professorDetailQuery,
+    slug,
+    fetchOrigin: `professor-detail-${slug}`,
+  })
+
   return (
-    <div>
-      <h1>{slug}</h1>
-      <p>Content for {slug}</p>
-    </div>
+    <PageLayout
+      header={{
+        greeting: professor.title ?? 'Academic Staff',
+        title: professor.name,
+        subtitle: professor.dbId ? `Database ID: ${professor.dbId}` : undefined,
+        actions: (
+          <NextLink href='/universities'>
+            <Badge className='cp-unstyled border border-grey-300'>
+              ← Universities & Faculties
+            </Badge>
+          </NextLink>
+        ),
+      }}
+      sidebar={
+        <>
+          {(professor.office ||
+            professor.telephone ||
+            professor.email ||
+            professor.website) && (
+            <Card className='p-6 ui-stack gap-3'>
+              <Title as='h3' className='ui-title font-semibold'>
+                Contact Details
+              </Title>
+              {professor.office && (
+                <Box className='ui-stack gap-0.5'>
+                  <Text className='ui-caption font-bold text-grey-500'>
+                    Office
+                  </Text>
+                  <Text className='ui-body'>{professor.office}</Text>
+                </Box>
+              )}
+              {professor.telephone && (
+                <Box className='ui-stack gap-0.5'>
+                  <Text className='ui-caption font-bold text-grey-500'>
+                    Phone
+                  </Text>
+                  <Text className='ui-body'>{professor.telephone}</Text>
+                </Box>
+              )}
+              {professor.email && (
+                <Box className='ui-stack gap-0.5'>
+                  <Text className='ui-caption font-bold text-grey-500'>
+                    Email
+                  </Text>
+                  <Text className='ui-body'>{professor.email}</Text>
+                </Box>
+              )}
+              {professor.website && (
+                <Box className='ui-stack gap-0.5'>
+                  <Text className='ui-caption font-bold text-grey-500'>
+                    Website
+                  </Text>
+                  <a
+                    href={professor.website}
+                    target='_blank'
+                    rel='noreferrer'
+                    className='ui-body text-brand hover:underline break-all'
+                  >
+                    {professor.website}
+                  </a>
+                </Box>
+              )}
+            </Card>
+          )}
+
+          {professor.faculties && professor.faculties.length > 0 && (
+            <Card className='p-6 ui-stack gap-3'>
+              <Title as='h3' className='ui-title font-semibold'>
+                Affiliated Faculties
+              </Title>
+              <Box className='ui-stack gap-2'>
+                {professor.faculties.map((fac) => (
+                  <Box key={fac._id} className='ui-stack gap-0.5'>
+                    <NextLink
+                      href={getFacultyPath(fac._id)}
+                      className='ui-body font-medium text-brand hover:underline'
+                    >
+                      {fac.name}
+                    </NextLink>
+                    {fac.university && (
+                      <Text className='ui-caption text-grey-500'>
+                        {fac.university.name}
+                      </Text>
+                    )}
+                  </Box>
+                ))}
+              </Box>
+            </Card>
+          )}
+        </>
+      }
+    >
+      {professor.bio && (
+        <Card className='p-6 ui-stack gap-3'>
+          <Title as='h2' className='ui-title font-bold'>
+            Biography
+          </Title>
+          <PortableTextContent>{professor.bio}</PortableTextContent>
+        </Card>
+      )}
+
+      {/* Subjects Taught */}
+      <Card className='p-6 ui-stack gap-4'>
+        <Box className='ui-cluster justify-between items-center'>
+          <Title as='h2' className='ui-title font-bold'>
+            Courses Taught
+          </Title>
+          <Badge className='cp-brand'>
+            {professor.subjects?.length ?? 0} Courses
+          </Badge>
+        </Box>
+
+        {professor.subjects && professor.subjects.length > 0 ? (
+          <Box className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+            {professor.subjects.map((subject) => (
+              <NextLink
+                key={subject._id}
+                href={getSubjectPath(subject._id)}
+                className='group'
+              >
+                <Card className='p-4 h-full ui-stack gap-2 transition hover:border-brand-500 hover:shadow-sm'>
+                  <Box className='ui-cluster justify-between items-start gap-2'>
+                    <Title
+                      as='h3'
+                      className='ui-body font-semibold group-hover:text-brand'
+                    >
+                      {subject.name}
+                    </Title>
+                    {subject.code && (
+                      <Badge className='cp-unstyled border border-grey-200'>
+                        {subject.code}
+                      </Badge>
+                    )}
+                  </Box>
+                  <Box className='ui-cluster gap-2 mt-auto text-grey-500'>
+                    <Text className='ui-caption'>Year {subject.year}</Text>
+                    {subject.credits !== undefined && (
+                      <Text className='ui-caption'>
+                        • {subject.credits} ECTS
+                      </Text>
+                    )}
+                    {subject.faculty && (
+                      <Text className='ui-caption'>
+                        • {subject.faculty.name}
+                      </Text>
+                    )}
+                  </Box>
+                </Card>
+              </NextLink>
+            ))}
+          </Box>
+        ) : (
+          <Text className='ui-caption text-grey-500'>
+            No courses listed for this professor.
+          </Text>
+        )}
+      </Card>
+    </PageLayout>
   )
 }
-export default Page

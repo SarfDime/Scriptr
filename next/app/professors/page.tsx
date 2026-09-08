@@ -1,11 +1,6 @@
-import { ApiResourcePage } from '../../components/api-tester/ApiResourcePage'
+import { redirect } from 'next/navigation'
 
 export default function ProfessorsPage() {
-  return (
-    <ApiResourcePage
-      description='Fetch professors and their related subjects.'
-      endpoint='/api/professors'
-      title='Professors'
-    />
-  )
+  // Standalone professor gallery is skipped; redirects to hierarchical academic gallery
+  redirect('/universities')
 }

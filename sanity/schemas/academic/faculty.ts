@@ -48,6 +48,12 @@ export const Faculty = defineType({
       fieldset: 'information',
     },
     {
+      name: 'description',
+      title: 'Description',
+      type: 'richTextLite',
+      fieldset: 'information',
+    },
+    {
       name: 'secretary',
       title: 'Secretary',
       type: 'string',

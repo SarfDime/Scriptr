@@ -1,11 +1,6 @@
-import { ApiResourcePage } from '../../components/api-tester/ApiResourcePage'
+import { redirect } from 'next/navigation'
 
 export default function FacultiesPage() {
-  return (
-    <ApiResourcePage
-      description='Fetch faculties with their university metadata.'
-      endpoint='/api/faculties'
-      title='Faculties'
-    />
-  )
+  // Hierarchical main gallery combines Universities and Faculties at /universities
+  redirect('/universities')
 }

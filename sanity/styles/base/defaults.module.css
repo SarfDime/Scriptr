@@ -28,6 +28,18 @@ body {
   line-height: calc(19 / 13);
 }
 
+[data-testid="document-panel-scroller"] > div {
+  max-width: unset;
+  padding-inline: 5%;
+}
+
+.compact-mode {
+  [data-testid="document-panel-scroller"] > div {
+    max-width: unset;
+    padding-inline: 2%;
+  }
+}
+
 .compact-mode {
   &:root {
     font-size: 18px;

@@ -4,10 +4,11 @@ import { useState } from 'react'
 import { ActivityStats } from '@/components/common/ActivityStats'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
-import { PageHeader } from '@/components/layout/PageHeader'
+import { PageLayout } from '@/components/layout/PageLayout'
 import { ProfileCard } from '@/components/profile/ProfileCard'
 import { SubjectsSidebar } from '@/components/Subjects/SubjectsSidebar'
 import { ScriptsSection } from '@/components/scripts/ScriptSection'
+import { Divider } from '@/components/ui/Divider'
 import { DEFAULT_ACTIVITY_CONTENT } from '@/config/content'
 import type { PortableTextType } from '@/types/components/PortableText.types'
 import type {
@@ -284,57 +285,66 @@ export default function Page({
         : [...current, id]
     )
   return (
-    <div className='min-h-screen bg-[#08100d] text-[#e8efeb]'>
-      <main className='ui-stack'>
-        <PageHeader greeting={`Profile`} title={profile.name}>
+    <PageLayout
+      header={{
+        greeting: `Profile`,
+        title: profile.name,
+        subtitle: profile.role,
+        actions: (
           <Button
             onClick={() => setShowProfessor(!showProfessor)}
-            className='rounded-lg border border-[#2b4036] bg-[#0d1a15] px-3 py-2 text-xs text-[#aab9b0]'
+            className='button subtle ui-caption'
           >
             Edit profile
           </Button>
-        </PageHeader>
-        <Box className='ui-cluster items-stretch'>
-          <ProfileCard
-            name={profile.name}
-            role={profile.role}
-            bio={profile.bio}
-            university={profile.university}
-            faculty={profile.faculty}
-            location={profile.location}
-            className='grow'
-          />
+        ),
+      }}
+      sidebar={
+        <>
           <ActivityStats
             savedCount={saved.length}
             authoredCount={authoredCount}
             commentCount={commentCount}
             content={activityContent}
           />
+          <Divider />
+          <SubjectsSidebar
+            subjects={pageSubjects}
+            content={subjectsContent}
+            className='grow'
+          />
+        </>
+      }
+    >
+      <Box className='ui-cluster items-stretch'>
+        <ProfileCard
+          name={profile.name}
+          role={profile.role}
+          bio={profile.bio}
+          university={profile.university}
+          faculty={profile.faculty}
+          location={profile.location}
+          className='grow'
+        />
+      </Box>
+      <Box className='ui-stack'>
+        <Box className='ui-cluster items-start'>
+          <ScriptsSection
+            content={scriptSectionContent}
+            scripts={filteredScripts}
+            subjectOptions={subjectOptions}
+            subject={subject}
+            sort={sort}
+            onSubjectChange={setSubject}
+            onSortChange={setSort}
+            savedIds={saved}
+            likedIds={liked}
+            onToggleSaved={toggleSaved}
+            onToggleLiked={toggleLiked}
+            className='grow'
+          />
         </Box>
-        <Box className='ui-stack'>
-          <Box className='ui-cluster items-start'>
-            <SubjectsSidebar
-              subjects={pageSubjects}
-              content={subjectsContent}
-              className='grow'
-            />
-            <ScriptsSection
-              content={scriptSectionContent}
-              scripts={filteredScripts}
-              subjectOptions={subjectOptions}
-              subject={subject}
-              sort={sort}
-              onSubjectChange={setSubject}
-              onSortChange={setSort}
-              savedIds={saved}
-              likedIds={liked}
-              onToggleSaved={toggleSaved}
-              onToggleLiked={toggleLiked}
-              className='grow'
-            />
-          </Box>
-        </Box>
-      </main>
-    </div>
+      </Box>
+    </PageLayout>
   )
 }

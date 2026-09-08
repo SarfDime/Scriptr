@@ -7,7 +7,7 @@
     "sanity"
   ],
   "scripts": {
-    "dev": "npm run dev:next & npm run dev:hono",
+    "dev": "npm run dev:next & npm run dev:hono & npm run dev:sanity",
     "dev:next": "npm run dev --workspace next",
     "dev:hono": "npm run dev --workspace hono",
     "dev:sanity": "npm run dev --workspace sanity",
