@@ -36,6 +36,20 @@ export const Professor = defineType({
       type: 'richTextLite',
     },
     {
+      name: 'faculties',
+      title: 'Faculties',
+      type: 'array',
+      of: [
+        {
+          type: 'reference',
+          to: [{ type: 'faculty' }],
+        },
+      ],
+      description:
+        'Assign this professor to one or more faculties in the database.',
+      validation: (rule: Rule) => rule.required().min(1),
+    },
+    {
       name: 'dbId',
       title: 'Database ID',
       type: 'string',

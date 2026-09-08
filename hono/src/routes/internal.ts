@@ -22,6 +22,96 @@ internal.use('*', async (c, next) => {
 
 type InternalSupabase = ReturnType<typeof createInternalSupabaseClient>
 
+async function syncProfessorFacultyAssignments(
+  supabase: InternalSupabase,
+  professorId: string,
+  desiredFacultyIds: Array<string>
+) {
+  const { data: currentRows, error: selectError } = await supabase
+    .from('professor_faculties')
+    .select('faculty_id')
+    .eq('professor_id', professorId)
+
+  if (selectError) throw new Error(selectError.message)
+
+  const currentSet = new Set(
+    (currentRows ?? []).map((row) => String(row.faculty_id))
+  )
+  const desiredSet = new Set(desiredFacultyIds)
+
+  const toAdd = [...desiredSet].filter((id) => !currentSet.has(id))
+  const toRemove = [...currentSet].filter((id) => !desiredSet.has(id))
+
+  if (toAdd.length > 0) {
+    const { error: insertError } = await supabase
+      .from('professor_faculties')
+      .upsert(
+        toAdd.map((facultyId) => ({
+          professor_id: professorId,
+          faculty_id: facultyId,
+        })),
+        { onConflict: 'professor_id,faculty_id' }
+      )
+
+    if (insertError) throw new Error(insertError.message)
+  }
+
+  if (toRemove.length > 0) {
+    const { error: deleteError } = await supabase
+      .from('professor_faculties')
+      .delete()
+      .eq('professor_id', professorId)
+      .in('faculty_id', toRemove)
+
+    if (deleteError) throw new Error(deleteError.message)
+  }
+}
+
+async function syncSubjectProfessorAssignments(
+  supabase: InternalSupabase,
+  subjectId: string,
+  desiredProfessorIds: Array<string>
+) {
+  const { data: currentRows, error: selectError } = await supabase
+    .from('subject_professors')
+    .select('professor_id')
+    .eq('subject_id', subjectId)
+
+  if (selectError) throw new Error(selectError.message)
+
+  const currentSet = new Set(
+    (currentRows ?? []).map((row) => String(row.professor_id))
+  )
+  const desiredSet = new Set(desiredProfessorIds)
+
+  const toAdd = [...desiredSet].filter((id) => !currentSet.has(id))
+  const toRemove = [...currentSet].filter((id) => !desiredSet.has(id))
+
+  if (toAdd.length > 0) {
+    const { error: insertError } = await supabase
+      .from('subject_professors')
+      .upsert(
+        toAdd.map((professorId) => ({
+          subject_id: subjectId,
+          professor_id: professorId,
+        })),
+        { onConflict: 'subject_id,professor_id' }
+      )
+
+    if (insertError) throw new Error(insertError.message)
+  }
+
+  if (toRemove.length > 0) {
+    const { error: deleteError } = await supabase
+      .from('subject_professors')
+      .delete()
+      .eq('subject_id', subjectId)
+      .in('professor_id', toRemove)
+
+    if (deleteError) throw new Error(deleteError.message)
+  }
+}
+
 /** Find a row already linked to this Sanity document, if any (keeps "create in DB" idempotent) */
 async function findBySanityId(
   supabase: InternalSupabase,
@@ -151,6 +241,38 @@ internal.patch('/universities/:id', async (c) => {
   return c.json({ success: true, university: data })
 })
 
+/** Sync a university with the latest Sanity values. */
+internal.post('/universities/:id/sync', async (c) => {
+  const universityId = requiredParam(c, 'id')
+  const supabase = createInternalSupabaseClient(c)
+  const { name } = await c.req.json()
+
+  if (!name) {
+    return c.json({ error: 'Name is required' }, 400)
+  }
+
+  const { data: existingUniversity, error: existingError } = await supabase
+    .from('universities')
+    .select('id')
+    .eq('id', universityId)
+    .maybeSingle()
+
+  if (existingError) return c.json({ error: existingError.message }, 500)
+  if (!existingUniversity) {
+    return c.json({ error: 'University database record not found' }, 404)
+  }
+
+  const { data, error } = await supabase
+    .from('universities')
+    .update({ name })
+    .eq('id', universityId)
+    .select()
+    .single()
+
+  if (error) return c.json({ error: error.message }, 500)
+  return c.json({ success: true, university: data })
+})
+
 /** Delete a university (blocked if any faculty still references it) */
 internal.delete('/universities/:id', async (c) => {
   const universityId = requiredParam(c, 'id')
@@ -234,6 +356,38 @@ internal.patch('/faculties/:id', async (c) => {
   const facultyId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
   const { name, university_id } = await c.req.json()
+
+  const { data, error } = await supabase
+    .from('faculties')
+    .update({ name, university_id })
+    .eq('id', facultyId)
+    .select()
+    .single()
+
+  if (error) return c.json({ error: error.message }, 500)
+  return c.json({ success: true, faculty: data })
+})
+
+/** Sync a faculty with the latest Sanity values. */
+internal.post('/faculties/:id/sync', async (c) => {
+  const facultyId = requiredParam(c, 'id')
+  const supabase = createInternalSupabaseClient(c)
+  const { name, university_id } = await c.req.json()
+
+  if (!name || !university_id) {
+    return c.json({ error: 'Name and university_id are required' }, 400)
+  }
+
+  const { data: existingFaculty, error: existingError } = await supabase
+    .from('faculties')
+    .select('id')
+    .eq('id', facultyId)
+    .maybeSingle()
+
+  if (existingError) return c.json({ error: existingError.message }, 500)
+  if (!existingFaculty) {
+    return c.json({ error: 'Faculty database record not found' }, 404)
+  }
 
   const { data, error } = await supabase
     .from('faculties')
@@ -359,6 +513,57 @@ internal.patch('/professors/:id', async (c) => {
     .single()
 
   if (error) return c.json({ error: error.message }, 500)
+  return c.json({ success: true, professor: data })
+})
+
+/** Sync a professor with the latest Sanity values and join-table assignments. */
+internal.post('/professors/:id/sync', async (c) => {
+  const professorId = requiredParam(c, 'id')
+  const supabase = createInternalSupabaseClient(c)
+  const { name, faculty_ids } = await c.req.json()
+
+  if (!name) {
+    return c.json({ error: 'Name is required' }, 400)
+  }
+
+  const { data: existingProfessor, error: existingError } = await supabase
+    .from('professors')
+    .select('id')
+    .eq('id', professorId)
+    .maybeSingle()
+
+  if (existingError) return c.json({ error: existingError.message }, 500)
+  if (!existingProfessor) {
+    return c.json({ error: 'Professor database record not found' }, 404)
+  }
+
+  const { data, error } = await supabase
+    .from('professors')
+    .update({ name })
+    .eq('id', professorId)
+    .select()
+    .single()
+
+  if (error) return c.json({ error: error.message }, 500)
+
+  try {
+    await syncProfessorFacultyAssignments(
+      supabase,
+      professorId,
+      Array.isArray(faculty_ids) ? faculty_ids : []
+    )
+  } catch (syncError) {
+    return c.json(
+      {
+        error:
+          syncError instanceof Error
+            ? syncError.message
+            : 'Failed to sync professor faculty assignments',
+      },
+      500
+    )
+  }
+
   return c.json({ success: true, professor: data })
 })
 
@@ -541,6 +746,68 @@ internal.patch('/subjects/:id', async (c) => {
     .single()
 
   if (error) return c.json({ error: error.message }, 500)
+  return c.json({ success: true, subject: data })
+})
+
+/** Sync a subject with the latest Sanity values and professor assignments. */
+internal.post('/subjects/:id/sync', async (c) => {
+  const subjectId = requiredParam(c, 'id')
+  const supabase = createInternalSupabaseClient(c)
+  const { name, year, exam_session, faculty_id, facultyId, professor_ids } =
+    await c.req.json()
+
+  const resolvedFacultyId = faculty_id ?? facultyId
+
+  if (!name || !year || !exam_session || !resolvedFacultyId) {
+    return c.json(
+      { error: 'Name, year, exam_session, and faculty_id are required' },
+      400
+    )
+  }
+
+  const { data: existingSubject, error: existingError } = await supabase
+    .from('subjects')
+    .select('id')
+    .eq('id', subjectId)
+    .maybeSingle()
+
+  if (existingError) return c.json({ error: existingError.message }, 500)
+  if (!existingSubject) {
+    return c.json({ error: 'Subject database record not found' }, 404)
+  }
+
+  const { data, error } = await supabase
+    .from('subjects')
+    .update({
+      name,
+      year,
+      exam_session,
+      faculty_id: resolvedFacultyId,
+    })
+    .eq('id', subjectId)
+    .select()
+    .single()
+
+  if (error) return c.json({ error: error.message }, 500)
+
+  try {
+    await syncSubjectProfessorAssignments(
+      supabase,
+      subjectId,
+      Array.isArray(professor_ids) ? professor_ids : []
+    )
+  } catch (syncError) {
+    return c.json(
+      {
+        error:
+          syncError instanceof Error
+            ? syncError.message
+            : 'Failed to sync subject professor assignments',
+      },
+      500
+    )
+  }
+
   return c.json({ success: true, subject: data })
 })
 

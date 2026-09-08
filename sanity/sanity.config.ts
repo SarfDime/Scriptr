@@ -14,6 +14,7 @@ import type { AcademicEntityType } from './actions/academicEntitySync'
 import {
   createCheckedDeleteAction,
   createInDatabaseAction,
+  syncWithDatabaseAction,
 } from './actions/academicEntitySync'
 import { CustomDuplicateAction } from './actions/customDuplicate'
 import { CustomToolMenu } from './components/CustomToolMenu'
@@ -105,7 +106,11 @@ export default defineConfig({
       })
 
       return entityType
-        ? [...mapped, createInDatabaseAction(entityType)]
+        ? [
+            ...mapped,
+            createInDatabaseAction(entityType),
+            syncWithDatabaseAction(entityType),
+          ]
         : mapped
     },
   },

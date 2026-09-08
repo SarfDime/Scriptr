@@ -50,6 +50,20 @@ export const Subject = defineType({
       validation: validationRules.isRequired,
     },
     {
+      name: 'professors',
+      title: 'Professors',
+      type: 'array',
+      of: [
+        {
+          type: 'reference',
+          to: [{ type: 'professor' }],
+        },
+      ],
+      description:
+        'Assign one or more professors to this subject in the database.',
+      validation: (rule: Rule) => rule.required().min(1),
+    },
+    {
       name: 'description',
       title: 'Description',
       type: 'richTextLite',

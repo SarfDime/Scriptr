@@ -1,7 +1,7 @@
 import type { QueryParams } from 'next-sanity'
 import type { LivePerspective } from 'next-sanity/live'
 import { isProd, isStaging } from '@/config/env'
-import { logServerless } from '@/lib/logger'
+import { nextLogs } from '@/lib/logger'
 import { sanityWebsiteId } from '../env'
 import { sanityFunctionQueries } from '../queries/functions.queries'
 import { prodClient } from './client'
@@ -55,7 +55,7 @@ async function fetchSanityData<QueryResponse>({
 
     return isProd ? prodData : (data as QueryResponse)
   } catch (error) {
-    logServerless({
+    nextLogs({
       logLevel: 'error',
       error,
       message: `fetchSanityData() - "${fetchOrigin}" - Failed to fetch sanity data.`,

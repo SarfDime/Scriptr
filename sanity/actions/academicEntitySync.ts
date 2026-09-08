@@ -1,5 +1,7 @@
-import AddCircleIcon from '@sanity/icons/AddCircle'
-import TrashIcon from '@sanity/icons/Trash'
+import AddCircle from '@sanity/icons/AddCircle'
+import Sync from '@sanity/icons/Sync'
+import Trash from '@sanity/icons/Trash'
+import { useToast } from '@sanity/ui/toast'
 import { useState } from 'react'
 import { useClient, useDocumentOperation } from 'sanity'
 
@@ -56,6 +58,7 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
   return function CreateInDatabaseAction(props: AcademicDocumentActionProps) {
     const { patch } = useDocumentOperation(props.id, props.type)
     const client = useClient({ apiVersion: '2024-01-01' })
+    const toast = useToast()
     const [dialog, setDialog] = useState<string | null>(null)
     const doc = props.draft ?? props.published
     const parentField = entityType === 'faculty' ? 'university' : 'faculty'
@@ -70,7 +73,7 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
 
     return {
       label: 'Create in Database',
-      icon: AddCircleIcon,
+      icon: AddCircle,
       disabled: Boolean(
         !doc?.name ||
           ((entityType === 'faculty' || entityType === 'subject') &&
@@ -95,6 +98,22 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
           sanity_id: publishedSanityId(props.id),
         }
 
+        if (entityType === 'professor') {
+          const facultyReferences = Array.isArray(doc.faculties)
+            ? doc.faculties
+                .map((faculty) => refId(faculty))
+                .filter((id): id is string => Boolean(id))
+            : []
+          const facultyIds = await client.fetch<Array<string>>(
+            '*[_id in $ids || _id in $draftIds].dbId',
+            {
+              ids: facultyReferences,
+              draftIds: facultyReferences.map((id) => `drafts.${id}`),
+            }
+          )
+          body.faculty_ids = facultyIds.filter(Boolean)
+        }
+
         if (entityType === 'faculty') {
           body.university_id = await client.fetch<string | null>(
             '*[_id == $id || _id == $draftId][0].dbId',
@@ -108,6 +127,19 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
             '*[_id == $id || _id == $draftId][0].dbId',
             { id: parentReference, draftId: `drafts.${parentReference}` }
           )
+          const professorReferences = Array.isArray(doc.professors)
+            ? doc.professors
+                .map((professor) => refId(professor))
+                .filter((id): id is string => Boolean(id))
+            : []
+          const professorIds = await client.fetch<Array<string>>(
+            '*[_id in $ids || _id in $draftIds].dbId',
+            {
+              ids: professorReferences,
+              draftIds: professorReferences.map((id) => `drafts.${id}`),
+            }
+          )
+          body.professor_ids = professorIds.filter(Boolean)
         }
 
         if (
@@ -138,6 +170,10 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
 
           const record = result[entityType] ?? result
           patch.execute([{ set: { dbId: record.id } }])
+          toast.push({
+            status: 'success',
+            title: 'Successfully created in the database.',
+          })
           props.onComplete()
         } catch (error) {
           setDialog(
@@ -159,6 +195,154 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
   }
 }
 
+/** Syncs an already-linked academic document with the latest Sanity values. */
+export function syncWithDatabaseAction(entityType: AcademicEntityType) {
+  return function SyncWithDatabaseAction(props: AcademicDocumentActionProps) {
+    const { patch } = useDocumentOperation(props.id, props.type)
+    const client = useClient({ apiVersion: '2024-01-01' })
+    const toast = useToast()
+    const [dialog, setDialog] = useState<string | null>(null)
+    const doc = props.draft ?? props.published
+    const parentField = entityType === 'faculty' ? 'university' : 'faculty'
+    const parentReference =
+      entityType === 'faculty' || entityType === 'subject'
+        ? refId(doc?.[parentField])
+        : undefined
+
+    return {
+      label: 'Sync with Database',
+      icon: Sync,
+      disabled: Boolean(
+        !doc?.dbId ||
+          !doc?.name ||
+          ((entityType === 'faculty' || entityType === 'subject') &&
+            !parentReference)
+      ),
+      onHandle: async () => {
+        if (!doc?.dbId) {
+          setDialog('Create this record in the database before syncing.')
+          return
+        }
+
+        if (!doc?.name) {
+          setDialog('Set a name before syncing to the database.')
+          return
+        }
+
+        if (
+          (entityType === 'faculty' || entityType === 'subject') &&
+          !parentReference
+        ) {
+          setDialog(`Add a ${parentField} before syncing this record.`)
+          return
+        }
+
+        const body: Record<string, unknown> = {
+          name: doc.name,
+          sanity_id: publishedSanityId(props.id),
+        }
+
+        if (entityType === 'professor') {
+          const facultyReferences = Array.isArray(doc.faculties)
+            ? doc.faculties
+                .map((faculty) => refId(faculty))
+                .filter((id): id is string => Boolean(id))
+            : []
+          const facultyIds = await client.fetch<Array<string>>(
+            '*[_id in $ids || _id in $draftIds].dbId',
+            {
+              ids: facultyReferences,
+              draftIds: facultyReferences.map((id) => `drafts.${id}`),
+            }
+          )
+          body.faculty_ids = facultyIds.filter(Boolean)
+        }
+
+        if (entityType === 'faculty') {
+          body.university_id = await client.fetch<string | null>(
+            '*[_id == $id || _id == $draftId][0].dbId',
+            { id: parentReference, draftId: `drafts.${parentReference}` }
+          )
+        }
+
+        if (entityType === 'subject') {
+          body.year = doc.year
+          body.exam_session = doc.examSession
+          body.faculty_id = await client.fetch<string | null>(
+            '*[_id == $id || _id == $draftId][0].dbId',
+            { id: parentReference, draftId: `drafts.${parentReference}` }
+          )
+          const professorReferences = Array.isArray(doc.professors)
+            ? doc.professors
+                .map((professor) => refId(professor))
+                .filter((id): id is string => Boolean(id))
+            : []
+          const professorIds = await client.fetch<Array<string>>(
+            '*[_id in $ids || _id in $draftIds].dbId',
+            {
+              ids: professorReferences,
+              draftIds: professorReferences.map((id) => `drafts.${id}`),
+            }
+          )
+          body.professor_ids = professorIds.filter(Boolean)
+        }
+
+        if (
+          (entityType === 'faculty' || entityType === 'subject') &&
+          !body[parentField === 'university' ? 'university_id' : 'faculty_id']
+        ) {
+          setDialog(`Link the selected ${parentField} to the database first.`)
+          return
+        }
+
+        try {
+          const targetPath = doc?.dbId
+            ? `/api/internal/${ENDPOINTS[entityType]}/${doc.dbId}/sync`
+            : `/api/internal/${ENDPOINTS[entityType]}`
+
+          const response = await fetch(apiUrl(targetPath), {
+            method: 'POST',
+            headers: apiHeaders(),
+            body: JSON.stringify(body),
+          })
+          const result = await response.json()
+
+          if (!response.ok) {
+            setDialog(
+              result.error ?? 'Failed to sync this document with the database.'
+            )
+            return
+          }
+
+          const record = result[entityType] ?? result
+          if (record?.id && !doc?.dbId) {
+            patch.execute([{ set: { dbId: record.id } }])
+          }
+          toast.push({
+            status: 'success',
+            title: 'Successfully synced with the database.',
+          })
+          props.onComplete()
+        } catch (error) {
+          setDialog(
+            error instanceof Error
+              ? error.message
+              : 'Network error while syncing.'
+          )
+        }
+      },
+      dialog: dialog
+        ? {
+            type: 'dialog' as const,
+            onClose: () => setDialog(null),
+            header: 'Sync with Database',
+            content: dialog,
+          }
+        : undefined,
+    }
+  }
+}
+
 /** Creates a "Delete" action override that checks the internal admin API for
  * dependents before allowing deletion, so a linked record can't be removed while
  * other records still reference it.
@@ -172,7 +356,7 @@ export function createCheckedDeleteAction(entityType: AcademicEntityType) {
 
     return {
       label: 'Delete',
-      icon: TrashIcon,
+      icon: Trash,
       disabled: Boolean(deleteOp.disabled),
       onHandle: async () => {
         if (!dbId) {

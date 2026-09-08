@@ -3,6 +3,7 @@ import {
   isProfileSubjectStatus,
   isUserRole,
 } from '../../../shared/utils/api.utils'
+import { honoLog } from '../lib/logger'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
@@ -83,8 +84,7 @@ auth.post('/logout', authMiddleware, async (c) => {
   const { error } = await supabase.auth.signOut()
 
   if (error) {
-    // biome-ignore lint/suspicious/noConsole: <Good to log>
-    console.error('Logout error:', error)
+    honoLog({ message: 'Logout error', logLevel: 'error', error })
   }
 
   return c.json({

@@ -27,10 +27,6 @@ This will:
 - Regenerate AGENTS.md with current phase focus
 - Update workspace CLAUDE.md with implementation notes
 
-**When generating commit messages in VS Code**, Copilot will automatically suggest the roadmap pattern (see [.commit-instructions.md](.commit-instructions.md) for the full guide).
-
-See [.agent-roadmap.md](.agent-roadmap.md) for detailed agent documentation.
-
 ## Before editing
 
 1. Read the README for the workspace you will change.

@@ -1,7 +1,7 @@
-// biome-ignore-all lint/suspicious/noConsole: API request and error logging is intentional.
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { handle } from 'hono/vercel'
+import { honoLog, honoLogRequest } from './lib/logger'
 import auth from './routes/auth'
 import comments from './routes/comments'
 import faculties from './routes/faculties'
@@ -29,20 +29,12 @@ app.use('*', async (c, next) => {
   const startedAt = Date.now()
   await next()
 
-  const log = {
-    duration_ms: Date.now() - startedAt,
+  honoLogRequest({
     method: c.req.method,
     path: c.req.path,
     status: c.res.status,
-  }
-
-  if (c.res.status >= 500) {
-    console.error(JSON.stringify({ ...log, level: 'error', type: 'request' }))
-  } else if (c.res.status >= 400) {
-    console.warn(JSON.stringify({ ...log, level: 'warn', type: 'request' }))
-  } else {
-    console.info(JSON.stringify({ ...log, level: 'info', type: 'request' }))
-  }
+    durationMs: Date.now() - startedAt,
+  })
 })
 
 app.use(
@@ -93,15 +85,11 @@ app.get('/', (c) =>
 )
 
 app.onError((err, c) => {
-  console.error(
-    JSON.stringify({
-      error: err.message,
-      level: 'error',
-      method: c.req.method,
-      path: c.req.path,
-      type: 'unhandled_error',
-    })
-  )
+  honoLog({
+    message: `Unhandled error on ${c.req.method} ${c.req.path}`,
+    logLevel: 'error',
+    error: err,
+  })
 
   return c.json(
     {
