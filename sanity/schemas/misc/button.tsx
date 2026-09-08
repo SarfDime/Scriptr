@@ -4,7 +4,7 @@ import { ButtonIcon } from '../../components/Icons'
 import type { ButtonColorVariantInputProps } from '../../types/button.types'
 import type { PreviewPrepareProps } from '../../types/common.types'
 import { headerSchemaFields } from '../common/headerFields'
-import { linkSelector } from '../common/linkSelector'
+import { linkSelector } from '../common/link-selector'
 import {
   generateLinkSelectorPreview,
   LinkSelectorPreviewSelect,
@@ -16,7 +16,7 @@ export const Button = defineType({
   type: 'document',
   icon: ButtonIcon,
   preview: {
-    select: { ...LinkSelectorPreviewSelect, title: 'stringTitle.en' },
+    select: { ...LinkSelectorPreviewSelect, title: 'stringTitle' },
     prepare(selection: PreviewPrepareProps) {
       const icon = (
         <ButtonIcon

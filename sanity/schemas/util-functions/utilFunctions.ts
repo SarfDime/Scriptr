@@ -254,7 +254,7 @@ export function sectionPreview({
 // More flexible version with default values
 export const createSectionPreview = ({
   title = 'title',
-  fallbackTitle = 'stringTitle.en',
+  fallbackTitle = 'stringTitle',
   subtitle = 'slug.current',
   media = 'icon',
   videoThumbnail = 'videoThumbnail',

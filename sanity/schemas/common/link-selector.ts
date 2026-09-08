@@ -26,7 +26,7 @@ export const linkSelector = [
     initialValue: 'internal',
   }),
   defineField({
-    name: 'allPages',
+    name: 'page',
     title: 'Select a page',
     description:
       'Select a reference to an existing page or create a new page on the website. The item link will direct users to this page.',
@@ -34,9 +34,13 @@ export const linkSelector = [
     to: [{ type: 'page' }],
     hidden: ({ document }) => document?.linkType === 'custom',
     validation: validationRules.linkSelectorInternalFieldsValidation as never,
+
+    // TODO: Figure out how to dynamically get all pages here, all professors, subjects, faculties and universities
+    // (possibly hardcode the main pages?),
+    // possibly fetch from university all the way down to the specific page?
   }),
   defineField({
-    name: 'allPageSections',
+    name: 'section',
     title: `Select a section from the chosen page in the 'Select a page' field above (OPTIONAL)`,
     description:
       'Select a reference to an existing section or create a new section on the website. The item link will direct users to this section. You must select a page first.',
@@ -53,11 +57,10 @@ export const linkSelector = [
     hidden: ({ document }) => document?.linkType === 'custom',
     readOnly: ({ document }) => {
       const values = document as
-        | { allPages?: { _ref?: string }; allPageSections?: { _ref?: string } }
+        | { page?: { _ref?: string }; section?: { _ref?: string } }
         | undefined
       return (
-        values?.allPages?._ref === undefined &&
-        values?.allPageSections?._ref === undefined
+        values?.page?._ref === undefined && values?.section?._ref === undefined
       )
     },
     options: {

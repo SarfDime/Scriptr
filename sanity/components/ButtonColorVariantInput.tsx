@@ -21,7 +21,7 @@ const DEFAULT_BUTTON_VARIANTS: Array<ButtonVariantOption> = [
 export function ButtonColorVariantInput(props: ButtonColorVariantInputProps) {
   const { schemaType, value, onChange } = props
   const options = schemaType?.options?.list ?? DEFAULT_BUTTON_VARIANTS
-  const buttonLabel = useFormValue(['stringTitle.en']) as string
+  const buttonLabel = useFormValue(['stringTitle']) as string
 
   return (
     <VariantListInput

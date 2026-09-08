@@ -1,8 +1,6 @@
 import BlockElementIcon from '@sanity/icons/BlockElement'
 import BookIcon from '@sanity/icons/Book'
-
 import EarthGlobeIcon from '@sanity/icons/EarthGlobe'
-
 import MasterDetailIcon from '@sanity/icons/MasterDetail'
 import MenuIcon from '@sanity/icons/Menu'
 
@@ -10,6 +8,7 @@ import type { StructureToolTypes } from '../types/common.types'
 import { buildAcademicStructure } from './academic-structure'
 import { createColoredIcon } from './icon-helpers'
 import { buildMiscellaneousStructure } from './misc-structure'
+import { buildNavigationStructure } from './nav-structure'
 import { buildPageStructure } from './page-structure'
 import { buildSectionsStructure } from './sections-structure'
 
@@ -48,8 +47,8 @@ export const customStructureTool = (build: StructureToolTypes['Build']) =>
       build
         .listItem()
         .icon(createColoredIcon(MenuIcon, 'navigationMenu'))
-        .title('Navigation Menu')
-        .child(build.documentTypeList('navigationMenu')),
+        .title('Navigation')
+        .child(buildNavigationStructure(build)),
 
       build
         .listItem()

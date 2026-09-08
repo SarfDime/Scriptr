@@ -24,11 +24,12 @@
     "check-types": "npm run check-types --workspace hono && npm run check-types --workspace next && npm run check-types --workspace sanity",
     "format": "biome check --write --unsafe .",
     "lint": "biome check .",
-    "clean": "rm -rf next/node_modules hono/node_modules sanity/node_modules node_modules next/.next sanity/.sanity sanity/tsconfig.tsbuildinfo next/tsconfig.tsbuildinfo hono/tsconfig.tsbuildinfo tsconfig.tsbuildinfo"
+    "clean": "rm -rf next/node_modules hono/node_modules sanity/node_modules node_modules next/.next sanity/.sanity sanity/tsconfig.tsbuildinfo next/tsconfig.tsbuildinfo hono/tsconfig.tsbuildinfo tsconfig.tsbuildinfo",
+    "setup": "rm -rf next/node_modules hono/node_modules sanity/node_modules node_modules next/.next sanity/.sanity sanity/tsconfig.tsbuildinfo next/tsconfig.tsbuildinfo hono/tsconfig.tsbuildinfo tsconfig.tsbuildinfo package-lock.json && npm i"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.12",
-    "@types/node": "^26.4.1",
+    "@types/node": "^26.5.0",
     "typescript": "^7.0.2"
   },
   "allowScripts": {

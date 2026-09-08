@@ -4,6 +4,7 @@ import CloseIcon from '@sanity/icons/Close'
 import { UI_STRINGS } from '@shared/config/strings'
 import { useState } from 'react'
 import { cn } from '@/lib/common-utils'
+import type { NavMenuType } from '@/types/components/Nav.types'
 import { Box } from '../common/Box'
 import { Button } from '../common/Button'
 import { Title } from '../typography/Title'
@@ -12,7 +13,11 @@ import { ThemeToggle } from '../ui/ThemeToggle'
 import { NavigationLinks } from './NavigationLinks'
 import { defaultUser, UserCard } from './UserCard'
 
-export const Navbar = () => {
+export const NavBar = ({
+  navItems,
+}: {
+  // TODO: Define the prop types for the Navbar component if needed
+} & NavMenuType) => {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
@@ -39,7 +44,7 @@ export const Navbar = () => {
       </Box>
 
       <Box className='ui-stack gap-0'>
-        <NavigationLinks />
+        <NavigationLinks navItems={navItems} />
       </Box>
 
       <Divider />

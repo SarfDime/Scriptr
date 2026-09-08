@@ -54,7 +54,7 @@ export const FooterSection = defineType({
           type: 'reference',
           to: [
             {
-              type: 'navigationItem',
+              type: 'navMenu',
             },
           ],
         },

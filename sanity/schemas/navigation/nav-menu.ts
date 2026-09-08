@@ -2,9 +2,9 @@ import { defineType } from 'sanity'
 import { internalUseTitle } from '../common/headerFields'
 import { filterExistingReferences } from '../util-functions/schemaFilters'
 
-export const NavigationMenu = defineType({
-  title: 'Navigation Menus',
-  name: 'navigationMenu',
+export const NavMenu = defineType({
+  title: 'Nav Menu',
+  name: 'navMenu',
   type: 'document',
   preview: {
     select: {
@@ -26,8 +26,8 @@ export const NavigationMenu = defineType({
     },
 
     {
-      title: 'Navigation bar items',
-      name: 'navigationItems',
+      title: 'Nav bar items',
+      name: 'navItems',
       type: 'array',
       description: 'List of items displayed in the navigation bar.',
       of: [
@@ -38,7 +38,7 @@ export const NavigationMenu = defineType({
           },
           to: [
             {
-              type: 'navigationItem',
+              type: 'navItem',
             },
           ],
         },

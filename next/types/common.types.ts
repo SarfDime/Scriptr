@@ -69,6 +69,15 @@ type ButtonType = 'button' | 'submit' | 'reset'
 
 type BreakpointsType = (typeof BREAKPOINTS)[number]
 
+type SharedSectionDataType = {
+  title: PortableTextType
+  subtitle: PortableTextType
+  stringTitle: string
+  stringSubtitle: string
+  slug: SlugType
+  icon: SanityImageType
+}
+
 export type {
   BreakpointsType,
   ButtonType,
@@ -78,4 +87,5 @@ export type {
   SanityButton,
   SanityImageSrcType,
   SanityImageType,
+  SharedSectionDataType,
 }

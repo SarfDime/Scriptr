@@ -1,49 +1,46 @@
 import AddCircleIcon from '@sanity/icons/AddCircle'
 import Bell from '@sanity/icons/Bell'
-import BookIcon from '@sanity/icons/Book'
 import CommentIcon from '@sanity/icons/Comment'
-import HomeIcon from '@sanity/icons/Home'
 import Star from '@sanity/icons/Star'
-import TextIcon from '@sanity/icons/Text'
-import User from '@sanity/icons/User'
 import { UI_STRINGS } from '@shared/config/strings'
-import { cn } from '@/lib/common-utils'
+import { cn, generateSlug } from '@/lib/common-utils'
+import type { NavItemType } from '@/types/components/Nav.types'
 import { Box } from '../common/Box'
 import { Button } from '../common/Button'
+import { NextImage } from '../common/NextImage'
 import { NextLink } from '../common/NextLink'
 import { Text } from '../typography/Text'
+import { Divider } from '../ui/Divider'
 
-const navLinks = [
-  { href: '/', label: UI_STRINGS.navigation.home, icon: HomeIcon },
-  { href: '/api-test', label: UI_STRINGS.navigation.api, icon: HomeIcon },
-  { href: '/auth', label: UI_STRINGS.navigation.auth, icon: HomeIcon },
-  { href: '/subjects', label: UI_STRINGS.navigation.subjects, icon: BookIcon },
-  { href: '/scripts', label: UI_STRINGS.navigation.scripts, icon: TextIcon },
-  {
-    href: '/professors',
-    label: UI_STRINGS.navigation.professors,
-    icon: User,
-  },
-]
+const NavItem = ({ stringTitle, icon, ...rest }: NavItemType) => {
+  const slug = generateSlug(rest)
+  return (
+    <NextLink
+      href={slug}
+      className={cn(
+        'button ghost',
+        'w-full justify-start gap-3 p-3',
+        'text-left ui-caption'
+      )}
+    >
+      {icon && <NextImage {...icon} />}
+      <Text>{stringTitle}</Text>
+    </NextLink>
+  )
+}
 
-export const NavigationLinks = () => (
+export const NavigationLinks = ({
+  navItems,
+}: {
+  navItems?: Array<NavItemType>
+}) => (
   <>
     <Box className='ui-stack gap-0'>
-      {navLinks.map(({ label, href, icon: Icon }) => (
-        <NextLink
-          key={label}
-          href={href}
-          className={cn(
-            'button ghost',
-            'w-full justify-start gap-3 p-3',
-            'text-left ui-caption'
-          )}
-        >
-          <Icon />
-          <Text>{label}</Text>
-        </NextLink>
+      {navItems?.map((item, index) => (
+        <NavItem key={`nav-item-${index}-${item?.stringTitle}`} {...item} />
       ))}
     </Box>
+    <Divider />
 
     <Box className='ui-stack gap-3'>
       <Text className='ui-label px-3 uppercase tracking-[0.18em]'>

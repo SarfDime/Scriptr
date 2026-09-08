@@ -6,10 +6,20 @@ import { type ClassValue, clsx } from 'clsx'
 import { toPlainText } from 'next-sanity'
 import path from 'path'
 import { twMerge } from 'tailwind-merge'
+import { isProd } from '@/config/env'
 import type { LinkSelectorProps } from '@/types/common.types'
 import type { PortableTextType } from '@/types/components/PortableText.types'
 import { client } from '../sanityClient'
 import type { ComponentPlacement } from '../types/component.types'
+
+/** Gets draft mode value; disabled in production builds */
+export const getDraftMode = async (
+  draftMode: () => Promise<{ isEnabled?: boolean }>
+) => {
+  if (isProd) return false
+  const { isEnabled } = await draftMode()
+  return isEnabled ?? false
+}
 
 /** A utility function that takes a localized string or content object and returns a plain text version of it. */
 export const convertToPlainText = ({ value }: { value?: PortableTextType }) => {

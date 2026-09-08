@@ -1,6 +1,6 @@
 import { defineType } from 'sanity'
 import { headerSchemaFields } from '../common/headerFields'
-import { linkSelector } from '../common/linkSelector'
+import { linkSelector } from '../common/link-selector'
 import {
   generateLinkSelectorPreview,
   LinkSelectorPreviewSelect,
