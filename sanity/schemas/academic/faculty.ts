@@ -54,6 +54,13 @@ export const Faculty = defineType({
       fieldset: 'information',
     },
     {
+      name: 'bio',
+      title: 'Short Biography',
+      type: 'string',
+      validation: validationRules.isRequired,
+      fieldset: 'information',
+    },
+    {
       name: 'picture',
       title: 'Picture',
       type: 'image',

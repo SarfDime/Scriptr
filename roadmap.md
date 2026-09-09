@@ -101,11 +101,11 @@ The first release is intentionally narrow. The goal is to ship the right core pr
 ## 4. Functional requirements by feature area
 
 ### 4.1 Script features
-1. Display a list of scripts with subject, professor, upload date, and popularity metadata.
-2. Implement reusable script filtering and sorting logic.
-3. Create a dedicated dynamic script detail page for each script.
-4. Support script creation with required metadata and validation.
-5. Allow script editing only for editable fields such as title and description.
+1. Display a list of scripts with subject, professor, upload date, exam session, additional reading links, and popularity metadata.
+2. Implement reusable script filtering and sorting logic (including filtering by exam session and subject).
+3. Create a dedicated dynamic script detail page for each script showing metadata, file preview, additional reading links, comments, and subject context.
+4. Support script creation with required metadata, exam session, optional additional reading links (array of strings/URLs), and validation.
+5. Allow script editing only for editable fields such as title, description, and additional reading links.
 6. Uploaded script files should remain immutable after upload.
 7. Allow script deletion for owners and admins with proper authorization checks.
 8. Script uploads should support PDF or image-based files only.
@@ -128,7 +128,7 @@ The first release is intentionally narrow. The goal is to ship the right core pr
 ### 4.4 Script creation and upload flow
 1. Users should create a script from a dedicated create script modal.
 2. The user should select a single subject; the associated professor, faculty, and university should be auto-selected from that subject.
-3. The user should provide a title, description, and exam session.
+3. The user should provide a title, description, exam session, and optional additional reading links (array of URLs).
 4. The user should upload the actual script file.
 5. Validation should ensure all required fields are present before submission.
 6. The system should prevent invalid subject selection and missing university context.
@@ -188,11 +188,13 @@ The first release is intentionally narrow. The goal is to ship the right core pr
 6. All content should be editable through a versioned CMS workflow.
 
 ### 5.2 Data ownership boundary
-1. Sanity owns rich academic content and editorial data.
+1. Sanity owns rich academic content and editorial data (including subject year, semester, description, syllabus, credits, and professor assignments).
 2. Supabase owns runtime identity, script records, user relationships, moderation metadata, and access-related state.
 3. The database should not store rich descriptive academic content such as bios, description text, or non-critical metadata.
 4. The backend should resolve the Sanity document by ID whenever the full academic record is needed.
 5. The frontend should never assume the DB row is the complete source of truth for academic entity data.
+6. The `scripts` database table owns runtime script metadata including `exam_session` (for script categorization by exam period) and `additional_reading` (an array of supplementary URL strings).
+7. The `subjects` database table should be minimal (names, IDs, relationships); `exam_session` belongs on scripts, not subjects, and `year`/`semester` belong to Sanity CMS. Remove `exam_session` from the `subjects` DB table and evaluate removing `year` from the `subjects` DB table.
 
 ### 5.3 Initial university and entity assumptions
 1. At launch there will be only one university.
@@ -254,6 +256,16 @@ The first release is intentionally narrow. The goal is to ship the right core pr
 2. Implement utility types (e.g., `StripSanityFields<T>` or `Dereferenced<T>`) that strip Sanity system metadata (such as `_rev`, `_createdAt`, `_updatedAt`, etc.).
 3. Replace Sanity reference structures (`{ _type: "reference", _ref: string }`) with dereferenced domain models so in-app types remain clean, ergonomic, and type-safe.
 
+### 5.11 Reusable academic schema components (mini-schemas)
+1. Extract recurring fields across academic documents (`university`, `faculty`, `subject`, `professor`) into modular, reusable Sanity mini-schemas / field objects (e.g., descriptions/bios, contact/social info, media assets, academic metadata).
+2. Mini-schemas must enforce consistent validation rules, preview configurations, and fieldsets across all academic entity types to maintain DRY principles in CMS schema definitions.
+
+### 5.12 Study Program architecture evaluation (TODO)
+1. **Decision required**: Decide whether to introduce `study_program` as an independent entity/table or attach study program categorization directly to `scripts` (or purely within Sanity CMS metadata).
+2. **Impact analysis**:
+   - *Option A (Independent relational entity)*: Hierarchical structure becomes `University -> Faculty -> Study Program -> Subject`. Each subject belongs to a study program under a faculty. This represents the real academic structure most accurately, but introduces significant cascade changes across the database schema, Sanity document schemas, sync workflows, slug generation (`[uni]-[faculty]-[program]-[subject]`), route handlers, frontend pages, and onboarding logic.
+   - *Option B (Script attribute / Sanity-only)*: Keep `Faculty -> Subject` direct relation and treat study program as an optional tag/attribute on `scripts` or as descriptive metadata in Sanity. Avoids large-scale code rewriting for v1.
+
 ---
 
 ## 6. Backend and API requirements
@@ -275,10 +287,10 @@ The first release is intentionally narrow. The goal is to ship the right core pr
 6. Centralize business rules for script creation, role enforcement, and download deduplication.
 
 ### 6.3 Script creation and upload backend requirements
-1. The backend should support creating scripts with a single subject, title, description, exam session, and uploaded file metadata.
+1. The backend should support creating scripts with a single subject, title, description, exam session, optional additional reading links (array of URLs/strings), and uploaded file metadata.
 2. Subject selection should automatically determine the professor, faculty, and university context.
 3. Uploaded files should be validated as PDF or image-based assets.
-4. File content should be immutable after upload; only title and description should be editable.
+4. File content should be immutable after upload; only title, description, and additional reading links should be editable.
 5. The backend should reject invalid scripts or missing subject context.
 
 ### 6.4 Academic entity backend requirements
@@ -367,6 +379,11 @@ The first release is intentionally narrow. The goal is to ship the right core pr
 13. Deletion should be blocked until dependency checks pass; if deletion succeeds, the DB record and Sanity document should be removed together.
 14. Slugs are generated programmatically following the entity hierarchy: University based on name (`ukim`), Faculty based on name + parent university (`ukim-pharmacy`), Subject based on name + parent faculty (`ukim-pharmacy-cell-biology`), and Professor based on name (`john-doe`).
 15. In-app TypeScript types should re-use generated Sanity types where possible, using helper utility types to strip internal Sanity metadata (`_rev`, `_createdAt`, `_updatedAt`, etc.) and replace reference fields with dereferenced domain types.
+16. Extract shared academic document fields into modular Sanity mini-schemas to ensure uniform validation and DRY schema definitions across academic entity types.
+17. The `scripts` database table includes `additional_reading` (an array of link strings) for supplementary study materials and `exam_session` for categorizing scripts by exam period.
+18. `exam_session` belongs on scripts (for categorization) and is removed from the `subjects` database table.
+19. `year` and `semester` are authored and owned in Sanity CMS; evaluate and remove `year` from the `subjects` database table if not strictly required for runtime linkage.
+20. **Open Architectural Decision (TODO)**: Decide whether `Study Program` should be an independent entity/table (`Faculty -> Study Program -> Subject`) or just a field on `scripts` / Sanity metadata. A full independent entity would require restructuring the academic hierarchy, CMS schemas, DB relations, sync pipelines, slugs, and UI routes.
 
 ### 8.2 Question 3 elaboration
 Question 3 is the editorial and sync workflow for academic entities:
@@ -398,7 +415,10 @@ The following items remain out of scope for the first release and should be addr
 5. Implement authentication and permission checks in the backend.
 6. Implement download deduplication logic (account → IP → device priority).
 7. Add backend validation and error handling for all operations.
-8. Test database schema and API endpoints thoroughly.
+8. Add `additional_reading` (`text[]` array of link strings) and `exam_session` (`text`) columns to `scripts` database table. [🔲 TODO]
+9. Remove `exam_session` from the `subjects` database table and evaluate removing `year` from `subjects` table if not needed for runtime linking (since `year` and `semester` live in Sanity). [🔲 TODO]
+10. Decide on Study Program architectural placement: separate database table & intermediate entity (`Faculty -> Study Program -> Subject`) vs. script-level attribute/Sanity metadata. [🔲 TODO]
+11. Test database schema and API endpoints thoroughly.
 
 ### Phase 2: Sanity CMS setup and academic entity management
 1. Finalize the academic entity model and schema structure for Sanity. [✅ Mostly complete]
@@ -412,6 +432,8 @@ The following items remain out of scope for the first release and should be addr
 9. Test sync workflows for create, update, and delete operations. [🔲 Pending follow-up after the deletion fix]
 10. Implement programmatic `slug` field generation on academic entity schemas (University: `[name]`, Faculty: `[uni]-[faculty]`, Subject: `[uni]-[faculty]-[subject]`, Professor: `[name]`). [🔲 TODO]
 11. Create TypeScript utility types to derive in-app types from Sanity generated types by stripping system metadata (`_rev`, `_createdAt`, etc.) and replacing reference fields with dereferenced domain types. [🔲 TODO]
+12. Create Sanity mini-schemas / reusable field objects for commonly used fields across academic documents (descriptions, media, contact/links, academic metadata) to eliminate schema duplication. [🔲 TODO]
+13. If Study Program is adopted as a dedicated entity, create Sanity schema for `studyProgram`, update `faculty` and `subject` references, and adjust sync actions. [🔲 TODO / Decision dependent]
 
 ### Phase 3: Core content and discovery
 1. Build dynamic slug-based pages for universities, faculties, subjects, and professors (`/[entity]/[slug]`). [✅ Mostly complete - transition from ID routes to programmatic slugs pending]
@@ -421,9 +443,9 @@ The following items remain out of scope for the first release and should be addr
 5. Transition existing ID-based routes and queries to programmatic slug-based routes. [🔲 TODO]
 
 ### Phase 4: User actions and uploads
-1. Build the create script modal and upload flow.
+1. Build the create script modal and upload flow supporting title, description, exam session, and additional reading links (array of URLs).
 2. Enforce single-subject constraints and auto-populate faculty/professor/university context.
-3. Implement script edit and delete permissions.
+3. Implement script edit and delete permissions (allowing title, description, and additional reading links edits).
 4. Add guest-friendly download and preview access with dedupe protection.
 
 ### Phase 5: Profile and onboarding
@@ -463,6 +485,9 @@ This section is maintained automatically by the commit agent. Update status by i
 - Implement authentication and permission checks in the backend. [✅]
 - Implement download deduplication logic (account → IP → device priority). [✅]
 - Add backend validation and error handling for all operations. [✅]
+- Add `additional_reading` (`text[]`) and `exam_session` (`text`) columns to `scripts` table. [🔲]
+- Remove `exam_session` from `subjects` table and evaluate removing `year` (sourced from Sanity). [🔲]
+- Decide Study Program architectural model: separate table vs script attribute vs Sanity-only. [🔲]
 - Test database schema and API endpoints thoroughly. [🔲]
 
 ### Phase 2: Sanity CMS setup and academic entity management [✏️ In Progress]
@@ -477,6 +502,7 @@ This section is maintained automatically by the commit agent. Update status by i
 - Test sync workflows for create, update, and delete operations. [🔲]
 - Implement programmatic slug generation for academic entities (University, Faculty, Subject, Professor). [🔲]
 - Create TypeScript utility types to strip Sanity metadata and replace references with dereferenced domain types for in-app models. [🔲]
+- Create reusable Sanity mini-schemas for common academic entity fields (descriptions, media, metadata, links). [🔲]
 
 ### Phase 3: Core content and discovery [✏️ In Progress]
 - Build dynamic slug-based pages for universities, faculties, subjects, and professors. [✅ Mostly complete - slug migration pending]
@@ -486,9 +512,9 @@ This section is maintained automatically by the commit agent. Update status by i
 - Transition dynamic pages and queries from Sanity ID routes to programmatic slug routes (`/[entity]/[slug]`). [🔲]
 
 ### Phase 4: User actions and uploads [🔲 Planned]
-- Build the create script modal and upload flow. [🔲]
+- Build the create script modal and upload flow with exam session selection and additional reading links. [🔲]
 - Enforce single-subject constraints and auto-populate faculty/professor/university context. [🔲]
-- Implement script edit and delete permissions. [🔲]
+- Implement script edit and delete permissions (including updating additional reading links). [🔲]
 - Add guest-friendly download and preview access with dedupe protection. [🔲]
 
 ### Phase 5: Profile and onboarding [🔲 Planned]
