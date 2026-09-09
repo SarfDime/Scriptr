@@ -41,8 +41,8 @@
 }
 
 @utility ui-section {
-  padding-block: clamp(1rem, 5vw, 3rem);
-  padding-inline: clamp(1rem, 5vw, 3rem);
+  padding-block: clamp(1rem, 6vw, 5rem);
+  padding-inline: clamp(1rem, 6vw, 6rem);
   flex-grow: 1;
 }
 

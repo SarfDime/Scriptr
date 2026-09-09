@@ -57,6 +57,8 @@ export const PageLayout = ({
             header
           ))}
 
+        {/* {header && <Divider />} */}
+
         {sidebar ? (
           <Box className='flex flex-col lg:flex-row gap-8 items-stretch w-full'>
             <Box className='w-full lg:flex-2 min-w-0 ui-stack gap-6 flex flex-col'>

@@ -1,3 +1,4 @@
+import type { BoxProps } from '@/components/common/Box'
 import type { SanityImageType } from '../common.types'
 import type { PersonSummary } from '../components/Person.types'
 import type { PortableTextType } from '../components/PortableText.types'
@@ -5,7 +6,7 @@ import type { AddressableContactInfo, MinimalEntity } from './academics.types'
 import type { MinimalProfessor } from './professor.types'
 import type { MinimalSubject } from './subject.types'
 
-export type MinimalFaculty = MinimalEntity & {
+type MinimalFaculty = MinimalEntity & {
   picture?: SanityImageType
   studentCount?: number
   subjectCount?: number
@@ -17,13 +18,16 @@ export type MinimalFaculty = MinimalEntity & {
   subjects?: Array<MinimalSubject>
 }
 
-export type FacultyDetail = Omit<
-  MinimalFaculty,
-  'subjectCount' | 'professorCount'
-> &
+type FacultyDetail = Omit<MinimalFaculty, 'subjectCount' | 'professorCount'> &
   AddressableContactInfo & {
     _type: 'faculty'
     description?: PortableTextType
     secretary?: PersonSummary
     viceDeans?: Array<PersonSummary>
   }
+
+type FacultyOverviewCardProps = {
+  faculty: FacultyDetail
+} & BoxProps
+
+export type { FacultyDetail, FacultyOverviewCardProps, MinimalFaculty }

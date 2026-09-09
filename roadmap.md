@@ -111,12 +111,12 @@ The first release is intentionally narrow. The goal is to ship the right core pr
 8. Script uploads should support PDF or image-based files only.
 
 ### 4.2 Academic entity features
-1. Create dedicated pages for universities, faculties, subjects, and professors using their IDs as the canonical route parameters.
+1. Create dedicated pages for universities, faculties, subjects, and professors using programmatic slugs (`slug` field) as the canonical route parameters instead of internal Sanity IDs.
 2. Generate dynamic pages from Sanity-backed academic records and map them to the database identity records.
 3. Each page should show relevant script lists, related entities, and Sanity metadata such as bios or descriptions.
-4. Navigation should prefer ID-based routes such as professor/[id], subject/[id], faculty/[id], and university/[id].
+4. Navigation should prefer slug-based routes such as `professor/[slug]`, `subject/[slug]`, `faculty/[slug]`, and `university/[slug]`.
 5. These pages should be built from the same entity model and the same sync lifecycle.
-6. Each academic entity should be resolved by ID and merged from the lightweight DB record plus the rich Sanity document.
+6. Each academic entity should be resolved by slug/ID and merged from the lightweight DB record plus the rich Sanity document.
 
 ### 4.3 Search and discovery
 1. Search should support scripts only in the first release.
@@ -240,6 +240,20 @@ The first release is intentionally narrow. The goal is to ship the right core pr
 4. The completed-year state should update automatically when all subjects in the year are complete.
 5. When the user creates an account, the local onboarding data should be migrated into the persisted profile.
 
+### 5.9 Programmatic slug generation requirements
+1. Sanity documents for academic entities must not use Sanity IDs (`_id`) for public URLs and routing.
+2. Each academic entity document must define a `slug` field generated programmatically based on entity naming and structural hierarchy:
+   - **University**: Based on its name (e.g., `ukim`).
+   - **Faculty**: Based on parent university and faculty name (e.g., `ukim-pharmacy`).
+   - **Subject**: Based on parent university, parent faculty, and subject name (e.g., `ukim-pharmacy-cell-biology`).
+   - **Professor**: Based directly on their name (e.g., `john-doe`).
+3. Slugs must be normalized, lowercase, hyphenated, and auto-generated on document creation/update.
+
+### 5.10 Sanity typegen and in-app type synchronization
+1. Re-use generated Sanity types (from `sanity.types.ts`) for in-app TypeScript models wherever possible (at least partially) to keep schemas and frontend types strictly aligned.
+2. Implement utility types (e.g., `StripSanityFields<T>` or `Dereferenced<T>`) that strip Sanity system metadata (such as `_rev`, `_createdAt`, `_updatedAt`, etc.).
+3. Replace Sanity reference structures (`{ _type: "reference", _ref: string }`) with dereferenced domain models so in-app types remain clean, ergonomic, and type-safe.
+
 ---
 
 ## 6. Backend and API requirements
@@ -338,7 +352,7 @@ The first release is intentionally narrow. The goal is to ship the right core pr
 ## 8. Explicit decisions and clarifications
 
 ### 8.1 Resolved decisions
-1. Dynamic pages for universities, faculties, subjects, and professors should be generated from ID-based routes.
+1. Dynamic pages for universities, faculties, subjects, and professors should be generated from programmatic slug-based routes (not internal Sanity IDs).
 2. Search is script-only in v1 and should use local-first behavior plus API fallback.
 3. The app is designed for very small expected volume.
 4. The user role model is: normal user, university-scoped moderator, and admin.
@@ -351,6 +365,8 @@ The first release is intentionally narrow. The goal is to ship the right core pr
 11. The admin should trigger the create button for academic entity creation and editing to ensure explicit editorial control.
 12. Updates to Sanity academic documents should be allowed even before the DB record exists, but publication should be blocked until the DB ID is created.
 13. Deletion should be blocked until dependency checks pass; if deletion succeeds, the DB record and Sanity document should be removed together.
+14. Slugs are generated programmatically following the entity hierarchy: University based on name (`ukim`), Faculty based on name + parent university (`ukim-pharmacy`), Subject based on name + parent faculty (`ukim-pharmacy-cell-biology`), and Professor based on name (`john-doe`).
+15. In-app TypeScript types should re-use generated Sanity types where possible, using helper utility types to strip internal Sanity metadata (`_rev`, `_createdAt`, `_updatedAt`, etc.) and replace reference fields with dereferenced domain types.
 
 ### 8.2 Question 3 elaboration
 Question 3 is the editorial and sync workflow for academic entities:
@@ -394,12 +410,15 @@ The following items remain out of scope for the first release and should be addr
 7. Implement deletion checks and cascading delete/update workflows. [⚠️ Needs verification; Sanity deletion is currently not working and should be checked]
 8. Define the initialization set for universities, faculties, subjects, and professors in Sanity. [✅ Complete]
 9. Test sync workflows for create, update, and delete operations. [🔲 Pending follow-up after the deletion fix]
+10. Implement programmatic `slug` field generation on academic entity schemas (University: `[name]`, Faculty: `[uni]-[faculty]`, Subject: `[uni]-[faculty]-[subject]`, Professor: `[name]`). [🔲 TODO]
+11. Create TypeScript utility types to derive in-app types from Sanity generated types by stripping system metadata (`_rev`, `_createdAt`, etc.) and replacing reference fields with dereferenced domain types. [🔲 TODO]
 
 ### Phase 3: Core content and discovery
-1. Build dynamic ID-based pages for universities, faculties, subjects, and professors. [✅ Mostly complete]
+1. Build dynamic slug-based pages for universities, faculties, subjects, and professors (`/[entity]/[slug]`). [✅ Mostly complete - transition from ID routes to programmatic slugs pending]
 2. Implement script listing, sorting, and filtering. [✅ Mostly complete]
 3. Add search for scripts with local-first and API-fallback behavior. [🔲 Missing / not complete]
 4. Add loading, empty, and error states across pages and search. [🔲 Missing / not complete]
+5. Transition existing ID-based routes and queries to programmatic slug-based routes. [🔲 TODO]
 
 ### Phase 4: User actions and uploads
 1. Build the create script modal and upload flow.
@@ -456,12 +475,15 @@ This section is maintained automatically by the commit agent. Update status by i
 - Implement deletion checks and cascading delete/update workflows. [⚠️ Needs repair; Sanity deletion is not currently working and needs to be checked]
 - Define the initialization set for universities, faculties, subjects, and professors in Sanity. [✅]
 - Test sync workflows for create, update, and delete operations. [🔲]
+- Implement programmatic slug generation for academic entities (University, Faculty, Subject, Professor). [🔲]
+- Create TypeScript utility types to strip Sanity metadata and replace references with dereferenced domain types for in-app models. [🔲]
 
 ### Phase 3: Core content and discovery [✏️ In Progress]
-- Build dynamic ID-based pages for universities, faculties, subjects, and professors. [✅]
+- Build dynamic slug-based pages for universities, faculties, subjects, and professors. [✅ Mostly complete - slug migration pending]
 - Implement script listing, sorting, and filtering. [✅]
 - Add search for scripts with local-first and API-fallback behavior. [🔲 Missing]
 - Add loading, empty, and error states across pages and search. [🔲 Missing]
+- Transition dynamic pages and queries from Sanity ID routes to programmatic slug routes (`/[entity]/[slug]`). [🔲]
 
 ### Phase 4: User actions and uploads [🔲 Planned]
 - Build the create script modal and upload flow. [🔲]

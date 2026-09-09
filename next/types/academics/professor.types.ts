@@ -5,9 +5,10 @@ import type {
   MinimalEntity,
   RelatedFaculty,
 } from './academics.types'
+import type { FacultyDetail } from './faculty.types'
 import type { MinimalSubject } from './subject.types'
 
-export type MinimalProfessor = MinimalEntity & {
+type MinimalProfessor = MinimalEntity & {
   title?: string
   picture?: SanityImageType
   faculties?: Array<Pick<MinimalEntity, '_id' | 'name'>>
@@ -15,7 +16,7 @@ export type MinimalProfessor = MinimalEntity & {
   subjects?: Array<Pick<MinimalSubject, '_id' | 'name' | 'code'>>
 }
 
-export type ProfessorDetail = Omit<MinimalProfessor, 'faculties' | 'subjects'> &
+type ProfessorDetail = Omit<MinimalProfessor, 'faculties' | 'subjects'> &
   ContactInfo & {
     _type: 'professor'
     bio?: PortableTextType
@@ -28,3 +29,9 @@ export type ProfessorDetail = Omit<MinimalProfessor, 'faculties' | 'subjects'> &
       }
     >
   }
+
+type ProfessorsSectionProps = {
+  professors: FacultyDetail['professors']
+}
+
+export type { MinimalProfessor, ProfessorDetail, ProfessorsSectionProps }

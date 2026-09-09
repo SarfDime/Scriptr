@@ -3,16 +3,10 @@ import { Text } from '@/components/typography/Text'
 import { Title } from '@/components/typography/Title'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
-import type { FacultyDetail } from '@/types/academics/faculty.types'
+import type { ProfessorsSectionProps } from '@/types/academics/professor.types'
 import { ProfessorCard } from './ProfessorCard'
 
-type FacultyProfessorsSectionProps = {
-  professors: FacultyDetail['professors']
-}
-
-export const FacultyProfessorsSection = ({
-  professors,
-}: FacultyProfessorsSectionProps) => {
+export const ProfessorsSection = ({ professors }: ProfessorsSectionProps) => {
   const professorList = professors ?? []
 
   return (
