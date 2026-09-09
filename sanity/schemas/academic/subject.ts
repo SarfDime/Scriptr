@@ -48,12 +48,14 @@ export const Subject = defineType({
       description: 'Course or catalog code (e.g., CS101, BIO201).',
       type: 'string',
       fieldset: 'information',
+      validation: validationRules.isRequired,
     },
     {
       name: 'description',
       title: 'Description',
       type: 'richTextLite',
       fieldset: 'information',
+      validation: validationRules.isRequired,
     },
     {
       name: 'credits',
@@ -61,6 +63,7 @@ export const Subject = defineType({
       description: 'Academic credit points for this course.',
       type: 'number',
       fieldset: 'information',
+      validation: validationRules.isRequired,
     },
     customLinkField({
       name: 'syllabus',
@@ -87,16 +90,7 @@ export const Subject = defineType({
           { title: 'Summer Semester', value: 'summer' },
         ],
       },
-      fieldset: 'academic',
-    },
-    {
-      name: 'examSession',
-      title: 'Exam session',
-      type: 'string',
-      description: 'Used to create the database record.',
-      options: {
-        list: ['january', 'june', 'september'],
-      },
+      initialValue: 'winter',
       validation: validationRules.isRequired,
       fieldset: 'academic',
     },

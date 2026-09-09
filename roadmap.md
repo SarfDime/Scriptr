@@ -385,21 +385,21 @@ The following items remain out of scope for the first release and should be addr
 8. Test database schema and API endpoints thoroughly.
 
 ### Phase 2: Sanity CMS setup and academic entity management
-1. Finalize the academic entity model and schema structure for Sanity.
-2. Create Sanity document types for university, faculty, subject, and professor with shared validation patterns.
-3. Define relationships and references between academic entities in Sanity.
-4. Implement the create-in-DB action that creates DB records and returns IDs to Sanity documents.
-5. Set up Sanity sync endpoints to create, update, and delete DB records from CMS documents.
-6. Implement publication blocking until DB ID exists.
-7. Implement deletion checks and cascading delete/update workflows.
-8. Define the initialization set for universities, faculties, subjects, and professors in Sanity.
-9. Test sync workflows for create, update, and delete operations.
+1. Finalize the academic entity model and schema structure for Sanity. [✅ Mostly complete]
+2. Create Sanity document types for university, faculty, subject, and professor with shared validation patterns. [✅ Mostly complete]
+3. Define relationships and references between academic entities in Sanity. [✅ Mostly complete]
+4. Implement the create-in-DB action that creates DB records and returns IDs to Sanity documents. [✅ Complete]
+5. Set up Sanity sync endpoints to create, update, and delete DB records from CMS documents. [✅ Mostly complete]
+6. Implement publication blocking until DB ID exists. [✅ Complete]
+7. Implement deletion checks and cascading delete/update workflows. [⚠️ Needs verification; Sanity deletion is currently not working and should be checked]
+8. Define the initialization set for universities, faculties, subjects, and professors in Sanity. [✅ Complete]
+9. Test sync workflows for create, update, and delete operations. [🔲 Pending follow-up after the deletion fix]
 
 ### Phase 3: Core content and discovery
-1. Build dynamic ID-based pages for universities, faculties, subjects, and professors.
-2. Implement script listing, sorting, and filtering.
-3. Add search for scripts with local-first and API-fallback behavior.
-4. Add loading, empty, and error states across pages and search.
+1. Build dynamic ID-based pages for universities, faculties, subjects, and professors. [✅ Mostly complete]
+2. Implement script listing, sorting, and filtering. [✅ Mostly complete]
+3. Add search for scripts with local-first and API-fallback behavior. [🔲 Missing / not complete]
+4. Add loading, empty, and error states across pages and search. [🔲 Missing / not complete]
 
 ### Phase 4: User actions and uploads
 1. Build the create script modal and upload flow.
@@ -446,22 +446,22 @@ This section is maintained automatically by the commit agent. Update status by i
 - Add backend validation and error handling for all operations. [✅]
 - Test database schema and API endpoints thoroughly. [🔲]
 
-### Phase 2: Sanity CMS setup and academic entity management [🔲 Planned]
-- Finalize the academic entity model and schema structure for Sanity. [🔲]
-- Create Sanity document types for university, faculty, subject, and professor with shared validation patterns. [🔲]
-- Define relationships and references between academic entities in Sanity. [🔲]
-- Implement the create-in-DB action that creates DB records and returns IDs to Sanity documents. [🔲]
-- Set up Sanity sync endpoints to create, update, and delete DB records from CMS documents. [🔲]
-- Implement publication blocking until DB ID exists. [🔲]
-- Implement deletion checks and cascading delete/update workflows. [🔲]
-- Define the initialization set for universities, faculties, subjects, and professors in Sanity. [🔲]
+### Phase 2: Sanity CMS setup and academic entity management [✏️ In Progress]
+- Finalize the academic entity model and schema structure for Sanity. [✅]
+- Create Sanity document types for university, faculty, subject, and professor with shared validation patterns. [✅]
+- Define relationships and references between academic entities in Sanity. [✅]
+- Implement the create-in-DB action that creates DB records and returns IDs to Sanity documents. [✅]
+- Set up Sanity sync endpoints to create, update, and delete DB records from CMS documents. [✅]
+- Implement publication blocking until DB ID exists. [✅]
+- Implement deletion checks and cascading delete/update workflows. [⚠️ Needs repair; Sanity deletion is not currently working and needs to be checked]
+- Define the initialization set for universities, faculties, subjects, and professors in Sanity. [✅]
 - Test sync workflows for create, update, and delete operations. [🔲]
 
-### Phase 3: Core content and discovery [🔲 Planned]
-- Build dynamic ID-based pages for universities, faculties, subjects, and professors. [🔲]
-- Implement script listing, sorting, and filtering. [🔲]
-- Add search for scripts with local-first and API-fallback behavior. [🔲]
-- Add loading, empty, and error states across pages and search. [🔲]
+### Phase 3: Core content and discovery [✏️ In Progress]
+- Build dynamic ID-based pages for universities, faculties, subjects, and professors. [✅]
+- Implement script listing, sorting, and filtering. [✅]
+- Add search for scripts with local-first and API-fallback behavior. [🔲 Missing]
+- Add loading, empty, and error states across pages and search. [🔲 Missing]
 
 ### Phase 4: User actions and uploads [🔲 Planned]
 - Build the create script modal and upload flow. [🔲]

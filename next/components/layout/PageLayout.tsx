@@ -43,7 +43,7 @@ export const PageLayout = ({
   return (
     <Box as='main' className={cn('ui-container', className)}>
       <Header />
-      <Box className={cn('ui-stack ui-section gap-8', contentClassName)}>
+      <Box className={cn('ui-stack ui-section gap-6', contentClassName)}>
         {header &&
           (isHeaderConfig(header) ? (
             <PageHeader
@@ -58,9 +58,13 @@ export const PageLayout = ({
           ))}
 
         {sidebar ? (
-          <Box className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
-            <Box className='lg:col-span-2 ui-stack gap-6'>{children}</Box>
-            <Box className='ui-stack gap-6'>{sidebar}</Box>
+          <Box className='flex flex-col lg:flex-row gap-8 items-stretch w-full'>
+            <Box className='w-full lg:flex-2 min-w-0 ui-stack gap-6 flex flex-col'>
+              {children}
+            </Box>
+            <Box className='w-full lg:flex-1 min-w-0 ui-stack gap-6 flex flex-col'>
+              {sidebar}
+            </Box>
           </Box>
         ) : (
           children

@@ -121,8 +121,6 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
           )
         }
         if (entityType === 'subject') {
-          body.year = doc.year
-          body.exam_session = doc.examSession
           body.faculty_id = await client.fetch<string | null>(
             '*[_id == $id || _id == $draftId][0].dbId',
             { id: parentReference, draftId: `drafts.${parentReference}` }

@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/Card'
 import { getFacultyPath, getUniversityPath } from '@/lib/academic-routes'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { universityGalleryQuery } from '@/sanity/queries/academics/university.queries'
-import type { UniversityGalleryData } from '@/types/academics.types'
+import type { UniversityGalleryData } from '@/types/academics/university.types'
 
 export const metadata: Metadata = {
   title: 'Universities & Faculties | Scriptr',

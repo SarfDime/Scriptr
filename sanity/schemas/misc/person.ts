@@ -17,7 +17,7 @@ export const Person = defineType({
   },
   fields: [
     {
-      name: 'image',
+      name: 'picture',
       title: `Person's image`,
       type: 'image',
       options: {

@@ -10,6 +10,7 @@ import { SubjectsSidebar } from '@/components/Subjects/SubjectsSidebar'
 import { ScriptsSection } from '@/components/scripts/ScriptSection'
 import { Divider } from '@/components/ui/Divider'
 import { DEFAULT_ACTIVITY_CONTENT } from '@/config/content'
+import type { SubjectDetail } from '@/types/academics/subject.types'
 import type { PortableTextType } from '@/types/components/PortableText.types'
 import type {
   PageDataProps,
@@ -17,7 +18,6 @@ import type {
   ScriptId,
   SortOption,
 } from '@/types/components/Scripts.types'
-import type { Subject } from '@/types/components/Subjects.types'
 
 const scriptSectionContent: PortableTextType = [
   {
@@ -120,27 +120,102 @@ const scripts: Array<Script> = [
   },
 ]
 
-const subjects: Array<Subject> = [
+const subjects: Array<SubjectDetail> = [
   {
     name: 'Biology',
     code: 'BIO 201',
-    next: 'Lab report due Friday',
-    color: 'cp-rose',
-    progress: 72,
+    professors: [
+      {
+        _id: 'professor-3',
+        name: 'Dr. Elena Park',
+      },
+    ],
+    year: 2,
+    credits: 4,
+    semester: 'summer',
+    description: [
+      {
+        _type: 'block',
+        children: [
+          {
+            _type: 'span',
+            text: 'An in-depth study of cellular processes and laboratory techniques.',
+          },
+        ],
+      },
+    ],
+    _id: 'subject-3',
+    _type: 'subject',
+    dbId: 'bio201',
+    faculty: {
+      _id: 'faculty-1',
+      name: 'Science',
+    },
+    syllabus: 'bio201-syllabus.pdf',
   },
   {
     name: 'Organic Chemistry',
     code: 'CHEM 204',
-    next: 'Quiz in 3 days',
-    color: 'cp-amber',
-    progress: 48,
+    professors: [
+      {
+        _id: 'professor-2',
+        name: 'Prof. Marcus Bell',
+      },
+    ],
+    year: 2,
+    credits: 4,
+    semester: 'summer',
+    description: [
+      {
+        _type: 'block',
+        children: [
+          {
+            _type: 'span',
+            text: 'A comprehensive study of organic reactions and mechanisms.',
+          },
+        ],
+      },
+    ],
+    _id: 'subject-4',
+    _type: 'subject',
+    dbId: 'chem204',
+    faculty: {
+      _id: 'faculty-1',
+      name: 'Science',
+    },
+    syllabus: 'chem204-syllabus.pdf',
   },
   {
     name: 'Linear Algebra',
     code: 'MATH 221',
-    next: 'Problem set due Monday',
-    color: 'cp-blue',
-    progress: 64,
+    professors: [
+      {
+        _id: 'professor-1',
+        name: 'Prof. Adrian Cole',
+      },
+    ],
+    year: 1,
+    credits: 4,
+    semester: 'summer',
+    description: [
+      {
+        _type: 'block',
+        children: [
+          {
+            _type: 'span',
+            text: 'An introduction to vector spaces, matrices, and linear transformations.',
+          },
+        ],
+      },
+    ],
+    _id: 'subject-5',
+    _type: 'subject',
+    dbId: 'math221',
+    faculty: {
+      _id: 'faculty-1',
+      name: 'Science',
+    },
+    syllabus: 'math221-syllabus.pdf',
   },
 ]
 

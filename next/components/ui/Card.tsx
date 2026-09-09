@@ -22,10 +22,16 @@ const CardRoot = ({ className, children, ...rest }: BoxProps) => (
  * clickable div with role 'button' and tabIndex 0. Otherwise, it will render a
  * NextLink.
  */
-export const CardRootClickable = (props: NextLinkProps) => {
-  const { children } = props
-
-  return <NextLink {...props}>{children}</NextLink>
+export const CardRootClickable = ({
+  children,
+  className,
+  ...rest
+}: NextLinkProps) => {
+  return (
+    <NextLink className={cn('ui-card', className)} {...rest}>
+      {children}
+    </NextLink>
+  )
 }
 
 const CardHeader = ({

@@ -1,4 +1,5 @@
 import { groq } from 'next-sanity'
+import { minimalFacultyQuery } from './faculty.queries'
 
 /** Minimal listing query for the unified hierarchical gallery page */
 export const universityGalleryQuery = groq`
@@ -48,14 +49,7 @@ export const universityDetailQuery = groq`
     image
   },
   "faculties": *[_type == "faculty" && references(^._id)] | order(name asc) {
-    _id,
-    name,
-    dbId,
-    email,
-    telephone,
-    website,
-    "subjectCount": count(*[_type == "subject" && references(^._id)]),
-    "professorCount": count(*[_type == "professor" && references(^._id)])
+    ${minimalFacultyQuery}
   }
 }
 `

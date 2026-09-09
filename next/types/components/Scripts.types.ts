@@ -4,9 +4,9 @@ import type {
   ProfileSubjectStatus,
 } from '@shared/types/api.types'
 import type { BoxProps } from '@/components/common/Box'
+import type { MinimalSubject } from '../academics/subject.types'
 import type { ComponentColorPalettes } from '../component.types'
 import type { PortableTextType } from './PortableText.types'
-import type { Subject } from './Subjects.types'
 
 export type { FileType, ProfileSubject, ProfileSubjectStatus }
 
@@ -31,7 +31,7 @@ export type Script = {
 
 export type PageDataProps = {
   scripts?: Array<Script>
-  subjects?: Array<Subject>
+  subjects?: Array<MinimalSubject>
   greeting?: string
   authoredCount?: number
   commentCount?: number

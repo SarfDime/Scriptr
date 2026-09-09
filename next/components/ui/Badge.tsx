@@ -6,7 +6,7 @@ import { Text } from '../typography/Text'
 export type BadgeProps = {
   colorPalette?: ComponentColorPalettes
   variant?: 'solid' | 'outline'
-} & TextProps
+} & Omit<TextProps, 'color'>
 
 export const Badge = ({
   children,
@@ -16,20 +16,10 @@ export const Badge = ({
   ...rest
 }: BadgeProps) => {
   const colorStyle =
-    variant === 'solid'
-      ? colorPalette
-      : cn(colorPalette, 'border border-currentColor')
+    variant === 'solid' ? colorPalette : cn(colorPalette, 'bg-transparent')
 
   return (
-    <Text
-      as='span'
-      {...rest}
-      className={cn(
-        'inline-flex items-center px-2.5 py-0.5 font-medium text-xs rounded-xl',
-        colorStyle,
-        className
-      )}
-    >
+    <Text as='span' {...rest} className={cn('ui-badge', colorStyle, className)}>
       {children}
     </Text>
   )

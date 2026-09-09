@@ -9,6 +9,30 @@ export const subjectSeoQuery = groq`
 }
 `
 
+export const minimalSubjectQuery = groq`
+_id,
+name,
+code,
+credits,
+year,
+semester,
+description,
+syllabus,
+faculty->{
+  _id,
+  name,
+  university->{
+    _id,
+    name,
+  }
+},
+professors[]->{
+  _id,
+  name,
+  title,
+}
+`
+
 /** Deep relational query for a subject: own info, parent faculty & university, and assigned professors */
 export const subjectDetailQuery = groq`
 *[_type == "subject" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {
@@ -20,7 +44,6 @@ export const subjectDetailQuery = groq`
   credits,
   year,
   semester,
-  examSession,
   description,
   syllabus,
   faculty->{

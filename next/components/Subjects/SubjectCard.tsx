@@ -1,40 +1,80 @@
-import Menu from '@sanity/icons/Menu'
-import { cn } from '@/lib/common-utils'
-import type { SubjectCardProps } from '@/types/components/Subjects.types'
+import { getSubjectPath } from '@/lib/academic-routes'
+import {
+  getColorPallette,
+  getCreditColor,
+  YEAR_COLORS,
+} from '@/lib/color-pallette-gen'
+import type { MinimalSubject } from '@/types/academics/subject.types'
 import { Box } from '../common/Box'
 import { Text } from '../typography/Text'
-import { Card } from '../ui/Card'
+import { Badge } from '../ui/Badge'
+import { ClickableCard } from '../ui/Card'
+import { InitialsIcon } from '../ui/InitialsIcon'
 
-export const SubjectCard = ({ subject }: SubjectCardProps) => {
+export const SubjectCard = (subject: MinimalSubject) => {
+  const professors = subject.professors ?? []
+  const [firstProfessor, ...restProfessors] = professors
+
+  const facultyName = subject.faculty?.name
+  const universityName = subject.faculty?.university?.name
+
+  const color = getColorPallette(subject._id)
   return (
-    <Card className={'ui-stack gap-4'}>
-      <Card.Body className='flex items-start gap-3 p-0'>
-        <Box
-          className={cn(
-            'flex h-9 w-9 items-center justify-center rounded-lg border ui-label',
-            subject.color
+    <ClickableCard
+      href={getSubjectPath(subject._id)}
+      className='group ui-stack gap-4 shadow-2xl p-4'
+    >
+      <ClickableCard.Body className='flex items-start gap-3 p-0'>
+        <InitialsIcon name={subject.name} color={color} />
+        <Box className='ui-stack gap-1'>
+          <Text className='ui-body'>{subject.name}</Text>
+          <Box className='ui-cluster gap-2'>
+            {firstProfessor?.name && (
+              <Text className='ui-caption'>
+                {firstProfessor.name}
+                {restProfessors.length > 0 && ` +${restProfessors.length} more`}
+              </Text>
+            )}
+          </Box>
+          {(universityName || facultyName) && (
+            <Text className='ui-caption'>
+              {universityName}
+              {universityName && facultyName && ' • '}
+              {facultyName}
+            </Text>
           )}
-        >
-          {subject.name.slice(0, 2).toUpperCase()}
         </Box>
-        <Box className='ui-stack min-w-0 gap-1'>
-          <Text className='ui-body text-fg-700'>{subject.name}</Text>
-          <Text className='ui-caption'>{subject.code}</Text>
-        </Box>
-        <Menu className='ml-auto text-fg-400' />
-      </Card.Body>
+        {subject.code && (
+          <Badge colorPalette={color} className='ml-auto ui-caption'>
+            {subject.code}
+          </Badge>
+        )}
+      </ClickableCard.Body>
 
-      <Card.Footer className='ui-cluster w-full justify-between pt-2'>
-        <Box className='ui-stack gap-2'>
-          <Text className='ui-label'>{subject.next}</Text>
-          <Box
-            className={cn('h-full rounded-full bg-brand-300', subject.color)}
-            style={{ width: `${subject.progress}%` }}
-          />
+      <ClickableCard.Footer className='ui-cluster w-full items-center justify-between pt-2'>
+        <Box className='ui-cluster gap-2'>
+          {subject.year && (
+            <Badge
+              colorPalette={YEAR_COLORS[subject.year] ?? 'cp-yellow'}
+              className='ui-caption'
+            >
+              Year {subject.year}
+            </Badge>
+          )}
+          {subject.credits !== undefined && (
+            <Badge
+              colorPalette={getCreditColor(subject.credits)}
+              className='ui-caption'
+            >
+              {subject.credits} ECTS
+            </Badge>
+          )}
         </Box>
 
-        <Text className='ui-label text-fg-700'>{subject.progress}%</Text>
-      </Card.Footer>
-    </Card>
+        {subject.semester && (
+          <Text className='ui-caption capitalize'>{subject.semester}</Text>
+        )}
+      </ClickableCard.Footer>
+    </ClickableCard>
   )
 }

@@ -47,11 +47,11 @@
 }
 
 @utility ui-display {
-  @apply text-4xl font-medium text-fg-700 md:text-5xl;
+  @apply font-size-lg font-medium text-fg-700;
 }
 
 @utility ui-title {
-  @apply text-xl font-medium text-fg-700;
+  @apply font-size-sm font-medium text-fg-700;
 }
 
 @utility ui-subtitle {
@@ -120,4 +120,15 @@
   padding-top: 1rem;
   border-top: 1px solid var(--color-grey-300);
   color: var(--color-fg-400);
+}
+
+@utility ui-badge {
+  @apply inline-flex items-center px-2.5 py-0.5 font-medium text-xs rounded-xl w-fit;
+}
+
+@utility ui-badge-fixed {
+  @apply inline-flex items-center px-1 py-0.5 gap-1 justify-center font-medium text-xs rounded-xl w-fit;
+  svg {
+    @apply w-5 h-5;
+  }
 }

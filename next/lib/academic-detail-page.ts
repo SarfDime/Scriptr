@@ -4,7 +4,7 @@ import { PageSEO } from '@/components/page-seo/PageSEO'
 import { convertToPlainText } from '@/lib/common-utils'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { websiteSeoQuery } from '@/sanity/queries/website.queries'
-import type { AcademicDetailPageProps } from '@/types/academics.types'
+import type { AcademicDetailPageProps } from '@/types/academics/academics.types'
 import type { PortableTextType } from '@/types/components/PortableText.types'
 
 export type WebsiteSeoSettings = {

@@ -16,10 +16,8 @@ import {
   universityDetailQuery,
   universityStaticParamsQuery,
 } from '@/sanity/queries/academics/university.queries'
-import type {
-  AcademicDetailPageProps,
-  UniversityDetail,
-} from '@/types/academics.types'
+import type { AcademicDetailPageProps } from '@/types/academics/academics.types'
+import type { UniversityDetail } from '@/types/academics/university.types'
 
 export const dynamicParams = false
 

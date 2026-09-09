@@ -20,10 +20,8 @@ import {
   subjectDetailQuery,
   subjectStaticParamsQuery,
 } from '@/sanity/queries/academics/subject.queries'
-import type {
-  AcademicDetailPageProps,
-  SubjectDetail,
-} from '@/types/academics.types'
+import type { AcademicDetailPageProps } from '@/types/academics/academics.types'
+import type { SubjectDetail } from '@/types/academics/subject.types'
 
 export const dynamicParams = false
 
@@ -107,14 +105,14 @@ export default async function SubjectDetailPage({
                 </Box>
               )}
 
-              {subject.examSession && (
+              {/* {subject.examSession && (
                 <Box className='ui-cluster justify-between'>
                   <Text className='ui-caption text-grey-500'>Exam Session</Text>
                   <Text className='ui-body capitalize'>
                     {subject.examSession}
                   </Text>
                 </Box>
-              )}
+              )} */}
 
               {subject.syllabus && (
                 <Box className='ui-stack gap-1 pt-2 border-t border-grey-200'>

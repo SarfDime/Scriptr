@@ -1,5 +1,5 @@
 import { cn } from '@/lib/common-utils'
-import type { PersonSummary } from '@/types/academics.types'
+import type { PersonSummary } from '@/types/components/Person.types'
 import { Box } from '../common/Box'
 import { Text } from '../typography/Text'
 import { Title } from '../typography/Title'

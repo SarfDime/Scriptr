@@ -16,10 +16,8 @@ import {
   professorDetailQuery,
   professorStaticParamsQuery,
 } from '@/sanity/queries/academics/professor.queries'
-import type {
-  AcademicDetailPageProps,
-  ProfessorDetail,
-} from '@/types/academics.types'
+import type { AcademicDetailPageProps } from '@/types/academics/academics.types'
+import type { ProfessorDetail } from '@/types/academics/professor.types'
 
 export const dynamicParams = false
 

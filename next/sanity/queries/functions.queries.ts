@@ -1,8 +1,11 @@
 import { groq } from 'next-sanity'
 
-// TODO: Change link selector to not be all pages, since it's only selecting one page
+const sanityImageFunction = groq`
+fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};
+`
+
 const sanityFunctionQueries = groq`
-fn sanityImage::full($image) = $image{ asset, crop, hotspot, cornerRadius, rounded, hexagon, edgeInset, "alt": asset->altText};
+${sanityImageFunction}
 
 fn linkSelector::full($link) = $link{
     defined(linkType) => {linkType},
@@ -40,4 +43,4 @@ fn portableText::full($portableText) = $portableText{
 };
 `
 
-export { sanityFunctionQueries }
+export { sanityFunctionQueries, sanityImageFunction }

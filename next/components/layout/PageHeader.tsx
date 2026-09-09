@@ -14,7 +14,7 @@ export const PageHeader = ({
   children?: React.ReactNode
 }) => {
   return (
-    <Box className='ui-cluster justify-between items-end pb-6'>
+    <Box className='ui-cluster justify-between items-end'>
       <Box className='ui-stack gap-1'>
         {greeting && <Text className='ui-title text-brand'>{greeting}</Text>}
         {title && (

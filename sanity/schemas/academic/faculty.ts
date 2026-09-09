@@ -54,11 +54,26 @@ export const Faculty = defineType({
       fieldset: 'information',
     },
     {
+      name: 'picture',
+      title: 'Picture',
+      type: 'image',
+      options: { hotspot: true },
+      fieldset: 'information',
+    },
+    {
       name: 'secretary',
       title: 'Secretary',
-      type: 'string',
+      type: 'reference',
+      to: [{ type: 'person' }],
       validation: validationRules.isRequired,
       fieldset: 'administration',
+    },
+    {
+      name: 'studentCount',
+      title: 'Student Count',
+      type: 'number',
+      validation: validationRules.isRequired,
+      fieldset: 'information',
     },
     {
       name: 'dean',
