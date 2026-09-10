@@ -1,10 +1,10 @@
 import { CloseIcon } from '@sanity/icons/Close'
 
-import type { IconProps } from '../../types/component.types'
+import type { SanityIconProps } from '../../types/component.types'
 import type { ButtonProps } from '../common/Button'
 import { Button } from '../common/Button'
 
-export type CloseButtonProps = { iconProps?: IconProps } & ButtonProps
+export type CloseButtonProps = { iconProps?: SanityIconProps } & ButtonProps
 
 /** `CloseButton` - A button component that renders a close icon by default.
  * It extends our `Button` component.

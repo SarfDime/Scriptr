@@ -69,7 +69,7 @@ export const Select = <T = string>({
         aria-expanded={listOpen}
         {...triggerProps}
         className={cn(
-          'group/trigger grow justify-start rounded-sm p-2 text-left text-base leading-4 md:leading-[inherit]',
+          'group/trigger grow justify-start items-center rounded-sm p-2 gap-2 text-left text-base leading-4 md:leading-[inherit]',
           triggerProps?.className
         )}
       >

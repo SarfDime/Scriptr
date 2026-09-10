@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import type { BoxProps } from '@/components/common/Box'
 import type { ButtonProps } from '@/components/common/Button'
 import type { TextProps } from '@/components/typography/Text'
-import type { IconProps } from '../component.types'
+import type { SanityIconProps } from '../component.types'
 
 type OptionType = {
   value: string
@@ -26,7 +26,7 @@ type RadioProps = {
   value?: string
   checked?: boolean
   labelProps?: TextProps
-  checkMarkProps?: IconProps
+  checkMarkProps?: SanityIconProps
   hasBorder?: boolean
 } & Omit<ButtonProps, 'onChange'>
 

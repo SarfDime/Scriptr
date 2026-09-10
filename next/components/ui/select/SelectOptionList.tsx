@@ -18,7 +18,7 @@ export const SelectOptionList = <T,>({
       as='ul'
       {...rest}
       className={cn(
-        'absolute top-full z-90 mt-1 max-h-60 w-full overflow-auto rounded-md bg-background-100 text-base opacity-start shadow-md focus:outline-none sm:text-sm',
+        'absolute top-full z-90 mt-1 max-h-60 min-w-max w-full overflow-auto rounded-md bg-background-100 text-base opacity-start shadow-xl focus:outline-none sm:text-sm border border-grey-300',
         rest?.className
       )}
     >

@@ -1,12 +1,12 @@
 import Launch from '@sanity/icons/Launch'
 import { Box } from '@/components/common/Box'
 import { Text } from '@/components/typography/Text'
-import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { DetailLink } from '@/components/ui/DetailLink'
 import { Divider } from '@/components/ui/Divider'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import type { SubjectDetail } from '@/types/academics/subject.types'
+import { AcademicBadge } from '../AcademicBadge'
 
 export const SubjectHighlightsCard = ({
   _id,
@@ -25,41 +25,10 @@ export const SubjectHighlightsCard = ({
       </Text>
 
       <Box className='ui-cluster gap-2'>
-        <Badge
-          colorPalette={
-            getColorPalette({ type: 'year', value: year }) ?? 'cp-yellow'
-          }
-        >
-          Year {year}
-        </Badge>
-        {code && (
-          <Badge
-            colorPalette={getColorPalette({ type: 'seed', value: code })}
-            className='border border-grey-200'
-          >
-            {code}
-          </Badge>
-        )}
-        {credits && (
-          <Badge
-            colorPalette={getColorPalette({ type: 'credit', value: credits })}
-            className='border border-grey-200'
-          >
-            {credits} ECTS
-          </Badge>
-        )}
-
-        {semester && (
-          <Badge
-            colorPalette={
-              getColorPalette({ type: 'semester', value: semester }) ??
-              'cp-yellow'
-            }
-            className='capitalize'
-          >
-            {semester}
-          </Badge>
-        )}
+        {year && <AcademicBadge type='year' value={year} />}
+        {code && <AcademicBadge type='code' value={code} />}
+        {credits && <AcademicBadge type='credits' value={credits} />}
+        {semester && <AcademicBadge type='semester' value={semester} />}
       </Box>
 
       <Text className='ui-body text-grey-500'>

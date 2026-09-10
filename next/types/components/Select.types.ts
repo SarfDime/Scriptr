@@ -7,6 +7,7 @@ type SelectOptionType<T = string> = {
   disabled?: boolean
   value: T
   label: React.ReactNode
+  icon?: ReactNode
 }
 
 type SelectOptionSelectType<T> = {

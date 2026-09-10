@@ -2,13 +2,10 @@ export type AcademicEntityType =
   | 'university'
   | 'faculty'
   | 'subject'
-  | 'professor' //TODO: Get these types from sanity
+  | 'professor' //TODO: Get these types from sanity types
+  | 'script'
 
-export type AcademicPathInput =
-  | { type: 'university'; id: string }
-  | { type: 'faculty'; id: string }
-  | { type: 'subject'; id: string }
-  | { type: 'professor'; id: string }
+export type AcademicPathInput = { type: AcademicEntityType; id: string }
 
 const cleanEntityId = (id: string): string =>
   id.startsWith('drafts.') ? id.slice('drafts.'.length) : id
@@ -25,7 +22,6 @@ export const getSubjectPath = (id: string): string =>
 export const getProfessorPath = (id: string): string =>
   `/professors/${cleanEntityId(id)}`
 
-// TODO: Refactor to use a single function for generating paths based on entity type
 export const getAcademicPath = (input: AcademicPathInput): string => {
   const { type, id } = input
 
@@ -38,6 +34,8 @@ export const getAcademicPath = (input: AcademicPathInput): string => {
       return getSubjectPath(id)
     case 'professor':
       return getProfessorPath(id)
+    case 'script':
+      return `/scripts/${cleanEntityId(id)}`
     default:
       return '/'
   }

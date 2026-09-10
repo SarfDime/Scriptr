@@ -1,13 +1,13 @@
 import LaunchIcon from '@sanity/icons/Launch'
 import Link, { type LinkProps } from 'next/link'
 import type { HTMLAttributes, ReactNode } from 'react'
-import type { IconProps } from '@/types/component.types'
+import type { SanityIconProps } from '@/types/component.types'
 import { cn, externalLink } from '../../lib/common-utils'
 
 export type NextLinkProps = {
   children: ReactNode
   href: string
-  externalIconProps?: IconProps
+  externalIconProps?: SanityIconProps
   hideExternalIcon?: boolean
 } & LinkProps &
   HTMLAttributes<HTMLAnchorElement>

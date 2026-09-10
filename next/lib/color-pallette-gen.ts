@@ -112,7 +112,7 @@ type ColorPaletteInput =
   | { type: 'year'; value: number; variant?: ColorPaletteVariant }
   | { type: 'semester'; value: string; variant?: ColorPaletteVariant }
   | { type: 'exam'; value: string; variant?: ColorPaletteVariant }
-  | { type: 'credit'; value: number; variant?: ColorPaletteVariant }
+  | { type: 'credits'; value: number; variant?: ColorPaletteVariant }
 
 const getColorPalette = (input: ColorPaletteInput) => {
   const { type = 'seed', value, variant } = input
@@ -124,7 +124,7 @@ const getColorPalette = (input: ColorPaletteInput) => {
       return getSemesterColor(value as SubjectSemester, variant)
     case 'exam':
       return getExamSessionColor(value as SubjectExamSession, variant)
-    case 'credit':
+    case 'credits':
       return getCreditColor(value as number, variant)
     default:
       return getSeedColor(value as string, variant)

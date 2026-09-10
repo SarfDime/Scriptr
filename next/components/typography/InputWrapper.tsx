@@ -16,21 +16,18 @@ export type InputWrapperProps = {
     InputHTMLAttributes<HTMLInputElement>,
     HTMLInputElement
   >
-  fieldProps?: FieldProps
   wrapperProps?: Omit<BoxProps, 'children'>
   inputVal?: string
   inputClearButton?: boolean
   inputOnClear?: () => void
   inputOnChange?: ChangeEventHandler<HTMLInputElement>
   inputOnClick?: () => void
-  children?: React.ReactNode
-}
+} & FieldProps
 
 /** A component that wraps an input field with a clear button
  * and a maximum length
  */
 export function InputWrapper({
-  fieldProps,
   inputVal,
   inputClearButton,
   inputOnClear,
@@ -39,9 +36,10 @@ export function InputWrapper({
   inputProps,
   wrapperProps,
   children,
+  ...rest
 }: InputWrapperProps) {
   return (
-    <Field {...fieldProps}>
+    <Field {...rest}>
       <Box
         {...wrapperProps}
         className={cn('relative flex w-full', wrapperProps?.className)}

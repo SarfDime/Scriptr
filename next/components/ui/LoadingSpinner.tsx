@@ -1,14 +1,14 @@
 import { SpinnerIcon } from '@sanity/icons/Spinner'
 
 import { cn } from '../../lib/common-utils'
-import type { IconProps } from '../../types/component.types'
+import type { SanityIconProps } from '../../types/component.types'
 import type { BoxProps } from '../common/Box'
 import { Box } from '../common/Box'
 
 export const LoadingSpinner = ({
   iconProps,
   ...rest
-}: { iconProps?: IconProps } & BoxProps) => {
+}: { iconProps?: SanityIconProps } & BoxProps) => {
   return (
     <Box
       className={cn(

@@ -35,7 +35,7 @@ type BoxTags =
   | ComponentTags['listItem']
   | ComponentTags['navigation']
 
-type IconProps = Omit<SVGProps<SVGSVGElement>, 'ref'> &
+type SanityIconProps = Omit<SVGProps<SVGSVGElement>, 'ref'> &
   RefAttributes<SVGSVGElement>
 
 type AdditionalComponentAttributes = {
@@ -50,5 +50,5 @@ export type {
   BoxTags,
   ComponentPlacement,
   ComponentTags,
-  IconProps,
+  SanityIconProps,
 }

@@ -1,9 +1,9 @@
 import { getSubjectPath } from '@/lib/academic-routes'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import type { MinimalSubject } from '@/types/academics/subject.types'
+import { AcademicBadge } from '../academics/AcademicBadge'
 import { Box } from '../common/Box'
 import { Text } from '../typography/Text'
-import { Badge } from '../ui/Badge'
 import { ClickableCard } from '../ui/Card'
 import { InitialsIcon } from '../ui/InitialsIcon'
 
@@ -48,41 +48,16 @@ export const SubjectCard = ({
             </Text>
           )}
         </Box>
-        {code && (
-          <Badge colorPalette={color} className='ml-auto ui-caption'>
-            {code}
-          </Badge>
-        )}
+        {code && <AcademicBadge type='code' value={code} />}
       </ClickableCard.Body>
 
       <ClickableCard.Footer className='ui-cluster w-full items-center justify-between pt-2'>
         <Box className='ui-cluster gap-2'>
-          {year && (
-            // TODO: Factor out all of these badges into a separate reusable academic badges component, and use them where needed
-            <Badge
-              colorPalette={getColorPalette({
-                type: 'year',
-                value: year,
-              })}
-              className='ui-caption'
-            >
-              Year {year}
-            </Badge>
-          )}
-          {credits !== undefined && (
-            <Badge
-              colorPalette={getColorPalette({
-                type: 'credit',
-                value: credits,
-              })}
-              className='ui-caption'
-            >
-              {credits} ECTS
-            </Badge>
-          )}
+          {year && <AcademicBadge type='year' value={year} />}
+          {credits && <AcademicBadge type='credits' value={credits} />}
         </Box>
 
-        {semester && <Text className='ui-caption capitalize'>{semester}</Text>}
+        {semester && <AcademicBadge type='semester' value={semester} />}
       </ClickableCard.Footer>
     </ClickableCard>
   )

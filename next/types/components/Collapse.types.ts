@@ -1,13 +1,13 @@
 import type { BoxProps } from '../../components/common/Box'
 import type { ButtonProps } from '../../components/common/Button'
 import type { TitleProps } from '../../components/typography/Title'
-import type { IconProps } from '../component.types'
+import type { SanityIconProps } from '../component.types'
 import type { PortableTextType } from './PortableText.types'
 
 type CommonCollapseProps = {
   title?: PortableTextType
   showArrow?: boolean
-  triggerArrowProps?: IconProps
+  triggerArrowProps?: SanityIconProps
   triggerTitleProps?: TitleProps
 }
 

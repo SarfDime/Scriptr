@@ -52,6 +52,7 @@ export const Faculty = defineType({
       title: 'Description',
       type: 'richTextLite',
       fieldset: 'information',
+      validation: (rule) => validationRules.descriptionValidation(rule),
     },
     {
       name: 'bio',

@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { UI_STRINGS } from '@shared/config/strings'
 import { ScriptsSection } from '@/components/academics/scripts/ScriptSection'
-import { SearchHeader } from '@/components/academics/scripts/SearchHeader'
 import { ActivityStats } from '@/components/common/ActivityStats'
 import { Box } from '@/components/common/Box'
+import { PageHeader } from '@/components/layout/PageHeader'
 import { PageLayout } from '@/components/layout/PageLayout'
 import { SubjectsSidebar } from '@/components/Subjects/SubjectsSidebar'
+import { Divider } from '@/components/ui/Divider'
 import { DEFAULT_ACTIVITY_CONTENT } from '@/config/content'
 import { FAKE_SCRIPTS } from '@/lib/fake-scripts-data'
 import type { SubjectDetail } from '@/types/academics/subject.types'
@@ -130,16 +131,16 @@ const Page = ({
   activityContent = DEFAULT_ACTIVITY_CONTENT,
   subjects: pageSubjects = subjects,
 }: PageDataProps) => {
-  const [query, setQuery] = useState('')
-
   return (
     <PageLayout>
-      <SearchHeader
+      <PageHeader
         greeting={greeting}
-        query={query}
-        onQueryChange={setQuery}
+        title={UI_STRINGS.home.title}
+        subtitle={UI_STRINGS.home.subtitle}
       />
 
+      <Divider />
+      {/* Make this class a utility class for responsive grid layout */}
       <Box className='grid gap-10 xl:grid-cols-[minmax(0,1fr)_340px]'>
         <ScriptsSection scripts={FAKE_SCRIPTS} />
         <SubjectsSidebar subjects={pageSubjects} content={subjectsContent} />

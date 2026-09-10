@@ -22,7 +22,7 @@ export type FieldProps = {
   required?: boolean
   showSkeleton?: boolean
   loading?: boolean
-} & BoxProps
+} & Omit<BoxProps, 'onChange'>
 
 /** Renders a field with optional label, helper, and error texts, as well as validation badges.
  *

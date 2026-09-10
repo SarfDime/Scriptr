@@ -6,14 +6,17 @@ import type { MinimalProfessor, ProfessorDetail } from './professor.types'
 export type SubjectExamSession = 'january' | 'june' | 'september'
 export type SubjectSemester = 'winter' | 'summer'
 
-export type MinimalSubject = MinimalEntity & {
+export type SubjectBasicInfo = {
   year: number
   code?: string
   credits?: number
   semester?: SubjectSemester
+}
+
+export type MinimalSubject = MinimalEntity & {
   faculty?: Pick<RelatedFaculty, '_id' | 'name' | 'university'>
   professors?: Array<Pick<MinimalProfessor, '_id' | 'name' | 'title'>>
-}
+} & SubjectBasicInfo
 
 export type SubjectDetail = Omit<MinimalSubject, 'professors' | 'faculty'> & {
   _type: 'subject'
