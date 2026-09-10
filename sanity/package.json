@@ -1,24 +1,4 @@
 {
-  "name": "scriptr-sanity",
-  "private": true,
-  "type": "module",
-  "version": "1.0.0",
-  "main": "package.json",
-  "license": "UNLICENSED",
-  "scripts": {
-    "deploy": "sanity deploy",
-    "deploy-graphql": "sanity graphql deploy",
-    "dev": "sanity dev",
-    "build": "sanity build",
-    "preview": "npm run build && sanity preview",
-    "check-types": "tsc --noEmit --pretty",
-    "schema:extract": "sanity schemas extract --force --enforce-required-fields",
-    "types:generate": "sanity typegen generate",
-    "typegen": "npm run schema:extract && npm run types:generate"
-  },
-  "keywords": [
-    "sanity"
-  ],
   "dependencies": {
     "@sanity/asset-utils": "^2.3.0",
     "@sanity/client": "^8.6.1",
@@ -41,5 +21,25 @@
   "devDependencies": {
     "@sanity/cli": "^8.9.1",
     "babel-plugin-react-compiler": "^1.0.0"
-  }
+  },
+  "keywords": [
+    "sanity"
+  ],
+  "license": "UNLICENSED",
+  "main": "package.json",
+  "name": "scriptr-sanity",
+  "private": true,
+  "scripts": {
+    "build": "sanity build",
+    "check-types": "tsc --noEmit --pretty",
+    "deploy": "sanity deploy",
+    "deploy-graphql": "sanity graphql deploy",
+    "dev": "sanity dev",
+    "preview": "npm run build && sanity preview",
+    "schema:extract": "sanity schemas extract --force --enforce-required-fields",
+    "typegen": "npm run schema:extract && npm run types:generate",
+    "types:generate": "sanity typegen generate"
+  },
+  "type": "module",
+  "version": "1.0.0"
 }

@@ -1,4 +1,41 @@
 {
+  "[css]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[postcss]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[tailwindcss]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "editor.codeActionsOnSave": {
+    "source.addMissingImports.ts": "explicit",
+    "source.biome": "explicit",
+    "source.fixAll.biome": "explicit",
+    "source.fixAll.ts": "never",
+    "source.organizeImports": "never",
+    "source.organizeImports.biome": "explicit",
+    "source.removeUnused.ts": "never",
+    "source.removeUnusedImports": "explicit",
+    "source.sort.json": "explicit",
+    "source.sortImports": "never"
+  },
+  "editor.defaultFormatter": "biomejs.biome",
   // Tailwind Intellisense power-up
   // Extend scope of supported attributes with {anything}Classes/Styling/Props etc:
   "tailwindCSS.classAttributes": [
@@ -14,6 +51,11 @@
     ".Elements.",
     ".overrideElements"
   ],
+  "tailwindCSS.classFunctions": [
+    "cn",
+    "clsx",
+    "classNames"
+  ],
   "tailwindCSS.experimental.classRegex": [
     // tailwind-variants
     [
@@ -26,45 +68,5 @@
       "'([^']*)'"
     ]
   ],
-  "tailwindCSS.classFunctions": [
-    "cn",
-    "clsx",
-    "classNames"
-  ],
-  "tailwindCSS.experimental.configFile": "./next/app/globals.css",
-  "editor.codeActionsOnSave": {
-    "source.organizeImports.biome": "explicit",
-    "source.addMissingImports.ts": "explicit",
-    "source.fixAll.ts": "never",
-    "source.removeUnused.ts": "never",
-    "source.removeUnusedImports": "never",
-    "source.sortImports": "never",
-    "source.fixAll.biome": "explicit",
-    "source.organizeImports": "never",
-  },
-  "editor.defaultFormatter": "biomejs.biome",
-  "[typescript]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[json]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[tailwindcss]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[css]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[postcss]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[yaml]": {
-    "editor.defaultFormatter": "redhat.vscode-yaml"
-  },
-  "[jsonc]": {
-    "editor.defaultFormatter": "vscode.json-language-features"
-  },
+  "tailwindCSS.experimental.configFile": "./next/app/globals.css"
 }
