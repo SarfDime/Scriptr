@@ -12,24 +12,16 @@ import { Button } from '@/components/common/Button'
 import { Text } from '@/components/typography/Text'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
-import { getColorPallette } from '@/lib/color-pallette-gen'
-import { cn } from '@/lib/common-utils'
+import { getColorPalette } from '@/lib/color-pallette-gen'
+import { cn, formatUpdated } from '@/lib/common-utils'
 import type { ScriptCardProps } from '@/types/components/Scripts.types'
-
-const formatUpdated = (date: Date) => {
-  // TODO: factor out to utils and add small jsdoc
-  const days = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24))
-  if (days <= 0) return 'Today'
-  if (days === 1) return 'Yesterday'
-  return `${days} days ago`
-}
 
 // TODO: Add JSDoc for all missing Script components
 export const ScriptCard = ({ script }: ScriptCardProps) => {
   const [isSaved, setIsSaved] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
 
-  const color = getColorPallette(script.id)
+  const color = getColorPalette({ type: 'seed', value: script.id })
   const displayedLikes = script.likes + (isLiked ? 1 : 0)
 
   return (

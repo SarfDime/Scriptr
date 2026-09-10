@@ -5,7 +5,7 @@ import { PortableTextContent } from '@/components/typography/PortableTextContent
 import { Text } from '@/components/typography/Text'
 import { Card } from '@/components/ui/Card'
 import { Divider } from '@/components/ui/Divider'
-import { getColorPallette } from '@/lib/color-pallette-gen'
+import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn, createPersonSummaries } from '@/lib/common-utils'
 import type { SubjectDetail } from '@/types/academics/subject.types'
 
@@ -15,7 +15,7 @@ export const SubjectOverviewCard = ({
   faculty,
   professors,
 }: SubjectDetail) => {
-  const color = getColorPallette(_id)
+  const color = getColorPalette({ type: 'seed', value: _id })
 
   const administrators = createPersonSummaries(
     { target: professors, title: 'Professor' },
@@ -44,12 +44,15 @@ export const SubjectOverviewCard = ({
         </Box>
       </Box>
 
-      <Divider className='mt-auto' />
+      <Divider className={cn('mt-auto', color)} />
 
       <AdministratorList
         administrators={administrators}
         layout='detailLink'
         className='px-0'
+        detailLinkProps={{
+          className: cn(color),
+        }}
       />
     </Card>
   )

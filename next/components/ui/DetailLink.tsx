@@ -24,14 +24,14 @@ export const DetailLink = ({
       {(label || value) && (
         <NextLink
           href={href}
-          className={cn('group ui-stack gap-0.5 w-fit', className)}
+          className={cn('group ui-stack gap-0.5 w-fit text-brand', className)}
           {...rest}
         >
           {label && (
             <Text
               {...labelProps}
               className={cn(
-                'ui-caption font-bold text-brand-400',
+                'ui-caption font-bold text-current/90 group-hover:text-current/70',
                 labelProps?.className
               )}
             >
@@ -42,7 +42,7 @@ export const DetailLink = ({
             <Box
               {...valueProps}
               className={cn(
-                'ui-body transition-all duration-200 underline-offset-4 group-hover:text-brand group-hover:underline decoration-brand/30',
+                'ui-body transition-all duration-200 underline-offset-4 group-hover:text-current group-hover:underline decoration-current/30',
                 valueProps?.className
               )}
             >

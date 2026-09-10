@@ -2,39 +2,43 @@ export type AcademicEntityType =
   | 'university'
   | 'faculty'
   | 'subject'
-  | 'professor'
+  | 'professor' //TODO: Get these types from sanity
 
-/**
- * Generates the canonical subroute path for an academic entity using its document ID.
- */
-export const getAcademicEntityPath = (
-  entityType: AcademicEntityType,
-  id: string
-): string => {
-  const cleanId = id.startsWith('drafts.') ? id.slice('drafts.'.length) : id
+export type AcademicPathInput =
+  | { type: 'university'; id: string }
+  | { type: 'faculty'; id: string }
+  | { type: 'subject'; id: string }
+  | { type: 'professor'; id: string }
 
-  switch (entityType) {
+const cleanEntityId = (id: string): string =>
+  id.startsWith('drafts.') ? id.slice('drafts.'.length) : id
+
+export const getUniversityPath = (id: string): string =>
+  `/universities/${cleanEntityId(id)}`
+
+export const getFacultyPath = (id: string): string =>
+  `/faculties/${cleanEntityId(id)}`
+
+export const getSubjectPath = (id: string): string =>
+  `/subjects/${cleanEntityId(id)}`
+
+export const getProfessorPath = (id: string): string =>
+  `/professors/${cleanEntityId(id)}`
+
+// TODO: Refactor to use a single function for generating paths based on entity type
+export const getAcademicPath = (input: AcademicPathInput): string => {
+  const { type, id } = input
+
+  switch (type) {
     case 'university':
-      return `/universities/${cleanId}`
+      return getUniversityPath(id)
     case 'faculty':
-      return `/faculties/${cleanId}`
+      return getFacultyPath(id)
     case 'subject':
-      return `/subjects/${cleanId}`
+      return getSubjectPath(id)
     case 'professor':
-      return `/professors/${cleanId}`
+      return getProfessorPath(id)
     default:
       return '/'
   }
 }
-
-export const getUniversityPath = (id: string): string =>
-  getAcademicEntityPath('university', id)
-
-export const getFacultyPath = (id: string): string =>
-  getAcademicEntityPath('faculty', id)
-
-export const getSubjectPath = (id: string): string =>
-  getAcademicEntityPath('subject', id)
-
-export const getProfessorPath = (id: string): string =>
-  getAcademicEntityPath('professor', id)

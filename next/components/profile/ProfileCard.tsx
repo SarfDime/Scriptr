@@ -1,8 +1,10 @@
 import Book from '@sanity/icons/Book'
 import Confetti from '@sanity/icons/Confetti'
 import { cn } from '@/lib/common-utils'
+import type { SanityImageType } from '@/types/common.types'
 import { Box, type BoxProps } from '../common/Box'
 import { Text } from '../typography/Text'
+import { Avatar } from '../ui/Avatar'
 import { Badge } from '../ui/Badge'
 import { Card } from '../ui/Card'
 
@@ -13,6 +15,7 @@ type ProfileCardProps = {
   university: string
   faculty: string
   location: string
+  picture?: SanityImageType
 } & BoxProps
 
 export const ProfileCard = ({
@@ -22,27 +25,16 @@ export const ProfileCard = ({
   university,
   faculty,
   location,
+  picture,
   className,
   ...props
 }: ProfileCardProps) => {
   const accent = 'cp-blue'
-  const initials = name // TODO: Factor out to util, and use profile photo if not then initials
-    .split(' ')
-    .map((word) => word[0])
-    .join('')
-    .toUpperCase()
 
   return (
     <Card {...props} className={cn('p-6', className)}>
       <Card.Body className='flex gap-4 grow-0'>
-        <Box
-          className={cn(
-            'h-full aspect-square rounded-2xl ui-center p-6',
-            accent
-          )}
-        >
-          {initials}
-        </Box>
+        <Avatar name={name} picture={picture} />
 
         <Box className='ui-stack gap-1'>
           <Box className='flex flex-wrap items-center gap-2'>

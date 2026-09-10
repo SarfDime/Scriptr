@@ -25,10 +25,10 @@ export function Title({ children, as = 'h4', ...rest }: TitleProps) {
   }
 
   if (isPortableTextValue(children)) {
-    // TODO: Fix the type assertion here, as children is already typed as PortableTextType
     return (
       <HeadingTag {...rest}>
         <PortableTextContent renderDefaultBlock={false} renderWrapper={false}>
+          {/* TODO: Fix the type assertion here, as children is already typed as PortableTextType */}
           {children as PortableTextType}
         </PortableTextContent>
       </HeadingTag>

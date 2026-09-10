@@ -55,14 +55,14 @@ export default async function FacultyDetailPage({
             {faculty.university && (
               <NextLink
                 href={getUniversityPath(faculty.university._id)}
-                className='ui-badge cp-red interactive'
+                className='ui-badge cp-red-interactive'
               >
                 {faculty.university.name}
               </NextLink>
             )}
             <NextLink
               href='/universities'
-              className='ui-badge cp-brand interactive'
+              className='ui-badge cp-brand-interactive'
             >
               ← All Universities
             </NextLink>

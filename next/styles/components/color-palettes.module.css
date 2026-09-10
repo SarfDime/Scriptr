@@ -1,320 +1,350 @@
-/* TODO: Figure out if these can be utils so they can have autocomplete */
-
-/* Used for color variations */
-@layer colorPalettes {
-  .cp-red {
-    background-color: color-mix(
-      in srgb,
-      var(--color-error-red) 8%,
-      var(--color-background-100)
-    );
-    border: 1px solid
-      color-mix(
+/* --- Red --- */
+@utility cp-red {
+  background-color: color-mix(
+    in srgb,
+    var(--color-error-red) 8%,
+    var(--color-background-100)
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--color-error-red) 32%, var(--color-background-100));
+  color: var(--color-error-red);
+}
+@utility cp-red-no-bg {
+  background-color: transparent;
+  border: 0;
+}
+@utility cp-red-interactive {
+  @media (hover: hover) {
+    cursor: pointer;
+    &:hover {
+      background-color: color-mix(
         in srgb,
-        var(--color-error-red) 32%,
+        var(--color-error-red) 16%,
         var(--color-background-100)
       );
-    color: var(--color-error-red);
-    &.interactive {
-      @media (hover: hover) {
-        cursor: pointer;
-        &:hover {
-          background-color: color-mix(
-            in srgb,
-            var(--color-error-red) 16%,
-            var(--color-background-100)
-          );
-        }
-      }
     }
   }
+}
 
-  .cp-green {
-    background-color: color-mix(
-      in srgb,
-      var(--color-jade) 8%,
-      var(--color-background-100)
-    );
-    border: 1px solid
-      color-mix(in srgb, var(--color-jade) 32%, var(--color-background-100));
-    color: var(--color-jade);
-    &.interactive {
-      @media (hover: hover) {
-        cursor: pointer;
-        &:hover {
-          background-color: color-mix(
-            in srgb,
-            var(--color-jade) 16%,
-            var(--color-background-100)
-          );
-        }
-      }
-    }
-  }
-
-  .cp-blue {
-    background-color: color-mix(
-      in srgb,
-      var(--color-brand-300) 10%,
-      var(--color-background-100)
-    );
-    border: 1px solid
-      color-mix(
+/* --- Green --- */
+@utility cp-green {
+  background-color: color-mix(
+    in srgb,
+    var(--color-jade) 8%,
+    var(--color-background-100)
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--color-jade) 32%, var(--color-background-100));
+  color: var(--color-jade);
+}
+@utility cp-green-no-bg {
+  background-color: transparent;
+  border: 0;
+}
+@utility cp-green-interactive {
+  @media (hover: hover) {
+    cursor: pointer;
+    &:hover {
+      background-color: color-mix(
         in srgb,
-        var(--color-brand-300) 36%,
+        var(--color-jade) 16%,
         var(--color-background-100)
       );
-    color: var(--color-brand-400);
-    &.interactive {
-      @media (hover: hover) {
-        cursor: pointer;
-        &:hover {
-          background-color: color-mix(
-            in srgb,
-            var(--color-brand-300) 20%,
-            var(--color-background-100)
-          );
-        }
-      }
     }
   }
+}
 
-  .cp-gray {
-    background-color: color-mix(
-      in srgb,
-      var(--color-grey-300) 34%,
-      var(--color-background-100)
-    );
-    border: 1px solid var(--color-grey-350);
-    color: var(--color-fg-700);
-    &.interactive {
-      @media (hover: hover) {
-        cursor: pointer;
-        &:hover {
-          background-color: color-mix(
-            in srgb,
-            var(--color-grey-300) 50%,
-            var(--color-background-100)
-          );
-        }
-      }
-    }
-  }
-
-  .cp-yellow {
-    background-color: color-mix(
-      in srgb,
-      var(--color-golden-yellow) 10%,
-      var(--color-background-100)
-    );
-    border: 1px solid
-      color-mix(
+/* --- Blue --- */
+@utility cp-blue {
+  background-color: color-mix(
+    in srgb,
+    var(--color-brand-300) 10%,
+    var(--color-background-100)
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--color-brand-300) 36%, var(--color-background-100));
+  color: var(--color-brand-400);
+}
+@utility cp-blue-no-bg {
+  background-color: transparent;
+  border: 0;
+}
+@utility cp-blue-interactive {
+  @media (hover: hover) {
+    cursor: pointer;
+    &:hover {
+      background-color: color-mix(
         in srgb,
-        var(--color-golden-yellow) 38%,
+        var(--color-brand-300) 20%,
         var(--color-background-100)
       );
-    color: var(--color-yellow);
-    &.interactive {
-      @media (hover: hover) {
-        cursor: pointer;
-        &:hover {
-          background-color: color-mix(
-            in srgb,
-            var(--color-golden-yellow) 20%,
-            var(--color-background-100)
-          );
-        }
-      }
     }
   }
+}
 
-  .cp-brand {
-    background-color: color-mix(
-      in srgb,
-      var(--color-brand-300) 10%,
-      var(--color-background-100)
-    );
-    border: 1px solid
-      color-mix(
+/* --- Gray --- */
+@utility cp-gray {
+  background-color: color-mix(
+    in srgb,
+    var(--color-grey-300) 34%,
+    var(--color-background-100)
+  );
+  border: 1px solid var(--color-grey-350);
+  color: var(--color-fg-700);
+}
+@utility cp-gray-no-bg {
+  background-color: transparent;
+  border: 0;
+}
+@utility cp-gray-interactive {
+  @media (hover: hover) {
+    cursor: pointer;
+    &:hover {
+      background-color: color-mix(
         in srgb,
-        var(--color-brand-300) 36%,
+        var(--color-grey-300) 50%,
         var(--color-background-100)
       );
-    color: var(--color-brand-400);
-    &.interactive {
-      @media (hover: hover) {
-        cursor: pointer;
-        &:hover {
-          background-color: color-mix(
-            in srgb,
-            var(--color-brand-300) 20%,
-            var(--color-background-100)
-          );
-        }
-      }
     }
   }
+}
 
-  .cp-rose {
-    background-color: color-mix(
+/* --- Yellow --- */
+@utility cp-yellow {
+  background-color: color-mix(
+    in srgb,
+    var(--color-golden-yellow) 10%,
+    var(--color-background-100)
+  );
+  border: 1px solid
+    color-mix(
       in srgb,
-      var(--color-rose-pink) 8%,
+      var(--color-golden-yellow) 38%,
       var(--color-background-100)
     );
-    border: 1px solid
-      color-mix(
+  color: var(--color-yellow);
+}
+@utility cp-yellow-no-bg {
+  background-color: transparent;
+  border: 0;
+}
+@utility cp-yellow-interactive {
+  @media (hover: hover) {
+    cursor: pointer;
+    &:hover {
+      background-color: color-mix(
         in srgb,
-        var(--color-rose-pink) 34%,
+        var(--color-golden-yellow) 20%,
         var(--color-background-100)
       );
-    color: var(--color-rose-pink);
-    &.interactive {
-      @media (hover: hover) {
-        cursor: pointer;
-        &:hover {
-          background-color: color-mix(
-            in srgb,
-            var(--color-rose-pink) 16%,
-            var(--color-background-100)
-          );
-        }
-      }
     }
   }
+}
 
-  .cp-sky {
-    background-color: color-mix(
-      in srgb,
-      #38bdf8 9%,
-      var(--color-background-100)
-    );
-    border: 1px solid
-      color-mix(in srgb, #38bdf8 34%, var(--color-background-100));
-    color: #38bdf8;
-    &.interactive {
-      @media (hover: hover) {
-        cursor: pointer;
-        &:hover {
-          background-color: color-mix(
-            in srgb,
-            #38bdf8 18%,
-            var(--color-background-100)
-          );
-        }
-      }
-    }
-  }
-
-  .cp-amber {
-    background-color: color-mix(
-      in srgb,
-      #f59e0b 9%,
-      var(--color-background-100)
-    );
-    border: 1px solid
-      color-mix(in srgb, #f59e0b 34%, var(--color-background-100));
-    color: #f59e0b;
-    &.interactive {
-      @media (hover: hover) {
-        cursor: pointer;
-        &:hover {
-          background-color: color-mix(
-            in srgb,
-            #f59e0b 18%,
-            var(--color-background-100)
-          );
-        }
-      }
-    }
-  }
-
-  .cp-success {
-    background-color: color-mix(
-      in srgb,
-      var(--color-jade) 8%,
-      var(--color-background-100)
-    );
-    border: 1px solid
-      color-mix(in srgb, var(--color-jade) 32%, var(--color-background-100));
-    color: var(--color-jade);
-    &.interactive {
-      @media (hover: hover) {
-        cursor: pointer;
-        &:hover {
-          background-color: color-mix(
-            in srgb,
-            var(--color-jade) 16%,
-            var(--color-background-100)
-          );
-        }
-      }
-    }
-  }
-
-  .cp-warning {
-    background-color: color-mix(
-      in srgb,
-      var(--color-golden-yellow) 10%,
-      var(--color-background-100)
-    );
-    border: 1px solid
-      color-mix(
+/* --- Brand --- */
+@utility cp-brand {
+  background-color: color-mix(
+    in srgb,
+    var(--color-brand-300) 10%,
+    var(--color-background-100)
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--color-brand-300) 36%, var(--color-background-100));
+  color: var(--color-brand-400);
+}
+@utility cp-brand-no-bg {
+  background-color: transparent;
+  border: 0;
+}
+@utility cp-brand-interactive {
+  @media (hover: hover) {
+    cursor: pointer;
+    &:hover {
+      background-color: color-mix(
         in srgb,
-        var(--color-golden-yellow) 38%,
+        var(--color-brand-300) 20%,
         var(--color-background-100)
       );
-    color: var(--color-yellow);
-    &.interactive {
-      @media (hover: hover) {
-        cursor: pointer;
-        &:hover {
-          background-color: color-mix(
-            in srgb,
-            var(--color-golden-yellow) 20%,
-            var(--color-background-100)
-          );
-        }
-      }
     }
   }
+}
 
-  .cp-danger {
-    background-color: color-mix(
-      in srgb,
-      var(--color-error-red) 8%,
-      var(--color-background-100)
-    );
-    border: 1px solid
-      color-mix(
+/* --- Rose --- */
+@utility cp-rose {
+  background-color: color-mix(
+    in srgb,
+    var(--color-rose-pink) 8%,
+    var(--color-background-100)
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--color-rose-pink) 34%, var(--color-background-100));
+  color: var(--color-rose-pink);
+}
+@utility cp-rose-no-bg {
+  background-color: transparent;
+  border: 0;
+}
+@utility cp-rose-interactive {
+  @media (hover: hover) {
+    cursor: pointer;
+    &:hover {
+      background-color: color-mix(
         in srgb,
-        var(--color-error-red) 32%,
+        var(--color-rose-pink) 16%,
         var(--color-background-100)
       );
-    color: var(--color-error-red);
-    &.interactive {
-      @media (hover: hover) {
-        cursor: pointer;
-        &:hover {
-          background-color: color-mix(
-            in srgb,
-            var(--color-error-red) 16%,
-            var(--color-background-100)
-          );
-        }
-      }
     }
   }
+}
 
-  .cp-unstyled {
-    background: transparent;
-    color: inherit;
-    &.interactive {
-      @media (hover: hover) {
-        cursor: pointer;
-        &:hover {
-          background-color: color-mix(in srgb, currentColor 8%, transparent);
-        }
-      }
+/* --- Sky --- */
+@utility cp-sky {
+  background-color: color-mix(in srgb, #38bdf8 9%, var(--color-background-100));
+  border: 1px solid color-mix(in srgb, #38bdf8 34%, var(--color-background-100));
+  color: #38bdf8;
+}
+@utility cp-sky-no-bg {
+  background-color: transparent;
+  border: 0;
+}
+@utility cp-sky-interactive {
+  @media (hover: hover) {
+    cursor: pointer;
+    &:hover {
+      background-color: color-mix(
+        in srgb,
+        #38bdf8 18%,
+        var(--color-background-100)
+      );
+    }
+  }
+}
+
+/* --- Amber --- */
+@utility cp-amber {
+  background-color: color-mix(in srgb, #f59e0b 9%, var(--color-background-100));
+  border: 1px solid color-mix(in srgb, #f59e0b 34%, var(--color-background-100));
+  color: #f59e0b;
+}
+@utility cp-amber-no-bg {
+  background-color: transparent;
+  border: 0;
+}
+@utility cp-amber-interactive {
+  @media (hover: hover) {
+    cursor: pointer;
+    &:hover {
+      background-color: color-mix(
+        in srgb,
+        #f59e0b 18%,
+        var(--color-background-100)
+      );
+    }
+  }
+}
+
+/* --- Success --- */
+@utility cp-success {
+  background-color: color-mix(
+    in srgb,
+    var(--color-jade) 8%,
+    var(--color-background-100)
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--color-jade) 32%, var(--color-background-100));
+  color: var(--color-jade);
+}
+@utility cp-success-no-bg {
+  background-color: transparent;
+  border: 0;
+}
+@utility cp-success-interactive {
+  @media (hover: hover) {
+    cursor: pointer;
+    &:hover {
+      background-color: color-mix(
+        in srgb,
+        var(--color-jade) 16%,
+        var(--color-background-100)
+      );
+    }
+  }
+}
+
+/* --- Warning --- */
+@utility cp-warning {
+  background-color: color-mix(
+    in srgb,
+    var(--color-golden-yellow) 10%,
+    var(--color-background-100)
+  );
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--color-golden-yellow) 38%,
+      var(--color-background-100)
+    );
+  color: var(--color-yellow);
+}
+@utility cp-warning-no-bg {
+  background-color: transparent;
+  border: 0;
+}
+@utility cp-warning-interactive {
+  @media (hover: hover) {
+    cursor: pointer;
+    &:hover {
+      background-color: color-mix(
+        in srgb,
+        var(--color-golden-yellow) 20%,
+        var(--color-background-100)
+      );
+    }
+  }
+}
+
+/* --- Danger --- */
+@utility cp-danger {
+  background-color: color-mix(
+    in srgb,
+    var(--color-error-red) 8%,
+    var(--color-background-100)
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--color-error-red) 32%, var(--color-background-100));
+  color: var(--color-error-red);
+}
+@utility cp-danger-no-bg {
+  background-color: transparent;
+  border: 0;
+}
+@utility cp-danger-interactive {
+  @media (hover: hover) {
+    cursor: pointer;
+    &:hover {
+      background-color: color-mix(
+        in srgb,
+        var(--color-error-red) 16%,
+        var(--color-background-100)
+      );
+    }
+  }
+}
+
+/* --- Unstyled --- */
+@utility cp-unstyled {
+  background: transparent;
+  color: inherit;
+}
+@utility cp-unstyled-no-bg {
+  background-color: transparent;
+  border: 0;
+}
+@utility cp-unstyled-interactive {
+  @media (hover: hover) {
+    cursor: pointer;
+    &:hover {
+      background-color: color-mix(in srgb, currentColor 8%, transparent);
     }
   }
 }

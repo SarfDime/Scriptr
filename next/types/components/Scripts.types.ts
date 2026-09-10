@@ -1,6 +1,6 @@
 import type { BoxProps } from '@/components/common/Box'
 import type { MinimalSubject } from '../academics/subject.types'
-import type { ComponentColorPalettes } from '../component.types'
+import type { ComponentColorPalettes } from './ColorPalettes.types'
 import type { PortableTextType } from './PortableText.types'
 
 type ScriptId = string

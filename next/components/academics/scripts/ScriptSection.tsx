@@ -53,20 +53,28 @@ export const ScriptsSection = ({
       </Text>
 
       <Box className='ui-cluster items-start justify-between gap-3'>
-        {/** biome-ignore lint/a11y/noLabelWithoutControl: <TODO: Use a proper accessible search input using fieldWrapper and maybe create a solid search bar component> */}
-        <label className='relative min-w-55 flex-1'>
-          <span className='sr-only'>Search scripts</span>
-          <SearchIcon className='pointer-events-none absolute left-3 top-2.5 text-fg-400' />
-          <InputWrapper
-            inputVal={query}
-            inputOnChange={(event) => setQuery(event.target.value)}
-            inputProps={{
-              placeholder: 'Search scripts, authors, tags',
-              className:
-                'ui-body w-full rounded-lg border border-grey-300 bg-background-200 py-2 pl-9 pr-3 outline-none placeholder:text-fg-400 focus:border-brand-300',
-            }}
-          />
-        </label>
+        {/* TODO: Create a solid search bar component, fix styles */}
+        <InputWrapper
+          inputVal={query}
+          inputOnChange={(event) => setQuery(event.target.value)}
+          fieldProps={{
+            label: 'Search scripts',
+            className: 'grow',
+
+            labelProps: {
+              className: 'sr-only',
+            },
+          }}
+          wrapperProps={{
+            className:
+              'ui-body w-full rounded-lg border border-grey-300 bg-background-200 py-2 px-2 outline-none placeholder:text-fg-400 focus:border-brand-300',
+          }}
+          inputProps={{
+            placeholder: 'Search scripts, authors, tags',
+          }}
+        >
+          <SearchIcon />
+        </InputWrapper>
 
         <ScriptFilters
           subject={subject}

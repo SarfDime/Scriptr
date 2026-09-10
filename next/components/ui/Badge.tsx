@@ -1,5 +1,5 @@
+import type { ComponentColorPalettes } from '@/types/components/ColorPalettes.types'
 import { cn } from '../../lib/common-utils'
-import type { ComponentColorPalettes } from '../../types/component.types'
 import type { TextProps } from '../typography/Text'
 import { Text } from '../typography/Text'
 

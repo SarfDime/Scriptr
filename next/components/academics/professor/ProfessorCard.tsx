@@ -5,7 +5,7 @@ import { Avatar } from '@/components/ui/Avatar'
 import { Badge } from '@/components/ui/Badge'
 import { ClickableCard } from '@/components/ui/Card'
 import { getProfessorPath } from '@/lib/academic-routes'
-import { getColorPallette } from '@/lib/color-pallette-gen'
+import { getColorPalette } from '@/lib/color-pallette-gen'
 import type { MinimalProfessor } from '@/types/academics/professor.types'
 
 export const ProfessorCard = ({
@@ -17,7 +17,7 @@ export const ProfessorCard = ({
   picture,
   universities,
 }: MinimalProfessor) => {
-  const color = getColorPallette(_id)
+  const color = getColorPalette({ type: 'seed', value: _id })
 
   const facultyNames = faculties?.map((faculty) => faculty.name).join(', ')
 

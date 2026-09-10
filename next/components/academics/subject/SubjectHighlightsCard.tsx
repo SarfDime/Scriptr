@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { DetailLink } from '@/components/ui/DetailLink'
 import { Divider } from '@/components/ui/Divider'
-import { getColorPallette, YEAR_COLORS } from '@/lib/color-pallette-gen'
+import { getColorPalette } from '@/lib/color-pallette-gen'
 import type { SubjectDetail } from '@/types/academics/subject.types'
 
 export const SubjectHighlightsCard = ({
@@ -16,7 +16,7 @@ export const SubjectHighlightsCard = ({
   semester,
   syllabus,
 }: SubjectDetail) => {
-  const color = getColorPallette(_id)
+  const color = getColorPalette({ type: 'seed', value: _id })
 
   return (
     <Card className='p-6 ui-stack gap-4'>
@@ -25,22 +25,38 @@ export const SubjectHighlightsCard = ({
       </Text>
 
       <Box className='ui-cluster gap-2'>
-        <Badge colorPalette={YEAR_COLORS[year] ?? 'cp-yellow'}>
+        <Badge
+          colorPalette={
+            getColorPalette({ type: 'year', value: year }) ?? 'cp-yellow'
+          }
+        >
           Year {year}
         </Badge>
         {code && (
-          <Badge colorPalette='cp-unstyled' className='border border-grey-200'>
+          <Badge
+            colorPalette={getColorPalette({ type: 'seed', value: code })}
+            className='border border-grey-200'
+          >
             {code}
           </Badge>
         )}
         {credits && (
-          <Badge colorPalette='cp-unstyled' className='border border-grey-200'>
+          <Badge
+            colorPalette={getColorPalette({ type: 'credit', value: credits })}
+            className='border border-grey-200'
+          >
             {credits} ECTS
           </Badge>
         )}
 
         {semester && (
-          <Badge colorPalette={color} className='capitalize'>
+          <Badge
+            colorPalette={
+              getColorPalette({ type: 'semester', value: semester }) ??
+              'cp-yellow'
+            }
+            className='capitalize'
+          >
             {semester}
           </Badge>
         )}
@@ -51,7 +67,7 @@ export const SubjectHighlightsCard = ({
         your own time.
       </Text>
 
-      <Divider />
+      <Divider className={color} />
 
       {syllabus && (
         <DetailLink

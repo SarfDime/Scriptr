@@ -38,6 +38,7 @@ export const linkSelector = [
     // TODO: Figure out how to dynamically get all pages here, all professors, subjects, faculties and universities
     // (possibly hardcode the main pages?),
     // possibly fetch from university all the way down to the specific page?
+    // probably best to hardcode and then fetch individually
   }),
   defineField({
     name: 'section',

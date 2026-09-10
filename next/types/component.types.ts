@@ -22,21 +22,6 @@ type ComponentTags = {
   audio: 'audio'
 }
 
-type ComponentColorPalettes = `cp-${
-  | 'red'
-  | 'green'
-  | 'blue'
-  | 'gray'
-  | 'yellow'
-  | 'brand'
-  | 'rose'
-  | 'sky'
-  | 'amber'
-  | 'success'
-  | 'warning'
-  | 'danger'
-  | 'unstyled'}`
-
 type ComponentPlacement = {
   placement: 'left' | 'center' | 'right'
   offsetY?: string
@@ -63,7 +48,6 @@ type AdditionalComponentAttributes = {
 export type {
   AdditionalComponentAttributes,
   BoxTags,
-  ComponentColorPalettes,
   ComponentPlacement,
   ComponentTags,
   IconProps,

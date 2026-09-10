@@ -1,5 +1,5 @@
 import { cn } from '@/lib/common-utils'
-import type { ComponentColorPalettes } from '@/types/component.types'
+import type { ComponentColorPalettes } from '@/types/components/ColorPalettes.types'
 import { Box, type BoxProps } from '../common/Box'
 
 export type InitialsIconProps = {

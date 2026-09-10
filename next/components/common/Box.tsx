@@ -6,7 +6,7 @@ import type {
 
 export type BoxProps = AdditionalComponentAttributes & {
   as?: BoxTags
-}
+} // TODO: Create a omitted children type export for BoxProps
 
 /** A utility component for wrapping arbitrary content in a layout element (eg. div, section, list). */
 export const Box = ({

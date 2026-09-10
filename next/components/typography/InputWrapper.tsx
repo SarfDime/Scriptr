@@ -6,7 +6,7 @@ import type {
   InputHTMLAttributes,
 } from 'react'
 import { cn } from '../../lib/common-utils'
-import { Box } from '../common/Box'
+import { Box, type BoxProps } from '../common/Box'
 import { Button } from '../common/Button'
 import type { FieldProps } from '../ui/field/Field'
 import { Field } from '../ui/field/Field'
@@ -17,11 +17,13 @@ export type InputWrapperProps = {
     HTMLInputElement
   >
   fieldProps?: FieldProps
+  wrapperProps?: Omit<BoxProps, 'children'>
   inputVal?: string
   inputClearButton?: boolean
   inputOnClear?: () => void
   inputOnChange?: ChangeEventHandler<HTMLInputElement>
   inputOnClick?: () => void
+  children?: React.ReactNode
 }
 
 /** A component that wraps an input field with a clear button
@@ -35,10 +37,16 @@ export function InputWrapper({
   inputOnChange,
   inputOnClick,
   inputProps,
+  wrapperProps,
+  children,
 }: InputWrapperProps) {
   return (
     <Field {...fieldProps}>
-      <Box className={'relative flex w-full'}>
+      <Box
+        {...wrapperProps}
+        className={cn('relative flex w-full', wrapperProps?.className)}
+      >
+        {children}
         <input
           {...inputProps}
           value={inputVal}

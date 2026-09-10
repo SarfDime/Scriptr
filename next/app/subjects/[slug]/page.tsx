@@ -59,7 +59,7 @@ export default async function SubjectDetailPage({
           // TODO: Factor out to reusable breadcrumb component
           <NextLink
             href={getFacultyPath(faculty._id)}
-            className='ui-badge interactive cp-brand'
+            className='ui-badge cp-brand-interactive'
           >
             ← {faculty.name}
           </NextLink>

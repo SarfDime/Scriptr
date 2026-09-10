@@ -1,5 +1,5 @@
 import type { BREAKPOINTS } from '@shared/config/next-constants'
-import type { ComponentColorPalettes } from './component.types'
+import type { ComponentColorPalettes } from './components/ColorPalettes.types'
 import type { PortableTextType } from './components/PortableText.types'
 
 type SlugType = {
