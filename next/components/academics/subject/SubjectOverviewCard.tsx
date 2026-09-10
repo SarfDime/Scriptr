@@ -1,8 +1,8 @@
 import Book from '@sanity/icons/Book'
 import { Box } from '@/components/common/Box'
-import { AdministratorList } from '@/components/layout/OverviewCard/OverviewAdministratorList'
 import { PortableTextContent } from '@/components/typography/PortableTextContent'
 import { Text } from '@/components/typography/Text'
+import { AdministratorList } from '@/components/ui/AdministratorList'
 import { Card } from '@/components/ui/Card'
 import { Divider } from '@/components/ui/Divider'
 import { getColorPalette } from '@/lib/color-pallette-gen'
@@ -15,7 +15,8 @@ export const SubjectOverviewCard = ({
   faculty,
   professors,
 }: SubjectDetail) => {
-  const color = getColorPalette({ type: 'seed', value: _id })
+  const color = getColorPalette({ type: 'seed', value: _id, variant: 'nb' })
+  const colorBorder = getColorPalette({ type: 'seed', value: _id })
 
   const administrators = createPersonSummaries(
     { target: professors, title: 'Professor' },
@@ -36,7 +37,7 @@ export const SubjectOverviewCard = ({
         </Box>
         <Box
           className={cn(
-            color,
+            colorBorder,
             'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl'
           )}
         >
@@ -44,14 +45,14 @@ export const SubjectOverviewCard = ({
         </Box>
       </Box>
 
-      <Divider className={cn('mt-auto', color)} />
+      <Divider className={cn('mt-auto cp-green-nb', colorBorder)} />
 
       <AdministratorList
         administrators={administrators}
         layout='detailLink'
         className='px-0'
         detailLinkProps={{
-          className: cn(color),
+          className: color,
         }}
       />
     </Card>

@@ -1,5 +1,4 @@
 @import "tailwindcss";
-
 @import "./base/breakpoints.module.css";
 @import "./base/colors.module.css";
 @import "./base/shadows.module.css";

@@ -1,350 +1,285 @@
 /* --- Red --- */
 @utility cp-red {
-  background-color: color-mix(
-    in srgb,
-    var(--color-error-red) 8%,
-    var(--color-background-100)
-  );
-  border: 1px solid
-    color-mix(in srgb, var(--color-error-red) 32%, var(--color-background-100));
-  color: var(--color-error-red);
+  &,
+  &[class] {
+    @apply bg-[color-mix(in_srgb,var(--color-error-red)_8%,var(--color-background-100))] border border-[color-mix(in_srgb,var(--color-error-red)_32%,var(--color-background-100))] text-error-red;
+  }
 }
-@utility cp-red-no-bg {
-  background-color: transparent;
-  border: 0;
+@utility cp-red-nb {
+  &,
+  &[class] {
+    @apply text-error-red;
+  }
 }
-@utility cp-red-interactive {
-  @media (hover: hover) {
-    cursor: pointer;
-    &:hover {
-      background-color: color-mix(
-        in srgb,
-        var(--color-error-red) 16%,
-        var(--color-background-100)
-      );
+@utility cp-red-int {
+  &,
+  &[class] {
+    @media (hover: hover) {
+      @apply cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-error-red)_16%,var(--color-background-100))];
     }
   }
 }
 
 /* --- Green --- */
 @utility cp-green {
-  background-color: color-mix(
-    in srgb,
-    var(--color-jade) 8%,
-    var(--color-background-100)
-  );
-  border: 1px solid
-    color-mix(in srgb, var(--color-jade) 32%, var(--color-background-100));
-  color: var(--color-jade);
+  &,
+  &[class] {
+    @apply bg-[color-mix(in_srgb,var(--color-jade)_8%,var(--color-background-100))] border border-[color-mix(in_srgb,var(--color-jade)_32%,var(--color-background-100))] text-jade;
+  }
 }
-@utility cp-green-no-bg {
-  background-color: transparent;
-  border: 0;
+@utility cp-green-nb {
+  &,
+  &[class] {
+    @apply text-jade;
+  }
 }
-@utility cp-green-interactive {
-  @media (hover: hover) {
-    cursor: pointer;
-    &:hover {
-      background-color: color-mix(
-        in srgb,
-        var(--color-jade) 16%,
-        var(--color-background-100)
-      );
+@utility cp-green-int {
+  &,
+  &[class] {
+    @media (hover: hover) {
+      @apply cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-jade)_16%,var(--color-background-100))];
     }
   }
 }
 
 /* --- Blue --- */
 @utility cp-blue {
-  background-color: color-mix(
-    in srgb,
-    var(--color-brand-300) 10%,
-    var(--color-background-100)
-  );
-  border: 1px solid
-    color-mix(in srgb, var(--color-brand-300) 36%, var(--color-background-100));
-  color: var(--color-brand-400);
+  &,
+  &[class] {
+    @apply bg-[color-mix(in_srgb,var(--color-blue-500)_10%,var(--color-background-100))] border border-[color-mix(in_srgb,var(--color-blue-500)_36%,var(--color-background-100))] text-blue-500;
+  }
 }
-@utility cp-blue-no-bg {
-  background-color: transparent;
-  border: 0;
+@utility cp-blue-nb {
+  &,
+  &[class] {
+    @apply text-blue-500;
+  }
 }
-@utility cp-blue-interactive {
-  @media (hover: hover) {
-    cursor: pointer;
-    &:hover {
-      background-color: color-mix(
-        in srgb,
-        var(--color-brand-300) 20%,
-        var(--color-background-100)
-      );
+@utility cp-blue-int {
+  &,
+  &[class] {
+    @media (hover: hover) {
+      @apply cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-blue-500)_20%,var(--color-background-100))];
     }
   }
 }
 
 /* --- Gray --- */
 @utility cp-gray {
-  background-color: color-mix(
-    in srgb,
-    var(--color-grey-300) 34%,
-    var(--color-background-100)
-  );
-  border: 1px solid var(--color-grey-350);
-  color: var(--color-fg-700);
+  &,
+  &[class] {
+    @apply bg-[color-mix(in_srgb,var(--color-grey-300)_34%,var(--color-background-100))] border border-grey-350 text-fg-700;
+  }
 }
-@utility cp-gray-no-bg {
-  background-color: transparent;
-  border: 0;
+@utility cp-gray-nb {
+  &,
+  &[class] {
+    @apply text-fg-700;
+  }
 }
-@utility cp-gray-interactive {
-  @media (hover: hover) {
-    cursor: pointer;
-    &:hover {
-      background-color: color-mix(
-        in srgb,
-        var(--color-grey-300) 50%,
-        var(--color-background-100)
-      );
+@utility cp-gray-int {
+  &,
+  &[class] {
+    @media (hover: hover) {
+      @apply cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-grey-300)_50%,var(--color-background-100))];
     }
   }
 }
 
 /* --- Yellow --- */
 @utility cp-yellow {
-  background-color: color-mix(
-    in srgb,
-    var(--color-golden-yellow) 10%,
-    var(--color-background-100)
-  );
-  border: 1px solid
-    color-mix(
-      in srgb,
-      var(--color-golden-yellow) 38%,
-      var(--color-background-100)
-    );
-  color: var(--color-yellow);
+  &,
+  &[class] {
+    @apply bg-[color-mix(in_srgb,var(--color-golden-yellow)_10%,var(--color-background-100))] border border-[color-mix(in_srgb,var(--color-golden-yellow)_38%,var(--color-background-100))] text-yellow;
+  }
 }
-@utility cp-yellow-no-bg {
-  background-color: transparent;
-  border: 0;
+@utility cp-yellow-nb {
+  &,
+  &[class] {
+    @apply text-yellow;
+  }
 }
-@utility cp-yellow-interactive {
-  @media (hover: hover) {
-    cursor: pointer;
-    &:hover {
-      background-color: color-mix(
-        in srgb,
-        var(--color-golden-yellow) 20%,
-        var(--color-background-100)
-      );
+@utility cp-yellow-int {
+  &,
+  &[class] {
+    @media (hover: hover) {
+      @apply cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-golden-yellow)_20%,var(--color-background-100))];
     }
   }
 }
 
 /* --- Brand --- */
 @utility cp-brand {
-  background-color: color-mix(
-    in srgb,
-    var(--color-brand-300) 10%,
-    var(--color-background-100)
-  );
-  border: 1px solid
-    color-mix(in srgb, var(--color-brand-300) 36%, var(--color-background-100));
-  color: var(--color-brand-400);
+  &,
+  &[class] {
+    @apply bg-[color-mix(in_srgb,var(--color-brand-300)_10%,var(--color-background-100))] border border-[color-mix(in_srgb,var(--color-brand-300)_36%,var(--color-background-100))] text-brand;
+  }
 }
-@utility cp-brand-no-bg {
-  background-color: transparent;
-  border: 0;
+@utility cp-brand-nb {
+  &,
+  &[class] {
+    @apply text-brand;
+  }
 }
-@utility cp-brand-interactive {
-  @media (hover: hover) {
-    cursor: pointer;
-    &:hover {
-      background-color: color-mix(
-        in srgb,
-        var(--color-brand-300) 20%,
-        var(--color-background-100)
-      );
+@utility cp-brand-int {
+  &,
+  &[class] {
+    @media (hover: hover) {
+      @apply cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-brand-300)_20%,var(--color-background-100))];
     }
   }
 }
 
 /* --- Rose --- */
 @utility cp-rose {
-  background-color: color-mix(
-    in srgb,
-    var(--color-rose-pink) 8%,
-    var(--color-background-100)
-  );
-  border: 1px solid
-    color-mix(in srgb, var(--color-rose-pink) 34%, var(--color-background-100));
-  color: var(--color-rose-pink);
+  &,
+  &[class] {
+    @apply bg-[color-mix(in_srgb,var(--color-rose-pink)_8%,var(--color-background-100))] border border-[color-mix(in_srgb,var(--color-rose-pink)_34%,var(--color-background-100))] text-rose-pink;
+  }
 }
-@utility cp-rose-no-bg {
-  background-color: transparent;
-  border: 0;
+@utility cp-rose-nb {
+  &,
+  &[class] {
+    @apply text-rose-pink;
+  }
 }
-@utility cp-rose-interactive {
-  @media (hover: hover) {
-    cursor: pointer;
-    &:hover {
-      background-color: color-mix(
-        in srgb,
-        var(--color-rose-pink) 16%,
-        var(--color-background-100)
-      );
+@utility cp-rose-int {
+  &,
+  &[class] {
+    @media (hover: hover) {
+      @apply cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-rose-pink)_16%,var(--color-background-100))];
     }
   }
 }
 
 /* --- Sky --- */
 @utility cp-sky {
-  background-color: color-mix(in srgb, #38bdf8 9%, var(--color-background-100));
-  border: 1px solid color-mix(in srgb, #38bdf8 34%, var(--color-background-100));
-  color: #38bdf8;
+  &,
+  &[class] {
+    @apply bg-[color-mix(in_srgb,#38bdf8_9%,var(--color-background-100))] border border-[color-mix(in_srgb,#38bdf8_34%,var(--color-background-100))] text-sky;
+  }
 }
-@utility cp-sky-no-bg {
-  background-color: transparent;
-  border: 0;
+@utility cp-sky-nb {
+  &,
+  &[class] {
+    @apply text-sky;
+  }
 }
-@utility cp-sky-interactive {
-  @media (hover: hover) {
-    cursor: pointer;
-    &:hover {
-      background-color: color-mix(
-        in srgb,
-        #38bdf8 18%,
-        var(--color-background-100)
-      );
+@utility cp-sky-int {
+  &,
+  &[class] {
+    @media (hover: hover) {
+      @apply cursor-pointer hover:bg-[color-mix(in_srgb,#38bdf8_18%,var(--color-background-100))];
     }
   }
 }
 
 /* --- Amber --- */
 @utility cp-amber {
-  background-color: color-mix(in srgb, #f59e0b 9%, var(--color-background-100));
-  border: 1px solid color-mix(in srgb, #f59e0b 34%, var(--color-background-100));
-  color: #f59e0b;
+  &,
+  &[class] {
+    @apply bg-[color-mix(in_srgb,#f59e0b_9%,var(--color-background-100))] border border-[color-mix(in_srgb,#f59e0b_34%,var(--color-background-100))] text-amber;
+  }
 }
-@utility cp-amber-no-bg {
-  background-color: transparent;
-  border: 0;
+@utility cp-amber-nb {
+  &,
+  &[class] {
+    @apply text-amber;
+  }
 }
-@utility cp-amber-interactive {
-  @media (hover: hover) {
-    cursor: pointer;
-    &:hover {
-      background-color: color-mix(
-        in srgb,
-        #f59e0b 18%,
-        var(--color-background-100)
-      );
+@utility cp-amber-int {
+  &,
+  &[class] {
+    @media (hover: hover) {
+      @apply cursor-pointer hover:bg-[color-mix(in_srgb,#f59e0b_18%,var(--color-background-100))];
     }
   }
 }
 
 /* --- Success --- */
 @utility cp-success {
-  background-color: color-mix(
-    in srgb,
-    var(--color-jade) 8%,
-    var(--color-background-100)
-  );
-  border: 1px solid
-    color-mix(in srgb, var(--color-jade) 32%, var(--color-background-100));
-  color: var(--color-jade);
+  &,
+  &[class] {
+    @apply bg-[color-mix(in_srgb,var(--color-jade)_8%,var(--color-background-100))] border border-[color-mix(in_srgb,var(--color-jade)_32%,var(--color-background-100))] text-jade;
+  }
 }
-@utility cp-success-no-bg {
-  background-color: transparent;
-  border: 0;
+@utility cp-success-nb {
+  &,
+  &[class] {
+    @apply text-jade;
+  }
 }
-@utility cp-success-interactive {
-  @media (hover: hover) {
-    cursor: pointer;
-    &:hover {
-      background-color: color-mix(
-        in srgb,
-        var(--color-jade) 16%,
-        var(--color-background-100)
-      );
+@utility cp-success-int {
+  &,
+  &[class] {
+    @media (hover: hover) {
+      @apply cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-jade)_16%,var(--color-background-100))];
     }
   }
 }
 
 /* --- Warning --- */
 @utility cp-warning {
-  background-color: color-mix(
-    in srgb,
-    var(--color-golden-yellow) 10%,
-    var(--color-background-100)
-  );
-  border: 1px solid
-    color-mix(
-      in srgb,
-      var(--color-golden-yellow) 38%,
-      var(--color-background-100)
-    );
-  color: var(--color-yellow);
+  &,
+  &[class] {
+    @apply bg-[color-mix(in_srgb,var(--color-golden-yellow)_10%,var(--color-background-100))] border border-[color-mix(in_srgb,var(--color-golden-yellow)_38%,var(--color-background-100))] text-yellow;
+  }
 }
-@utility cp-warning-no-bg {
-  background-color: transparent;
-  border: 0;
+@utility cp-warning-nb {
+  &,
+  &[class] {
+    @apply text-yellow;
+  }
 }
-@utility cp-warning-interactive {
-  @media (hover: hover) {
-    cursor: pointer;
-    &:hover {
-      background-color: color-mix(
-        in srgb,
-        var(--color-golden-yellow) 20%,
-        var(--color-background-100)
-      );
+@utility cp-warning-int {
+  &,
+  &[class] {
+    @media (hover: hover) {
+      @apply cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-golden-yellow)_20%,var(--color-background-100))];
     }
   }
 }
 
 /* --- Danger --- */
 @utility cp-danger {
-  background-color: color-mix(
-    in srgb,
-    var(--color-error-red) 8%,
-    var(--color-background-100)
-  );
-  border: 1px solid
-    color-mix(in srgb, var(--color-error-red) 32%, var(--color-background-100));
-  color: var(--color-error-red);
+  &,
+  &[class] {
+    @apply bg-[color-mix(in_srgb,var(--color-error-red)_8%,var(--color-background-100))] border border-[color-mix(in_srgb,var(--color-error-red)_32%,var(--color-background-100))] text-error-red;
+  }
 }
-@utility cp-danger-no-bg {
-  background-color: transparent;
-  border: 0;
+@utility cp-danger-nb {
+  &,
+  &[class] {
+    @apply text-error-red;
+  }
 }
-@utility cp-danger-interactive {
-  @media (hover: hover) {
-    cursor: pointer;
-    &:hover {
-      background-color: color-mix(
-        in srgb,
-        var(--color-error-red) 16%,
-        var(--color-background-100)
-      );
+@utility cp-danger-int {
+  &,
+  &[class] {
+    @media (hover: hover) {
+      @apply cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-error-red)_16%,var(--color-background-100))];
     }
   }
 }
 
 /* --- Unstyled --- */
 @utility cp-unstyled {
-  background: transparent;
-  color: inherit;
+  &,
+  &[class] {
+    @apply bg-transparent text-inherit;
+  }
 }
-@utility cp-unstyled-no-bg {
-  background-color: transparent;
-  border: 0;
+@utility cp-unstyled-nb {
+  &,
+  &[class] {
+    @apply text-inherit;
+  }
 }
-@utility cp-unstyled-interactive {
-  @media (hover: hover) {
-    cursor: pointer;
-    &:hover {
-      background-color: color-mix(in srgb, currentColor 8%, transparent);
+@utility cp-unstyled-int {
+  &,
+  &[class] {
+    @media (hover: hover) {
+      @apply cursor-pointer hover:bg-[color-mix(in_srgb,currentColor_8%,transparent)];
     }
   }
 }

@@ -16,7 +16,8 @@ export const SubjectHighlightsCard = ({
   semester,
   syllabus,
 }: SubjectDetail) => {
-  const color = getColorPalette({ type: 'seed', value: _id })
+  const color = getColorPalette({ type: 'seed', value: _id, variant: 'nb' })
+  const colorBorder = getColorPalette({ type: 'seed', value: _id })
 
   return (
     <Card className='p-6 ui-stack gap-4'>
@@ -67,13 +68,14 @@ export const SubjectHighlightsCard = ({
         your own time.
       </Text>
 
-      <Divider className={color} />
+      <Divider className={colorBorder} />
 
       {syllabus && (
         <DetailLink
           href={syllabus}
           label='Syllabus'
           hideExternalIcon
+          className={color}
           value={
             <>
               View Syllabus Document

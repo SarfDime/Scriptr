@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/Card'
 import { Divider } from '@/components/ui/Divider'
 import { cn } from '@/lib/common-utils'
 import type { OverviewCardProps } from '@/types/components/OverviewCard.types'
-import { AdministratorList } from './OverviewAdministratorList'
+import { AdministratorList } from '../../ui/AdministratorList'
 import { OverviewCardAction } from './OverviewCardAction'
 
 export const OverviewCard = ({
