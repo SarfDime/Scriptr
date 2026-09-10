@@ -23,10 +23,21 @@ svg {
   font-size: 1.75rem;
 }
 
+@theme {
+  /* Default sans font */
+  --font-sans: var(--font-matter), sans-serif;
+
+  /* Explicit font utilities */
+  --font-matter: var(--font-matter), sans-serif;
+  --font-olive: var(--font-antique-olive), sans-serif;
+  --font-olive-cond: var(--font-antique-olive-cond), sans-serif;
+  --font-bricolage: var(--font-bricolage), sans-serif;
+}
+
 body {
   background: var(--color-background);
   color: var(--color-fg);
-  font-family: var(--font-geist-sans), sans-serif;
+  font-family: var(--font-matter), sans-serif;
   transition:
     background-color 200ms ease,
     color 200ms ease;

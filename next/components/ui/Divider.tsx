@@ -1,7 +1,7 @@
 import { cn } from '../../lib/common-utils'
 import { Box, type BoxProps } from '../common/Box'
 
-type DividerProps = {
+export type DividerProps = {
   variant?: 'solid' | 'dashed'
   orientation?: 'horizontal' | 'vertical'
 } & BoxProps

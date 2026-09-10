@@ -1,10 +1,10 @@
 import Search from '@sanity/icons/Search'
 import { UI_STRINGS } from '@shared/config/strings'
+import { Box } from '@/components/common/Box'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { InputWrapper } from '@/components/typography/InputWrapper'
 import { cn } from '@/lib/common-utils'
 import type { SearchHeaderProps } from '@/types/components/Scripts.types'
-import { Box } from '../common/Box'
-import { PageHeader } from '../layout/PageHeader'
-import { InputWrapper } from '../typography/InputWrapper'
 
 export const SearchHeader = ({
   greeting,

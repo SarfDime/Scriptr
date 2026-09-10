@@ -78,6 +78,12 @@ type SharedSectionDataType = {
   icon: SanityImageType
 }
 
+// Generic type for any entity with at least an _id and name
+type Summarizable = {
+  _id: string
+  name: string
+}
+
 export type {
   BreakpointsType,
   ButtonType,
@@ -88,4 +94,5 @@ export type {
   SanityImageSrcType,
   SanityImageType,
   SharedSectionDataType,
+  Summarizable,
 }

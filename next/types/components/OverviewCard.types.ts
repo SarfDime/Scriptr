@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react'
 import type { BoxProps } from '@/components/common/Box'
 import type { NextImageProps } from '@/components/common/NextImage'
+import type { NextLinkProps } from '@/components/common/NextLink'
+import type { DividerProps } from '@/components/ui/Divider'
+import type { PersonProps } from '@/components/ui/Person'
 import type { ComponentColorPalettes } from '../component.types'
 import type { PersonSummary } from './Person.types'
 import type { PortableContentProps } from './PortableText.types'
@@ -20,7 +23,13 @@ type OverviewCardActionProps = {
 
 type AdministratorListProps = {
   administrators: Array<PersonSummary>
-}
+  layout?: 'person' | 'detailLink'
+  detailLinkProps?: NextLinkProps
+  dividerProps?: {
+    showDivider?: boolean
+  } & DividerProps
+  personProps?: PersonProps
+} & Omit<BoxProps, 'children'>
 
 type OverviewCardProps = {
   picture?: Omit<NextImageProps, 'alt' | 'className' | 'fillProp'>

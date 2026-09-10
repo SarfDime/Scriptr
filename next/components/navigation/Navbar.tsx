@@ -31,7 +31,7 @@ export const NavBar = ({
       )}
     >
       <Box className='ui-cluster items-center justify-between h-16 px-3 border-b border-grey-300'>
-        <Title className='ui-title font-black'>
+        <Title className='ui-title font-black font-olive tracking-tighter leading-3'>
           Scriptr<span className='text-brand'>.</span>
         </Title>
         <Button

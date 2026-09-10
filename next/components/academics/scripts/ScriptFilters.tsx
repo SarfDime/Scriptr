@@ -1,13 +1,14 @@
-import Menu from '@sanity/icons/Menu'
+import MenuIcon from '@sanity/icons/Menu'
 import { UI_STRINGS } from '@shared/config/strings'
+import { Box } from '@/components/common/Box'
+import { Select } from '@/components/ui/select/Select'
 import type {
   ScriptFiltersProps,
-  SortOption,
+  ScriptSortOption,
 } from '@/types/components/Scripts.types'
 import type { SelectOptionType } from '@/types/components/Select.types'
-import { Box } from '../common/Box'
-import { Select } from '../ui/select/Select'
 
+// TODO: Add JSDoc
 export const ScriptFilters = ({
   subject,
   subjects,
@@ -27,7 +28,7 @@ export const ScriptFilters = ({
       value: item,
     })),
   ]
-  const sortOptions: Array<SelectOptionType<SortOption>> = [
+  const sortOptions: Array<SelectOptionType<ScriptSortOption>> = [
     {
       id: 'recently-updated',
       label: UI_STRINGS.scripts.filters.recentlyUpdated,
@@ -41,7 +42,7 @@ export const ScriptFilters = ({
   ]
 
   return (
-    <Box className='flex items-center gap-2'>
+    <Box className='ui-cluster gap-2'>
       <Select
         className='w-auto bg-background-200'
         defaultOption={
@@ -49,7 +50,7 @@ export const ScriptFilters = ({
           subjectOptions[0]
         }
         options={subjectOptions}
-        icon={<Menu className='text-fg-400' />}
+        icon={<MenuIcon className='text-fg-400' />}
         setSelectedValue={(value) => onSubjectChange(value || '')}
         triggerProps={{
           'aria-label': UI_STRINGS.scripts.filters.subjectLabel,
@@ -57,9 +58,11 @@ export const ScriptFilters = ({
             'button ghost min-w-36 rounded-lg border border-grey-300 px-3 py-2 ui-caption',
         }}
       />
-      <Select<SortOption>
+      <Select<ScriptSortOption>
         className='w-auto bg-background-200'
-        defaultOption={sortOptions.find((option) => option.value === sort)}
+        defaultOption={
+          sortOptions.find((option) => option.value === sort) ?? sortOptions[0]
+        }
         options={sortOptions}
         setSelectedValue={onSortChange}
         triggerProps={{

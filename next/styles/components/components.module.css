@@ -47,7 +47,7 @@
 }
 
 @utility ui-display {
-  @apply font-size-lg font-medium text-fg-700;
+  @apply font-olive font-size-2xl font-black text-fg-700 leading-tight tracking-tighter;
 }
 
 @utility ui-title {

@@ -7,10 +7,37 @@ import { toPlainText } from 'next-sanity'
 import path from 'path'
 import { twMerge } from 'tailwind-merge'
 import { isProd } from '@/config/env'
-import type { LinkSelectorProps } from '@/types/common.types'
+import type { LinkSelectorProps, Summarizable } from '@/types/common.types'
+import type { PersonSummary } from '@/types/components/Person.types'
 import type { PortableTextType } from '@/types/components/PortableText.types'
 import { client } from '../sanityClient'
 import type { ComponentPlacement } from '../types/component.types'
+
+/**
+ * Normalizes single entities or arrays of entities into PersonSummary objects,
+ * safely filtering out nullish or incomplete records.
+ */
+export function createPersonSummaries(
+  ...entries: Array<{
+    target: Summarizable | Array<Summarizable> | null | undefined
+    title: string
+  }>
+): Array<PersonSummary> {
+  return entries.flatMap(({ target, title }) => {
+    if (!target) return []
+
+    const items = Array.isArray(target) ? target : [target]
+
+    return items.flatMap((item) => {
+      if (!item?._id || !item?.name) return []
+      return {
+        _id: item._id,
+        name: item.name,
+        title,
+      }
+    })
+  })
+}
 
 /** Gets draft mode value; disabled in production builds */
 export const getDraftMode = async (

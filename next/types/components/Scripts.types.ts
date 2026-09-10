@@ -1,19 +1,11 @@
-import type {
-  FileType,
-  ProfileSubject,
-  ProfileSubjectStatus,
-} from '@shared/types/api.types'
 import type { BoxProps } from '@/components/common/Box'
 import type { MinimalSubject } from '../academics/subject.types'
 import type { ComponentColorPalettes } from '../component.types'
 import type { PortableTextType } from './PortableText.types'
 
-export type { FileType, ProfileSubject, ProfileSubjectStatus }
+type ScriptId = string
 
-export type ScriptId = string
-export type SortOption = 'Recently updated' | 'Title A-Z'
-
-export type Script = {
+type Script = {
   id: ScriptId
   title: string
   subject: string
@@ -29,7 +21,7 @@ export type Script = {
   liked: boolean
 }
 
-export type PageDataProps = {
+type PageDataProps = {
   scripts?: Array<Script>
   subjects?: Array<MinimalSubject>
   greeting?: string
@@ -38,38 +30,61 @@ export type PageDataProps = {
   activityContent?: PortableTextType
 }
 
-export type ScriptCardProps = {
-  script: Script
-  isSaved: boolean
-  isLiked: boolean
-  onToggleSaved: (id: ScriptId) => void
-  onToggleLiked: (id: ScriptId) => void
-}
+type ScriptSortOption = 'Recently updated' | 'Title A-Z'
 
-export type ScriptFiltersProps = {
-  subject: string
-  subjects: Array<string>
-  sort: SortOption
-  onSubjectChange: (value: string) => void
-  onSortChange: (value: SortOption) => void
-}
-
-export type ScriptsSectionProps = {
+type ScriptsSectionProps = {
   content: PortableTextType
   scripts: Array<Script>
   subjectOptions: Array<string>
   subject: string
-  sort: SortOption
+  sort: ScriptSortOption
   onSubjectChange: (value: string) => void
-  onSortChange: (value: SortOption) => void
+  onSortChange: (value: ScriptSortOption) => void
   savedIds: Array<ScriptId>
   likedIds: Array<ScriptId>
   onToggleSaved: (id: ScriptId) => void
   onToggleLiked: (id: ScriptId) => void
 } & Omit<BoxProps, 'content' | 'as'>
 
-export type SearchHeaderProps = {
+type SearchHeaderProps = {
   greeting: string
   query: string
   onQueryChange: (value: string) => void
+}
+
+type ScriptDetail = {
+  id: string
+  title: string
+  tag?: string
+  subject: string
+  professor?: string
+  year?: number
+  author: string
+  updatedAt: Date
+  likes: number
+  comments: number
+}
+
+type ScriptCardProps = {
+  script: ScriptDetail
+}
+
+type ScriptFiltersProps = {
+  subject: string
+  subjects: Array<string>
+  sort: ScriptSortOption
+  onSubjectChange: (value: string) => void
+  onSortChange: (value: ScriptSortOption) => void
+}
+
+export type {
+  PageDataProps,
+  Script,
+  ScriptCardProps,
+  ScriptDetail,
+  ScriptFiltersProps,
+  ScriptId,
+  ScriptSortOption,
+  ScriptsSectionProps,
+  SearchHeaderProps,
 }

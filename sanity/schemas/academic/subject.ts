@@ -58,6 +58,14 @@ export const Subject = defineType({
       validation: validationRules.isRequired,
     },
     {
+      name: 'keywords',
+      title: 'Keywords',
+      description: 'Keywords or tags associated with the subject.',
+      type: 'array',
+      of: [{ type: 'string' }],
+      fieldset: 'information',
+    },
+    {
       name: 'credits',
       title: 'ECTS Credits',
       description: 'Academic credit points for this course.',

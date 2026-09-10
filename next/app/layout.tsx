@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Bricolage_Grotesque } from 'next/font/google'
+import localFont from 'next/font/local'
 import { NavBar } from '@/components/navigation/Navbar'
 import { ThemeProvider } from '../providers/theme/ThemeProvider'
 
@@ -14,14 +15,114 @@ import { fetchSanityData } from '@/sanity/lib/utils'
 import { navMenuQuery } from '@/sanity/queries/nav.queries'
 import type { NavMenuType } from '@/types/components/Nav.types'
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-bricolage',
+  // axes: ['wdth', 'opsz'],
 })
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
+// 1. Matter - Standard geometric font with straightforward weights
+const matter = localFont({
+  src: [
+    { path: './fonts/Matter-Light.woff2', weight: '300', style: 'normal' },
+    {
+      path: './fonts/Matter-LightItalic.woff2',
+      weight: '300',
+      style: 'italic',
+    },
+    { path: './fonts/Matter-Regular.woff2', weight: '400', style: 'normal' },
+    {
+      path: './fonts/Matter-RegularItalic.woff2',
+      weight: '400',
+      style: 'italic',
+    },
+    { path: './fonts/Matter-Medium.woff2', weight: '500', style: 'normal' },
+    {
+      path: './fonts/Matter-MediumItalic.woff2',
+      weight: '500',
+      style: 'italic',
+    },
+    { path: './fonts/Matter-SemiBold.woff2', weight: '600', style: 'normal' },
+    {
+      path: './fonts/Matter-SemiBoldItalic.woff2',
+      weight: '600',
+      style: 'italic',
+    },
+    { path: './fonts/Matter-Bold.woff2', weight: '700', style: 'normal' },
+    { path: './fonts/Matter-BoldItalic.woff2', weight: '700', style: 'italic' },
+    { path: './fonts/Matter-Heavy.woff2', weight: '900', style: 'normal' },
+    {
+      path: './fonts/Matter-HeavyItalic.woff2',
+      weight: '900',
+      style: 'italic',
+    },
+  ],
+  variable: '--font-matter',
+  display: 'swap',
+})
+
+// 2. Antique Olive - Main Family
+const antiqueOlive = localFont({
+  src: [
+    {
+      path: './fonts/AntiqueOliveStd-Light.woff2',
+      weight: '300',
+      style: 'normal',
+    },
+    {
+      path: './fonts/AntiqueOliveStd-Roman.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: './fonts/AntiqueOliveStd-Italic.woff2',
+      weight: '400',
+      style: 'italic',
+    },
+    {
+      path: './fonts/AntiqueOliveStd-Bold.woff2',
+      weight: '700',
+      style: 'normal',
+    },
+    // Compact is narrower and heavier than Bold, lighter than Black
+    {
+      path: './fonts/AntiqueOliveStd-Compact.woff2',
+      weight: '800',
+      style: 'normal',
+    },
+    {
+      path: './fonts/AntiqueOliveStd-Black.woff2',
+      weight: '900',
+      style: 'normal',
+    },
+    // Nord is the ultra-bold, wide display cut of Antique Olive
+    {
+      path: './fonts/AntiqueOliveStd-Nord.woff2',
+      weight: '950',
+      style: 'normal',
+    },
+    {
+      path: './fonts/AntiqueOliveStd-NordItalic.woff2',
+      weight: '950',
+      style: 'italic',
+    },
+  ],
+  variable: '--font-antique-olive',
+  display: 'swap',
+})
+
+// 3. Antique Olive Condensed (Separated so it doesn't conflict with standard Bold)
+const antiqueOliveCond = localFont({
+  src: [
+    {
+      path: './fonts/AntiqueOliveStd-BoldCond.woff2',
+      weight: '700',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-antique-olive-cond',
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
@@ -41,9 +142,12 @@ export default async function RootLayout({
   const isDraft = await getDraftMode(draftMode)
 
   return (
-    <html lang='en' data-scroll-behavior='smooth'>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+    <html
+      lang='en'
+      data-scroll-behavior='smooth'
+      className={`${antiqueOlive.variable} ${antiqueOliveCond.variable} ${matter.variable} ${bricolage.variable} antialiased`}
+    >
+      <body // Apply all CSS variables to the root HTML element
       >
         <ThemeProvider>
           <NavBar {...navMenu} />

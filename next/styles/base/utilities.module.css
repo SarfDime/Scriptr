@@ -1,6 +1,7 @@
 html {
   @apply scroll-smooth;
 }
+
 @utility vertical-text {
   writing-mode: vertical-lr;
   text-orientation: mixed;
@@ -41,6 +42,7 @@ html {
   display: flex;
   gap: 2rem;
 }
+
 @utility scroll-item {
   display: inline-block;
   /* Mobile uses scroll-left-mobile (starts at 50%). md+ keeps original scroll-left. */

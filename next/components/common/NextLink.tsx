@@ -29,7 +29,9 @@ export function NextLink({
       {...attributes}
       {...rest}
       className={cn(
-        isExternal && 'inline-flex items-center justify-center gap-1',
+        isExternal &&
+          !hideExternalIcon &&
+          'inline-flex items-center justify-center gap-1',
         className
       )}
     >

@@ -1,4 +1,4 @@
-import { LaunchIcon } from '@sanity/icons/Launch'
+import Launch from '@sanity/icons/Launch'
 import { externalLink } from '@/lib/common-utils'
 import type { IconProps } from '../../types/component.types'
 
@@ -8,5 +8,5 @@ import type { IconProps } from '../../types/component.types'
 export const ExternalLinkIndicator = ({
   href,
 }: { href?: string } & IconProps) => {
-  return <>{href && externalLink(href)?.isExternal && <LaunchIcon />}</>
+  return <>{href && externalLink(href)?.isExternal && <Launch />}</>
 }
