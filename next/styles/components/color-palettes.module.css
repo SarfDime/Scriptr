@@ -2,20 +2,38 @@
 @utility cp-red {
   &,
   &[class] {
-    @apply bg-[color-mix(in_srgb,var(--color-error-red)_8%,var(--color-background-100))] border border-[color-mix(in_srgb,var(--color-error-red)_32%,var(--color-background-100))] text-error-red;
+    background-color: color-mix(
+      in srgb,
+      var(--color-error-red) 8%,
+      var(--color-background-100)
+    );
+    border: 1px solid
+      color-mix(
+        in srgb,
+        var(--color-error-red) 32%,
+        var(--color-background-100)
+      );
+    color: var(--color-error-red);
   }
 }
 @utility cp-red-nb {
   &,
   &[class] {
-    @apply text-error-red;
+    color: var(--color-error-red);
   }
 }
 @utility cp-red-int {
   &,
   &[class] {
     @media (hover: hover) {
-      @apply cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-error-red)_16%,var(--color-background-100))];
+      cursor: pointer;
+      &:hover {
+        background-color: color-mix(
+          in srgb,
+          var(--color-error-red) 16%,
+          var(--color-background-100)
+        );
+      }
     }
   }
 }
@@ -24,20 +42,34 @@
 @utility cp-green {
   &,
   &[class] {
-    @apply bg-[color-mix(in_srgb,var(--color-jade)_8%,var(--color-background-100))] border border-[color-mix(in_srgb,var(--color-jade)_32%,var(--color-background-100))] text-jade;
+    background-color: color-mix(
+      in srgb,
+      var(--color-jade) 8%,
+      var(--color-background-100)
+    );
+    border: 1px solid
+      color-mix(in srgb, var(--color-jade) 32%, var(--color-background-100));
+    color: var(--color-jade);
   }
 }
 @utility cp-green-nb {
   &,
   &[class] {
-    @apply text-jade;
+    color: var(--color-jade);
   }
 }
 @utility cp-green-int {
   &,
   &[class] {
     @media (hover: hover) {
-      @apply cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-jade)_16%,var(--color-background-100))];
+      cursor: pointer;
+      &:hover {
+        background-color: color-mix(
+          in srgb,
+          var(--color-jade) 16%,
+          var(--color-background-100)
+        );
+      }
     }
   }
 }
@@ -46,20 +78,34 @@
 @utility cp-blue {
   &,
   &[class] {
-    @apply bg-[color-mix(in_srgb,var(--color-blue-500)_10%,var(--color-background-100))] border border-[color-mix(in_srgb,var(--color-blue-500)_36%,var(--color-background-100))] text-blue-500;
+    background-color: color-mix(
+      in srgb,
+      var(--color-blue-500) 10%,
+      var(--color-background-100)
+    );
+    border: 1px solid
+      color-mix(in srgb, var(--color-blue-500) 36%, var(--color-background-100));
+    color: var(--color-blue-500);
   }
 }
 @utility cp-blue-nb {
   &,
   &[class] {
-    @apply text-blue-500;
+    color: var(--color-blue-500);
   }
 }
 @utility cp-blue-int {
   &,
   &[class] {
     @media (hover: hover) {
-      @apply cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-blue-500)_20%,var(--color-background-100))];
+      cursor: pointer;
+      &:hover {
+        background-color: color-mix(
+          in srgb,
+          var(--color-blue-500) 20%,
+          var(--color-background-100)
+        );
+      }
     }
   }
 }
@@ -68,20 +114,33 @@
 @utility cp-gray {
   &,
   &[class] {
-    @apply bg-[color-mix(in_srgb,var(--color-grey-300)_34%,var(--color-background-100))] border border-grey-350 text-fg-700;
+    background-color: color-mix(
+      in srgb,
+      var(--color-grey-300) 34%,
+      var(--color-background-100)
+    );
+    border: 1px solid var(--color-grey-350);
+    color: var(--color-fg-700);
   }
 }
 @utility cp-gray-nb {
   &,
   &[class] {
-    @apply text-fg-700;
+    color: var(--color-fg-700);
   }
 }
 @utility cp-gray-int {
   &,
   &[class] {
     @media (hover: hover) {
-      @apply cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-grey-300)_50%,var(--color-background-100))];
+      cursor: pointer;
+      &:hover {
+        background-color: color-mix(
+          in srgb,
+          var(--color-grey-300) 50%,
+          var(--color-background-100)
+        );
+      }
     }
   }
 }
@@ -90,20 +149,38 @@
 @utility cp-yellow {
   &,
   &[class] {
-    @apply bg-[color-mix(in_srgb,var(--color-golden-yellow)_10%,var(--color-background-100))] border border-[color-mix(in_srgb,var(--color-golden-yellow)_38%,var(--color-background-100))] text-yellow;
+    background-color: color-mix(
+      in srgb,
+      var(--color-golden-yellow) 10%,
+      var(--color-background-100)
+    );
+    border: 1px solid
+      color-mix(
+        in srgb,
+        var(--color-golden-yellow) 38%,
+        var(--color-background-100)
+      );
+    color: var(--color-yellow);
   }
 }
 @utility cp-yellow-nb {
   &,
   &[class] {
-    @apply text-yellow;
+    color: var(--color-yellow);
   }
 }
 @utility cp-yellow-int {
   &,
   &[class] {
     @media (hover: hover) {
-      @apply cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-golden-yellow)_20%,var(--color-background-100))];
+      cursor: pointer;
+      &:hover {
+        background-color: color-mix(
+          in srgb,
+          var(--color-golden-yellow) 20%,
+          var(--color-background-100)
+        );
+      }
     }
   }
 }
@@ -112,20 +189,38 @@
 @utility cp-brand {
   &,
   &[class] {
-    @apply bg-[color-mix(in_srgb,var(--color-brand-300)_10%,var(--color-background-100))] border border-[color-mix(in_srgb,var(--color-brand-300)_36%,var(--color-background-100))] text-brand;
+    background-color: color-mix(
+      in srgb,
+      var(--color-brand-300) 10%,
+      var(--color-background-100)
+    );
+    border: 1px solid
+      color-mix(
+        in srgb,
+        var(--color-brand-300) 36%,
+        var(--color-background-100)
+      );
+    color: var(--color-brand-400);
   }
 }
 @utility cp-brand-nb {
   &,
   &[class] {
-    @apply text-brand;
+    color: var(--color-brand-400);
   }
 }
 @utility cp-brand-int {
   &,
   &[class] {
     @media (hover: hover) {
-      @apply cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-brand-300)_20%,var(--color-background-100))];
+      cursor: pointer;
+      &:hover {
+        background-color: color-mix(
+          in srgb,
+          var(--color-brand-300) 20%,
+          var(--color-background-100)
+        );
+      }
     }
   }
 }
@@ -134,20 +229,38 @@
 @utility cp-rose {
   &,
   &[class] {
-    @apply bg-[color-mix(in_srgb,var(--color-rose-pink)_8%,var(--color-background-100))] border border-[color-mix(in_srgb,var(--color-rose-pink)_34%,var(--color-background-100))] text-rose-pink;
+    background-color: color-mix(
+      in srgb,
+      var(--color-rose-pink) 8%,
+      var(--color-background-100)
+    );
+    border: 1px solid
+      color-mix(
+        in srgb,
+        var(--color-rose-pink) 34%,
+        var(--color-background-100)
+      );
+    color: var(--color-rose-pink);
   }
 }
 @utility cp-rose-nb {
   &,
   &[class] {
-    @apply text-rose-pink;
+    color: var(--color-rose-pink);
   }
 }
 @utility cp-rose-int {
   &,
   &[class] {
     @media (hover: hover) {
-      @apply cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-rose-pink)_16%,var(--color-background-100))];
+      cursor: pointer;
+      &:hover {
+        background-color: color-mix(
+          in srgb,
+          var(--color-rose-pink) 16%,
+          var(--color-background-100)
+        );
+      }
     }
   }
 }
@@ -156,20 +269,34 @@
 @utility cp-sky {
   &,
   &[class] {
-    @apply bg-[color-mix(in_srgb,#38bdf8_9%,var(--color-background-100))] border border-[color-mix(in_srgb,#38bdf8_34%,var(--color-background-100))] text-sky;
+    background-color: color-mix(
+      in srgb,
+      #38bdf8 9%,
+      var(--color-background-100)
+    );
+    border: 1px solid
+      color-mix(in srgb, #38bdf8 34%, var(--color-background-100));
+    color: #38bdf8;
   }
 }
 @utility cp-sky-nb {
   &,
   &[class] {
-    @apply text-sky;
+    color: #38bdf8;
   }
 }
 @utility cp-sky-int {
   &,
   &[class] {
     @media (hover: hover) {
-      @apply cursor-pointer hover:bg-[color-mix(in_srgb,#38bdf8_18%,var(--color-background-100))];
+      cursor: pointer;
+      &:hover {
+        background-color: color-mix(
+          in srgb,
+          #38bdf8 18%,
+          var(--color-background-100)
+        );
+      }
     }
   }
 }
@@ -178,20 +305,34 @@
 @utility cp-amber {
   &,
   &[class] {
-    @apply bg-[color-mix(in_srgb,#f59e0b_9%,var(--color-background-100))] border border-[color-mix(in_srgb,#f59e0b_34%,var(--color-background-100))] text-amber;
+    background-color: color-mix(
+      in srgb,
+      #f59e0b 9%,
+      var(--color-background-100)
+    );
+    border: 1px solid
+      color-mix(in srgb, #f59e0b 34%, var(--color-background-100));
+    color: #f59e0b;
   }
 }
 @utility cp-amber-nb {
   &,
   &[class] {
-    @apply text-amber;
+    color: #f59e0b;
   }
 }
 @utility cp-amber-int {
   &,
   &[class] {
     @media (hover: hover) {
-      @apply cursor-pointer hover:bg-[color-mix(in_srgb,#f59e0b_18%,var(--color-background-100))];
+      cursor: pointer;
+      &:hover {
+        background-color: color-mix(
+          in srgb,
+          #f59e0b 18%,
+          var(--color-background-100)
+        );
+      }
     }
   }
 }
@@ -200,20 +341,34 @@
 @utility cp-success {
   &,
   &[class] {
-    @apply bg-[color-mix(in_srgb,var(--color-jade)_8%,var(--color-background-100))] border border-[color-mix(in_srgb,var(--color-jade)_32%,var(--color-background-100))] text-jade;
+    background-color: color-mix(
+      in srgb,
+      var(--color-jade) 8%,
+      var(--color-background-100)
+    );
+    border: 1px solid
+      color-mix(in srgb, var(--color-jade) 32%, var(--color-background-100));
+    color: var(--color-jade);
   }
 }
 @utility cp-success-nb {
   &,
   &[class] {
-    @apply text-jade;
+    color: var(--color-jade);
   }
 }
 @utility cp-success-int {
   &,
   &[class] {
     @media (hover: hover) {
-      @apply cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-jade)_16%,var(--color-background-100))];
+      cursor: pointer;
+      &:hover {
+        background-color: color-mix(
+          in srgb,
+          var(--color-jade) 16%,
+          var(--color-background-100)
+        );
+      }
     }
   }
 }
@@ -222,20 +377,38 @@
 @utility cp-warning {
   &,
   &[class] {
-    @apply bg-[color-mix(in_srgb,var(--color-golden-yellow)_10%,var(--color-background-100))] border border-[color-mix(in_srgb,var(--color-golden-yellow)_38%,var(--color-background-100))] text-yellow;
+    background-color: color-mix(
+      in srgb,
+      var(--color-golden-yellow) 10%,
+      var(--color-background-100)
+    );
+    border: 1px solid
+      color-mix(
+        in srgb,
+        var(--color-golden-yellow) 38%,
+        var(--color-background-100)
+      );
+    color: var(--color-yellow);
   }
 }
 @utility cp-warning-nb {
   &,
   &[class] {
-    @apply text-yellow;
+    color: var(--color-yellow);
   }
 }
 @utility cp-warning-int {
   &,
   &[class] {
     @media (hover: hover) {
-      @apply cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-golden-yellow)_20%,var(--color-background-100))];
+      cursor: pointer;
+      &:hover {
+        background-color: color-mix(
+          in srgb,
+          var(--color-golden-yellow) 20%,
+          var(--color-background-100)
+        );
+      }
     }
   }
 }
@@ -244,20 +417,38 @@
 @utility cp-danger {
   &,
   &[class] {
-    @apply bg-[color-mix(in_srgb,var(--color-error-red)_8%,var(--color-background-100))] border border-[color-mix(in_srgb,var(--color-error-red)_32%,var(--color-background-100))] text-error-red;
+    background-color: color-mix(
+      in srgb,
+      var(--color-error-red) 8%,
+      var(--color-background-100)
+    );
+    border: 1px solid
+      color-mix(
+        in srgb,
+        var(--color-error-red) 32%,
+        var(--color-background-100)
+      );
+    color: var(--color-error-red);
   }
 }
 @utility cp-danger-nb {
   &,
   &[class] {
-    @apply text-error-red;
+    color: var(--color-error-red);
   }
 }
 @utility cp-danger-int {
   &,
   &[class] {
     @media (hover: hover) {
-      @apply cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-error-red)_16%,var(--color-background-100))];
+      cursor: pointer;
+      &:hover {
+        background-color: color-mix(
+          in srgb,
+          var(--color-error-red) 16%,
+          var(--color-background-100)
+        );
+      }
     }
   }
 }
@@ -266,20 +457,24 @@
 @utility cp-unstyled {
   &,
   &[class] {
-    @apply bg-transparent text-inherit;
+    background-color: transparent;
+    color: inherit;
   }
 }
 @utility cp-unstyled-nb {
   &,
   &[class] {
-    @apply text-inherit;
+    color: inherit;
   }
 }
 @utility cp-unstyled-int {
   &,
   &[class] {
     @media (hover: hover) {
-      @apply cursor-pointer hover:bg-[color-mix(in_srgb,currentColor_8%,transparent)];
+      cursor: pointer;
+      &:hover {
+        background-color: color-mix(in srgb, currentColor 8%, transparent);
+      }
     }
   }
 }

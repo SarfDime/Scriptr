@@ -1,4 +1,8 @@
 import type {
+  SubjectExamSession,
+  SubjectSemester,
+} from '@/types/academics/subject.types'
+import type {
   ColorPaletteClass,
   ColorPaletteVariant,
   PalettesINT,
@@ -53,31 +57,36 @@ const getYearColor = (year: number, variant?: ColorPaletteVariant) => {
   return applyVariant(map[year] ?? 'cp-gray', variant)
 }
 
-const getSemesterColor = (semester: string, variant?: ColorPaletteVariant) => {
-  const map: Record<string, ColorPaletteClass> = {
-    fall: 'cp-red',
-    spring: 'cp-green',
+const getSemesterColor = (
+  semester: SubjectSemester,
+  variant?: ColorPaletteVariant
+) => {
+  const map: Record<SubjectSemester, ColorPaletteClass> = {
+    winter: 'cp-rose',
     summer: 'cp-blue',
   }
-  return applyVariant(map[semester?.toLowerCase()] ?? 'cp-gray', variant)
+  return applyVariant(map[semester ?? ''] ?? 'cp-gray', variant)
 }
 
-const getExamSessionColor = (month: string, variant?: ColorPaletteVariant) => {
-  const map: Record<string, ColorPaletteClass> = {
-    january: 'cp-red',
-    february: 'cp-green',
-    march: 'cp-blue',
-    april: 'cp-yellow',
-    may: 'cp-rose',
+const getExamSessionColor = (
+  month: SubjectExamSession,
+  variant?: ColorPaletteVariant
+) => {
+  const map: Record<SubjectExamSession, ColorPaletteClass> = {
+    january: 'cp-amber',
+    // february: 'cp-green',
+    // march: 'cp-blue',
+    // april: 'cp-yellow',
+    // may: 'cp-rose',
     june: 'cp-sky',
-    july: 'cp-amber',
-    august: 'cp-success',
-    september: 'cp-warning',
-    october: 'cp-danger',
-    november: 'cp-brand',
-    december: 'cp-gray',
+    // july: 'cp-amber',
+    // august: 'cp-success',
+    september: 'cp-rose',
+    // october: 'cp-danger',
+    // november: 'cp-brand',
+    // december: 'cp-gray',
   }
-  return applyVariant(map[month?.toLowerCase()] ?? 'cp-gray', variant)
+  return applyVariant(map[month ?? ''] ?? 'cp-gray', variant)
 }
 
 const getCreditColor = (point: number, variant?: ColorPaletteVariant) => {
@@ -112,9 +121,9 @@ const getColorPalette = (input: ColorPaletteInput) => {
     case 'year':
       return getYearColor(value as number, variant)
     case 'semester':
-      return getSemesterColor(value as string, variant)
+      return getSemesterColor(value as SubjectSemester, variant)
     case 'exam':
-      return getExamSessionColor(value as string, variant)
+      return getExamSessionColor(value as SubjectExamSession, variant)
     case 'credit':
       return getCreditColor(value as number, variant)
     default:

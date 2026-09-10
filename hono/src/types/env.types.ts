@@ -18,6 +18,8 @@ export type Env = {
   R2_ENDPOINT: string
   R2_BUCKET: string
   R2_PUBLIC_URL: string
+  NEXT_REVALIDATE_URL?: string
+  REVALIDATE_SECRET?: string
 }
 
 // Extend User type with additional custom properties

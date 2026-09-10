@@ -325,6 +325,13 @@ The first release is intentionally narrow. The goal is to ship the right core pr
 3. The backend should support bulk year completion state based on faculty-specific subject data.
 4. A persistent reminder should be triggered for guest users who have incomplete onboarding state.
 
+### 6.9 Script caching and revalidation requirements
+1. Frontend fetches of script data (list, by-subject, top, popular, detail) should use the Next.js Data Cache, tagged per endpoint and, where applicable, per query (e.g. per subject/script ID).
+2. Script search results must never be cached; search requests always hit the live dataset.
+3. Requests scoped to the current user's session (e.g. "my scripts") must never be cached.
+4. Creating, updating, or deleting a script must revalidate only the cache tags affected by that script (its detail tag, its subject's tag, and the shared list/top/popular tags), not the entire cache.
+5. Revalidation is triggered by the backend via a shared-secret webhook to the frontend, so it works regardless of which client performed the mutation.
+
 ---
 
 ## 7. Frontend architecture requirements
@@ -489,6 +496,7 @@ This section is maintained automatically by the commit agent. Update status by i
 - Remove `exam_session` from `subjects` table and evaluate removing `year` (sourced from Sanity). [🔲]
 - Decide Study Program architectural model: separate table vs script attribute vs Sanity-only. [🔲]
 - Test database schema and API endpoints thoroughly. [🔲]
+- Cache script list/subject/top/popular/detail fetches in the Next.js Data Cache with per-endpoint and per-query tags; revalidate the affected tags via a backend webhook on script create/update/delete; keep search and my-scripts uncached. [✅]
 
 ### Phase 2: Sanity CMS setup and academic entity management [✏️ In Progress]
 - Finalize the academic entity model and schema structure for Sanity. [✅]

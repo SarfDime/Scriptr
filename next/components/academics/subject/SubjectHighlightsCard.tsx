@@ -18,7 +18,6 @@ export const SubjectHighlightsCard = ({
 }: SubjectDetail) => {
   const color = getColorPalette({ type: 'seed', value: _id, variant: 'nb' })
   const colorBorder = getColorPalette({ type: 'seed', value: _id })
-
   return (
     <Card className='p-6 ui-stack gap-4'>
       <Text className='ui-caption text-grey-500 uppercase tracking-wide'>

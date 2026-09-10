@@ -7,6 +7,7 @@ declare global {
       NEXT_PUBLIC_SANITY_DATASET?: string
       NEXT_PUBLIC_SANITY_PROJECT_ID?: string
       SANITY_AUTH_TOKEN?: string
+      REVALIDATE_SECRET?: string
     }
   }
 }

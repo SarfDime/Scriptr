@@ -1,5 +1,9 @@
 import type { Context } from 'hono'
 import { Hono } from 'hono'
+import {
+  revalidateScriptTags,
+  scriptMutationTags,
+} from '../lib/cache-revalidate'
 import { requiredParam } from '../lib/request'
 import {
   authMiddleware,
@@ -352,6 +356,8 @@ scripts.post('/', authMiddleware, async (c) => {
     return c.json({ error: 'Failed to save script record' }, 500)
   }
 
+  await revalidateScriptTags(c.env, scriptMutationTags(data))
+
   return c.json({
     success: true,
     script: data,
@@ -397,6 +403,9 @@ scripts.patch('/:id', authMiddleware, async (c) => {
     .single()
 
   if (error) return c.json({ error: error.message }, 500)
+
+  await revalidateScriptTags(c.env, scriptMutationTags(data))
+
   return c.json({ success: true, script: data })
 })
 
@@ -410,7 +419,7 @@ scripts.delete('/:id', authMiddleware, async (c) => {
   const [{ data: script }, { data: profile }] = await Promise.all([
     supabase
       .from('scripts')
-      .select('author_id, file_url')
+      .select('author_id, file_url, subject_id')
       .eq('id', scriptId)
       .single(),
     supabase.from('profiles').select('role').eq('id', user.id).single(),
@@ -427,6 +436,13 @@ scripts.delete('/:id', authMiddleware, async (c) => {
   const { error } = await supabase.from('scripts').delete().eq('id', scriptId)
 
   if (error) return c.json({ error: error.message }, 500)
+
+  if (script?.subject_id) {
+    await revalidateScriptTags(
+      c.env,
+      scriptMutationTags({ id: scriptId, subject_id: script.subject_id })
+    )
+  }
 
   // Note: You might want to also delete the actual file from storage here
   // Example: await supabase.storage.from('scripts').remove([script.file_url])
