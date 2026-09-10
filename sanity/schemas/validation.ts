@@ -1,5 +1,6 @@
 import type { SanityDocument } from '@sanity/client'
 import type {
+  ImageRule,
   ImageValue,
   PortableTextBlock,
   Rule,
@@ -8,85 +9,40 @@ import type {
 } from 'sanity'
 import { flattenRichText, isExternalLink } from './util-functions/utilFunctions'
 
+// ---------------------------------------------------------------------------
+// Length presets
+// ---------------------------------------------------------------------------
+
 export const DEFAULT_VALIDATION_RULES = {
-  title: {
-    min: 1,
-    max: 100,
-    maxWarning: 70,
-  },
-  description: {
-    max: 250,
-    maxWarning: 200,
-  },
-  subtitle: {
-    min: 5,
-    max: 80,
-    maxWarning: 60,
-  },
-  content: {
-    max: 1000,
-    maxWarning: 400,
-  },
+  title: { min: 1, max: 100, maxWarning: 70 },
+  description: { max: 250, maxWarning: 200 },
+  subtitle: { min: 5, max: 80, maxWarning: 60 },
+  content: { max: 1000, maxWarning: 400 },
 
-  longTitle: {
-    min: 15,
-    max: 100,
-    minWarning: 30,
-    maxWarning: 70,
-  },
-  longSubtitle: {
-    min: 40,
-    max: 150,
-    minWarning: 70,
-    maxWarning: 130,
-  },
+  longTitle: { min: 15, max: 100, minWarning: 30, maxWarning: 70 },
+  longSubtitle: { min: 40, max: 150, minWarning: 70, maxWarning: 130 },
 
-  midTitle: {
-    min: 5,
-    minWarning: 5,
-    max: 55,
-    maxWarning: 50,
-  },
-  midSubtitle: {
-    min: 5,
-    minWarning: 5,
-    max: 115,
-    maxWarning: 90,
-  },
+  midTitle: { min: 5, minWarning: 5, max: 55, maxWarning: 50 },
+  midSubtitle: { min: 5, minWarning: 5, max: 115, maxWarning: 90 },
 
-  shortTitle: {
-    min: 1,
-    max: 20,
-  },
-  shortSubtitle: {
-    min: 3,
-    max: 55,
-  },
+  shortTitle: { min: 1, max: 20 },
+  shortSubtitle: { min: 3, max: 55 },
 } as const
 
 export const CUSTOM_VALIDATION_RULES = {
-  tag: {
-    max: 20,
-  },
-  jobPosting: {
-    max: 30,
-  },
-  country: {
-    length: 2,
-  },
-  featuredPost: {
-    max: 1,
-  },
-  readTime: {
-    min: 1,
-  },
-  slug: {
-    min: 2,
-    max: 80,
-  },
+  tag: { max: 20 },
+  jobPosting: { max: 30 },
+  country: { length: 2 },
+  featuredPost: { max: 1 },
+  readTime: { min: 1 },
+  slug: { min: 2, max: 80 },
 } as const
 
-type ValidatorTemplateProps = {
+// ---------------------------------------------------------------------------
+// Shared types
+// ---------------------------------------------------------------------------
+
+type LengthValidationProps = {
   rule: Rule
   isRequired?: boolean
   max?: number
@@ -103,21 +59,18 @@ type UniqueStringValidationOptions = {
   caseSensitive?: boolean
 }
 
-import type { ImageRule } from 'sanity'
+// ---------------------------------------------------------------------------
+// Field-level validators
+// ---------------------------------------------------------------------------
 
 export const imageValidation: ValidationBuilder<ImageRule, ImageValue> = (
   rule
-) => {
-  return rule.required()
-}
+) => rule.required()
 
-export const stringValidation: ValidationBuilder<StringRule, string> = (
-  rule
-) => {
-  return rule.required()
-}
+export const stringValidation: ValidationBuilder<StringRule, string> = (rule) =>
+  rule.required()
 
-/** Custom validation rule to ensure a unique string value across documents of the same type */
+/** Ensures a string field is unique across other documents of the same type. */
 export const uniqueStringValidation =
   ({
     documentType,
@@ -144,13 +97,12 @@ export const uniqueStringValidation =
           ? normalize(currentDocument[fieldName] as string)
           : ''
 
-      if (
+      const isUnchangedOnPublishedDoc =
         currentDocument &&
         currentFieldValue === normalizedValue &&
-        !currentId?.startsWith('drafts.')
-      ) {
-        return true
-      }
+        !currentId.startsWith('drafts.')
+
+      if (isUnchangedOnPublishedDoc) return true
 
       const client = context.getClient({ apiVersion: '2024-01-01' })
       const query = `*[
@@ -177,20 +129,25 @@ export const uniqueStringValidation =
         : true
     })
 
-/** Creates an array of validation rules based on provided constraints */
-const ValidatorTemplate = ({
-  rule,
-  max,
-  maxWarning,
-}: ValidatorTemplateProps) => {
+// ---------------------------------------------------------------------------
+// Length + rich text helpers
+// ---------------------------------------------------------------------------
+
+/** Character length of a field value, whether it's a plain string or Portable Text. */
+const getTextLength = (value: string | Array<PortableTextBlock>) => {
+  const text = Array.isArray(value) ? flattenRichText(value) : value
+  return text?.length ?? 0
+}
+
+/** Max-length rule (hard cap) plus an SEO-oriented warning threshold, shared across field types. */
+const buildLengthRules = ({ rule, max, maxWarning }: LengthValidationProps) => {
   const rules = [
-    // Min validation causes bug with validation on rich text that's why custom validation bellow
-    // Max validation is required here along the custom one bellow to make char counter work
-    // TODO: Revert to error once major content changes are done
-    // TODO: Should add min here if the item is a string, need to
-    // revamp this but no time right now, it will show double warnings who cares.
+    // Min validation causes a bug with validation on rich text, hence the custom validation below.
+    // Max validation is still required here (alongside the custom one below) to power the char counter.
+    // TODO: Add min here for string fields too — needs a revamp, skipping for now since it'd just
+    // double up the warning message.
     max &&
-      rule.max(max).warning(`You are allowed to write up to ${max} characters`),
+      rule.max(max).error(`You are allowed to write up to ${max} characters`),
     maxWarning &&
       rule
         .max(maxWarning)
@@ -202,31 +159,25 @@ const ValidatorTemplate = ({
   return rules.length ? rules : undefined
 }
 
-/** Creates validation rules for rich text content */
-const ExtendedValidation = (props: ValidatorTemplateProps) => {
+/** Length validation for rich text (Portable Text) fields, with required/min/max + SEO warnings. */
+const richTextValidation = (props: LengthValidationProps) => {
   const { rule, isRequired, max, min, minWarning, maxWarning } = props
+
   return [
-    ...(ValidatorTemplate?.(props) ?? []),
-    rule.custom((richTextBlocks: Array<PortableTextBlock>) => {
-      const text = !Array.isArray(richTextBlocks)
-        ? richTextBlocks
-        : flattenRichText(richTextBlocks)
+    ...(buildLengthRules(props) ?? []),
+    rule.custom((value: Array<PortableTextBlock>) => {
+      const length = getTextLength(value)
 
-      const length = text?.length
-
-      if (isRequired && !text) return 'Field cannot be empty'
+      if (isRequired && !length) return 'Field cannot be empty'
       if (isRequired && min && length < min)
         return `Minimum ${min} characters required`
       if (max && length > max) return `Maximum ${max} characters allowed`
       return true
     }),
     rule
-      .custom((richTextBlocks: Array<PortableTextBlock>) => {
-        const text = !Array.isArray(richTextBlocks)
-          ? richTextBlocks
-          : flattenRichText(richTextBlocks)
+      .custom((value: Array<PortableTextBlock>) => {
+        const length = getTextLength(value)
 
-        const length = text?.length
         if (minWarning && length < minWarning) {
           return {
             message: `Recommended min ${minWarning} characters for SEO (${length}/${minWarning})`,
@@ -239,78 +190,32 @@ const ExtendedValidation = (props: ValidatorTemplateProps) => {
             severity: 'warning',
           }
         }
-        if (max && length > max)
+        if (max && length > max) {
           return {
             message: `Maximum ${max} characters allowed (${length}/${max})`,
             severity: 'error',
           }
+        }
         return true
       })
       .warning(),
   ]
 }
 
+// ---------------------------------------------------------------------------
+// Public validators
+// ---------------------------------------------------------------------------
+
 export const validationRules = {
+  // -- Text length --
   descriptionValidation: (rule: Rule, isRequired?: boolean) =>
-    ExtendedValidation({
+    richTextValidation({
       rule,
       isRequired,
       ...DEFAULT_VALIDATION_RULES.description,
     }),
 
-  productCardsValidation: (rule: Rule) => rule.required().min(1),
-
-  countryValidation: (rule: Rule) => [
-    rule.custom((value: string) => {
-      if (value && value?.length === 0) {
-        return 'Country code cannot be empty'
-      }
-      if (value?.length !== CUSTOM_VALIDATION_RULES.country.length) {
-        return `Country code must be ${CUSTOM_VALIDATION_RULES.country.length} characters long`
-      }
-      return true
-    }),
-  ],
-  faqCategoryValidation: (rule: Rule) => [rule.required().unique()],
-  intersectSectionsValidation: (rule: Rule) =>
-    rule.custom((value: string) => {
-      if (value && value?.length === 0) {
-        return 'Tag cannot be empty'
-      }
-      return true
-    }),
-  slugValidation: (rule: Rule, isRequired = true) => [
-    rule.custom((value: { current: string }) => {
-      const slug = value?.current
-      if (isRequired) {
-        if (!slug) {
-          return 'A slug is required'
-        }
-      } else if (!isRequired && !slug) {
-        return true
-      }
-
-      if (slug !== slug.toLowerCase()) {
-        return 'The slug must be written in lowercase'
-      }
-      if (!/^[a-z0-9-]+$/i.test(slug)) {
-        return 'The slug should contain only letters, numbers, or hyphens'
-      }
-      if (slug.endsWith('-')) {
-        return 'The slug should not end with a hyphen'
-      }
-
-      if (slug.length < CUSTOM_VALIDATION_RULES.slug.min) {
-        return `A slug of at least ${CUSTOM_VALIDATION_RULES.slug.min} characters is required`
-      }
-      if (slug.length > CUSTOM_VALIDATION_RULES.slug.max) {
-        return `You are allowed to write up to ${CUSTOM_VALIDATION_RULES.slug.max} characters`
-      }
-
-      return true
-    }),
-  ],
-
+  // -- Links / URLs --
   urlValidation: (rule: StringRule) =>
     rule.required().custom((value: string | undefined) => {
       if (!value) return true
@@ -318,17 +223,12 @@ export const validationRules = {
       if (!value.startsWith('https:') && !value.startsWith('/')) {
         return 'Only use https urls or internal paths starting with /'
       }
-
-      if (value && !isExternalLink(value)) {
-        if (value.endsWith('/') && value.length > 1) {
-          return `A path should not end with '/'`
-        }
+      if (!isExternalLink(value) && value.endsWith('/') && value.length > 1) {
+        return `A path should not end with '/'`
       }
 
       return true
     }),
-
-  emailValidation: (rule: Rule) => rule.required().email(),
 
   linkSelectorInternalFieldsValidation: (rule: Rule) =>
     rule.custom((value, context) => {
@@ -342,27 +242,19 @@ export const validationRules = {
   linkSelectorCustomLinkValidation: (rule: Rule) =>
     rule.custom((value: string, context) => {
       const { allPages, linkType } = context.document as SanityDocument
-
       const validationFieldTitle = context?.type?.title
 
       if (allPages?._ref && value !== undefined) {
         return 'Cannot set both page or modal and custom path or link. Please delete the page reference.'
       }
-
       if (linkType !== 'custom') return true
+      if (!value) return `${validationFieldTitle ?? 'Field'} cannot be empty`
 
-      if (!value) {
-        return `${validationFieldTitle ?? 'Field'} cannot be empty`
-      }
-
-      if (value && !value?.startsWith('https:') && !value?.startsWith('/')) {
+      if (!value.startsWith('https:') && !value.startsWith('/')) {
         return 'Only use https urls or internal paths starting with /'
       }
-
-      if (value && !isExternalLink(value)) {
-        if (value?.endsWith('/')) {
-          return `A path should not end with '/'`
-        }
+      if (!isExternalLink(value) && value.endsWith('/')) {
+        return `A path should not end with '/'`
       }
 
       return true
@@ -373,28 +265,62 @@ export const validationRules = {
       const { linkType, customParamsButton } =
         context.document as SanityDocument
 
-      if (linkType !== 'custom') return true
+      if (linkType !== 'custom' || !customParamsButton || !value) return true
 
-      if (!customParamsButton) return true
-
-      if (value) {
-        if (value?.startsWith('/')) {
-          return `A path should not start with '/'`
-        }
-        if (value?.startsWith('http')) {
-          return 'Only use https urls or internal paths starting with /'
-        }
-        if (value?.endsWith('/')) {
-          return `A path should not end with '/'`
-        }
-      }
+      if (value.startsWith('/')) return `A path should not start with '/'`
+      if (value.startsWith('http'))
+        return 'Only use https urls or internal paths starting with /'
+      if (value.endsWith('/')) return `A path should not end with '/'`
 
       return true
     }),
 
-  // When we need to be required usually at slug
-  isRequired: (rule: Rule) => rule.required(),
-  // Validation for number of articles in mini blog section
+  // -- Slugs / identifiers --
+  slugValidation: (rule: Rule, isRequired = true) => [
+    rule.custom((value: { current: string }) => {
+      const slug = value?.current
+      if (!slug) return isRequired ? 'A slug is required' : true
+
+      if (slug !== slug.toLowerCase())
+        return 'The slug must be written in lowercase'
+      if (!/^[a-z0-9-]+$/i.test(slug))
+        return 'The slug should contain only letters, numbers, or hyphens'
+      if (slug.endsWith('-')) return 'The slug should not end with a hyphen'
+      if (slug.length < CUSTOM_VALIDATION_RULES.slug.min) {
+        return `A slug of at least ${CUSTOM_VALIDATION_RULES.slug.min} characters is required`
+      }
+      if (slug.length > CUSTOM_VALIDATION_RULES.slug.max) {
+        return `You are allowed to write up to ${CUSTOM_VALIDATION_RULES.slug.max} characters`
+      }
+
+      return true
+    }),
+  ],
+
+  countryValidation: (rule: Rule) => [
+    rule.custom((value: string) => {
+      if (value?.length === 0) return 'Country code cannot be empty'
+      if (value?.length !== CUSTOM_VALIDATION_RULES.country.length) {
+        return `Country code must be ${CUSTOM_VALIDATION_RULES.country.length} characters long`
+      }
+      return true
+    }),
+  ],
+
+  // -- Misc field-specific --
+  emailValidation: (rule: Rule) => rule.required().email(),
+
+  faqCategoryValidation: (rule: Rule) => [rule.required().unique()],
+
+  intersectSectionsValidation: (rule: Rule) =>
+    rule.custom((value: string) => {
+      if (value?.length === 0) return 'Tag cannot be empty'
+      return true
+    }),
+
+  productCardsValidation: (rule: Rule) => rule.required().min(1),
+
+  // Number of articles allowed in a mini blog section.
   articleNumberValidation: (rule: Rule) => [
     rule
       .required()
@@ -404,4 +330,7 @@ export const validationRules = {
       .max(3)
       .error('You can only have a maximum of three articles in this section.'),
   ],
+
+  // When we just need `.required()` — mainly used for slugs.
+  isRequired: (rule: Rule) => rule.required(),
 } as const
