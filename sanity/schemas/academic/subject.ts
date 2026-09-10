@@ -88,6 +88,13 @@ export const Subject = defineType({
       fieldset: 'academic',
     },
     {
+      name: 'classes',
+      title: 'Classes',
+      type: 'string',
+      description: 'Class amount for this course (e.g., 3 + 3).',
+      fieldset: 'academic',
+    },
+    {
       name: 'semester',
       title: 'Semester',
       type: 'string',

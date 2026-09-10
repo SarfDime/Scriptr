@@ -477,6 +477,7 @@ The following items remain out of scope for the first release and should be addr
 2. Add accessibility and validation refinements.
 3. Expand the notification system after the first release.
 4. Review architecture for maintainability and future scale.
+5. Implement CSS obfuscation for production builds.
 
 ---
 
@@ -547,6 +548,7 @@ This section is maintained automatically by the commit agent. Update status by i
 - Add accessibility and validation refinements. [🔲]
 - Expand the notification system after the first release. [🔲]
 - Review architecture for maintainability and future scale. [🔲]
+- Implement CSS obfuscation for production builds. [🔲]
 
 ### How to update progress
 Commits with `[ROADMAP: Phase X - Feature Name]` headers will automatically update this section. See [.commit-agent.md](.commit-agent.md) for details.
