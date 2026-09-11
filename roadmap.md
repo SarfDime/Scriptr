@@ -32,7 +32,7 @@ The first release is intentionally narrow: ship the right core product, keep the
 
 1. Browse and filter scripts by subject, professor, popularity, recency, and other metadata.
 2. View subject pages (subject info, professor data, relevant scripts).
-3. View professor pages (profile info, subject/study-program assignments, relevant scripts).
+3. View professor pages (profile info, subject/study assignments, relevant scripts).
 4. View faculty, study, and university pages.
 5. View a script detail page (title, description, file preview, subject context, comments, metadata).
 6. Create, edit, and delete own scripts.
@@ -115,7 +115,7 @@ The first release is intentionally narrow: ship the right core product, keep the
 
 ### 4.2 Academic entity features
 
-1. Dedicated pages for universities, faculties, studies, subjects, and professors, using programmatic `slug` fields as the canonical route parameters (not internal Sanity IDs) — routes: `university/[slug]`, `faculty/[slug]`, `study-program/[slug]`, `subject/[slug]`, `professor/[slug]` (slug rules: §5.9).
+1. Dedicated pages for universities, faculties, studies, subjects, and professors, using programmatic `slug` fields as the canonical route parameters (not internal Sanity IDs) — routes: `university/[slug]`, `faculty/[slug]`, `study/[slug]`, `subject/[slug]`, `professor/[slug]` (slug rules: §5.9).
 2. Pages are generated from Sanity-backed academic records merged with the matching Supabase identity record.
 3. Each page shows relevant script lists, related entities, and Sanity metadata (bios, descriptions).
 4. All five entity types share the same page-generation model and sync lifecycle (sync rules: §5.6).
@@ -192,13 +192,13 @@ Applies uniformly to all five entity types: university, faculty, study, subject,
 ### 5.2 Data ownership boundary
 
 1. Sanity owns rich academic content and editorial data (subject year, semester, description, syllabus, credits, and descriptive text about professor/program affiliation).
-2. Supabase owns runtime identity, script records, user relationships, moderation metadata, and access-related state — this now explicitly includes the structured professor↔faculty, professor↔study-program, and student↔study-program relationship data (`professor_faculties`, `professor_study_programs`, `profile_faculties`, `profile_study_programs`), which is relational/runtime by nature even though Sanity may separately hold descriptive text about those same affiliations.
+2. Supabase owns runtime identity, script records, user relationships, moderation metadata, and access-related state — this now explicitly includes the structured professor↔faculty, professor↔study, and student↔study relationship data (`professor_faculties`, `professor_studies`, `profile_faculties`, `profile_studies`), which is relational/runtime by nature even though Sanity may separately hold descriptive text about those same affiliations.
 3. The database does not store rich descriptive content (bios, description text, non-critical metadata).
 4. The backend resolves the Sanity document by ID whenever the full academic record is needed.
 5. The frontend never assumes the DB row is the complete source of truth for academic entity data.
 6. `scripts` owns runtime script metadata: `exam_session` (categorization by exam period) and `additional_reading` (`text[]` of supplementary URLs).
 7. `subjects` is minimal (names, IDs, relationships). `exam_session` belongs on scripts, not subjects; `year`/`semester` belong to Sanity. `exam_session` and `year` have been removed from the `subjects` DB table.
-8. `scripts` does **not** store `faculty_id` directly. Faculty is always derived via `subject_id → study_program_id → faculty_id`, to avoid drift. (This column existed before `studies` was introduced, when the chain was `subject_id → faculty_id` directly; it has since been dropped — see Phase 1 to-dos in §9.)
+8. `scripts` does **not** store `faculty_id` directly. Faculty is always derived via `subject_id → study_id → faculty_id`, to avoid drift. (This column existed before `studies` was introduced, when the chain was `subject_id → faculty_id` directly; it has since been dropped.)
 
 ### 5.3 Initial university and entity assumptions
 
@@ -245,13 +245,13 @@ Applies uniformly to all five entity types (§4.8 elaboration: §8.2):
 
 ### 5.8 Academic profile data model
 
-**"Academic profile" (canonical definition):** the combination of `profiles`, `profile_subjects`, `profile_faculties`, and `profile_study_programs` — not a single dedicated table. `profile_subjects.status` tracks `completed`/`currently_taking`; `profile_faculties` and `profile_study_programs` are many-to-many enrollment records (a student can belong to multiple faculties and studies). On account creation, the locally-stored guest onboarding state syncs into these four tables.
+**"Academic profile" (canonical definition):** the combination of `profiles`, `profile_subjects`, `profile_faculties`, and `profile_studies` — not a single dedicated table. `profile_subjects.status` tracks `completed`/`currently_taking`; `profile_faculties` and `profile_studies` are many-to-many enrollment records (a student can belong to multiple faculties and studies). On account creation, the locally-stored guest onboarding state syncs into these four tables.
 
 1. Guest academic-profile data persists in local storage until account creation.
-2. The app tracks current subjects, completed subjects, faculty/study-program enrollment, and completed years in a structured way.
+2. The app tracks current subjects, completed subjects, faculty/study enrollment, and completed years in a structured way.
 3. The profile preserves academic history even if the user later changes faculty, study, or university.
 4. Completed-year state updates automatically when all subjects in the year are complete.
-5. On account creation, local onboarding data migrates into `profiles` / `profile_subjects` / `profile_faculties` / `profile_study_programs`.
+5. On account creation, local onboarding data migrates into `profiles` / `profile_subjects` / `profile_faculties` / `profile_studies`.
 
 ### 5.9 Programmatic slug generation requirements
 
@@ -268,23 +268,23 @@ Applies uniformly to all five entity types (§4.8 elaboration: §8.2):
 
 1. Re-use generated Sanity types (`sanity.types.ts`) for in-app TypeScript models wherever possible, across all five entity types.
 2. Utility types (e.g. `StripSanityFields<T>`, `Dereferenced<T>`) strip Sanity system metadata (`_rev`, `_createdAt`, `_updatedAt`, etc.).
-3. Sanity reference structures (`{ _type: "reference", _ref: string }`) are replaced with dereferenced domain models, including `studyProgram` references, so in-app types stay clean and type-safe.
+3. Sanity reference structures (`{ _type: "reference", _ref: string }`) are replaced with dereferenced domain models, including `study` references, so in-app types stay clean and type-safe.
 
 ### 5.11 Reusable academic schema components (mini-schemas)
 
-1. Extract recurring fields across all five academic document types (`university`, `faculty`, `studyProgram`, `subject`, `professor`) into modular, reusable Sanity mini-schemas (descriptions/bios, contact/social info, media assets, academic metadata).
+1. Extract recurring fields across all five academic document types (`university`, `faculty`, `study`, `subject`, `professor`) into modular, reusable Sanity mini-schemas (descriptions/bios, contact/social info, media assets, academic metadata).
 2. Mini-schemas enforce consistent validation, preview configuration, and fieldsets across all entity types.
 
 ### 5.12 Study architecture (resolved)
 
-**Decision:** Study is an independent relational entity in both Supabase and Sanity, giving the hierarchy `University → Faculty → Study → Subject`. Subjects reference `study_program_id`; a subject's faculty and university are resolved transitively through that relationship, not stored redundantly.
+**Decision:** Study is an independent relational entity in both Supabase and Sanity, giving the hierarchy `University → Faculty → Study → Subject`. Subjects reference `study_id`; a subject's faculty and university are resolved transitively through that relationship, not stored redundantly.
 
 This was chosen over the alternative (treating study as a tag/attribute on scripts or Sanity-only metadata) because it represents the real academic structure accurately, even though it required cascading changes across the schema, sync workflows, slug generation, routing, and onboarding — most of which are now complete (status: §9–§10, Phase 1–2).
 
 **Cross-entity relationships added as a result:**
 
-- `profile_study_programs` (`profile_id`, `study_program_id`) — a student can be enrolled in multiple studies. Publicly readable; a user manages their own rows.
-- `professor_study_programs` (`professor_id`, `study_program_id`) — a professor can be affiliated with multiple studies, independent of which subjects they currently teach. Publicly readable; only moderators manage rows (mirrors `professor_faculties`' admin-managed pattern, since professor records are not self-managed).
+- `profile_studies` (`profile_id`, `study_id`) — a student can be enrolled in multiple studies. Publicly readable; a user manages their own rows.
+- `professor_studies` (`professor_id`, `study_id`) — a professor can be affiliated with multiple studies, independent of which subjects they currently teach. Publicly readable; only moderators manage rows (mirrors `professor_faculties`' admin-managed pattern, since professor records are not self-managed).
 
 Both mirror the existing `profile_faculties` / `professor_faculties` many-to-many pattern and both exist in the live schema.
 
@@ -351,7 +351,7 @@ Both mirror the existing `profile_faculties` / `professor_faculties` many-to-man
 ### 6.8 Academic onboarding and profile persistence backend requirements
 
 1. Support local-first guest profile storage and later migration into the account profile (§5.8).
-2. Store current/completed subject state, faculty enrollment, and study-program enrollment in structured form.
+2. Store current/completed subject state, faculty enrollment, and study enrollment in structured form.
 3. Support bulk year-completion state based on faculty-specific subject data.
 4. Trigger a persistent reminder for guest users with incomplete onboarding state.
 
@@ -392,7 +392,7 @@ Both mirror the existing `profile_faculties` / `professor_faculties` many-to-man
 
 1. First-visit onboarding modal collects faculty, study(s), current subjects, and completed subjects.
 2. One-click completion of an academic year.
-3. Profile page displays grouped completed subjects and completed years, plus faculty/study-program enrollment.
+3. Profile page displays grouped completed subjects and completed years, plus faculty/study enrollment.
 4. Guest users see a persistent reminder to create an account and save their academic profile (pattern: §7.5).
 5. The reminder is dismissable and configurable client-side.
 
@@ -415,7 +415,7 @@ Both mirror the existing `profile_faculties` / `professor_faculties` many-to-man
 5. Download dedup priority: account → IP → device (§5.7).
 6. Scripts are single-subject only; university, study, and faculty are determined from the subject, while professor is selected explicitly from the subject's valid professors (§4.4.2).
 7. **General flagging is implemented** for scripts, users, and comments via the shared `flags` table with pending/reviewed/dismissed statuses (§4.6) — this supersedes the platform's original "abuse-only, no general flagging" framing; suspicious-download detection remains a separate mechanism.
-8. Guest onboarding/academic-profile data is stored in local storage only for v1, migrating into `profiles` / `profile_subjects` / `profile_faculties` / `profile_study_programs` on account creation (§5.8).
+8. Guest onboarding/academic-profile data is stored in local storage only for v1, migrating into `profiles` / `profile_subjects` / `profile_faculties` / `profile_studies` on account creation (§5.8).
 9. A year is marked complete when all subjects in that year, for that faculty, are complete.
 10. Persistent reminders are allowed as a simple, dismissable onboarding/account-save notification, independent of a full notification system (§7.5).
 11. The admin triggers the create button for academic entity creation/editing, for explicit editorial control.
@@ -429,8 +429,9 @@ Both mirror the existing `profile_faculties` / `professor_faculties` many-to-man
 19. `year`/`semester` are authored and owned in Sanity CMS, removed from the `subjects` DB table (§5.2.7).
 20. **Study is an independent entity/table** in the `Faculty → Study → Subject` hierarchy (§5.12).
 21. `profiles.role` allows `student`, `moderator`, and `admin`, matching the three-role model (§3.2).
-22. **`scripts.faculty_id` has been removed** — it predated `studies` and was a redundant, unsynced column; faculty is now always derived via `subject_id → study_program_id → faculty_id` (§5.2.8).
-23. **`profile_study_programs` and `professor_study_programs`** junction tables have been added, mirroring the `profile_faculties`/`professor_faculties` pattern, since both students and professors can be associated with multiple studies (§5.12).
+22. **`scripts.faculty_id` has been removed** — it predated `studies` and was a redundant, unsynced column; faculty is now always derived via `subject_id → study_id → faculty_id` (§5.2.8).
+23. **`profile_studies` and `professor_studies`** junction tables have been added, mirroring the `profile_faculties`/`professor_faculties` pattern, since both students and professors can be associated with multiple studies (§5.12).
+24. **The live Supabase schema uses study naming throughout** — `study_programs` was renamed to `studies`, both junction tables were renamed to `profile_studies`/`professor_studies`, and all `study_program_id` columns were renamed to `study_id`.
 
 ### 8.2 Sanity/DB sync workflow elaboration
 
@@ -457,7 +458,7 @@ Out of scope for the first release, to address after launch:
 ### Phase 1: Database foundation and backend API
 
 1. Configure the minimal DB schema for runtime identity and script records.
-2. Implement all required database tables: `profiles`, `scripts`, `profile_subjects`, `profile_faculties`, `profile_study_programs`, `professor_study_programs`, `download_events`, and remaining relationship tables (academic profile model: §5.8).
+2. Implement all required database tables: `profiles`, `scripts`, `profile_subjects`, `profile_faculties`, `profile_studies`, `professor_studies`, `download_events`, and remaining relationship tables (academic profile model: §5.8). **[✅]**
 3. Set up database constraints, indexes, and validation rules for data integrity.
 4. Implement the script API (create, read, update, delete).
 5. Implement authentication and permission checks in the backend.
@@ -466,35 +467,36 @@ Out of scope for the first release, to address after launch:
 8. Add `additional_reading` (`text[]`) and `exam_session` (`text`) to `scripts`. **[✅]**
 9. Remove `exam_session` and `year` from `subjects`; keep academic year data in Sanity. **[✅]**
 10. Implement Study as a separate table (`Faculty → Study → Subject`). **[✅]**
-11. Add `profile_study_programs` and `professor_study_programs` junction tables (composite PK, RLS: publicly readable; `profile_study_programs` self-managed by the owning user; `professor_study_programs` managed by moderators only). **[✅]**
-12. Drop the stale `scripts.faculty_id` column, its FK, and its index — faculty is now derived via `subject_id → study_program_id → faculty_id` only. **[✅]**
+11. Add `profile_studies` and `professor_studies` junction tables (composite PK, RLS: publicly readable; `profile_studies` self-managed by the owning user; `professor_studies` managed by moderators only). **[✅]**
+12. Drop the stale `scripts.faculty_id` column, its FK, and its index — faculty is now derived via `subject_id → study_id → faculty_id` only. **[✅]**
 13. Add `admin` to the `profiles.role` check constraint. **[✅]**
-14. **Regenerate `shared/types/database.types.ts`** to reflect items 11–13, and grep `hono/` and `next/` for any remaining `scripts.faculty_id` references to remove. **[🔲]**
-15. Update the onboarding/profile backend to accept and persist study-program selection into `profile_study_programs`. **[🔲]**
-16. Update professor admin sync actions to manage `professor_study_programs` alongside `professor_faculties`. **[🔲]**
-17. Test database schema and API endpoints thoroughly. **[🔲]**
+14. **Regenerate `shared/types/database.types.ts`** to reflect items 11–13, and grep `hono/` and `next/` for any remaining `scripts.faculty_id` references to remove. **[✅]**
+15. Update the onboarding/profile backend to accept and persist study selection into `profile_studies`. **[✅]**
+16. Update professor admin sync actions to manage `professor_studies` alongside `professor_faculties`. **[✅]**
+17. Rename the live Supabase schema from study-program naming to study naming, including tables, columns, constraints, indexes, and policies. **[✅]**
+18. Test database schema and API endpoints thoroughly. **[🔲]**
 18. Cache script list/subject/top/popular/detail fetches in the Next.js Data Cache, tagged per endpoint/query; revalidate affected tags via a backend webhook on script create/update/delete; keep search and my-scripts uncached. **[✅]**
 
 ### Phase 2: Sanity CMS setup and academic entity management
 
-1. Finalize the academic entity model/schema structure for Sanity. **[✅ Mostly complete]**
-2. Create Sanity document types for university, faculty, subject, and professor with shared validation patterns. **[✅ Mostly complete]**
-3. Define relationships/references between academic entities in Sanity, including `studyProgram` references on `subject`. **[✅ Mostly complete]**
+1. Finalize the academic entity model/schema structure for Sanity. **[✅]**
+2. Create Sanity document types for university, faculty, study, subject, and professor with shared validation patterns. **[✅]**
+3. Define relationships/references between academic entities in Sanity, including `study` references on `subject`. **[✅]**
 4. Implement the Create-in-DB action (§8.2). **[✅ Complete]**
 5. Set up Sanity sync endpoints (create/update/delete DB records from CMS documents). **[✅ Mostly complete]**
 6. Implement publication blocking until DB ID exists. **[✅ Complete]**
 7. Implement deletion checks and cascading delete/update workflows. **[⚠️]**
 8. Define the initialization set for universities, faculties, studies, subjects, and professors in Sanity. **[✅ Complete]**
-9. Create the `studyProgram` Sanity schema, update subject references, adjust sync actions. **[✅]**
+9. Create the `study` Sanity schema, update subject references, adjust sync actions. **[✅]**
 10. Test sync workflows for create/update/delete, across all five entity types. **[🔲 Pending, after the deletion fix]**
-11. Implement programmatic `slug` generation for all five entity types, including `studyProgram` (`[uni]-[faculty]-[program]`) (§5.9). **[🔲 TODO]**
-12. Create TypeScript utility types to strip Sanity metadata and dereference references, including `studyProgram` references, for in-app models (§5.10). **[🔲 TODO]**
-13. Create reusable Sanity mini-schemas across all five entity types, including `studyProgram` (§5.11). **[🔲 TODO]**
+11. Implement programmatic `slug` generation for all five entity types, including `study` (`[uni]-[faculty]-[study]`) (§5.9). **[🔲 TODO]**
+12. Create TypeScript utility types to strip Sanity metadata and dereference references, including `study` references, for in-app models (§5.10). **[🔲 TODO]**
+13. Create reusable Sanity mini-schemas across all five entity types, including `study` (§5.11). **[🔲 TODO]**
 
 ### Phase 3: Core content and discovery
 
 1. Build dynamic slug-based pages for universities, faculties, subjects, and professors. **[✅ Mostly complete — ID→slug migration pending]**
-2. Add a dynamic slug-based `study-program/[slug]` page, following the same pattern as the other four entity types (§7.2). **[🔲 New]**
+2. Add a dynamic slug-based `study/[slug]` page, following the same pattern as the other four entity types (§7.2). **[🔲 New]**
 3. Update subject pages to display their parent study alongside faculty (§7.2.4). **[🔲 New]**
 4. Implement script listing, sorting, and filtering. **[✅ Mostly complete]**
 5. Add search for scripts (local-first + API fallback). **[🔲 Missing]**
@@ -504,26 +506,26 @@ Out of scope for the first release, to address after launch:
 ### Phase 4: User actions and uploads
 
 1. Build the create-script modal and upload flow: title, description, exam session, additional reading links.
-2. Enforce single-subject constraints; resolve faculty/study-program/university from the subject; explicitly select and validate the professor against `subject_professors` (§4.4.2).
+2. Enforce single-subject constraints; resolve faculty/study/university from the subject; explicitly select and validate the professor against `subject_professors` (§4.4.2).
 3. Implement script edit/delete permissions (title, description, additional reading links only).
 4. Add guest-friendly download/preview access with dedupe protection.
 
 ### Phase 5: Profile and onboarding
 
 1. Implement first-visit onboarding for faculty and subject selection.
-2. **Add study-program selection to onboarding**, scoped to the selected faculty. **[🔲 New]**
+2. **Add study selection to onboarding**, scoped to the selected faculty. **[🔲 New]**
 3. Add one-click year-completion logic and auto-complete year state.
 4. Persist guest academic data in local storage.
 5. Add a dismissable persistent reminder to create an account.
-6. Build the profile page with grouped subject/year data, plus faculty and study-program enrollment.
-7. Sync guest onboarding data into `profiles`, `profile_subjects`, `profile_faculties`, **and `profile_study_programs`** during account creation. **[Updated for studies]**
+6. Build the profile page with grouped subject/year data, plus faculty and study enrollment.
+7. Sync guest onboarding data into `profiles`, `profile_subjects`, `profile_faculties`, **and `profile_studies`** during account creation. **[Updated for studies]**
 
 ### Phase 6: Moderation and admin tools
 
 1. Implement global moderator and admin roles with platform-wide moderation rules (§3.2, §6.7).
 2. Add simple suspicious-download review flows.
 3. Add admin action interfaces for academic entity creation, sync, and dependency checks across all five entity types.
-4. **Add admin UI for managing `professor_study_programs` affiliations**, alongside the existing `professor_faculties` management. **[🔲 New]**
+4. **Add admin UI for managing `professor_studies` affiliations**, alongside the existing `professor_faculties` management. **[🔲 New]**
 5. Ensure delete/update flows remain safe and auditable.
 6. Make comments flaggable via the existing flags workflow. **[✅]**
 7. Return reaction counts, like counts, and the current user's reaction/like status in the comments query. **[✅]**
@@ -544,7 +546,7 @@ Out of scope for the first release, to address after launch:
 ### Phase 1: Database foundation and backend API `[✏️ In Progress]`
 
 - Configure the minimal DB schema for runtime identity and script records. **[✅]**
-- Implement all required database tables (`profiles`, `scripts`, `profile_subjects`, `profile_faculties`, `profile_study_programs`, `professor_study_programs`, `download_events`, relationship tables). **[✅]**
+- Implement all required database tables (`profiles`, `scripts`, `profile_subjects`, `profile_faculties`, `profile_studies`, `professor_studies`, `download_events`, relationship tables). **[✅]**
 - Set up database constraints, indexes, and validation rules. **[✅]**
 - Implement the script API (CRUD). **[✅]**
 - Implement authentication and permission checks. **[✅]**
@@ -553,12 +555,13 @@ Out of scope for the first release, to address after launch:
 - Add `additional_reading`/`exam_session` to `scripts`. **[✅]**
 - Remove `exam_session`/`year` from `subjects`. **[✅]**
 - Decide and implement Study architecture. **[✅]**
-- Add `profile_study_programs` / `professor_study_programs` junction tables. **[✅]**
+- Add `profile_studies` / `professor_studies` junction tables. **[✅]**
 - Drop stale `scripts.faculty_id`. **[✅]**
 - Add `admin` role to `profiles.role`. **[✅]**
-- Regenerate database types; remove dead `scripts.faculty_id` references from Hono/Next.js. **[🔲]**
-- Sync study-program selection into `profile_study_programs` in onboarding backend. **[🔲]**
-- Manage `professor_study_programs` in professor admin sync actions. **[🔲]**
+- Regenerate database types; remove dead `scripts.faculty_id` references from Hono/Next.js. **[✅]**
+- Sync study selection into `profile_studies` in onboarding backend. **[✅]**
+- Manage `professor_studies` in professor admin sync actions. **[✅]**
+- Rename the live Supabase schema to `studies`, `profile_studies`, `professor_studies`, and `study_id`, including constraints, indexes, and policies. **[✅]**
 - Test database schema and API endpoints thoroughly. **[🔲]**
 - Cache script fetches in the Next.js Data Cache with tag-based revalidation via webhook; keep search/my-scripts uncached. **[✅]**
 
@@ -572,16 +575,16 @@ Out of scope for the first release, to address after launch:
 - Implement publication blocking until DB ID exists. **[✅]**
 - Implement deletion checks and cascading delete/update workflows. **[⚠️ Needs repair — Sanity deletion is not currently working]**
 - Define the initialization set for universities, faculties, studies, subjects, professors. **[✅]**
-- Create the `studyProgram` Sanity schema and update subject references/sync actions. **[✅]**
+- Create the `study` Sanity schema and update subject references/sync actions. **[✅]**
 - Test sync workflows for create/update/delete. **[🔲]**
 - Implement programmatic slug generation for all five entity types. **[🔲]**
-- Create TypeScript utility types for stripped/dereferenced Sanity types (including `studyProgram`). **[🔲]**
+- Create TypeScript utility types for stripped/dereferenced Sanity types (including `study`). **[🔲]**
 - Create reusable Sanity mini-schemas across all five entity types. **[🔲]**
 
 ### Phase 3: Core content and discovery `[✏️ In Progress]`
 
 - Build dynamic slug-based pages for universities, faculties, subjects, professors. **[✅ Mostly complete — slug migration pending]**
-- Add `study-program/[slug]` page. **[🔲]**
+- Add `study/[slug]` page. **[🔲]**
 - Update subject pages to show parent study. **[🔲]**
 - Implement script listing, sorting, filtering. **[✅]**
 - Add search for scripts (local-first + API fallback). **[🔲 Missing]**
@@ -591,26 +594,26 @@ Out of scope for the first release, to address after launch:
 ### Phase 4: User actions and uploads `[🔲 Planned]`
 
 - Build the create-script modal and upload flow. **[🔲]**
-- Enforce single-subject constraints; resolve faculty/study-program/university from subject; explicitly validate professor via `subject_professors`. **[🔲]**
+- Enforce single-subject constraints; resolve faculty/study/university from subject; explicitly validate professor via `subject_professors`. **[🔲]**
 - Implement script edit/delete permissions. **[🔲]**
 - Add guest-friendly download/preview access with dedupe protection. **[🔲]**
 
 ### Phase 5: Profile and onboarding `[🔲 Planned]`
 
 - Implement first-visit onboarding for faculty and subject selection. **[🔲]**
-- Add study-program selection to onboarding. **[🔲]**
+- Add study selection to onboarding. **[🔲]**
 - Add one-click year-completion logic. **[🔲]**
 - Persist guest academic data in local storage. **[🔲]**
 - Add a dismissable persistent reminder to create an account. **[🔲]**
-- Build the profile page with grouped subject/year/faculty/study-program data. **[🔲]**
-- Sync guest onboarding data into `profiles`, `profile_subjects`, `profile_faculties`, `profile_study_programs`. **[🔲]**
+- Build the profile page with grouped subject/year/faculty/study data. **[🔲]**
+- Sync guest onboarding data into `profiles`, `profile_subjects`, `profile_faculties`, `profile_studies`. **[🔲]**
 
 ### Phase 6: Moderation and admin tools `[🔲 Planned]`
 
 - Implement global moderator and admin roles with platform-wide rules. **[🔲]**
 - Add simple suspicious-download review flows. **[🔲]**
 - Add admin interfaces for academic entity creation, sync, dependency checks. **[🔲]**
-- Add admin UI for `professor_study_programs` management. **[🔲]**
+- Add admin UI for `professor_studies` management. **[🔲]**
 - Ensure delete/update flows remain safe and auditable. **[🔲]**
 - Make comments flaggable via the existing flags workflow. **[✅]**
 - Return reaction/like counts and current-user status in the comments query. **[✅]**
