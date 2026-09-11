@@ -61,14 +61,14 @@ Get a single professor by ID.
 - **Response**: Professor object with related records
 
 #### `GET /subjects`
-Get all subjects with faculty and professor metadata.
+Get all subjects with study-program, faculty, and professor metadata.
 - **Auth**: `x-internal-secret` required
 - **Response**: Array of subjects
 
-#### `GET /subjects/year/:year`
-Get subjects by year.
+#### `GET /internal/study-programs`
+Get all study programs with faculty and university metadata.
 - **Auth**: `x-internal-secret` required
-- **Response**: Array of subjects
+- **Response**: Array of study programs
 
 #### `GET /subjects/:id`
 Get a single subject by ID.
@@ -132,11 +132,6 @@ Get all subjects with professors and script counts
 - **Auth**: `x-internal-secret` required
 - **Response**: Array of subjects
 
-#### `GET /subjects/year/:year`
-Get subjects by year
-- **Auth**: `x-internal-secret` required
-- **Response**: Array of subjects for the specified year
-
 #### `GET /subjects/:id`
 Get a single subject with professors and scripts
 - **Auth**: `x-internal-secret` required
@@ -151,11 +146,11 @@ List subjects via the internal API.
 
 #### `POST /internal/subjects`
 Create a new subject.
-- **Body**: `{ name, year, exam_session, faculty_id, description?, professor_ids? }`
+- **Body**: `{ name, study_program_id, professor_ids? }`
 
 #### `PATCH /internal/subjects/:id`
 Update a subject.
-- **Body**: `{ name?, year?, exam_session?, faculty_id?, description? }`
+- **Body**: `{ name?, study_program_id? }`
 
 #### `DELETE /internal/subjects/:id`
 Delete a subject.

@@ -260,8 +260,8 @@ The first release is intentionally narrow. The goal is to ship the right core pr
 1. Extract recurring fields across academic documents (`university`, `faculty`, `subject`, `professor`) into modular, reusable Sanity mini-schemas / field objects (e.g., descriptions/bios, contact/social info, media assets, academic metadata).
 2. Mini-schemas must enforce consistent validation rules, preview configurations, and fieldsets across all academic entity types to maintain DRY principles in CMS schema definitions.
 
-### 5.12 Study Program architecture evaluation (TODO)
-1. **Decision required**: Decide whether to introduce `study_program` as an independent entity/table or attach study program categorization directly to `scripts` (or purely within Sanity CMS metadata).
+### 5.12 Study Program architecture
+1. Study Program is an independent entity in both Supabase and Sanity.
 2. **Impact analysis**:
    - *Option A (Independent relational entity)*: Hierarchical structure becomes `University -> Faculty -> Study Program -> Subject`. Each subject belongs to a study program under a faculty. This represents the real academic structure most accurately, but introduces significant cascade changes across the database schema, Sanity document schemas, sync workflows, slug generation (`[uni]-[faculty]-[program]-[subject]`), route handlers, frontend pages, and onboarding logic.
    - *Option B (Script attribute / Sanity-only)*: Keep `Faculty -> Subject` direct relation and treat study program as an optional tag/attribute on `scripts` or as descriptive metadata in Sanity. Avoids large-scale code rewriting for v1.
@@ -390,7 +390,7 @@ The first release is intentionally narrow. The goal is to ship the right core pr
 17. The `scripts` database table includes `additional_reading` (an array of link strings) for supplementary study materials and `exam_session` for categorizing scripts by exam period.
 18. `exam_session` belongs on scripts (for categorization) and is removed from the `subjects` database table.
 19. `year` and `semester` are authored and owned in Sanity CMS; evaluate and remove `year` from the `subjects` database table if not strictly required for runtime linkage.
-20. **Open Architectural Decision (TODO)**: Decide whether `Study Program` should be an independent entity/table (`Faculty -> Study Program -> Subject`) or just a field on `scripts` / Sanity metadata. A full independent entity would require restructuring the academic hierarchy, CMS schemas, DB relations, sync pipelines, slugs, and UI routes.
+20. **Decision**: `Study Program` is an independent entity/table in the `Faculty -> Study Program -> Subject` hierarchy. Subjects reference study programs, and their faculty is resolved through that relationship.
 
 ### 8.2 Question 3 elaboration
 Question 3 is the editorial and sync workflow for academic entities:
@@ -422,9 +422,9 @@ The following items remain out of scope for the first release and should be addr
 5. Implement authentication and permission checks in the backend.
 6. Implement download deduplication logic (account → IP → device priority).
 7. Add backend validation and error handling for all operations.
-8. Add `additional_reading` (`text[]` array of link strings) and `exam_session` (`text`) columns to `scripts` database table. [🔲 TODO]
-9. Remove `exam_session` from the `subjects` database table and evaluate removing `year` from `subjects` table if not needed for runtime linking (since `year` and `semester` live in Sanity). [🔲 TODO]
-10. Decide on Study Program architectural placement: separate database table & intermediate entity (`Faculty -> Study Program -> Subject`) vs. script-level attribute/Sanity metadata. [🔲 TODO]
+8. Add `additional_reading` (`text[]` array of link strings) and `exam_session` (`text`) columns to `scripts` database table. [✅]
+9. Remove `exam_session` and `year` from the `subjects` database table; keep academic year data in Sanity. [✅]
+10. Implement Study Program as a separate database table and intermediate entity (`Faculty -> Study Program -> Subject`). [✅]
 11. Test database schema and API endpoints thoroughly.
 
 ### Phase 2: Sanity CMS setup and academic entity management
@@ -440,7 +440,7 @@ The following items remain out of scope for the first release and should be addr
 10. Implement programmatic `slug` field generation on academic entity schemas (University: `[name]`, Faculty: `[uni]-[faculty]`, Subject: `[uni]-[faculty]-[subject]`, Professor: `[name]`). [🔲 TODO]
 11. Create TypeScript utility types to derive in-app types from Sanity generated types by stripping system metadata (`_rev`, `_createdAt`, etc.) and replacing reference fields with dereferenced domain types. [🔲 TODO]
 12. Create Sanity mini-schemas / reusable field objects for commonly used fields across academic documents (descriptions, media, contact/links, academic metadata) to eliminate schema duplication. [🔲 TODO]
-13. If Study Program is adopted as a dedicated entity, create Sanity schema for `studyProgram`, update `faculty` and `subject` references, and adjust sync actions. [🔲 TODO / Decision dependent]
+13. Create the Sanity `studyProgram` schema, update subject references, and adjust sync actions. [✅]
 
 ### Phase 3: Core content and discovery
 1. Build dynamic slug-based pages for universities, faculties, subjects, and professors (`/[entity]/[slug]`). [✅ Mostly complete - transition from ID routes to programmatic slugs pending]

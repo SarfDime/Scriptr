@@ -10,12 +10,22 @@ export type AcademicEntityType =
   | 'faculty'
   | 'professor'
   | 'subject'
+  | 'studyProgram'
 
 const ENDPOINTS: Record<AcademicEntityType, string> = {
   university: 'universities',
   faculty: 'faculties',
   professor: 'professors',
   subject: 'subjects',
+  studyProgram: 'study-programs',
+}
+
+export type AcademicDocumentActionProps = {
+  id: string
+  type: string
+  draft: Record<string, unknown> | null
+  published: Record<string, unknown> | null
+  onComplete: () => void
 }
 
 function apiUrl(path: string) {
@@ -38,16 +48,16 @@ function refId(value: unknown) {
     : undefined
 }
 
-function publishedSanityId(id: string) {
-  return id.startsWith('drafts.') ? id.slice('drafts.'.length) : id
+function parentFieldFor(entityType: AcademicEntityType) {
+  if (entityType === 'faculty') return 'university'
+  if (entityType === 'subject') return 'studyProgram'
+  return 'faculty'
 }
 
-export type AcademicDocumentActionProps = {
-  id: string
-  type: string
-  draft: Record<string, unknown> | null
-  published: Record<string, unknown> | null
-  onComplete: () => void
+function parentColumnFor(parentField: string) {
+  if (parentField === 'university') return 'university_id'
+  if (parentField === 'studyProgram') return 'study_program_id'
+  return 'faculty_id'
 }
 
 /** Creates the "Create in Database" action shared by all academic entity documents.
@@ -61,9 +71,11 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
     const toast = useToast()
     const [dialog, setDialog] = useState<string | null>(null)
     const doc = props.draft ?? props.published
-    const parentField = entityType === 'faculty' ? 'university' : 'faculty'
+    const parentField = parentFieldFor(entityType)
     const parentReference =
-      entityType === 'faculty' || entityType === 'subject'
+      entityType === 'faculty' ||
+      entityType === 'subject' ||
+      entityType === 'studyProgram'
         ? refId(doc?.[parentField])
         : undefined
 
@@ -76,7 +88,9 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
       icon: AddCircle,
       disabled: Boolean(
         !doc?.name ||
-          ((entityType === 'faculty' || entityType === 'subject') &&
+          ((entityType === 'faculty' ||
+            entityType === 'subject' ||
+            entityType === 'studyProgram') &&
             !parentReference)
       ),
       onHandle: async () => {
@@ -86,7 +100,9 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
         }
 
         if (
-          (entityType === 'faculty' || entityType === 'subject') &&
+          (entityType === 'faculty' ||
+            entityType === 'subject' ||
+            entityType === 'studyProgram') &&
           !parentReference
         ) {
           setDialog(`Add a ${parentField} before creating this record.`)
@@ -95,7 +111,7 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
 
         const body: Record<string, unknown> = {
           name: doc.name,
-          sanity_id: publishedSanityId(props.id),
+          sanity_id: props.id,
         }
 
         if (entityType === 'professor') {
@@ -121,7 +137,7 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
           )
         }
         if (entityType === 'subject') {
-          body.faculty_id = await client.fetch<string | null>(
+          body.study_program_id = await client.fetch<string | null>(
             '*[_id == $id || _id == $draftId][0].dbId',
             { id: parentReference, draftId: `drafts.${parentReference}` }
           )
@@ -140,9 +156,18 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
           body.professor_ids = professorIds.filter(Boolean)
         }
 
+        if (entityType === 'studyProgram') {
+          body.faculty_id = await client.fetch<string | null>(
+            '*[_id == $id || _id == $draftId][0].dbId',
+            { id: parentReference, draftId: `drafts.${parentReference}` }
+          )
+        }
+
         if (
-          (entityType === 'faculty' || entityType === 'subject') &&
-          !body[parentField === 'university' ? 'university_id' : 'faculty_id']
+          (entityType === 'faculty' ||
+            entityType === 'subject' ||
+            entityType === 'studyProgram') &&
+          !body[parentColumnFor(parentField)]
         ) {
           setDialog(`Link the selected ${parentField} to the database first.`)
           return
@@ -201,9 +226,11 @@ export function syncWithDatabaseAction(entityType: AcademicEntityType) {
     const toast = useToast()
     const [dialog, setDialog] = useState<string | null>(null)
     const doc = props.draft ?? props.published
-    const parentField = entityType === 'faculty' ? 'university' : 'faculty'
+    const parentField = parentFieldFor(entityType)
     const parentReference =
-      entityType === 'faculty' || entityType === 'subject'
+      entityType === 'faculty' ||
+      entityType === 'subject' ||
+      entityType === 'studyProgram'
         ? refId(doc?.[parentField])
         : undefined
 
@@ -213,7 +240,9 @@ export function syncWithDatabaseAction(entityType: AcademicEntityType) {
       disabled: Boolean(
         !doc?.dbId ||
           !doc?.name ||
-          ((entityType === 'faculty' || entityType === 'subject') &&
+          ((entityType === 'faculty' ||
+            entityType === 'subject' ||
+            entityType === 'studyProgram') &&
             !parentReference)
       ),
       onHandle: async () => {
@@ -228,7 +257,9 @@ export function syncWithDatabaseAction(entityType: AcademicEntityType) {
         }
 
         if (
-          (entityType === 'faculty' || entityType === 'subject') &&
+          (entityType === 'faculty' ||
+            entityType === 'subject' ||
+            entityType === 'studyProgram') &&
           !parentReference
         ) {
           setDialog(`Add a ${parentField} before syncing this record.`)
@@ -237,7 +268,7 @@ export function syncWithDatabaseAction(entityType: AcademicEntityType) {
 
         const body: Record<string, unknown> = {
           name: doc.name,
-          sanity_id: publishedSanityId(props.id),
+          sanity_id: props.id,
         }
 
         if (entityType === 'professor') {
@@ -264,9 +295,7 @@ export function syncWithDatabaseAction(entityType: AcademicEntityType) {
         }
 
         if (entityType === 'subject') {
-          body.year = doc.year
-          body.exam_session = doc.examSession
-          body.faculty_id = await client.fetch<string | null>(
+          body.study_program_id = await client.fetch<string | null>(
             '*[_id == $id || _id == $draftId][0].dbId',
             { id: parentReference, draftId: `drafts.${parentReference}` }
           )
@@ -285,9 +314,18 @@ export function syncWithDatabaseAction(entityType: AcademicEntityType) {
           body.professor_ids = professorIds.filter(Boolean)
         }
 
+        if (entityType === 'studyProgram') {
+          body.faculty_id = await client.fetch<string | null>(
+            '*[_id == $id || _id == $draftId][0].dbId',
+            { id: parentReference, draftId: `drafts.${parentReference}` }
+          )
+        }
+
         if (
-          (entityType === 'faculty' || entityType === 'subject') &&
-          !body[parentField === 'university' ? 'university_id' : 'faculty_id']
+          (entityType === 'faculty' ||
+            entityType === 'subject' ||
+            entityType === 'studyProgram') &&
+          !body[parentColumnFor(parentField)]
         ) {
           setDialog(`Link the selected ${parentField} to the database first.`)
           return
@@ -350,8 +388,7 @@ export function createCheckedDeleteAction(entityType: AcademicEntityType) {
     const { delete: deleteOp } = useDocumentOperation(props.id, props.type)
     const [dialog, setDialog] = useState<string | null>(null)
     const doc = props.draft ?? props.published
-    const dbId = doc?.dbId as string | undefined
-
+    const dbId = doc?.dbId
     return {
       label: 'Delete',
       icon: Trash,

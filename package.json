@@ -20,6 +20,7 @@
     "dev:hono": "npm run dev --workspace hono",
     "dev:next": "npm run dev --workspace next",
     "dev:sanity": "npm run dev --workspace sanity",
+    "dev:sanity:ninja": "npm run dev:ninja --workspace sanity",
     "format": "biome check --write --unsafe .",
     "gen:api-types": "npm run gen:types --workspace hono && npm run format",
     "lint": "biome check .",

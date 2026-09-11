@@ -45,7 +45,7 @@ studentCount,
 "professors": *[_type == "professor" && references(^._id)] | order(name asc) {
   ${minimalProfessorQuery}
 },
-"subjects": *[_type == "subject" && references(^._id)] | order(year asc, name asc) {
+"subjects": *[_type == "subject" && studyProgram->faculty._id == ^._id] | order(year asc, name asc) {
   ${minimalSubjectQuery}
 }
 `
@@ -92,7 +92,7 @@ ${sanityImageFunction}
   "professors": *[_type == "professor" && references(^._id)] | order(name asc) {
     ${minimalProfessorQuery}
   },
-  "subjects": *[_type == "subject" && references(^._id)] | order(year asc, name asc) {
+  "subjects": *[_type == "subject" && studyProgram->faculty._id == ^._id] | order(year asc, name asc) {
     ${minimalSubjectQuery}
   }
 }

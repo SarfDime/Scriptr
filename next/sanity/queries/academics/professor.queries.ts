@@ -72,7 +72,7 @@ export const professorDetailQuery = groq`
     year,
     code,
     credits,
-    faculty->{
+    studyProgram->faculty->{
       _id,
       name,
       dbId

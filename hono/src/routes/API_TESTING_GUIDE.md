@@ -203,7 +203,6 @@ curl http://localhost:8787/api/professors | jq .
 curl http://localhost:8787/api/professors/$PROF | jq .
 
 curl http://localhost:8787/api/subjects | jq .
-curl "http://localhost:8787/api/subjects/year/1" | jq .
 curl http://localhost:8787/api/subjects/$SUBJ | jq .
 ```
 
@@ -343,19 +342,21 @@ curl -X PATCH http://localhost:8787/api/internal/profiles/$USER/role \
   -d '{"role":"moderator"}' | jq .
 ```
 
-| Method       | Path                                                 | Body                                                                                 |
-| ------------ | ---------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| GET/POST     | `/api/internal/universities`                         | `{ "name" }`                                                                         |
-| PATCH/DELETE | `/api/internal/universities/:id`                     | `{ "name" }`                                                                         |
-| GET/POST     | `/api/internal/faculties`                            | `{ "name", "university_id" }`                                                        |
-| PATCH/DELETE | `/api/internal/faculties/:id`                        | `{ "name", "university_id" }`                                                        |
-| GET/POST     | `/api/internal/professors`                           | `{ "name", "picture_url?", "bio?", "faculty_ids?" }`                                 |
-| PATCH/DELETE | `/api/internal/professors/:id`                       | `{ "name", "picture_url", "bio" }`                                                   |
-| POST/DELETE  | `/api/internal/professors/:id/faculties/:facultyId`  | —                                                                                    |
-| GET/POST     | `/api/internal/subjects`                             | `{ "name", "year", "exam_session", "faculty_id", "description?", "professor_ids?" }` |
-| PATCH/DELETE | `/api/internal/subjects/:id`                         | same fields, partial                                                                 |
-| POST/DELETE  | `/api/internal/subjects/:id/professors/:professorId` | —                                                                                    |
-| PATCH        | `/api/internal/profiles/:id/role`                    | `{ "role": "student"                                                                 | "moderator" }` |
+| Method       | Path                                                 | Body                                                 |
+| ------------ | ---------------------------------------------------- | ---------------------------------------------------- |
+| GET/POST     | `/api/internal/universities`                         | `{ "name" }`                                         |
+| PATCH/DELETE | `/api/internal/universities/:id`                     | `{ "name" }`                                         |
+| GET/POST     | `/api/internal/faculties`                            | `{ "name", "university_id" }`                        |
+| PATCH/DELETE | `/api/internal/faculties/:id`                        | `{ "name", "university_id" }`                        |
+| GET/POST     | `/api/internal/professors`                           | `{ "name", "picture_url?", "bio?", "faculty_ids?" }` |
+| PATCH/DELETE | `/api/internal/professors/:id`                       | `{ "name", "picture_url", "bio" }`                   |
+| POST/DELETE  | `/api/internal/professors/:id/faculties/:facultyId`  | —                                                    |
+| GET/POST     | `/api/internal/study-programs`                       | `{ "name", "faculty_id" }`                           |
+| PATCH/DELETE | `/api/internal/study-programs/:id`                   | same fields, partial                                 |
+| GET/POST     | `/api/internal/subjects`                             | `{ "name", "study_program_id", "professor_ids?" }`   |
+| PATCH/DELETE | `/api/internal/subjects/:id`                         | same fields, partial                                 |
+| POST/DELETE  | `/api/internal/subjects/:id/professors/:professorId` | —                                                    |
+| PATCH        | `/api/internal/profiles/:id/role`                    | `{ "role": "student"                                 | "moderator" }` |
 
 ---
 

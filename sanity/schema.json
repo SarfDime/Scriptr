@@ -31,7 +31,7 @@
   },
   {
     "type": "type",
-    "name": "faculty.reference",
+    "name": "studyProgram.reference",
     "value": {
       "type": "object",
       "attributes": {
@@ -56,7 +56,7 @@
           "optional": true
         }
       },
-      "dereferencesTo": "faculty"
+      "dereferencesTo": "studyProgram"
     }
   },
   {
@@ -106,13 +106,23 @@
         "value": {
           "type": "string"
         },
-        "optional": true
+        "optional": false
       },
       "description": {
         "type": "objectAttribute",
         "value": {
           "type": "inline",
           "name": "richTextLite"
+        },
+        "optional": false
+      },
+      "keywords": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "array",
+          "of": {
+            "type": "string"
+          }
         },
         "optional": true
       },
@@ -121,7 +131,7 @@
         "value": {
           "type": "number"
         },
-        "optional": true
+        "optional": false
       },
       "syllabus": {
         "type": "objectAttribute",
@@ -137,6 +147,13 @@
         },
         "optional": false
       },
+      "classes": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
       "semester": {
         "type": "objectAttribute",
         "value": {
@@ -149,27 +166,6 @@
             {
               "type": "string",
               "value": "summer"
-            }
-          ]
-        },
-        "optional": true
-      },
-      "examSession": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "union",
-          "of": [
-            {
-              "type": "string",
-              "value": "january"
-            },
-            {
-              "type": "string",
-              "value": "june"
-            },
-            {
-              "type": "string",
-              "value": "september"
             }
           ]
         },
@@ -196,6 +192,103 @@
           }
         },
         "optional": false
+      },
+      "studyProgram": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "inline",
+          "name": "studyProgram.reference"
+        },
+        "optional": false
+      },
+      "dbId": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      }
+    }
+  },
+  {
+    "type": "type",
+    "name": "faculty.reference",
+    "value": {
+      "type": "object",
+      "attributes": {
+        "_ref": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "string"
+          }
+        },
+        "_type": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "string",
+            "value": "reference"
+          }
+        },
+        "_weak": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "boolean"
+          },
+          "optional": true
+        }
+      },
+      "dereferencesTo": "faculty"
+    }
+  },
+  {
+    "name": "studyProgram",
+    "type": "document",
+    "attributes": {
+      "_id": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "_type": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string",
+          "value": "studyProgram"
+        }
+      },
+      "_createdAt": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "_updatedAt": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "_rev": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "name": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": false
+      },
+      "description": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "inline",
+          "name": "richTextLite"
+        },
+        "optional": true
       },
       "faculty": {
         "type": "objectAttribute",
@@ -913,10 +1006,72 @@
         },
         "optional": true
       },
-      "secretary": {
+      "bio": {
         "type": "objectAttribute",
         "value": {
           "type": "string"
+        },
+        "optional": false
+      },
+      "picture": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "object",
+          "attributes": {
+            "asset": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "inline",
+                "name": "sanity.imageAsset.reference"
+              },
+              "optional": true
+            },
+            "media": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "unknown"
+              },
+              "optional": true
+            },
+            "hotspot": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "inline",
+                "name": "sanity.imageHotspot"
+              },
+              "optional": true
+            },
+            "crop": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "inline",
+                "name": "sanity.imageCrop"
+              },
+              "optional": true
+            },
+            "_type": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string",
+                "value": "image"
+              }
+            }
+          }
+        },
+        "optional": true
+      },
+      "secretary": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "inline",
+          "name": "person.reference"
+        },
+        "optional": false
+      },
+      "studentCount": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
         },
         "optional": false
       },
@@ -1935,6 +2090,44 @@
         },
         "optional": true
       },
+      "siteName": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
+      "siteUrl": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
+      "defaultSeoTitle": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
+      "defaultSeoDescription": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
+      "defaultKeywords": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "array",
+          "of": {
+            "type": "string"
+          }
+        },
+        "optional": true
+      },
       "navAndFooterFields": {
         "type": "objectAttribute",
         "value": {
@@ -2038,7 +2231,7 @@
           "type": "string"
         }
       },
-      "image": {
+      "picture": {
         "type": "objectAttribute",
         "value": {
           "type": "object",

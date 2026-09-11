@@ -18,12 +18,23 @@ year,
 semester,
 description,
 syllabus,
-faculty->{
+"faculty": studyProgram->faculty->{
   _id,
   name,
+  dbId,
   university->{
     _id,
     name,
+  }
+},
+studyProgram->{
+  _id,
+  name,
+  dbId,
+  faculty->{
+    _id,
+    name,
+    dbId,
   }
 },
 professors[]->{
@@ -46,11 +57,11 @@ export const subjectDetailQuery = groq`
   semester,
   description,
   syllabus,
-  faculty->{
+  "faculty": studyProgram->faculty->{
     _id,
     name,
     dbId,
-    university->{
+    faculty->{
       _id,
       name,
       dbId

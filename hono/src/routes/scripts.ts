@@ -16,7 +16,7 @@ const scripts = new Hono<HonoEnv>()
 
 // Excludes is_flagged, which is internal moderation state and not for public consumption.
 const PUBLIC_SCRIPT_COLUMNS =
-  'id, title, description, file_url, file_type, subject_id, professor_id, faculty_id, author_id, vote_score, download_count, created_at, updated_at'
+  'id, title, description, file_url, file_type, subject_id, professor_id, faculty_id, author_id, exam_session, additional_reading, vote_score, download_count, created_at, updated_at'
 
 /** Resolve the requester's dedupe identity for downloads: account, then IP, then device. */
 async function resolveDownloadIdentity(c: Context<HonoEnv>) {
@@ -120,7 +120,7 @@ scripts.get('/', async (c) => {
     .select(`
       ${PUBLIC_SCRIPT_COLUMNS},
       author:profiles(username, full_name),
-      subject:subjects(name, year, exam_session, faculty:faculties(id, name, university:universities(id, name))),
+      subject:subjects(name, study_program:study_programs(name, faculty:faculties(id, name, university:universities(id, name)))),
       faculty:faculties(id, name, university:universities(id, name))
     `)
     .order('created_at', { ascending: false })
@@ -146,7 +146,7 @@ scripts.get('/subject/:subjectId', async (c) => {
     .select(`
       ${PUBLIC_SCRIPT_COLUMNS},
       author:profiles(username, full_name),
-      subject:subjects(name, year, exam_session, faculty:faculties(id, name, university:universities(id, name))),
+      subject:subjects(name, study_program:study_programs(name, faculty:faculties(id, name, university:universities(id, name)))),
       faculty:faculties(id, name, university:universities(id, name))
     `)
     .eq('subject_id', subjectId)
@@ -173,7 +173,7 @@ scripts.get('/top', async (c) => {
     .select(`
       ${PUBLIC_SCRIPT_COLUMNS},
       author:profiles(username, full_name),
-      subject:subjects(name, year, faculty:faculties(id, name, university:universities(id, name))),
+      subject:subjects(name, study_program:study_programs(name, faculty:faculties(id, name, university:universities(id, name)))),
       faculty:faculties(id, name, university:universities(id, name))
     `)
     .order('vote_score', { ascending: false })
@@ -200,7 +200,7 @@ scripts.get('/popular', async (c) => {
     .select(`
       ${PUBLIC_SCRIPT_COLUMNS},
       author:profiles(username, full_name),
-      subject:subjects(name, year, faculty:faculties(id, name, university:universities(id, name))),
+      subject:subjects(name, study_program:study_programs(name, faculty:faculties(id, name, university:universities(id, name)))),
       faculty:faculties(id, name, university:universities(id, name))
     `)
     .order('download_count', { ascending: false })
@@ -228,7 +228,7 @@ scripts.get('/search', async (c) => {
   let query = supabase.from('scripts').select(`
       ${PUBLIC_SCRIPT_COLUMNS},
       author:profiles(username, full_name),
-      subject:subjects(name, year, faculty:faculties(id, name, university:universities(id, name))),
+      subject:subjects(name, study_program:study_programs(name, faculty:faculties(id, name, university:universities(id, name)))),
       faculty:faculties(id, name, university:universities(id, name))
     `)
   const selectedFacultyIds = await getSelectedFacultyScope(supabase)
@@ -272,7 +272,7 @@ scripts.get('/:id', async (c) => {
     .select(`
       ${PUBLIC_SCRIPT_COLUMNS},
       author:profiles(username, full_name),
-      subject:subjects(name, year, exam_session, faculty:faculties(id, name, university:universities(id, name))),
+      subject:subjects(name, study_program:study_programs(name, faculty:faculties(id, name, university:universities(id, name)))),
       faculty:faculties(id, name, university:universities(id, name))
     `)
     .eq('id', scriptId)
@@ -308,6 +308,9 @@ scripts.post('/', authMiddleware, async (c) => {
   const professorId = body.professor_id ?? body.professorId
   const facultyId = body.faculty_id ?? body.facultyId
   const fileType = body.fileType ?? body.file_type
+  const examSession = body.examSession ?? body.exam_session ?? null
+  const additionalReading =
+    body.additionalReading ?? body.additional_reading ?? []
 
   if (
     !title ||
@@ -315,7 +318,8 @@ scripts.post('/', authMiddleware, async (c) => {
     !professorId ||
     !fileKey ||
     !fileType ||
-    !facultyId
+    !facultyId ||
+    !Array.isArray(additionalReading)
   ) {
     return c.json(
       {
@@ -341,13 +345,15 @@ scripts.post('/', authMiddleware, async (c) => {
       professor_id: professorId,
       faculty_id: facultyId,
       author_id: user.id,
+      exam_session: examSession,
+      additional_reading: additionalReading,
       vote_score: 0,
       download_count: 0,
     })
     .select(`
       *,
       author:profiles(username, full_name),
-      subject:subjects(name, year, faculty:faculties(id, name, university:universities(id, name))),
+      subject:subjects(name, study_program:study_programs(name, faculty:faculties(id, name, university:universities(id, name)))),
       faculty:faculties(id, name, university:universities(id, name))
     `)
     .single()
@@ -371,7 +377,7 @@ scripts.patch('/:id', authMiddleware, async (c) => {
   const scriptId = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)
 
-  const { title, description } = await c.req.json()
+  const { title, description, additional_reading } = await c.req.json()
 
   // Get the script and user's role
   const [{ data: script }, { data: profile }] = await Promise.all([
@@ -392,13 +398,14 @@ scripts.patch('/:id', authMiddleware, async (c) => {
     .update({
       title,
       description,
+      ...(Array.isArray(additional_reading) ? { additional_reading } : {}),
       updated_at: new Date().toISOString(),
     })
     .eq('id', scriptId)
     .select(`
       *,
       author:profiles(username, full_name),
-      subject:subjects(name, year)
+      subject:subjects(name, study_program:study_programs(name))
     `)
     .single()
 
@@ -459,7 +466,7 @@ scripts.get('/my-scripts', authMiddleware, async (c) => {
     .from('scripts')
     .select(`
       *,
-      subject:subjects(name, year)
+      subject:subjects(name, study_program:study_programs(name))
     `)
     .eq('author_id', user.id)
     .order('created_at', { ascending: false })
@@ -543,7 +550,7 @@ scripts.get('/flagged/all', authMiddleware, async (c) => {
     .select(`
       *,
       author:profiles(username, full_name),
-      subject:subjects(name, year),
+      subject:subjects(name, study_program:study_programs(name)),
       flags:flags(
         *,
         reporter:profiles!reporter_id(username)

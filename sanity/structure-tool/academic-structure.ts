@@ -18,6 +18,12 @@ const academicSections: Array<ChildSchemaType> = [
     icon: BlockElementIcon,
   },
   {
+    title: 'Study Program',
+    schemaType: 'studyProgram',
+    category: 'info',
+    icon: BlockElementIcon,
+  },
+  {
     title: 'Subject',
     schemaType: 'subject',
     category: 'info',

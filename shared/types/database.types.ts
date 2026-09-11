@@ -497,10 +497,12 @@ export type Database = {
       }
       scripts: {
         Row: {
+          additional_reading: string[]
           author_id: string
           created_at: string
           description: string | null
           download_count: number
+          exam_session: string | null
           faculty_id: string | null
           file_type: string
           file_url: string
@@ -513,10 +515,12 @@ export type Database = {
           vote_score: number
         }
         Insert: {
+          additional_reading?: string[]
           author_id: string
           created_at?: string
           description?: string | null
           download_count?: number
+          exam_session?: string | null
           faculty_id?: string | null
           file_type: string
           file_url: string
@@ -529,10 +533,12 @@ export type Database = {
           vote_score?: number
         }
         Update: {
+          additional_reading?: string[]
           author_id?: string
           created_at?: string
           description?: string | null
           download_count?: number
+          exam_session?: string | null
           faculty_id?: string | null
           file_type?: string
           file_url?: string
@@ -575,6 +581,38 @@ export type Database = {
           },
         ]
       }
+      study_programs: {
+        Row: {
+          created_at: string
+          faculty_id: string
+          id: string
+          name: string
+          sanity_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          faculty_id: string
+          id?: string
+          name: string
+          sanity_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          faculty_id?: string
+          id?: string
+          name?: string
+          sanity_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'study_programs_faculty_id_fkey'
+            columns: ['faculty_id']
+            isOneToOne: false
+            referencedRelation: 'faculties'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       subject_professors: {
         Row: {
           professor_id: string
@@ -608,37 +646,31 @@ export type Database = {
       subjects: {
         Row: {
           created_at: string
-          exam_session: string
-          faculty_id: string | null
           id: string
           name: string
           sanity_id: string | null
-          year: number
+          study_program_id: string
         }
         Insert: {
           created_at?: string
-          exam_session: string
-          faculty_id?: string | null
           id?: string
           name: string
           sanity_id?: string | null
-          year: number
+          study_program_id: string
         }
         Update: {
           created_at?: string
-          exam_session?: string
-          faculty_id?: string | null
           id?: string
           name?: string
           sanity_id?: string | null
-          year?: number
+          study_program_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'subjects_faculty_id_fkey'
-            columns: ['faculty_id']
+            foreignKeyName: 'subjects_study_program_id_fkey'
+            columns: ['study_program_id']
             isOneToOne: false
-            referencedRelation: 'faculties'
+            referencedRelation: 'study_programs'
             referencedColumns: ['id']
           },
         ]

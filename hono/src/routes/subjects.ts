@@ -43,41 +43,12 @@ subjects.get('/', async (c) => {
     .from('subjects')
     .select(`
       *,
-      faculty:faculties(id, name, university:universities(id, name)),
+      study_program:study_programs(id, name, faculty:faculties(id, name, university:universities(id, name))),
       professors:subject_professors(
         professor:professors(*)
       ),
       scripts:scripts(count)
     `)
-    .order('year', { ascending: true })
-    .order('name', { ascending: true })
-
-  if (selectedFacultyIds && selectedFacultyIds.length > 0) {
-    query = query.in('faculty_id', selectedFacultyIds)
-  }
-
-  const { data, error } = await query
-
-  if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
-})
-
-/** Get subjects by year */
-subjects.get('/year/:year', async (c) => {
-  const year = requiredParam(c, 'year')
-  const supabase = createSupabaseClient(c)
-  const selectedFacultyIds = await getSelectedFacultyScope(supabase)
-
-  let query = supabase
-    .from('subjects')
-    .select(`
-      *,
-      faculty:faculties(id, name, university:universities(id, name)),
-      professors:subject_professors(
-        professor:professors(*)
-      )
-    `)
-    .eq('year', Number(year))
     .order('name', { ascending: true })
 
   if (selectedFacultyIds && selectedFacultyIds.length > 0) {
@@ -101,7 +72,7 @@ subjects.get('/:id', async (c) => {
     .from('subjects')
     .select(`
       *,
-      faculty:faculties(id, name, university:universities(id, name)),
+      study_program:study_programs(id, name, faculty:faculties(id, name, university:universities(id, name))),
       professors:subject_professors(
         professor:professors(*)
       ),
@@ -118,8 +89,8 @@ subjects.get('/:id', async (c) => {
   if (
     selectedFacultyIds &&
     selectedFacultyIds.length > 0 &&
-    data.faculty_id &&
-    !selectedFacultyIds.includes(data.faculty_id)
+    data.study_program?.faculty?.id &&
+    !selectedFacultyIds.includes(data.study_program.faculty.id)
   ) {
     return c.json(
       { error: 'Subject not available in your selected faculties' },
