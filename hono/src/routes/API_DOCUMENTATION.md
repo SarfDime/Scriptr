@@ -61,7 +61,7 @@ Get a single professor by ID.
 - **Response**: Professor object with related records
 
 #### `GET /subjects`
-Get all subjects with study-program, faculty, and professor metadata.
+Get all subjects with study, faculty, and professor metadata.
 - **Auth**: `x-internal-secret` required
 - **Response**: Array of subjects
 

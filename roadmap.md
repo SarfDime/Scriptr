@@ -130,7 +130,7 @@ The first release is intentionally narrow: ship the right core product, keep the
 ### 4.4 Script creation and upload flow
 
 1. Users create a script from a dedicated create-script modal.
-2. **Subject-driven resolution (canonical rule):** the user selects a single subject. Professor, faculty, study, and university are resolved automatically from that subject (`subject → study → faculty → university`, all derived, never stored redundantly on `scripts` — see §5.2.8).
+2. **Subject-driven resolution (canonical rule):** the user selects a single subject. Faculty, study, university and professor are resolved automatically from that subject (`subject → study → faculty → university` - `subject -> professor`, all derived, never stored redundantly on `scripts` — see §5.2.8).
 3. User provides title, description, exam session, and optional additional reading links (array of URLs).
 4. User uploads the script file.
 5. Validation ensures all required fields are present before submission.
@@ -198,7 +198,7 @@ Applies uniformly to all five entity types: university, faculty, study, subject,
 5. The frontend never assumes the DB row is the complete source of truth for academic entity data.
 6. `scripts` owns runtime script metadata: `exam_session` (categorization by exam period) and `additional_reading` (`text[]` of supplementary URLs).
 7. `subjects` is minimal (names, IDs, relationships). `exam_session` belongs on scripts, not subjects; `year`/`semester` belong to Sanity. `exam_session` and `year` have been removed from the `subjects` DB table.
-8. `scripts` does **not** store `faculty_id` directly. Faculty is always derived via `subject_id → study_id → faculty_id`, to avoid drift. (This column existed before `studies` was introduced, when the chain was `subject_id → faculty_id` directly; it has since been dropped.)
+8. `scripts` does **not** store `faculty_id` directly. Faculty is always derived via `subject_id → study_id → faculty_id`, to avoid drift.
 
 ### 5.3 Initial university and entity assumptions
 
@@ -429,9 +429,7 @@ Both mirror the existing `profile_faculties` / `professor_faculties` many-to-man
 19. `year`/`semester` are authored and owned in Sanity CMS, removed from the `subjects` DB table (§5.2.7).
 20. **Study is an independent entity/table** in the `Faculty → Study → Subject` hierarchy (§5.12).
 21. `profiles.role` allows `student`, `moderator`, and `admin`, matching the three-role model (§3.2).
-22. **`scripts.faculty_id` has been removed** — it predated `studies` and was a redundant, unsynced column; faculty is now always derived via `subject_id → study_id → faculty_id` (§5.2.8).
-23. **`profile_studies` and `professor_studies`** junction tables have been added, mirroring the `profile_faculties`/`professor_faculties` pattern, since both students and professors can be associated with multiple studies (§5.12).
-24. **The live Supabase schema uses study naming throughout** — `study_programs` was renamed to `studies`, both junction tables were renamed to `profile_studies`/`professor_studies`, and all `study_program_id` columns were renamed to `study_id`.
+22. **`profile_studies` and `professor_studies`** junction tables have been added, mirroring the `profile_faculties`/`professor_faculties` pattern, since both students and professors can be associated with multiple studies (§5.12).
 
 ### 8.2 Sanity/DB sync workflow elaboration
 
@@ -457,8 +455,8 @@ Out of scope for the first release, to address after launch:
 
 ### Phase 1: Database foundation and backend API
 
-1. Configure the minimal DB schema for runtime identity and script records.
-2. Implement all required database tables: `profiles`, `scripts`, `profile_subjects`, `profile_faculties`, `profile_studies`, `professor_studies`, `download_events`, and remaining relationship tables (academic profile model: §5.8). **[✅]**
+1. Configure the minimal DB schema for runtime identity and script records.**[✅]**
+2. Implement all required database tables: `profiles`, `scripts`, `profile_subjects`, `profile_faculties`, `profile_studies`, `professor_studies`, `download_events`, and remaining relationship tables (academic profile model: §5.8).**[✅]**
 3. Set up database constraints, indexes, and validation rules for data integrity.
 4. Implement the script API (create, read, update, delete).
 5. Implement authentication and permission checks in the backend.
@@ -470,11 +468,10 @@ Out of scope for the first release, to address after launch:
 11. Add `profile_studies` and `professor_studies` junction tables (composite PK, RLS: publicly readable; `profile_studies` self-managed by the owning user; `professor_studies` managed by moderators only). **[✅]**
 12. Drop the stale `scripts.faculty_id` column, its FK, and its index — faculty is now derived via `subject_id → study_id → faculty_id` only. **[✅]**
 13. Add `admin` to the `profiles.role` check constraint. **[✅]**
-14. **Regenerate `shared/types/database.types.ts`** to reflect items 11–13, and grep `hono/` and `next/` for any remaining `scripts.faculty_id` references to remove. **[✅]**
-15. Update the onboarding/profile backend to accept and persist study selection into `profile_studies`. **[✅]**
-16. Update professor admin sync actions to manage `professor_studies` alongside `professor_faculties`. **[✅]**
-17. Rename the live Supabase schema from study-program naming to study naming, including tables, columns, constraints, indexes, and policies. **[✅]**
-18. Test database schema and API endpoints thoroughly. **[🔲]**
+14. **Regenerate `shared/types/database.types.ts`**, and grep `hono/` and `next/`. **[🔲]**
+15. Update the onboarding/profile backend to accept and persist study selection into `profile_studies`. **[🔲]**
+16. Update professor admin sync actions to manage `professor_studies` alongside `professor_faculties`. **[🔲]**
+17. Test database schema and API endpoints thoroughly. **[🔲]**
 18. Cache script list/subject/top/popular/detail fetches in the Next.js Data Cache, tagged per endpoint/query; revalidate affected tags via a backend webhook on script create/update/delete; keep search and my-scripts uncached. **[✅]**
 
 ### Phase 2: Sanity CMS setup and academic entity management
@@ -485,7 +482,7 @@ Out of scope for the first release, to address after launch:
 4. Implement the Create-in-DB action (§8.2). **[✅ Complete]**
 5. Set up Sanity sync endpoints (create/update/delete DB records from CMS documents). **[✅ Mostly complete]**
 6. Implement publication blocking until DB ID exists. **[✅ Complete]**
-7. Implement deletion checks and cascading delete/update workflows. **[⚠️]**
+7. Implement deletion checks and cascading delete/update workflows. **[⚠️ Needs testing]**
 8. Define the initialization set for universities, faculties, studies, subjects, and professors in Sanity. **[✅ Complete]**
 9. Create the `study` Sanity schema, update subject references, adjust sync actions. **[✅]**
 10. Test sync workflows for create/update/delete, across all five entity types. **[🔲 Pending, after the deletion fix]**
@@ -541,7 +538,7 @@ Out of scope for the first release, to address after launch:
 4. Review architecture for maintainability and future scale.
 5. Implement CSS obfuscation for production builds.
 
-## 10 - Progress
+## 10. Progress
 
 ### Phase 1: Database foundation and backend API `[✏️ In Progress]`
 
@@ -558,10 +555,7 @@ Out of scope for the first release, to address after launch:
 - Add `profile_studies` / `professor_studies` junction tables. **[✅]**
 - Drop stale `scripts.faculty_id`. **[✅]**
 - Add `admin` role to `profiles.role`. **[✅]**
-- Regenerate database types; remove dead `scripts.faculty_id` references from Hono/Next.js. **[✅]**
-- Sync study selection into `profile_studies` in onboarding backend. **[✅]**
-- Manage `professor_studies` in professor admin sync actions. **[✅]**
-- Rename the live Supabase schema to `studies`, `profile_studies`, `professor_studies`, and `study_id`, including constraints, indexes, and policies. **[✅]**
+- Regenerate database types. **[🔲]**
 - Test database schema and API endpoints thoroughly. **[🔲]**
 - Cache script fetches in the Next.js Data Cache with tag-based revalidation via webhook; keep search/my-scripts uncached. **[✅]**
 
@@ -577,14 +571,14 @@ Out of scope for the first release, to address after launch:
 - Define the initialization set for universities, faculties, studies, subjects, professors. **[✅]**
 - Create the `study` Sanity schema and update subject references/sync actions. **[✅]**
 - Test sync workflows for create/update/delete. **[🔲]**
-- Implement programmatic slug generation for all five entity types. **[✅]**
+- Implement programmatic slug generation for all five entity types. **[🔲]**
 - Create TypeScript utility types for stripped/dereferenced Sanity types (including `study`). **[🔲]**
-- Create reusable Sanity mini-schemas across all five entity types. **[✅]**
+- Create reusable Sanity mini-schemas across all five entity types. **[🔲]**
 
 ### Phase 3: Core content and discovery `[✏️ In Progress]`
 
 - Build dynamic slug-based pages for universities, faculties, subjects, professors. **[✅]**
-- Add `study/[slug]` page. **[✅]**
+- Add `study/[slug]` page. **[🔲]**
 - Update subject pages to show parent study. **[🔲]**
 - Implement script listing, sorting, filtering. **[✅]**
 - Add search for scripts (local-first + API fallback). **[🔲 Missing]**

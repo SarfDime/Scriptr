@@ -506,7 +506,7 @@ internal.post('/studies', async (c) => {
 
   const existing = await findBySanityId(supabase, 'studies', sanity_id)
   if (existing) {
-    return c.json({ success: true, studyProgram: existing, existing: true })
+    return c.json({ success: true, study: existing, existing: true })
   }
 
   const { data, error } = await supabase
@@ -522,29 +522,29 @@ internal.post('/studies', async (c) => {
     return c.json({ error: error.message }, 500)
   }
 
-  return c.json({ success: true, studyProgram: data })
+  return c.json({ success: true, study: data })
 })
 
 /** Update a study. */
 internal.patch('/studies/:id', async (c) => {
-  const studyProgramId = requiredParam(c, 'id')
+  const studyId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
   const { name, faculty_id } = await c.req.json()
 
   const { data, error } = await supabase
     .from('studies')
     .update({ name, faculty_id })
-    .eq('id', studyProgramId)
+    .eq('id', studyId)
     .select()
     .single()
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json({ success: true, studyProgram: data })
+  return c.json({ success: true, study: data })
 })
 
 /** Sync a study with its Sanity document. */
 internal.post('/studies/:id/sync', async (c) => {
-  const studyProgramId = requiredParam(c, 'id')
+  const studyId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
   const { name, faculty_id } = await c.req.json()
 
@@ -555,19 +555,19 @@ internal.post('/studies/:id/sync', async (c) => {
   const { data, error } = await supabase
     .from('studies')
     .update({ name, faculty_id })
-    .eq('id', studyProgramId)
+    .eq('id', studyId)
     .select()
     .single()
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json({ success: true, studyProgram: data })
+  return c.json({ success: true, study: data })
 })
 
 /** Delete a study when no subject still references it. */
 internal.delete('/studies/:id', async (c) => {
-  const studyProgramId = requiredParam(c, 'id')
+  const studyId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
-  const blockers = await findBlockingDependents(supabase, studyProgramId, [
+  const blockers = await findBlockingDependents(supabase, studyId, [
     { table: 'subjects', column: 'study_id', label: 'subjects' },
   ])
 
@@ -578,10 +578,7 @@ internal.delete('/studies/:id', async (c) => {
     )
   }
 
-  const { error } = await supabase
-    .from('studies')
-    .delete()
-    .eq('id', studyProgramId)
+  const { error } = await supabase.from('studies').delete().eq('id', studyId)
 
   if (error) return c.json({ error: error.message }, 500)
   return c.json({
