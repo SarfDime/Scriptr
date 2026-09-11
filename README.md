@@ -52,6 +52,31 @@ npm run sanity:schema  # Extract schema.json only
 npm run sanity:types   # Generate TypeScript types only
 ```
 
+## Deployment and branch behavior
+
+The deploy flow is controlled by the branch name:
+
+- Branch names containing `-s-` should run the Sanity-only action path, which is the dry-run validation flow for schema and Studio changes.
+- Branch names containing `-f-` should run the full deploy path, including Sanity and any other release actions such as Vercel or app deploys.
+
+This keeps schema-only changes separate from full production deploys.
+
+### Production deploy commands
+
+Deploy the production website:
+
+```bash
+git push origin staging:main
+```
+
+Deploy the Sanity production studio/schema:
+
+```bash
+git push origin staging:main-sanity
+```
+
+If a Sanity deploy fails for non-critical type changes or related schema drift, use the force deploy action so the GraphQL/schema update can be pushed again.
+
 ## Documentation
 
 - [API setup](hono/README.md)
