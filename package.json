@@ -3,8 +3,8 @@
     "esbuild@0.28.2": true
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.12",
-    "@types/node": "^26.5.0",
+    "@biomejs/biome": "2.5.13",
+    "@types/node": "^24.13.4",
     "typescript": "^7.0.2"
   },
   "name": "scriptr",
@@ -15,7 +15,7 @@
     "build:sanity": "npm run build --workspace sanity",
     "check-types": "npm run check-types --workspace hono && npm run check-types --workspace next && npm run check-types --workspace sanity",
     "check-types:sanity": "npm run check-types --workspace sanity",
-    "clean": "rm -rf next/node_modules hono/node_modules sanity/node_modules node_modules next/.next sanity/.sanity sanity/tsconfig.tsbuildinfo next/tsconfig.tsbuildinfo hono/tsconfig.tsbuildinfo tsconfig.tsbuildinfo",
+    "clean": "rm -rf next/node_modules hono/node_modules sanity/node_modules node_modules next/.next sanity/.sanity sanity/tsconfig.tsbuildinfo sanity/dist next/tsconfig.tsbuildinfo hono/tsconfig.tsbuildinfo tsconfig.tsbuildinfo",
     "dev": "npm run dev:next & npm run dev:hono & npm run dev:sanity",
     "dev:hono": "npm run dev --workspace hono",
     "dev:next": "npm run dev --workspace next",

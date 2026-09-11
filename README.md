@@ -77,6 +77,9 @@ git push origin staging:main-sanity
 
 If a Sanity deploy fails for non-critical type changes or related schema drift, use the force deploy action so the GraphQL/schema update can be pushed again.
 
+### Sanity Studio
+Studio deployed at https://scriptr.sanity.studio
+
 ## Documentation
 
 - [API setup](hono/README.md)
