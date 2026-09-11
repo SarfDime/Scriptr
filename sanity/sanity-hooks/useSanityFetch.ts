@@ -23,7 +23,7 @@ export const useSanityFetch = <T>(query: string, params?: QueryParams) => {
       )
       setData(result)
     } catch (err) {
-      // biome-ignore lint/suspicious/noConsole: <Used for tontineLog>
+      // biome-ignore lint/suspicious/noConsole: <Used for logging>
       console.error('[useSanityFetch] Failed to fetch data:', err)
       setError(err as Error)
       setData(null)

@@ -1,0 +1,54 @@
+name: Manual deploy studio and schemas (force GraphQL)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/production-sanity'
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [24.x]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
+      - name: Install dependencies with CI
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Lint schemas using biome & check types
+        run: npm run lint && npm run check-types:sanity
+
+      - name: Check code formatting using prettier
+        run: npm run format
+
+      - name: Build studio, deploy studio and schemas
+        env:
+          SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
+          SANITY_STUDIO_INTERNAL_SECRET: ${{ secrets.SANITY_STUDIO_INTERNAL_SECRET }}
+        run: npm -w sanity-studio run deploy
+
+      - name: Force deploy GraphQL schema (breaking changes allowed)
+        env:
+          SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
+          SANITY_STUDIO_INTERNAL_SECRET: ${{ secrets.SANITY_STUDIO_INTERNAL_SECRET }}
+        run: npm -w sanity-studio run deploy-graphql -- --dataset production --force
