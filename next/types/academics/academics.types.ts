@@ -25,3 +25,8 @@ export type AddressableContactInfo = ContactInfo & {
 export type RelatedFaculty = MinimalEntity & {
   university?: MinimalEntity
 }
+
+// Extracted relation type used inside SubjectDetail and ProfessorDetail
+export type RelatedStudy = MinimalEntity & {
+  faculty?: RelatedFaculty
+}

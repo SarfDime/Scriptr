@@ -125,12 +125,12 @@ export const Subject = defineType({
       fieldset: 'academic',
     },
     {
-      name: 'studyProgram',
-      title: 'Study Program',
+      name: 'study',
+      title: 'Study',
       type: 'reference',
-      to: [{ type: 'studyProgram' }],
+      to: [{ type: 'study' }],
       description:
-        'Used to create the database record. The faculty is inherited from the selected study program.',
+        'Used to create the database record. The faculty is inherited from the selected study.',
       validation: validationRules.isRequired,
       fieldset: 'database',
     },

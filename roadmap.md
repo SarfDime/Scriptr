@@ -1,412 +1,452 @@
 # Scriptr Product and Implementation Roadmap
 
 ## 1. Project goal
-Scriptr is a university-focused platform for discovering and sharing scripts within a single academic context. The app should stay simple, reliable, and easy to maintain while still having a clean separation between editorial content, runtime data, and platform logic.
 
-This roadmap reflects the product decisions that have now been confirmed for the first release: Sanity is the CMS for academic metadata, Supabase stores only lightweight runtime records, the initial rollout assumes a single university, and scripts are always tied to exactly one subject.
+Scriptr is a university-focused platform for discovering and sharing scripts within a single academic context. The app stays simple, reliable, and easy to maintain, with a clean separation between editorial content (Sanity), runtime data (Supabase), and platform logic.
+
+Confirmed for the first release: Sanity is the CMS for academic metadata, Supabase stores only lightweight runtime records, the initial rollout assumes a single university, and scripts are always tied to exactly one subject. The academic hierarchy is `University → Faculty → Study → Subject`.
 
 ---
 
 ## 2. Release scope and product assumptions
 
-### 2.1 Initial release assumptions
 1. Expected volume is very small at launch.
-2. Only scripts will be searchable in the first release.
-3. Search should use a local data-first approach when possible, with an API fallback if needed.
-4. There will be a single university in v1, so the university should be automatically selected and readonly for users.
-5. All academic entities in Sanity and in the database will be created from app start and changed only when a new university is added later.
-6. Scripts are always tied to one subject only; multi-subject scripts are not allowed.
-7. Each script should automatically resolve the associated professor, faculty, and university from the selected subject.
-8. The app will support three user roles: normal user, university-scoped moderator, and admin.
-9. Guest onboarding and profile data should persist in local storage only.
-10. The first release does not include general flagging; suspicious download patterns are the initial abuse-control mechanism.
-11. The deduplication identity priority should be account first, then IP, then device.
-12. Download activity should be unique per identity and should not count duplicate requests from the same person or device beyond the allowed threshold.
+2. Only scripts are searchable in the first release (details: §4.3, §6.5).
+3. There is a single university in v1; it is auto-selected and read-only for users (§5.3).
+4. All academic entities (university, faculty, study, subject, professor) are created from app start in both Sanity and Supabase, and changed only when a new university is added later (§5.3).
+5. Scripts are always tied to exactly one subject; multi-subject scripts are out of scope. Faculty, study, and university are resolved from the subject automatically; professor is selected explicitly (full rule: §4.4.2).
+6. Three user roles: normal user, moderator (global, not university-scoped), admin (full model: §3.2).
+7. Guest onboarding and academic-profile data persist in local storage until account creation (full model: §5.8).
+8. General flagging — covering scripts, users, and comments through a shared `flags` table with a pending/reviewed/dismissed lifecycle — is implemented in v1. Suspicious download-pattern detection is a separate, additional abuse control (full model: §4.6).
+9. Download deduplication identity priority: account first, then IP, then device (§5.7).
 
-### 2.2 Product principle for v1
-The first release is intentionally narrow. The goal is to ship the right core product, keep the architecture clean, and defer more advanced moderation and community features until the product is proven.
+### Product principle for v1
+
+The first release is intentionally narrow: ship the right core product, keep the architecture clean, and defer advanced moderation/community features until the product is proven (deferred list: §8.3).
 
 ---
 
 ## 3. Product requirements
 
 ### 3.1 Core user flows
-1. Users must be able to browse and filter scripts by subject, professor, popularity, recency, or other relevant metadata.
-2. Users must be able to view subject pages that show subject information, associated professor data, and relevant scripts.
-3. Users must be able to view professor pages that show profile information, subject assignments, and relevant scripts.
-4. Users must be able to view faculty pages and university pages generated from their IDs.
-5. Users must be able to view a dedicated script detail page showing the title, description, file preview, subject context, comments, and metadata.
-6. Users must be able to create, edit, and delete their own scripts.
-7. Users must be able to view and manage their own profile information and uploaded content.
-8. Guests must still be able to browse content and download scripts where permitted without creating an account.
 
-### 3.2 Auth and permissions
-1. Only authenticated users should be able to create, edit, or delete scripts.
-2. Users should only be able to manage their own scripts unless they have moderator or admin privileges.
-3. Anonymous users should still be able to read public content.
-4. Authenticated actions such as liking, saving, commenting, or script creation should be restricted to signed-in users.
-5. Guests should still be able to preview or download scripts unless abuse protections are triggered.
-6. Permissions must be enforced in both the frontend and backend.
-7. Moderators should be scoped per university and only act within that university.
-8. Admin users should retain platform-level governance rights.
+1. Browse and filter scripts by subject, professor, popularity, recency, and other metadata.
+2. View subject pages (subject info, professor data, relevant scripts).
+3. View professor pages (profile info, subject/study-program assignments, relevant scripts).
+4. View faculty, study, and university pages.
+5. View a script detail page (title, description, file preview, subject context, comments, metadata).
+6. Create, edit, and delete own scripts.
+7. View and manage own profile and uploaded content.
+8. Guests can browse content and download scripts where permitted, without an account.
+
+### 3.2 Roles, auth, and permissions
+
+**Role model** (canonical — referenced elsewhere as "§3.2"): three roles — normal user, moderator, admin.
+
+- Moderators are a **global** role: they can act across all universities, not scoped to one. This is a deliberate simplification given v1 has only one university anyway.
+- Admins retain platform-level governance rights (escalations, edge cases, entity administration).
+- Only authenticated users can create, edit, or delete scripts, or like/save/comment.
+- Users manage only their own scripts unless they have moderator or admin privileges.
+- Anonymous users can read public content and preview/download scripts where allowed.
+- Permissions are enforced in both frontend and backend (server-side enforcement is authoritative — see §5.5.7, §6.6.1).
 
 ### 3.3 Content quality and moderation
-1. Submitted scripts should be validated before storage.
-2. Abuse prevention should focus on suspicious download patterns and repeated spam-like activity in v1.
-3. The app should surface clear auth prompts when a user attempts protected actions without an account.
-4. Ownership and attribution must remain clear for scripts, professors, faculties, universities, and subjects.
-5. The first version does not require a general user or script flagging workflow.
-6. Moderators should be able to review and resolve abuse-related issues within their university context.
-7. Admins should be able to handle escalations, edge cases, and platform-level actions.
-8. Moderation actions should be auditable and include a clear status lifecycle where relevant.
+
+1. Submitted scripts are validated before storage.
+2. Abuse prevention focuses on suspicious download patterns and repeated spam-like activity (§4.6, §5.7).
+3. The app surfaces clear auth prompts when a guest attempts a protected action (§4.8).
+4. Ownership and attribution stay clear for scripts, professors, faculties, studies, universities, and subjects.
+5. Moderators review and resolve abuse and flagged content across all universities (role model: §3.2); admins handle escalations.
+6. Moderation actions are auditable with a clear status lifecycle (`flags.status`: pending/reviewed/dismissed).
 
 ### 3.4 Notifications and engagement
-1. Users should receive notifications when their script becomes popular or when a moderation decision affects their content.
-2. Notifications should be visible in-app and should be structured so future email or push delivery is possible.
-3. Notification preferences should be configurable in a later phase when the system is more mature.
-4. In the first release, a persistent reminder or reminder-like notification can be hardcoded when a user has not completed onboarding or has not created an account yet.
-5. The app should support future notification types without reworking the whole system.
+
+1. Users are notified when their script becomes popular, or when a moderation decision affects their content.
+2. Notifications are visible in-app, structured so future email/push delivery is possible, without reworking the system.
+3. Notification preferences become configurable in a later phase.
+4. In v1, only a persistent, hardcoded reminder exists, for incomplete onboarding / no account (pattern detailed in §7.5).
 
 ### 3.5 Achievements and progression
-1. Users should unlock achievements for milestones such as script uploads, like thresholds, or subject engagement.
-2. Achievement logic should run server-side and should not rely only on frontend state.
-3. Achievement states should be displayed on user profiles and relevant pages.
-4. New achievement types should be easy to add without a large rewrite.
+
+1. Users unlock achievements for milestones (script uploads, like thresholds, subject engagement).
+2. Achievement logic runs server-side, not only on frontend state.
+3. Achievement states display on profiles and relevant pages.
+4. New achievement types should be addable without a large rewrite (current implementation: a `jsonb` array on `profiles.achievements`, chosen for this flexibility).
 
 ### 3.6 Guest experience and access
-1. The app should be usable without an account for browsing, previewing, and downloading scripts.
-2. Guests should be shown a clear auth modal if they try to perform a protected action.
-3. Guest onboarding data should persist in local storage until account creation or sign-out.
-4. Download tracking should avoid inflated totals caused by repeated requests from the same user, IP, or device.
-5. The guest flow should be frictionless while still protecting the platform from abuse.
 
-### 3.7 Onboarding and profile persistence
-1. On first visit, users should be shown an onboarding modal to select their faculty, current subjects, and completed subjects.
-2. Users should be able to complete an entire year in one action, automatically marking all relevant subjects as complete.
-3. Once a user has completed all subjects in a year for that faculty, the year should be marked as completed for that student.
-4. Completed subjects and completed years should be grouped and displayed on the profile page.
-5. Guest data should persist locally and be migrated into the user profile after the user creates an account.
-6. The app should show a dismissable, persistent reminder encouraging the guest to create an account to save their academic profile.
-7. Users should be able to update and revise their academic profile later without losing prior progress.
+1. The app is usable without an account for browsing, previewing, and downloading scripts.
+2. Guests see a clear auth modal for protected actions (§4.8).
+3. Guest onboarding data persists in local storage until account creation or sign-out (§5.8).
+4. Download tracking avoids inflated totals from repeated requests by the same user/IP/device (§5.7).
+
+### 3.7 Onboarding and academic-profile persistence
+
+1. On first visit, users see an onboarding modal to select their faculty, study(s), current subjects, and completed subjects.
+2. Users can complete an entire year in one action, auto-marking all relevant subjects as complete.
+3. A year is marked complete once all subjects in that year (for that faculty) are complete.
+4. Completed subjects and years display grouped on the profile page.
+5. Guest data persists locally and migrates into the account's academic profile on sign-up (data model and exact table mapping: §5.8).
+6. A dismissible, persistent reminder encourages guests to create an account to save their academic profile (pattern: §7.5).
+7. Users can update their academic profile later without losing prior progress.
 
 ### 3.8 Accessibility and UX
-1. Interactive states should be keyboard accessible.
-2. Forms should include validation and guiding error states.
-3. Loading, empty, and error states should be visible and consistent across the app.
-4. The layout should work across mobile, tablet, and desktop views.
-5. The visual design should remain consistent with the product design system.
+
+1. Interactive states are keyboard accessible.
+2. Forms include validation and guiding error states.
+3. Loading, empty, and error states are visible and consistent app-wide.
+4. Layout works across mobile, tablet, and desktop.
+5. Visual design stays consistent with the product design system.
 
 ---
 
 ## 4. Functional requirements by feature area
 
 ### 4.1 Script features
-1. Display a list of scripts with subject, professor, upload date, exam session, additional reading links, and popularity metadata.
-2. Implement reusable script filtering and sorting logic (including filtering by exam session and subject).
-3. Create a dedicated dynamic script detail page for each script showing metadata, file preview, additional reading links, comments, and subject context.
-4. Support script creation with required metadata, exam session, optional additional reading links (array of strings/URLs), and validation.
-5. Allow script editing only for editable fields such as title, description, and additional reading links.
-6. Uploaded script files should remain immutable after upload.
-7. Allow script deletion for owners and admins with proper authorization checks.
-8. Script uploads should support PDF or image-based files only.
+
+1. List scripts with subject, professor, upload date, exam session, additional reading links, and popularity metadata.
+2. Reusable script filtering/sorting logic, including by exam session and subject.
+3. Dedicated script detail page: metadata, file preview, additional reading links, comments, subject context.
+4. Script creation with required metadata, exam session, optional additional reading links (`text[]` of URLs), and validation (flow detail: §4.4).
+5. Editing limited to title, description, and additional reading links.
+6. Uploaded script files are immutable after upload.
+7. Script deletion for owners and admins, with authorization checks.
+8. Script uploads support PDF or image-based files only.
 
 ### 4.2 Academic entity features
-1. Create dedicated pages for universities, faculties, subjects, and professors using programmatic slugs (`slug` field) as the canonical route parameters instead of internal Sanity IDs.
-2. Generate dynamic pages from Sanity-backed academic records and map them to the database identity records.
-3. Each page should show relevant script lists, related entities, and Sanity metadata such as bios or descriptions.
-4. Navigation should prefer slug-based routes such as `professor/[slug]`, `subject/[slug]`, `faculty/[slug]`, and `university/[slug]`.
-5. These pages should be built from the same entity model and the same sync lifecycle.
-6. Each academic entity should be resolved by slug/ID and merged from the lightweight DB record plus the rich Sanity document.
+
+1. Dedicated pages for universities, faculties, studies, subjects, and professors, using programmatic `slug` fields as the canonical route parameters (not internal Sanity IDs) — routes: `university/[slug]`, `faculty/[slug]`, `study-program/[slug]`, `subject/[slug]`, `professor/[slug]` (slug rules: §5.9).
+2. Pages are generated from Sanity-backed academic records merged with the matching Supabase identity record.
+3. Each page shows relevant script lists, related entities, and Sanity metadata (bios, descriptions).
+4. All five entity types share the same page-generation model and sync lifecycle (sync rules: §5.6).
 
 ### 4.3 Search and discovery
-1. Search should support scripts only in the first release.
-2. Search should try a local data-first search when the data is already loaded in the frontend.
-3. If the local dataset is incomplete, the app should fall back to a dedicated script search API.
-4. Search state should include proper loading, empty, and error messaging.
-5. Search should remain simple and low-risk for the early product stage.
+
+1. Search supports scripts only in v1.
+2. Local data-first search when data is already loaded in the frontend; API fallback if incomplete.
+3. Proper loading, empty, and error messaging.
+4. Kept simple and low-risk for the early product stage.
 
 ### 4.4 Script creation and upload flow
-1. Users should create a script from a dedicated create script modal.
-2. The user should select a single subject; the associated professor, faculty, and university should be auto-selected from that subject.
-3. The user should provide a title, description, exam session, and optional additional reading links (array of URLs).
-4. The user should upload the actual script file.
-5. Validation should ensure all required fields are present before submission.
-6. The system should prevent invalid subject selection and missing university context.
-7. The create modal should include clear empty, loading, and validation states.
+
+1. Users create a script from a dedicated create-script modal.
+2. **Subject-driven resolution (canonical rule):** the user selects a single subject. Professor, faculty, study, and university are resolved automatically from that subject (`subject → study → faculty → university`, all derived, never stored redundantly on `scripts` — see §5.2.8).
+3. User provides title, description, exam session, and optional additional reading links (array of URLs).
+4. User uploads the script file.
+5. Validation ensures all required fields are present before submission.
+6. The system rejects invalid subject selection or missing university context.
+7. Clear empty, loading, and validation states in the create modal.
 8. Multi-subject scripts are explicitly out of scope for v1.
 
 ### 4.5 Notifications and achievements features
-1. Implement an in-app notification center for user actions and status updates.
-2. Trigger notifications for script popularity, moderation decisions, and account-related reminders.
-3. Keep notification infrastructure flexible enough for future expansion.
-4. Implement achievement tracking and display for milestone-based progress.
+
+1. In-app notification center for user actions and status updates.
+2. Triggers: script popularity, moderation decisions, account-related reminders.
+3. Infrastructure stays flexible for future notification types.
+4. Achievement tracking and display for milestone-based progress.
 
 ### 4.6 Moderation and abuse prevention features
-1. The first release does not include a general flagging workflow.
-2. Suspicious download patterns should be detected using a lightweight abuse check.
-3. The app should record download attempts with account, IP, and device identity information.
-4. The system should detect repeated downloads from the same identity and suppress duplicate counting.
-5. Moderators and admins should still be able to review abuse issues when they arise.
-6. Comments should be flaggable using the same flag workflow as scripts and users.
-7. The comments query should return reaction counts and like counts per comment, plus the current logged-in user's own reaction and like status when authenticated.
 
-### 4.7 User onboarding and academic profile features
-1. On first visit, the user should be prompted to choose their faculty and current/completed subjects.
-2. Users should be able to complete a full year in one action.
-3. A year should be marked complete when all subjects in that year for that faculty are completed.
-4. Completed subjects and completed years should display on the profile page grouped by year.
-5. Guest onboarding data should persist locally and later be migrated into the user profile after account creation.
-6. A dismissable persistent reminder should notify guests to create an account and preserve their data.
+**Flagging (canonical rule):** general flagging is implemented in v1 — scripts, users, and comments are all flaggable through the shared `flags` table (`target_script_id` / `target_user_id` / `target_comment_id`, each nullable so a flag targets exactly one), with a `pending → reviewed → dismissed` status lifecycle and a `reviewed_by`/`reviewed_at` audit trail. This is broader than the platform's original abuse-only scope and is treated as a deliberate, superseding decision (see §8.1.7).
 
-### 4.8 Auth modal and access prompts
-1. A reusable auth modal should appear when a user tries a protected action without signing in.
-2. The modal should explain which actions require authentication.
-3. Protected actions should be blocked at the UI and backend level.
-4. The modal should appear for script creation, likes, saves, and comments.
-5. Download and preview actions should remain accessible for guests where allowed.
+1. Suspicious download patterns are detected using a lightweight abuse check, separate from flagging (§5.7).
+2. The app records download attempts with account, IP, and device identity information.
+3. Repeated downloads from the same identity are detected and suppressed from the public count.
+4. Moderators and admins review abuse issues and flags globally (role model: §3.2).
+5. Comments are flaggable via the same `flags` workflow as scripts and users.
+6. The comments query returns reaction counts and like counts per comment, plus the current logged-in user's own reaction/like status when authenticated.
 
-### 4.9 Sanity-managed academic entity administration
-1. Universities, faculties, subjects, and professors should all be manageable through the Sanity admin layer using one pattern.
-2. A Sanity document should be editable without requiring a DB row to exist yet.
-3. The admin flow should allow a document to be created or updated in Sanity first.
-4. A separate create-in-DB action should then create the minimal database record and return the DB ID back to the Sanity document.
-5. The same document should not be allowed to have duplicate DB IDs across the same academic entity type.
-6. Updating a Sanity document without an existing DB row should be allowed, but publication should be blocked until the DB ID exists.
-7. Deletion should be blocked unless the dependency checks pass.
-8. If deletion succeeds, the DB record and corresponding Sanity document should be removed together.
+### 4.7 Auth modal and access prompts
+
+1. A reusable auth modal appears when a signed-out user attempts a protected action.
+2. The modal explains which actions require authentication.
+3. Protected actions are blocked at both UI and backend level.
+4. Triggers: script creation, likes, saves, comments.
+5. Download and preview remain accessible to guests where allowed.
+
+### 4.8 Sanity-managed academic entity administration
+
+Applies uniformly to all five entity types: university, faculty, study, subject, professor.
+
+1. Manageable through the Sanity admin layer using one shared pattern.
+2. A Sanity document is editable without requiring a DB row to exist yet.
+3. Admin flow: create/update the document in Sanity first.
+4. A separate **Create in DB** action then creates the minimal database record and writes the returned DB ID back onto the Sanity document.
+5. A document cannot hold duplicate DB IDs for the same entity type.
+6. Publication is blocked until the DB ID exists (elaboration: §8.2).
+7. Deletion is blocked unless dependency checks pass; on success, the DB record and Sanity document are removed together.
 
 ---
 
 ## 5. Data and CMS requirements
 
 ### 5.1 Content model requirements
-1. Sanity should be the source of truth for structured academic content such as professors, subjects, faculties, universities, and static page-level metadata.
-2. Dynamic user-generated content such as scripts, likes, saves, and user interactions should be stored in the database layer.
-3. Relationships should be explicit and normalized between scripts, subjects, professors, faculties, and universities.
-4. Rich metadata such as bios, descriptions, images, academic year information, and similar non-critical fields should live in Sanity only.
-5. The database should store only minimal identifiers and runtime data such as names, IDs, states, and relationship keys.
-6. All content should be editable through a versioned CMS workflow.
+
+1. Sanity is the source of truth for structured academic content (professors, subjects, studies, faculties, universities) and static page-level metadata.
+2. Dynamic user-generated content (scripts, likes, saves, interactions) lives in the database.
+3. Relationships are explicit and normalized between scripts, subjects, studies, professors, faculties, and universities.
+4. Rich metadata (bios, descriptions, images, academic year info) lives in Sanity only.
+5. The database stores only minimal identifiers and runtime data: names, IDs, states, and relationship keys.
+6. All content is editable through a versioned CMS workflow.
 
 ### 5.2 Data ownership boundary
-1. Sanity owns rich academic content and editorial data (including subject year, semester, description, syllabus, credits, and professor assignments).
-2. Supabase owns runtime identity, script records, user relationships, moderation metadata, and access-related state.
-3. The database should not store rich descriptive academic content such as bios, description text, or non-critical metadata.
-4. The backend should resolve the Sanity document by ID whenever the full academic record is needed.
-5. The frontend should never assume the DB row is the complete source of truth for academic entity data.
-6. The `scripts` database table owns runtime script metadata including `exam_session` (for script categorization by exam period) and `additional_reading` (an array of supplementary URL strings).
-7. The `subjects` database table should be minimal (names, IDs, relationships); `exam_session` belongs on scripts, not subjects, and `year`/`semester` belong to Sanity CMS. Remove `exam_session` from the `subjects` DB table and evaluate removing `year` from the `subjects` DB table.
+
+1. Sanity owns rich academic content and editorial data (subject year, semester, description, syllabus, credits, and descriptive text about professor/program affiliation).
+2. Supabase owns runtime identity, script records, user relationships, moderation metadata, and access-related state — this now explicitly includes the structured professor↔faculty, professor↔study-program, and student↔study-program relationship data (`professor_faculties`, `professor_study_programs`, `profile_faculties`, `profile_study_programs`), which is relational/runtime by nature even though Sanity may separately hold descriptive text about those same affiliations.
+3. The database does not store rich descriptive content (bios, description text, non-critical metadata).
+4. The backend resolves the Sanity document by ID whenever the full academic record is needed.
+5. The frontend never assumes the DB row is the complete source of truth for academic entity data.
+6. `scripts` owns runtime script metadata: `exam_session` (categorization by exam period) and `additional_reading` (`text[]` of supplementary URLs).
+7. `subjects` is minimal (names, IDs, relationships). `exam_session` belongs on scripts, not subjects; `year`/`semester` belong to Sanity. `exam_session` and `year` have been removed from the `subjects` DB table.
+8. `scripts` does **not** store `faculty_id` directly. Faculty is always derived via `subject_id → study_program_id → faculty_id`, to avoid drift. (This column existed before `studies` was introduced, when the chain was `subject_id → faculty_id` directly; it has since been dropped — see Phase 1 to-dos in §9.)
 
 ### 5.3 Initial university and entity assumptions
-1. At launch there will be only one university.
-2. The university should always be auto-selected and readonly in the client.
-3. Universities, faculties, subjects, and professors are created from app start and only changed when adding a new university in the future.
-4. The system should not rely on annual data churn for academic entities at launch.
+
+1. Only one university at launch.
+2. The university is always auto-selected and read-only in the client.
+3. Universities, faculties, studies, subjects, and professors are created from app start and changed only when adding a new university later.
+4. The system does not rely on annual data churn for academic entities at launch.
 
 ### 5.4 Data fetching and rendering requirements
-1. Data fetching should be separated into CMS-backed academic content and database-backed dynamic content.
-2. Server-side rendering should be used where appropriate for page-level content.
-3. Dynamic data should be isolated into client components when needed.
-4. Loading, empty, and error states should be included in all data fetches.
-5. Missing or stale data should fail gracefully without breaking the page.
+
+1. Data fetching is separated into CMS-backed academic content and database-backed dynamic content.
+2. Server-side rendering is used where appropriate for page-level content.
+3. Dynamic data is isolated into client components when needed.
+4. Loading, empty, and error states are included in all data fetches.
+5. Missing or stale data fails gracefully without breaking the page.
 
 ### 5.5 Data integrity requirements
-1. Relationships between scripts, subject, professor, faculty, university, and user records must be validated.
-2. Required fields should be enforced at both schema and API levels.
-3. Data should be normalized so duplicate records and inconsistent references are avoided.
-4. Script creation should always infer the relevant faculty, professor, and university from the selected subject.
-5. Download counting should not be inflated by repeated requests from the same account, IP, or device.
-6. If the same user or device downloads the same script more than a threshold, additional requests should not contribute to the public total.
-7. Roles and permissions should be enforced server-side to prevent misuse.
+
+1. Relationships between scripts, subjects, studies, professors, faculties, universities, and user records are validated.
+2. Required fields are enforced at both schema and API levels.
+3. Data is normalized so duplicate records and inconsistent references are avoided (this is why `scripts.faculty_id` was removed — see §5.2.8).
+4. Download counting is not inflated by repeated requests from the same account, IP, or device (§5.7).
+5. Roles and permissions are enforced server-side to prevent misuse (§3.2, §6.6).
 
 ### 5.6 Academic entity sync rules
+
+Applies uniformly to all five entity types (§4.8 elaboration: §8.2):
+
 1. The Sanity document is the system of record for rich academic metadata.
-2. The database row is a lightweight runtime record used for identity and relationship linking.
-3. When an academic entity is created or updated in Sanity, it may also require a DB record to exist for runtime use.
-4. Updates to the academic document are allowed before the DB record is created, but publication should be blocked until a DB ID is present.
-5. A document cannot be published while missing a valid DB ID.
-6. When the admin chooses Create in DB, the system should create the DB row and then update the Sanity document to store the returned DB ID.
-7. The database should reject duplicate IDs for the same academic entity type.
-8. Deletion of a Sanity-backed academic entity should be blocked unless dependencies are safe to remove.
+2. The database row is a lightweight runtime record for identity and relationship linking.
+3. Creating/updating an entity in Sanity may require a DB record to exist for runtime use.
+4. Sanity document updates are allowed before the DB record exists; publication is blocked until a DB ID is present.
+5. When the admin chooses **Create in DB**, the system creates the DB row and writes the returned ID back onto the Sanity document.
+6. The database rejects duplicate IDs for the same entity type.
+7. Deletion of a Sanity-backed entity is blocked unless dependencies are safe to remove.
 
 ### 5.7 Download and abuse prevention data model
-1. A download event model should record raw attempts, user identity source, script ID, and dedupe state.
-2. The identity priority should be account first, then IP, then device.
-3. Download counting should be deduplicated across repeated requests from the same effective identity.
-4. The system should use simple, explicit abuse logic rather than a highly complex fraud pipeline in v1.
-5. Events should be stored in a way that can support future analytics and auditing.
 
-### 5.8 User profile and academic progress data model
-1. User academic profile data should persist in local storage for guest users until account creation.
-2. The app should track current subjects, completed subjects, and completed years in a structured way.
-3. The profile should preserve academic history even if the user later changes faculty or university data.
-4. The completed-year state should update automatically when all subjects in the year are complete.
-5. When the user creates an account, the local onboarding data should be migrated into the persisted profile.
+1. `download_events` records raw attempts: user identity source, script ID, and dedupe state (`identity_key`, `ip_address`, `device_id`, `user_id`).
+2. Identity priority for dedup: account first, then IP, then device.
+3. Download counting is deduplicated across repeated requests from the same effective identity.
+4. Abuse logic stays simple and explicit rather than a complex fraud pipeline in v1.
+5. Events are stored in a way that supports future analytics and auditing (append-only log; dedup happens at query/aggregation time, not by rejecting duplicate rows).
+
+### 5.8 Academic profile data model
+
+**"Academic profile" (canonical definition):** the combination of `profiles`, `profile_subjects`, `profile_faculties`, and `profile_study_programs` — not a single dedicated table. `profile_subjects.status` tracks `completed`/`currently_taking`; `profile_faculties` and `profile_study_programs` are many-to-many enrollment records (a student can belong to multiple faculties and studies). On account creation, the locally-stored guest onboarding state syncs into these four tables.
+
+1. Guest academic-profile data persists in local storage until account creation.
+2. The app tracks current subjects, completed subjects, faculty/study-program enrollment, and completed years in a structured way.
+3. The profile preserves academic history even if the user later changes faculty, study, or university.
+4. Completed-year state updates automatically when all subjects in the year are complete.
+5. On account creation, local onboarding data migrates into `profiles` / `profile_subjects` / `profile_faculties` / `profile_study_programs`.
 
 ### 5.9 Programmatic slug generation requirements
-1. Sanity documents for academic entities must not use Sanity IDs (`_id`) for public URLs and routing.
-2. Each academic entity document must define a `slug` field generated programmatically based on entity naming and structural hierarchy:
-   - **University**: Based on its name (e.g., `ukim`).
-   - **Faculty**: Based on parent university and faculty name (e.g., `ukim-pharmacy`).
-   - **Subject**: Based on parent university, parent faculty, and subject name (e.g., `ukim-pharmacy-cell-biology`).
-   - **Professor**: Based directly on their name (e.g., `john-doe`).
-3. Slugs must be normalized, lowercase, hyphenated, and auto-generated on document creation/update.
+
+1. Sanity documents for academic entities do not use Sanity IDs (`_id`) for public URLs/routing.
+2. Each of the five entity types defines a `slug` field, generated programmatically from its position in the hierarchy:
+   - **University**: based on name (e.g., `ukim`).
+   - **Faculty**: parent university + faculty name (e.g., `ukim-pharmacy`).
+   - **Study**: parent university + parent faculty + program name (e.g., `ukim-pharmacy-pharmacology`).
+   - **Subject**: parent university + parent faculty + parent study + subject name (e.g., `ukim-pharmacy-pharmacology-cell-biology`).
+   - **Professor**: based on name (e.g., `john-doe`).
+3. Slugs are normalized, lowercase, hyphenated, and auto-generated on document creation/update.
 
 ### 5.10 Sanity typegen and in-app type synchronization
-1. Re-use generated Sanity types (from `sanity.types.ts`) for in-app TypeScript models wherever possible (at least partially) to keep schemas and frontend types strictly aligned.
-2. Implement utility types (e.g., `StripSanityFields<T>` or `Dereferenced<T>`) that strip Sanity system metadata (such as `_rev`, `_createdAt`, `_updatedAt`, etc.).
-3. Replace Sanity reference structures (`{ _type: "reference", _ref: string }`) with dereferenced domain models so in-app types remain clean, ergonomic, and type-safe.
+
+1. Re-use generated Sanity types (`sanity.types.ts`) for in-app TypeScript models wherever possible, across all five entity types.
+2. Utility types (e.g. `StripSanityFields<T>`, `Dereferenced<T>`) strip Sanity system metadata (`_rev`, `_createdAt`, `_updatedAt`, etc.).
+3. Sanity reference structures (`{ _type: "reference", _ref: string }`) are replaced with dereferenced domain models, including `studyProgram` references, so in-app types stay clean and type-safe.
 
 ### 5.11 Reusable academic schema components (mini-schemas)
-1. Extract recurring fields across academic documents (`university`, `faculty`, `subject`, `professor`) into modular, reusable Sanity mini-schemas / field objects (e.g., descriptions/bios, contact/social info, media assets, academic metadata).
-2. Mini-schemas must enforce consistent validation rules, preview configurations, and fieldsets across all academic entity types to maintain DRY principles in CMS schema definitions.
 
-### 5.12 Study Program architecture
-1. Study Program is an independent entity in both Supabase and Sanity.
-2. **Impact analysis**:
-   - *Option A (Independent relational entity)*: Hierarchical structure becomes `University -> Faculty -> Study Program -> Subject`. Each subject belongs to a study program under a faculty. This represents the real academic structure most accurately, but introduces significant cascade changes across the database schema, Sanity document schemas, sync workflows, slug generation (`[uni]-[faculty]-[program]-[subject]`), route handlers, frontend pages, and onboarding logic.
-   - *Option B (Script attribute / Sanity-only)*: Keep `Faculty -> Subject` direct relation and treat study program as an optional tag/attribute on `scripts` or as descriptive metadata in Sanity. Avoids large-scale code rewriting for v1.
+1. Extract recurring fields across all five academic document types (`university`, `faculty`, `studyProgram`, `subject`, `professor`) into modular, reusable Sanity mini-schemas (descriptions/bios, contact/social info, media assets, academic metadata).
+2. Mini-schemas enforce consistent validation, preview configuration, and fieldsets across all entity types.
+
+### 5.12 Study architecture (resolved)
+
+**Decision:** Study is an independent relational entity in both Supabase and Sanity, giving the hierarchy `University → Faculty → Study → Subject`. Subjects reference `study_program_id`; a subject's faculty and university are resolved transitively through that relationship, not stored redundantly.
+
+This was chosen over the alternative (treating study as a tag/attribute on scripts or Sanity-only metadata) because it represents the real academic structure accurately, even though it required cascading changes across the schema, sync workflows, slug generation, routing, and onboarding — most of which are now complete (status: §9–§10, Phase 1–2).
+
+**Cross-entity relationships added as a result:**
+
+- `profile_study_programs` (`profile_id`, `study_program_id`) — a student can be enrolled in multiple studies. Publicly readable; a user manages their own rows.
+- `professor_study_programs` (`professor_id`, `study_program_id`) — a professor can be affiliated with multiple studies, independent of which subjects they currently teach. Publicly readable; only moderators manage rows (mirrors `professor_faculties`' admin-managed pattern, since professor records are not self-managed).
+
+Both mirror the existing `profile_faculties` / `professor_faculties` many-to-many pattern and both exist in the live schema.
 
 ---
 
 ## 6. Backend and API requirements
 
 ### 6.1 API structure
-1. The backend should expose clean endpoints for scripts, profiles, subjects, professors, faculties, universities, and interactions.
-2. API routes should be organized by resource and responsibility.
-3. The API should return consistent response shapes for success, validation errors, and system failures.
-4. Search should be built around script discovery first and should not be over-engineered for other content types in v1.
-5. Every endpoint file should carry a short doc comment above each route explaining what it is for.
-6. Professor, subject (excluding profile-subject), faculty, and university routes should be internal-only, gated the same way as `/api/internal`, since this data is admin-managed and not meant for direct public access.
+
+1. Clean endpoints for scripts, profiles, subjects, studies, professors, faculties, universities, and interactions.
+2. Routes organized by resource and responsibility.
+3. Consistent response shapes for success, validation errors, and system failures.
+4. Search is built around script discovery first, not over-engineered for other content types in v1.
+5. Every endpoint file carries a short doc comment above each route.
+6. Professor, study, subject (excluding profile-subject), faculty, and university routes are internal-only, gated the same way as `/api/internal` — this data is admin-managed, not for direct public access.
 
 ### 6.2 Backend responsibilities
+
 1. Handle authentication checks.
 2. Validate input before writing data.
 3. Enforce permissions for creation, update, deletion, and moderation.
 4. Return consistent, meaningful status codes and helpful error messages.
 5. Resolve the Sanity document behind any academic entity ID before returning a full entity detail payload.
-6. Centralize business rules for script creation, role enforcement, and download deduplication.
+6. Centralize business rules for script creation (§4.4.2), role enforcement (§3.2), and download deduplication (§5.7).
 
 ### 6.3 Script creation and upload backend requirements
-1. The backend should support creating scripts with a single subject, title, description, exam session, optional additional reading links (array of URLs/strings), and uploaded file metadata.
-2. Subject selection should automatically determine the professor, faculty, and university context.
-3. Uploaded files should be validated as PDF or image-based assets.
-4. File content should be immutable after upload; only title, description, and additional reading links should be editable.
-5. The backend should reject invalid scripts or missing subject context.
+
+1. Support creating scripts with a single subject, title, description, exam session, optional additional reading links, and uploaded file metadata.
+2. Subject selection determines faculty, study, and university context automatically; professor is validated explicitly against `subject_professors` (full rule: §4.4.2).
+3. Uploaded files are validated as PDF or image-based assets.
+4. File content is immutable after upload; only title, description, and additional reading links are editable.
+5. Reject invalid scripts or missing subject context.
 
 ### 6.4 Academic entity backend requirements
-1. Academic entity endpoints should accept IDs as the main lookup mechanism.
-2. The backend should merge database identity data with Sanity metadata for subject, professor, faculty, and university details.
-3. The API should handle missing Sanity documents gracefully with a useful empty or error state.
-4. The backend should support create, update, and delete patterns for each academic entity type.
+
+1. Academic entity endpoints accept IDs as the main lookup mechanism; public-facing routes resolve by `slug` (§5.9) and internally map to the DB ID.
+2. The backend merges database identity data with Sanity metadata for all five entity types.
+3. The API handles missing Sanity documents gracefully with a useful empty/error state.
+4. The backend supports create, update, and delete patterns for each entity type (sync rules: §5.6).
 
 ### 6.5 Search backend requirements
-1. Search should support script search only in the first release.
-2. A script search endpoint should already exist and may be improved, but it should remain simple and focused.
-3. The frontend should attempt a local search first when current script data is already in memory.
-4. Loading, empty, and error states should be shown while waiting for search results.
-5. Search should remain lightweight due to the small expected volume and limited release scope.
+
+1. Script search only in v1.
+2. A script search endpoint exists and may be improved, staying simple and focused.
+3. Frontend attempts a local search first when current script data is already in memory.
+4. Loading, empty, and error states while waiting for results.
+5. Kept lightweight given the small expected volume.
 
 ### 6.6 Auth and download protection backend requirements
+
 1. Only authenticated users can create, like, save, or comment on scripts.
-2. Public preview and download endpoints should remain available to guests where allowed.
-3. The backend should deduplicate download counts based on account first, then IP, then device.
-4. Repeated download attempts from the same identity should not inflate popularity counts beyond reasonable thresholds.
-5. The abuse logic should be simple, explicit, and easy to maintain.
+2. Public preview/download endpoints remain available to guests where allowed.
+3. Deduplicate download counts: account → IP → device (§5.7).
+4. Repeated download attempts from the same identity don't inflate popularity counts beyond reasonable thresholds.
+5. Abuse logic stays simple, explicit, and easy to maintain.
 
 ### 6.7 Moderator and admin backend requirements
-1. Moderators should be scoped by university.
-2. Admins should have access to platform-level moderation actions.
-3. The backend should support moderator review actions and escalation logic.
-4. In the first release, moderation should be focused on abuse and suspicious activity rather than full general-purpose flag management.
+
+1. Moderators are global (role model: §3.2) — no university-scoping logic needed.
+2. Admins have access to platform-level moderation actions.
+3. The backend supports moderator review actions and escalation logic, including flag review (§4.6).
+4. Moderation in v1 focuses on abuse/suspicious activity and flag review, not broader general-purpose moderation tooling (deferred: §8.3.2).
 
 ### 6.8 Academic onboarding and profile persistence backend requirements
-1. The backend should support local-first guest profile storage and later migration into the account profile.
-2. Current and completed subject state should be stored in a structured format.
-3. The backend should support bulk year completion state based on faculty-specific subject data.
-4. A persistent reminder should be triggered for guest users who have incomplete onboarding state.
+
+1. Support local-first guest profile storage and later migration into the account profile (§5.8).
+2. Store current/completed subject state, faculty enrollment, and study-program enrollment in structured form.
+3. Support bulk year-completion state based on faculty-specific subject data.
+4. Trigger a persistent reminder for guest users with incomplete onboarding state.
 
 ### 6.9 Script caching and revalidation requirements
-1. Frontend fetches of script data (list, by-subject, top, popular, detail) should use the Next.js Data Cache, tagged per endpoint and, where applicable, per query (e.g. per subject/script ID).
-2. Script search results must never be cached; search requests always hit the live dataset.
-3. Requests scoped to the current user's session (e.g. "my scripts") must never be cached.
-4. Creating, updating, or deleting a script must revalidate only the cache tags affected by that script (its detail tag, its subject's tag, and the shared list/top/popular tags), not the entire cache.
-5. Revalidation is triggered by the backend via a shared-secret webhook to the frontend, so it works regardless of which client performed the mutation.
+
+1. Frontend fetches of script data (list, by-subject, top, popular, detail) use the Next.js Data Cache, tagged per endpoint and per query (e.g. per subject/script ID).
+2. Script search results are never cached; search always hits the live dataset.
+3. Requests scoped to the current user's session (e.g. "my scripts") are never cached.
+4. Creating, updating, or deleting a script revalidates only the affected cache tags (its detail tag, its subject's tag, and the shared list/top/popular tags) — never the entire cache.
+5. Revalidation is triggered by the backend via a shared-secret webhook to the frontend, working regardless of which client performed the mutation.
 
 ---
 
 ## 7. Frontend architecture requirements
 
 ### 7.1 UI responsibilities
-1. Components should only manage the UI state they own.
-2. Data fetching and business rules should be extracted into hooks or helpers.
-3. Filtering, sorting, and transformation logic should be reusable and testable.
-4. The page layer should orchestrate data flow instead of embedding all logic directly in render code.
+
+1. Components manage only the UI state they own.
+2. Data fetching and business rules are extracted into hooks/helpers.
+3. Filtering, sorting, and transformation logic is reusable and testable.
+4. The page layer orchestrates data flow instead of embedding logic in render code.
 
 ### 7.2 Academic entity page requirements
-1. Universities, faculties, subjects, and professors should each have dynamically generated pages by ID.
-2. The page should load the lightweight DB record and then merge in Sanity metadata for the full display.
-3. Empty states, not-found states, and loading states should be present for each page.
-4. The route should remain stable and should not depend on slugs alone.
+
+1. Universities, faculties, studies, subjects, and professors each have dynamically generated pages, routed by `slug` (§5.9) rather than internal ID.
+2. Each page loads the lightweight DB record and merges in Sanity metadata for full display.
+3. Empty, not-found, and loading states are present for each page.
+4. Subject pages show their parent study, not just faculty.
 
 ### 7.3 Search UX requirements
-1. Search should show loading indicators and should avoid flashing empty states unnecessarily.
-2. Local data-first search should be used when the current dataset is available.
-3. The app should display a clear empty state when there are no script results.
-4. Search should be designed to feel fast and low-friction for a small-volume product.
+
+1. Loading indicators; avoid flashing empty states unnecessarily.
+2. Local data-first search when the current dataset is available.
+3. Clear empty state when there are no script results.
+4. Designed to feel fast and low-friction for a small-volume product.
 
 ### 7.4 Onboarding and profile UX requirements
-1. Users should see a first-visit onboarding modal that collects faculty, current subjects, and completed subjects.
-2. The UI should allow one-click completion of an academic year.
-3. The profile page should display grouped completed subjects and completed years.
-4. Guest users should see a persistent reminder to create an account to save their academic profile.
-5. The reminder should be dismissable and configurable in a simple client-side way.
+
+1. First-visit onboarding modal collects faculty, study(s), current subjects, and completed subjects.
+2. One-click completion of an academic year.
+3. Profile page displays grouped completed subjects and completed years, plus faculty/study-program enrollment.
+4. Guest users see a persistent reminder to create an account and save their academic profile (pattern: §7.5).
+5. The reminder is dismissable and configurable client-side.
 
 ### 7.5 Persistent notification pattern
-1. Persistent reminders are allowed as a lightweight first-step notification system.
-2. This system should not depend on the full notification engine being complete.
-3. It should be hardcoded to the onboarding/account-save use case and should remain separate from the future full in-app notifications system.
+
+1. Persistent reminders are the lightweight, v1-only first step of a notification system.
+2. This does not depend on the full notification engine being complete.
+3. It's hardcoded to the onboarding/account-save use case and stays separate from the future full in-app notification system (§4.5, §3.4).
 
 ---
 
 ## 8. Explicit decisions and clarifications
 
 ### 8.1 Resolved decisions
-1. Dynamic pages for universities, faculties, subjects, and professors should be generated from programmatic slug-based routes (not internal Sanity IDs).
-2. Search is script-only in v1 and should use local-first behavior plus API fallback.
+
+1. Dynamic pages for all five entity types use programmatic slug-based routes, not internal Sanity IDs (§5.9, §7.2).
+2. Search is script-only in v1, local-first with API fallback (§4.3, §6.5).
 3. The app is designed for very small expected volume.
-4. The user role model is: normal user, university-scoped moderator, and admin.
-5. Download deduplication should prefer account identity first, then IP, then device.
-6. Scripts are single-subject only; professor, university, and faculty are auto-determined from the selected subject.
-7. General flags are not required in v1; suspicious download patterns are the initial abuse mechanism.
-8. Guest onboarding and profile data should be stored in local storage only for the first release.
-9. A year is marked complete when all subjects in that year for that faculty are completed.
-10. Persistent reminders are allowed and can be implemented as a simple, dismissable onboarding/account-save notification that does not depend on a full notification system.
-11. The admin should trigger the create button for academic entity creation and editing to ensure explicit editorial control.
-12. Updates to Sanity academic documents should be allowed even before the DB record exists, but publication should be blocked until the DB ID is created.
-13. Deletion should be blocked until dependency checks pass; if deletion succeeds, the DB record and Sanity document should be removed together.
-14. Slugs are generated programmatically following the entity hierarchy: University based on name (`ukim`), Faculty based on name + parent university (`ukim-pharmacy`), Subject based on name + parent faculty (`ukim-pharmacy-cell-biology`), and Professor based on name (`john-doe`).
-15. In-app TypeScript types should re-use generated Sanity types where possible, using helper utility types to strip internal Sanity metadata (`_rev`, `_createdAt`, `_updatedAt`, etc.) and replace reference fields with dereferenced domain types.
-16. Extract shared academic document fields into modular Sanity mini-schemas to ensure uniform validation and DRY schema definitions across academic entity types.
-17. The `scripts` database table includes `additional_reading` (an array of link strings) for supplementary study materials and `exam_session` for categorizing scripts by exam period.
-18. `exam_session` belongs on scripts (for categorization) and is removed from the `subjects` database table.
-19. `year` and `semester` are authored and owned in Sanity CMS; evaluate and remove `year` from the `subjects` database table if not strictly required for runtime linkage.
-20. **Decision**: `Study Program` is an independent entity/table in the `Faculty -> Study Program -> Subject` hierarchy. Subjects reference study programs, and their faculty is resolved through that relationship.
+4. Role model: normal user, moderator (global), admin (§3.2).
+5. Download dedup priority: account → IP → device (§5.7).
+6. Scripts are single-subject only; university, study, and faculty are determined from the subject, while professor is selected explicitly from the subject's valid professors (§4.4.2).
+7. **General flagging is implemented** for scripts, users, and comments via the shared `flags` table with pending/reviewed/dismissed statuses (§4.6) — this supersedes the platform's original "abuse-only, no general flagging" framing; suspicious-download detection remains a separate mechanism.
+8. Guest onboarding/academic-profile data is stored in local storage only for v1, migrating into `profiles` / `profile_subjects` / `profile_faculties` / `profile_study_programs` on account creation (§5.8).
+9. A year is marked complete when all subjects in that year, for that faculty, are complete.
+10. Persistent reminders are allowed as a simple, dismissable onboarding/account-save notification, independent of a full notification system (§7.5).
+11. The admin triggers the create button for academic entity creation/editing, for explicit editorial control.
+12. Sanity document updates are allowed before the DB record exists, but publication is blocked until the DB ID is created (§8.2).
+13. Deletion is blocked until dependency checks pass; on success, the DB record and Sanity document are removed together.
+14. Slugs follow the entity hierarchy (§5.9): University (`ukim`), Faculty (`ukim-pharmacy`), Study (`ukim-pharmacy-pharmacology`), Subject (`ukim-pharmacy-cell-biology`), Professor (`john-doe`).
+15. In-app TypeScript types re-use generated Sanity types where possible, via helper utility types that strip internal metadata and dereference references (§5.10).
+16. Shared academic document fields are extracted into modular Sanity mini-schemas across all five entity types (§5.11).
+17. `scripts` includes `additional_reading` (`text[]`) and `exam_session` (`text`) (§5.2.6).
+18. `exam_session` is removed from `subjects`; it belongs on scripts only (§5.2.7).
+19. `year`/`semester` are authored and owned in Sanity CMS, removed from the `subjects` DB table (§5.2.7).
+20. **Study is an independent entity/table** in the `Faculty → Study → Subject` hierarchy (§5.12).
+21. `profiles.role` allows `student`, `moderator`, and `admin`, matching the three-role model (§3.2).
+22. **`scripts.faculty_id` has been removed** — it predated `studies` and was a redundant, unsynced column; faculty is now always derived via `subject_id → study_program_id → faculty_id` (§5.2.8).
+23. **`profile_study_programs` and `professor_study_programs`** junction tables have been added, mirroring the `profile_faculties`/`professor_faculties` pattern, since both students and professors can be associated with multiple studies (§5.12).
 
-### 8.2 Question 3 elaboration
-Question 3 is the editorial and sync workflow for academic entities:
+### 8.2 Sanity/DB sync workflow elaboration
 
-- The Sanity document is the authoring layer.
-- The database row is the runtime linking layer.
-- The content editor can create or edit a Sanity document before a DB row exists.
-- A separate Create in DB action creates the minimal runtime row and returns the DB ID back to the Sanity document.
-- This avoids the product needing a DB row before the editorial record exists, but it still guarantees that published content cannot exist without runtime identity.
-- This keeps Sanity as the source of truth for descriptive content while the database stays lean for actual app behavior, permissions, and relationships.
-- It also prevents accidental duplicate identity records because the same document type cannot be assigned two different DB IDs.
+- The Sanity document is the authoring layer; the database row is the runtime linking layer.
+- A content editor can create/edit a Sanity document before a DB row exists.
+- A separate **Create in DB** action creates the minimal runtime row and returns the DB ID to the Sanity document.
+- This avoids needing a DB row before the editorial record exists, while guaranteeing published content always has runtime identity.
+- It keeps Sanity as the source of truth for descriptive content while the database stays lean for app behavior, permissions, and relationships.
+- It prevents duplicate identity records, since a document type can't be assigned two different DB IDs.
 
-### 8.3 Deferred items from the original open list
-The following items remain out of scope for the first release and should be addressed after launch:
+### 8.3 Deferred items
+
+Out of scope for the first release, to address after launch:
+
 1. Comprehensive notification system beyond persistent reminder banners.
-2. Large-scale moderation flows or general-purpose flags.
+2. Large-scale moderation tooling/UI beyond the existing flags data model (the `flags` table and comment-flagging workflow are already implemented at the data layer — §4.6).
 3. Advanced search beyond script search.
 4. Broad non-academic CMS capabilities beyond the entity model described here.
 
@@ -415,64 +455,84 @@ The following items remain out of scope for the first release and should be addr
 ## 9. Implementation priorities
 
 ### Phase 1: Database foundation and backend API
+
 1. Configure the minimal DB schema for runtime identity and script records.
-2. Design and implement all required database tables: users, scripts, academic_profiles, download_events, and relationship tables.
+2. Implement all required database tables: `profiles`, `scripts`, `profile_subjects`, `profile_faculties`, `profile_study_programs`, `professor_study_programs`, `download_events`, and remaining relationship tables (academic profile model: §5.8).
 3. Set up database constraints, indexes, and validation rules for data integrity.
-4. Implement the first version of the script API with create, read, update, delete endpoints.
+4. Implement the script API (create, read, update, delete).
 5. Implement authentication and permission checks in the backend.
 6. Implement download deduplication logic (account → IP → device priority).
 7. Add backend validation and error handling for all operations.
-8. Add `additional_reading` (`text[]` array of link strings) and `exam_session` (`text`) columns to `scripts` database table. [✅]
-9. Remove `exam_session` and `year` from the `subjects` database table; keep academic year data in Sanity. [✅]
-10. Implement Study Program as a separate database table and intermediate entity (`Faculty -> Study Program -> Subject`). [✅]
-11. Test database schema and API endpoints thoroughly.
+8. Add `additional_reading` (`text[]`) and `exam_session` (`text`) to `scripts`. **[✅]**
+9. Remove `exam_session` and `year` from `subjects`; keep academic year data in Sanity. **[✅]**
+10. Implement Study as a separate table (`Faculty → Study → Subject`). **[✅]**
+11. Add `profile_study_programs` and `professor_study_programs` junction tables (composite PK, RLS: publicly readable; `profile_study_programs` self-managed by the owning user; `professor_study_programs` managed by moderators only). **[✅]**
+12. Drop the stale `scripts.faculty_id` column, its FK, and its index — faculty is now derived via `subject_id → study_program_id → faculty_id` only. **[✅]**
+13. Add `admin` to the `profiles.role` check constraint. **[✅]**
+14. **Regenerate `shared/types/database.types.ts`** to reflect items 11–13, and grep `hono/` and `next/` for any remaining `scripts.faculty_id` references to remove. **[🔲]**
+15. Update the onboarding/profile backend to accept and persist study-program selection into `profile_study_programs`. **[🔲]**
+16. Update professor admin sync actions to manage `professor_study_programs` alongside `professor_faculties`. **[🔲]**
+17. Test database schema and API endpoints thoroughly. **[🔲]**
+18. Cache script list/subject/top/popular/detail fetches in the Next.js Data Cache, tagged per endpoint/query; revalidate affected tags via a backend webhook on script create/update/delete; keep search and my-scripts uncached. **[✅]**
 
 ### Phase 2: Sanity CMS setup and academic entity management
-1. Finalize the academic entity model and schema structure for Sanity. [✅ Mostly complete]
-2. Create Sanity document types for university, faculty, subject, and professor with shared validation patterns. [✅ Mostly complete]
-3. Define relationships and references between academic entities in Sanity. [✅ Mostly complete]
-4. Implement the create-in-DB action that creates DB records and returns IDs to Sanity documents. [✅ Complete]
-5. Set up Sanity sync endpoints to create, update, and delete DB records from CMS documents. [✅ Mostly complete]
-6. Implement publication blocking until DB ID exists. [✅ Complete]
-7. Implement deletion checks and cascading delete/update workflows. [⚠️ Needs verification; Sanity deletion is currently not working and should be checked]
-8. Define the initialization set for universities, faculties, subjects, and professors in Sanity. [✅ Complete]
-9. Test sync workflows for create, update, and delete operations. [🔲 Pending follow-up after the deletion fix]
-10. Implement programmatic `slug` field generation on academic entity schemas (University: `[name]`, Faculty: `[uni]-[faculty]`, Subject: `[uni]-[faculty]-[subject]`, Professor: `[name]`). [🔲 TODO]
-11. Create TypeScript utility types to derive in-app types from Sanity generated types by stripping system metadata (`_rev`, `_createdAt`, etc.) and replacing reference fields with dereferenced domain types. [🔲 TODO]
-12. Create Sanity mini-schemas / reusable field objects for commonly used fields across academic documents (descriptions, media, contact/links, academic metadata) to eliminate schema duplication. [🔲 TODO]
-13. Create the Sanity `studyProgram` schema, update subject references, and adjust sync actions. [✅]
+
+1. Finalize the academic entity model/schema structure for Sanity. **[✅ Mostly complete]**
+2. Create Sanity document types for university, faculty, subject, and professor with shared validation patterns. **[✅ Mostly complete]**
+3. Define relationships/references between academic entities in Sanity, including `studyProgram` references on `subject`. **[✅ Mostly complete]**
+4. Implement the Create-in-DB action (§8.2). **[✅ Complete]**
+5. Set up Sanity sync endpoints (create/update/delete DB records from CMS documents). **[✅ Mostly complete]**
+6. Implement publication blocking until DB ID exists. **[✅ Complete]**
+7. Implement deletion checks and cascading delete/update workflows. **[⚠️]**
+8. Define the initialization set for universities, faculties, studies, subjects, and professors in Sanity. **[✅ Complete]**
+9. Create the `studyProgram` Sanity schema, update subject references, adjust sync actions. **[✅]**
+10. Test sync workflows for create/update/delete, across all five entity types. **[🔲 Pending, after the deletion fix]**
+11. Implement programmatic `slug` generation for all five entity types, including `studyProgram` (`[uni]-[faculty]-[program]`) (§5.9). **[🔲 TODO]**
+12. Create TypeScript utility types to strip Sanity metadata and dereference references, including `studyProgram` references, for in-app models (§5.10). **[🔲 TODO]**
+13. Create reusable Sanity mini-schemas across all five entity types, including `studyProgram` (§5.11). **[🔲 TODO]**
 
 ### Phase 3: Core content and discovery
-1. Build dynamic slug-based pages for universities, faculties, subjects, and professors (`/[entity]/[slug]`). [✅ Mostly complete - transition from ID routes to programmatic slugs pending]
-2. Implement script listing, sorting, and filtering. [✅ Mostly complete]
-3. Add search for scripts with local-first and API-fallback behavior. [🔲 Missing / not complete]
-4. Add loading, empty, and error states across pages and search. [🔲 Missing / not complete]
-5. Transition existing ID-based routes and queries to programmatic slug-based routes. [🔲 TODO]
+
+1. Build dynamic slug-based pages for universities, faculties, subjects, and professors. **[✅ Mostly complete — ID→slug migration pending]**
+2. Add a dynamic slug-based `study-program/[slug]` page, following the same pattern as the other four entity types (§7.2). **[🔲 New]**
+3. Update subject pages to display their parent study alongside faculty (§7.2.4). **[🔲 New]**
+4. Implement script listing, sorting, and filtering. **[✅ Mostly complete]**
+5. Add search for scripts (local-first + API fallback). **[🔲 Missing]**
+6. Add loading, empty, and error states across pages and search. **[🔲 Missing]**
+7. Transition existing ID-based routes/queries to programmatic slug-based routes. **[🔲 TODO]**
 
 ### Phase 4: User actions and uploads
-1. Build the create script modal and upload flow supporting title, description, exam session, and additional reading links (array of URLs).
-2. Enforce single-subject constraints and auto-populate faculty/professor/university context.
-3. Implement script edit and delete permissions (allowing title, description, and additional reading links edits).
-4. Add guest-friendly download and preview access with dedupe protection.
+
+1. Build the create-script modal and upload flow: title, description, exam session, additional reading links.
+2. Enforce single-subject constraints; resolve faculty/study-program/university from the subject; explicitly select and validate the professor against `subject_professors` (§4.4.2).
+3. Implement script edit/delete permissions (title, description, additional reading links only).
+4. Add guest-friendly download/preview access with dedupe protection.
 
 ### Phase 5: Profile and onboarding
+
 1. Implement first-visit onboarding for faculty and subject selection.
-2. Add one-click year completion logic and auto-complete year state.
-3. Persist guest academic data in local storage.
-4. Add a dismissable persistent reminder to create an account.
-5. Build the profile page with grouped subject/year data.
+2. **Add study-program selection to onboarding**, scoped to the selected faculty. **[🔲 New]**
+3. Add one-click year-completion logic and auto-complete year state.
+4. Persist guest academic data in local storage.
+5. Add a dismissable persistent reminder to create an account.
+6. Build the profile page with grouped subject/year data, plus faculty and study-program enrollment.
+7. Sync guest onboarding data into `profiles`, `profile_subjects`, `profile_faculties`, **and `profile_study_programs`** during account creation. **[Updated for studies]**
 
 ### Phase 6: Moderation and admin tools
-1. Implement moderator and admin roles with university-scoped rules.
+
+1. Implement global moderator and admin roles with platform-wide moderation rules (§3.2, §6.7).
 2. Add simple suspicious-download review flows.
-3. Add admin action interfaces for academic entity creation, sync, and dependency checks.
-4. Ensure delete and update flows remain safe and auditable.
-5. Make comments flaggable via the existing flags workflow.
-6. Return reaction counts, like counts, and the current user's reaction/like status in the comments query.
-7. Add a short doc comment above each API endpoint explaining its purpose.
-8. Move professor, subject (not profile-subject), faculty, and university routes behind internal-only access.
+3. Add admin action interfaces for academic entity creation, sync, and dependency checks across all five entity types.
+4. **Add admin UI for managing `professor_study_programs` affiliations**, alongside the existing `professor_faculties` management. **[🔲 New]**
+5. Ensure delete/update flows remain safe and auditable.
+6. Make comments flaggable via the existing flags workflow. **[✅]**
+7. Return reaction counts, like counts, and the current user's reaction/like status in the comments query. **[✅]**
+8. Add a short doc comment above each API endpoint. **[✅]**
+9. Move professor, study, subject (not profile-subject), faculty, and university routes behind internal-only access. **[Updated to include study routes]**
+10. Build frontend flag submission and moderation views for scripts, users, and comments (pending/reviewed/dismissed states).
 
 ### Phase 7: Polish and iteration
+
 1. Improve UX consistency and mobile behavior.
 2. Add accessibility and validation refinements.
 3. Expand the notification system after the first release.
@@ -481,79 +541,93 @@ The following items remain out of scope for the first release and should be addr
 
 ---
 
-## 10. Progress and status tracking
+### Phase 1: Database foundation and backend API `[✏️ In Progress]`
 
-This section is maintained automatically by the commit agent. Update status by including `[ROADMAP: Phase X - Feature Name]` in commit messages.
+- Configure the minimal DB schema for runtime identity and script records. **[✅]**
+- Implement all required database tables (`profiles`, `scripts`, `profile_subjects`, `profile_faculties`, `profile_study_programs`, `professor_study_programs`, `download_events`, relationship tables). **[✅]**
+- Set up database constraints, indexes, and validation rules. **[✅]**
+- Implement the script API (CRUD). **[✅]**
+- Implement authentication and permission checks. **[✅]**
+- Implement download deduplication logic. **[✅]**
+- Add backend validation and error handling. **[✅]**
+- Add `additional_reading`/`exam_session` to `scripts`. **[✅]**
+- Remove `exam_session`/`year` from `subjects`. **[✅]**
+- Decide and implement Study architecture. **[✅]**
+- Add `profile_study_programs` / `professor_study_programs` junction tables. **[✅]**
+- Drop stale `scripts.faculty_id`. **[✅]**
+- Add `admin` role to `profiles.role`. **[✅]**
+- Regenerate database types; remove dead `scripts.faculty_id` references from Hono/Next.js. **[🔲]**
+- Sync study-program selection into `profile_study_programs` in onboarding backend. **[🔲]**
+- Manage `professor_study_programs` in professor admin sync actions. **[🔲]**
+- Test database schema and API endpoints thoroughly. **[🔲]**
+- Cache script fetches in the Next.js Data Cache with tag-based revalidation via webhook; keep search/my-scripts uncached. **[✅]**
 
-### Phase 1: Database foundation and backend API [✏️ In Progress]
-- Configure the minimal DB schema for runtime identity and script records. [✅]
-- Design and implement all required database tables: users, scripts, academic_profiles, download_events, and relationship tables. [✅]
-- Set up database constraints, indexes, and validation rules for data integrity. [✅]
-- Implement the first version of the script API with create, read, update, delete endpoints. [✅]
-- Implement authentication and permission checks in the backend. [✅]
-- Implement download deduplication logic (account → IP → device priority). [✅]
-- Add backend validation and error handling for all operations. [✅]
-- Add `additional_reading` (`text[]`) and `exam_session` (`text`) columns to `scripts` table. [🔲]
-- Remove `exam_session` from `subjects` table and evaluate removing `year` (sourced from Sanity). [🔲]
-- Decide Study Program architectural model: separate table vs script attribute vs Sanity-only. [🔲]
-- Test database schema and API endpoints thoroughly. [🔲]
-- Cache script list/subject/top/popular/detail fetches in the Next.js Data Cache with per-endpoint and per-query tags; revalidate the affected tags via a backend webhook on script create/update/delete; keep search and my-scripts uncached. [✅]
+### Phase 2: Sanity CMS setup and academic entity management `[✏️ In Progress]`
 
-### Phase 2: Sanity CMS setup and academic entity management [✏️ In Progress]
-- Finalize the academic entity model and schema structure for Sanity. [✅]
-- Create Sanity document types for university, faculty, subject, and professor with shared validation patterns. [✅]
-- Define relationships and references between academic entities in Sanity. [✅]
-- Implement the create-in-DB action that creates DB records and returns IDs to Sanity documents. [✅]
-- Set up Sanity sync endpoints to create, update, and delete DB records from CMS documents. [✅]
-- Implement publication blocking until DB ID exists. [✅]
-- Implement deletion checks and cascading delete/update workflows. [⚠️ Needs repair; Sanity deletion is not currently working and needs to be checked]
-- Define the initialization set for universities, faculties, subjects, and professors in Sanity. [✅]
-- Test sync workflows for create, update, and delete operations. [🔲]
-- Implement programmatic slug generation for academic entities (University, Faculty, Subject, Professor). [🔲]
-- Create TypeScript utility types to strip Sanity metadata and replace references with dereferenced domain types for in-app models. [🔲]
-- Create reusable Sanity mini-schemas for common academic entity fields (descriptions, media, metadata, links). [🔲]
+- Finalize the academic entity model/schema structure for Sanity. **[✅]**
+- Create Sanity document types (university, faculty, subject, professor) with shared validation. **[✅]**
+- Define relationships/references between academic entities. **[✅]**
+- Implement the Create-in-DB action. **[✅]**
+- Set up Sanity sync endpoints. **[✅]**
+- Implement publication blocking until DB ID exists. **[✅]**
+- Implement deletion checks and cascading delete/update workflows. **[⚠️ Needs repair — Sanity deletion is not currently working]**
+- Define the initialization set for universities, faculties, studies, subjects, professors. **[✅]**
+- Create the `studyProgram` Sanity schema and update subject references/sync actions. **[✅]**
+- Test sync workflows for create/update/delete. **[🔲]**
+- Implement programmatic slug generation for all five entity types. **[🔲]**
+- Create TypeScript utility types for stripped/dereferenced Sanity types (including `studyProgram`). **[🔲]**
+- Create reusable Sanity mini-schemas across all five entity types. **[🔲]**
 
-### Phase 3: Core content and discovery [✏️ In Progress]
-- Build dynamic slug-based pages for universities, faculties, subjects, and professors. [✅ Mostly complete - slug migration pending]
-- Implement script listing, sorting, and filtering. [✅]
-- Add search for scripts with local-first and API-fallback behavior. [🔲 Missing]
-- Add loading, empty, and error states across pages and search. [🔲 Missing]
-- Transition dynamic pages and queries from Sanity ID routes to programmatic slug routes (`/[entity]/[slug]`). [🔲]
+### Phase 3: Core content and discovery `[✏️ In Progress]`
 
-### Phase 4: User actions and uploads [🔲 Planned]
-- Build the create script modal and upload flow with exam session selection and additional reading links. [🔲]
-- Enforce single-subject constraints and auto-populate faculty/professor/university context. [🔲]
-- Implement script edit and delete permissions (including updating additional reading links). [🔲]
-- Add guest-friendly download and preview access with dedupe protection. [🔲]
+- Build dynamic slug-based pages for universities, faculties, subjects, professors. **[✅ Mostly complete — slug migration pending]**
+- Add `study-program/[slug]` page. **[🔲]**
+- Update subject pages to show parent study. **[🔲]**
+- Implement script listing, sorting, filtering. **[✅]**
+- Add search for scripts (local-first + API fallback). **[🔲 Missing]**
+- Add loading/empty/error states across pages and search. **[🔲 Missing]**
+- Transition ID-based routes/queries to programmatic slug routes. **[🔲]**
 
-### Phase 5: Profile and onboarding [🔲 Planned]
-- Implement first-visit onboarding for faculty and subject selection. [🔲]
-- Add one-click year completion logic and auto-complete year state. [🔲]
-- Persist guest academic data in local storage. [🔲]
-- Add a dismissable persistent reminder to create an account. [🔲]
-- Build the profile page with grouped subject/year data. [🔲]
+### Phase 4: User actions and uploads `[🔲 Planned]`
 
-### Phase 6: Moderation and admin tools [🔲 Planned]
-- Implement moderator and admin roles with university-scoped rules. [🔲]
-- Add simple suspicious-download review flows. [🔲]
-- Add admin action interfaces for academic entity creation, sync, and dependency checks. [🔲]
-- Ensure delete and update flows remain safe and auditable. [🔲]
-- Make comments flaggable via the existing flags workflow. [✅]
-- Return reaction counts, like counts, and the current user's reaction/like status in the comments query. [✅]
-- Add a short doc comment above each API endpoint explaining its purpose. [✅]
-- Move professor, subject (not profile-subject), faculty, and university routes behind internal-only access. [✅]
+- Build the create-script modal and upload flow. **[🔲]**
+- Enforce single-subject constraints; resolve faculty/study-program/university from subject; explicitly validate professor via `subject_professors`. **[🔲]**
+- Implement script edit/delete permissions. **[🔲]**
+- Add guest-friendly download/preview access with dedupe protection. **[🔲]**
 
-### Phase 7: Polish and iteration [🔲 Planned]
-- Improve UX consistency and mobile behavior. [🔲]
-- Add accessibility and validation refinements. [🔲]
-- Expand the notification system after the first release. [🔲]
-- Review architecture for maintainability and future scale. [🔲]
-- Implement CSS obfuscation for production builds. [🔲]
+### Phase 5: Profile and onboarding `[🔲 Planned]`
+
+- Implement first-visit onboarding for faculty and subject selection. **[🔲]**
+- Add study-program selection to onboarding. **[🔲]**
+- Add one-click year-completion logic. **[🔲]**
+- Persist guest academic data in local storage. **[🔲]**
+- Add a dismissable persistent reminder to create an account. **[🔲]**
+- Build the profile page with grouped subject/year/faculty/study-program data. **[🔲]**
+- Sync guest onboarding data into `profiles`, `profile_subjects`, `profile_faculties`, `profile_study_programs`. **[🔲]**
+
+### Phase 6: Moderation and admin tools `[🔲 Planned]`
+
+- Implement global moderator and admin roles with platform-wide rules. **[🔲]**
+- Add simple suspicious-download review flows. **[🔲]**
+- Add admin interfaces for academic entity creation, sync, dependency checks. **[🔲]**
+- Add admin UI for `professor_study_programs` management. **[🔲]**
+- Ensure delete/update flows remain safe and auditable. **[🔲]**
+- Make comments flaggable via the existing flags workflow. **[✅]**
+- Return reaction/like counts and current-user status in the comments query. **[✅]**
+- Add a short doc comment above each API endpoint. **[✅]**
+- Move professor, study, subject (not profile-subject), faculty, and university routes behind internal-only access. **[✅]**
+- Build frontend flag submission/moderation views (scripts, users, comments). **[🔲]**
+
+### Phase 7: Polish and iteration `[🔲 Planned]`
+
+- Improve UX consistency and mobile behavior. **[🔲]**
+- Add accessibility and validation refinements. **[🔲]**
+- Expand the notification system. **[🔲]**
+- Review architecture for maintainability and future scale. **[🔲]**
+- Implement CSS obfuscation for production builds. **[🔲]**
 
 ### How to update progress
-Commits with `[ROADMAP: Phase X - Feature Name]` headers will automatically update this section. See [.commit-agent.md](.commit-agent.md) for details.
 
-Example commit:
 ```
 [ROADMAP: Phase 1 - Sanity schema] Add academic entity document types
 
@@ -564,6 +638,7 @@ Added validation rules and relationship references.
 ---
 
 ## 11. Final product position
-The first release of Scriptr is intentionally narrow but structurally correct. It treats Sanity as the CMS source of truth for academic metadata, keeps the database lightweight and runtime-focused, and supports a simple single-university academic flow with single-subject scripts and simple abuse protection.
 
-This gives the team a clean technical foundation without overbuilding, while still keeping the architecture ready for future growth once the platform proves itself and the volume increases.
+The first release of Scriptr is intentionally narrow but structurally correct. Sanity is the CMS source of truth for academic metadata; the database stays lightweight and runtime-focused, with a full `University → Faculty → Study → Subject` relational hierarchy and explicit many-to-many enrollment for both students and professors. It supports a single-university academic flow with single-subject scripts, explicit-but-auto-assisted professor selection, general flagging across scripts/users/comments, and simple download-abuse protection.
+
+This gives the team a clean technical foundation without overbuilding, while staying ready for future growth — including a second university — once the platform proves itself.

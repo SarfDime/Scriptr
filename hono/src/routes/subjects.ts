@@ -39,11 +39,11 @@ subjects.get('/', async (c) => {
   const supabase = createSupabaseClient(c)
   const selectedFacultyIds = await getSelectedFacultyScope(supabase)
 
-  let query = supabase
+  const { data, error } = await supabase
     .from('subjects')
     .select(`
       *,
-      study_program:study_programs(id, name, faculty:faculties(id, name, university:universities(id, name))),
+      study:studies(id, name, faculty:faculties(id, name, university:universities(id, name))),
       professors:subject_professors(
         professor:professors(*)
       ),
@@ -51,14 +51,19 @@ subjects.get('/', async (c) => {
     `)
     .order('name', { ascending: true })
 
-  if (selectedFacultyIds && selectedFacultyIds.length > 0) {
-    query = query.in('faculty_id', selectedFacultyIds)
+  if (error) return c.json({ error: error.message }, 500)
+
+  if (!selectedFacultyIds || selectedFacultyIds.length === 0) {
+    return c.json(data)
   }
 
-  const { data, error } = await query
-
-  if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json(
+    data.filter(
+      (subject) =>
+        !subject.study?.faculty?.id ||
+        selectedFacultyIds.includes(subject.study.faculty.id)
+    )
+  )
 })
 
 /** Get a single subject by ID */
@@ -72,7 +77,7 @@ subjects.get('/:id', async (c) => {
     .from('subjects')
     .select(`
       *,
-      study_program:study_programs(id, name, faculty:faculties(id, name, university:universities(id, name))),
+      study:studies(id, name, faculty:faculties(id, name, university:universities(id, name))),
       professors:subject_professors(
         professor:professors(*)
       ),
@@ -89,8 +94,8 @@ subjects.get('/:id', async (c) => {
   if (
     selectedFacultyIds &&
     selectedFacultyIds.length > 0 &&
-    data.study_program?.faculty?.id &&
-    !selectedFacultyIds.includes(data.study_program.faculty.id)
+    (!data.study?.faculty?.id ||
+      !selectedFacultyIds.includes(data.study.faculty.id))
   ) {
     return c.json(
       { error: 'Subject not available in your selected faculties' },

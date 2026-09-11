@@ -10,14 +10,14 @@ export type AcademicEntityType =
   | 'faculty'
   | 'professor'
   | 'subject'
-  | 'studyProgram'
+  | 'study'
 
 const ENDPOINTS: Record<AcademicEntityType, string> = {
   university: 'universities',
   faculty: 'faculties',
   professor: 'professors',
   subject: 'subjects',
-  studyProgram: 'study-programs',
+  study: 'studies',
 }
 
 export type AcademicDocumentActionProps = {
@@ -50,13 +50,13 @@ function refId(value: unknown) {
 
 function parentFieldFor(entityType: AcademicEntityType) {
   if (entityType === 'faculty') return 'university'
-  if (entityType === 'subject') return 'studyProgram'
+  if (entityType === 'subject') return 'study'
   return 'faculty'
 }
 
 function parentColumnFor(parentField: string) {
   if (parentField === 'university') return 'university_id'
-  if (parentField === 'studyProgram') return 'study_program_id'
+  if (parentField === 'study') return 'study_id'
   return 'faculty_id'
 }
 
@@ -75,7 +75,7 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
     const parentReference =
       entityType === 'faculty' ||
       entityType === 'subject' ||
-      entityType === 'studyProgram'
+      entityType === 'study'
         ? refId(doc?.[parentField])
         : undefined
 
@@ -90,7 +90,7 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
         !doc?.name ||
           ((entityType === 'faculty' ||
             entityType === 'subject' ||
-            entityType === 'studyProgram') &&
+            entityType === 'study') &&
             !parentReference)
       ),
       onHandle: async () => {
@@ -102,7 +102,7 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
         if (
           (entityType === 'faculty' ||
             entityType === 'subject' ||
-            entityType === 'studyProgram') &&
+            entityType === 'study') &&
           !parentReference
         ) {
           setDialog(`Add a ${parentField} before creating this record.`)
@@ -128,6 +128,20 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
             }
           )
           body.faculty_ids = facultyIds.filter(Boolean)
+
+          const studyReferences = Array.isArray(doc.studies)
+            ? doc.studies
+                .map((study) => refId(study))
+                .filter((id): id is string => Boolean(id))
+            : []
+          const studyIds = await client.fetch<Array<string>>(
+            '*[_id in $ids || _id in $draftIds].dbId',
+            {
+              ids: studyReferences,
+              draftIds: studyReferences.map((id) => `drafts.${id}`),
+            }
+          )
+          body.study_ids = studyIds.filter(Boolean)
         }
 
         if (entityType === 'faculty') {
@@ -137,7 +151,7 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
           )
         }
         if (entityType === 'subject') {
-          body.study_program_id = await client.fetch<string | null>(
+          body.study_id = await client.fetch<string | null>(
             '*[_id == $id || _id == $draftId][0].dbId',
             { id: parentReference, draftId: `drafts.${parentReference}` }
           )
@@ -156,7 +170,7 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
           body.professor_ids = professorIds.filter(Boolean)
         }
 
-        if (entityType === 'studyProgram') {
+        if (entityType === 'study') {
           body.faculty_id = await client.fetch<string | null>(
             '*[_id == $id || _id == $draftId][0].dbId',
             { id: parentReference, draftId: `drafts.${parentReference}` }
@@ -166,7 +180,7 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
         if (
           (entityType === 'faculty' ||
             entityType === 'subject' ||
-            entityType === 'studyProgram') &&
+            entityType === 'study') &&
           !body[parentColumnFor(parentField)]
         ) {
           setDialog(`Link the selected ${parentField} to the database first.`)
@@ -230,7 +244,7 @@ export function syncWithDatabaseAction(entityType: AcademicEntityType) {
     const parentReference =
       entityType === 'faculty' ||
       entityType === 'subject' ||
-      entityType === 'studyProgram'
+      entityType === 'study'
         ? refId(doc?.[parentField])
         : undefined
 
@@ -242,7 +256,7 @@ export function syncWithDatabaseAction(entityType: AcademicEntityType) {
           !doc?.name ||
           ((entityType === 'faculty' ||
             entityType === 'subject' ||
-            entityType === 'studyProgram') &&
+            entityType === 'study') &&
             !parentReference)
       ),
       onHandle: async () => {
@@ -259,7 +273,7 @@ export function syncWithDatabaseAction(entityType: AcademicEntityType) {
         if (
           (entityType === 'faculty' ||
             entityType === 'subject' ||
-            entityType === 'studyProgram') &&
+            entityType === 'study') &&
           !parentReference
         ) {
           setDialog(`Add a ${parentField} before syncing this record.`)
@@ -285,6 +299,20 @@ export function syncWithDatabaseAction(entityType: AcademicEntityType) {
             }
           )
           body.faculty_ids = facultyIds.filter(Boolean)
+
+          const studyReferences = Array.isArray(doc.studies)
+            ? doc.studies
+                .map((study) => refId(study))
+                .filter((id): id is string => Boolean(id))
+            : []
+          const studyIds = await client.fetch<Array<string>>(
+            '*[_id in $ids || _id in $draftIds].dbId',
+            {
+              ids: studyReferences,
+              draftIds: studyReferences.map((id) => `drafts.${id}`),
+            }
+          )
+          body.study_ids = studyIds.filter(Boolean)
         }
 
         if (entityType === 'faculty') {
@@ -295,7 +323,7 @@ export function syncWithDatabaseAction(entityType: AcademicEntityType) {
         }
 
         if (entityType === 'subject') {
-          body.study_program_id = await client.fetch<string | null>(
+          body.study_id = await client.fetch<string | null>(
             '*[_id == $id || _id == $draftId][0].dbId',
             { id: parentReference, draftId: `drafts.${parentReference}` }
           )
@@ -314,7 +342,7 @@ export function syncWithDatabaseAction(entityType: AcademicEntityType) {
           body.professor_ids = professorIds.filter(Boolean)
         }
 
-        if (entityType === 'studyProgram') {
+        if (entityType === 'study') {
           body.faculty_id = await client.fetch<string | null>(
             '*[_id == $id || _id == $draftId][0].dbId',
             { id: parentReference, draftId: `drafts.${parentReference}` }
@@ -324,7 +352,7 @@ export function syncWithDatabaseAction(entityType: AcademicEntityType) {
         if (
           (entityType === 'faculty' ||
             entityType === 'subject' ||
-            entityType === 'studyProgram') &&
+            entityType === 'study') &&
           !body[parentColumnFor(parentField)]
         ) {
           setDialog(`Link the selected ${parentField} to the database first.`)

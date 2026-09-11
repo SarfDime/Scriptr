@@ -1,10 +1,10 @@
 import { groq } from 'next-sanity'
 import { sanityImageFunction } from '../functions.queries'
 import { minimalProfessorQuery } from './professor.queries'
-import { minimalSubjectQuery } from './subject.queries'
+import { minimalStudyQuery } from './study.queries'
 
 /** Minimal query for SEO metadata on a faculty. */
-export const facultySeoQuery = groq`
+const facultySeoQuery = groq`
 *[_type == "faculty" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {
   _id,
   name,
@@ -12,9 +12,10 @@ export const facultySeoQuery = groq`
 }
 `
 
-export const minimalFacultyQuery = groq`
+const minimalFacultyQuery = groq`
 _id,
 name,
+studentCount,
 defined(picture)=>{ "picture": sanityImage::full(picture) },
 dean->{
   _id,
@@ -39,19 +40,18 @@ university->{
   name,
   dbId
 },
-studentCount,
-"subjectCount": count(*[_type == "subject" && references(^._id)]),
-"professorCount": count(*[_type == "professor" && references(^._id)])
+"studyCount": count(*[_type == "study" && references(^._id)]),
+"professorCount": count(*[_type == "professor" && references(^._id)]),
 "professors": *[_type == "professor" && references(^._id)] | order(name asc) {
   ${minimalProfessorQuery}
 },
-"subjects": *[_type == "subject" && studyProgram->faculty._id == ^._id] | order(year asc, name asc) {
-  ${minimalSubjectQuery}
-}
+"studies": *[_type == "study" && references(^._id)] | order(name asc) {
+  ${minimalStudyQuery}
+},
 `
 
 /** Deep relational query for a faculty: own info, parent university, and child professors/subjects */
-export const facultyDetailQuery = groq`
+const facultyDetailQuery = groq`
 ${sanityImageFunction}
 
 *[_type == "faculty" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {
@@ -92,15 +92,22 @@ ${sanityImageFunction}
   "professors": *[_type == "professor" && references(^._id)] | order(name asc) {
     ${minimalProfessorQuery}
   },
-  "subjects": *[_type == "subject" && studyProgram->faculty._id == ^._id] | order(year asc, name asc) {
-    ${minimalSubjectQuery}
+  "studies": *[_type == "study" && references(^._id)] | order(name asc) {
+    ${minimalStudyQuery}
   }
 }
 `
 
 /** Static params query for pre-generating all faculty subroutes */
-export const facultyStaticParamsQuery = groq`
+const facultyStaticParamsQuery = groq`
 *[_type == "faculty" && !(_id in path("drafts.**"))] {
   "slug": _id
 }
 `
+
+export {
+  facultyDetailQuery,
+  facultySeoQuery,
+  facultyStaticParamsQuery,
+  minimalFacultyQuery,
+}

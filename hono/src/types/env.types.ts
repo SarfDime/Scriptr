@@ -29,6 +29,7 @@ export type AuthUser = User & {
     role?: UserRole
     subjects?: Array<{ subject_id: string; status: ProfileSubjectStatus }>
     selected_faculty_ids?: Array<string>
+    selected_study_ids?: Array<string>
   }
 }
 

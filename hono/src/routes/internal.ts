@@ -5,7 +5,10 @@ import { requiredParam } from '../lib/request'
 import { createInternalSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
-type TableName = keyof Database['public']['Tables']
+type TableName =
+  | keyof Database['public']['Tables']
+  | 'profile_studies'
+  | 'professor_studies'
 
 const internal = new Hono<HonoEnv>()
 
@@ -67,6 +70,51 @@ async function syncProfessorFacultyAssignments(
   }
 }
 
+async function syncProfessorStudyAssignments(
+  supabase: InternalSupabase,
+  professorId: string,
+  desiredStudyIds: Array<string>
+) {
+  const { data: currentRows, error: selectError } = await supabase
+    .from('professor_studies')
+    .select('study_id')
+    .eq('professor_id', professorId)
+
+  if (selectError) throw new Error(selectError.message)
+
+  const currentSet = new Set(
+    (currentRows ?? []).map((row) => String(row.study_id))
+  )
+  const desiredSet = new Set(desiredStudyIds)
+
+  const toAdd = [...desiredSet].filter((id) => !currentSet.has(id))
+  const toRemove = [...currentSet].filter((id) => !desiredSet.has(id))
+
+  if (toAdd.length > 0) {
+    const { error: insertError } = await supabase
+      .from('professor_studies')
+      .upsert(
+        toAdd.map((studyId) => ({
+          professor_id: professorId,
+          study_id: studyId,
+        })),
+        { onConflict: 'professor_id,study_id' }
+      )
+
+    if (insertError) throw new Error(insertError.message)
+  }
+
+  if (toRemove.length > 0) {
+    const { error: deleteError } = await supabase
+      .from('professor_studies')
+      .delete()
+      .eq('professor_id', professorId)
+      .in('study_id', toRemove)
+
+    if (deleteError) throw new Error(deleteError.message)
+  }
+}
+
 async function syncSubjectProfessorAssignments(
   supabase: InternalSupabase,
   subjectId: string,
@@ -115,12 +163,7 @@ async function syncSubjectProfessorAssignments(
 /** Find a row already linked to this Sanity document, if any (keeps "create in DB" idempotent) */
 async function findBySanityId(
   supabase: InternalSupabase,
-  table:
-    | 'universities'
-    | 'faculties'
-    | 'professors'
-    | 'subjects'
-    | 'study_programs',
+  table: 'universities' | 'faculties' | 'professors' | 'subjects' | 'studies',
   sanityId: unknown
 ) {
   if (typeof sanityId !== 'string' || !sanityId) return null
@@ -411,7 +454,7 @@ internal.delete('/faculties/:id', async (c) => {
   const supabase = createInternalSupabaseClient(c)
 
   const blockers = await findBlockingDependents(supabase, facultyId, [
-    { table: 'study_programs', column: 'faculty_id', label: 'study programs' },
+    { table: 'studies', column: 'faculty_id', label: 'studies' },
     {
       table: 'professor_faculties',
       column: 'faculty_id',
@@ -422,7 +465,6 @@ internal.delete('/faculties/:id', async (c) => {
       column: 'faculty_id',
       label: 'user faculty selections',
     },
-    { table: 'scripts', column: 'faculty_id', label: 'scripts' },
   ])
 
   if (blockers.length > 0) {
@@ -441,11 +483,11 @@ internal.delete('/faculties/:id', async (c) => {
   return c.json({ success: true, message: 'Faculty deleted successfully' })
 })
 
-/** List all study programs. */
-internal.get('/study-programs', async (c) => {
+/** List all studies. */
+internal.get('/studies', async (c) => {
   const supabase = createInternalSupabaseClient(c)
   const { data, error } = await supabase
-    .from('study_programs')
+    .from('studies')
     .select('*, faculty:faculties(id, name, university:universities(id, name))')
     .order('name', { ascending: true })
 
@@ -453,8 +495,8 @@ internal.get('/study-programs', async (c) => {
   return c.json(data)
 })
 
-/** Create a study program, or return the existing Sanity-linked record. */
-internal.post('/study-programs', async (c) => {
+/** Create a study, or return the existing Sanity-linked record. */
+internal.post('/studies', async (c) => {
   const supabase = createInternalSupabaseClient(c)
   const { name, faculty_id, sanity_id } = await c.req.json()
 
@@ -462,23 +504,20 @@ internal.post('/study-programs', async (c) => {
     return c.json({ error: 'Name and faculty_id are required' }, 400)
   }
 
-  const existing = await findBySanityId(supabase, 'study_programs', sanity_id)
+  const existing = await findBySanityId(supabase, 'studies', sanity_id)
   if (existing) {
     return c.json({ success: true, studyProgram: existing, existing: true })
   }
 
   const { data, error } = await supabase
-    .from('study_programs')
+    .from('studies')
     .insert({ name, faculty_id, sanity_id: sanity_id ?? null })
     .select()
     .single()
 
   if (error) {
     if (error.code === '23505') {
-      return c.json(
-        { error: 'This study program already exists in this faculty' },
-        409
-      )
+      return c.json({ error: 'This study already exists in this faculty' }, 409)
     }
     return c.json({ error: error.message }, 500)
   }
@@ -486,14 +525,14 @@ internal.post('/study-programs', async (c) => {
   return c.json({ success: true, studyProgram: data })
 })
 
-/** Update a study program. */
-internal.patch('/study-programs/:id', async (c) => {
+/** Update a study. */
+internal.patch('/studies/:id', async (c) => {
   const studyProgramId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
   const { name, faculty_id } = await c.req.json()
 
   const { data, error } = await supabase
-    .from('study_programs')
+    .from('studies')
     .update({ name, faculty_id })
     .eq('id', studyProgramId)
     .select()
@@ -503,8 +542,8 @@ internal.patch('/study-programs/:id', async (c) => {
   return c.json({ success: true, studyProgram: data })
 })
 
-/** Sync a study program with its Sanity document. */
-internal.post('/study-programs/:id/sync', async (c) => {
+/** Sync a study with its Sanity document. */
+internal.post('/studies/:id/sync', async (c) => {
   const studyProgramId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
   const { name, faculty_id } = await c.req.json()
@@ -514,7 +553,7 @@ internal.post('/study-programs/:id/sync', async (c) => {
   }
 
   const { data, error } = await supabase
-    .from('study_programs')
+    .from('studies')
     .update({ name, faculty_id })
     .eq('id', studyProgramId)
     .select()
@@ -524,12 +563,12 @@ internal.post('/study-programs/:id/sync', async (c) => {
   return c.json({ success: true, studyProgram: data })
 })
 
-/** Delete a study program when no subject still references it. */
-internal.delete('/study-programs/:id', async (c) => {
+/** Delete a study when no subject still references it. */
+internal.delete('/studies/:id', async (c) => {
   const studyProgramId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
   const blockers = await findBlockingDependents(supabase, studyProgramId, [
-    { table: 'subjects', column: 'study_program_id', label: 'subjects' },
+    { table: 'subjects', column: 'study_id', label: 'subjects' },
   ])
 
   if (blockers.length > 0) {
@@ -540,14 +579,14 @@ internal.delete('/study-programs/:id', async (c) => {
   }
 
   const { error } = await supabase
-    .from('study_programs')
+    .from('studies')
     .delete()
     .eq('id', studyProgramId)
 
   if (error) return c.json({ error: error.message }, 500)
   return c.json({
     success: true,
-    message: 'Study program deleted successfully',
+    message: ' deleted successfully',
   })
 })
 
@@ -575,7 +614,7 @@ internal.get('/professors/by-sanity/:sanityId', async (c) => {
  * existing one already linked to this Sanity document */
 internal.post('/professors', async (c) => {
   const supabase = createInternalSupabaseClient(c)
-  const { name, faculty_ids, sanity_id } = await c.req.json()
+  const { name, faculty_ids, study_ids, sanity_id } = await c.req.json()
 
   if (!name) {
     return c.json({ error: 'Name is required' }, 400)
@@ -611,6 +650,15 @@ internal.post('/professors', async (c) => {
     )
   }
 
+  if (Array.isArray(study_ids) && study_ids.length > 0) {
+    await supabase.from('professor_studies').insert(
+      study_ids.map((studyId: string) => ({
+        professor_id: data.id,
+        study_id: studyId,
+      }))
+    )
+  }
+
   return c.json({ success: true, professor: data })
 })
 
@@ -635,7 +683,7 @@ internal.patch('/professors/:id', async (c) => {
 internal.post('/professors/:id/sync', async (c) => {
   const professorId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
-  const { name, faculty_ids } = await c.req.json()
+  const { name, faculty_ids, study_ids } = await c.req.json()
 
   if (!name) {
     return c.json({ error: 'Name is required' }, 400)
@@ -667,13 +715,18 @@ internal.post('/professors/:id/sync', async (c) => {
       professorId,
       Array.isArray(faculty_ids) ? faculty_ids : []
     )
+    await syncProfessorStudyAssignments(
+      supabase,
+      professorId,
+      Array.isArray(study_ids) ? study_ids : []
+    )
   } catch (syncError) {
     return c.json(
       {
         error:
           syncError instanceof Error
             ? syncError.message
-            : 'Failed to sync professor faculty assignments',
+            : 'Failed to sync professor assignments',
       },
       500
     )
@@ -697,6 +750,11 @@ internal.delete('/professors/:id', async (c) => {
       table: 'professor_faculties',
       column: 'professor_id',
       label: 'faculty assignments',
+    },
+    {
+      table: 'professor_studies',
+      column: 'professor_id',
+      label: 'study assignments',
     },
     { table: 'scripts', column: 'professor_id', label: 'scripts' },
     { table: 'comments', column: 'professor_id', label: 'comments' },
@@ -776,11 +834,10 @@ internal.get('/subjects/by-sanity/:sanityId', async (c) => {
  * one already linked to this Sanity document */
 internal.post('/subjects', async (c) => {
   const supabase = createInternalSupabaseClient(c)
-  const { name, professor_ids, study_program_id, sanity_id } =
-    await c.req.json()
+  const { name, professor_ids, study_id, sanity_id } = await c.req.json()
 
-  if (!name || !study_program_id) {
-    return c.json({ error: 'Name and study_program_id are required' }, 400)
+  if (!name || !study_id) {
+    return c.json({ error: 'Name and study_id are required' }, 400)
   }
 
   const existing = await findBySanityId(supabase, 'subjects', sanity_id)
@@ -792,7 +849,7 @@ internal.post('/subjects', async (c) => {
     .from('subjects')
     .insert({
       name,
-      study_program_id,
+      study_id,
       sanity_id: sanity_id ?? null,
     })
     .select()
@@ -828,13 +885,13 @@ internal.post('/subjects', async (c) => {
 internal.patch('/subjects/:id', async (c) => {
   const subjectId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
-  const { name, study_program_id } = await c.req.json()
+  const { name, study_id } = await c.req.json()
 
   const { data, error } = await supabase
     .from('subjects')
     .update({
       ...(name !== undefined ? { name } : {}),
-      ...(study_program_id !== undefined ? { study_program_id } : {}),
+      ...(study_id !== undefined ? { study_id } : {}),
     })
     .eq('id', subjectId)
     .select()
@@ -848,10 +905,10 @@ internal.patch('/subjects/:id', async (c) => {
 internal.post('/subjects/:id/sync', async (c) => {
   const subjectId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
-  const { name, study_program_id, professor_ids } = await c.req.json()
+  const { name, study_id, professor_ids } = await c.req.json()
 
-  if (!name || !study_program_id) {
-    return c.json({ error: 'Name and study_program_id are required' }, 400)
+  if (!name || !study_id) {
+    return c.json({ error: 'Name and study_id are required' }, 400)
   }
 
   const { data: existingSubject, error: existingError } = await supabase
@@ -869,7 +926,7 @@ internal.post('/subjects/:id/sync', async (c) => {
     .from('subjects')
     .update({
       name,
-      study_program_id,
+      study_id,
     })
     .eq('id', subjectId)
     .select()

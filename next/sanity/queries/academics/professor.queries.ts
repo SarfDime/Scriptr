@@ -17,17 +17,14 @@ defined(picture)=>{ "picture": sanityImage::full(picture) },
 faculties[]->{
   _id,
   name,
-  dbId,
   university->{
     _id,
     name,
-    dbId,
   },
 },
 "universities": array::unique(faculties[]->university)[defined(@)]->{
   _id,
   name,
-  dbId,
 },
 "subjects": *[_type == "subject" && references(^._id)] | order(year asc, name asc) {
   _id,
@@ -42,7 +39,6 @@ export const professorDetailQuery = groq`
   _id,
   _type,
   name,
-  dbId,
   title,
   bio,
   defined(picture)=>{ "picture": sanityImage::full(picture) },
@@ -53,29 +49,24 @@ export const professorDetailQuery = groq`
   faculties[]->{
     _id,
     name,
-    dbId,
     university->{
       _id,
       name,
-      dbId
     }
   },
   "universities": array::unique(faculties[]->university)[defined(@)]->{
     _id,
     name,
-    dbId,
   },
   "subjects": *[_type == "subject" && references(^._id)] | order(year asc, name asc) {
     _id,
     name,
-    dbId,
     year,
     code,
     credits,
-    studyProgram->faculty->{
+    study->faculty->{
       _id,
       name,
-      dbId
     }
   }
 }

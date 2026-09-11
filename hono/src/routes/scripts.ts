@@ -16,7 +16,20 @@ const scripts = new Hono<HonoEnv>()
 
 // Excludes is_flagged, which is internal moderation state and not for public consumption.
 const PUBLIC_SCRIPT_COLUMNS =
-  'id, title, description, file_url, file_type, subject_id, professor_id, faculty_id, author_id, exam_session, additional_reading, vote_score, download_count, created_at, updated_at'
+  'id, title, description, file_url, file_type, subject_id, professor_id, author_id, exam_session, additional_reading, vote_score, download_count, created_at, updated_at'
+
+function applySelectedFacultyScope<
+  T extends { subject?: { study?: { faculty?: { id?: string } } } },
+>(rows: Array<T> | null, selectedFacultyIds: Array<string> | null) {
+  if (!rows || !selectedFacultyIds || selectedFacultyIds.length === 0) {
+    return rows ?? []
+  }
+
+  return rows.filter((row) => {
+    const facultyId = row.subject?.study?.faculty?.id
+    return !facultyId || selectedFacultyIds.includes(facultyId)
+  })
+}
 
 /** Resolve the requester's dedupe identity for downloads: account, then IP, then device. */
 async function resolveDownloadIdentity(c: Context<HonoEnv>) {
@@ -115,24 +128,17 @@ scripts.get('/', async (c) => {
   const supabase = createSupabaseClient(c)
   const selectedFacultyIds = await getSelectedFacultyScope(supabase)
 
-  let query = supabase
+  const { data, error } = await supabase
     .from('scripts')
     .select(`
       ${PUBLIC_SCRIPT_COLUMNS},
       author:profiles(username, full_name),
-      subject:subjects(name, study_program:study_programs(name, faculty:faculties(id, name, university:universities(id, name)))),
-      faculty:faculties(id, name, university:universities(id, name))
+      subject:subjects(name, study:studies(name, faculty:faculties(id, name, university:universities(id, name))))
     `)
     .order('created_at', { ascending: false })
 
-  if (selectedFacultyIds && selectedFacultyIds.length > 0) {
-    query = query.in('faculty_id', selectedFacultyIds)
-  }
-
-  const { data, error } = await query
-
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json(applySelectedFacultyScope(data, selectedFacultyIds))
 })
 
 /** Get scripts by subject */
@@ -141,25 +147,18 @@ scripts.get('/subject/:subjectId', async (c) => {
   const supabase = createSupabaseClient(c)
   const selectedFacultyIds = await getSelectedFacultyScope(supabase)
 
-  let query = supabase
+  const { data, error } = await supabase
     .from('scripts')
     .select(`
       ${PUBLIC_SCRIPT_COLUMNS},
       author:profiles(username, full_name),
-      subject:subjects(name, study_program:study_programs(name, faculty:faculties(id, name, university:universities(id, name)))),
-      faculty:faculties(id, name, university:universities(id, name))
+      subject:subjects(name, study:studies(name, faculty:faculties(id, name, university:universities(id, name))))
     `)
     .eq('subject_id', subjectId)
     .order('vote_score', { ascending: false })
 
-  if (selectedFacultyIds && selectedFacultyIds.length > 0) {
-    query = query.in('faculty_id', selectedFacultyIds)
-  }
-
-  const { data, error } = await query
-
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json(applySelectedFacultyScope(data, selectedFacultyIds))
 })
 
 /** Get top scripts (by vote score) */
@@ -168,25 +167,18 @@ scripts.get('/top', async (c) => {
   const supabase = createSupabaseClient(c)
   const selectedFacultyIds = await getSelectedFacultyScope(supabase)
 
-  let query = supabase
+  const { data, error } = await supabase
     .from('scripts')
     .select(`
       ${PUBLIC_SCRIPT_COLUMNS},
       author:profiles(username, full_name),
-      subject:subjects(name, study_program:study_programs(name, faculty:faculties(id, name, university:universities(id, name)))),
-      faculty:faculties(id, name, university:universities(id, name))
+      subject:subjects(name, study:studies(name, faculty:faculties(id, name, university:universities(id, name))))
     `)
     .order('vote_score', { ascending: false })
     .limit(limit)
 
-  if (selectedFacultyIds && selectedFacultyIds.length > 0) {
-    query = query.in('faculty_id', selectedFacultyIds)
-  }
-
-  const { data, error } = await query
-
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json(applySelectedFacultyScope(data, selectedFacultyIds))
 })
 
 /** Get most downloaded scripts */
@@ -195,53 +187,42 @@ scripts.get('/popular', async (c) => {
   const supabase = createSupabaseClient(c)
   const selectedFacultyIds = await getSelectedFacultyScope(supabase)
 
-  let query = supabase
+  const { data, error } = await supabase
     .from('scripts')
     .select(`
       ${PUBLIC_SCRIPT_COLUMNS},
       author:profiles(username, full_name),
-      subject:subjects(name, study_program:study_programs(name, faculty:faculties(id, name, university:universities(id, name)))),
-      faculty:faculties(id, name, university:universities(id, name))
+      subject:subjects(name, study:studies(name, faculty:faculties(id, name, university:universities(id, name))))
     `)
     .order('download_count', { ascending: false })
     .limit(limit)
 
-  if (selectedFacultyIds && selectedFacultyIds.length > 0) {
-    query = query.in('faculty_id', selectedFacultyIds)
-  }
-
-  const { data, error } = await query
-
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json(applySelectedFacultyScope(data, selectedFacultyIds))
 })
 
 /** Search scripts */
 scripts.get('/search', async (c) => {
   const queryParam = c.req.query('q')
-  const supabase = createSupabaseClient(c)
 
   if (!queryParam) {
     return c.json({ error: 'Search query is required' }, 400)
   }
 
-  let query = supabase.from('scripts').select(`
-      ${PUBLIC_SCRIPT_COLUMNS},
-      author:profiles(username, full_name),
-      subject:subjects(name, study_program:study_programs(name, faculty:faculties(id, name, university:universities(id, name)))),
-      faculty:faculties(id, name, university:universities(id, name))
-    `)
+  const supabase = createSupabaseClient(c)
   const selectedFacultyIds = await getSelectedFacultyScope(supabase)
 
-  if (selectedFacultyIds && selectedFacultyIds.length > 0) {
-    query = query.in('faculty_id', selectedFacultyIds)
-  }
-
-  const { data, error } = await query
+  const { data, error } = await supabase.from('scripts').select(`
+      ${PUBLIC_SCRIPT_COLUMNS},
+      author:profiles(username, full_name),
+      subject:subjects(name, study:studies(name, faculty:faculties(id, name, university:universities(id, name))))
+    `)
 
   if (error) return c.json({ error: error.message }, 500)
 
-  const results = data
+  const filteredData = applySelectedFacultyScope(data, selectedFacultyIds)
+
+  const results = filteredData
     .map((script) => ({
       script,
       score: Math.max(
@@ -272,19 +253,18 @@ scripts.get('/:id', async (c) => {
     .select(`
       ${PUBLIC_SCRIPT_COLUMNS},
       author:profiles(username, full_name),
-      subject:subjects(name, study_program:study_programs(name, faculty:faculties(id, name, university:universities(id, name)))),
-      faculty:faculties(id, name, university:universities(id, name))
+      subject:subjects(name, study:studies(name, faculty:faculties(id, name, university:universities(id, name))))
     `)
     .eq('id', scriptId)
     .single()
 
   if (error) return c.json({ error: error.message }, 404)
 
+  const facultyId = data.subject?.study?.faculty?.id
   if (
     selectedFacultyIds &&
     selectedFacultyIds.length > 0 &&
-    data.faculty_id &&
-    !selectedFacultyIds.includes(data.faculty_id)
+    (!facultyId || !selectedFacultyIds.includes(facultyId))
   ) {
     return c.json(
       { error: 'Script not available in your selected faculties' },
@@ -306,7 +286,6 @@ scripts.post('/', authMiddleware, async (c) => {
   const fileKey = body.fileKey ?? body.file_url
   const subjectId = body.subject_id ?? body.subjectId
   const professorId = body.professor_id ?? body.professorId
-  const facultyId = body.faculty_id ?? body.facultyId
   const fileType = body.fileType ?? body.file_type
   const examSession = body.examSession ?? body.exam_session ?? null
   const additionalReading =
@@ -318,13 +297,12 @@ scripts.post('/', authMiddleware, async (c) => {
     !professorId ||
     !fileKey ||
     !fileType ||
-    !facultyId ||
     !Array.isArray(additionalReading)
   ) {
     return c.json(
       {
         error:
-          'title, subjectId, professorId, facultyId, fileKey, and fileType are required',
+          'title, subjectId, professorId, fileKey, and fileType are required',
       },
       400
     )
@@ -343,7 +321,6 @@ scripts.post('/', authMiddleware, async (c) => {
       file_type: fileType || 'pdf',
       subject_id: subjectId,
       professor_id: professorId,
-      faculty_id: facultyId,
       author_id: user.id,
       exam_session: examSession,
       additional_reading: additionalReading,
@@ -353,8 +330,7 @@ scripts.post('/', authMiddleware, async (c) => {
     .select(`
       *,
       author:profiles(username, full_name),
-      subject:subjects(name, study_program:study_programs(name, faculty:faculties(id, name, university:universities(id, name)))),
-      faculty:faculties(id, name, university:universities(id, name))
+      subject:subjects(name, study:studies(name, faculty:faculties(id, name, university:universities(id, name))))
     `)
     .single()
 
@@ -405,7 +381,7 @@ scripts.patch('/:id', authMiddleware, async (c) => {
     .select(`
       *,
       author:profiles(username, full_name),
-      subject:subjects(name, study_program:study_programs(name))
+      subject:subjects(name, study:studies(name))
     `)
     .single()
 
@@ -466,7 +442,7 @@ scripts.get('/my-scripts', authMiddleware, async (c) => {
     .from('scripts')
     .select(`
       *,
-      subject:subjects(name, study_program:study_programs(name))
+      subject:subjects(name, study:studies(name))
     `)
     .eq('author_id', user.id)
     .order('created_at', { ascending: false })
@@ -550,7 +526,7 @@ scripts.get('/flagged/all', authMiddleware, async (c) => {
     .select(`
       *,
       author:profiles(username, full_name),
-      subject:subjects(name, study_program:study_programs(name)),
+      subject:subjects(name, study:studies(name)),
       flags:flags(
         *,
         reporter:profiles!reporter_id(username)

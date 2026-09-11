@@ -15,12 +15,12 @@ export const SubjectCard = ({
   credits,
   semester,
   professors = [],
-  faculty,
+  study,
 }: MinimalSubject) => {
   const [firstProfessor, ...restProfessors] = professors
 
-  const facultyName = faculty?.name
-  const universityName = faculty?.university?.name
+  const facultyName = study?.faculty?.name
+  const universityName = study?.faculty?.university?.name
 
   const color = getColorPalette({ type: 'seed', value: _id })
   return (

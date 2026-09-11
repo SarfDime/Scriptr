@@ -1,7 +1,7 @@
 // Academic entities (linked to Postgres via dbId)
 import { Faculty } from './academic/faculty'
 import { Professor } from './academic/professor'
-import { StudyProgram } from './academic/studyProgram'
+import { Study } from './academic/study'
 import { Subject } from './academic/subject'
 import { University } from './academic/university'
 import { Button } from './misc/button'
@@ -39,5 +39,5 @@ export const schemaTypes = [
   Faculty,
   Professor,
   Subject,
-  StudyProgram,
+  Study,
 ]

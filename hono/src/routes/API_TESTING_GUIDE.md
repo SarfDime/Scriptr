@@ -351,9 +351,9 @@ curl -X PATCH http://localhost:8787/api/internal/profiles/$USER/role \
 | GET/POST     | `/api/internal/professors`                           | `{ "name", "picture_url?", "bio?", "faculty_ids?" }` |
 | PATCH/DELETE | `/api/internal/professors/:id`                       | `{ "name", "picture_url", "bio" }`                   |
 | POST/DELETE  | `/api/internal/professors/:id/faculties/:facultyId`  | —                                                    |
-| GET/POST     | `/api/internal/study-programs`                       | `{ "name", "faculty_id" }`                           |
-| PATCH/DELETE | `/api/internal/study-programs/:id`                   | same fields, partial                                 |
-| GET/POST     | `/api/internal/subjects`                             | `{ "name", "study_program_id", "professor_ids?" }`   |
+| GET/POST     | `/api/internal/studies`                              | `{ "name", "faculty_id" }`                           |
+| PATCH/DELETE | `/api/internal/studies/:id`                          | same fields, partial                                 |
+| GET/POST     | `/api/internal/subjects`                             | `{ "name", "study_id", "professor_ids?" }`           |
 | PATCH/DELETE | `/api/internal/subjects/:id`                         | same fields, partial                                 |
 | POST/DELETE  | `/api/internal/subjects/:id/professors/:professorId` | —                                                    |
 | PATCH        | `/api/internal/profiles/:id/role`                    | `{ "role": "student"                                 | "moderator" }` |

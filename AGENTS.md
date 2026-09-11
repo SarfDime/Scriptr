@@ -32,7 +32,7 @@ This will:
 1. Read the README for the workspace you will change.
 2. Check the current phase in [roadmap.md](roadmap.md) section 10 to understand focus areas.
 3. Check the nearest implementation and its callers before introducing a new pattern.
-4. Treat generated files as generated: do not hand-edit `shared/types/database.types.ts`, `next/sanity.types.ts`, or `sanity/schema.json`. `hono/src/types/supabase.ts` is only a compatibility re-export.
+4. Treat generated files as generated: do not hand-edit `shared/types/database.types.ts`, `next/sanity.types.ts`, or `sanity/schema.json`. `hono/src/types/supabase.ts` is only a compatibility re-export. After any schema change (for example, the removal of `scripts.faculty_id`), regenerate `shared/types/database.types.ts` with `npm run gen:api-types` before touching code that references the old column, then grep the `hono/` and `next/` workspaces for `faculty_id` usages on `scripts` to remove dead references.
 5. Keep secrets in `.env` files. Never add credentials, cookies, tokens, or production data to docs or fixtures.
 6. Start from the smallest concrete anchor: the owning file, symbol, failing check, or nearby test.
 7. Before editing, identify one local hypothesis and one cheap check that could disprove it.

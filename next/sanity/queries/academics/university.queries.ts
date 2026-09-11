@@ -6,11 +6,9 @@ export const universityGalleryQuery = groq`
 *[_type == "university"] | order(name asc) {
   _id,
   name,
-  dbId,
   "faculties": *[_type == "faculty" && references(^._id)] | order(name asc) {
     _id,
     name,
-    dbId
   }
 }
 `
@@ -30,7 +28,6 @@ export const universityDetailQuery = groq`
   _id,
   _type,
   name,
-  dbId,
   description,
   streetAddress,
   telephone,

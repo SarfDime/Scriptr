@@ -339,6 +339,39 @@ export type Database = {
           },
         ]
       }
+      professor_studies: {
+        Row: {
+          created_at: string
+          professor_id: string
+          study_id: string
+        }
+        Insert: {
+          created_at?: string
+          professor_id: string
+          study_id: string
+        }
+        Update: {
+          created_at?: string
+          professor_id?: string
+          study_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'professor_studies_professor_id_fkey'
+            columns: ['professor_id']
+            isOneToOne: false
+            referencedRelation: 'professors'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'professor_studies_study_id_fkey'
+            columns: ['study_id']
+            isOneToOne: false
+            referencedRelation: 'studies'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       professors: {
         Row: {
           created_at: string
@@ -389,6 +422,39 @@ export type Database = {
             columns: ['profile_id']
             isOneToOne: false
             referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      profile_studies: {
+        Row: {
+          created_at: string
+          profile_id: string
+          study_id: string
+        }
+        Insert: {
+          created_at?: string
+          profile_id: string
+          study_id: string
+        }
+        Update: {
+          created_at?: string
+          profile_id?: string
+          study_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'profile_studies_profile_id_fkey'
+            columns: ['profile_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'profile_studies_study_id_fkey'
+            columns: ['study_id']
+            isOneToOne: false
+            referencedRelation: 'studies'
             referencedColumns: ['id']
           },
         ]
@@ -503,7 +569,6 @@ export type Database = {
           description: string | null
           download_count: number
           exam_session: string | null
-          faculty_id: string | null
           file_type: string
           file_url: string
           id: string
@@ -521,7 +586,6 @@ export type Database = {
           description?: string | null
           download_count?: number
           exam_session?: string | null
-          faculty_id?: string | null
           file_type: string
           file_url: string
           id?: string
@@ -539,7 +603,6 @@ export type Database = {
           description?: string | null
           download_count?: number
           exam_session?: string | null
-          faculty_id?: string | null
           file_type?: string
           file_url?: string
           id?: string
@@ -559,13 +622,6 @@ export type Database = {
             referencedColumns: ['id']
           },
           {
-            foreignKeyName: 'scripts_faculty_id_fkey'
-            columns: ['faculty_id']
-            isOneToOne: false
-            referencedRelation: 'faculties'
-            referencedColumns: ['id']
-          },
-          {
             foreignKeyName: 'scripts_subject_id_fkey'
             columns: ['subject_id']
             isOneToOne: false
@@ -581,7 +637,7 @@ export type Database = {
           },
         ]
       }
-      study_programs: {
+      studies: {
         Row: {
           created_at: string
           faculty_id: string
@@ -605,7 +661,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'study_programs_faculty_id_fkey'
+            foreignKeyName: 'studies_faculty_id_fkey'
             columns: ['faculty_id']
             isOneToOne: false
             referencedRelation: 'faculties'
@@ -649,28 +705,28 @@ export type Database = {
           id: string
           name: string
           sanity_id: string | null
-          study_program_id: string
+          study_id: string
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
           sanity_id?: string | null
-          study_program_id: string
+          study_id: string
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
           sanity_id?: string | null
-          study_program_id?: string
+          study_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'subjects_study_program_id_fkey'
-            columns: ['study_program_id']
+            foreignKeyName: 'subjects_study_id_fkey'
+            columns: ['study_id']
             isOneToOne: false
-            referencedRelation: 'study_programs'
+            referencedRelation: 'studies'
             referencedColumns: ['id']
           },
         ]

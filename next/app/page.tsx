@@ -52,9 +52,17 @@ const subjects: Array<SubjectDetail> = [
     _id: 'subject-3',
     _type: 'subject',
     dbId: 'bio201',
-    faculty: {
-      _id: 'faculty-1',
-      name: 'Science',
+    study: {
+      _id: 'study-1',
+      name: 'Biology',
+      faculty: {
+        _id: 'faculty-1',
+        name: 'Science',
+        university: {
+          _id: 'university-1',
+          name: 'Example University',
+        },
+      },
     },
     syllabus: 'bio201-syllabus.pdf',
   },
@@ -84,9 +92,17 @@ const subjects: Array<SubjectDetail> = [
     _id: 'subject-4',
     _type: 'subject',
     dbId: 'chem204',
-    faculty: {
-      _id: 'faculty-1',
-      name: 'Science',
+    study: {
+      _id: 'study-2',
+      name: 'Chemistry',
+      faculty: {
+        _id: 'faculty-1',
+        name: 'Science',
+        university: {
+          _id: 'university-1',
+          name: 'Example University',
+        },
+      },
     },
     syllabus: 'chem204-syllabus.pdf',
   },
@@ -116,9 +132,17 @@ const subjects: Array<SubjectDetail> = [
     _id: 'subject-5',
     _type: 'subject',
     dbId: 'math221',
-    faculty: {
-      _id: 'faculty-1',
-      name: 'Science',
+    study: {
+      _id: 'study-3',
+      name: 'Mathematics',
+      faculty: {
+        _id: 'faculty-1',
+        name: 'Science',
+        university: {
+          _id: 'university-1',
+          name: 'Example University',
+        },
+      },
     },
     syllabus: 'math221-syllabus.pdf',
   },

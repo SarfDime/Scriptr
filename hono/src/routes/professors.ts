@@ -44,7 +44,7 @@ professors.get('/', async (c) => {
     .select(`
       *,
       subjects:subject_professors(
-        subject:subjects(*, study_program:study_programs(id, name, faculty:faculties(id, name, university:universities(id, name))))
+        subject:subjects(*, study:studies(id, name, faculty:faculties(id, name, university:universities(id, name))))
       ),
       faculties:professor_faculties(
         faculty:faculties(id, name, university:universities(id, name))
@@ -87,7 +87,7 @@ professors.get('/:id', async (c) => {
     .select(`
       *,
       subjects:subject_professors(
-        subject:subjects(*, study_program:study_programs(id, name, faculty:faculties(id, name, university:universities(id, name))))
+        subject:subjects(*, study:studies(id, name, faculty:faculties(id, name, university:universities(id, name))))
       ),
       faculties:professor_faculties(
         faculty:faculties(id, name, university:universities(id, name))

@@ -2,6 +2,7 @@ import UserIcon from '@sanity/icons/User'
 import type { Rule } from 'sanity'
 import { defineType } from 'sanity'
 import { customLinkField } from '../common/customLink'
+import { filterExistingReferences } from '../util-functions/schemaFilters'
 import { validationRules } from '../validation'
 
 export const Professor = defineType({
@@ -98,11 +99,53 @@ export const Professor = defineType({
         {
           type: 'reference',
           to: [{ type: 'faculty' }],
+          options: {
+            filter: filterExistingReferences,
+            disableNew: true,
+          },
         },
       ],
       description:
         'Assign this professor to one or more faculties in the database.',
       validation: (rule: Rule) => rule.required().min(1),
+      fieldset: 'database',
+    },
+    {
+      name: 'studies',
+      title: 'Studies',
+      type: 'array',
+      of: [
+        {
+          type: 'reference',
+          to: [{ type: 'study' }],
+          options: {
+            disableNew: true,
+            // Combines existing reference filter with faculty check
+            filter: ({
+              document,
+              parent,
+            }: {
+              document: { faculties?: Array<{ _ref: string }> }
+              parent: Array<{ _ref: string }>
+              // TODO: Type Properly
+            }) => {
+              // 1. Get currently chosen faculty IDs
+              const selectedFacultyIds =
+                document?.faculties?.map((f) => f._ref).filter(Boolean) || []
+
+              // 2. Get already chosen study IDs (replaces filterExistingReferences)
+              const existingIds =
+                parent?.map((p) => p._ref).filter(Boolean) || []
+
+              return {
+                filter:
+                  'faculty._ref in $selectedFacultyIds && !(_id in $existingIds) && !(_id in path("drafts.**"))',
+                params: { selectedFacultyIds, existingIds },
+              }
+            },
+          },
+        },
+      ],
       fieldset: 'database',
     },
     {

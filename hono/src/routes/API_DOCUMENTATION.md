@@ -65,10 +65,10 @@ Get all subjects with study-program, faculty, and professor metadata.
 - **Auth**: `x-internal-secret` required
 - **Response**: Array of subjects
 
-#### `GET /internal/study-programs`
-Get all study programs with faculty and university metadata.
+#### `GET /internal/studies`
+Get all studies with faculty and university metadata.
 - **Auth**: `x-internal-secret` required
-- **Response**: Array of study programs
+- **Response**: Array of studies
 
 #### `GET /subjects/:id`
 Get a single subject by ID.
@@ -146,11 +146,11 @@ List subjects via the internal API.
 
 #### `POST /internal/subjects`
 Create a new subject.
-- **Body**: `{ name, study_program_id, professor_ids? }`
+- **Body**: `{ name, study_id, professor_ids? }`
 
 #### `PATCH /internal/subjects/:id`
 Update a subject.
-- **Body**: `{ name?, study_program_id? }`
+- **Body**: `{ name?, study_id? }`
 
 #### `DELETE /internal/subjects/:id`
 Delete a subject.

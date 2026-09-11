@@ -10,17 +10,17 @@ import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import type { SubjectDetail } from '@/types/academics/subject.types'
 
-type FacultySubject = Omit<SubjectDetail, '_type'>
+type StudySubject = Omit<SubjectDetail, '_type'>
 type SortOption = 'year' | 'name' | 'professor'
 
-type FacultySubjectsExplorerProps = {
-  subjects: Array<FacultySubject>
+type StudySubjectsExplorerProps = {
+  subjects: Array<StudySubject>
 }
 
-const getPrimaryProfessorName = (subject: FacultySubject) =>
+const getPrimaryProfessorName = (subject: StudySubject) =>
   subject.professors?.[0]?.name ?? ''
 
-const sortSubjects = (subjects: Array<FacultySubject>, sort: SortOption) =>
+const sortSubjects = (subjects: Array<StudySubject>, sort: SortOption) =>
   [...subjects].sort((a, b) => {
     if (sort === 'name') return a.name.localeCompare(b.name)
     if (sort === 'professor') {
@@ -31,7 +31,7 @@ const sortSubjects = (subjects: Array<FacultySubject>, sort: SortOption) =>
     return a.year - b.year
   })
 
-const matchesQuery = (subject: FacultySubject, query: string) => {
+const matchesQuery = (subject: StudySubject, query: string) => {
   if (!query) return true
   const haystack = [
     subject.name,
@@ -44,9 +44,9 @@ const matchesQuery = (subject: FacultySubject, query: string) => {
   return haystack.includes(query.toLowerCase())
 }
 
-export const FacultySubjectsExplorer = ({
+export const StudySubjectsExplorer = ({
   subjects,
-}: FacultySubjectsExplorerProps) => {
+}: StudySubjectsExplorerProps) => {
   const [year, setYear] = useState<number | 'all'>('all')
   const [sort, setSort] = useState<SortOption>('year')
   const [query, setQuery] = useState('')

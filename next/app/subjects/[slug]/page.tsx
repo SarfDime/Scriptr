@@ -47,21 +47,21 @@ export default async function SubjectDetailPage({
     fetchOrigin: `subject-detail-${slug}`,
   })
 
-  const faculty = subject.faculty
+  const study = subject.study
 
   return (
     <PageLayout
       header={{
-        greeting: faculty?.name ?? 'Subject',
+        greeting: study?.name ?? 'Subject',
         title: subject.name,
         subtitle: subject.dbId ? `Database ID: ${subject.dbId}` : undefined, //TODO: Subtitle should be short bio or something similar not dbID all across the project
-        actions: faculty && (
+        actions: study?.faculty && (
           // TODO: Factor out to reusable breadcrumb component
           <NextLink
-            href={getFacultyPath(faculty._id)}
+            href={getFacultyPath(study.faculty._id)}
             className='ui-badge cp-brand-interactive'
           >
-            ← {faculty.name}
+            ← {study.faculty.name}
           </NextLink>
         ),
       }}

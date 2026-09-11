@@ -28,7 +28,7 @@ profiles.get('/me', authMiddleware, async (c) => {
   const { data, error } = await supabase
     .from('profiles')
     .select(
-      '*, subjects:profile_subjects(subject_id, status, updated_at), selected_faculties:profile_faculties(faculty:faculties(*, university:universities(id, name)))'
+      '*, subjects:profile_subjects(subject_id, status, updated_at), selected_faculties:profile_faculties(faculty:faculties(*, university:universities(id, name))), selected_studies:profile_studies(study:studies(*, faculty:faculties(*, university:universities(id, name))))'
     )
     .eq('id', user.id)
     .single()
@@ -104,7 +104,8 @@ profiles.patch('/me', authMiddleware, async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)
 
-  const { username, full_name, selected_faculty_ids } = await c.req.json()
+  const { username, full_name, selected_faculty_ids, selected_study_ids } =
+    await c.req.json()
 
   // Validate username if provided
   if (username) {
@@ -156,7 +157,18 @@ profiles.patch('/me', authMiddleware, async (c) => {
       )
     }
   }
+  if (Array.isArray(selected_study_ids)) {
+    await supabase.from('profile_studies').delete().eq('profile_id', user.id)
 
+    if (selected_study_ids.length > 0) {
+      await supabase.from('profile_studies').insert(
+        selected_study_ids.map((studyId: string) => ({
+          profile_id: user.id,
+          study_id: studyId,
+        }))
+      )
+    }
+  }
   return c.json({ success: true, profile: data })
 })
 

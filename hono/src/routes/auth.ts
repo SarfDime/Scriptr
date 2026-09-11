@@ -111,6 +111,7 @@ auth.get('/session', async (c) => {
       { data: profile },
       { data: profileSubjects },
       { data: facultySelections },
+      { data: studySelections },
     ] = await Promise.all([
       supabase
         .from('profiles')
@@ -124,6 +125,10 @@ auth.get('/session', async (c) => {
       supabase
         .from('profile_faculties')
         .select('faculty_id')
+        .eq('profile_id', session.user.id),
+      supabase
+        .from('profile_studies')
+        .select('study_id')
         .eq('profile_id', session.user.id),
     ])
 
@@ -139,6 +144,8 @@ auth.get('/session', async (c) => {
           ) || [],
         selected_faculty_ids:
           facultySelections?.map(({ faculty_id }) => faculty_id) || [],
+        selected_study_ids:
+          studySelections?.map(({ study_id }) => study_id) || [],
       },
     })
   } catch (_error) {

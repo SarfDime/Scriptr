@@ -94,7 +94,7 @@ export default defineConfig({
         faculty: 'faculty',
         professor: 'professor',
         subject: 'subject',
-        studyProgram: 'studyProgram',
+        study: 'study',
       }
       const entityType = academicEntityTypes[context.schemaType]
 

@@ -12,7 +12,7 @@ import type { SubjectDetail } from '@/types/academics/subject.types'
 export const SubjectOverviewCard = ({
   _id,
   description,
-  faculty,
+  study,
   professors,
 }: SubjectDetail) => {
   const color = getColorPalette({ type: 'seed', value: _id, variant: 'nb' })
@@ -20,8 +20,10 @@ export const SubjectOverviewCard = ({
 
   const administrators = createPersonSummaries(
     { target: professors, title: 'Professor' },
-    { target: faculty, title: 'Faculty' },
-    { target: faculty?.university, title: 'University' }
+
+    { target: study, title: 'Study' },
+    { target: study?.faculty, title: 'Faculty' },
+    { target: study?.faculty?.university, title: 'University' }
   )
 
   return (

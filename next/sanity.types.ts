@@ -28,11 +28,11 @@ export type ProfessorReference = {
   [internalGroqTypeReferenceTo]?: "professor";
 };
 
-export type StudyProgramReference = {
+export type StudyReference = {
   _ref: string;
   _type: "reference";
   _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "studyProgram";
+  [internalGroqTypeReferenceTo]?: "study";
 };
 
 export type Subject = {
@@ -55,7 +55,7 @@ export type Subject = {
       _key: string;
     } & ProfessorReference
   >;
-  studyProgram: StudyProgramReference;
+  study: StudyReference;
   dbId?: string;
 };
 
@@ -66,15 +66,23 @@ export type FacultyReference = {
   [internalGroqTypeReferenceTo]?: "faculty";
 };
 
-export type StudyProgram = {
+export type PersonReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "person";
+};
+
+export type Study = {
   _id: string;
-  _type: "studyProgram";
+  _type: "study";
   _createdAt: string;
   _updatedAt: string;
   _rev: string;
   name: string;
   description?: RichTextLite;
   faculty: FacultyReference;
+  assistant?: PersonReference;
   dbId?: string;
 };
 
@@ -154,6 +162,11 @@ export type Professor = {
       _key: string;
     } & FacultyReference
   >;
+  studies?: Array<
+    {
+      _key: string;
+    } & StudyReference
+  >;
   dbId?: string;
 };
 
@@ -171,13 +184,6 @@ export type SanityImageHotspot = {
   y: number;
   height: number;
   width: number;
-};
-
-export type PersonReference = {
-  _ref: string;
-  _type: "reference";
-  _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "person";
 };
 
 export type UniversityReference = {
@@ -729,17 +735,17 @@ export type Geopoint = {
 
 export type AllSanitySchemaTypes =
   | ProfessorReference
-  | StudyProgramReference
+  | StudyReference
   | Subject
   | FacultyReference
-  | StudyProgram
+  | PersonReference
+  | Study
   | SanityImageAssetReference
   | ButtonReference
   | RichTextLite
   | Professor
   | SanityImageCrop
   | SanityImageHotspot
-  | PersonReference
   | UniversityReference
   | Faculty
   | University
@@ -788,7 +794,7 @@ export type FacultySeoQueryResult = {
 
 // Source: ../next/sanity/queries/academics/faculty.queries.ts
 // Variable: facultyDetailQuery
-// Query: fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};*[_type == "faculty" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {  _id,  _type,  name,  dbId,  description,  streetAddress,  telephone,  email,  defined(picture)=>{ "picture": sanityImage::full(picture) },  website,  studentCount,  dean->{    _id,    name,    title,    defined(picture)=>{ "picture": sanityImage::full(picture) }  },  secretary->{    _id,    name,    title,    defined(picture)=>{ "picture": sanityImage::full(picture) }  },  viceDeans[]->{    _id,    name,    title,    defined(picture)=>{ "picture": sanityImage::full(picture) }  },  university->{    _id,    name,    dbId  },  "professors": *[_type == "professor" && references(^._id)] | order(name asc) {    _id,name,title,defined(picture)=>{ "picture": sanityImage::full(picture) },faculties[]->{  _id,  name,  dbId,  university->{    _id,    name,    dbId,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  name,  dbId,},"subjects": *[_type == "subject" && references(^._id)] | order(year asc, name asc) {  _id,  name,  code,},  },  "subjects": *[_type == "subject" && studyProgram->faculty._id == ^._id] | order(year asc, name asc) {    _id,name,code,credits,year,semester,description,syllabus,"faculty": studyProgram->faculty->{  _id,  name,  dbId,  university->{    _id,    name,  }},studyProgram->{  _id,  name,  dbId,  faculty->{    _id,    name,    dbId,  }},professors[]->{  _id,  name,  title,}  }}
+// Query: fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};*[_type == "faculty" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {  _id,  _type,  name,  dbId,  description,  streetAddress,  telephone,  email,  defined(picture)=>{ "picture": sanityImage::full(picture) },  website,  studentCount,  dean->{    _id,    name,    title,    defined(picture)=>{ "picture": sanityImage::full(picture) }  },  secretary->{    _id,    name,    title,    defined(picture)=>{ "picture": sanityImage::full(picture) }  },  viceDeans[]->{    _id,    name,    title,    defined(picture)=>{ "picture": sanityImage::full(picture) }  },  university->{    _id,    name,    dbId  },  "professors": *[_type == "professor" && references(^._id)] | order(name asc) {    _id,name,title,defined(picture)=>{ "picture": sanityImage::full(picture) },faculties[]->{  _id,  name,  university->{    _id,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  name,},"subjects": *[_type == "subject" && references(^._id)] | order(year asc, name asc) {  _id,  name,  code,},  },  "studies": *[_type == "study" && references(^._id)] | order(name asc) {    _id,name,studentCount,defined(picture)=>{ "picture": sanityImage::full(picture) },assistant->{  _id,  name,  title,  defined(picture)=>{ "picture": sanityImage::full(picture) }},faculty->{  _id,  name,  university->{    _id,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id)]),"professorCount": count(*[_type == "professor" && references(^._id)]),"professors": *[_type == "professor" && references(^._id)] | order(name asc) {  _id,name,title,defined(picture)=>{ "picture": sanityImage::full(picture) },faculties[]->{  _id,  name,  university->{    _id,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  name,},"subjects": *[_type == "subject" && references(^._id)] | order(year asc, name asc) {  _id,  name,  code,},},"subjects": *[_type == "subject" && references(^._id)] | order(year asc, name asc) {  _id,name,code,credits,year,semester,description,syllabus,"faculty": study->faculty->{  _id,  name,  dbId,  university->{    _id,    name,  }},study->{  _id,  name,  dbId,  faculty->{    _id,    name,  }},professors[]->{  _id,  name,  title,}},  }}
 export type FacultyDetailQueryResult =
   | {
       _id: string;
@@ -878,17 +884,14 @@ export type FacultyDetailQueryResult =
             faculties: Array<{
               _id: string;
               name: string;
-              dbId: string | null;
               university: {
                 _id: string;
                 name: string;
-                dbId: string | null;
               };
             }>;
             universities: Array<{
               _id: string;
               name: string;
-              dbId: string | null;
             }>;
             subjects: Array<{
               _id: string;
@@ -903,17 +906,14 @@ export type FacultyDetailQueryResult =
             faculties: Array<{
               _id: string;
               name: string;
-              dbId: string | null;
               university: {
                 _id: string;
                 name: string;
-                dbId: string | null;
               };
             }>;
             universities: Array<{
               _id: string;
               name: string;
-              dbId: string | null;
             }>;
             subjects: Array<{
               _id: string;
@@ -922,7 +922,124 @@ export type FacultyDetailQueryResult =
             }>;
           }
       >;
-      subjects: Array<never>;
+      studies: Array<{
+        _id: string;
+        name: string;
+        studentCount: null;
+        assistant:
+          | {
+              _id: string;
+              name: string;
+              title: string;
+              picture: {
+                asset: SanityImageAssetReference | null;
+                crop: SanityImageCrop | null;
+                hotspot: SanityImageHotspot | null;
+                alt: string | null;
+              } | null;
+            }
+          | {
+              _id: string;
+              name: string;
+              title: string;
+            }
+          | null;
+        faculty: {
+          _id: string;
+          name: string;
+          university: {
+            _id: string;
+            name: string;
+          };
+        };
+        subjectCount: number;
+        professorCount: number;
+        professors: Array<
+          | {
+              _id: string;
+              name: string;
+              title: string | null;
+              picture: {
+                asset: SanityImageAssetReference | null;
+                crop: SanityImageCrop | null;
+                hotspot: SanityImageHotspot | null;
+                alt: string | null;
+              } | null;
+              faculties: Array<{
+                _id: string;
+                name: string;
+                university: {
+                  _id: string;
+                  name: string;
+                };
+              }>;
+              universities: Array<{
+                _id: string;
+                name: string;
+              }>;
+              subjects: Array<{
+                _id: string;
+                name: string;
+                code: string;
+              }>;
+            }
+          | {
+              _id: string;
+              name: string;
+              title: string | null;
+              faculties: Array<{
+                _id: string;
+                name: string;
+                university: {
+                  _id: string;
+                  name: string;
+                };
+              }>;
+              universities: Array<{
+                _id: string;
+                name: string;
+              }>;
+              subjects: Array<{
+                _id: string;
+                name: string;
+                code: string;
+              }>;
+            }
+        >;
+        subjects: Array<{
+          _id: string;
+          name: string;
+          code: string;
+          credits: number;
+          year: number;
+          semester: "summer" | "winter";
+          description: RichTextLite;
+          syllabus: string;
+          faculty: {
+            _id: string;
+            name: string;
+            dbId: string | null;
+            university: {
+              _id: string;
+              name: string;
+            };
+          };
+          study: {
+            _id: string;
+            name: string;
+            dbId: string | null;
+            faculty: {
+              _id: string;
+              name: string;
+            };
+          };
+          professors: Array<{
+            _id: string;
+            name: string;
+            title: string | null;
+          }>;
+        }>;
+      }>;
     }
   | {
       _id: string;
@@ -1006,17 +1123,14 @@ export type FacultyDetailQueryResult =
             faculties: Array<{
               _id: string;
               name: string;
-              dbId: string | null;
               university: {
                 _id: string;
                 name: string;
-                dbId: string | null;
               };
             }>;
             universities: Array<{
               _id: string;
               name: string;
-              dbId: string | null;
             }>;
             subjects: Array<{
               _id: string;
@@ -1031,17 +1145,14 @@ export type FacultyDetailQueryResult =
             faculties: Array<{
               _id: string;
               name: string;
-              dbId: string | null;
               university: {
                 _id: string;
                 name: string;
-                dbId: string | null;
               };
             }>;
             universities: Array<{
               _id: string;
               name: string;
-              dbId: string | null;
             }>;
             subjects: Array<{
               _id: string;
@@ -1050,7 +1161,124 @@ export type FacultyDetailQueryResult =
             }>;
           }
       >;
-      subjects: Array<never>;
+      studies: Array<{
+        _id: string;
+        name: string;
+        studentCount: null;
+        assistant:
+          | {
+              _id: string;
+              name: string;
+              title: string;
+              picture: {
+                asset: SanityImageAssetReference | null;
+                crop: SanityImageCrop | null;
+                hotspot: SanityImageHotspot | null;
+                alt: string | null;
+              } | null;
+            }
+          | {
+              _id: string;
+              name: string;
+              title: string;
+            }
+          | null;
+        faculty: {
+          _id: string;
+          name: string;
+          university: {
+            _id: string;
+            name: string;
+          };
+        };
+        subjectCount: number;
+        professorCount: number;
+        professors: Array<
+          | {
+              _id: string;
+              name: string;
+              title: string | null;
+              picture: {
+                asset: SanityImageAssetReference | null;
+                crop: SanityImageCrop | null;
+                hotspot: SanityImageHotspot | null;
+                alt: string | null;
+              } | null;
+              faculties: Array<{
+                _id: string;
+                name: string;
+                university: {
+                  _id: string;
+                  name: string;
+                };
+              }>;
+              universities: Array<{
+                _id: string;
+                name: string;
+              }>;
+              subjects: Array<{
+                _id: string;
+                name: string;
+                code: string;
+              }>;
+            }
+          | {
+              _id: string;
+              name: string;
+              title: string | null;
+              faculties: Array<{
+                _id: string;
+                name: string;
+                university: {
+                  _id: string;
+                  name: string;
+                };
+              }>;
+              universities: Array<{
+                _id: string;
+                name: string;
+              }>;
+              subjects: Array<{
+                _id: string;
+                name: string;
+                code: string;
+              }>;
+            }
+        >;
+        subjects: Array<{
+          _id: string;
+          name: string;
+          code: string;
+          credits: number;
+          year: number;
+          semester: "summer" | "winter";
+          description: RichTextLite;
+          syllabus: string;
+          faculty: {
+            _id: string;
+            name: string;
+            dbId: string | null;
+            university: {
+              _id: string;
+              name: string;
+            };
+          };
+          study: {
+            _id: string;
+            name: string;
+            dbId: string | null;
+            faculty: {
+              _id: string;
+              name: string;
+            };
+          };
+          professors: Array<{
+            _id: string;
+            name: string;
+            title: string | null;
+          }>;
+        }>;
+      }>;
     }
   | null;
 
@@ -1077,6 +1305,22 @@ export type ProfessorStaticParamsQueryResult = Array<{
   slug: string;
 }>;
 
+// Source: ../next/sanity/queries/academics/study.queries.ts
+// Variable: studySeoQuery
+// Query: *[_type == "study" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {  _id,  name,  description}
+export type StudySeoQueryResult = {
+  _id: string;
+  name: string;
+  description: RichTextLite | null;
+} | null;
+
+// Source: ../next/sanity/queries/academics/study.queries.ts
+// Variable: studyStaticParamsQuery
+// Query: *[_type == "study" && !(_id in path("drafts.**"))] {  "slug": _id}
+export type StudyStaticParamsQueryResult = Array<{
+  slug: string;
+}>;
+
 // Source: ../next/sanity/queries/academics/subject.queries.ts
 // Variable: subjectSeoQuery
 // Query: *[_type == "subject" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {  _id,  name,  description}
@@ -1088,23 +1332,29 @@ export type SubjectSeoQueryResult = {
 
 // Source: ../next/sanity/queries/academics/subject.queries.ts
 // Variable: subjectDetailQuery
-// Query: *[_type == "subject" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {  _id,  _type,  name,  dbId,  code,  credits,  year,  semester,  description,  syllabus,  "faculty": studyProgram->faculty->{    _id,    name,    dbId,    faculty->{      _id,      name,      dbId    }  },  professors[]->{    _id,    name,    dbId,    title,    picture,    email  }}
+// Query: *[_type == "subject" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {  _id,  _type,  name,  code,  credits,  year,  semester,  description,  syllabus,  study->{    _id,    name,    dbId,    faculty->{      _id,      name,      university->{        _id,        name,      }    }  },  professors[]->{    _id,    name,    dbId,    title,    picture,    email  }}
 export type SubjectDetailQueryResult = {
   _id: string;
   _type: "subject";
   name: string;
-  dbId: string | null;
   code: string;
   credits: number;
   year: number;
   semester: "summer" | "winter";
   description: RichTextLite;
   syllabus: string;
-  faculty: {
+  study: {
     _id: string;
     name: string;
     dbId: string | null;
-    faculty: null;
+    faculty: {
+      _id: string;
+      name: string;
+      university: {
+        _id: string;
+        name: string;
+      };
+    };
   };
   professors: Array<{
     _id: string;
@@ -1131,15 +1381,13 @@ export type SubjectStaticParamsQueryResult = Array<{
 
 // Source: ../next/sanity/queries/academics/university.queries.ts
 // Variable: universityGalleryQuery
-// Query: *[_type == "university"] | order(name asc) {  _id,  name,  dbId,  "faculties": *[_type == "faculty" && references(^._id)] | order(name asc) {    _id,    name,    dbId  }}
+// Query: *[_type == "university"] | order(name asc) {  _id,  name,  "faculties": *[_type == "faculty" && references(^._id)] | order(name asc) {    _id,    name,  }}
 export type UniversityGalleryQueryResult = Array<{
   _id: string;
   name: string;
-  dbId: string | null;
   faculties: Array<{
     _id: string;
     name: string;
-    dbId: string | null;
   }>;
 }>;
 
@@ -1183,14 +1431,16 @@ export type WebsiteSeoQueryResult =
 declare global {
   interface SanityQueries {
     '\n*[_type == "faculty" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {\n  _id,\n  name,\n  description\n}\n': FacultySeoQueryResult;
-    '\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\n*[_type == "faculty" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {\n  _id,\n  _type,\n  name,\n  dbId,\n  description,\n  streetAddress,\n  telephone,\n  email,\n  defined(picture)=>{ "picture": sanityImage::full(picture) },\n  website,\n  studentCount,\n  dean->{\n    _id,\n    name,\n    title,\n    defined(picture)=>{ "picture": sanityImage::full(picture) }\n  },\n  secretary->{\n    _id,\n    name,\n    title,\n    defined(picture)=>{ "picture": sanityImage::full(picture) }\n  },\n  viceDeans[]->{\n    _id,\n    name,\n    title,\n    defined(picture)=>{ "picture": sanityImage::full(picture) }\n  },\n  university->{\n    _id,\n    name,\n    dbId\n  },\n  "professors": *[_type == "professor" && references(^._id)] | order(name asc) {\n    \n_id,\nname,\ntitle,\ndefined(picture)=>{ "picture": sanityImage::full(picture) },\nfaculties[]->{\n  _id,\n  name,\n  dbId,\n  university->{\n    _id,\n    name,\n    dbId,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  name,\n  dbId,\n},\n"subjects": *[_type == "subject" && references(^._id)] | order(year asc, name asc) {\n  _id,\n  name,\n  code,\n},\n\n  },\n  "subjects": *[_type == "subject" && studyProgram->faculty._id == ^._id] | order(year asc, name asc) {\n    \n_id,\nname,\ncode,\ncredits,\nyear,\nsemester,\ndescription,\nsyllabus,\n"faculty": studyProgram->faculty->{\n  _id,\n  name,\n  dbId,\n  university->{\n    _id,\n    name,\n  }\n},\nstudyProgram->{\n  _id,\n  name,\n  dbId,\n  faculty->{\n    _id,\n    name,\n    dbId,\n  }\n},\nprofessors[]->{\n  _id,\n  name,\n  title,\n}\n\n  }\n}\n': FacultyDetailQueryResult;
+    '\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\n*[_type == "faculty" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {\n  _id,\n  _type,\n  name,\n  dbId,\n  description,\n  streetAddress,\n  telephone,\n  email,\n  defined(picture)=>{ "picture": sanityImage::full(picture) },\n  website,\n  studentCount,\n  dean->{\n    _id,\n    name,\n    title,\n    defined(picture)=>{ "picture": sanityImage::full(picture) }\n  },\n  secretary->{\n    _id,\n    name,\n    title,\n    defined(picture)=>{ "picture": sanityImage::full(picture) }\n  },\n  viceDeans[]->{\n    _id,\n    name,\n    title,\n    defined(picture)=>{ "picture": sanityImage::full(picture) }\n  },\n  university->{\n    _id,\n    name,\n    dbId\n  },\n  "professors": *[_type == "professor" && references(^._id)] | order(name asc) {\n    \n_id,\nname,\ntitle,\ndefined(picture)=>{ "picture": sanityImage::full(picture) },\nfaculties[]->{\n  _id,\n  name,\n  university->{\n    _id,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id)] | order(year asc, name asc) {\n  _id,\n  name,\n  code,\n},\n\n  },\n  "studies": *[_type == "study" && references(^._id)] | order(name asc) {\n    \n_id,\nname,\nstudentCount,\ndefined(picture)=>{ "picture": sanityImage::full(picture) },\nassistant->{\n  _id,\n  name,\n  title,\n  defined(picture)=>{ "picture": sanityImage::full(picture) }\n},\nfaculty->{\n  _id,\n  name,\n  university->{\n    _id,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id)]),\n"professorCount": count(*[_type == "professor" && references(^._id)]),\n"professors": *[_type == "professor" && references(^._id)] | order(name asc) {\n  \n_id,\nname,\ntitle,\ndefined(picture)=>{ "picture": sanityImage::full(picture) },\nfaculties[]->{\n  _id,\n  name,\n  university->{\n    _id,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id)] | order(year asc, name asc) {\n  _id,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id)] | order(year asc, name asc) {\n  \n_id,\nname,\ncode,\ncredits,\nyear,\nsemester,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  name,\n  dbId,\n  university->{\n    _id,\n    name,\n  }\n},\nstudy->{\n  _id,\n  name,\n  dbId,\n  faculty->{\n    _id,\n    name,\n  }\n},\nprofessors[]->{\n  _id,\n  name,\n  title,\n}\n\n},\n\n  }\n}\n': FacultyDetailQueryResult;
     '\n*[_type == "faculty" && !(_id in path("drafts.**"))] {\n  "slug": _id\n}\n': FacultyStaticParamsQueryResult;
     '\n*[_type == "professor" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {\n  _id,\n  name,\n  bio\n}\n': ProfessorSeoQueryResult;
     '\n*[_type == "professor" && !(_id in path("drafts.**"))] {\n  "slug": _id\n}\n': ProfessorStaticParamsQueryResult;
+    '\n*[_type == "study" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {\n  _id,\n  name,\n  description\n}\n': StudySeoQueryResult;
+    '\n*[_type == "study" && !(_id in path("drafts.**"))] {\n  "slug": _id\n}\n': StudyStaticParamsQueryResult;
     '\n*[_type == "subject" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {\n  _id,\n  name,\n  description\n}\n': SubjectSeoQueryResult;
-    '\n*[_type == "subject" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {\n  _id,\n  _type,\n  name,\n  dbId,\n  code,\n  credits,\n  year,\n  semester,\n  description,\n  syllabus,\n  "faculty": studyProgram->faculty->{\n    _id,\n    name,\n    dbId,\n    faculty->{\n      _id,\n      name,\n      dbId\n    }\n  },\n  professors[]->{\n    _id,\n    name,\n    dbId,\n    title,\n    picture,\n    email\n  }\n}\n': SubjectDetailQueryResult;
+    '\n*[_type == "subject" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {\n  _id,\n  _type,\n  name,\n  code,\n  credits,\n  year,\n  semester,\n  description,\n  syllabus,\n  study->{\n    _id,\n    name,\n    dbId,\n    faculty->{\n      _id,\n      name,\n      university->{\n        _id,\n        name,\n      }\n    }\n  },\n  professors[]->{\n    _id,\n    name,\n    dbId,\n    title,\n    picture,\n    email\n  }\n}\n': SubjectDetailQueryResult;
     '\n*[_type == "subject" && !(_id in path("drafts.**"))] {\n  "slug": _id\n}\n': SubjectStaticParamsQueryResult;
-    '\n*[_type == "university"] | order(name asc) {\n  _id,\n  name,\n  dbId,\n  "faculties": *[_type == "faculty" && references(^._id)] | order(name asc) {\n    _id,\n    name,\n    dbId\n  }\n}\n': UniversityGalleryQueryResult;
+    '\n*[_type == "university"] | order(name asc) {\n  _id,\n  name,\n  "faculties": *[_type == "faculty" && references(^._id)] | order(name asc) {\n    _id,\n    name,\n  }\n}\n': UniversityGalleryQueryResult;
     '\n*[_type == "university" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {\n  _id,\n  name,\n  description\n}\n': UniversitySeoQueryResult;
     '\n*[_type == "university" && !(_id in path("drafts.**"))] {\n  "slug": _id\n}\n': UniversityStaticParamsQueryResult;
     '\n*[_id == $WEBSITE][0]{\n  "siteName": coalesce(siteName, websiteTitle, "Scriptr"),\n  "siteUrl": coalesce(siteUrl, ""),\n  "defaultSeoTitle": coalesce(defaultSeoTitle, websiteTitle, "Scriptr"),\n  "defaultSeoDescription": coalesce(defaultSeoDescription, ""),\n  "defaultKeywords": defaultKeywords[]\n}\n': WebsiteSeoQueryResult;

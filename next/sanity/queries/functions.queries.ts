@@ -4,8 +4,18 @@ const sanityImageFunction = groq`
 fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};
 `
 
+const personQueryFunction = groq`
+fn person::full($person) = $person{
+    _id,
+    name,
+    title,
+    defined(picture)=>{ "picture": sanityImage::full(picture) }
+};
+` //TODO: Check if person query works if yes ,use person::full(@) wherever a person reference is needed
+
 const sanityFunctionQueries = groq`
 ${sanityImageFunction}
+${personQueryFunction}
 
 fn linkSelector::full($link) = $link{
     defined(linkType) => {linkType},
@@ -43,4 +53,4 @@ fn portableText::full($portableText) = $portableText{
 };
 `
 
-export { sanityFunctionQueries, sanityImageFunction }
+export { personQueryFunction, sanityFunctionQueries, sanityImageFunction }

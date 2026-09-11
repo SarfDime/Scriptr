@@ -193,9 +193,9 @@ export default async function UniversityDetailPage({
                     {faculty.name}
                   </Title>
                   <Box className='ui-cluster gap-2 mt-auto text-grey-500'>
-                    {faculty.subjectCount !== undefined && (
+                    {faculty.studyCount !== undefined && (
                       <Text className='ui-caption'>
-                        {faculty.subjectCount} Subjects
+                        {faculty.studyCount} Studies
                       </Text>
                     )}
                     {faculty.professorCount !== undefined && (

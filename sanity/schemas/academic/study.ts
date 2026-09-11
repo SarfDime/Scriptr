@@ -3,9 +3,9 @@ import type { Rule } from 'sanity'
 import { defineType } from 'sanity'
 import { validationRules } from '../validation'
 
-export const StudyProgram = defineType({
-  name: 'studyProgram',
-  title: 'Study Program',
+export const Study = defineType({
+  name: 'study',
+  title: 'Study',
   type: 'document',
   icon: BookIcon,
   preview: {
@@ -33,6 +33,12 @@ export const StudyProgram = defineType({
       type: 'reference',
       to: [{ type: 'faculty' }],
       validation: validationRules.isRequired,
+    },
+    {
+      name: 'assistant',
+      title: 'Assistant',
+      type: 'reference',
+      to: [{ type: 'person' }],
     },
     {
       name: 'dbId',

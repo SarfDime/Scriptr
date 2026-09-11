@@ -1,5 +1,5 @@
 import { FacultyOverviewCard } from '@/components/academics/faculty/FacultyOverviewCard'
-import { FacultySubjectsExplorer } from '@/components/academics/faculty/FacultySubjectsExplorer'
+import { FacultyStudyExplorer } from '@/components/academics/faculty/FacultyStudyExplorer'
 import { ProfessorsSection } from '@/components/academics/professor/ProfessorsSection'
 import { Box } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
@@ -73,7 +73,7 @@ export default async function FacultyDetailPage({
     >
       <FacultyOverviewCard faculty={faculty} />
 
-      <FacultySubjectsExplorer subjects={faculty.subjects ?? []} />
+      <FacultyStudyExplorer studies={faculty.studies ?? []} />
     </PageLayout>
   )
 }
