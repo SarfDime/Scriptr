@@ -127,6 +127,7 @@ export const Subject = defineType({
       description:
         'Used to create the database record. The faculty is inherited from the selected study.',
       validation: validationRules.isRequired,
+      // TODO: Check if professor is assigned to the selected study
       fieldset: 'database',
     },
     databaseIdField({ fieldset: 'database' }),

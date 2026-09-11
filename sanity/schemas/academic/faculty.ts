@@ -15,6 +15,8 @@ export const Faculty = defineType({
   title: 'Faculty',
   type: 'document',
   icon: MasterDetailIcon,
+  // TODO: Preview should also be preset in a reusable configurable util like academic[Field]Field
+
   preview: {
     select: { title: 'name', subtitle: 'dbId' },
     prepare: ({ title, subtitle }) => ({
@@ -23,6 +25,7 @@ export const Faculty = defineType({
     }),
   },
   fieldsets: [
+    // TODO: Fieldsets should also be preset in a reusable configurable util like academic[Field]Field
     {
       name: 'information',
       title: 'Information',
@@ -48,6 +51,10 @@ export const Faculty = defineType({
     academicNameField({ fieldset: 'information' }),
     academicDescriptionField({ fieldset: 'information', required: true }),
     academicSlugField({ hierarchy: 'faculty' }),
+    // TODO: More of these should be made into reusable fields,
+    // for example picture, bio, email, telephone, student count,
+    // and the fieldset should be already set, only pass to override,
+    // instead of redefining each time.
     {
       name: 'bio',
       title: 'Short Biography',

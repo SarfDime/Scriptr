@@ -541,7 +541,7 @@ Out of scope for the first release, to address after launch:
 4. Review architecture for maintainability and future scale.
 5. Implement CSS obfuscation for production builds.
 
----
+## 10 - Progress
 
 ### Phase 1: Database foundation and backend API `[✏️ In Progress]`
 
@@ -628,17 +628,6 @@ Out of scope for the first release, to address after launch:
 - Expand the notification system. **[🔲]**
 - Review architecture for maintainability and future scale. **[🔲]**
 - Implement CSS obfuscation for production builds. **[🔲]**
-
-### How to update progress
-
-```
-[ROADMAP: Phase 1 - Sanity schema] Add academic entity document types
-
-Implemented university, faculty, subject, and professor document types with shared fields.
-Added validation rules and relationship references.
-```
-
----
 
 ## 11. Final product position
 

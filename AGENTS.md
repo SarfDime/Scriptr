@@ -9,23 +9,7 @@ Scriptr is an npm workspace monorepo with three packages:
 
 ## Roadmap and Progress Tracking
 
-The project is organized around a phased roadmap defined in [roadmap.md](roadmap.md). Progress is tracked automatically via commit messages:
-
-**Include `[ROADMAP: Phase X - Feature Name]` in commit messages to trigger automatic roadmap updates.**
-
-Example:
-```bash
-git commit -m "[ROADMAP: Phase 2 - ID-based routes] Implement professor/[id] page
-
-- Dynamic page component that merges DB + Sanity data
-- Loading, error, and not-found states included
-- Tests pass for all edge cases"
-```
-
-This will:
-- Update roadmap.md status for Phase 2
-- Regenerate AGENTS.md with current phase focus
-- Update workspace CLAUDE.md with implementation notes
+The project is organized around a phased roadmap defined in [roadmap.md](roadmap.md).
 
 ## Before editing
 
@@ -123,4 +107,4 @@ npm run check-types --workspace sanity
 
 ## Current Phase
 
-See [roadmap.md section 10](roadmap.md#10-progress-and-status-tracking) for current implementation priorities and phase status.
+See [roadmap.md section 10](roadmap.md#10-progress) for current implementation priorities and phase status.

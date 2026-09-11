@@ -7,6 +7,8 @@ type AcademicFieldOptions = {
   fieldset?: string
 }
 
+// TODO: Academic fields should be made reusable and configurable, including fieldsets and validation rules.
+// TODO: Academic fields should be grouped in some wrapper util that would decide which fields to return based on an array of requested fields object.
 export const academicNameField = ({
   fieldset,
 }: AcademicFieldOptions = {}): FieldDefinition =>
