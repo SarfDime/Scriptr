@@ -1,15 +1,12 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
-name: Deploy studio and schemas
+name: Deploy Sanity Studio and schema
 
 on:
   push:
     branches:
-      - "main-sanity"
+      - main-sanity
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     strategy:
@@ -25,34 +22,22 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          cache: npm
 
-      - name: Cache node_modules
-        id: cache-node-modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-modules-
-
-      - name: Install dependencies with CI
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+      - name: Install dependencies
         run: npm ci
 
-      - name: Lint schemas using biome & check types
+      - name: Lint project and check Sanity types
         run: npm run lint && npm run check-types:sanity
 
-      - name: Check code formatting using prettier
-        run: npm run format
-
-      - name: Build studio, deploy studio and schemas
+      - name: Deploy Sanity Studio
         env:
           SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
           SANITY_STUDIO_INTERNAL_SECRET: ${{ secrets.SANITY_STUDIO_INTERNAL_SECRET }}
-        run: npm -w sanity-studio run deploy
+        run: npm -w sanity run deploy
 
-      - name: Deploy schemas
+      - name: Deploy GraphQL schema
         env:
           SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
           SANITY_STUDIO_INTERNAL_SECRET: ${{ secrets.SANITY_STUDIO_INTERNAL_SECRET }}
-        run: npm -w sanity-studio run deploy-graphql -- --dataset production
+        run: npm -w sanity run deploy-graphql -- --dataset production
