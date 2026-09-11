@@ -47,6 +47,7 @@ const matchesQuery = (subject: StudySubject, query: string) => {
 export const StudySubjectsExplorer = ({
   subjects,
 }: StudySubjectsExplorerProps) => {
+  // TODO: Use filters and sorts with the existing utils in shared
   const [year, setYear] = useState<number | 'all'>('all')
   const [sort, setSort] = useState<SortOption>('year')
   const [query, setQuery] = useState('')

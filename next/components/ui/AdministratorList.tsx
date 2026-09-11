@@ -3,7 +3,7 @@ import { Box } from '@/components/common/Box'
 import { DetailLink } from '@/components/ui/DetailLink'
 import { Divider } from '@/components/ui/Divider'
 import { Person } from '@/components/ui/Person'
-import { getProfessorPath } from '@/lib/academic-routes'
+import { getAcademicPath } from '@/lib/academic-routes'
 import { cn } from '@/lib/common-utils'
 import type { AdministratorListProps } from '@/types/components/OverviewCard.types'
 
@@ -41,7 +41,10 @@ export const AdministratorList = ({
             <DetailLink
               {...detailLinkProps}
               key={admin._id}
-              href={getProfessorPath(admin._id)}
+              href={getAcademicPath({
+                type: 'professor',
+                id: admin._id,
+              })}
               label={admin.title}
               value={admin.name ?? 'daw'}
             />

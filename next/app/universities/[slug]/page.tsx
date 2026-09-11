@@ -11,7 +11,7 @@ import {
   createAcademicStaticParams,
   fetchAcademicDetailOrNotFound,
 } from '@/lib/academic-detail-page'
-import { getFacultyPath } from '@/lib/academic-routes'
+import { getAcademicPath } from '@/lib/academic-routes'
 import {
   universityDetailQuery,
   universityStaticParamsQuery,
@@ -182,7 +182,10 @@ export default async function UniversityDetailPage({
             {university.faculties.map((faculty) => (
               <NextLink
                 key={faculty._id}
-                href={getFacultyPath(faculty._id)}
+                href={getAcademicPath({
+                  type: 'faculty',
+                  id: faculty.slug ?? faculty._id,
+                })}
                 className='group'
               >
                 <Card className='p-4 h-full ui-stack gap-2 transition hover:border-brand-500 hover:shadow-sm'>

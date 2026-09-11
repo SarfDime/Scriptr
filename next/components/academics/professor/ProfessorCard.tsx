@@ -4,7 +4,7 @@ import { Title } from '@/components/typography/Title'
 import { Avatar } from '@/components/ui/Avatar'
 import { Badge } from '@/components/ui/Badge'
 import { ClickableCard } from '@/components/ui/Card'
-import { getProfessorPath } from '@/lib/academic-routes'
+import { getAcademicPath } from '@/lib/academic-routes'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import type { MinimalProfessor } from '@/types/academics/professor.types'
 
@@ -23,7 +23,10 @@ export const ProfessorCard = ({
 
   return (
     <ClickableCard
-      href={getProfessorPath(_id)}
+      href={getAcademicPath({
+        type: 'professor',
+        id: _id,
+      })}
       className='group p-4 h-full flex flex-col justify-between gap-3 transition hover:border-brand-500 hover:shadow-sm'
     >
       <ClickableCard.Body className='flex items-start gap-3 flex-1 min-w-0'>

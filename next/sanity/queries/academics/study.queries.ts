@@ -6,8 +6,9 @@ import { minimalSubjectQuery } from './subject.queries'
 
 /** Minimal query for SEO metadata on a study. */
 export const studySeoQuery = groq`
-*[_type == "study" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {
+*[_type == "study" && (slug.current == $slug || _id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {
   _id,
+  "slug": slug.current,
   name,
   description
 }
@@ -15,6 +16,7 @@ export const studySeoQuery = groq`
 
 export const minimalStudyQuery = groq`
 _id,
+"slug": slug.current,
 name,
 studentCount,
 defined(picture)=>{ "picture": sanityImage::full(picture) },
@@ -46,8 +48,9 @@ faculty->{
 export const studyDetailQuery = groq`
 ${sanityImageFunction}
 
-*[_type == "study" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {
+*[_type == "study" && (slug.current == $slug || _id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {
   _id,
+  "slug": slug.current,
   _type,
   name,
   description,
@@ -72,6 +75,6 @@ ${sanityImageFunction}
 /** Static params query for pre-generating all study subroutes */
 export const studyStaticParamsQuery = groq`
 *[_type == "study" && !(_id in path("drafts.**"))] {
-  "slug": _id
+  "slug": coalesce(slug.current, _id)
 }
 `

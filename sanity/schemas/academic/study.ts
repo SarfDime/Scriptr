@@ -1,6 +1,11 @@
 import BookIcon from '@sanity/icons/Book'
-import type { Rule } from 'sanity'
 import { defineType } from 'sanity'
+import {
+  academicDescriptionField,
+  academicNameField,
+  academicSlugField,
+  databaseIdField,
+} from '../common/academicFields'
 import { validationRules } from '../validation'
 
 export const Study = defineType({
@@ -16,17 +21,9 @@ export const Study = defineType({
     }),
   },
   fields: [
-    {
-      name: 'name',
-      title: 'Name',
-      type: 'string',
-      validation: validationRules.isRequired,
-    },
-    {
-      name: 'description',
-      title: 'Description',
-      type: 'richTextLite',
-    },
+    academicNameField(),
+    academicDescriptionField(),
+    academicSlugField({ hierarchy: 'study' }),
     {
       name: 'faculty',
       title: 'Faculty',
@@ -40,17 +37,6 @@ export const Study = defineType({
       type: 'reference',
       to: [{ type: 'person' }],
     },
-    {
-      name: 'dbId',
-      title: 'Database ID',
-      type: 'string',
-      readOnly: true,
-      validation: (rule: Rule) =>
-        rule.custom((value: string) =>
-          value
-            ? true
-            : 'Run the "Create in Database" action before publishing.'
-        ),
-    },
+    databaseIdField(),
   ],
 })

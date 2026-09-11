@@ -1,9 +1,13 @@
 import UserIcon from '@sanity/icons/User'
 import type { Rule } from 'sanity'
 import { defineType } from 'sanity'
+import {
+  academicNameField,
+  academicSlugField,
+  databaseIdField,
+} from '../common/academicFields'
 import { customLinkField } from '../common/customLink'
 import { filterExistingReferences } from '../util-functions/schemaFilters'
-import { validationRules } from '../validation'
 
 export const Professor = defineType({
   // Editorial record for a professor; the runtime identity lives in Postgres, linked via dbId.
@@ -37,13 +41,8 @@ export const Professor = defineType({
     },
   ],
   fields: [
-    {
-      name: 'name',
-      title: 'Name',
-      type: 'string',
-      validation: validationRules.isRequired,
-      fieldset: 'information',
-    },
+    academicNameField({ fieldset: 'information' }),
+    academicSlugField(),
     {
       name: 'title',
       title: 'Academic Title',
@@ -148,20 +147,6 @@ export const Professor = defineType({
       ],
       fieldset: 'database',
     },
-    {
-      name: 'dbId',
-      title: 'Database ID',
-      type: 'string',
-      readOnly: true,
-      description:
-        'Set by the "Create in Database" action. Publishing is blocked until this exists.',
-      validation: (rule: Rule) =>
-        rule.custom((value: string) =>
-          value
-            ? true
-            : 'Run the "Create in Database" action before publishing.'
-        ),
-      fieldset: 'database',
-    },
+    databaseIdField({ fieldset: 'database' }),
   ],
 })

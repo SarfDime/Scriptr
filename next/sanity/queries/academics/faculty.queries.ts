@@ -5,8 +5,9 @@ import { minimalStudyQuery } from './study.queries'
 
 /** Minimal query for SEO metadata on a faculty. */
 const facultySeoQuery = groq`
-*[_type == "faculty" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {
+*[_type == "faculty" && (slug.current == $slug || _id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {
   _id,
+  "slug": slug.current,
   name,
   description
 }
@@ -14,6 +15,7 @@ const facultySeoQuery = groq`
 
 const minimalFacultyQuery = groq`
 _id,
+"slug": slug.current,
 name,
 studentCount,
 defined(picture)=>{ "picture": sanityImage::full(picture) },
@@ -37,6 +39,7 @@ viceDeans[]->{
 },
 university->{
   _id,
+  "slug": slug.current,
   name,
   dbId
 },
@@ -54,8 +57,9 @@ university->{
 const facultyDetailQuery = groq`
 ${sanityImageFunction}
 
-*[_type == "faculty" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {
+*[_type == "faculty" && (slug.current == $slug || _id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {
   _id,
+  "slug": slug.current,
   _type,
   name,
   dbId,
@@ -86,6 +90,7 @@ ${sanityImageFunction}
   },
   university->{
     _id,
+    "slug": slug.current,
     name,
     dbId
   },
@@ -101,7 +106,7 @@ ${sanityImageFunction}
 /** Static params query for pre-generating all faculty subroutes */
 const facultyStaticParamsQuery = groq`
 *[_type == "faculty" && !(_id in path("drafts.**"))] {
-  "slug": _id
+  "slug": coalesce(slug.current, _id)
 }
 `
 

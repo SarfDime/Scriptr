@@ -11,7 +11,7 @@ import {
   createAcademicStaticParams,
   fetchAcademicDetailOrNotFound,
 } from '@/lib/academic-detail-page'
-import { getFacultyPath, getSubjectPath } from '@/lib/academic-routes'
+import { getAcademicPath } from '@/lib/academic-routes'
 import {
   professorDetailQuery,
   professorStaticParamsQuery,
@@ -122,7 +122,10 @@ export default async function ProfessorDetailPage({
                 {professor.faculties.map((fac) => (
                   <Box key={fac._id} className='ui-stack gap-0.5'>
                     <NextLink
-                      href={getFacultyPath(fac._id)}
+                      href={getAcademicPath({
+                        type: 'faculty',
+                        id: fac.slug ?? fac._id,
+                      })}
                       className='ui-body font-medium text-brand hover:underline'
                     >
                       {fac.name}
@@ -165,7 +168,10 @@ export default async function ProfessorDetailPage({
             {professor.subjects.map((subject) => (
               <NextLink
                 key={subject._id}
-                href={getSubjectPath(subject._id)}
+                href={getAcademicPath({
+                  type: 'subject',
+                  id: subject.slug ?? subject._id,
+                })}
                 className='group'
               >
                 <Card className='p-4 h-full ui-stack gap-2 transition hover:border-brand-500 hover:shadow-sm'>

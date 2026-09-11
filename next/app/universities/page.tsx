@@ -6,7 +6,7 @@ import { Text } from '@/components/typography/Text'
 import { Title } from '@/components/typography/Title'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
-import { getFacultyPath, getUniversityPath } from '@/lib/academic-routes'
+import { getAcademicPath } from '@/lib/academic-routes'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { universityGalleryQuery } from '@/sanity/queries/academics/university.queries'
 import type { UniversityGalleryData } from '@/types/academics/university.types'
@@ -48,7 +48,10 @@ export default async function UniversitiesPage() {
           <Box className='ui-cluster justify-between items-center border-b border-grey-200 pb-4'>
             <Box className='ui-stack gap-1'>
               <NextLink
-                href={getUniversityPath(university._id)}
+                href={getAcademicPath({
+                  type: 'university',
+                  id: university.slug ?? university._id,
+                })}
                 className='hover:underline'
               >
                 <Title as='h2' className='ui-title text-xl font-bold'>
@@ -61,7 +64,12 @@ export default async function UniversitiesPage() {
                 </Text>
               )}
             </Box>
-            <NextLink href={getUniversityPath(university._id)}>
+            <NextLink
+              href={getAcademicPath({
+                type: 'university',
+                id: university.slug ?? university._id,
+              })}
+            >
               <Badge className='cp-brand'>View University →</Badge>
             </NextLink>
           </Box>
@@ -76,7 +84,10 @@ export default async function UniversitiesPage() {
                 {university.faculties.map((faculty) => (
                   <NextLink
                     key={faculty._id}
-                    href={getFacultyPath(faculty._id)}
+                    href={getAcademicPath({
+                      type: 'faculty',
+                      id: faculty.slug ?? faculty._id,
+                    })}
                     className='group'
                   >
                     <Card className='p-4 h-full transition hover:border-brand-500 hover:shadow-sm'>

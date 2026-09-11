@@ -10,7 +10,7 @@ import {
   createAcademicStaticParams,
   fetchAcademicDetailOrNotFound,
 } from '@/lib/academic-detail-page'
-import { getFacultyPath } from '@/lib/academic-routes'
+import { getAcademicPath } from '@/lib/academic-routes'
 import { FAKE_SCRIPTS } from '@/lib/fake-scripts-data'
 import {
   subjectDetailQuery,
@@ -58,7 +58,10 @@ export default async function SubjectDetailPage({
         actions: study?.faculty && (
           // TODO: Factor out to reusable breadcrumb component
           <NextLink
-            href={getFacultyPath(study.faculty._id)}
+            href={getAcademicPath({
+              type: 'faculty',
+              id: study.faculty.slug ?? study.faculty._id,
+            })}
             className='ui-badge cp-brand-interactive'
           >
             ← {study.faculty.name}

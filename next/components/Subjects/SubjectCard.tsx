@@ -1,4 +1,4 @@
-import { getSubjectPath } from '@/lib/academic-routes'
+import { getAcademicPath } from '@/lib/academic-routes'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import type { MinimalSubject } from '@/types/academics/subject.types'
 import { AcademicBadge } from '../academics/AcademicBadge'
@@ -25,7 +25,10 @@ export const SubjectCard = ({
   const color = getColorPalette({ type: 'seed', value: _id })
   return (
     <ClickableCard
-      href={getSubjectPath(_id)}
+      href={getAcademicPath({
+        type: 'subject',
+        id: _id,
+      })}
       className='group ui-stack gap-4 shadow-2xl p-4'
     >
       <ClickableCard.Body className='flex items-start gap-3 p-0'>

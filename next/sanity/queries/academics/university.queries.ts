@@ -5,9 +5,11 @@ import { minimalFacultyQuery } from './faculty.queries'
 export const universityGalleryQuery = groq`
 *[_type == "university"] | order(name asc) {
   _id,
+  "slug": slug.current,
   name,
   "faculties": *[_type == "faculty" && references(^._id)] | order(name asc) {
     _id,
+    "slug": slug.current,
     name,
   }
 }
@@ -15,8 +17,9 @@ export const universityGalleryQuery = groq`
 
 /** Minimal query for SEO metadata on a single university. */
 export const universitySeoQuery = groq`
-*[_type == "university" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {
+*[_type == "university" && (slug.current == $slug || _id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {
   _id,
+  "slug": slug.current,
   name,
   description
 }
@@ -24,8 +27,9 @@ export const universitySeoQuery = groq`
 
 /** Deep relational query for a single university and its related entities */
 export const universityDetailQuery = groq`
-*[_type == "university" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {
+*[_type == "university" && (slug.current == $slug || _id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {
   _id,
+  "slug": slug.current,
   _type,
   name,
   description,
@@ -54,6 +58,6 @@ export const universityDetailQuery = groq`
 /** Static params query for pre-generating all university subroutes */
 export const universityStaticParamsQuery = groq`
 *[_type == "university" && !(_id in path("drafts.**"))] {
-  "slug": _id
+  "slug": coalesce(slug.current, _id)
 }
 `

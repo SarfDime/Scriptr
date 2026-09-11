@@ -489,14 +489,14 @@ Out of scope for the first release, to address after launch:
 8. Define the initialization set for universities, faculties, studies, subjects, and professors in Sanity. **[✅ Complete]**
 9. Create the `study` Sanity schema, update subject references, adjust sync actions. **[✅]**
 10. Test sync workflows for create/update/delete, across all five entity types. **[🔲 Pending, after the deletion fix]**
-11. Implement programmatic `slug` generation for all five entity types, including `study` (`[uni]-[faculty]-[study]`) (§5.9). **[🔲 TODO]**
+11. Implement programmatic `slug` generation for all five entity types, including `study` (`[uni]-[faculty]-[study]`) (§5.9). **[✅]**
 12. Create TypeScript utility types to strip Sanity metadata and dereference references, including `study` references, for in-app models (§5.10). **[🔲 TODO]**
-13. Create reusable Sanity mini-schemas across all five entity types, including `study` (§5.11). **[🔲 TODO]**
+13. Create reusable Sanity mini-schemas across all five entity types, including `study` (§5.11). **[✅]**
 
 ### Phase 3: Core content and discovery
 
-1. Build dynamic slug-based pages for universities, faculties, subjects, and professors. **[✅ Mostly complete — ID→slug migration pending]**
-2. Add a dynamic slug-based `study/[slug]` page, following the same pattern as the other four entity types (§7.2). **[🔲 New]**
+1. Build dynamic slug-based pages for universities, faculties, subjects, and professors. **[✅]**
+2. Add a dynamic slug-based `study/[slug]` page, following the same pattern as the other four entity types (§7.2). **[✅]**
 3. Update subject pages to display their parent study alongside faculty (§7.2.4). **[🔲 New]**
 4. Implement script listing, sorting, and filtering. **[✅ Mostly complete]**
 5. Add search for scripts (local-first + API fallback). **[🔲 Missing]**
@@ -577,14 +577,14 @@ Out of scope for the first release, to address after launch:
 - Define the initialization set for universities, faculties, studies, subjects, professors. **[✅]**
 - Create the `study` Sanity schema and update subject references/sync actions. **[✅]**
 - Test sync workflows for create/update/delete. **[🔲]**
-- Implement programmatic slug generation for all five entity types. **[🔲]**
+- Implement programmatic slug generation for all five entity types. **[✅]**
 - Create TypeScript utility types for stripped/dereferenced Sanity types (including `study`). **[🔲]**
-- Create reusable Sanity mini-schemas across all five entity types. **[🔲]**
+- Create reusable Sanity mini-schemas across all five entity types. **[✅]**
 
 ### Phase 3: Core content and discovery `[✏️ In Progress]`
 
-- Build dynamic slug-based pages for universities, faculties, subjects, professors. **[✅ Mostly complete — slug migration pending]**
-- Add `study/[slug]` page. **[🔲]**
+- Build dynamic slug-based pages for universities, faculties, subjects, professors. **[✅]**
+- Add `study/[slug]` page. **[✅]**
 - Update subject pages to show parent study. **[🔲]**
 - Implement script listing, sorting, filtering. **[✅]**
 - Add search for scripts (local-first + API fallback). **[🔲 Missing]**

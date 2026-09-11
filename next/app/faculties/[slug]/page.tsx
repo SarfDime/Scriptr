@@ -9,7 +9,7 @@ import {
   createAcademicStaticParams,
   fetchAcademicDetailOrNotFound,
 } from '@/lib/academic-detail-page'
-import { getUniversityPath } from '@/lib/academic-routes'
+import { getAcademicPath } from '@/lib/academic-routes'
 import {
   facultyDetailQuery,
   facultyStaticParamsQuery,
@@ -54,7 +54,10 @@ export default async function FacultyDetailPage({
           <Box className='ui-cluster gap-2'>
             {faculty.university && (
               <NextLink
-                href={getUniversityPath(faculty.university._id)}
+                href={getAcademicPath({
+                  type: 'university',
+                  id: faculty.university.slug ?? faculty.university._id,
+                })}
                 className='ui-badge cp-red-interactive'
               >
                 {faculty.university.name}

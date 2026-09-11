@@ -7,6 +7,7 @@ export type MinimalEntity = {
   _id: string
   name: string
   dbId?: string
+  slug?: string
 }
 
 // Extracted shared contact properties

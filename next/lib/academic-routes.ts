@@ -11,20 +11,17 @@ export type AcademicPathInput = { type: AcademicEntityType; id: string }
 const cleanEntityId = (id: string): string =>
   id.startsWith('drafts.') ? id.slice('drafts.'.length) : id
 
-export const getUniversityPath = (id: string): string =>
+const getUniversityPath = (id: string): string =>
   `/universities/${cleanEntityId(id)}`
 
-export const getFacultyPath = (id: string): string =>
-  `/faculties/${cleanEntityId(id)}`
+const getFacultyPath = (id: string): string => `/faculties/${cleanEntityId(id)}`
 
-export const getSubjectPath = (id: string): string =>
-  `/subjects/${cleanEntityId(id)}`
+const getSubjectPath = (id: string): string => `/subjects/${cleanEntityId(id)}`
 
-export const getProfessorPath = (id: string): string =>
+const getProfessorPath = (id: string): string =>
   `/professors/${cleanEntityId(id)}`
 
-export const getStudyPath = (id: string): string =>
-  `/studies/${cleanEntityId(id)}`
+const getStudyPath = (id: string): string => `/studies/${cleanEntityId(id)}`
 
 export const getAcademicPath = (input: AcademicPathInput): string => {
   const { type, id } = input

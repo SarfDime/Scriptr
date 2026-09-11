@@ -1,6 +1,12 @@
 import BookIcon from '@sanity/icons/Book'
 import type { Rule } from 'sanity'
 import { defineType } from 'sanity'
+import {
+  academicDescriptionField,
+  academicNameField,
+  academicSlugField,
+  databaseIdField,
+} from '../common/academicFields'
 import { customLinkField } from '../common/customLink'
 import { validationRules } from '../validation'
 
@@ -35,13 +41,8 @@ export const Subject = defineType({
     },
   ],
   fields: [
-    {
-      name: 'name',
-      title: 'Name',
-      type: 'string',
-      validation: validationRules.isRequired,
-      fieldset: 'information',
-    },
+    academicNameField({ fieldset: 'information' }),
+    academicSlugField({ hierarchy: 'subject' }),
     {
       name: 'code',
       title: 'Course Code',
@@ -50,13 +51,7 @@ export const Subject = defineType({
       fieldset: 'information',
       validation: validationRules.isRequired,
     },
-    {
-      name: 'description',
-      title: 'Description',
-      type: 'richTextLite',
-      fieldset: 'information',
-      validation: validationRules.isRequired,
-    },
+    academicDescriptionField({ fieldset: 'information', required: true }),
     {
       name: 'keywords',
       title: 'Keywords',
@@ -134,20 +129,6 @@ export const Subject = defineType({
       validation: validationRules.isRequired,
       fieldset: 'database',
     },
-    {
-      name: 'dbId',
-      title: 'Database ID',
-      type: 'string',
-      readOnly: true,
-      description:
-        'Set by the "Create in Database" action. Publishing is blocked until this exists.',
-      validation: (rule: Rule) =>
-        rule.custom((value: string) =>
-          value
-            ? true
-            : 'Run the "Create in Database" action before publishing.'
-        ),
-      fieldset: 'database',
-    },
+    databaseIdField({ fieldset: 'database' }),
   ],
 })

@@ -2,8 +2,9 @@ import { groq } from 'next-sanity'
 
 /** Minimal query for SEO metadata on a subject. */
 export const subjectSeoQuery = groq`
-*[_type == "subject" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {
+*[_type == "subject" && (slug.current == $slug || _id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {
   _id,
+  "slug": slug.current,
   name,
   description
 }
@@ -11,6 +12,7 @@ export const subjectSeoQuery = groq`
 
 export const minimalSubjectQuery = groq`
 _id,
+"slug": slug.current,
 name,
 code,
 credits,
@@ -29,10 +31,12 @@ syllabus,
 },
 study->{
   _id,
+  "slug": slug.current,
   name,
   dbId,
   faculty->{
     _id,
+    "slug": slug.current,
     name,
   }
 },
@@ -45,8 +49,9 @@ professors[]->{
 
 /** Deep relational query for a subject: own info, parent faculty & university, and assigned professors */
 export const subjectDetailQuery = groq`
-*[_type == "subject" && (_id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {
+*[_type == "subject" && (slug.current == $slug || _id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {
   _id,
+  "slug": slug.current,
   _type,
   name,
   code,
@@ -61,6 +66,7 @@ export const subjectDetailQuery = groq`
     dbId,
     faculty->{
       _id,
+      "slug": slug.current,
       name,
       university->{
         _id,
@@ -82,6 +88,6 @@ export const subjectDetailQuery = groq`
 /** Static params query for pre-generating all subject subroutes */
 export const subjectStaticParamsQuery = groq`
 *[_type == "subject" && !(_id in path("drafts.**"))] {
-  "slug": _id
+  "slug": coalesce(slug.current, _id)
 }
 `
