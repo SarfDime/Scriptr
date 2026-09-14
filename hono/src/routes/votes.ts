@@ -1,10 +1,7 @@
 import { Hono } from 'hono'
+import { checkTotalScriptVotes } from '../lib/achievements'
 import { requiredParam } from '../lib/request'
-import {
-  authMiddleware,
-  createInternalSupabaseClient,
-  createSupabaseClient,
-} from '../lib/supabase'
+import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
 const votes = new Hono<HonoEnv>()
@@ -20,7 +17,6 @@ votes.get('/', async (c) => {
   if (error) return c.json({ error: error.message }, 500)
   return c.json(data)
 })
-
 /** List votes for a specific script */
 votes.get('/script/:scriptId', async (c) => {
   const scriptId = requiredParam(c, 'scriptId')
@@ -83,98 +79,47 @@ votes.get('/script/:scriptId/my-vote', authMiddleware, async (c) => {
 votes.get('/script/:scriptId/stats', async (c) => {
   const scriptId = requiredParam(c, 'scriptId')
   const supabase = createSupabaseClient(c)
-  const [{ count: upvotes }, { count: downvotes }] = await Promise.all([
-    supabase
-      .from('votes')
-      .select('*', { count: 'exact', head: true })
-      .eq('script_id', scriptId)
-      .eq('value', 1),
-    supabase
-      .from('votes')
-      .select('*', { count: 'exact', head: true })
-      .eq('script_id', scriptId)
-      .eq('value', -1),
-  ])
+  const { count: upvotes } = await supabase
+    .from('votes')
+    .select('*', { count: 'exact', head: true })
+    .eq('script_id', scriptId)
 
   return c.json({
     upvotes: upvotes ?? 0,
-    downvotes: downvotes ?? 0,
-    total: (upvotes ?? 0) + (downvotes ?? 0),
     score: Math.max(0, upvotes ?? 0),
   })
 })
 
 /** Toggle the current user's +1 vote for a script. */
 votes.post('/:scriptId', authMiddleware, async (c) => {
-  const user = c.get('user')
   const scriptId = requiredParam(c, 'scriptId')
-  const supabase = createInternalSupabaseClient(c)
+  const supabase = createSupabaseClient(c)
 
-  const { data: script, error: scriptError } = await supabase
+  const { data, error } = await supabase
+    .rpc('toggle_vote', { p_script_id: scriptId })
+    .single()
+
+  if (error) {
+    if (error.code === '42501') {
+      return c.json({ error: 'Your account is restricted from voting' }, 403)
+    }
+    if (error.code === 'P0002') {
+      return c.json({ error: 'Script not found' }, 404)
+    }
+    return c.json({ error: error.message }, 500)
+  }
+
+  const { data: script } = await supabase
     .from('scripts')
-    .select('vote_score')
+    .select('author_id')
     .eq('id', scriptId)
     .single()
 
-  if (scriptError || !script) {
-    return c.json({ error: 'Script not found' }, 404)
+  if (script?.author_id) {
+    await checkTotalScriptVotes(c, script.author_id)
   }
 
-  const { data: existingVote, error: voteLookupError } = await supabase
-    .from('votes')
-    .select('id')
-    .eq('user_id', user.id)
-    .eq('script_id', scriptId)
-    .maybeSingle()
-
-  if (voteLookupError) {
-    return c.json({ error: voteLookupError.message }, 500)
-  }
-
-  if (existingVote) {
-    const { error: deleteError } = await supabase
-      .from('votes')
-      .delete()
-      .eq('id', existingVote.id)
-
-    if (deleteError) {
-      return c.json({ error: deleteError.message }, 500)
-    }
-
-    const nextScore = Math.max(0, script.vote_score - 1)
-    const { error: scoreError } = await supabase
-      .from('scripts')
-      .update({ vote_score: nextScore })
-      .eq('id', scriptId)
-
-    if (scoreError) {
-      return c.json({ error: scoreError.message }, 500)
-    }
-
-    return c.json({ voted: false, vote_score: nextScore })
-  }
-
-  const { error: insertError } = await supabase.from('votes').insert({
-    user_id: user.id,
-    script_id: scriptId,
-    value: 1,
-  })
-
-  if (insertError) {
-    return c.json({ error: insertError.message }, 500)
-  }
-
-  const nextScore = Math.max(0, script.vote_score + 1)
-  const { error: scoreError } = await supabase
-    .from('scripts')
-    .update({ vote_score: nextScore })
-    .eq('id', scriptId)
-
-  if (scoreError) {
-    return c.json({ error: scoreError.message }, 500)
-  }
-
-  return c.json({ voted: true, vote_score: nextScore })
+  return c.json({ voted: data.voted, vote_score: data.vote_score })
 })
 
 export default votes

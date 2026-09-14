@@ -20,4 +20,6 @@ export default defineCliConfig({
     path: '../next/**/*.{ts,tsx}',
     overloadClientMethods: true,
   },
+  reactStrictMode: true,
+  // reactCompiler: true,
 })

@@ -6,8 +6,6 @@ labels: refactor
 assignees: ""
 ---
 
-Closes #
-
 ## Summary
 
 <!-- Describe what should be refactored in one or two sentences. -->

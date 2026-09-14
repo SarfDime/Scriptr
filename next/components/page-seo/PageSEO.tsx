@@ -1,5 +1,5 @@
+import { generatePath } from '@shared/utils/common-utils'
 import type { Metadata } from 'next'
-import { generatePath } from '@/lib/common-utils'
 import { websiteDomain } from '@/sanity/env'
 
 type OpenGraphType = 'website' | 'article' | 'profile'

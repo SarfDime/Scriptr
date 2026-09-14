@@ -25,7 +25,7 @@ export const NavBar = ({
       className={cn(
         'fixed inset-y-0 left-0 z-20 w-(--nav-width)',
         'ui-stack gap-5 p-2.5 pt-0',
-        'border-r border-grey-300 bg-background-100 shadow-mdx',
+        'border-r ui-above',
         'transition-transform duration-300 lg:translate-x-0',
         mobileOpen ? 'translate-x-0' : '-translate-x-full'
       )}
@@ -54,7 +54,6 @@ export const NavBar = ({
 
       <Box className='ui-stack mt-auto gap-3'>
         <ThemeToggle className='w-full flex-row' />
-
         <Divider />
         <UserCard name={defaultUser.name} userRole={defaultUser.role} />
       </Box>

@@ -1,552 +1,475 @@
 # API Endpoints Documentation
 
-Complete REST API endpoints for the Scriptr application.
-
-All endpoints in this document are relative to the API base path `/api`. For
-local development, the full URL is `http://localhost:8787/api`.
+REST API reference for Scriptr. All paths are relative to `/api`
+(`http://localhost:8787/api` in local dev).
 
 ## Table of Contents
-- [Catalog](#catalog)
-- [Professors](#professors)
-- [Subjects](#subjects)
-- [Scripts](#scripts)
-- [Comments](#comments)
-- [Flags](#flags)
-- [Profiles](#profiles)
-- [Profile Subjects](#profile-subjects)
-- [Favorites](#favorites)
-- [Votes](#votes)
-- [Internal Admin](#internal-admin)
+- [API Endpoints Documentation](#api-endpoints-documentation)
+  - [Table of Contents](#table-of-contents)
+  - [Catalog](#catalog)
+  - [Universities](#universities)
+  - [Professors](#professors)
+  - [Studies](#studies)
+  - [Subjects](#subjects)
+  - [File Uploads](#file-uploads)
+  - [Scripts](#scripts)
+    - [Public](#public)
+    - [Authenticated](#authenticated)
+  - [Comments](#comments)
+    - [Public](#public-1)
+    - [Authenticated](#authenticated-1)
+  - [Flags](#flags)
+  - [Profiles](#profiles)
+    - [Public](#public-2)
+    - [Authenticated](#authenticated-2)
+    - [Admin](#admin)
+    - [Internal](#internal)
+  - [Profile Selections](#profile-selections)
+  - [Favorites](#favorites)
+  - [Votes](#votes)
+  - [Ratings](#ratings)
+  - [Notifications](#notifications)
+    - [Achievements](#achievements)
+  - [Client Access Patterns](#client-access-patterns)
+  - [Authentication](#authentication)
+  - [Role-Based Access Control](#role-based-access-control)
+  - [Error Responses](#error-responses)
+  - [Notes](#notes)
+  - [Planned Endpoints (Not Yet Implemented)](#planned-endpoints-not-yet-implemented)
 
 ---
 
 ## Catalog
 
-### Internal-only endpoints (secret-protected)
+Academic catalog data (universities, faculties, studies, professors, subjects)
+is admin-managed and closed to end users. **Every route below, reads
+included, requires the `x-internal-secret` header** matching
+`INTERNAL_API_SECRET` — this is independent of Supabase Auth roles, since RLS
+on these tables (and their junctions: `subject_professors`,
+`professor_faculties`, `professor_studies`) is read-only for every role,
+admin included. See [Client Access Patterns](#client-access-patterns).
 
-Academic catalog data (universities, faculties, professors, subjects) is
-admin-managed and not exposed to end users. Every route below, including
-reads, requires the `x-internal-secret` header to match `INTERNAL_API_SECRET`,
-even though the routes are mounted at `/api/universities`, `/api/faculties`,
-`/api/professors`, and `/api/subjects`.
+| Route                   | Response                                                                                          |
+| ----------------------- | ------------------------------------------------------------------------------------------------- |
+| `GET /universities`     | Universities with faculties (includes `r2_bucket_id`)                                             |
+| `GET /universities/:id` | One university with faculties (includes `r2_bucket_id`)                                           |
+| `GET /faculties`        | Faculties, each with `university`, `studies` (nested `subjects` for the count), `professor_count` |
+| `GET /faculties/:id`    | One faculty with `studies` (each with its `subjects`) and assigned `professors`                   |
+| `GET /professors`       | Professors with subjects, studies, faculties                                                      |
+| `GET /professors/:id`   | One professor with subjects, studies, faculties                                                   |
+| `GET /subjects`         | Subjects with study, faculty, professors, script counts                                           |
+| `GET /subjects/:id`     | One subject with study, faculty, professors, scripts                                              |
 
-#### `GET /universities`
-Get all universities with faculties.
-- **Auth**: `x-internal-secret` required
-- **Response**: Array of universities
+Note on shape: subjects relate to faculties only *through* studies
+(`subjects.study_id → studies.faculty_id`) — there is no direct
+`subjects.faculty_id`. Faculty responses nest subjects under `studies`
+accordingly; don't expect a flat `faculty.subjects` array.
 
-#### `GET /universities/:id`
-Get a single university by ID.
-- **Auth**: `x-internal-secret` required
-- **Response**: University with faculties
+Catalog **mutations** live under `/api/internal` (below), same header — see
+[Universities](#universities) for university-specific mutations, and the
+sections below for the rest.
+`profile_subjects`/`profile_faculties`/`profile_studies` are not catalog data
+— they're a user's own selections and stay on the normal authenticated API.
 
-#### `GET /faculties`
-Get all faculties with university metadata.
-- **Auth**: `x-internal-secret` required
-- **Response**: Array of faculties
+---
 
-#### `GET /faculties/:id`
-Get a single faculty by ID.
-- **Auth**: `x-internal-secret` required
-- **Response**: Faculty details
+## Universities
 
-#### `GET /professors`
-Get all professors with their subjects and faculty metadata.
-- **Auth**: `x-internal-secret` required
-- **Response**: Array of professors
+Internal-only, `x-internal-secret` required for all routes (reads and writes).
 
-#### `GET /professors/:id`
-Get a single professor by ID.
-- **Auth**: `x-internal-secret` required
-- **Response**: Professor object with related records
+**Reads**: `GET /universities`, `GET /universities/:id` (see [Catalog](#catalog)).
 
-#### `GET /subjects`
-Get all subjects with study, faculty, and professor metadata.
-- **Auth**: `x-internal-secret` required
-- **Response**: Array of subjects
+**Mutations** (`/api/internal`):
 
-#### `GET /internal/studies`
-Get all studies with faculty and university metadata.
-- **Auth**: `x-internal-secret` required
-- **Response**: Array of studies
+| Route                                  | Body                                                 |
+| -------------------------------------- | ---------------------------------------------------- |
+| `POST /internal/universities`          | `{ name, sanity_id?, r2_bucket_id? }`                |
+| `PATCH /internal/universities/:id`     | `{ name?, r2_bucket_id? }`                           |
+| `DELETE /internal/universities/:id`    | — (blocked if any faculties still reference it)      |
+| `POST /internal/universities/:id/sync` | `{ name, r2_bucket_id? }` — full re-sync from Sanity |
 
-#### `GET /subjects/:id`
-Get a single subject by ID.
-- **Auth**: `x-internal-secret` required
-- **Response**: Subject details
-
-> Catalog mutation routes are separately exposed under `/api/internal` and require the same `x-internal-secret` header. Profile-subjects (`/api/profile-subjects`) remain public/authenticated as normal, since they represent a user's own academic progress rather than catalog data.
+`r2_bucket_id` is the Cloudflare R2 bucket used for this university's file
+storage — must match `^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$` (S3/R2 bucket naming
+rules), enforced at both the API and a Postgres `CHECK` constraint, and
+unique across universities. Nullable — a university without one falls back
+to the default `R2_BUCKET` env var at upload time (see
+[File Uploads](#file-uploads) below). Delete is blocked at the application
+level by an explicit dependents check against `faculties`, independent of
+the underlying FK's `ON DELETE CASCADE` — the FK itself would not stop a
+raw SQL delete from cascading through the whole hierarchy; only this route
+does.
 
 ---
 
 ## Professors
 
-### Internal-only endpoints (secret-protected)
+Internal-only, `x-internal-secret` required for all routes (reads and writes).
 
-All professor routes, reads included, require the `x-internal-secret` header to match `INTERNAL_API_SECRET`.
+**Reads**: `GET /professors`, `GET /professors/:id` (see [Catalog](#catalog)).
 
-#### `GET /professors`
-Get all professors with their subjects
-- **Auth**: `x-internal-secret` required
-- **Response**: Array of professors with related subjects
+**Mutations** (`/api/internal`):
 
-#### `GET /professors/:id`
-Get a single professor by ID with subjects and comments
-- **Auth**: `x-internal-secret` required
-- **Response**: Professor object with subjects and comments
+| Route                                                         | Body                                                                            |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `POST /internal/professors`                                   | `{ name, faculty_ids?, study_ids?, sanity_id? }`                                |
+| `PATCH /internal/professors/:id`                              | `{ name? }`                                                                     |
+| `DELETE /internal/professors/:id`                             | — (blocked if referenced by subjects, faculties, studies, scripts, or comments) |
+| `POST`/`DELETE /internal/professors/:id/faculties/:facultyId` | —                                                                               |
+| `POST`/`DELETE /internal/professors/:id/studies/:studyId`     | —                                                                               |
+| `GET /internal/professors/by-sanity/:sanityId`                | Looks up the DB row linked to a Sanity document                                 |
+| `POST /internal/professors/:id/sync`                          | `{ name, faculty_ids?, study_ids? }` — full re-sync from Sanity                 |
 
-### Internal mutation endpoints (secret-protected)
+`professors` only has `id`, `name`, `sanity_id`, `created_at` in Postgres —
+bio/picture and other rich metadata live in Sanity, not here.
 
-These routes live under `/api/internal` and require the `x-internal-secret` header to match `INTERNAL_API_SECRET`.
+---
 
-#### `GET /internal/professors`
-List professors via the internal API.
+## Studies
 
-#### `POST /internal/professors`
-Create a new professor.
-- **Body**: `{ name, picture_url?, bio?, faculty_ids? }`
+Internal-only, `x-internal-secret` required for all routes. Reads live at
+plain `/studies` (matching every other catalog entity); only mutations live
+under `/internal`.
 
-#### `PATCH /internal/professors/:id`
-Update a professor.
-- **Body**: `{ name?, picture_url?, bio? }`
+**Reads**: `GET /studies`, `GET /studies/:id` (see [Catalog](#catalog) pattern
+— faculty/university metadata, subjects, professor assignments).
 
-#### `DELETE /internal/professors/:id`
-Delete a professor.
+**Mutations** (`/api/internal`):
 
-#### `POST /internal/professors/:id/faculties/:facultyId`
-Assign a professor to a faculty.
-
-#### `DELETE /internal/professors/:id/faculties/:facultyId`
-Remove a professor from a faculty.
+| Route                             | Body                                                                              |
+| --------------------------------- | --------------------------------------------------------------------------------- |
+| `POST /internal/studies`          | `{ name, faculty_id, sanity_id? }`                                                |
+| `PATCH /internal/studies/:id`     | `{ name?, faculty_id? }`                                                          |
+| `DELETE /internal/studies/:id`    | — (blocked if referenced by subjects, professor assignments, or user enrollments) |
+| `POST /internal/studies/:id/sync` | `{ name, faculty_id }`                                                            |
 
 ---
 
 ## Subjects
 
-### Internal-only endpoints (secret-protected)
+Internal-only, `x-internal-secret` required for all routes. Does not apply to
+`/api/profile-subjects`, which is a user's own progress, not catalog data.
 
-All subject routes, reads included, require the `x-internal-secret` header to match `INTERNAL_API_SECRET`. This does not apply to `/api/profile-subjects`, which tracks a user's own progress and stays authenticated/public as before.
+**Reads**: `GET /subjects`, `GET /subjects/:id` (see [Catalog](#catalog)).
 
-#### `GET /subjects`
-Get all subjects with professors and script counts
-- **Auth**: `x-internal-secret` required
-- **Response**: Array of subjects
+**Mutations** (`/api/internal`):
 
-#### `GET /subjects/:id`
-Get a single subject with professors and scripts
-- **Auth**: `x-internal-secret` required
-- **Response**: Subject object with related data
+| Route                                                          | Body                                                                                  |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `POST /internal/subjects`                                      | `{ name, study_id, professor_ids?, sanity_id? }`                                      |
+| `PATCH /internal/subjects/:id`                                 | `{ name?, study_id? }`                                                                |
+| `DELETE /internal/subjects/:id`                                | — (blocked if referenced by professor assignments, user subject statuses, or scripts) |
+| `POST`/`DELETE /internal/subjects/:id/professors/:professorId` | —                                                                                     |
+| `POST /internal/subjects/:id/sync`                             | `{ name, study_id, professor_ids? }`                                                  |
 
-### Internal mutation endpoints (secret-protected)
+---
 
-These routes live under `/api/internal` and require the `x-internal-secret` header to match `INTERNAL_API_SECRET`.
+## File Uploads
 
-#### `GET /internal/subjects`
-List subjects via the internal API.
+| Route                      | Notes                                                                                                                                                                                                                                                                                                     |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /file-ops/upload`    | Authenticated. Multipart form: one or more `files` entries (a single file is accepted too — normalized to an array server-side) plus optional `subjectId`. Returns `{ success: true, files: [{ fileKey, fileType, fileSizeBytes, bucket }] }` — one entry per uploaded file, in the same order submitted. |
+| `GET /file-ops/get-file/*` | Public. Returns a pre-signed download URL for the given key. Optional `?bucket=` query param — required to resolve a file stored in a university-specific bucket rather than the default `R2_BUCKET`; omit only for files that used the fallback bucket.                                                  |
 
-#### `POST /internal/subjects`
-Create a new subject.
-- **Body**: `{ name, study_id, professor_ids? }`
+**Storage scoping**: if `subjectId` is provided and resolves to a real
+subject → study → faculty → university chain, the file is stored in that
+university's `r2_bucket_id` bucket (falling back to the default `R2_BUCKET`
+if the university has none set), under a key prefixed
+`{facultyId}/{studyId}/{subjectId}/{userId}/` — all Postgres dbIds, not
+slugs. If `subjectId` is omitted or doesn't resolve, the file falls back to
+the default bucket under a plain `{userId}/` prefix. Per-file size limit
+(~1MB) and the allowed-extension list are enforced via a `zValidator` form
+schema, not a Postgres constraint.
 
-#### `PATCH /internal/subjects/:id`
-Update a subject.
-- **Body**: `{ name?, study_id? }`
-
-#### `DELETE /internal/subjects/:id`
-Delete a subject.
-
-#### `POST /internal/subjects/:id/professors/:professorId`
-Assign a professor to a subject.
-
-#### `DELETE /internal/subjects/:id/professors/:professorId`
-Remove a professor from a subject.
+`script_files.bucket` persists which bucket each file actually landed in —
+required at download time, since a bare file key no longer implies a single
+global bucket once buckets are university-scoped. It's included in every
+public script response's `files` array (see [Scripts](#scripts)).
 
 ---
 
 ## Scripts
 
-### Public Endpoints
+### Public
 
-#### `GET /scripts`
-Get all scripts with author and subject info
-- **Auth**: Not required
-- **Response**: Array of scripts (excludes the internal `is_flagged` moderation field)
+| Route                             | Notes                                                                                                                                                                                                       |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /scripts`                    | All scripts; scoped to the session's selected faculties if a cookie is present                                                                                                                              |
+| `GET /scripts/:id`                | One script; 404 if outside the session's selected faculties                                                                                                                                                 |
+| `GET /scripts/subject/:subjectId` | Scripts for a subject, sorted by vote score                                                                                                                                                                 |
+| `GET /scripts/top?limit=10`       | By vote score                                                                                                                                                                                               |
+| `GET /scripts/popular?limit=10`   | By download count                                                                                                                                                                                           |
+| `GET /scripts/search?q=`          | Fuzzy match on title/description (Portable Text → plain text)                                                                                                                                               |
+| `POST /scripts/:id/download`      | Records a download, deduped by account → IP → `x-device-id` header. Runs on service-role — `download_events` has no client-facing INSERT policy for any role. Returns `{ success: true, counted: boolean }` |
 
-#### `GET /scripts/:id`
-Get a single script by ID
-- **Auth**: Not required
-- **Response**: Script object with author and subject
+Response excludes `is_flagged` (internal moderation state). Each file in
+`files` includes `bucket` (see [File Uploads](#file-uploads)).
 
-#### `GET /scripts/subject/:subjectId`
-Get all scripts for a specific subject
-- **Auth**: Not required
-- **Response**: Array of scripts
+### Authenticated
 
-#### `GET /scripts/top?limit=10`
-Get top scripts by vote score
-- **Auth**: Not required
-- **Query**: `limit` (default: 10)
-- **Response**: Array of top-rated scripts
-
-#### `GET /scripts/popular?limit=10`
-Get most downloaded scripts
-- **Auth**: Not required
-- **Query**: `limit` (default: 10)
-- **Response**: Array of popular scripts
-
-#### `GET /scripts/search?q=query`
-Search scripts by title or description
-- **Auth**: Not required
-- **Query**: `q` (required)
-- **Response**: Array of matching scripts
-
-#### `POST /scripts/:id/download`
-Record a download and increment the public download count, deduplicated per
-requester identity (account first, then IP, then device).
-- **Auth**: Not required
-- **Headers**: `x-device-id` (optional fallback identity when IP is unavailable)
-- **Response**: `{ success: true, counted: boolean }` — `counted` is `false`
-  when this identity already downloaded the script.
-
-### Authenticated Endpoints
-
-#### `POST /scripts`
-Upload a new script
-- **Auth**: Required
-- **Body**: `{ title, description?, fileKey, subjectId, professorId, fileType }`
-- **Response**: Created script
-
-#### `GET /scripts/my-scripts`
-Get current user's scripts
-- **Auth**: Required
-- **Response**: Array of user's scripts
-
-#### `PATCH /scripts/:id`
-Update a script (author or moderator only)
-- **Auth**: Required
-- **Body**: `{ title?, description? }`
-- **Response**: Updated script
-
-#### `DELETE /scripts/:id`
-Delete a script (author or moderator only)
-- **Auth**: Required
-- **Response**: Success message
-
-#### `GET /scripts/flagged/all`
-Get all flagged scripts (moderator only)
-- **Auth**: Required (Moderator only)
-- **Response**: Array of flagged scripts with flag details
+| Route                      | Notes                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /scripts`            | Body: `{ title, description?, subjectId, professorId, examSession?, additionalReading?, files: [{ fileKey, fileType, fileSizeBytes, bucket }] }` — `files` is exactly what `POST /file-ops/upload` returns, passed straight through. `title`/`description` are Portable Text. At least one file required. Validated via a `zValidator` JSON schema (accepts both `subjectId`/`subject_id` etc. key styles). Rejected if restricted. |
+| `GET /scripts/my-scripts`  | Current user's scripts                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `PATCH /scripts/:id`       | Author or admin. Body: `{ title?, description?, additional_reading? }`. Files are immutable — not part of this body.                                                                                                                                                                                                                                                                                                                |
+| `DELETE /scripts/:id`      | Author or admin                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `GET /scripts/flagged/all` | Admin only                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 ---
 
 ## Comments
 
-### Public Endpoints
+### Public
+`GET /comments/script/:scriptId`, `/comments/professor/:professorId`,
+`/comments/user/:userId`, `/comments/:commentId/reactions` — no auth
+required; list routes include `reactions_count`, `reactions_by_type`,
+`likes_count`, `my_reaction`, `liked_by_me` when a session is present.
 
-#### `GET /comments/script/:scriptId`
-Get comments for a specific script
-- **Auth**: Not required (reaction/like status is included when a session is present)
-- **Response**: Array of comments, each including `reactions_count`, `reactions_by_type`, `likes_count`, `my_reaction`, and `liked_by_me`
+### Authenticated
 
-#### `GET /comments/professor/:professorId`
-Get comments for a specific professor
-- **Auth**: Not required (reaction/like status is included when a session is present)
-- **Response**: Array of comments with the same engagement fields as above
-
-#### `GET /comments/user/:userId`
-Get comments by a specific user
-- **Auth**: Not required (reaction/like status is included when a session is present)
-- **Response**: Array of comments with the same engagement fields as above
-
-#### `GET /comments/:commentId/reactions`
-Get reactions for a comment
-- **Auth**: Not required
-- **Response**: Array of reactions
-
-### Authenticated Endpoints
-
-#### `POST /comments`
-Create a new comment
-- **Auth**: Required
-- **Body**: `{ content: PortableTextValue, professor_id? }` or `{ content: PortableTextValue, script_id? }`
-- **Restriction**: Exactly one of `professor_id` or `script_id` is required.
-- **Response**: Created comment
-
-#### `POST /comments/:commentId/replies`
-Create a reply to a comment
-- **Auth**: Required
-- **Body**: `{ content: PortableTextValue, professor_id? }` or `{ content: PortableTextValue, script_id? }`
-- **Restriction**: Exactly one of `professor_id` or `script_id` is required.
-- **Response**: Created reply with `parent_id`
-
-#### `POST /comments/:commentId/reactions`
-Add or change the current user's reaction
-- **Auth**: Required
-- **Body**: `{ reaction_type }`
-- **Note**: Calling this again replaces the user's existing reaction.
-- **Response**: Created or updated reaction
-
-#### `POST /comments/:commentId/like`
-Toggle the current user's like on a comment
-- **Auth**: Required
-- **Note**: The first request likes the comment; calling it again removes the like.
-- **Response**: `{ success: true, liked: boolean }`
-
-#### `PATCH /comments/:id`
-Update a comment (author only)
-- **Auth**: Required
-- **Body**: `{ content }`
-- **Response**: Updated comment
-
-#### `DELETE /comments/:id`
-Delete a comment (author or moderator)
-- **Auth**: Required
-- **Response**: Success message
-
-#### `GET /comments/flagged/all`
-Get all flagged comments (moderator only)
-- **Auth**: Required (Moderator only)
-- **Response**: Array of flagged comments with flag details
+| Route                                 | Notes                                                                                                       |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `POST /comments`                      | `{ content: PortableTextValue, professor_id? \| script_id? }` — exactly one target. Rejected if restricted. |
+| `POST /comments/:commentId/replies`   | Same body shape, sets `parent_id`                                                                           |
+| `POST /comments/:commentId/reactions` | `{ reaction_type }` — upsert, replaces existing reaction. Rejected if restricted.                           |
+| `POST /comments/:commentId/like`      | Toggle. **Not** restriction-checked.                                                                        |
+| `PATCH /comments/:id`                 | Author or admin. `{ content }`                                                                              |
+| `DELETE /comments/:id`                | Author or admin                                                                                             |
+| `GET /comments/flagged/all`           | Admin only                                                                                                  |
 
 ---
 
 ## Flags
 
-### Authenticated Endpoints
+Single `flags` table for scripts, users, and comments
+(`target_script_id`/`target_user_id`/`target_comment_id`, exactly one set).
 
-#### `GET /flags/my-flags`
-Get current user's submitted flags
-- **Auth**: Required
-- **Response**: Array of user's flags
+| Route                                                   | Access                                                                                                                                         |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /flags`                                           | Any authenticated, non-restricted user. `{ target_type: 'user'\|'script'\|'comment', target_id, reason (≥10 chars) }`                          |
+| `GET /flags/my-flags`                                   | Reporter, own flags only                                                                                                                       |
+| `DELETE /flags/:id`                                     | Reporter (own flag) **or** admin (any flag). Not restriction-checked.                                                                          |
+| `GET /flags`, `/flags/pending`, `/flags/status/:status` | Admin only — RLS grants admins direct `SELECT`                                                                                                 |
+| `PATCH /flags/:id`                                      | Admin only. `{ status: 'pending'\|'reviewed'\|'dismissed' }`. Dismissing clears `is_flagged` on the target once no other pending flag remains. |
 
-#### `POST /flags`
-Create a new flag (report)
-- **Auth**: Required
-- **Body**: `{ target_type: 'user'|'script'|'comment', target_id, reason }` (stored as `target_user_id`, `target_script_id`, or `target_comment_id`)
-- **Response**: Created flag
-
-### Moderator read endpoints
-
-These are moderator-only reads:
-
-#### `GET /flags`
-Get all flags.
-- **Auth**: Required (Moderator only)
-- **Response**: Array of all flags
-
-#### `GET /flags/pending`
-Get pending flags.
-- **Auth**: Required (Moderator only)
-- **Response**: Array of pending flags
-
-#### `GET /flags/status/:status`
-Get flags by status (`pending`, `reviewed`, `dismissed`).
-- **Auth**: Required (Moderator only)
-- **Response**: Array of matching flags
-
-### Authenticated user mutation endpoints
-
-#### `PATCH /flags/:id`
-Update your own flag.
-- **Auth**: Required
-- **Body**: `{ status: 'pending'|'reviewed'|'dismissed' }`
-- **Restriction**: Only the flag reporter can update their own flag. Moderators cannot update another moderator's flag.
-
-#### `DELETE /flags/:id`
-Delete your own flag.
-- **Auth**: Required
-- **Restriction**: Only the flag reporter can delete their own flag.
+Reporters can create, view their own, and delete their own flag — that's the
+complete self-service surface. They cannot change a flag's `status`; only an
+admin can resolve one. Moderators have no flag access at all (see
+[Role-Based Access Control](#role-based-access-control)).
 
 ---
 
 ## Profiles
 
-### Public Endpoints
+### Public
+`GET /profiles`, `/profiles/username/:username`, `/profiles/:id`,
+`/profiles/:id/stats` — no auth required.
 
-#### `GET /profiles`
-Get all user profiles
-- **Auth**: Not required
-- **Response**: Array of public profile data
+### Authenticated
+`GET /profiles/me`, `PATCH /profiles/me` (`{ username?, full_name?,
+selected_faculty_ids?, selected_study_ids? }`), `DELETE /profiles/me`.
 
-#### `GET /profiles/username/:username`
-Get a user profile by username
-- **Auth**: Not required
-- **Response**: Profile with user's scripts
+### Admin
+`PATCH /profiles/:id`, `DELETE /profiles/:id` — same shape as the `/me`
+equivalents, session-client-eligible (`is_admin()` is baked into the
+`profiles` RLS policy directly).
 
-#### `GET /profiles/:id`
-Get a user profile by ID
-- **Auth**: Not required
-- **Response**: Profile with user's scripts
-
-#### `GET /profiles/:id/stats`
-Get user statistics
-- **Auth**: Not required
-- **Response**: User stats (scripts count, votes, downloads, comments)
-
-### Authenticated Endpoints
-
-#### `GET /profiles/me`
-Get current user's profile
-- **Auth**: Required
-- **Response**: Full profile data
-
-#### `PATCH /profiles/me`
-Update current user's profile
-- **Auth**: Required
-- **Body**: `{ username?, full_name?, selected_faculty_ids? }`
-- **Response**: Updated profile
-
-### Internal-only role mutation
-
-#### `PATCH /internal/profiles/:id/role`
-Update a user's role.
-- **Auth**: Not a public auth route; requires `x-internal-secret` header matching `INTERNAL_API_SECRET`
-- **Body**: `{ role: 'student'|'moderator' }`
-- **Response**: Updated profile
-
-> Public role mutation is intentionally not exposed on `/api/profiles`.
+### Internal
+`PATCH /internal/profiles/:id/role` — `{ role: 'student'|'moderator'|'admin' }`,
+`x-internal-secret` required. Kept off the session-client path as extra
+hardening for a sensitive column, even though `is_admin()` RLS would
+technically allow it too.
 
 ---
 
-## Profile Subjects
+## Profile Selections
 
-All profile-subject endpoints require authentication and operate on the current
-user's subject status records.
+Three structurally identical resources for a user's own faculty, study, and
+subject data. All require authentication and operate on the caller only.
 
-#### `GET /profile-subjects`
-List the current user's subjects and statuses.
-- **Auth**: Required
-- **Response**: Array of `{ subject_id, status, updated_at, subject }`
+| Resource  | List                     | Get one                             | Add                                             | Remove                                 |
+| --------- | ------------------------ | ----------------------------------- | ----------------------------------------------- | -------------------------------------- |
+| Faculties | `GET /profile-faculties` | `GET /profile-faculties/:facultyId` | `POST /profile-faculties/:facultyId`            | `DELETE /profile-faculties/:facultyId` |
+| Studies   | `GET /profile-studies`   | `GET /profile-studies/:studyId`     | `POST /profile-studies/:studyId`                | `DELETE /profile-studies/:studyId`     |
+| Subjects  | `GET /profile-subjects`  | `GET /profile-subjects/:subjectId`  | `PUT /profile-subjects/:subjectId` `{ status }` | `DELETE /profile-subjects/:subjectId`  |
 
-#### `GET /profile-subjects/:subjectId`
-Get one of the current user's subject status records, or `null` when it is not set.
-- **Auth**: Required
+Faculties/studies adds are plain idempotent selections (no body). Subjects
+use `PUT` with a `status` body (`completed` or `currently_taking`) since it's
+a value, not just a membership toggle. All three are `profile_id = auth.uid()`
+RLS, session-client-eligible.
 
-#### `PUT /profile-subjects/:subjectId`
-Create or replace the current user's status for a subject.
-- **Auth**: Required
-- **Body**: `{ status }`
-- **Response**: The saved subject status record
-
-#### `DELETE /profile-subjects/:subjectId`
-Remove the current user's status for a subject.
-- **Auth**: Required
-- **Response**: `{ success: true }`
+---
 
 ## Favorites
 
-All favorites endpoints require authentication and use the current user's
-favorite scripts.
+Authenticated, own resource. `GET /favorites`, `GET /favorites/:scriptId`,
+`POST /favorites/:scriptId` (idempotent), `DELETE /favorites/:scriptId`.
+**Not** restriction-checked — favoriting is always available.
 
-#### `GET /favorites`
-List the current user's favorite scripts.
-- **Auth**: Required
-- **Response**: Array of `{ created_at, script }`
-
-#### `GET /favorites/:scriptId`
-Get the current user's favorite record for a script, or `null` when it is not favorited.
-- **Auth**: Required
-
-#### `POST /favorites/:scriptId`
-Add a script to the current user's favorites. Repeating the request is safe.
-- **Auth**: Required
-- **Response**: The favorite record
-
-#### `DELETE /favorites/:scriptId`
-Remove a script from the current user's favorites.
-- **Auth**: Required
-- **Response**: `{ success: true }`
+---
 
 ## Votes
 
-### Public Endpoints
+| Route                                                          | Auth     | Notes                                                                                                                                                                                                                                                                                                                                                                              |
+| -------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /votes`, `/votes/script/:scriptId`, `/votes/user/:userId` | Public   | —                                                                                                                                                                                                                                                                                                                                                                                  |
+| `GET /votes/script/:scriptId/stats`                            | Public   | `{ upvotes, score }`                                                                                                                                                                                                                                                                                                                                                               |
+| `GET /votes/my-votes`, `/votes/script/:scriptId/my-vote`       | Required | —                                                                                                                                                                                                                                                                                                                                                                                  |
+| `POST /votes/:scriptId`                                        | Required | Toggle. First call adds a vote, second removes it. `vote_score` is clamped at zero. Runs through a single atomic `toggle_vote` RPC (`security definer`, keyed off `auth.uid()` internally) rather than a read-then-write, so it can't race and can't be called with an arbitrary score delta. Casting is rejected if restricted; removing is not. Returns `{ voted, vote_score }`. |
 
-#### `GET /votes`
-List all votes.
+---
 
-#### `GET /votes/script/:scriptId`
-List votes for a script.
+## Ratings
 
-#### `GET /votes/user/:userId`
-List votes by a user.
+Professors and subjects each take multiple, independently extensible rating
+types via a shared `rating_types` lookup (`target_type: 'professor'|'subject'`).
+One rating per user per type per entity — posting again updates the score.
 
-#### `GET /votes/script/:scriptId/stats`
-Get vote counts and the nonnegative score for a script.
+**Rating types** — public read, admin-only write (`is_admin()` RLS, no
+internal secret involved):
+`GET /ratings/types` (optional `?target_type=`), `GET /ratings/types/:id`,
+`POST /ratings/types` (`{ id, target_type, label }`, `id` matches
+`^[a-z0-9_]{2,40}$`), `PATCH /ratings/types/:id` (`{ label }`),
+`DELETE /ratings/types/:id` (409 if any rating still references it).
 
-### Authenticated Read Endpoints
+**Professor/subject ratings** — identical shape, scoped by path:
 
-#### `GET /votes/my-votes`
-List the current user's votes.
+| Route                                                   | Auth                                                                                                           |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `GET /ratings/{professor,subject}/:id`                  | Public                                                                                                         |
+| `GET /ratings/{professor,subject}/:id/stats`            | Public — `{ rating_type_id, average, count }[]`                                                                |
+| `GET /ratings/{professor,subject}/:id/my-ratings`       | Required                                                                                                       |
+| `POST /ratings/{professor,subject}/:id`                 | Required — `{ rating_type_id, score (1–5) }`. Rejected if restricted, or if the type doesn't match the target. |
+| `DELETE /ratings/{professor,subject}/:id/:ratingTypeId` | Required — not restriction-checked                                                                             |
 
-#### `GET /votes/script/:scriptId/my-vote`
-Get the current user's vote for a script, or `null`.
+---
 
-### Authenticated Mutation Endpoint
+## Notifications
 
-#### `POST /votes/:scriptId`
-Toggle the current user's vote for a script.
-- **Auth**: Required
-- **Body**: None
-- **Note**: The first request adds one vote. The next request removes that user's vote.
-- **Response**: `{ voted: boolean, vote_score: number }`
-- **Invariant**: `vote_score` never falls below zero.
+Own-resource, authenticated. System-generated (achievements today; restrictions
+and other types are schema-ready via the open-ended `type` column) — there is
+no user-facing create endpoint, matching `notifications` RLS (`INSERT` is
+admin/service-role only).
+
+| Route                             | Notes                                                     |
+| --------------------------------- | --------------------------------------------------------- |
+| `GET /notifications`              | List own notifications. Query: `is_read` (`true`/`false`) |
+| `GET /notifications/unread-count` | `{ count }`                                               |
+| `PATCH /notifications/read-all`   | Marks all unread as read                                  |
+| `PATCH /notifications/:id`        | `{ is_read }` — update one notification's read state      |
+| `DELETE /notifications/:id`       | Delete one notification                                   |
+
+### Achievements
+
+`achievement_definitions` (public read) define a `metric` + `threshold` on the
+`profile` entity type. After a relevant mutation, the backend recomputes that
+profile's current value for the metric and awards (`profile_achievements`) +
+notifies (`type: 'achievement_earned'`) for any newly-crossed threshold —
+idempotent, service-role, never fails the triggering request.
+
+| Metric                   | Recomputed after                               | Credited to                                               |
+| ------------------------ | ---------------------------------------------- | --------------------------------------------------------- |
+| `scripts_uploaded`       | `POST /scripts`                                | The uploader                                              |
+| `comments_posted`        | `POST /comments`, `POST /comments/:id/replies` | The comment/reply author                                  |
+| `total_script_votes`     | `POST /votes/:scriptId` (either direction)     | The **voted-on script's author**, not the voter           |
+| `total_script_downloads` | `POST /scripts/:id/download`                   | The script's author (no seeded achievement uses this yet) |
+
+---
+
+## Client Access Patterns
+
+Every route uses either the caller's session client or the service-role
+client. Getting it backwards either silently fails a legitimate request
+(session client hits a table RLS doesn't grant it) or bypasses an intended
+check (service role used where RLS was supposed to be the actual gate).
+
+**Use the session client** when RLS already grants the caller access: their
+own resource (`author_id`/`user_id`/`profile_id` = `auth.uid()`), or an
+`is_admin()`-gated policy for an admin action. This is nearly everything —
+scripts/comments/profiles admin actions, all "own resource" endpoints, flags
+(list/resolve/delete, now that admin has direct SELECT/DELETE RLS), rating
+types, professor/subject ratings, profile faculties/studies/subjects.
+
+**Use the service role** only where no RLS path exists for the caller:
+- All catalog + catalog-junction tables (`universities` → `professor_studies`)
+  — read-only via RLS for every role, admin included; `/api/internal` is the
+  only write path.
+- `POST /scripts/:id/download` — `download_events` has zero client-facing
+  `INSERT` policy for any role.
+- `PATCH /internal/profiles/:id/role` — deliberately hardened past what RLS
+  alone would require, given how sensitive the column is.
 
 ---
 
 ## Authentication
 
-All authenticated endpoints require the Supabase session cookie created by the
-authentication routes. The `authMiddleware` verifies the session, attaches the
-user to the request context, and returns `401` when authentication fails.
+Authenticated endpoints require the Supabase session cookie set by
+`/api/auth/login`. `authMiddleware` verifies it and returns `401` on failure.
 
 ## Role-Based Access Control
 
-The backend now uses a clear separation of responsibilities:
-1. Catalog routes (universities, faculties, professors, subjects) are admin-managed and require the `x-internal-secret` header for every request, including reads.
-2. Authenticated user routes require a valid Supabase session.
-3. Moderator-only routes are read-only views of flags and require the user role to be `'moderator'`.
-4. Internal catalog writes and role changes are only exposed under `/api/internal` and require the `x-internal-secret` header.
-5. A moderator may only update/delete their own flags; they cannot mutate flags from other moderators or other users.
+`profiles.role` is `student` / `moderator` / `admin` — **only `admin` carries
+any elevated database privilege today.**
 
-Any violation returns `403` with an error payload.
+1. Catalog routes require `x-internal-secret` for every request, independent
+   of Supabase role — RLS closes these tables to everyone regardless.
+2. Authenticated routes generally operate on the caller's own resources.
+3. Admin-only actions: full CRUD on any `scripts`/`comments`/`profiles` row,
+   flag resolution, flag listing, rating-type management — all `is_admin()`-
+   gated in RLS, all usable via the admin's own session.
+4. **Moderators have zero elevated access anywhere in this API.** The role is
+   reserved for a planned notification-trigger feature (see
+   [Planned Endpoints](#planned-endpoints-not-yet-implemented)), not direct
+   write access. Any code still branching on `role === 'moderator'` for
+   elevated behavior is stale and should check `admin`.
+5. Internal catalog writes and role changes require `x-internal-secret`.
+6. **Restricted users** (`profile_restrictions`, admin-managed, enforced via
+   `is_restricted()` in RLS) are blocked from *creating or updating* scripts,
+   comments, flags, comment reactions, votes, and ratings — but can still
+   remove their own existing content or interactions. Favoriting and comment
+   likes are exempt entirely.
+
+Violations return `403` with an error payload.
 
 ## Error Responses
 
-All endpoints return errors in the format:
 ```json
-{
-  "error": "Error message description"
-}
+{ "error": "Error message description" }
 ```
-
-Common HTTP status codes:
-- `200` - Success
-- `400` - Bad Request (validation errors)
-- `401` - Unauthorized (authentication required)
-- `403` - Forbidden (insufficient permissions)
-- `404` - Not Found
-- `500` - Internal Server Error
+`400` validation · `401` unauthenticated · `403` forbidden/restricted ·
+`404` not found · `409` conflict (unique/FK constraint) · `500` server error.
 
 ## Notes
 
-### Vote System
-The vote system supports:
-- One +1 vote per user and script
-- Toggle behavior: the first POST adds a vote and the next removes it
-- Automatic `vote_score` calculation, clamped at zero
+**Vote system**: one `+1` per user per script, toggle behavior, `vote_score`
+clamped at zero. No downvotes exist anywhere in the schema or API.
 
-### Flag System
-When a script or comment is flagged:
-- The `is_flagged` field is set to `true`
-- When all flags are dismissed, `is_flagged` returns to `false`
+**Flag system**: `is_flagged` is set on the target when a flag lands, cleared
+once no pending flags remain. Flagged content stays publicly visible —
+flagging surfaces content for review, it never hides it.
 
-### File Types
-Supported file types for scripts: `pdf`, `jpg`, `jpeg`, `png`, `webp`
+**File types**: `pdf`, `jpg`, `jpeg`, `png`, `webp`, `md`, `doc`, `docx`,
+`xls`, `xlsx`. A script has one or more immutable `script_files` rows
+(`file_url`, `file_type`, `file_size_bytes`, `bucket`, ordered by
+`position`). Per-file size limit (~1MB) and type/extension checks are
+enforced at the API via `zValidator`, not Postgres — the database never sees
+raw bytes.
 
-### Internal writes
-Catalog writes and role changes are intentionally not available on the public API. Use `/api/internal` with the `x-internal-secret` header to mutate internal catalog records or update a profile role.
+**Portable Text**: `scripts.title`, `scripts.description`, `comments.content`
+are Portable Text (`jsonb` block arrays). The Postgres `CHECK` only confirms
+valid JSON under a size cap — block/mark-type validation is an API concern,
+and the renderer should only recognize an explicit block-type allow-list.
 
-### User-specific records
-Subject status records are stored in `profile_subjects` and managed through the
-`/profile-subjects` endpoints. Script favorites are stored in
-`script_favorites` and managed through the `/favorites` endpoints.
+## Planned Endpoints (Not Yet Implemented)
+
+- **Notifications** (`notifications` table) — list/mark-read/delete a user's
+  own notifications.
+- **Achievements** (`achievement_definitions`, `profile_achievements`) —
+  award-check logic isn't wired into any mutation endpoint yet.
+- **User restriction management** (`profile_restrictions`) — no endpoint
+  exists yet for an admin to restrict/unrestrict a user.
+- **Individual script file removal** — RLS supports author/admin delete on
+  `script_files`; no endpoint removes a single file without deleting the
+  whole script.
+- **Moderator notification pipeline** — repeated flags notifying moderators,
+  a moderator's flag escalating to admins. No schema or backend work started;
+  moderators have no elevated access today.

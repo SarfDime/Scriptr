@@ -6,6 +6,7 @@
     "@sanity/icons": "^5.2.2",
     "@sanity/ui": "^4.2.1",
     "@sanity/vision": "^6.13.2",
+    "oxc-transform-react": "^0.149.0",
     "react": "^19.3.0",
     "react-compiler-runtime": "^1.0.0",
     "react-dom": "^19.3.0",
@@ -14,12 +15,12 @@
     "sanity-plugin-iframe-pane": "^5.0.35",
     "sanity-plugin-media": "^6.1.8",
     "sanity-plugin-mermaid-content-model": "^1.0.1",
-    "sanity-plugin-references": "^1.1.0",
+    "sanity-plugin-references": "^1.2.0",
     "sanity-plugin-smart-asset-manager": "^2.0.1",
     "styled-components": "6.5.3"
   },
   "devDependencies": {
-    "@sanity/cli": "^8.10.0",
+    "@sanity/cli": "^8.11.0",
     "babel-plugin-react-compiler": "^1.0.0"
   },
   "keywords": [

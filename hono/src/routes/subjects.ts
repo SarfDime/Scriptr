@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { requiredParam } from '../lib/request'
-import { createSupabaseClient } from '../lib/supabase'
+import { createInternalSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
 const subjects = new Hono<HonoEnv>()
@@ -17,92 +17,48 @@ subjects.use('*', async (c, next) => {
   return next()
 })
 
-async function getSelectedFacultyScope(
-  supabase: ReturnType<typeof createSupabaseClient>
-) {
-  const { data: sessionData } = await supabase.auth.getUser()
-
-  if (!sessionData.user) {
-    return null
-  }
-
-  const { data } = await supabase
-    .from('profile_faculties')
-    .select('faculty_id')
-    .eq('profile_id', sessionData.user.id)
-
-  return data?.map(({ faculty_id }) => faculty_id) ?? []
-}
-
-/** Get all subjects */
+/** Get all subjects with study, faculty, professor, and script-count metadata */
 subjects.get('/', async (c) => {
-  const supabase = createSupabaseClient(c)
-  const selectedFacultyIds = await getSelectedFacultyScope(supabase)
+  const supabase = createInternalSupabaseClient(c)
 
   const { data, error } = await supabase
     .from('subjects')
     .select(`
-      *,
-      study:studies(id, name, faculty:faculties(id, name, university:universities(id, name))),
-      professors:subject_professors(
-        professor:professors(*)
-      ),
-      scripts:scripts(count)
-    `)
+        *,
+        study:studies(id, name, faculty:faculties(id, name, university:universities(id, name))),
+        professors:subject_professors(
+          professor:professors(*)
+        ),
+        scripts:scripts(count)
+      `)
     .order('name', { ascending: true })
 
   if (error) return c.json({ error: error.message }, 500)
-
-  if (!selectedFacultyIds || selectedFacultyIds.length === 0) {
-    return c.json(data)
-  }
-
-  return c.json(
-    data.filter(
-      (subject) =>
-        !subject.study?.faculty?.id ||
-        selectedFacultyIds.includes(subject.study.faculty.id)
-    )
-  )
+  return c.json(data)
 })
 
-/** Get a single subject by ID */
+/** Get a single subject with study, faculty, professor, and script metadata */
 subjects.get('/:id', async (c) => {
   const subjectId = requiredParam(c, 'id')
-  const supabase = createSupabaseClient(c)
-
-  const selectedFacultyIds = await getSelectedFacultyScope(supabase)
+  const supabase = createInternalSupabaseClient(c)
 
   const { data, error } = await supabase
     .from('subjects')
     .select(`
-      *,
-      study:studies(id, name, faculty:faculties(id, name, university:universities(id, name))),
-      professors:subject_professors(
-        professor:professors(*)
-      ),
-      scripts:scripts(
         *,
-        author:profiles(username)
-      )
-    `)
+        study:studies(id, name, faculty:faculties(id, name, university:universities(id, name))),
+        professors:subject_professors(
+          professor:professors(*)
+        ),
+        scripts:scripts(
+          *,
+          author:profiles(username)
+        )
+      `)
     .eq('id', subjectId)
     .single()
 
   if (error) return c.json({ error: error.message }, 404)
-
-  if (
-    selectedFacultyIds &&
-    selectedFacultyIds.length > 0 &&
-    (!data.study?.faculty?.id ||
-      !selectedFacultyIds.includes(data.study.faculty.id))
-  ) {
-    return c.json(
-      { error: 'Subject not available in your selected faculties' },
-      404
-    )
-  }
-
   return c.json(data)
 })
 

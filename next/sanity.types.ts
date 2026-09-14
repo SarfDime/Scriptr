@@ -47,7 +47,6 @@ export type Subject = {
   description?: RichTextLite;
   keywords?: Array<string>;
   credits: number;
-  syllabus: string;
   year: number;
   classes?: string;
   semester: "winter" | "summer";
@@ -81,17 +80,11 @@ export type Study = {
   _updatedAt: string;
   _rev: string;
   name: string;
-  description?: RichTextLite;
   slug: Slug;
+  description?: RichTextLite;
   faculty: FacultyReference;
   assistant?: PersonReference;
   dbId?: string;
-};
-
-export type Slug = {
-  _type: "slug";
-  current: string;
-  source?: string;
 };
 
 export type SanityImageAssetReference = {
@@ -145,6 +138,12 @@ export type RichTextLite = Array<{
   _key: string;
 }>;
 
+export type Slug = {
+  _type: "slug";
+  current: string;
+  source?: string;
+};
+
 export type Professor = {
   _id: string;
   _type: "professor";
@@ -154,6 +153,7 @@ export type Professor = {
   name: string;
   slug: Slug;
   title?: string;
+  description?: RichTextLite;
   picture?: {
     asset?: SanityImageAssetReference;
     media?: unknown;
@@ -162,7 +162,7 @@ export type Professor = {
     _type: "image";
   };
   bio?: RichTextLite;
-  office?: string;
+  officeLocation: string;
   telephone?: string;
   email?: string;
   website: string;
@@ -209,9 +209,16 @@ export type Faculty = {
   _updatedAt: string;
   _rev: string;
   name: string;
-  description?: RichTextLite;
   slug: Slug;
+  description?: RichTextLite;
   bio: string;
+  logo?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
   picture?: {
     asset?: SanityImageAssetReference;
     media?: unknown;
@@ -241,9 +248,23 @@ export type University = {
   _createdAt: string;
   _updatedAt: string;
   _rev: string;
+  logo?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
+  picture?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
   name: string;
-  description?: RichTextLite;
   slug: Slug;
+  description?: RichTextLite;
   rector?: PersonReference;
   viceRectors?: Array<
     {
@@ -428,6 +449,10 @@ export type Person = {
   };
   name: string;
   title: string;
+  email?: string;
+  academicRank?: string;
+  scientificField?: string;
+  website: string;
   description?: RichTextLite;
 };
 
@@ -745,10 +770,10 @@ export type AllSanitySchemaTypes =
   | FacultyReference
   | PersonReference
   | Study
-  | Slug
   | SanityImageAssetReference
   | ButtonReference
   | RichTextLite
+  | Slug
   | Professor
   | SanityImageCrop
   | SanityImageHotspot
@@ -1040,7 +1065,7 @@ export type FacultyDetailQueryResult =
           year: number;
           semester: "summer" | "winter";
           description: RichTextLite | null;
-          syllabus: string;
+          syllabus: null;
           faculty: {
             _id: string;
             name: string;
@@ -1301,7 +1326,7 @@ export type FacultyDetailQueryResult =
           year: number;
           semester: "summer" | "winter";
           description: RichTextLite | null;
-          syllabus: string;
+          syllabus: null;
           faculty: {
             _id: string;
             name: string;
@@ -1396,7 +1421,7 @@ export type SubjectDetailQueryResult = {
   year: number;
   semester: "summer" | "winter";
   description: RichTextLite | null;
-  syllabus: string;
+  syllabus: null;
   study: {
     _id: string;
     name: string;
@@ -1465,6 +1490,37 @@ export type UniversityStaticParamsQueryResult = Array<{
   slug: string;
 }>;
 
+// Source: ../next/sanity/queries/onboarding.queries.ts
+// Variable: onboardingCatalogQuery
+// Query: {   "universities": *[_type == "university"]{ _id, dbId, name },  "faculties": *[_type == "faculty"]{ _id, dbId, name, "universityId": university._ref },  "studies": *[_type == "study"]{    _id,    dbId,    name,    "facultyId": faculty._ref,    "subjectsByYear": array::unique(*[_type == "subject" && study._ref == ^._id].year) | order(@ asc) {      "year": @,      "subjects": *[_type == "subject" && study._ref == ^.^._id && year == ^]{        _id, dbId, name, year, "studyId": study._ref      }    }  },  "subjects": *[_type == "subject"] | order(year asc){ _id, dbId, name, year, "studyId": study._ref }}
+export type OnboardingCatalogQueryResult = {
+  universities: Array<{
+    _id: string;
+    dbId: string | null;
+    name: string;
+  }>;
+  faculties: Array<{
+    _id: string;
+    dbId: string | null;
+    name: string;
+    universityId: string;
+  }>;
+  studies: Array<{
+    _id: string;
+    dbId: string | null;
+    name: string;
+    facultyId: string;
+    subjectsByYear: Array<null>;
+  }>;
+  subjects: Array<{
+    _id: string;
+    dbId: string | null;
+    name: string;
+    year: number;
+    studyId: string;
+  }>;
+};
+
 // Source: ../next/sanity/queries/website.queries.ts
 // Variable: websiteSeoQuery
 // Query: *[_id == $WEBSITE][0]{  "siteName": coalesce(siteName, websiteTitle, "Scriptr"),  "siteUrl": coalesce(siteUrl, ""),  "defaultSeoTitle": coalesce(defaultSeoTitle, websiteTitle, "Scriptr"),  "defaultSeoDescription": coalesce(defaultSeoDescription, ""),  "defaultKeywords": defaultKeywords[]}
@@ -1501,6 +1557,7 @@ declare global {
     '\n*[_type == "university"] | order(name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  "faculties": *[_type == "faculty" && references(^._id)] | order(name asc) {\n    _id,\n    "slug": slug.current,\n    name,\n  }\n}\n': UniversityGalleryQueryResult;
     '\n*[_type == "university" && (slug.current == $slug || _id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  description\n}\n': UniversitySeoQueryResult;
     '\n*[_type == "university" && !(_id in path("drafts.**"))] {\n  "slug": coalesce(slug.current, _id)\n}\n': UniversityStaticParamsQueryResult;
+    '{ \n  "universities": *[_type == "university"]{ _id, dbId, name },\n  "faculties": *[_type == "faculty"]{ _id, dbId, name, "universityId": university._ref },\n  "studies": *[_type == "study"]{\n    _id,\n    dbId,\n    name,\n    "facultyId": faculty._ref,\n    "subjectsByYear": array::unique(*[_type == "subject" && study._ref == ^._id].year) | order(@ asc) {\n      "year": @,\n      "subjects": *[_type == "subject" && study._ref == ^.^._id && year == ^]{\n        _id, dbId, name, year, "studyId": study._ref\n      }\n    }\n  },\n  "subjects": *[_type == "subject"] | order(year asc){ _id, dbId, name, year, "studyId": study._ref }\n}': OnboardingCatalogQueryResult;
     '\n*[_id == $WEBSITE][0]{\n  "siteName": coalesce(siteName, websiteTitle, "Scriptr"),\n  "siteUrl": coalesce(siteUrl, ""),\n  "defaultSeoTitle": coalesce(defaultSeoTitle, websiteTitle, "Scriptr"),\n  "defaultSeoDescription": coalesce(defaultSeoDescription, ""),\n  "defaultKeywords": defaultKeywords[]\n}\n': WebsiteSeoQueryResult;
   }
 }

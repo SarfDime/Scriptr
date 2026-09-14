@@ -1,5 +1,4 @@
-import type { PortableTextBlock } from 'next-sanity'
-
+import type { PortableTextValue } from '@shared/types/portable-text.types'
 import type { BoxProps } from '../../components/common/Box'
 import type { ComponentTags } from '../component.types'
 
@@ -17,7 +16,8 @@ type ComponentParserType = {
   renderDefaultBlock?: boolean
 } & OverrideElement
 
-type PortableTextType = Array<PortableTextBlock>
+/** @deprecated Use PortableTextValue directly instead */
+type PortableTextType = PortableTextValue
 
 type PortableContentProps = {
   children?: PortableTextType

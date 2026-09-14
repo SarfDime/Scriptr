@@ -11,7 +11,7 @@ export const Person = defineType({
   preview: {
     select: {
       title: 'name',
-      media: 'image',
+      media: 'picture',
       subtitle: 'title',
     },
   },
@@ -35,6 +35,27 @@ export const Person = defineType({
       name: 'title',
       title: `Person's title`,
       type: 'string',
+      validation: validationRules.isRequired,
+    },
+    {
+      name: 'email',
+      title: `Person's email`,
+      type: 'string',
+    },
+    {
+      name: 'academicRank',
+      title: `Person's academic rank`,
+      type: 'string',
+    },
+    {
+      name: 'scientificField',
+      title: `Person's scientific field`,
+      type: 'string',
+    },
+    {
+      name: 'website',
+      title: `Person's website`,
+      type: 'url', // TODO: Change to link selector custom link
       validation: validationRules.isRequired,
     },
     {

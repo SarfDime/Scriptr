@@ -1,42 +1,40 @@
 import BookIcon from '@sanity/icons/Book'
 import { defineType } from 'sanity'
 import {
-  academicDescriptionField,
-  academicNameField,
-  academicSlugField,
-  databaseIdField,
+  academicFields,
+  academicGrouping,
+  academicPreview,
 } from '../common/academicFields'
 import { validationRules } from '../validation'
+
+const ENTITY = 'study'
 
 export const Study = defineType({
   name: 'study',
   title: 'Study',
   type: 'document',
   icon: BookIcon,
-  preview: {
-    select: { title: 'name', subtitle: 'dbId' },
-    prepare: ({ title, subtitle }) => ({
-      title,
-      subtitle: subtitle ? `DB: ${subtitle}` : 'Not linked to database',
-    }),
-  },
+  ...academicPreview(),
+  ...academicGrouping(ENTITY),
   fields: [
-    academicNameField(),
-    academicDescriptionField(),
-    academicSlugField({ hierarchy: 'study' }),
+    ...academicFields(ENTITY, ['name', 'slug', 'description']),
     {
       name: 'faculty',
       title: 'Faculty',
       type: 'reference',
       to: [{ type: 'faculty' }],
       validation: validationRules.isRequired,
+      group: 'database',
+      fieldset: 'database',
     },
     {
       name: 'assistant',
       title: 'Assistant',
       type: 'reference',
       to: [{ type: 'person' }],
+      group: 'database',
+      fieldset: 'database',
     },
-    databaseIdField(),
+    ...academicFields(ENTITY, ['dbId']),
   ],
 })

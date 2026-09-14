@@ -1,42 +1,132 @@
-import type { SlugSourceContext } from '@sanity/types'
-import { defineField, type FieldDefinition, type SanityDocument } from 'sanity'
+import type { AcademicEntityType } from '@shared/config/api'
+import { GROUPING_KEYS } from '@shared/config/sanity-constants'
+import { getAttribute } from '@shared/utils/common-utils'
+import { defineField, type FieldDefinition } from 'sanity'
+import type {
+  AcademicFieldOptions,
+  GroupingKeys,
+} from '../../types/schema-prop.types'
 import { sanitizeSlug } from '../util-functions/utilFunctions'
-import { validationRules } from '../validation'
+import { stringValidation, validationRules } from '../validation'
+import { type CustomLinkFieldOptions, customLinkField } from './customLink'
 
-type AcademicFieldOptions = {
-  fieldset?: string
+const GROUPING_PRESETS: Record<
+  GroupingKeys,
+  { title: string; description: (entity: AcademicEntityType) => string }
+> = {
+  information: {
+    title: 'Information',
+    description: (entity) => `General information for the ${entity}.`,
+  },
+  contactInfo: {
+    title: 'Contact Information',
+    description: (entity) => `Contact details for the ${entity}.`,
+  },
+  administration: {
+    title: 'Administration',
+    description: (entity) => `Administrative details for the ${entity}.`,
+  },
+  academic: {
+    title: 'Academic',
+    description: (entity) => `Academic curriculum details for the ${entity}.`,
+  },
+  database: {
+    title: 'Database',
+    description: (entity) => `Database details for the ${entity}.`,
+  },
+  media: {
+    title: 'Media',
+    description: (entity) => `Media assets for the ${entity}.`,
+  },
 }
 
-// TODO: Academic fields should be made reusable and configurable, including fieldsets and validation rules.
-// TODO: Academic fields should be grouped in some wrapper util that would decide which fields to return based on an array of requested fields object.
+/** Builds a schema's `fieldsets` array from the shared presets above. */
+export const academicGrouping = (
+  entity: AcademicEntityType,
+  keys: Array<GroupingKeys> = [...GROUPING_KEYS]
+) => {
+  // TODO: Maybe add customization in the future, along with overrides
+  const grouping = keys.map((key) => ({
+    name: key,
+    title: GROUPING_PRESETS[key].title,
+    description: GROUPING_PRESETS[key].description(entity),
+  }))
+  return { fieldsets: grouping, groups: grouping }
+}
+
+// ---------------------------------------------------------------------------
+// Preview — shared "DB: <id>" / "Not linked to database" pattern used by
+// every academic document. Pass `media` for schemas that show a picture
+// (e.g. professor).
+// ---------------------------------------------------------------------------
+
+export const academicPreview = ({ media }: { media?: string } = {}) => ({
+  select: {
+    title: 'name',
+    subtitle: 'dbId',
+    ...getAttribute(Boolean(media), 'media', media),
+  },
+  prepare: ({
+    title,
+    subtitle,
+    media: mediaValue,
+  }: {
+    title?: string
+    subtitle?: string
+    media?: unknown
+  }) => ({
+    title,
+    ...getAttribute(Boolean(mediaValue), 'media', mediaValue),
+    subtitle: subtitle ? `DB: ${subtitle}` : 'Not linked to database',
+  }),
+})
+
+// ---------------------------------------------------------------------------
+// Individual field builders. Each knows its own sensible defaults; callers
+// only override what actually differs for their schema.
+// ---------------------------------------------------------------------------
+
 export const academicNameField = ({
-  fieldset,
-}: AcademicFieldOptions = {}): FieldDefinition =>
+  grouping = 'information',
+}: AcademicFieldOptions): FieldDefinition =>
   defineField({
     name: 'name',
     title: 'Name',
     type: 'string',
     validation: (rule) => rule.required(),
-    fieldset,
+    fieldset: grouping,
+    group: grouping,
+  })
+
+export const academicTitleField = ({
+  grouping = 'information',
+}: AcademicFieldOptions): FieldDefinition =>
+  defineField({
+    name: 'title',
+    title: 'Academic Title',
+    type: 'string',
+    fieldset: grouping,
+    group: grouping,
   })
 
 export const academicDescriptionField = ({
-  fieldset,
+  grouping = 'information',
   required = false,
-}: AcademicFieldOptions & { required?: boolean } = {}): FieldDefinition =>
+}: AcademicFieldOptions & { required?: boolean }): FieldDefinition =>
   defineField({
     name: 'description',
     title: 'Description',
     type: 'richTextLite',
-    fieldset,
+    fieldset: grouping,
+    group: grouping,
     validation: required
       ? (rule) => validationRules.descriptionValidation(rule)
       : undefined,
   })
 
 export const databaseIdField = ({
-  fieldset,
-}: AcademicFieldOptions = {}): FieldDefinition =>
+  grouping = 'database',
+}: AcademicFieldOptions): FieldDefinition =>
   defineField({
     name: 'dbId',
     title: 'Database ID',
@@ -48,63 +138,284 @@ export const databaseIdField = ({
       rule.custom((value: string | undefined) =>
         value ? true : 'Run the "Create in Database" action before publishing.'
       ),
-    fieldset,
+    fieldset: grouping,
+    group: grouping,
   })
 
-type AcademicSlugOptions = {
-  hierarchy?: 'faculty' | 'study' | 'subject'
+export const academicImageField = (
+  name: 'logo' | 'picture',
+  { grouping = 'media' }: AcademicFieldOptions
+): FieldDefinition =>
+  defineField({
+    name,
+    title: name === 'logo' ? 'Logo' : 'Picture',
+    type: 'image',
+    options: { hotspot: true },
+    fieldset: grouping,
+    group: grouping,
+  })
+
+export const academicKeywordsField = ({
+  grouping = 'information',
+  required = false,
+}: AcademicFieldOptions & { required?: boolean }): FieldDefinition =>
+  defineField({
+    name: 'keywords',
+    title: 'Keywords',
+    description: 'Keywords or tags associated with the subject.',
+    type: 'array',
+    of: [{ type: 'string' }],
+    fieldset: grouping,
+    group: grouping,
+    validation: required ? (rule) => rule.required() : undefined,
+  })
+
+type AcademicBioOptions = AcademicFieldOptions & {
+  type?: 'string' | 'richTextLite'
+  required?: boolean
 }
 
-const hierarchyQuery = {
-  faculty: '*[_id == $id][0]{name, university-> {name}}',
-  study: '*[_id == $id][0]{name, faculty-> {name, university-> {name}}}',
-  subject:
-    '*[_id == $id][0]{name, study-> {name, faculty-> {name, university-> {name}}}}',
-} as const
-
-const hierarchySlugSource =
-  (hierarchy: keyof typeof hierarchyQuery) =>
-  async (document: SanityDocument, context: SlugSourceContext) => {
-    const reference = document[
-      hierarchy === 'faculty' ? 'university' : 'study'
-    ] as { _ref?: string } | undefined
-    if (!reference?._ref) return String(document.name ?? '')
-
-    const parent = await context
-      .getClient({ apiVersion: '2024-01-01' })
-      .fetch(hierarchyQuery[hierarchy], { id: reference._ref })
-
-    let parts: Array<string | undefined>
-    if (hierarchy === 'faculty') {
-      parts = [parent?.university?.name, document.name]
-    } else if (hierarchy === 'study') {
-      parts = [
-        parent?.faculty?.university?.name,
-        parent?.faculty?.name,
-        document.name,
-      ]
-    } else {
-      parts = [
-        parent?.study?.faculty?.university?.name,
-        parent?.study?.faculty?.name,
-        parent?.study?.name,
-        document.name,
-      ]
-    }
-
-    return parts.filter(Boolean).map(sanitizeSlug).filter(Boolean).join('-')
+export const academicBioField = (
+  {
+    grouping = 'information',
+    type = 'richTextLite',
+    required = false,
+  }: AcademicBioOptions = {
+    type: 'richTextLite',
+    required: false,
   }
+): FieldDefinition => {
+  const title = type === 'string' ? 'Short Biography' : 'Bio'
+
+  // 'string' goes through defineField's dedicated string overload, which
+  // demands a StringRule-typed validator; richTextLite has no such overload,
+  // so the generic Rule-typed validationRules.isRequired fits it directly.
+  return type === 'string' // TODO: Maybe remove bio
+    ? defineField({
+        name: 'bio',
+        title,
+        type: 'string',
+        fieldset: grouping,
+        group: grouping,
+        validation: required ? stringValidation : undefined,
+      })
+    : defineField({
+        name: 'bio',
+        title,
+        type: 'richTextLite',
+        fieldset: grouping,
+        group: grouping,
+        validation: required ? validationRules.isRequired : undefined,
+      })
+}
+
+export const academicTelephoneField = ({
+  grouping = 'contactInfo',
+  required = false,
+}: AcademicFieldOptions & { required?: boolean }): FieldDefinition => {
+  return defineField({
+    name: 'telephone',
+    title: 'Telephone',
+    type: 'string',
+    fieldset: grouping,
+    group: grouping,
+    validation: required ? stringValidation : undefined,
+  })
+}
+
+export const academicEmailField = ({
+  grouping = 'contactInfo',
+  required = false,
+}: AcademicFieldOptions & { required?: boolean }): FieldDefinition =>
+  defineField({
+    name: 'email',
+    title: 'Email',
+    type: 'string',
+    fieldset: grouping,
+    group: grouping,
+    validation: required
+      ? validationRules.emailValidation
+      : validationRules.optionalEmailValidation,
+  })
+
+type AcademicLinkFieldOptions = Omit<
+  CustomLinkFieldOptions,
+  'name' | 'title'
+> & {
+  entity?: AcademicEntityType
+}
+
+export const academicWebsiteField = ({
+  entity,
+  grouping = 'contactInfo',
+  ...rest
+}: AcademicLinkFieldOptions): FieldDefinition =>
+  customLinkField({
+    name: 'website',
+    title: 'Website',
+    description: `Enter the ${entity} website URL.`,
+    grouping,
+    ...rest,
+  })
+
+export const academicStreetAddressField = ({
+  entity,
+  grouping = 'contactInfo',
+  ...rest
+}: AcademicLinkFieldOptions): FieldDefinition =>
+  customLinkField({
+    name: 'streetAddress',
+    title: 'Street Address Link',
+    description: `Enter a map URL or an internal path for this ${entity} address.`,
+    grouping,
+    ...rest,
+  })
+
+export const academicOfficeLocationField = ({
+  entity,
+  grouping = 'contactInfo',
+  ...rest
+}: AcademicLinkFieldOptions): FieldDefinition =>
+  customLinkField({
+    name: 'officeLocation',
+    title: 'Office Location Address',
+    description: `Enter a map URL or an internal path for this ${entity} office location.`,
+    grouping,
+    ...rest,
+  })
 
 export const academicSlugField = ({
-  hierarchy,
-}: AcademicSlugOptions = {}): FieldDefinition =>
-  defineField({
+  grouping = 'information',
+  ...rest
+}: AcademicLinkFieldOptions): FieldDefinition => {
+  return defineField({
     name: 'slug',
     title: 'URL Slug',
+    description:
+      'URL-friendly version of the name. Click generate to create it automatically.',
     type: 'slug',
     options: {
-      source: hierarchy ? hierarchySlugSource(hierarchy) : 'name',
+      source: 'name',
       slugify: (value) => sanitizeSlug(value),
     },
     validation: (rule) => rule.required(),
+    fieldset: grouping,
+    group: grouping,
+    ...rest,
   })
+}
+
+// ---------------------------------------------------------------------------
+// Wrapper — the entry point most schemas should reach for. Pass the entity
+// name (used to auto-fill copy like "Enter the <entity> website URL."), the
+// field keys you want in the order they should render, a shared fieldset for
+// the group, and per-field overrides only where a schema differs from the
+// defaults (required, wording, bio type, etc.).
+// ---------------------------------------------------------------------------
+
+export type AcademicFieldKey =
+  | 'name'
+  | 'title'
+  | 'description'
+  | 'keywords'
+  | 'bio'
+  | 'logo'
+  | 'picture'
+  | 'telephone'
+  | 'email'
+  | 'website'
+  | 'streetAddress'
+  | 'office'
+  | 'slug'
+  | 'dbId'
+
+export type AcademicFieldsOverrides = Partial<{
+  name: AcademicFieldOptions
+  title: AcademicFieldOptions
+  description: AcademicFieldOptions & { required?: boolean }
+  keywords: AcademicFieldOptions
+  bio: AcademicBioOptions
+  logo: AcademicFieldOptions
+  picture: AcademicFieldOptions
+  telephone: AcademicFieldOptions & { required?: boolean }
+  email: AcademicFieldOptions & { required?: boolean }
+  website: AcademicLinkFieldOptions
+  streetAddress: AcademicLinkFieldOptions
+  office: AcademicLinkFieldOptions
+  dbId: AcademicFieldOptions
+}>
+
+type AcademicFieldContext = {
+  entity: AcademicEntityType
+  grouping?: GroupingKeys
+  overrides: AcademicFieldsOverrides
+}
+
+const FIELD_BUILDERS: Record<
+  AcademicFieldKey,
+  (context: AcademicFieldContext) => FieldDefinition
+> = {
+  slug: ({ grouping }) => academicSlugField({ grouping }),
+  name: ({ grouping, overrides }) =>
+    academicNameField({ grouping, ...overrides.name }),
+  title: ({ grouping, overrides }) =>
+    academicTitleField({ grouping, ...overrides.title }),
+  description: ({ grouping, overrides }) =>
+    academicDescriptionField({
+      grouping,
+      ...overrides.description,
+    }),
+  keywords: ({ grouping, overrides }) =>
+    academicKeywordsField({ grouping, ...overrides.keywords }),
+  bio: ({ grouping, overrides }) =>
+    academicBioField({ grouping, ...overrides.bio }),
+  logo: ({ grouping, overrides }) =>
+    academicImageField('logo', {
+      grouping,
+      ...overrides.logo,
+    }),
+  picture: ({ grouping, overrides }) =>
+    academicImageField('picture', {
+      grouping,
+      ...overrides.picture,
+    }),
+  telephone: ({ grouping, overrides }) =>
+    academicTelephoneField({
+      grouping,
+      ...overrides.telephone,
+    }),
+  email: ({ grouping, overrides }) =>
+    academicEmailField({ grouping, ...overrides.email }),
+  website: ({ entity, grouping, overrides }) =>
+    academicWebsiteField({ entity, grouping, ...overrides.website }),
+  streetAddress: ({ entity, grouping, overrides }) =>
+    academicStreetAddressField({
+      entity,
+      grouping,
+      ...overrides.streetAddress,
+    }),
+  office: ({ entity, grouping, overrides }) =>
+    academicOfficeLocationField({ entity, grouping, ...overrides.office }),
+  dbId: ({ grouping, overrides }) =>
+    databaseIdField({ grouping, ...overrides.dbId }),
+}
+
+export function academicFields(
+  entity: AcademicEntityType,
+  keys: Array<AcademicFieldKey>,
+  {
+    grouping,
+    overrides = {},
+  }: {
+    grouping?: GroupingKeys
+    overrides?: AcademicFieldsOverrides
+  } = {}
+): Array<FieldDefinition> {
+  return keys.map((key) =>
+    FIELD_BUILDERS[key]({
+      entity,
+      grouping,
+      overrides,
+    })
+  )
+}

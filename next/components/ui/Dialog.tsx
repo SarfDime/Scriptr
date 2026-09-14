@@ -1,24 +1,23 @@
 'use client'
 
-import type { DetailedHTMLProps, DialogHTMLAttributes } from 'react'
-import { useEffect, useRef, useState } from 'react'
+import type { DetailedHTMLProps, DialogHTMLAttributes, ReactNode } from 'react'
+import { useEffect, useEffectEvent, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useBodyScrollLock } from '@/hooks/useBodyScroll'
-import { Z_INDEX } from '@/styles/style'
+import { cn, getPlacementClasses } from '@/lib/common-utils'
 import type { PortableTextType } from '@/types/components/PortableText.types'
-import { cn, getPlacementClasses } from '../../lib/common-utils'
+import { Z_INDEX } from '../../styles/style'
 import type { ComponentPlacement } from '../../types/component.types'
-import type { BoxProps } from '../common/Box'
-import { Box } from '../common/Box'
-import type { ButtonProps } from '../common/Button'
-import { Button } from '../common/Button'
+import { Box, type BoxProps } from '../common/Box'
+import { Button, type ButtonProps } from '../common/Button'
 import type { TitleProps } from '../typography/Title'
 import { Title } from '../typography/Title'
 import type { CloseButtonProps } from './CloseButton'
 import { CloseButton } from './CloseButton'
 
 export type DialogProps = {
-  title?: PortableTextType
-  children: React.ReactNode
+  title?: PortableTextType | ReactNode
+  children: ReactNode
   placement?: ComponentPlacement['placement']
   triggerButtonProps?: ButtonProps
   headerProps?: Omit<BoxProps, 'children'>
@@ -90,17 +89,26 @@ export function Dialog({
 }: DialogProps) {
   const [showBackdrop, setShowBackdrop] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [internalDialogOpen, setInternalDialogOpen] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
 
-  useBodyScrollLock({ skipCheck, isLocked: dialogRef?.current?.open ?? false })
+  useBodyScrollLock({ skipCheck, isLocked: internalDialogOpen ?? false })
+
+  const setMountedEffect = useEffectEvent((isMounted: boolean) => {
+    setMounted(isMounted)
+  })
+
+  const setRefEffect = useEffectEvent((ref: HTMLDialogElement) => {
+    setRef?.(ref)
+  })
 
   useEffect(() => {
-    setMounted(true)
+    setMountedEffect(true)
   }, [])
 
   useEffect(() => {
     if (setRef && dialogRef?.current) {
-      setRef(dialogRef?.current)
+      setRefEffect(dialogRef?.current)
     }
   }, [setRef])
 
@@ -120,15 +128,32 @@ export function Dialog({
     onToggle?.()
   }
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <No need for those>
+  const handleOpenEffect = useEffectEvent(() => {
+    handleOpen()
+  })
+
+  const handleCloseEffect = useEffectEvent(() => {
+    handleClose()
+  })
+
+  const handleInternalOpenChange = useEffectEvent((open: boolean) =>
+    setInternalDialogOpen(open ?? false)
+  )
+
   useEffect(() => {
     if (setRef || !hideTrigger) return
     if (isOpen) {
-      handleOpen()
+      handleOpenEffect()
     } else {
-      handleClose()
+      handleCloseEffect()
     }
-  }, [isOpen, setRef])
+  }, [hideTrigger, isOpen, setRef])
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <Needed for internalDialogOpen prop changes>
+  useEffect(() => {
+    if (!dialogRef?.current) return
+    handleInternalOpenChange(dialogRef?.current?.open ?? false)
+  }, [dialogRef?.current, dialogRef?.current?.open])
 
   const handleClickOutside = (e: React.MouseEvent<HTMLDialogElement>) => {
     if (!closeOnOutsideClick) return
@@ -159,57 +184,63 @@ export function Dialog({
         </Button>
       )}
 
-      {mounted && showBackdrop && (
-        <div
-          className={cn(
-            'pointer-events-none fixed inset-0 bg-background-1000/50 backdrop-blur-xs starting:backdrop-blur-[0] transition-[backdrop-filter] duration-350',
-            Z_INDEX.DIALOG_BACKDROP
-          )}
-        />
-      )}
+      {mounted &&
+        createPortal(
+          <>
+            {showBackdrop && (
+              <div
+                className={cn(
+                  'pointer-events-none fixed inset-0 bg-background-1000/50 backdrop-blur-xs starting:backdrop-blur-[0] transition-[backdrop-filter] duration-350',
+                  Z_INDEX.DIALOG_BACKDROP
+                )}
+              />
+            )}
 
-      {/* Dialog */}
-      {/* TODO: Add onKeyDown improvements for accessibility */}
-      <dialog
-        ref={dialogRef}
-        // make the dialog focusable so we can programmatically focus it and
-        // prevent the browser from auto-focusing the first focusable child
-        tabIndex={-1}
-        aria-labelledby='dialog-title'
-        {...dialogProps}
-        onClick={handleClickOutside}
-        onClose={handleClose}
-        onToggle={handleToggle}
-        onCancel={handleCancel}
-        onKeyDown={handleKeyDown}
-        className={cn(
-          'dialog',
-          'fixed top-[10%] w-full md:w-fit md:min-w-2xl',
-          'overflow-y-hidden',
-          getPlacementClasses({ placement, offsetX, offsetY }),
-          dialogProps?.className
-        )}
-      >
-        {/* Header */}
-        <Box {...headerProps}>
-          <Title id='dialog-title' as='h2' {...titleProps}>
-            {title}
-          </Title>
-          {!hideCloseButton && (
-            <CloseButton
-              onClick={handleClose}
-              aria-label='Close dialog'
-              {...closeButtonProps}
+            {/* Dialog */}
+            {/* TODO: Add onKeyDown improvements for accessibility */}
+            <dialog
+              ref={dialogRef}
+              // make the dialog focusable so we can programmatically focus it and
+              // prevent the browser from auto-focusing the first focusable child
+              tabIndex={-1}
+              aria-labelledby='dialog-title'
+              {...dialogProps}
+              onClick={handleClickOutside}
+              onClose={handleClose}
+              onToggle={handleToggle}
+              onCancel={handleCancel}
+              onKeyDown={handleKeyDown}
               className={cn(
-                'text-gray-500 hover:bg-brand-100 hover:text-gray-800',
-                closeButtonProps?.className
+                'dialog',
+                'fixed top-[10%] w-full md:w-fit md:min-w-2xl',
+                'overflow-y-hidden',
+                getPlacementClasses({ placement, offsetX, offsetY }),
+                dialogProps?.className
               )}
-            />
-          )}
-        </Box>
-        {/* Content */}
-        {children}
-      </dialog>
+            >
+              {/* Header */}
+              <Box {...headerProps}>
+                <Title id='dialog-title' as='h2' {...titleProps}>
+                  {title}
+                </Title>
+                {!hideCloseButton && (
+                  <CloseButton
+                    onClick={handleClose}
+                    aria-label='Close dialog'
+                    {...closeButtonProps}
+                    className={cn(
+                      'text-gray-500 hover:bg-brand-100 hover:text-gray-800',
+                      closeButtonProps?.className
+                    )}
+                  />
+                )}
+              </Box>
+              {/* Content */}
+              {children}
+            </dialog>
+          </>,
+          document.body
+        )}
     </>
   )
 }

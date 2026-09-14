@@ -1,17 +1,26 @@
 # SANITY
-- [ ] Make academic fields reusable and configurable, including fieldsets and validation rules.
-- [ ] Group academic fields in a wrapper util that decides which fields to return based on an array of requested fields object.
-- [ ] Make preview for academic fields reusable and configurable, similar to academic[Field]Field.
-- [ ] Make fieldsets for academic fields reusable and configurable.
-- [ ] Make validation rules for academic fields reusable and configurable.
-- [ ] Fix up validation rules file and segment it into reusable and configurable parts.
-- [ ] Naming scheme in sanity should be standardized and consistent across documents using kebab-case except for components which always use PascalCase.
-- [ ] Clean up structure tool, add different icons for various document types
 - [ ] Remove unused schemas
 - [ ] Remove any unused utils and constants
+- [ ] Encrypt internal secret and use same salt across environments with env variables
 
 # NEXT 
 - [ ] Do all todos across project
+- [ ] Add image sizes across project
+- [ ] https://tailwindcss.com/docs/transition-behavior for handling transitions like notification shade pop up
 
 # NEXT and SANITY
 - [ ] Decide how to handle page data in the structure tool
+- [ ] Check out cache components and use cache directive for ppr
+- [ ] Nest academic routes except for professor
+
+# HONO
+- [ ] file-ops.ts — one thing worth a decision, not a fix
+GET /get-file/* has no authMiddleware and does no check that the requested key corresponds to an actual script_files.file_url row — it'll happily presign a URL for any key string handed to it, including one for a script/file that's since been deleted from the DB. In practice the UUID-based keys make guessing impractical, so this may be an accepted tradeoff given "download and preview remain accessible to guests" — but it does mean a deleted script's file stays fetchable via R2 forever unless something also deletes the R2 object on script deletion (nothing in scripts.ts's DELETE /:id does that today). I'd rather flag this than silently add auth, since guest access here might be load-bearing for the public preview/download flow — do you want key-to-DB validation added, R2 cleanup added on script delete, or is this intentional as-is?
+- [ ] Decide on handling of R2 objects for deleted scripts in hono/file-ops.ts
+
+## R2 
+- [ ] Allow uploading multiple files, in CF upload files under the subject slug so faculty/study/userid/files go here
+- [ ] Cloudflare buckets will be university scoped so each university will have it's own bucket
+
+# GENERAL
+- [ ] Add more biome rules that are not currently covered in the project, mostly nursery rules.

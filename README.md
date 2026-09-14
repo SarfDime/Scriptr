@@ -82,6 +82,8 @@ Studio deployed at https://scriptr.sanity.studio
 
 ## Documentation
 
+- [Architecture & requirements](ARCHITECTURE.md)
+- [Progress & todos](PROGRESS.md)
 - [API setup](hono/README.md)
 - [API reference](hono/src/routes/API_DOCUMENTATION.md)
 - [API testing guide](hono/src/routes/API_TESTING_GUIDE.md)

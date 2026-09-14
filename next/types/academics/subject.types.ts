@@ -18,6 +18,7 @@ export type MinimalSubject = MinimalEntity & {
   professors?: Array<Pick<MinimalProfessor, '_id' | 'name' | 'title'>>
 } & SubjectBasicInfo
 
+// TODO: use SubjectDetailQueryResult for types here since they are 1 to 1 with queries same for other types like this
 export type SubjectDetail = Omit<MinimalSubject, 'professors' | 'study'> & {
   _type: 'subject'
   description?: PortableTextType

@@ -1,13 +1,13 @@
 import MasterDetailIcon from '@sanity/icons/MasterDetail'
 import { defineType } from 'sanity'
 import {
-  academicDescriptionField,
-  academicNameField,
-  academicSlugField,
-  databaseIdField,
+  academicFields,
+  academicGrouping,
+  academicPreview,
 } from '../common/academicFields'
-import { customLinkField } from '../common/customLink'
 import { validationRules } from '../validation'
+
+const ENTITY = 'faculty'
 
 export const Faculty = defineType({
   // Editorial record for a faculty; the runtime identity lives in Postgres, linked via dbId.
@@ -15,60 +15,19 @@ export const Faculty = defineType({
   title: 'Faculty',
   type: 'document',
   icon: MasterDetailIcon,
-  // TODO: Preview should also be preset in a reusable configurable util like academic[Field]Field
-
-  preview: {
-    select: { title: 'name', subtitle: 'dbId' },
-    prepare: ({ title, subtitle }) => ({
-      title,
-      subtitle: subtitle ? `DB: ${subtitle}` : 'Not linked to database',
-    }),
-  },
-  fieldsets: [
-    // TODO: Fieldsets should also be preset in a reusable configurable util like academic[Field]Field
-    {
-      name: 'information',
-      title: 'Information',
-      description: 'General information for the faculty.',
-    },
-    {
-      name: 'contactInfo',
-      title: 'Contact Information',
-      description: 'Contact details for the faculty.',
-    },
-    {
-      name: 'administration',
-      title: 'Administration',
-      description: 'Administrative details for the faculty.',
-    },
-    {
-      name: 'database',
-      title: 'Database',
-      description: 'Database details for the faculty.',
-    },
-  ],
+  ...academicPreview(),
+  ...academicGrouping(ENTITY),
   fields: [
-    academicNameField({ fieldset: 'information' }),
-    academicDescriptionField({ fieldset: 'information', required: true }),
-    academicSlugField({ hierarchy: 'faculty' }),
-    // TODO: More of these should be made into reusable fields,
-    // for example picture, bio, email, telephone, student count,
-    // and the fieldset should be already set, only pass to override,
-    // instead of redefining each time.
-    {
-      name: 'bio',
-      title: 'Short Biography',
-      type: 'string',
-      validation: validationRules.isRequired,
-      fieldset: 'information',
-    },
-    {
-      name: 'picture',
-      title: 'Picture',
-      type: 'image',
-      options: { hotspot: true },
-      fieldset: 'information',
-    },
+    ...academicFields(
+      ENTITY,
+      ['name', 'slug', 'description', 'bio', 'logo', 'picture'],
+      {
+        overrides: {
+          description: { required: true },
+          bio: { required: true, type: 'string' },
+        },
+      }
+    ),
     {
       name: 'secretary',
       title: 'Secretary',
@@ -108,33 +67,16 @@ export const Faculty = defineType({
       ],
       fieldset: 'administration',
     },
-    customLinkField({
-      name: 'streetAddress',
-      title: 'Street Address Link',
-      description:
-        'Enter a map URL or an internal path for this faculty address.',
-      fieldset: 'contactInfo',
-    }),
-    {
-      name: 'telephone',
-      title: 'Telephone',
-      type: 'string',
-      validation: validationRules.isRequired,
-      fieldset: 'contactInfo',
-    },
-    {
-      name: 'email',
-      title: 'Email',
-      type: 'string',
-      validation: validationRules.emailValidation,
-      fieldset: 'contactInfo',
-    },
-    customLinkField({
-      name: 'website',
-      title: 'Website',
-      description: 'Enter the faculty website URL.',
-      fieldset: 'contactInfo',
-    }),
+    ...academicFields(
+      ENTITY,
+      ['streetAddress', 'telephone', 'email', 'website'],
+      {
+        overrides: {
+          telephone: { required: true },
+          email: { required: true },
+        },
+      }
+    ),
     {
       name: 'university',
       title: 'University',
@@ -145,6 +87,6 @@ export const Faculty = defineType({
       validation: validationRules.isRequired,
       fieldset: 'database',
     },
-    databaseIdField({ fieldset: 'database' }),
+    ...academicFields(ENTITY, ['dbId']),
   ],
 })

@@ -1,12 +1,13 @@
 import { defineField, type FieldDefinition } from 'sanity'
 import { CustomLinkInput } from '../../components/CustomLinkInput'
+import type { GroupingKeys } from '../../types/schema-prop.types'
 import { validationRules } from '../validation'
 
-type CustomLinkFieldOptions = {
+export type CustomLinkFieldOptions = {
   name?: string
   title?: string
   description?: string
-  fieldset?: string
+  grouping?: GroupingKeys
   required?: boolean
 }
 
@@ -14,7 +15,7 @@ export const customLinkField = ({
   name = 'customLink',
   title = 'Custom link',
   description = 'Enter an internal path or an external HTTPS URL.',
-  fieldset,
+  grouping,
   required = true,
 }: CustomLinkFieldOptions = {}): FieldDefinition =>
   defineField({
@@ -22,7 +23,8 @@ export const customLinkField = ({
     title,
     description,
     type: 'string',
-    fieldset,
+    fieldset: grouping,
+    group: grouping,
     components: { field: CustomLinkInput },
     validation: required ? validationRules.urlValidation : undefined,
   })

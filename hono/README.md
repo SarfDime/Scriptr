@@ -1,8 +1,9 @@
 # Scriptr API
 
 The Hono service is Scriptr's backend. It provides authentication, profiles,
-catalog data, scripts, comments, flags, votes, favorites, profile subjects,
-and Cloudflare R2 file operations.
+academic catalog data, scripts, comments, flags, votes, ratings, favorites,
+profile selections (faculties/studies/subjects), and Cloudflare R2 file
+operations.
 
 ## Stack
 
@@ -38,6 +39,10 @@ R2_PUBLIC_URL=your_public_r2_domain
 PORT=8787
 ```
 
+Universities can override `R2_BUCKET` per-university via
+`universities.r2_bucket_id` — see [File Uploads](src/routes/API_DOCUMENTATION.md#file-uploads).
+`R2_BUCKET` remains the fallback for any university without one set.
+
 Never commit `.env` files or storage credentials.
 
 ## Commands
@@ -52,8 +57,11 @@ Formatting is run from the repository root and applies Biome fixes automatically
 
 ## API Base Path
 
-All routes are mounted below `/api`:
+The app is built with `.basePath('/api')`, so **every** route — including
+the root health check (`GET /`, which now actually lives at `GET /api/`) —
+is mounted below `/api`:
 
+- `/api/` (health check)
 - `/api/auth`
 - `/api/file-ops`
 - `/api/scripts`
@@ -63,21 +71,30 @@ All routes are mounted below `/api`:
 - `/api/favorites`
 - `/api/profiles`
 - `/api/profile-subjects`
+- `/api/profile-faculties`
+- `/api/profile-studies`
 - `/api/universities`
 - `/api/faculties`
+- `/api/studies`
 - `/api/professors`
 - `/api/subjects`
+- `/api/ratings`
 - `/api/internal`
 
 The complete endpoint, authentication, authorization, validation, and error reference is in [API_DOCUMENTATION.md](src/routes/API_DOCUMENTATION.md).
 
 ## Security Notes
 
-- Public catalog routes (`/api/universities`, `/api/faculties`, `/api/professors`, `/api/subjects`) are read-only.
+- Academic catalog routes (`/api/universities`, `/api/faculties`, `/api/studies`, `/api/professors`, `/api/subjects`) are **not** public — every request, reads included, requires the `x-internal-secret` header matching `INTERNAL_API_SECRET`. RLS closes these tables to every Supabase role, admin included; there is no session-based access path at all.
+- Catalog writes and role changes are only exposed on `/api/internal` and also require `x-internal-secret`, including universities' mutation routes.
+- Rating types (`/api/ratings/types`) are the one lookup table that's actually public to read; only mutation is admin-gated, via `is_admin()` RLS on the admin's own session — no internal secret involved there.
 - User-specific write routes require a valid Supabase session cookie.
-- Catalog writes (universities, faculties, professors, subjects, and role changes) are only exposed on `/api/internal` and require the `x-internal-secret` header to match `INTERNAL_API_SECRET`.
 - Role updates are never exposed on the public profile routes.
-- Moderator access is only used for moderator-only reads and for own-flag mutation checks.
+- Moderators currently have zero elevated access anywhere in this API — the role exists in the schema but isn't checked by any policy or route yet.
 - Route parameters are validated before database operations.
-- Uploads are restricted to the file types documented in the API reference.
+- Uploads are restricted to the file types documented in the API reference, and scoped per-university to a distinct R2 bucket when `r2_bucket_id` is set.
 - R2 and Supabase credentials must be supplied through environment variables.
+
+## Route Files: Build It, Then Mount It
+
+Every route file (`src/routes/*.ts`) needs an explicit `app.route('/path', router)`

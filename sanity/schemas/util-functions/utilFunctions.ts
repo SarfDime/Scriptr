@@ -66,16 +66,14 @@ export const flattenFirstRichTextBlock = (
 export const sanitizeSlug = (slug?: string) => {
   if (!slug) return ''
 
-  const sanitizedInput = slug?.replaceAll(/[^a-zA-Z0-9\s]/g, '')
-
-  const sanitizedSlug = sanitizedInput
-    ?.toLowerCase()
-    ?.replaceAll(/\s+/g, '-')
-    ?.slice(0, 60)
-
-  return sanitizedSlug?.endsWith('-')
-    ? sanitizedSlug?.slice(0, -1)
-    : sanitizedSlug
+  return slug
+    .replaceAll(/[-_]+/g, ' ') // treat hyphens/underscores as word separators
+    .replaceAll(/[^a-zA-Z0-9\s]/g, '') // strip everything else that isn't alphanumeric or space
+    .toLowerCase()
+    .trim()
+    .replaceAll(/\s+/g, '-') // collapse any whitespace runs into a single hyphen
+    .slice(0, 60)
+    .replace(/-$/, '') // strip a trailing hyphen left by the slice
 }
 
 /**

@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/Card'
 
 export default function AuthPage() {
   return (
-    <PageLayout contentClassName='flex items-center justify-center min-h-[60vh]'>
+    <PageLayout className='flex items-center justify-center min-h-[60vh]'>
       <Card className='w-full max-w-md p-6 ui-stack gap-4'>
         <Card.Header>
           <Title as='h1' className='ui-title font-bold text-center'>

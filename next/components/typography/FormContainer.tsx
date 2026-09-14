@@ -4,7 +4,7 @@ type FormContainerProps = {
   children?: React.ReactNode
   formName?: string
   formMethod?: string
-  onSubmitProp: (e: React.FormEvent<HTMLFormElement>) => void
+  onSubmitProp: (e: React.FormEvent<HTMLFormElement>) => void /// TODO: fix type
   formRef?: React.RefObject<HTMLFormElement>
 } & AdditionalComponentAttributes
 

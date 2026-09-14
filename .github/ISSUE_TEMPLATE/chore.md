@@ -6,8 +6,6 @@ labels: chore
 assignees: ""
 ---
 
-Closes #
-
 ## Summary
 
 <!-- Describe the task in one or two sentences. -->

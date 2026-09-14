@@ -44,16 +44,10 @@ const academicSections: Array<ChildSchemaType> = [
  * - Section Types: A list of all section schemas, each as a separate item.
  */
 export const buildAcademicStructure = (build: StructureToolTypes['Build']) =>
-  build
-    .list()
-    .title('Academic')
-    .items([
-      build.divider().title('Academic Sections'),
-      ...academicSections.map((item) => {
-        return build
-          .listItem()
-          .icon(createColoredIcon(item.icon, item.category ?? 'utility'))
-          .title(item.title)
-          .child(build.documentTypeList(item.schemaType))
-      }),
-    ])
+  academicSections.map((item) => {
+    return build
+      .listItem()
+      .icon(createColoredIcon(item.icon, item.category ?? 'utility'))
+      .title(item.title)
+      .child(build.documentTypeList(item.schemaType))
+  })

@@ -2,12 +2,13 @@ import UserIcon from '@sanity/icons/User'
 import type { Rule } from 'sanity'
 import { defineType } from 'sanity'
 import {
-  academicNameField,
-  academicSlugField,
-  databaseIdField,
+  academicFields,
+  academicGrouping,
+  academicPreview,
 } from '../common/academicFields'
-import { customLinkField } from '../common/customLink'
 import { filterExistingReferences } from '../util-functions/schemaFilters'
+
+const ENTITY = 'professor'
 
 export const Professor = defineType({
   // Editorial record for a professor; the runtime identity lives in Postgres, linked via dbId.
@@ -15,81 +16,21 @@ export const Professor = defineType({
   title: 'Professor',
   type: 'document',
   icon: UserIcon,
-  preview: {
-    select: { title: 'name', media: 'picture', subtitle: 'dbId' },
-    prepare: ({ title, media, subtitle }) => ({
-      title,
-      media,
-      subtitle: subtitle ? `DB: ${subtitle}` : 'Not linked to database',
-    }),
-  },
-  fieldsets: [
-    {
-      name: 'information',
-      title: 'Information',
-      description: 'General information for the professor.',
-    },
-    {
-      name: 'contactInfo',
-      title: 'Contact Information',
-      description: 'Contact details for the professor.',
-    },
-    {
-      name: 'database',
-      title: 'Database',
-      description: 'Database details for the professor.',
-    },
-  ],
+  ...academicPreview(),
+  ...academicGrouping(ENTITY),
   fields: [
-    academicNameField({ fieldset: 'information' }),
-    academicSlugField(),
-    {
-      name: 'title',
-      title: 'Academic Title',
-      description:
-        'Academic rank or title (e.g., Professor, Associate Professor, Assistant Professor, Lecturer).',
-      type: 'string',
-      fieldset: 'information',
-    },
-    {
-      name: 'picture',
-      title: 'Picture',
-      type: 'image',
-      options: { hotspot: true },
-      fieldset: 'information',
-    },
-    {
-      name: 'bio',
-      title: 'Bio',
-      type: 'richTextLite',
-      fieldset: 'information',
-    },
-    {
-      name: 'office',
-      title: 'Office / Room',
-      description: 'Office or room location for consultations.',
-      type: 'string',
-      fieldset: 'contactInfo',
-    },
-    {
-      name: 'telephone',
-      title: 'Telephone',
-      type: 'string',
-      fieldset: 'contactInfo',
-    },
-    {
-      name: 'email',
-      title: 'Email',
-      type: 'string',
-      validation: (rule: Rule) => rule.email(),
-      fieldset: 'contactInfo',
-    },
-    customLinkField({
-      name: 'website',
-      title: 'Website',
-      description: 'Enter the personal or faculty profile website URL.',
-      fieldset: 'contactInfo',
-    }),
+    ...academicFields(ENTITY, ['name', 'slug', 'title', 'description']),
+    ...academicFields(
+      ENTITY,
+      ['picture', 'bio', 'office', 'telephone', 'email', 'website'],
+      {
+        overrides: {
+          website: {
+            description: 'Enter the personal or faculty profile website URL.',
+          },
+        },
+      }
+    ),
     {
       name: 'faculties',
       title: 'Faculties',
@@ -106,8 +47,9 @@ export const Professor = defineType({
       ],
       description:
         'Assign this professor to one or more faculties in the database.',
-      validation: (rule: Rule) => rule.required().min(1),
+      validation: (rule: Rule) => rule.required().min(1), // TODO: All faculties must be assigned to the same university, so after choosing the first one show only faculties from that university
       fieldset: 'database',
+      group: 'database',
     },
     {
       name: 'studies',
@@ -146,7 +88,8 @@ export const Professor = defineType({
         },
       ],
       fieldset: 'database',
+      group: 'database',
     },
-    databaseIdField({ fieldset: 'database' }),
+    ...academicFields(ENTITY, ['dbId']),
   ],
 })

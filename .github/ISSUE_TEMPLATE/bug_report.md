@@ -6,8 +6,6 @@ labels: bug
 assignees: ""
 ---
 
-Closes #
-
 ## Summary
 
 <!-- Describe the problem in one or two sentences. -->

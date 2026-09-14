@@ -1,8 +1,8 @@
+import { getAttribute } from '@shared/utils/common-utils'
 import type { ReactNode } from 'react'
-
-import { cn, getAttribute } from '../../../lib/common-utils'
-import { Box, type BoxProps } from '../../common/Box'
-import type { TextProps } from '../../typography/Text'
+import { Box, type BoxProps } from '@/components/common/Box'
+import type { TextProps } from '@/components/typography/Text'
+import { cn } from '@/lib/common-utils'
 import type { BadgeProps } from '../Badge'
 import { Skeleton } from '../skeleton/Skeleton'
 import { FieldContent } from './FieldContent'

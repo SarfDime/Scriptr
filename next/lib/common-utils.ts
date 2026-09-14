@@ -2,14 +2,14 @@ import {
   createImageUrlBuilder,
   type SanityImageSource,
 } from '@sanity/image-url'
+import type { PortableTextValue } from '@shared/types/portable-text.types'
+import { generatePath } from '@shared/utils/common-utils'
 import { type ClassValue, clsx } from 'clsx'
 import { toPlainText } from 'next-sanity'
-import path from 'path'
 import { twMerge } from 'tailwind-merge'
 import { isProd } from '@/config/env'
 import type { LinkSelectorProps, Summarizable } from '@/types/common.types'
 import type { PersonSummary } from '@/types/components/Person.types'
-import type { PortableTextType } from '@/types/components/PortableText.types'
 import { client } from '../sanityClient'
 import type { ComponentPlacement } from '../types/component.types'
 
@@ -57,7 +57,11 @@ export const getDraftMode = async (
 }
 
 /** A utility function that takes a localized string or content object and returns a plain text version of it. */
-export const convertToPlainText = ({ value }: { value?: PortableTextType }) => {
+export const convertToPlainText = ({
+  value,
+}: {
+  value?: PortableTextValue
+}) => {
   if (!value) return ''
 
   if (typeof value === 'string') return value
@@ -138,27 +142,6 @@ export function replaceString({
   return str
 }
 
-/**
- * Joins an array of segments into a single path string, with optional leading and ending trailing slash.
- *
- * - `segments` - An array of segments to join into a path.
- * - `leadingSlash` - Whether to include a leading slash in the path. Defaults to false.
- * - `endsWithSlash` - Whether to include a trailing slash at the end of the path. Defaults to false.
- */
-export const generatePath = ({
-  segments,
-  leadingSlash = false,
-  endsWithSlash = false,
-}: {
-  segments: Array<string>
-  leadingSlash?: boolean
-  endsWithSlash?: boolean
-}): string => {
-  const route = segments?.filter(Boolean).join('/')
-
-  return path.join(leadingSlash ? '/' : '', route, endsWithSlash ? '/' : '')
-}
-
 /** Generates a slug based on the provided slug data. */
 export const generateSlug = (slugData: LinkSelectorProps) => {
   if (slugData?.linkType === 'custom') return slugData?.customLink
@@ -167,7 +150,7 @@ export const generateSlug = (slugData: LinkSelectorProps) => {
     segments: [
       slugData?.pageSlug?.current,
       slugData?.sectionSlug?.current && `#${slugData?.sectionSlug?.current}`,
-    ].filter(Boolean),
+    ],
   })
 }
 
@@ -222,19 +205,6 @@ export function getImagePath({
   }
 
   return url.toString()
-}
-
-/**
- * Returns an object with the specified attribute name and value if the condition is true, otherwise returns an empty object.
- */
-export function getAttribute<T extends string, U>(
-  condition: boolean,
-  attributeName: T,
-  attributeValue: U
-) {
-  return condition && attributeValue
-    ? ({ [attributeName]: attributeValue } as { [K in T]: U })
-    : undefined
 }
 
 /** Function that converts date to client locale */

@@ -43,3 +43,6 @@ Thumbs.db
 *.pdf
 *.doc
 *.docx
+
+# API TODO: Ignore generated API route files if repo is ever public
+# shared/config/api-routes.ts

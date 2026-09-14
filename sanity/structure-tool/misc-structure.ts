@@ -23,7 +23,7 @@ const contentSchemas: Array<ChildSchemaType> = [
 
 // People & Social
 const peopleSchemas: Array<ChildSchemaType> = [
-  { title: 'Person', schemaType: 'person', category: 'people', icon: UserIcon },
+  { title: 'Person', schemaType: 'person', category: 'people', icon: UserIcon }, // TODO: Sort people in the tool based on which academic field they belong to
 ]
 
 /** Custom structure tool for miscellaneous schema types.

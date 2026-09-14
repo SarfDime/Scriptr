@@ -10,19 +10,6 @@ type TableName =
   | 'profile_studies'
   | 'professor_studies'
 
-const internal = new Hono<HonoEnv>()
-
-internal.use('*', async (c, next) => {
-  const secret = c.req.header('x-internal-secret')
-  const expected = c.env.INTERNAL_API_SECRET
-
-  if (!expected || !secret || secret !== expected) {
-    return c.json({ error: 'Forbidden' }, 403)
-  }
-
-  return next()
-})
-
 type InternalSupabase = ReturnType<typeof createInternalSupabaseClient>
 
 async function syncProfessorFacultyAssignments(
@@ -195,7 +182,27 @@ async function findBlockingDependents(
     .map(({ label }) => label)
 }
 
-/** Update a user's role (student/moderator) */
+/** Create a professor, optionally assigning it to faculties, or return the
+ * existing one already linked to this Sanity document */
+
+/** Create a subject, optionally assigning professors, or return the existing
+ * one already linked to this Sanity document */
+
+const internal = new Hono<HonoEnv>()
+
+/** Internal API authentication middleware */
+internal.use('*', async (c, next) => {
+  const secret = c.req.header('x-internal-secret')
+  const expected = c.env.INTERNAL_API_SECRET
+
+  if (!expected || !secret || secret !== expected) {
+    return c.json({ error: 'Forbidden' }, 403)
+  }
+
+  return next()
+})
+
+/** Update a user's role */
 internal.patch('/profiles/:id/role', async (c) => {
   const targetUserId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
@@ -203,7 +210,7 @@ internal.patch('/profiles/:id/role', async (c) => {
 
   if (!isUserRole(role)) {
     return c.json(
-      { error: 'Role must be either "student" or "moderator"' },
+      { error: 'Role must be "student", "moderator", or "admin"' },
       400
     )
   }
@@ -569,6 +576,16 @@ internal.delete('/studies/:id', async (c) => {
   const supabase = createInternalSupabaseClient(c)
   const blockers = await findBlockingDependents(supabase, studyId, [
     { table: 'subjects', column: 'study_id', label: 'subjects' },
+    {
+      table: 'professor_studies',
+      column: 'study_id',
+      label: 'professor assignments',
+    },
+    {
+      table: 'profile_studies',
+      column: 'study_id',
+      label: 'user study enrollments',
+    },
   ])
 
   if (blockers.length > 0) {
@@ -583,7 +600,7 @@ internal.delete('/studies/:id', async (c) => {
   if (error) return c.json({ error: error.message }, 500)
   return c.json({
     success: true,
-    message: ' deleted successfully',
+    message: 'Study deleted successfully',
   })
 })
 
@@ -607,8 +624,6 @@ internal.get('/professors/by-sanity/:sanityId', async (c) => {
   return c.json(data)
 })
 
-/** Create a professor, optionally assigning it to faculties, or return the
- * existing one already linked to this Sanity document */
 internal.post('/professors', async (c) => {
   const supabase = createInternalSupabaseClient(c)
   const { name, faculty_ids, study_ids, sanity_id } = await c.req.json()
@@ -674,6 +689,39 @@ internal.patch('/professors/:id', async (c) => {
 
   if (error) return c.json({ error: error.message }, 500)
   return c.json({ success: true, professor: data })
+})
+
+/** Assign a professor to a study */
+internal.post('/professors/:id/studies/:studyId', async (c) => {
+  const professorId = requiredParam(c, 'id')
+  const studyId = requiredParam(c, 'studyId')
+  const supabase = createInternalSupabaseClient(c)
+
+  const { error } = await supabase
+    .from('professor_studies')
+    .upsert(
+      { professor_id: professorId, study_id: studyId },
+      { onConflict: 'professor_id,study_id' }
+    )
+
+  if (error) return c.json({ error: error.message }, 500)
+  return c.json({ success: true, message: 'Professor assigned to study' })
+})
+
+/** Remove a professor from a study */
+internal.delete('/professors/:id/studies/:studyId', async (c) => {
+  const professorId = requiredParam(c, 'id')
+  const studyId = requiredParam(c, 'studyId')
+  const supabase = createInternalSupabaseClient(c)
+
+  const { error } = await supabase
+    .from('professor_studies')
+    .delete()
+    .eq('professor_id', professorId)
+    .eq('study_id', studyId)
+
+  if (error) return c.json({ error: error.message }, 500)
+  return c.json({ success: true, message: 'Professor removed from study' })
 })
 
 /** Sync a professor with the latest Sanity values and join-table assignments. */
@@ -827,8 +875,6 @@ internal.get('/subjects/by-sanity/:sanityId', async (c) => {
   return c.json(data)
 })
 
-/** Create a subject, optionally assigning professors, or return the existing
- * one already linked to this Sanity document */
 internal.post('/subjects', async (c) => {
   const supabase = createInternalSupabaseClient(c)
   const { name, professor_ids, study_id, sanity_id } = await c.req.json()
@@ -1016,16 +1062,16 @@ internal.delete('/subjects/:id/professors/:professorId', async (c) => {
 })
 
 /** List all comments (internal admin view) */
-internal.get('/', async (c) => {
+internal.get('/comments', async (c) => {
   const supabase = createInternalSupabaseClient(c)
 
   const { data, error } = await supabase
     .from('comments')
     .select(`
-      *,
-      author:profiles(username, full_name),
-      professor:professors(name)
-    `)
+        *,
+        author:profiles(username, full_name),
+        professor:professors(name)
+      `)
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)

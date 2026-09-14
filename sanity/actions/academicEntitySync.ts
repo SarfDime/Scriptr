@@ -2,23 +2,18 @@ import AddCircle from '@sanity/icons/AddCircle'
 import Sync from '@sanity/icons/Sync'
 import Trash from '@sanity/icons/Trash'
 import { useToast } from '@sanity/ui/toast'
+import type { AcademicEntityType } from '@shared/config/api'
+import { apiUrl, getDatabaseAcademicEndpoints } from '@shared/utils/api.utils'
+
 import { useState } from 'react'
-import { useClient, useDocumentOperation } from 'sanity'
-
-export type AcademicEntityType =
-  | 'university'
-  | 'faculty'
-  | 'professor'
-  | 'subject'
-  | 'study'
-
-const ENDPOINTS: Record<AcademicEntityType, string> = {
-  university: 'universities',
-  faculty: 'faculties',
-  professor: 'professors',
-  subject: 'subjects',
-  study: 'studies',
-}
+import {
+  type DocumentActionComponent,
+  type DocumentActionDescription,
+  type DocumentActionProps,
+  type SanityClient,
+  useClient,
+  useDocumentOperation,
+} from 'sanity'
 
 export type AcademicDocumentActionProps = {
   id: string
@@ -28,10 +23,10 @@ export type AcademicDocumentActionProps = {
   onComplete: () => void
 }
 
-function apiUrl(path: string) {
-  const base = process.env.SANITY_STUDIO_API_URL ?? 'http://localhost:8787'
-  return `${base.replace(/\/$/, '')}${path}`
-}
+type DialogState =
+  | { type: 'none' }
+  | { type: 'confirm'; message: string; onConfirm: () => void }
+  | { type: 'error'; message: string }
 
 function apiHeaders() {
   return {
@@ -40,7 +35,7 @@ function apiHeaders() {
   }
 }
 
-function refId(value: unknown) {
+function refId(value: unknown): string | undefined {
   return value &&
     typeof value === 'object' &&
     '_ref' in (value as Record<string, unknown>)
@@ -48,425 +43,481 @@ function refId(value: unknown) {
     : undefined
 }
 
-function parentFieldFor(entityType: AcademicEntityType) {
-  if (entityType === 'faculty') return 'university'
-  if (entityType === 'subject') return 'study'
-  return 'faculty'
+function parentFieldFor(entityType: AcademicEntityType): string | undefined {
+  switch (entityType) {
+    case 'faculty':
+      return 'university'
+    case 'subject':
+      return 'study'
+    case 'study':
+      return 'faculty'
+    case 'professor':
+    case 'university':
+      return undefined
+    default: {
+      // biome-ignore lint/style/useNamingConvention: <Might need here>
+      const _exhaustive: never = entityType
+      throw new Error(`Unhandled entity type: ${_exhaustive}`)
+    }
+  }
 }
 
-function parentColumnFor(parentField: string) {
-  if (parentField === 'university') return 'university_id'
-  if (parentField === 'study') return 'study_id'
-  return 'faculty_id'
+function parentColumnFor(parentField: string | undefined): string | undefined {
+  switch (parentField) {
+    case 'university':
+      return 'university_id'
+    case 'study':
+      return 'study_id'
+    case 'faculty':
+      return 'faculty_id'
+    case undefined:
+      return undefined
+    default:
+      throw new Error(`Unhandled parent field: ${parentField}`)
+  }
 }
 
-/** Creates the "Create in Database" action shared by all academic entity documents.
- * Calls the internal admin API to create (or find) the matching Postgres row, then
- * patches this document's dbId field, which unblocks publishing.
+/**
+ * Shared helper to build the relational Postgres payload
+ */
+async function buildDatabasePayload(
+  entityType: AcademicEntityType,
+  doc: Record<string, unknown> | null,
+  sanityId: string,
+  client: SanityClient
+): Promise<Record<string, unknown>> {
+  if (!doc?.name) {
+    throw new Error('Set a name before linking to the database.')
+  }
+
+  const parentField = parentFieldFor(entityType)
+  const parentReference = parentField ? refId(doc?.[parentField]) : undefined
+
+  if (parentField && !parentReference) {
+    throw new Error(`Add a ${parentField} before syncing this record.`)
+  }
+
+  const body: Record<string, unknown> = {
+    name: doc.name,
+    sanity_id: sanityId,
+  }
+
+  const fetchDbIds = async (refs: unknown) => {
+    const references = Array.isArray(refs)
+      ? refs.map(refId).filter((id): id is string => Boolean(id))
+      : []
+    if (!references.length) return []
+    return client.fetch<Array<string>>(
+      '*[_id in $ids || _id in $draftIds].dbId',
+      { ids: references, draftIds: references.map((id) => `drafts.${id}`) }
+    )
+  }
+
+  const fetchParentDbId = async (refId: string | undefined) => {
+    if (!refId) return null
+    return client.fetch<string | null>(
+      '*[_id == $id || _id == $draftId][0].dbId',
+      { id: refId, draftId: `drafts.${refId}` }
+    )
+  }
+
+  if (entityType === 'professor') {
+    body.faculty_ids = (await fetchDbIds(doc.faculties)).filter(Boolean)
+    body.study_ids = (await fetchDbIds(doc.studies)).filter(Boolean)
+  } else if (entityType === 'faculty') {
+    body.university_id = await fetchParentDbId(parentReference)
+  } else if (entityType === 'subject') {
+    body.study_id = await fetchParentDbId(parentReference)
+    body.professor_ids = (await fetchDbIds(doc.professors)).filter(Boolean)
+  } else if (entityType === 'study') {
+    body.faculty_id = await fetchParentDbId(parentReference)
+  } else if (entityType === 'university') {
+    if (doc.r2BucketId && typeof doc.r2BucketId === 'string') {
+      body.r2_bucket_id = doc.r2BucketId
+    }
+  }
+
+  const parentCol = parentColumnFor(parentField)
+  if (parentCol && !body[parentCol]) {
+    throw new Error(`Link the selected ${parentField} to the database first.`)
+  }
+
+  return body
+}
+
+/**
+ * Checks for a dbId to ensure the row exists before allowing publish
+ */
+export function createCheckedPublishAction(
+  originalAction: DocumentActionComponent
+): DocumentActionComponent {
+  return function CreateCheckedPublishAction(
+    props: DocumentActionProps
+  ): DocumentActionDescription | null {
+    const originalResult = originalAction(props)
+
+    const doc = props.draft ?? props?.published
+
+    if (!originalResult) return null
+
+    return {
+      ...originalResult,
+      disabled: Boolean(!doc?.dbId || originalResult?.disabled),
+      label: 'Publish',
+      tone: 'positive',
+    }
+  }
+}
+
+/**
+ * Creates a brand new Postgres row for the sanity document
  */
 export function createInDatabaseAction(entityType: AcademicEntityType) {
-  return function CreateInDatabaseAction(props: AcademicDocumentActionProps) {
+  return function CreateInDatabaseAction(
+    props: AcademicDocumentActionProps
+  ): DocumentActionDescription | null {
     const { patch } = useDocumentOperation(props.id, props.type)
     const client = useClient({ apiVersion: '2024-01-01' })
     const toast = useToast()
-    const [dialog, setDialog] = useState<string | null>(null)
+    const [dialogState, setDialogState] = useState<DialogState>({
+      type: 'none',
+    })
     const doc = props.draft ?? props.published
-    const parentField = parentFieldFor(entityType)
-    const parentReference =
-      entityType === 'faculty' ||
-      entityType === 'subject' ||
-      entityType === 'study'
-        ? refId(doc?.[parentField])
-        : undefined
 
-    if (doc?.dbId) {
-      return null
+    if (doc?.dbId) return null
+
+    const endpoints = getDatabaseAcademicEndpoints(entityType)
+    const endpoint = apiUrl(endpoints.create)
+
+    const handleConfirm = async () => {
+      setDialogState({ type: 'none' })
+      try {
+        const body = await buildDatabasePayload(
+          entityType,
+          doc,
+          props.id,
+          client
+        )
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: apiHeaders(),
+          body: JSON.stringify(body),
+        })
+        const result = await response.json()
+
+        if (!response.ok) {
+          throw new Error(
+            result.error ?? 'Failed to link this document to the database.'
+          )
+        }
+
+        const record = result[entityType] ?? result
+        patch.execute([{ set: { dbId: record.id } }])
+        toast.push({
+          status: 'success',
+          title: 'Successfully created in the database.',
+        })
+        props.onComplete()
+      } catch (error) {
+        setDialogState({
+          type: 'error',
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Network error while linking.',
+        })
+      }
     }
 
     return {
       label: 'Create in Database',
       icon: AddCircle,
-      disabled: Boolean(
-        !doc?.name ||
-          ((entityType === 'faculty' ||
-            entityType === 'subject' ||
-            entityType === 'study') &&
-            !parentReference)
-      ),
-      onHandle: async () => {
-        if (!doc?.name) {
-          setDialog('Set a name before linking to the database.')
-          return
-        }
-
-        if (
-          (entityType === 'faculty' ||
-            entityType === 'subject' ||
-            entityType === 'study') &&
-          !parentReference
-        ) {
-          setDialog(`Add a ${parentField} before creating this record.`)
-          return
-        }
-
-        const body: Record<string, unknown> = {
-          name: doc.name,
-          sanity_id: props.id,
-        }
-
-        if (entityType === 'professor') {
-          const facultyReferences = Array.isArray(doc.faculties)
-            ? doc.faculties
-                .map((faculty) => refId(faculty))
-                .filter((id): id is string => Boolean(id))
-            : []
-          const facultyIds = await client.fetch<Array<string>>(
-            '*[_id in $ids || _id in $draftIds].dbId',
-            {
-              ids: facultyReferences,
-              draftIds: facultyReferences.map((id) => `drafts.${id}`),
-            }
-          )
-          body.faculty_ids = facultyIds.filter(Boolean)
-
-          const studyReferences = Array.isArray(doc.studies)
-            ? doc.studies
-                .map((study) => refId(study))
-                .filter((id): id is string => Boolean(id))
-            : []
-          const studyIds = await client.fetch<Array<string>>(
-            '*[_id in $ids || _id in $draftIds].dbId',
-            {
-              ids: studyReferences,
-              draftIds: studyReferences.map((id) => `drafts.${id}`),
-            }
-          )
-          body.study_ids = studyIds.filter(Boolean)
-        }
-
-        if (entityType === 'faculty') {
-          body.university_id = await client.fetch<string | null>(
-            '*[_id == $id || _id == $draftId][0].dbId',
-            { id: parentReference, draftId: `drafts.${parentReference}` }
-          )
-        }
-        if (entityType === 'subject') {
-          body.study_id = await client.fetch<string | null>(
-            '*[_id == $id || _id == $draftId][0].dbId',
-            { id: parentReference, draftId: `drafts.${parentReference}` }
-          )
-          const professorReferences = Array.isArray(doc.professors)
-            ? doc.professors
-                .map((professor) => refId(professor))
-                .filter((id): id is string => Boolean(id))
-            : []
-          const professorIds = await client.fetch<Array<string>>(
-            '*[_id in $ids || _id in $draftIds].dbId',
-            {
-              ids: professorReferences,
-              draftIds: professorReferences.map((id) => `drafts.${id}`),
-            }
-          )
-          body.professor_ids = professorIds.filter(Boolean)
-        }
-
-        if (entityType === 'study') {
-          body.faculty_id = await client.fetch<string | null>(
-            '*[_id == $id || _id == $draftId][0].dbId',
-            { id: parentReference, draftId: `drafts.${parentReference}` }
-          )
-        }
-
-        if (
-          (entityType === 'faculty' ||
-            entityType === 'subject' ||
-            entityType === 'study') &&
-          !body[parentColumnFor(parentField)]
-        ) {
-          setDialog(`Link the selected ${parentField} to the database first.`)
-          return
-        }
-
-        try {
-          const response = await fetch(
-            apiUrl(`/api/internal/${ENDPOINTS[entityType]}`),
-            {
-              method: 'POST',
-              headers: apiHeaders(),
-              body: JSON.stringify(body),
-            }
-          )
-          const result = await response.json()
-
-          if (!response.ok) {
-            setDialog(
-              result.error ?? 'Failed to link this document to the database.'
-            )
-            return
-          }
-
-          const record = result[entityType] ?? result
-          patch.execute([{ set: { dbId: record.id } }])
-          toast.push({
-            status: 'success',
-            title: 'Successfully created in the database.',
-          })
-          props.onComplete()
-        } catch (error) {
-          setDialog(
-            error instanceof Error
-              ? error.message
-              : 'Network error while linking.'
-          )
-        }
-      },
-      dialog: dialog
-        ? {
-            type: 'dialog' as const,
-            onClose: () => setDialog(null),
-            header: 'Create in Database',
-            content: dialog,
-          }
-        : undefined,
+      tone: 'caution',
+      disabled: !doc?.name || Boolean(doc?.dbId),
+      onHandle: () =>
+        setDialogState({
+          type: 'confirm',
+          message:
+            'Are you sure you want to create a new database record for this document?',
+          onConfirm: handleConfirm,
+        }),
+      dialog: renderDialog(dialogState, setDialogState, 'Create in Database'),
     }
   }
 }
 
-/** Syncs an already-linked academic document with the latest Sanity values. */
+/**
+ * Syncs an already-linked academic document with the latest Sanity values
+ */
 export function syncWithDatabaseAction(entityType: AcademicEntityType) {
-  return function SyncWithDatabaseAction(props: AcademicDocumentActionProps) {
-    const { patch } = useDocumentOperation(props.id, props.type)
+  return function SyncWithDatabaseAction(
+    props: AcademicDocumentActionProps
+  ): DocumentActionDescription | null {
     const client = useClient({ apiVersion: '2024-01-01' })
     const toast = useToast()
-    const [dialog, setDialog] = useState<string | null>(null)
+    const [dialogState, setDialogState] = useState<DialogState>({
+      type: 'none',
+    })
     const doc = props.draft ?? props.published
-    const parentField = parentFieldFor(entityType)
-    const parentReference =
-      entityType === 'faculty' ||
-      entityType === 'subject' ||
-      entityType === 'study'
-        ? refId(doc?.[parentField])
-        : undefined
+    const dbId = doc?.dbId
+
+    if (!dbId) return null
+
+    const endpoints = getDatabaseAcademicEndpoints(entityType)
+    const endpoint = apiUrl(endpoints.sync(String(dbId)))
+
+    const handleConfirm = async () => {
+      setDialogState({ type: 'none' })
+      try {
+        const body = await buildDatabasePayload(
+          entityType,
+          doc as Record<string, unknown>,
+          props.id,
+          client
+        )
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: apiHeaders(),
+          body: JSON.stringify(body),
+        })
+        const result = await response.json()
+
+        if (!response.ok) {
+          throw new Error(
+            result.error ?? 'Failed to sync this document with the database.'
+          )
+        }
+
+        toast.push({
+          status: 'success',
+          title: 'Successfully synced with the database.',
+        })
+        props.onComplete()
+      } catch (error) {
+        setDialogState({
+          type: 'error',
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Network error while syncing.',
+        })
+      }
+    }
 
     return {
       label: 'Sync with Database',
       icon: Sync,
-      disabled: Boolean(
-        !doc?.dbId ||
-          !doc?.name ||
-          ((entityType === 'faculty' ||
-            entityType === 'subject' ||
-            entityType === 'study') &&
-            !parentReference)
-      ),
-      onHandle: async () => {
-        if (!doc?.dbId) {
-          setDialog('Create this record in the database before syncing.')
-          return
-        }
-
-        if (!doc?.name) {
-          setDialog('Set a name before syncing to the database.')
-          return
-        }
-
-        if (
-          (entityType === 'faculty' ||
-            entityType === 'subject' ||
-            entityType === 'study') &&
-          !parentReference
-        ) {
-          setDialog(`Add a ${parentField} before syncing this record.`)
-          return
-        }
-
-        const body: Record<string, unknown> = {
-          name: doc.name,
-          sanity_id: props.id,
-        }
-
-        if (entityType === 'professor') {
-          const facultyReferences = Array.isArray(doc.faculties)
-            ? doc.faculties
-                .map((faculty) => refId(faculty))
-                .filter((id): id is string => Boolean(id))
-            : []
-          const facultyIds = await client.fetch<Array<string>>(
-            '*[_id in $ids || _id in $draftIds].dbId',
-            {
-              ids: facultyReferences,
-              draftIds: facultyReferences.map((id) => `drafts.${id}`),
-            }
-          )
-          body.faculty_ids = facultyIds.filter(Boolean)
-
-          const studyReferences = Array.isArray(doc.studies)
-            ? doc.studies
-                .map((study) => refId(study))
-                .filter((id): id is string => Boolean(id))
-            : []
-          const studyIds = await client.fetch<Array<string>>(
-            '*[_id in $ids || _id in $draftIds].dbId',
-            {
-              ids: studyReferences,
-              draftIds: studyReferences.map((id) => `drafts.${id}`),
-            }
-          )
-          body.study_ids = studyIds.filter(Boolean)
-        }
-
-        if (entityType === 'faculty') {
-          body.university_id = await client.fetch<string | null>(
-            '*[_id == $id || _id == $draftId][0].dbId',
-            { id: parentReference, draftId: `drafts.${parentReference}` }
-          )
-        }
-
-        if (entityType === 'subject') {
-          body.study_id = await client.fetch<string | null>(
-            '*[_id == $id || _id == $draftId][0].dbId',
-            { id: parentReference, draftId: `drafts.${parentReference}` }
-          )
-          const professorReferences = Array.isArray(doc.professors)
-            ? doc.professors
-                .map((professor) => refId(professor))
-                .filter((id): id is string => Boolean(id))
-            : []
-          const professorIds = await client.fetch<Array<string>>(
-            '*[_id in $ids || _id in $draftIds].dbId',
-            {
-              ids: professorReferences,
-              draftIds: professorReferences.map((id) => `drafts.${id}`),
-            }
-          )
-          body.professor_ids = professorIds.filter(Boolean)
-        }
-
-        if (entityType === 'study') {
-          body.faculty_id = await client.fetch<string | null>(
-            '*[_id == $id || _id == $draftId][0].dbId',
-            { id: parentReference, draftId: `drafts.${parentReference}` }
-          )
-        }
-
-        if (
-          (entityType === 'faculty' ||
-            entityType === 'subject' ||
-            entityType === 'study') &&
-          !body[parentColumnFor(parentField)]
-        ) {
-          setDialog(`Link the selected ${parentField} to the database first.`)
-          return
-        }
-
-        try {
-          const targetPath = doc?.dbId
-            ? `/api/internal/${ENDPOINTS[entityType]}/${doc.dbId}/sync`
-            : `/api/internal/${ENDPOINTS[entityType]}`
-
-          const response = await fetch(apiUrl(targetPath), {
-            method: 'POST',
-            headers: apiHeaders(),
-            body: JSON.stringify(body),
-          })
-          const result = await response.json()
-
-          if (!response.ok) {
-            setDialog(
-              result.error ?? 'Failed to sync this document with the database.'
-            )
-            return
-          }
-
-          const record = result[entityType] ?? result
-          if (record?.id && !doc?.dbId) {
-            patch.execute([{ set: { dbId: record.id } }])
-          }
-          toast.push({
-            status: 'success',
-            title: 'Successfully synced with the database.',
-          })
-          props.onComplete()
-        } catch (error) {
-          setDialog(
-            error instanceof Error
-              ? error.message
-              : 'Network error while syncing.'
-          )
-        }
-      },
-      dialog: dialog
-        ? {
-            type: 'dialog' as const,
-            onClose: () => setDialog(null),
-            header: 'Sync with Database',
-            content: dialog,
-          }
-        : undefined,
+      tone: 'caution',
+      disabled: !doc?.name || !doc?.dbId,
+      onHandle: () =>
+        setDialogState({
+          type: 'confirm',
+          message:
+            'Are you sure you want to sync your recent changes to the database?',
+          onConfirm: handleConfirm,
+        }),
+      dialog: renderDialog(dialogState, setDialogState, 'Sync with Database'),
     }
   }
 }
 
-/** Creates a "Delete" action override that checks the internal admin API for
- * dependents before allowing deletion, so a linked record can't be removed while
- * other records still reference it.
+/**
+ * Checks dependents before deleting a record from Postgres
  */
 export function createCheckedDeleteAction(entityType: AcademicEntityType) {
-  return function CheckedDeleteAction(props: AcademicDocumentActionProps) {
+  return function CheckedDeleteAction(
+    props: AcademicDocumentActionProps
+  ): DocumentActionDescription {
     const { delete: deleteOp } = useDocumentOperation(props.id, props.type)
-    const [dialog, setDialog] = useState<string | null>(null)
+    const toast = useToast()
+    const [dialogState, setDialogState] = useState<DialogState>({
+      type: 'none',
+    })
     const doc = props.draft ?? props.published
     const dbId = doc?.dbId
+
+    const handleConfirm = async () => {
+      setDialogState({ type: 'none' })
+
+      if (!dbId) {
+        deleteOp.execute()
+        props.onComplete()
+        return
+      }
+
+      const endpoints = getDatabaseAcademicEndpoints(entityType)
+      const endpoint = apiUrl(endpoints.byId(String(dbId)))
+
+      try {
+        const response = await fetch(endpoint, {
+          method: 'DELETE',
+          headers: apiHeaders(),
+        })
+
+        if (response.status === 409) {
+          const result = await response.json()
+          throw new Error(
+            result.error ??
+              'This record still has dependents and cannot be deleted.'
+          )
+        }
+
+        if (!response.ok) {
+          const result = await response.json().catch(() => ({}))
+          throw new Error(
+            result.error ?? 'Failed to delete the database record.'
+          )
+        }
+
+        deleteOp.execute()
+        toast.push({
+          status: 'success',
+          title: 'Successfully deleted from Sanity and the database.',
+        })
+        props.onComplete()
+      } catch (error) {
+        setDialogState({
+          type: 'error',
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Network error while deleting.',
+        })
+      }
+    }
+
     return {
       label: 'Delete',
       icon: Trash,
       disabled: Boolean(deleteOp.disabled),
-      onHandle: async () => {
-        if (!dbId) {
-          deleteOp.execute()
-          props.onComplete()
-          return
-        }
-
-        try {
-          const response = await fetch(
-            apiUrl(`/api/internal/${ENDPOINTS[entityType]}/${dbId}`),
-            { method: 'DELETE', headers: apiHeaders() }
-          )
-
-          if (response.status === 409) {
-            const result = await response.json()
-            setDialog(
-              result.error ??
-                'This record still has dependents and cannot be deleted.'
-            )
-            return
-          }
-
-          if (!response.ok) {
-            const result = await response.json().catch(() => ({}))
-            setDialog(result.error ?? 'Failed to delete the database record.')
-            return
-          }
-
-          deleteOp.execute()
-          props.onComplete()
-        } catch (error) {
-          setDialog(
-            error instanceof Error
-              ? error.message
-              : 'Network error while deleting.'
-          )
-        }
-      },
-      dialog: dialog
-        ? {
-            type: 'dialog' as const,
-            onClose: () => setDialog(null),
-            header: 'Cannot Delete',
-            content: dialog,
-          }
-        : undefined,
+      tone: 'critical',
+      onHandle: () =>
+        setDialogState({
+          type: 'confirm',
+          message: dbId
+            ? 'Are you sure you want to delete this document? It will also be removed from the linked database.'
+            : 'Are you sure you want to delete this document?',
+          onConfirm: handleConfirm,
+        }),
+      dialog: renderDialog(dialogState, setDialogState, 'Cannot Delete'),
     }
   }
+}
+
+/**
+ * Deletes the record from the Postgres database but keeps the Sanity document.
+ * If successful, removes the `dbId` from the Sanity document.
+ */
+export function createDeleteInDatabaseAction(
+  entityType: AcademicEntityType
+): DocumentActionComponent {
+  return function DeleteInDatabaseAction(
+    props: DocumentActionProps
+  ): DocumentActionDescription | null {
+    const { patch } = useDocumentOperation(props.id, props.type)
+    const toast = useToast()
+    const [dialogState, setDialogState] = useState<DialogState>({
+      type: 'none',
+    })
+
+    const doc = (props.draft ?? props.published) as Record<
+      string,
+      unknown
+    > | null
+    const dbId = doc?.dbId
+
+    if (!dbId) return null
+
+    const handleConfirm = async () => {
+      setDialogState({ type: 'none' })
+
+      const endpoints = getDatabaseAcademicEndpoints(entityType)
+      const endpoint = apiUrl(endpoints.byId(String(dbId)))
+
+      try {
+        const response = await fetch(endpoint, {
+          method: 'DELETE',
+          headers: apiHeaders(),
+        })
+
+        // Handle dependents conflict
+        if (response.status === 409) {
+          const result = await response.json()
+          throw new Error(
+            result.error ??
+              'This record still has dependents and cannot be deleted from the database.'
+          )
+        }
+
+        if (!response.ok) {
+          const result = await response.json().catch(() => ({}))
+          throw new Error(
+            result.error ?? 'Failed to delete the database record.'
+          )
+        }
+
+        // Unset the dbId from the Sanity document
+        patch.execute([{ unset: ['dbId'] }])
+
+        toast.push({
+          status: 'success',
+          title: 'Successfully deleted from database. Sanity document kept.',
+        })
+        props.onComplete()
+      } catch (error) {
+        setDialogState({
+          type: 'error',
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Network error while deleting.',
+        })
+      }
+    }
+
+    return {
+      label: 'Delete in Database',
+      icon: Trash,
+      tone: 'critical',
+      onHandle: () =>
+        setDialogState({
+          type: 'confirm',
+          message:
+            'Are you sure you want to delete this record from the Postgres database? The Sanity document will NOT be deleted.',
+          onConfirm: handleConfirm,
+        }),
+      dialog: renderDialog(
+        dialogState,
+        setDialogState,
+        'Cannot Delete in Database'
+      ),
+    }
+  }
+}
+
+/**
+ * Shared helper to format Sanity Dialog outputs
+ */
+function renderDialog(
+  state: DialogState,
+  setState: (s: DialogState) => void,
+  errorHeader: string
+) {
+  if (state.type === 'confirm') {
+    return {
+      type: 'confirm' as const,
+      message: state.message,
+      onConfirm: state.onConfirm,
+      onCancel: () => setState({ type: 'none' }),
+    }
+  }
+  if (state.type === 'error') {
+    return {
+      type: 'dialog' as const,
+      header: errorHeader,
+      content: state.message,
+      onClose: () => setState({ type: 'none' }),
+    }
+  }
+  return undefined
 }

@@ -1,17 +1,13 @@
+import { isAdmin } from '@shared/utils/api.utils'
 import { Hono } from 'hono'
 import {
   isPortableTextValue,
   portableTextToPlainText,
 } from '../../../shared/utils/portable-text.utils'
+import { checkCommentsPosted } from '../lib/achievements'
 import { requiredParam } from '../lib/request'
-import {
-  authMiddleware,
-  createInternalSupabaseClient,
-  createSupabaseClient,
-} from '../lib/supabase'
+import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
-
-const comments = new Hono<HonoEnv>()
 
 // Excludes is_flagged, which is internal moderation state and not for public consumption.
 const PUBLIC_COMMENT_COLUMNS =
@@ -68,6 +64,8 @@ async function attachEngagement<T extends CommentEngagementRow>(
   })
 }
 
+const comments = new Hono<HonoEnv>()
+
 /** Get comments for a specific script */
 comments.get('/script/:scriptId', async (c) => {
   const scriptId = requiredParam(c, 'scriptId')
@@ -95,9 +93,9 @@ comments.get('/professor/:professorId', async (c) => {
   const { data, error } = await supabase
     .from('comments')
     .select(`
-      ${PUBLIC_COMMENT_COLUMNS},
-      author:profiles(username, full_name)
-    `)
+        ${PUBLIC_COMMENT_COLUMNS},
+        author:profiles(username, full_name)
+      `)
     .eq('professor_id', professorId)
     .order('created_at', { ascending: false })
 
@@ -114,9 +112,9 @@ comments.get('/user/:userId', async (c) => {
   const { data, error } = await supabase
     .from('comments')
     .select(`
-      ${PUBLIC_COMMENT_COLUMNS},
-      professor:professors(name)
-    `)
+        ${PUBLIC_COMMENT_COLUMNS},
+        professor:professors(name)
+      `)
     .eq('author_id', userId)
     .order('created_at', { ascending: false })
 
@@ -143,7 +141,7 @@ comments.get('/:commentId/reactions', async (c) => {
 comments.post('/:commentId/replies', authMiddleware, async (c) => {
   const user = c.get('user')
   const commentId = requiredParam(c, 'commentId')
-  const supabase = createInternalSupabaseClient(c)
+  const supabase = createSupabaseClient(c)
   const { content, professor_id, script_id } = await c.req.json<{
     content?: unknown
     professor_id?: string
@@ -183,6 +181,7 @@ comments.post('/:commentId/replies', authMiddleware, async (c) => {
     .single()
 
   if (error) return c.json({ error: error.message }, 500)
+  await checkCommentsPosted(c, user.id)
   return c.json({
     success: true,
     reply: {
@@ -200,7 +199,7 @@ comments.post('/:commentId/replies', authMiddleware, async (c) => {
 comments.post('/:commentId/reactions', authMiddleware, async (c) => {
   const user = c.get('user')
   const commentId = requiredParam(c, 'commentId')
-  const supabase = createInternalSupabaseClient(c)
+  const supabase = createSupabaseClient(c)
   const { reaction_type } = await c.req.json()
 
   if (!reaction_type || typeof reaction_type !== 'string') {
@@ -228,7 +227,7 @@ comments.post('/:commentId/reactions', authMiddleware, async (c) => {
 comments.post('/:commentId/like', authMiddleware, async (c) => {
   const user = c.get('user')
   const commentId = requiredParam(c, 'commentId')
-  const supabase = createInternalSupabaseClient(c)
+  const supabase = createSupabaseClient(c)
 
   const { data: existingLike } = await supabase
     .from('comment_likes')
@@ -259,7 +258,7 @@ comments.post('/:commentId/like', authMiddleware, async (c) => {
 /** Create a new comment */
 comments.post('/', authMiddleware, async (c) => {
   const user = c.get('user')
-  const supabase = createInternalSupabaseClient(c)
+  const supabase = createSupabaseClient(c)
 
   const { content, professor_id, script_id } = await c.req.json<{
     content?: unknown
@@ -294,14 +293,15 @@ comments.post('/', authMiddleware, async (c) => {
       author_id: user.id,
     })
     .select(`
-      ${PUBLIC_COMMENT_COLUMNS},
-      author:profiles(username, full_name),
-      professor:professors(name),
-      script:scripts(title)
-    `)
+        ${PUBLIC_COMMENT_COLUMNS},
+        author:profiles(username, full_name),
+        professor:professors(name),
+        script:scripts(title)
+      `)
     .single()
 
   if (error) return c.json({ error: error.message }, 500)
+  await checkCommentsPosted(c, user.id)
   return c.json({
     success: true,
     comment: {
@@ -319,7 +319,7 @@ comments.post('/', authMiddleware, async (c) => {
 comments.patch('/:id', authMiddleware, async (c) => {
   const user = c.get('user')
   const commentId = requiredParam(c, 'id')
-  const supabase = createInternalSupabaseClient(c)
+  const supabase = createSupabaseClient(c)
 
   const { content } = await c.req.json<{ content?: unknown }>()
 
@@ -353,10 +353,10 @@ comments.patch('/:id', authMiddleware, async (c) => {
     })
     .eq('id', commentId)
     .select(`
-      ${PUBLIC_COMMENT_COLUMNS},
-      author:profiles(username, full_name),
-      professor:professors(name)
-    `)
+        ${PUBLIC_COMMENT_COLUMNS},
+        author:profiles(username, full_name),
+        professor:professors(name)
+      `)
     .single()
 
   if (error) return c.json({ error: error.message }, 500)
@@ -364,11 +364,11 @@ comments.patch('/:id', authMiddleware, async (c) => {
   return c.json({ success: true, comment: engaged })
 })
 
-/** Delete a comment (by author or moderator) */
+/** Delete a comment (by author or admin) */
 comments.delete('/:id', authMiddleware, async (c) => {
   const user = c.get('user')
   const commentId = requiredParam(c, 'id')
-  const supabase = createInternalSupabaseClient(c)
+  const supabase = createSupabaseClient(c)
 
   // Get user's role and comment author
   const [{ data: profile }, { data: comment }] = await Promise.all([
@@ -376,10 +376,12 @@ comments.delete('/:id', authMiddleware, async (c) => {
     supabase.from('comments').select('author_id').eq('id', commentId).single(),
   ])
 
-  // Check if user is author or moderator
-  if (comment?.author_id !== user.id && profile?.role !== 'moderator') {
+  // Check if user is author or admin
+  if (comment?.author_id !== user.id && !isAdmin(profile?.role)) {
     return c.json(
-      { error: 'Unauthorized: You can only delete your own comments' },
+      {
+        error: 'Unauthorized: You can only delete your own comments',
+      },
       403
     )
   }
@@ -390,7 +392,7 @@ comments.delete('/:id', authMiddleware, async (c) => {
   return c.json({ success: true, message: 'Comment deleted successfully' })
 })
 
-/** Get flagged comments (moderator only) */
+/** Get flagged comments (admin only) */
 comments.get('/flagged/all', authMiddleware, async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)
@@ -401,17 +403,17 @@ comments.get('/flagged/all', authMiddleware, async (c) => {
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'moderator') {
-    return c.json({ error: 'Unauthorized: Moderator access required' }, 403)
+  if (!isAdmin(profile?.role)) {
+    return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 
   const { data, error } = await supabase
     .from('comments')
     .select(`
-      ${PUBLIC_COMMENT_COLUMNS},
-      author:profiles(username, full_name),
-      flags:flags(*, reporter:profiles!reporter_id(username))
-    `)
+        ${PUBLIC_COMMENT_COLUMNS},
+        author:profiles(username, full_name),
+        flags:flags(*, reporter:profiles!reporter_id(username))
+      `)
     .eq('is_flagged', true)
     .order('created_at', { ascending: false })
 
