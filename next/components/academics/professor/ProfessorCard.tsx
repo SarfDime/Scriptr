@@ -10,6 +10,7 @@ import type { MinimalProfessor } from '@/types/academics/professor.types'
 
 export const ProfessorCard = ({
   _id,
+  slug,
   name,
   title,
   subjects,
@@ -25,7 +26,7 @@ export const ProfessorCard = ({
     <ClickableCard
       href={getAcademicPath({
         type: 'professor',
-        id: _id,
+        professorSlug: slug ?? _id,
       })}
       className='group p-4 h-full flex flex-col justify-between gap-3 transition hover:border-brand-500 hover:shadow-sm'
     >

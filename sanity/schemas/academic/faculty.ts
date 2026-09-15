@@ -20,7 +20,7 @@ export const Faculty = defineType({
   fields: [
     ...academicFields(
       ENTITY,
-      ['name', 'slug', 'description', 'bio', 'logo', 'picture'],
+      ['name', 'slug', 'description', 'studentCount', 'bio', 'logo', 'picture'],
       {
         overrides: {
           description: { required: true },
@@ -35,13 +35,6 @@ export const Faculty = defineType({
       to: [{ type: 'person' }],
       validation: validationRules.isRequired,
       fieldset: 'administration',
-    },
-    {
-      name: 'studentCount',
-      title: 'Student Count',
-      type: 'number',
-      validation: validationRules.isRequired,
-      fieldset: 'information',
     },
     {
       name: 'dean',

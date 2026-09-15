@@ -6,6 +6,7 @@ import {
   academicGrouping,
   academicPreview,
 } from '../common/academicFields'
+import { customLinkField } from '../common/customLink'
 import { validationRules } from '../validation'
 
 const ENTITY = 'subject'
@@ -91,6 +92,12 @@ export const Subject = defineType({
       fieldset: 'database',
       group: 'database',
     },
+    customLinkField({
+      name: 'syllabus',
+      title: 'Syllabus',
+      description: `Enter a URL containing this subject syllabus.`,
+      grouping: 'academic',
+    }),
     {
       name: 'study',
       title: 'Study',

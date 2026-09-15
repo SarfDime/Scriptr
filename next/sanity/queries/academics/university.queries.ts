@@ -1,4 +1,5 @@
 import { groq } from 'next-sanity'
+import { sanityFunctionQueries } from '../functions.queries'
 import { minimalFacultyQuery } from './faculty.queries'
 
 /** Minimal listing query for the unified hierarchical gallery page */
@@ -17,19 +18,22 @@ export const universityGalleryQuery = groq`
 
 /** Minimal query for SEO metadata on a single university. */
 export const universitySeoQuery = groq`
-*[_type == "university" && (slug.current == $slug || _id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {
+*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {
   _id,
   "slug": slug.current,
   name,
-  description
+  description,
 }
 `
 
 /** Deep relational query for a single university and its related entities */
 export const universityDetailQuery = groq`
-*[_type == "university" && (slug.current == $slug || _id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {
+${sanityFunctionQueries}
+
+*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {
   _id,
   "slug": slug.current,
+  dbId,
   _type,
   name,
   description,
@@ -58,6 +62,6 @@ export const universityDetailQuery = groq`
 /** Static params query for pre-generating all university subroutes */
 export const universityStaticParamsQuery = groq`
 *[_type == "university" && !(_id in path("drafts.**"))] {
-  "slug": coalesce(slug.current, _id)
+  "universitySlug": coalesce(slug.current, _id)
 }
 `

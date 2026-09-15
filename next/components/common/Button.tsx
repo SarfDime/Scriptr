@@ -1,7 +1,7 @@
+import type { ButtonType } from '@shared/types/common.types'
 import { getAttribute } from '@shared/utils/common-utils'
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/common-utils'
-import type { ButtonType } from '@/types/common.types'
 import type { AdditionalComponentAttributes } from '@/types/component.types'
 import { LoadingSpinner } from '../ui/LoadingSpinner'
 

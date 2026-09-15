@@ -1,24 +1,23 @@
 'use client'
 
 import { Box } from '@/components/common/Box'
+import { EntityCard } from '@/components/common/EntityCard'
 import { Text } from '@/components/typography/Text'
 import { Title } from '@/components/typography/Title'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
-import type { StudyDetail } from '@/types/academics/study.types'
-
-type FacultyStudy = Omit<StudyDetail, '_type'>
+import { getAcademicPath } from '@/lib/academic-routes'
+import { compactStats } from '@/lib/common-utils'
+import type { MinimalStudy } from '@/types/academics/study.types'
 
 type FacultySubjectsExplorerProps = {
-  studies: Array<FacultyStudy>
+  studies: Array<MinimalStudy>
 }
 
+// TODO: Move strings from here to shared string file
 export const FacultyStudyExplorer = ({
   studies,
 }: FacultySubjectsExplorerProps) => {
-  {
-    /* TODO: Move strings from here to shared string file */
-  }
   return (
     <Card className='p-6 ui-stack gap-4'>
       <Box className='ui-cluster justify-between items-center'>
@@ -33,11 +32,30 @@ export const FacultyStudyExplorer = ({
 
       {studies.length > 0 ? (
         <Box className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-          {studies.map((study) => (
-            // TODO: Create a new component for generic cards if possible, to be used for universities, faculties and studies
-            // <SubjectCard key={subject._id} {...subject} />
-            <>{study.name}</>
-          ))}
+          {studies.map((study) => {
+            const universitySlug =
+              study.faculty?.university?.slug ?? study.faculty?.university?._id
+            const facultySlug = study.faculty?.slug ?? study.faculty?._id
+
+            if (!universitySlug || !facultySlug) return null
+
+            return (
+              <EntityCard
+                key={study._id}
+                href={getAcademicPath({
+                  type: 'study',
+                  universitySlug,
+                  facultySlug,
+                  studySlug: study.slug ?? study._id,
+                })}
+                title={study.name}
+                stats={compactStats({
+                  Subjects: study.subjectCount,
+                  Professors: study.professorCount,
+                })}
+              />
+            )
+          })}
         </Box>
       ) : (
         <Text className='ui-caption text-grey-500'>

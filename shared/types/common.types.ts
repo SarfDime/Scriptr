@@ -1,6 +1,6 @@
 import type { BREAKPOINTS } from '@shared/config/next-constants'
-import type { ComponentColorPalettes } from './components/ColorPalettes.types'
-import type { PortableTextType } from './components/PortableText.types'
+import type { PortableTextValue } from './portable-text.types'
+import type { SanityImageType } from './sanity-transform.types'
 
 type SlugType = {
   _type: string
@@ -14,30 +14,6 @@ type LinkSelectorProps = {
   customLink: string
 }
 
-type SanityImageType = {
-  alt: string
-  asset: {
-    _ref: string
-    _type: string
-  }
-  cornerRadius?: number
-  rounded?: number
-  crop?: {
-    _type: string
-    bottom: number
-    left: number
-    right: number
-    top: number
-  }
-  hotspot?: {
-    _type: string
-    height: number
-    width: number
-    x: number
-    y: number
-  }
-}
-
 type SanityImageSrcType = {
   src: string
   alt?: string
@@ -45,14 +21,13 @@ type SanityImageSrcType = {
 
 type SanityButton = {
   _id: string
-  buttonLabel?: PortableTextType
+  buttonLabel?: PortableTextValue
   buttonColorVariant?:
     | 'solid'
     | 'solid alternate'
     | 'outline'
     | 'transparent'
     | 'transparent alternate'
-    | ComponentColorPalettes
 } & LinkSelectorProps
 
 type ImageObjectFitType = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down'
@@ -70,8 +45,8 @@ type ButtonType = 'button' | 'submit' | 'reset'
 type BreakpointsType = (typeof BREAKPOINTS)[number]
 
 type SharedSectionDataType = {
-  title: PortableTextType
-  subtitle: PortableTextType
+  title: PortableTextValue
+  subtitle: PortableTextValue
   stringTitle: string
   stringSubtitle: string
   slug: SlugType

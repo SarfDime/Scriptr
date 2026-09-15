@@ -1,7 +1,7 @@
 import Sparkles from '@sanity/icons/Sparkles'
 import { UI_STRINGS } from '@shared/config/strings'
+import type { PortableTextValue } from '@shared/types/portable-text.types'
 import { DEFAULT_STUDY_TIP_CONTENT } from '@/config/content'
-import type { PortableTextType } from '@/types/components/PortableText.types'
 import { PortableTextContent } from '../typography/PortableTextContent'
 import { Text } from '../typography/Text'
 import { Card } from '../ui/Card'
@@ -9,7 +9,7 @@ import { Card } from '../ui/Card'
 export const StudyTipCard = ({
   content = DEFAULT_STUDY_TIP_CONTENT,
 }: {
-  content?: PortableTextType
+  content?: PortableTextValue
 }) => {
   return (
     <Card className='ui-stack gap-3 p-4'>

@@ -17,7 +17,7 @@ export const Study = defineType({
   ...academicPreview(),
   ...academicGrouping(ENTITY),
   fields: [
-    ...academicFields(ENTITY, ['name', 'slug', 'description']),
+    ...academicFields(ENTITY, ['name', 'slug', 'description', 'studentCount']),
     {
       name: 'faculty',
       title: 'Faculty',

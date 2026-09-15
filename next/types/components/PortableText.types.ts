@@ -1,5 +1,5 @@
 import type { PortableTextValue } from '@shared/types/portable-text.types'
-import type { BoxProps } from '../../components/common/Box'
+import type { BoxProps } from '@/components/common/Box'
 import type { ComponentTags } from '../component.types'
 
 type OverrideElement = {
@@ -16,19 +16,11 @@ type ComponentParserType = {
   renderDefaultBlock?: boolean
 } & OverrideElement
 
-/** @deprecated Use PortableTextValue directly instead */
-type PortableTextType = PortableTextValue
-
 type PortableContentProps = {
-  children?: PortableTextType
+  children?: PortableTextValue
   renderWrapper?: boolean
   as?: ComponentTags['box']
 } & Omit<BoxProps, 'children' | 'as'> &
   ComponentParserType
 
-export type {
-  ComponentParserType,
-  OverrideElement,
-  PortableContentProps,
-  PortableTextType,
-}
+export type { ComponentParserType, OverrideElement, PortableContentProps }

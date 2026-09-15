@@ -74,7 +74,6 @@ pieces are designed to work.
 
 * **Verify deletion/sync workflows end-to-end** — previously logged as broken, but untested recently; status unconfirmed. Check before assuming it's fixed or still failing. Now doubly relevant since universities gained real mutation routes to sync/delete against for the first time. **[🔲]**
 * Test all sync workflows (create/update/delete) across all entity types. **[🔲]**
-* TS utility types to strip Sanity metadata and dereference references, for shared frontend types. **[🔲]**
 
 ## API Client Architecture (`shared/`, `next/`)
 
@@ -89,17 +88,26 @@ pieces are designed to work.
 ### Todo
 
 * **Regeneration command for `shared/config/api-routes.ts` undocumented.** It's marked auto-generated with a script that introspects the route tree, but the exact `npm run ...` invocation wasn't captured this round — add it to `AGENTS.md`'s generated-files list once known, alongside the existing `NEVER hand-edit` entries. **[🔲]**
+## Shared Types (`shared/`)
+
+### Done
+
+* **Sanity TypeGen output relocated to `shared/types/`** — previously generated into `next/sanity.types.ts`; every workspace (`next/`, `hono/`, `sanity/`) now imports the same generated Sanity types from `shared/types/` instead of each maintaining its own copy. **[✅]**
+* **Academic entity types derived from Sanity query-result types, not hand-written** — `MinimalStudy`, `StudyDetail`, and the equivalent types for every other academic entity are now defined as `NonNullable<WithResolvedSanityData<XTypedQueryResult>>` instead of a manually maintained shape. This closes off the class of bug where a hand-written type quietly drifts from what its GROQ query actually returns. **[✅]**
+* **`WithResolvedSanityData` generalized beyond pictures** (`shared/types/sanity-transform.types.ts`) — recursively resolves three structural mismatches TypeGen can't express on its own: `picture` fields guarded by `defined(picture)=>{...}` in GROQ are narrowed from nullable to `SanityImageType`; Portable Text fields (`description`/`bio` by default, configurable via a type param) are forced `NonNullable`; and the `media: unknown` field TypeGen emits for Portable Text image blocks is widened to `Record<string, unknown>` so it's actually usable. Same caveat as before: this only changes the type, so it's only safe at call sites where the underlying query actually guarantees what the type now claims (`defined()` guards for pictures, reliably-populated rich text). **[✅]**
+* **`hono/src/sanity-stub.d.ts`** — a minimal module-augmentation stub for `@sanity/client`'s `SanityQueries` interface, so `hono/` can import Sanity-generated types without installing `@sanity/client` as a real dependency. TypeGen's output augments that module; TypeScript needs the module to exist to resolve the augmentation even though `hono/` never instantiates a Sanity client. **[✅]**
+* All type imports across the project re-sorted/organized to match the new `shared/types/` layout; `npm run check-types` clean across every workspace. **[✅]**
 
 ## Frontend (`next/`)
 
 ### Done
 
-* Dynamic slug-based pages for university/faculty/study/subject/professor, replacing ID-based routing. **[✅ superseded — see nested-routing migration below]**
++ Dynamic slug-based pages for university/faculty/study/subject/professor, replacing ID-based routing; superseded by the nested URL structure below. **[✅]**
 * Script listing, sorting, and filtering. **[✅]**
+* Nested academic catalog routing live: `/university/[slug]/faculty/[slug]/study/[slug]/subject/[slug]`, professor pages flat at `/professor/[slug]`. Covers route folders, ancestor-scoped GROQ queries (Sanity slugs are only unique per-parent, so each level's query filters on its parent chain, not just its own slug), `getAcademicPath`/`AcademicDetailPageProps` generalized to a discriminated union / generic params shape, and every card/breadcrumb link updated to build full ancestor-chain URLs. **[✅]**
 
 ### Todo
 
-* **Migrate academic catalog routing to the nested URL structure** — `/university/[slug]/faculty/[slug]/study/[slug]/subject/[slug]`, each slug already a simple per-document (name-based) field with no cross-entity uniqueness logic — nesting itself is what makes reused slugs safe. Purely a frontend change: route folder structure, fetch/lookup logic (resolve each segment scoped to its parent), and every internal link/breadcrumb. Professor pages stay flat at `/professor/[slug]`, explicitly not nested. No Sanity schema change needed. **[🔲]**
 * Update subject pages to display parent study. **[🔲]**
 * Update script rendering for multiple files and Portable Text title/description (shared, allow-listed serializer). **[🔲]**
 * Script search (local-first + API fallback). **[🔲]**
@@ -124,5 +132,4 @@ pieces are designed to work.
 1. Notifications CRUD + achievement award-check helper (they're linked — awarding an achievement is expected to also write a notification).
 2. User restriction management endpoint (small, `is_admin()`-gated, unblocks the restriction UI).
 3. Sanity: verify the deletion/sync workflow and environment wiring before building anything new on top of it — now doubly relevant with universities' new mutation routes.
-4. Frontend: nested catalog routing migration (route restructuring, scoped fetch/lookup logic, link/breadcrumb updates) — do this before the subject/study display and script-rendering todos below, since they'll otherwise be built against the routing structure that's about to change.
-5. Frontend: script upload flow and rendering (title/description/files), since scripts are the core content type and several other frontend todos depend on it.
+4. Frontend: script upload flow and rendering (title/description/files), since scripts are the core content type and several other frontend todos depend on it.

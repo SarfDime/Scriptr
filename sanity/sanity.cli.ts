@@ -16,8 +16,8 @@ export default defineCliConfig({
   typegen: {
     enabled: true,
     schema: 'schema.json',
-    generates: '../next/sanity.types.ts',
-    path: '../next/**/*.{ts,tsx}',
+    generates: '../shared/types/sanity.types.ts',
+    path: '../next/sanity/queries/**/*.{ts,tsx}',
     overloadClientMethods: true,
   },
   reactStrictMode: true,

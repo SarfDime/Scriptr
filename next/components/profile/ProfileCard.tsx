@@ -1,7 +1,7 @@
 import Book from '@sanity/icons/Book'
 import Confetti from '@sanity/icons/Confetti'
+import type { SanityImageType } from '@shared/types/sanity-transform.types'
 import { cn } from '@/lib/common-utils'
-import type { SanityImageType } from '@/types/common.types'
 import { Box, type BoxProps } from '../common/Box'
 import { Text } from '../typography/Text'
 import { Avatar } from '../ui/Avatar'

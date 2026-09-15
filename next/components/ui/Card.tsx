@@ -1,4 +1,4 @@
-import type { PortableTextType } from '@/types/components/PortableText.types'
+import type { PortableTextValue } from '@shared/types/portable-text.types'
 import { cn } from '../../lib/common-utils'
 import type { BoxProps } from '../common/Box'
 import { Box } from '../common/Box'
@@ -7,7 +7,7 @@ import type { TitleProps } from '../typography/Title'
 import { Title } from '../typography/Title'
 
 type CardHeaderProps = {
-  title?: PortableTextType
+  title?: PortableTextValue
   titleProps?: TitleProps
 } & BoxProps
 

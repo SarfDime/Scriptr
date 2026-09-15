@@ -1,11 +1,11 @@
-import type { BoxProps } from '../../components/common/Box'
-import type { ButtonProps } from '../../components/common/Button'
-import type { TitleProps } from '../../components/typography/Title'
+import type { PortableTextValue } from '@shared/types/portable-text.types'
+import type { BoxProps } from '@/components/common/Box'
+import type { ButtonProps } from '@/components/common/Button'
+import type { TitleProps } from '@/components/typography/Title'
 import type { SanityIconProps } from '../component.types'
-import type { PortableTextType } from './PortableText.types'
 
 type CommonCollapseProps = {
-  title?: PortableTextType
+  title?: PortableTextValue
   showArrow?: boolean
   triggerArrowProps?: SanityIconProps
   triggerTitleProps?: TitleProps

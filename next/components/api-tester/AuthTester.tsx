@@ -228,8 +228,15 @@ export function AuthTester() {
               request('/api/comments', {
                 content: [
                   {
+                    _key: 'comment-block',
                     _type: 'block',
-                    children: [{ _type: 'span', text: comment }],
+                    children: [
+                      {
+                        _key: 'comment-span',
+                        _type: 'span',
+                        text: comment,
+                      },
+                    ],
                   },
                 ] satisfies PortableTextValue,
                 professor_id: professorId,

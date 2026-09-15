@@ -43,7 +43,7 @@ export const AdministratorList = ({
               key={admin._id}
               href={getAcademicPath({
                 type: 'professor',
-                id: admin._id,
+                professorSlug: admin._id,
               })}
               label={admin.title}
               value={admin.name ?? 'daw'}

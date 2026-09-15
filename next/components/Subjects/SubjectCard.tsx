@@ -1,14 +1,15 @@
+import { AcademicBadge } from '@/components/academics/AcademicBadge'
+import { Box } from '@/components/common/Box'
+import { EntityCard } from '@/components/common/EntityCard'
+import { ClickableCard } from '@/components/ui/Card'
+import { InitialsIcon } from '@/components/ui/InitialsIcon'
 import { getAcademicPath } from '@/lib/academic-routes'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import type { MinimalSubject } from '@/types/academics/subject.types'
-import { AcademicBadge } from '../academics/AcademicBadge'
-import { Box } from '../common/Box'
-import { Text } from '../typography/Text'
-import { ClickableCard } from '../ui/Card'
-import { InitialsIcon } from '../ui/InitialsIcon'
 
 export const SubjectCard = ({
   _id,
+  slug,
   name,
   code,
   year,
@@ -18,50 +19,48 @@ export const SubjectCard = ({
   study,
 }: MinimalSubject) => {
   const [firstProfessor, ...restProfessors] = professors
-
-  const facultyName = study?.faculty?.name
-  const universityName = study?.faculty?.university?.name
-
   const color = getColorPalette({ type: 'seed', value: _id })
+
+  const universitySlug =
+    study?.faculty?.university?.slug ?? study?.faculty?.university?._id ?? ''
+  const facultySlug = study?.faculty?.slug ?? study?.faculty?._id ?? ''
+  const studySlug = study?.slug ?? study?._id ?? ''
+
+  const universityName = study?.faculty?.university?.name
+  const facultyName = study?.faculty?.name
+
   return (
-    <ClickableCard
+    <EntityCard
       href={getAcademicPath({
         type: 'subject',
-        id: _id,
+        universitySlug,
+        facultySlug,
+        studySlug,
+        subjectSlug: slug ?? _id,
       })}
+      title={name}
+      media={<InitialsIcon name={name} color={color} />}
+      subtitle={
+        firstProfessor?.name
+          ? `${firstProfessor.name}${restProfessors.length > 0 ? ` +${restProfessors.length} more` : ''}`
+          : undefined
+      }
+      caption={
+        universityName || facultyName
+          ? [universityName, facultyName].filter(Boolean).join(' • ')
+          : undefined
+      }
+      headerAside={code && <AcademicBadge type='code' value={code} />}
       className='group ui-stack gap-4 shadow-2xl p-4'
-    >
-      <ClickableCard.Body className='flex items-start gap-3 p-0'>
-        <InitialsIcon name={name} color={color} />
-        <Box className='ui-stack gap-1'>
-          <Text className='ui-body'>{name}</Text>
+      footer={
+        <ClickableCard.Footer className='ui-cluster w-full items-center justify-between pt-2'>
           <Box className='ui-cluster gap-2'>
-            {firstProfessor?.name && (
-              <Text className='ui-caption'>
-                {firstProfessor.name}
-                {restProfessors.length > 0 && ` +${restProfessors.length} more`}
-              </Text>
-            )}
+            {year && <AcademicBadge type='year' value={year} />}
+            {credits && <AcademicBadge type='credits' value={credits} />}
           </Box>
-          {(universityName || facultyName) && (
-            <Text className='ui-caption'>
-              {universityName}
-              {universityName && facultyName && ' • '}
-              {facultyName}
-            </Text>
-          )}
-        </Box>
-        {code && <AcademicBadge type='code' value={code} />}
-      </ClickableCard.Body>
-
-      <ClickableCard.Footer className='ui-cluster w-full items-center justify-between pt-2'>
-        <Box className='ui-cluster gap-2'>
-          {year && <AcademicBadge type='year' value={year} />}
-          {credits && <AcademicBadge type='credits' value={credits} />}
-        </Box>
-
-        {semester && <AcademicBadge type='semester' value={semester} />}
-      </ClickableCard.Footer>
-    </ClickableCard>
+          {semester && <AcademicBadge type='semester' value={semester} />}
+        </ClickableCard.Footer>
+      }
+    />
   )
 }

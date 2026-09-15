@@ -194,6 +194,13 @@
         },
         "optional": false
       },
+      "syllabus": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": false
+      },
       "study": {
         "type": "objectAttribute",
         "value": {
@@ -326,6 +333,13 @@
         "value": {
           "type": "inline",
           "name": "richTextLite"
+        },
+        "optional": true
+      },
+      "studentCount": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
         },
         "optional": true
       },
@@ -1099,6 +1113,13 @@
         },
         "optional": true
       },
+      "studentCount": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
       "bio": {
         "type": "objectAttribute",
         "value": {
@@ -1205,13 +1226,6 @@
         "value": {
           "type": "inline",
           "name": "person.reference"
-        },
-        "optional": false
-      },
-      "studentCount": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "number"
         },
         "optional": false
       },
@@ -1499,6 +1513,13 @@
           "type": "string"
         },
         "optional": false
+      },
+      "r2BucketId": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
       },
       "dbId": {
         "type": "objectAttribute",

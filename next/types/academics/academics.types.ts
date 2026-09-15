@@ -1,7 +1,14 @@
-// academics.types.ts
-export type AcademicDetailPageProps = {
-  params: Promise<{ slug: string }>
+export type AcademicDetailPageProps<
+  TParams extends Record<string, string> = { slug: string },
+> = {
+  params: Promise<TParams>
 }
+
+export type UniversityRouteParams = { universitySlug: string }
+export type FacultyRouteParams = UniversityRouteParams & { facultySlug: string }
+export type StudyRouteParams = FacultyRouteParams & { studySlug: string }
+export type SubjectRouteParams = StudyRouteParams & { subjectSlug: string }
+export type ProfessorRouteParams = { professorSlug: string }
 
 export type MinimalEntity = {
   _id: string

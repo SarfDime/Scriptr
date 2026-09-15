@@ -1,15 +1,15 @@
 'use client'
 
+import type { PortableTextValue } from '@shared/types/portable-text.types'
 import { type ReactNode, useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { Text } from '@/components/typography/Text'
 import { cn } from '@/lib/common-utils'
-import type { PortableTextType } from '@/types/components/PortableText.types'
 import { Dialog } from './Dialog'
 
 type ConfirmActionProps = {
-  title: PortableTextType | ReactNode
+  title: PortableTextValue | ReactNode
   description: string
   confirmLabel?: string
   cancelLabel?: string

@@ -1,5 +1,6 @@
+import { BackLink } from '@/components/common/BackLink'
 import { Box } from '@/components/common/Box'
-import { NextLink } from '@/components/common/NextLink'
+import { EntityCard } from '@/components/common/EntityCard'
 import { PageLayout } from '@/components/layout/PageLayout'
 import { PortableTextContent } from '@/components/typography/PortableTextContent'
 import { Text } from '@/components/typography/Text'
@@ -12,25 +13,34 @@ import {
   fetchAcademicDetailOrNotFound,
 } from '@/lib/academic-detail-page'
 import { getAcademicPath } from '@/lib/academic-routes'
+import { compactStats } from '@/lib/common-utils'
 import {
   universityDetailQuery,
   universityStaticParamsQuery,
 } from '@/sanity/queries/academics/university.queries'
-import type { AcademicDetailPageProps } from '@/types/academics/academics.types'
+import type {
+  AcademicDetailPageProps,
+  UniversityRouteParams,
+} from '@/types/academics/academics.types'
 import type { UniversityDetail } from '@/types/academics/university.types'
 
 export const dynamicParams = false
 
-export const generateStaticParams = createAcademicStaticParams(
-  universityStaticParamsQuery,
-  'universities-static-params'
-)
+export const generateStaticParams =
+  createAcademicStaticParams<UniversityRouteParams>(
+    universityStaticParamsQuery,
+    'universities-static-params'
+  )
 
-export const generateMetadata = createAcademicMetadata<UniversityDetail>({
+export const generateMetadata = createAcademicMetadata<
+  UniversityDetail,
+  UniversityRouteParams
+>({
   query: universityDetailQuery,
   pageDomain: 'universities',
   entityLabel: 'University',
   fetchOriginPrefix: 'university',
+  getOwnSlug: (p) => p.universitySlug,
   getDescription: (university) => university.description,
   descriptionFallback: (university) =>
     `Explore faculties, departments, and academic programs at ${university.name}.`,
@@ -38,13 +48,13 @@ export const generateMetadata = createAcademicMetadata<UniversityDetail>({
 
 export default async function UniversityDetailPage({
   params,
-}: AcademicDetailPageProps) {
-  const { slug } = await params
+}: AcademicDetailPageProps<UniversityRouteParams>) {
+  const routeParams = await params
 
   const university = await fetchAcademicDetailOrNotFound<UniversityDetail>({
     query: universityDetailQuery,
-    slug,
-    fetchOrigin: `university-detail-${slug}`,
+    params: routeParams,
+    fetchOrigin: `university-detail-${routeParams.universitySlug}`,
   })
 
   return (
@@ -56,11 +66,11 @@ export default async function UniversityDetailPage({
           ? `Database ID: ${university.dbId}`
           : undefined,
         actions: (
-          <NextLink href='/universities'>
-            <Badge className='cp-unstyled border border-grey-300'>
-              ← All Universities
-            </Badge>
-          </NextLink>
+          <BackLink
+            href='/universities'
+            label='← All Universities'
+            variant='plain'
+          />
         ),
       }}
       sidebar={
@@ -180,35 +190,19 @@ export default async function UniversityDetailPage({
         {university.faculties && university.faculties.length > 0 ? (
           <Box className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
             {university.faculties.map((faculty) => (
-              <NextLink
+              <EntityCard
                 key={faculty._id}
                 href={getAcademicPath({
                   type: 'faculty',
-                  id: faculty.slug ?? faculty._id,
+                  universitySlug: routeParams.universitySlug,
+                  facultySlug: faculty.slug ?? faculty._id,
                 })}
-                className='group'
-              >
-                <Card className='p-4 h-full ui-stack gap-2 transition hover:border-brand-500 hover:shadow-sm'>
-                  <Title
-                    as='h3'
-                    className='ui-body font-semibold group-hover:text-brand'
-                  >
-                    {faculty.name}
-                  </Title>
-                  <Box className='ui-cluster gap-2 mt-auto text-grey-500'>
-                    {faculty.studyCount !== undefined && (
-                      <Text className='ui-caption'>
-                        {faculty.studyCount} Studies
-                      </Text>
-                    )}
-                    {faculty.professorCount !== undefined && (
-                      <Text className='ui-caption'>
-                        • {faculty.professorCount} Professors
-                      </Text>
-                    )}
-                  </Box>
-                </Card>
-              </NextLink>
+                title={faculty.name}
+                stats={compactStats({
+                  Studies: faculty.studyCount,
+                  Professors: faculty.professorCount,
+                })}
+              />
             ))}
           </Box>
         ) : (

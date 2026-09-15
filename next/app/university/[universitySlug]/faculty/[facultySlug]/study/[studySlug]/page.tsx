@@ -1,8 +1,8 @@
 import { ProfessorsSection } from '@/components/academics/professor/ProfessorsSection'
 import { StudyOverviewCard } from '@/components/academics/study/StudyOverviewCard'
 import { StudySubjectsExplorer } from '@/components/academics/study/StudySubjectsExplorer'
+import { BackLink } from '@/components/common/BackLink'
 import { Box } from '@/components/common/Box'
-import { NextLink } from '@/components/common/NextLink'
 import { PageLayout } from '@/components/layout/PageLayout'
 import {
   createAcademicMetadata,
@@ -14,21 +14,29 @@ import {
   studyDetailQuery,
   studyStaticParamsQuery,
 } from '@/sanity/queries/academics/study.queries'
-import type { AcademicDetailPageProps } from '@/types/academics/academics.types'
+import type {
+  AcademicDetailPageProps,
+  StudyRouteParams,
+} from '@/types/academics/academics.types'
 import type { StudyDetail } from '@/types/academics/study.types'
 
 export const dynamicParams = false
 
-export const generateStaticParams = createAcademicStaticParams(
-  studyStaticParamsQuery,
-  'studies-static-params'
-)
+export const generateStaticParams =
+  createAcademicStaticParams<StudyRouteParams>(
+    studyStaticParamsQuery,
+    'studies-static-params'
+  )
 
-export const generateMetadata = createAcademicMetadata<StudyDetail>({
+export const generateMetadata = createAcademicMetadata<
+  StudyDetail,
+  StudyRouteParams
+>({
   query: studyDetailQuery,
   pageDomain: 'studies',
   entityLabel: 'Study',
   fetchOriginPrefix: 'study',
+  getOwnSlug: (p) => p.studySlug,
   getDescription: (study) => study.description,
   descriptionFallback: (study) =>
     `Explore academic subjects, faculty administration, and professors at ${study.name}.`,
@@ -36,13 +44,13 @@ export const generateMetadata = createAcademicMetadata<StudyDetail>({
 
 export default async function StudyDetailPage({
   params,
-}: AcademicDetailPageProps) {
-  const { slug } = await params
+}: AcademicDetailPageProps<StudyRouteParams>) {
+  const routeParams = await params
 
   const study = await fetchAcademicDetailOrNotFound<StudyDetail>({
     query: studyDetailQuery,
-    slug,
-    fetchOrigin: `study-detail-${slug}`,
+    params: routeParams,
+    fetchOrigin: `study-detail-${routeParams.universitySlug}-${routeParams.facultySlug}-${routeParams.studySlug}`,
   })
 
   return (
@@ -53,22 +61,27 @@ export default async function StudyDetailPage({
         actions: (
           <Box className='ui-cluster gap-2'>
             {study.faculty && (
-              <NextLink
+              // NOTE: kept the pre-existing behavior of linking to the parent
+              // university, labeled with the faculty's name. If you actually
+              // want this to link to the faculty page instead, switch this to
+              // `type: 'faculty'` with both universitySlug and facultySlug.
+              <BackLink
                 href={getAcademicPath({
                   type: 'university',
-                  id: study.faculty.slug ?? study.faculty._id,
+                  universitySlug:
+                    study.faculty.university?.slug ??
+                    study.faculty.university?._id ??
+                    '',
                 })}
-                className='ui-badge cp-red-interactive'
-              >
-                {study.faculty.name}
-              </NextLink>
+                label={study.faculty.name}
+                variant='red'
+              />
             )}
-            <NextLink
+            <BackLink
               href='/universities'
-              className='ui-badge cp-brand-interactive'
-            >
-              ← All Universities
-            </NextLink>
+              label='← All Universities'
+              variant='brand'
+            />
           </Box>
         ),
       }}
@@ -76,7 +89,6 @@ export default async function StudyDetailPage({
     >
       <StudyOverviewCard study={study} />
 
-      {/* TODO: Change to StudySubjectsExplorer once it is implemented */}
       <StudySubjectsExplorer subjects={study.subjects ?? []} />
     </PageLayout>
   )

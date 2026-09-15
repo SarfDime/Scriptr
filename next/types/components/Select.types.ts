@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import type { BoxProps } from '../../components/common/Box'
-import type { ButtonProps } from '../../components/common/Button'
+import type { BoxProps } from '@/components/common/Box'
+import type { ButtonProps } from '@/components/common/Button'
 
 type SelectOptionType<T = string> = {
   id: string

@@ -44,4 +44,5 @@ export const generatePath = ({
     .join('/')
     .replace(/\/+/g, '/')
 }
+
 export { camelCase, capitalize, getAttribute }

@@ -1,8 +1,8 @@
 import { FacultyOverviewCard } from '@/components/academics/faculty/FacultyOverviewCard'
 import { FacultyStudyExplorer } from '@/components/academics/faculty/FacultyStudyExplorer'
 import { ProfessorsSection } from '@/components/academics/professor/ProfessorsSection'
+import { BackLink } from '@/components/common/BackLink'
 import { Box } from '@/components/common/Box'
-import { NextLink } from '@/components/common/NextLink'
 import { PageLayout } from '@/components/layout/PageLayout'
 import {
   createAcademicMetadata,
@@ -14,21 +14,29 @@ import {
   facultyDetailQuery,
   facultyStaticParamsQuery,
 } from '@/sanity/queries/academics/faculty.queries'
-import type { AcademicDetailPageProps } from '@/types/academics/academics.types'
+import type {
+  AcademicDetailPageProps,
+  FacultyRouteParams,
+} from '@/types/academics/academics.types'
 import type { FacultyDetail } from '@/types/academics/faculty.types'
 
 export const dynamicParams = false
 
-export const generateStaticParams = createAcademicStaticParams(
-  facultyStaticParamsQuery,
-  'faculties-static-params'
-)
+export const generateStaticParams =
+  createAcademicStaticParams<FacultyRouteParams>(
+    facultyStaticParamsQuery,
+    'faculties-static-params'
+  )
 
-export const generateMetadata = createAcademicMetadata<FacultyDetail>({
+export const generateMetadata = createAcademicMetadata<
+  FacultyDetail,
+  FacultyRouteParams
+>({
   query: facultyDetailQuery,
   pageDomain: 'faculties',
   entityLabel: 'Faculty',
   fetchOriginPrefix: 'faculty',
+  getOwnSlug: (p) => p.facultySlug,
   getDescription: (faculty) => faculty.description,
   descriptionFallback: (faculty) =>
     `Explore academic subjects, faculty administration, and professors at ${faculty.name}.`,
@@ -36,13 +44,13 @@ export const generateMetadata = createAcademicMetadata<FacultyDetail>({
 
 export default async function FacultyDetailPage({
   params,
-}: AcademicDetailPageProps) {
-  const { slug } = await params
+}: AcademicDetailPageProps<FacultyRouteParams>) {
+  const routeParams = await params
 
   const faculty = await fetchAcademicDetailOrNotFound<FacultyDetail>({
     query: facultyDetailQuery,
-    slug,
-    fetchOrigin: `faculty-detail-${slug}`,
+    params: routeParams,
+    fetchOrigin: `faculty-detail-${routeParams.universitySlug}-${routeParams.facultySlug}`,
   })
 
   return (
@@ -53,22 +61,21 @@ export default async function FacultyDetailPage({
         actions: (
           <Box className='ui-cluster gap-2'>
             {faculty.university && (
-              <NextLink
+              <BackLink
                 href={getAcademicPath({
                   type: 'university',
-                  id: faculty.university.slug ?? faculty.university._id,
+                  universitySlug:
+                    faculty.university.slug ?? faculty.university._id,
                 })}
-                className='ui-badge cp-red-interactive'
-              >
-                {faculty.university.name}
-              </NextLink>
+                label={faculty.university.name}
+                variant='red'
+              />
             )}
-            <NextLink
+            <BackLink
               href='/universities'
-              className='ui-badge cp-brand-interactive'
-            >
-              ← All Universities
-            </NextLink>
+              label='← All Universities'
+              variant='brand'
+            />
           </Box>
         ),
       }}
@@ -76,7 +83,7 @@ export default async function FacultyDetailPage({
     >
       <FacultyOverviewCard faculty={faculty} />
 
-      <FacultyStudyExplorer studies={faculty.studies ?? []} />
+      <FacultyStudyExplorer studies={faculty.studies} />
     </PageLayout>
   )
 }

@@ -1,8 +1,8 @@
 import { ScriptsSection } from '@/components/academics/scripts/ScriptSection'
 import { SubjectHighlightsCard } from '@/components/academics/subject/SubjectHighlightsCard'
 import { SubjectOverviewCard } from '@/components/academics/subject/SubjectOverviewCard'
+import { BackLink } from '@/components/common/BackLink'
 import { Box } from '@/components/common/Box'
-import { NextLink } from '@/components/common/NextLink'
 import { PageLayout } from '@/components/layout/PageLayout'
 import { Card } from '@/components/ui/Card'
 import {
@@ -16,21 +16,29 @@ import {
   subjectDetailQuery,
   subjectStaticParamsQuery,
 } from '@/sanity/queries/academics/subject.queries'
-import type { AcademicDetailPageProps } from '@/types/academics/academics.types'
+import type {
+  AcademicDetailPageProps,
+  SubjectRouteParams,
+} from '@/types/academics/academics.types'
 import type { SubjectDetail } from '@/types/academics/subject.types'
 
 export const dynamicParams = false
 
-export const generateStaticParams = createAcademicStaticParams(
-  subjectStaticParamsQuery,
-  'subjects-static-params'
-)
+export const generateStaticParams =
+  createAcademicStaticParams<SubjectRouteParams>(
+    subjectStaticParamsQuery,
+    'subjects-static-params'
+  )
 
-export const generateMetadata = createAcademicMetadata<SubjectDetail>({
+export const generateMetadata = createAcademicMetadata<
+  SubjectDetail,
+  SubjectRouteParams
+>({
   query: subjectDetailQuery,
   pageDomain: 'subjects',
   entityLabel: 'Subject',
   fetchOriginPrefix: 'subject',
+  getOwnSlug: (p) => p.subjectSlug,
   getDescription: (subject) => subject.description,
   descriptionFallback: (subject) =>
     `Syllabus, academic year, exam sessions, and course details for ${subject.name}.`,
@@ -38,13 +46,13 @@ export const generateMetadata = createAcademicMetadata<SubjectDetail>({
 
 export default async function SubjectDetailPage({
   params,
-}: AcademicDetailPageProps) {
-  const { slug } = await params
+}: AcademicDetailPageProps<SubjectRouteParams>) {
+  const routeParams = await params
 
   const subject = await fetchAcademicDetailOrNotFound<SubjectDetail>({
     query: subjectDetailQuery,
-    slug,
-    fetchOrigin: `subject-detail-${slug}`,
+    params: routeParams,
+    fetchOrigin: `subject-detail-${routeParams.universitySlug}-${routeParams.facultySlug}-${routeParams.studySlug}-${routeParams.subjectSlug}`,
   })
 
   const study = subject.study
@@ -56,16 +64,18 @@ export default async function SubjectDetailPage({
         title: subject.name,
         subtitle: subject.dbId ? `Database ID: ${subject.dbId}` : undefined, //TODO: Subtitle should be short bio or something similar not dbID all across the project
         actions: study?.faculty && (
-          // TODO: Factor out to reusable breadcrumb component
-          <NextLink
+          <BackLink
             href={getAcademicPath({
               type: 'faculty',
-              id: study.faculty.slug ?? study.faculty._id,
+              universitySlug:
+                study.faculty.university?.slug ??
+                study.faculty.university?._id ??
+                '',
+              facultySlug: study.faculty.slug ?? study.faculty._id,
             })}
-            className='ui-badge cp-brand-interactive'
-          >
-            ← {study.faculty.name}
-          </NextLink>
+            label={`← ${study.faculty.name}`}
+            variant='brand'
+          />
         ),
       }}
     >

@@ -1,24 +1,6 @@
-import type { Json } from './database.types'
+import type { RichTextLite } from './sanity.types'
+import type { WithResolvedSanityData } from './sanity-transform.types'
 
-export type PortableTextSpan = {
-  _key?: string
-  _type: 'span'
-  marks?: Array<string>
-  text: string
-}
-
-export type PortableTextMarkDefinition = {
-  [key: string]: Json | undefined
-}
-
-export type PortableTextBlock = {
-  _key?: string
-  _type: 'block'
-  children: Array<PortableTextSpan>
-  markDefs?: Array<PortableTextMarkDefinition>
-  style?: string
-  listItem?: string
-  level?: number
-}
-
-export type PortableTextValue = Array<PortableTextBlock>
+export type PortableTextValue = NonNullable<
+  WithResolvedSanityData<RichTextLite>
+>

@@ -1,3 +1,4 @@
+import type { PortableTextValue } from '@shared/types/portable-text.types'
 import type { BoxProps } from '@/components/common/Box'
 import type { ButtonProps } from '@/components/common/Button'
 import type { NextLinkProps } from '@/components/common/NextLink'
@@ -5,7 +6,6 @@ import type { TextProps } from '@/components/typography/Text'
 import type { MinimalSubject } from '../academics/subject.types'
 import type { SanityIconProps } from '../component.types'
 import type { ComponentColorPalettes } from './ColorPalettes.types'
-import type { PortableTextType } from './PortableText.types'
 
 // -----------------------------------------------------------------------------
 // Base Primitives & Shared Traits
@@ -114,7 +114,7 @@ export type ScriptCardProps = {
 
 export type ScriptsSectionProps = Omit<BoxProps, 'content' | 'as'> &
   ScriptFiltersProps & {
-    content: PortableTextType
+    content: PortableTextValue
     scripts: Array<Script>
     savedIds: Array<ScriptId>
     likedIds: Array<ScriptId>
@@ -128,5 +128,5 @@ export type PageDataProps = {
   greeting?: string
   authoredCount?: number
   commentCount?: number
-  activityContent?: PortableTextType
+  activityContent?: PortableTextValue
 }

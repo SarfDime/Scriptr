@@ -1,32 +1,15 @@
-import type { BoxProps } from '@/components/common/Box'
-import type { SanityImageType } from '../common.types'
-import type { PersonSummary } from '../components/Person.types'
-import type { PortableTextType } from '../components/PortableText.types'
 import type {
-  AddressableContactInfo,
-  MinimalEntity,
-  RelatedFaculty,
-} from './academics.types'
-import type { MinimalProfessor } from './professor.types'
-import type { MinimalSubject } from './subject.types'
+  MinimalStudyTypedQueryResult,
+  StudyDetailQueryResult,
+} from '@shared/types/sanity.types'
+import type { WithResolvedSanityData } from '@shared/types/sanity-transform.types'
+import type { BoxProps } from '@/components/common/Box'
 
-type MinimalStudy = MinimalEntity & {
-  picture?: SanityImageType
-  studentCount?: number
-  subjectCount?: number
-  assistant?: PersonSummary
-  professorCount?: number
+type MinimalStudy = NonNullable<
+  WithResolvedSanityData<MinimalStudyTypedQueryResult>
+>
 
-  faculty?: RelatedFaculty
-  professors?: Array<MinimalProfessor>
-  subjects?: Array<MinimalSubject>
-}
-
-type StudyDetail = Omit<MinimalStudy, 'subjectCount' | 'professorCount'> &
-  AddressableContactInfo & {
-    _type: 'study'
-    description?: PortableTextType
-  }
+type StudyDetail = NonNullable<WithResolvedSanityData<StudyDetailQueryResult>>
 
 type StudyOverviewCardProps = {
   study: StudyDetail

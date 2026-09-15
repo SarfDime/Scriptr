@@ -8,13 +8,13 @@ import { Text } from '@/components/typography/Text'
 import { Title } from '@/components/typography/Title'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
-import type { SubjectDetail } from '@/types/academics/subject.types'
+import type { MinimalSubject } from '@/types/academics/subject.types'
 
-type StudySubject = Omit<SubjectDetail, '_type'>
+type StudySubject = MinimalSubject
 type SortOption = 'year' | 'name' | 'professor'
 
 type StudySubjectsExplorerProps = {
-  subjects: Array<StudySubject>
+  subjects: Array<MinimalSubject>
 }
 
 const getPrimaryProfessorName = (subject: StudySubject) =>

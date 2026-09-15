@@ -8,8 +8,7 @@
 **Workflow & Editing Rules**
 
 * **Check Priorities:** Always review `ARCHITECTURE.md` (system design) and `PROGRESS.md` (what's done vs. outstanding) and target workspace READMEs before starting.
-* **Generated Files:** NEVER hand-edit `shared/types/database.types.ts`, `next/sanity.types.ts`, `sanity/schema.json`, `hono/src/types/supabase.ts`, or `shared/config/api-routes.ts`.
-* **Schema Changes:** Run `npm run gen:api-types`, then grep/remove dead references across `hono/` and `next/`.
++ **Generated Files:** NEVER hand-edit `shared/types/database.types.ts`, `shared/types/sanity.types.ts` (Sanity TypeGen output — generates here now, not `next/`, so every workspace imports Sanity types from `shared/types/` instead of maintaining its own copy), `sanity/schema.json`, `hono/src/types/supabase.ts`, or `shared/config/api-routes.ts`.* **Schema Changes:** Run `npm run gen:api-types`, then grep/remove dead references across `hono/` and `next/`.
 * **Secrets:** Store exclusively in `.env`. No credentials or production data in docs/fixtures.
 * **Local Checks:** Validate the smallest affected workspace first. Do not stop at a plan—implement and verify locally. Keep PRs focused; no unrelated refactors.
 
@@ -24,7 +23,7 @@
 * **Core Principles:** Use SOLID principles, composition over inheritance, and strict TypeScript (no `any`).
 * **DRY:** Extract logic or UI components only if used in 2+ places. Do not add new abstractions if existing helpers work.
 * **Prefer composition over inheritance**: Build features by composing existing components and hooks rather than extending base classes.
-* **Types:** Centralize types in `shared/types/` (preferred), `next/types/`, or `hono/src/types/`. In-file types are only allowed if they are <3 fields and strictly local.
++ **Types:** Centralize types in `shared/types/` (preferred), `next/types/`, or `hono/src/types/`. In-file types are only allowed if they are <3 fields and strictly local. Academic entity types (faculty/study/subject/etc.) are derived from the corresponding Sanity TypeGen query-result type via `WithResolvedSanityData<...>` (`shared/types/sanity-transform.types.ts`) — e.g. `type StudyDetail = NonNullable<WithResolvedSanityData<StudyDetailQueryResult>>` — rather than hand-written. Only hand-write a type where no query-result type exists to derive from.
 
 **Frontend (`next/`)**
 
@@ -40,3 +39,4 @@
 * **API Design:** Use arrow functions and strict RESTful conventions (GET, POST, PATCH, DELETE). Ensure consistent HTTP status codes and error messages.
 * **Documentation:** Always update `hono/src/routes/API_DOCUMENTATION.md` and `API_TESTING_GUIDE.md` when altering routes, and reflect the change's status (done/outstanding) in `PROGRESS.md`.
 * **New route files must be mounted, not just built:** a fully-built, fully-documented route file with zero `.route()` call anywhere in `index.ts` will type-check clean and pass review — it just silently 404s in production. When adding a route file, grep `index.ts` for it as a final check before calling the work done.
++ **Type-only Sanity imports:** `hono/` doesn't install `@sanity/client` as a real dependency, but importing Sanity TypeGen types still requires TypeScript to resolve that package's module-augmentation target. `hono/src/sanity-stub.d.ts` declares a minimal stub for this — don't remove it, and don't install `@sanity/client` for real just to silence a missing-module error here.

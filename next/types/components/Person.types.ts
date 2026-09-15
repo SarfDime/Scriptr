@@ -1,4 +1,4 @@
-import type { SanityImageType } from '../common.types'
+import type { SanityImageType } from '@shared/types/sanity-transform.types'
 
 export type PersonSummary = {
   _id: string

@@ -1,40 +1,19 @@
-import type { SanityImageType } from '../common.types'
-import type { PortableTextType } from '../components/PortableText.types'
 import type {
-  ContactInfo,
-  MinimalEntity,
-  RelatedFaculty,
-} from './academics.types'
-import type { FacultyDetail } from './faculty.types'
-import type { MinimalSubject } from './subject.types'
+  MinimalProfessorTypedQueryResult,
+  ProfessorDetailQueryResult,
+} from '@shared/types/sanity.types'
+import type { WithResolvedSanityData } from '@shared/types/sanity-transform.types'
 
-type MinimalProfessor = MinimalEntity & {
-  title?: string
-  picture?: SanityImageType
-  faculties?: Array<Pick<MinimalEntity, '_id' | 'name'>>
-  universities?: Array<MinimalEntity>
-  subjects?: Array<Pick<MinimalSubject, '_id' | 'name' | 'code' | 'slug'>>
-}
+type MinimalProfessor = NonNullable<
+  WithResolvedSanityData<MinimalProfessorTypedQueryResult>
+>
 
-type ProfessorDetail = Omit<MinimalProfessor, 'faculties' | 'subjects'> &
-  ContactInfo & {
-    _type: 'professor'
-    bio?: PortableTextType
-    office?: string
-    faculties?: Array<RelatedFaculty>
-    subjects?: Array<
-      Pick<
-        MinimalSubject,
-        '_id' | 'name' | 'year' | 'code' | 'credits' | 'slug'
-      > & {
-        dbId?: string
-        faculty?: MinimalEntity
-      }
-    >
-  }
+type ProfessorDetail = NonNullable<
+  WithResolvedSanityData<ProfessorDetailQueryResult>
+>
 
 type ProfessorsSectionProps = {
-  professors: FacultyDetail['professors']
+  professors: Array<MinimalProfessor>
 }
 
 export type { MinimalProfessor, ProfessorDetail, ProfessorsSectionProps }

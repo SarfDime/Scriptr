@@ -1,6 +1,6 @@
+import type { SanityButton, SanityImageType } from '@shared/types/common.types'
 import type { PortableTextBlock, PortableTextComponentProps } from 'next-sanity'
 import { IMAGE_SIZES } from '@/styles/style'
-import type { SanityButton, SanityImageType } from '@/types/common.types'
 import { cn, generateSlug } from '../../lib/common-utils'
 import type { ComponentParserType } from '../../types/components/PortableText.types'
 import { NextImage } from '../common/NextImage'

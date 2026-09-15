@@ -209,6 +209,20 @@ export const academicBioField = (
       })
 }
 
+export const academicStudentCountField = ({
+  grouping = 'information',
+  required = false,
+}: AcademicFieldOptions & { required?: boolean }): FieldDefinition =>
+  defineField({
+    name: 'studentCount',
+    title: 'Student Count',
+    description: 'Number of students associated attending.',
+    type: 'number',
+    fieldset: grouping,
+    group: grouping,
+    validation: required ? (rule) => rule.required() : undefined,
+  })
+
 export const academicTelephoneField = ({
   grouping = 'contactInfo',
   required = false,
@@ -328,6 +342,7 @@ export type AcademicFieldKey =
   | 'office'
   | 'slug'
   | 'dbId'
+  | 'studentCount'
 
 export type AcademicFieldsOverrides = Partial<{
   name: AcademicFieldOptions
@@ -343,6 +358,7 @@ export type AcademicFieldsOverrides = Partial<{
   streetAddress: AcademicLinkFieldOptions
   office: AcademicLinkFieldOptions
   dbId: AcademicFieldOptions
+  studentCount: AcademicFieldOptions
 }>
 
 type AcademicFieldContext = {
@@ -365,6 +381,8 @@ const FIELD_BUILDERS: Record<
       grouping,
       ...overrides.description,
     }),
+  studentCount: ({ grouping, overrides }) =>
+    academicStudentCountField({ grouping, ...overrides.studentCount }),
   keywords: ({ grouping, overrides }) =>
     academicKeywordsField({ grouping, ...overrides.keywords }),
   bio: ({ grouping, overrides }) =>

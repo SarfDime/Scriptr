@@ -2,8 +2,8 @@ import Comment from '@sanity/icons/Comment'
 import DocumentText from '@sanity/icons/DocumentText'
 import Heart from '@sanity/icons/Heart'
 import { UI_STRINGS } from '@shared/config/strings'
+import type { PortableTextValue } from '@shared/types/portable-text.types'
 import { DEFAULT_ACTIVITY_CONTENT } from '@/config/content'
-import type { PortableTextType } from '@/types/components/PortableText.types'
 import { PortableTextContent } from '../typography/PortableTextContent'
 import { Text } from '../typography/Text'
 import { Card } from '../ui/Card'
@@ -14,7 +14,7 @@ interface ActivityStatsProps {
   savedCount: number
   authoredCount: number
   commentCount: number
-  content?: PortableTextType
+  content?: PortableTextValue
 }
 
 export const ActivityStats = ({

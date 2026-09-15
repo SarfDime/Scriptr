@@ -1,11 +1,11 @@
 'use client'
 
+import type { PortableTextValue } from '@shared/types/portable-text.types'
 import type { DetailedHTMLProps, DialogHTMLAttributes, ReactNode } from 'react'
 import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useBodyScrollLock } from '@/hooks/useBodyScroll'
 import { cn, getPlacementClasses } from '@/lib/common-utils'
-import type { PortableTextType } from '@/types/components/PortableText.types'
 import { Z_INDEX } from '../../styles/style'
 import type { ComponentPlacement } from '../../types/component.types'
 import { Box, type BoxProps } from '../common/Box'
@@ -16,7 +16,7 @@ import type { CloseButtonProps } from './CloseButton'
 import { CloseButton } from './CloseButton'
 
 export type DialogProps = {
-  title?: PortableTextType | ReactNode
+  title?: PortableTextValue | ReactNode
   children: ReactNode
   placement?: ComponentPlacement['placement']
   triggerButtonProps?: ButtonProps

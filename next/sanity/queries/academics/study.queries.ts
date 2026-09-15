@@ -1,36 +1,43 @@
 import { groq } from 'next-sanity'
-import { sanityImageFunction } from '../functions.queries'
-import { minimalFacultyQuery } from './faculty.queries'
+import { sanityFunctionQueries } from '../functions.queries'
+// import { minimalFacultyQuery } from './faculty.queries'
 import { minimalProfessorQuery } from './professor.queries'
 import { minimalSubjectQuery } from './subject.queries'
 
 /** Minimal query for SEO metadata on a study. */
 export const studySeoQuery = groq`
-*[_type == "study" && (slug.current == $slug || _id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {
+*[_type == "study"
+  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)
+  && faculty->slug.current == $facultySlug
+  && faculty->university->slug.current == $universitySlug
+][0] {
   _id,
   "slug": slug.current,
   name,
-  description
+  description,
 }
 `
 
-export const minimalStudyQuery = groq`
+export const minimalStudyQuery = /* groq */ `
 _id,
+dbId,
 "slug": slug.current,
 name,
 studentCount,
-defined(picture)=>{ "picture": sanityImage::full(picture) },
+"picture": sanityImage::full(picture),
 assistant->{
   _id,
   name,
   title,
-  defined(picture)=>{ "picture": sanityImage::full(picture) }
+  "picture": sanityImage::full(picture)
 },
 faculty->{
   _id,
+  "slug": slug.current,
   name,
   university->{
     _id,
+    "slug": slug.current,
     name,
   }
 },
@@ -44,37 +51,43 @@ faculty->{
 },
 `
 
+/** @private @description DO NOT USE !! Minimal query for typed GROQ result */
+export const minimalStudyTypedQuery = groq`
+${sanityFunctionQueries}
+
+*[_type == "study"
+  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)
+  && faculty->slug.current == $facultySlug
+  && faculty->university->slug.current == $universitySlug
+][0] {
+${minimalStudyQuery}
+}
+`
+
 /** Deep relational query for a study: own info, parent university, parent faculty, and child professors/subjects */
 export const studyDetailQuery = groq`
-${sanityImageFunction}
+${sanityFunctionQueries}
 
-*[_type == "study" && (slug.current == $slug || _id == $slug || _id == "drafts." + $slug || dbId == $slug)][0] {
-  _id,
-  "slug": slug.current,
+*[_type == "study"
+  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)
+  && faculty->slug.current == $facultySlug
+  && faculty->university->slug.current == $universitySlug
+][0] {
+  ${minimalStudyQuery}
   _type,
-  name,
   description,
   streetAddress,
   telephone,
   email,
-  defined(picture)=>{ "picture": sanityImage::full(picture) },
   website,
-  studentCount,
-  faculty->{
-    ${minimalFacultyQuery},
-  },
-  "professors": *[_type == "professor" && references(^._id)] | order(name asc) {
-    ${minimalProfessorQuery}
-  },
-  "subjects": *[_type == "subject" && references(^._id)] | order(year asc, name asc) {
-    ${minimalSubjectQuery}
-  }
 }
 `
 
 /** Static params query for pre-generating all study subroutes */
 export const studyStaticParamsQuery = groq`
 *[_type == "study" && !(_id in path("drafts.**"))] {
-  "slug": coalesce(slug.current, _id)
+  "studySlug": coalesce(slug.current, _id),
+  "facultySlug": coalesce(faculty->slug.current, faculty->_id),
+  "universitySlug": coalesce(faculty->university->slug.current, faculty->university->_id)
 }
 `

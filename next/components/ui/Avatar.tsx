@@ -19,6 +19,7 @@ export const Avatar = ({
           <NextImage
             {...picture}
             className='rounded-full shrink-0 object-cover h-full aspect-square ui-center p-6'
+            fillProp
           />
         ) : (
           <InitialsIcon name={name} color={color} />

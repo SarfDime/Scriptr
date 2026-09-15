@@ -2,16 +2,34 @@ import {
   createImageUrlBuilder,
   type SanityImageSource,
 } from '@sanity/image-url'
+import type {
+  LinkSelectorProps,
+  Summarizable,
+} from '@shared/types/common.types'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
 import { generatePath } from '@shared/utils/common-utils'
 import { type ClassValue, clsx } from 'clsx'
 import { toPlainText } from 'next-sanity'
 import { twMerge } from 'tailwind-merge'
+import type { EntityCardStat } from '@/components/common/EntityCard'
 import { isProd } from '@/config/env'
-import type { LinkSelectorProps, Summarizable } from '@/types/common.types'
 import type { PersonSummary } from '@/types/components/Person.types'
 import { client } from '../sanityClient'
 import type { ComponentPlacement } from '../types/component.types'
+
+/**
+ * Builds an `EntityCard` stats array from a label→value record, dropping any
+ * entries whose value is `undefined` (e.g. optional counts not yet computed).
+ * Insertion order is preserved, so callers control display order via key order.
+ */
+export const compactStats = (
+  values: Record<string, number | string | undefined>
+): Array<EntityCardStat> =>
+  Object.entries(values)
+    .filter(
+      (entry): entry is [string, number | string] => entry[1] !== undefined
+    )
+    .map(([label, value]) => ({ label, value }))
 
 /** Formats a given date into a human-readable string indicating how long ago it was updated. */
 export const formatUpdated = (date: Date) => {

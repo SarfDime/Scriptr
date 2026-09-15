@@ -1,12 +1,12 @@
+import type { PortableTextValue } from '@shared/types/portable-text.types'
 import { cn } from '@/lib/common-utils'
-import type { PortableTextType } from '@/types/components/PortableText.types'
 import { PortableTextContent } from '../typography/PortableTextContent'
 import { Title } from '../typography/Title'
 import { Card } from '../ui/Card'
 
 export type DescriptionCardProps = {
   title?: string
-  description?: PortableTextType
+  description?: PortableTextValue
   className?: string
 }
 

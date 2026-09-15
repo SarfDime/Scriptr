@@ -18,7 +18,7 @@ export const ScriptCommentsLink = ({
 }: ScriptCommentsLinkProps) => (
   <NextLink
     {...props}
-    href={getAcademicPath({ id, type: 'script' })}
+    href={getAcademicPath({ scriptSlug: id, type: 'script' })}
     className={cn(
       'ui-caption flex items-center gap-1.5 px-2 py-1 text-grey-500 hover:text-brand',
       className

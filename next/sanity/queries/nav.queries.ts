@@ -1,6 +1,10 @@
 import { groq } from 'next-sanity'
+import { linkSelectorFunction, sanityImageFunction } from './functions.queries'
 
 const navMenuQuery = groq`
+${sanityImageFunction}
+${linkSelectorFunction}
+
 *[_id == $WEBSITE][0]{
   "navMenu": navMenu->{
     defined(title) => {title},

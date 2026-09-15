@@ -1,4 +1,4 @@
-import type { BoxProps } from '../../components/common/Box'
+import type { BoxProps } from '@/components/common/Box'
 
 type SkeletonCircleProps = {
   size?: string
