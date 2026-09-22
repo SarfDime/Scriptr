@@ -56,6 +56,7 @@ study->{
 },
 professors[]->{
   _id,
+  dbId,
   "slug": slug.current,
   name,
   title,
@@ -85,6 +86,27 @@ ${sanityFunctionQueries}
   && study->faculty->slug.current == $facultySlug
   && study->faculty->university->slug.current == $universitySlug
 ][0] {
+  ${minimalSubjectQuery}
+  _type,
+  dbId,
+  professors[]->{
+    _id,
+    "slug": slug.current,
+    name,
+    dbId,
+    title,
+    picture,
+    email
+  }
+}
+`
+
+/** Fetches a subject by its own Sanity `_id` directly — no ancestor-slug
+ * scoping, unlike subjectDetailQuery above */
+export const subjectByIdQuery = groq`
+${sanityFunctionQueries}
+
+*[_type == "subject" && (_id == $subjectId || _id == "drafts." + $subjectId)][0] {
   ${minimalSubjectQuery}
   _type,
   dbId,

@@ -25,6 +25,28 @@ export const UI_STRINGS = {
     actions: {
       download: 'Download',
       preview: 'Preview',
+      noFilesAttached: 'No files attached to this script.',
+    },
+    uploadModal: {
+      title: 'Upload a script',
+      triggerLabel: 'New script',
+      submitButtonLabel: 'Create Script',
+      cancelButtonLabel: 'Clear',
+      description: 'Fill out the form below to upload a new script.',
+      formTitle: 'Script Details',
+      formDescription: 'Provide the necessary details for your script.',
+      examSessionLabel: 'Exam session (optional)',
+      examSessionPlaceholder: 'e.g. Winter 2026',
+      additionalReadingLabel: 'Additional reading (optional)',
+      filesLabel: 'Files',
+      removeButtonLabel: 'Remove',
+      addLinkButtonLabel: 'Add link',
+      statuses: {
+        uploading: 'Uploading files…',
+        creating: 'Creating script…',
+        error: 'An error occurred while creating the script.',
+        success: 'Script created successfully.',
+      },
     },
   },
   subjects: {

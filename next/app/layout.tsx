@@ -156,7 +156,6 @@ export default async function RootLayout({
     <html
       lang='en'
       data-scroll-behavior='smooth'
-      // TODO: Consider adding a lang attribute dynamically based on user preferences or locale
       // TODO: When implementing dark mode consider adding a class or data attribute to the HTML element to toggle dark mode styles
       className={`${antiqueOlive.variable} ${antiqueOliveCond.variable} ${matter.variable} ${bricolage.variable} antialiased`}
     >

@@ -19,6 +19,7 @@ REST API reference for Scriptr. All paths are relative to `/api`
     - [Public](#public-1)
     - [Authenticated](#authenticated-1)
   - [Flags](#flags)
+  - [Restrictions](#restrictions)
   - [Profiles](#profiles)
     - [Public](#public-2)
     - [Authenticated](#authenticated-2)
@@ -231,7 +232,7 @@ required; list routes include `reactions_count`, `reactions_by_type`,
 | `POST /comments`                      | `{ content: PortableTextValue, professor_id? \| script_id? }` — exactly one target. Rejected if restricted. |
 | `POST /comments/:commentId/replies`   | Same body shape, sets `parent_id`                                                                           |
 | `POST /comments/:commentId/reactions` | `{ reaction_type }` — upsert, replaces existing reaction. Rejected if restricted.                           |
-| `POST /comments/:commentId/like`      | Toggle. **Not** restriction-checked.                                                                        |
+| `POST /comments/:commentId/like`      | Toggle. Rejected if restricted.                                                                             |
 | `PATCH /comments/:id`                 | Author or admin. `{ content }`                                                                              |
 | `DELETE /comments/:id`                | Author or admin                                                                                             |
 | `GET /comments/flagged/all`           | Admin only                                                                                                  |
@@ -255,6 +256,25 @@ Reporters can create, view their own, and delete their own flag — that's the
 complete self-service surface. They cannot change a flag's `status`; only an
 admin can resolve one. Moderators have no flag access at all (see
 [Role-Based Access Control](#role-based-access-control)).
+
+---
+
+## Restrictions
+
+Admin-managed. `profile_restrictions` has `profile_id` as its primary key —
+one row per restricted user; its presence *is* the restriction. Enforced
+elsewhere via `is_restricted()` in RLS (blocks creating/updating scripts,
+comments, flags, comment reactions, votes, ratings — see
+[Role-Based Access Control](#role-based-access-control)); this section is
+just the admin CRUD surface.
+
+| Route                             | Access                                                                                                                                              |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /restrictions`               | Admin only. All active restrictions.                                                                                                                |
+| `GET /restrictions/me`            | Any authenticated user. Own restriction status, or `null`.                                                                                          |
+| `GET /restrictions/:profileId`    | Owner or admin (RLS-enforced) — a non-admin querying someone else's status silently gets `null`, indistinguishable from unrestricted.               |
+| `PUT /restrictions/:profileId`    | Admin only. `{ reason (3–500 chars) }` — upsert; restricting an already-restricted user updates the reason and `restricted_by` instead of erroring. |
+| `DELETE /restrictions/:profileId` | Admin only. Lifts the restriction. `404` if the user wasn't restricted.                                                                             |
 
 ---
 
@@ -424,9 +444,9 @@ any elevated database privilege today.**
 5. Internal catalog writes and role changes require `x-internal-secret`.
 6. **Restricted users** (`profile_restrictions`, admin-managed, enforced via
    `is_restricted()` in RLS) are blocked from *creating or updating* scripts,
-   comments, flags, comment reactions, votes, and ratings — but can still
-   remove their own existing content or interactions. Favoriting and comment
-   likes are exempt entirely.
+   comments, comment reactions/likes, flags, votes, and ratings — but can
+   still remove their own existing content or interactions. Only favoriting
+   is exempt entirely (`script_favorites` has no restriction check in RLS).
 
 Violations return `403` with an error payload.
 
@@ -459,17 +479,11 @@ are Portable Text (`jsonb` block arrays). The Postgres `CHECK` only confirms
 valid JSON under a size cap — block/mark-type validation is an API concern,
 and the renderer should only recognize an explicit block-type allow-list.
 
-## Planned Endpoints (Not Yet Implemented)
+ ## Planned Endpoints (Not Yet Implemented)
 
-- **Notifications** (`notifications` table) — list/mark-read/delete a user's
-  own notifications.
-- **Achievements** (`achievement_definitions`, `profile_achievements`) —
-  award-check logic isn't wired into any mutation endpoint yet.
-- **User restriction management** (`profile_restrictions`) — no endpoint
-  exists yet for an admin to restrict/unrestrict a user.
 - **Individual script file removal** — RLS supports author/admin delete on
-  `script_files`; no endpoint removes a single file without deleting the
-  whole script.
-- **Moderator notification pipeline** — repeated flags notifying moderators,
-  a moderator's flag escalating to admins. No schema or backend work started;
-  moderators have no elevated access today.
+   `script_files`; no endpoint removes a single file without deleting the
+   whole script.
+ - **Moderator notification pipeline** — repeated flags notifying moderators,
+   a moderator's flag escalating to admins. No schema or backend work started;
+   moderators have no elevated access today.

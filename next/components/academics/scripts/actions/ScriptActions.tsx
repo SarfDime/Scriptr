@@ -17,6 +17,9 @@ export const ScriptActions = ({
   scriptTitle,
   likes,
   comments,
+  title,
+  description,
+  files,
   className,
   ...rest
 }: ScriptActionsProps) => (
@@ -27,9 +30,16 @@ export const ScriptActions = ({
     <ScriptSaveButton id={id} scriptTitle={scriptTitle} />
     <ScriptLikeButton id={id} scriptTitle={scriptTitle} likes={likes} />
     <ScriptCommentsLink id={id} scriptTitle={scriptTitle} comments={comments} />
-    <Box className='ml-auto ui-cluster gap-2'>
-      <ScriptDownloadButton id={id} />
-      <ScriptPreviewButton id={id} />
+    <Box className='ml-auto ui-cluster flex-wrap gap-2'>
+      {files.map((file) => (
+        <ScriptDownloadButton key={file.id} scriptId={id} file={file} />
+      ))}
+      <ScriptPreviewButton
+        id={id}
+        title={title}
+        description={description}
+        files={files}
+      />
     </Box>
   </Box>
 )

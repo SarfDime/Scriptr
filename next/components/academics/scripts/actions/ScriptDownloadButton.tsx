@@ -1,24 +1,52 @@
-import DownloadIcon from '@sanity/icons/Download'
-import { Button } from '@/components/common/Button'
-import { cn } from '@/lib/common-utils'
-import type { ScriptDownloadButtonProps } from '@/types/components/Scripts.types'
+'use client'
 
-/** Download action for a single script.
- * TODO: wire this up to actually trigger the script file download.
+import type { ScriptFile } from '@shared/types/scripts.types'
+import { useState } from 'react'
+import { Button } from '@/components/common/Button'
+import { Text } from '@/components/typography/Text'
+import { downloadScript } from '@/lib/api/scripts-api'
+
+export type ScriptDownloadButtonProps = {
+  scriptId: string
+  file: ScriptFile
+}
+
+/** POST apiRoutes.scripts.downloadById records the attempt server-side
+ * (service-role client, dedup'd account → IP → device per ARCHITECTURE.md
+ * §5) before the file itself opens. Not restriction-checked — guests can
+ * download — so no useProtectedAction wrapper.
  */
-export const ScriptDownloadButton = ({
-  id,
-  className,
-  iconProps,
-  children,
-  ...props
-}: ScriptDownloadButtonProps) => (
-  <Button
-    {...props}
-    className={cn('button basic gap-1.5 px-2.5 py-1.5 ui-caption', className)}
-    data-script-id={id}
-  >
-    <DownloadIcon {...iconProps} />
-    {children}
-  </Button>
-)
+export function ScriptDownloadButton({
+  scriptId,
+  file,
+}: ScriptDownloadButtonProps) {
+  const [status, setStatus] = useState<'idle' | 'pending' | 'error'>('idle')
+
+  const handleDownload = async () => {
+    setStatus('pending')
+    try {
+      const url = await downloadScript(scriptId, file)
+      window.open(url, '_blank', 'noopener,noreferrer')
+      setStatus('idle')
+    } catch {
+      setStatus('error')
+    }
+  }
+
+  return (
+    <div className='ui-stack gap-1'>
+      <Button
+        onClick={handleDownload}
+        disabled={status === 'pending'}
+        className='button outline'
+      >
+        {status === 'pending' ? 'Preparing…' : `Download (${file.file_type})`}
+      </Button>
+      {status === 'error' && (
+        <Text className='ui-caption text-danger-600'>
+          Download failed — try again.
+        </Text>
+      )}
+    </div>
+  )
+}

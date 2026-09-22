@@ -1,11 +1,7 @@
 import type { AdditionalComponentAttributes } from '../../types/component.types'
 
 type FormContainerProps = {
-  children?: React.ReactNode
-  formName?: string
-  formMethod?: string
-  onSubmitProp: (e: React.FormEvent<HTMLFormElement>) => void /// TODO: fix type
-  formRef?: React.RefObject<HTMLFormElement>
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void /// TODO: fix type
 } & AdditionalComponentAttributes
 
 /** A form container component which wraps a `form` element. It forwards any
@@ -13,16 +9,12 @@ type FormContainerProps = {
  */
 export function FormContainer({
   children,
-  formName,
-  onSubmitProp,
-  formRef,
+  onSubmit,
   ...rest
 }: FormContainerProps) {
   return (
     <form
-      ref={formRef}
-      name={formName}
-      onSubmit={onSubmitProp}
+      onSubmit={onSubmit}
       encType='application/x-www-form-urlencoded'
       {...rest}
     >

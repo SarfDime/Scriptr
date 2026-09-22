@@ -9,7 +9,7 @@ fn person::full($person) = $person{
     title,
     "picture": sanityImage::full(picture)
 };
-` //TODO: Check if person query works if yes ,use person::full(@) wherever a person reference is needed
+`
 
 const linkSelectorFunction = /* groq */ `
 fn linkSelector::full($link) = $link{

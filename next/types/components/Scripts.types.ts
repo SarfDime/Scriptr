@@ -1,4 +1,5 @@
 import type { PortableTextValue } from '@shared/types/portable-text.types'
+import type { ScriptFile } from '@shared/types/scripts.types'
 import type { BoxProps } from '@/components/common/Box'
 import type { ButtonProps } from '@/components/common/Button'
 import type { NextLinkProps } from '@/components/common/NextLink'
@@ -21,14 +22,15 @@ export type ScriptStats = {
 }
 
 export type ScriptMeta = ScriptId & {
-  scriptTitle: string
+  scriptTitle: PortableTextValue
 }
 
 type BaseScript = ScriptId &
   ScriptStats & {
-    title: string
+    title: PortableTextValue
     subject: string
     tag?: string
+    files?: Array<ScriptFile>
   }
 
 type BaseScriptAction = ScriptMeta & {
@@ -74,12 +76,12 @@ export type ScriptFiltersProps = {
 // Action Components & Buttons
 // -----------------------------------------------------------------------------
 
-export type ScriptDownloadButtonProps = ScriptId &
-  ButtonProps & {
-    iconProps?: SanityIconProps
+export type ScriptPreviewButtonProps = ScriptId &
+  Omit<ButtonProps, 'title'> & {
+    title: PortableTextValue
+    description?: PortableTextValue
+    files: Array<ScriptFile>
   }
-
-export type ScriptPreviewButtonProps = ScriptId & ButtonProps
 
 export type ScriptSaveButtonProps = BaseScriptAction &
   Omit<ButtonProps, 'children'>
@@ -94,10 +96,13 @@ export type ScriptCommentsLinkProps = BaseScriptAction & {
   comments: number
 } & Omit<NextLinkProps, 'children' | 'href'>
 
-export type ScriptActionsProps = BoxProps &
+export type ScriptActionsProps = Omit<BoxProps, 'title'> &
   ScriptMeta &
   ScriptStats & {
     className?: string
+    title: PortableTextValue
+    description?: PortableTextValue
+    files: Array<ScriptFile>
     saveButtonProps?: ScriptSaveButtonProps
     likeButtonProps?: ScriptLikeButtonProps
     commentsLinkProps?: ScriptCommentsLinkProps
@@ -130,3 +135,24 @@ export type PageDataProps = {
   commentCount?: number
   activityContent?: PortableTextValue
 }
+
+/*
+ * Script Upload Types
+ */
+
+export type ScriptUploadInput = {
+  title: PortableTextValue
+  description?: PortableTextValue
+  subjectId: string
+  professorId: string
+  examSession?: string | null
+  additionalReading?: Array<string>
+  files: Array<File>
+}
+
+export type ScriptUploadState =
+  | { status: 'idle' }
+  | { status: 'uploading' }
+  | { status: 'creating' }
+  | { status: 'success'; scriptId: string }
+  | { status: 'error'; message: string }

@@ -16,6 +16,7 @@ import profileStudies from './routes/profile-studies'
 import profileSubjects from './routes/profile-subjects'
 import profiles from './routes/profiles'
 import ratings from './routes/ratings'
+import restrictions from './routes/restrictions'
 import scripts from './routes/scripts'
 import studies from './routes/studies'
 import subjects from './routes/subjects'
@@ -83,6 +84,7 @@ app.route('/profile-studies', profileStudies)
 app.route('/profile-faculties', profileFaculties)
 app.route('/notifications', notifications)
 app.route('/ratings', ratings)
+app.route('/restrictions', restrictions)
 app.route('/internal', internal)
 
 app.get('/', (c) =>

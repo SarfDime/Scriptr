@@ -32,12 +32,12 @@ pieces are designed to work.
 * `API_DOCUMENTATION.md` and `API_TESTING_GUIDE.md` fully reconciled with the live schema and route set (end-to-end curl walkthrough covering every route, including teardown). **[✅]**
 * **Universities: full CRUD + sync** — `universities.ts` previously only had `GET /` and `GET /:id`; `POST`/`PATCH`/`DELETE`/`POST .../sync` under `/api/internal/universities` added, matching the pattern of professors/studies/subjects. Delete is blocked at the application level by an explicit `faculties` dependents check, independent of the underlying FK (see below). This also means the Sanity "Create in Database"/"Sync"/"Delete" actions for universities, which were calling endpoints that 404'd, now actually work. **[✅]**
 * **`ratings.ts` mounted in `index.ts`** — the full ratings route file (rating types, professor/subject ratings, all documented in `API_DOCUMENTATION.md` from the start) existed but was never `.route()`d into the app. Every `/ratings/*` endpoint was dead/unreachable in production until this was caught and fixed. **[✅]**
+* **Notifications CRUD** — list/mark-read/delete a user's own notifications. **[✅]**
+* **Achievement award-check helper** — compare a metric against `achievement_definitions.threshold`, insert into `profile_achievements` + a matching notification, wired into the relevant mutation endpoints (vote, download, comment). **[✅]**
+* **User restriction management endpoint** — `profile_restrictions` insert/delete for an admin to restrict/unrestrict a user. RLS is `is_admin()`-gated and ready; **[✅]**
 
 ### Todo
 
-* **Notifications CRUD** — list/mark-read/delete a user's own notifications. Schema exists; no endpoint yet. **[🔲]**
-* **Achievement award-check helper** — compare a metric against `achievement_definitions.threshold`, insert into `profile_achievements` + a matching notification, wired into the relevant mutation endpoints (vote, download, comment). Not started. **[🔲]**
-* **User restriction management endpoint** — `profile_restrictions` insert/delete for an admin to restrict/unrestrict a user. RLS is `is_admin()`-gated and ready; no route exists. **[🔲]**
 * **Portable Text block-type allow-list validation, server-side** — the Postgres `CHECK` only confirms "valid JSON array under the size limit," not the recursive block/mark structure. Currently unenforced at the API layer. **[🔲]**
 * **Individual script file removal** — RLS already supports author/admin `DELETE` on `script_files`; no endpoint removes a single file without deleting the whole script. **[🔲]**
 * **Achievement definitions CRUD** — admin create/update/delete for `achievement_definitions` (`is_admin()` RLS-ready, same pattern as rating types); currently only the public read exists (joined into `profiles.ts` responses). **[🔲]**
@@ -129,7 +129,5 @@ pieces are designed to work.
 
 ## Suggested Order
 
-1. Notifications CRUD + achievement award-check helper (they're linked — awarding an achievement is expected to also write a notification).
-2. User restriction management endpoint (small, `is_admin()`-gated, unblocks the restriction UI).
-3. Sanity: verify the deletion/sync workflow and environment wiring before building anything new on top of it — now doubly relevant with universities' new mutation routes.
-4. Frontend: script upload flow and rendering (title/description/files), since scripts are the core content type and several other frontend todos depend on it.
+1. Sanity: verify the deletion/sync workflow and environment wiring before building anything new on top of it — now doubly relevant with universities' new mutation routes.
+2. Frontend: script upload flow and rendering (title/description/files), since scripts are the core content type and several other frontend todos depend on it.

@@ -21,7 +21,7 @@ export const ScriptFilters = ({
   onSortChange,
 }: ScriptFiltersProps) => {
   const iconClass = 'rounded-md w-6 h-6'
-  const subjectOptions: Array<SelectOptionType<string>> = [
+  const subjectOptions: Array<SelectOptionType> = [
     {
       id: 'all-subjects',
       label: UI_STRINGS.scripts.filters.allSubjects,

@@ -1,5 +1,6 @@
 import DocumentTextIcon from '@sanity/icons/DocumentText'
 import { Box } from '@/components/common/Box'
+import { PortableTextContent } from '@/components/typography/PortableTextContent'
 import { Text } from '@/components/typography/Text'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
@@ -29,7 +30,9 @@ export const ScriptCard = ({ script }: ScriptCardProps) => {
 
         <Box className='ui-stack min-w-0 flex-1 gap-1'>
           <Box className='ui-cluster items-center gap-2'>
-            <Text className='ui-title'>{script.title}</Text>
+            <PortableTextContent className='ui-title'>
+              {script.title}
+            </PortableTextContent>
             {script.tag && <Badge colorPalette={color}>{script.tag}</Badge>}
           </Box>
           <Text className='ui-caption text-grey-500'>
@@ -49,6 +52,8 @@ export const ScriptCard = ({ script }: ScriptCardProps) => {
           scriptTitle={script.title}
           likes={script.likes}
           comments={script.comments}
+          title={script.title}
+          files={script.files ?? []}
         />
       </Card.Footer>
     </Card>

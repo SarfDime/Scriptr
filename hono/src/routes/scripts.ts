@@ -4,6 +4,12 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import type { ScriptFileInput } from '../../../shared/types/api.types'
 import type { PortableTextValue } from '../../../shared/types/portable-text.types'
+import type {
+  MyScriptSummary,
+  ScriptFlaggedSummary,
+  ScriptPatchResult,
+  ScriptSummary,
+} from '../../../shared/types/scripts.types'
 import { isAdmin, isScriptFileInput } from '../../../shared/utils/api.utils'
 import { getAttribute } from '../../../shared/utils/common-utils'
 import {
@@ -30,9 +36,27 @@ import type { HonoEnv } from '../types/env.types'
 const PUBLIC_SCRIPT_COLUMNS =
   'id, title, description, subject_id, professor_id, author_id, exam_session, additional_reading, vote_score, download_count, created_at, updated_at, files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, created_at)'
 
-function applySelectedFacultyScope<
-  T extends { subject?: { study?: { faculty?: { id?: string } } } },
->(rows: Array<T> | null, selectedFacultyIds: Array<string> | null) {
+/**
+ * Reused by every list/detail endpoint below (`/`, `/subject/:subjectId`,
+ * `/top`, `/popular`, `/search`, `/:id`) and by `POST /`'s create + refetch
+ * selects — one select string instead of the same literal duplicated per
+ * route. `study` only carries `sanity_id` (client-side Sanity queries
+ * resolve faculty/university/professor metadata from it — see
+ * `Architecture.md §1`) and `faculty_id` (server-side faculty scoping only,
+ * via `applySelectedFacultyScope` below — never returned for display).
+ * Matches `ScriptSummary` in `shared/types/scripts.types.ts` exactly; keep
+ * the two in sync if this changes.
+ */
+const SCRIPT_SUMMARY_SELECT = `
+    ${PUBLIC_SCRIPT_COLUMNS},
+    author:profiles(username, full_name),
+    subject:subjects(sanity_id, study:studies(sanity_id, faculty:faculties(sanity_id, id)))
+  `
+
+function applySelectedFacultyScope<T extends ScriptSummary>(
+  rows: Array<T> | null,
+  selectedFacultyIds: Array<string> | null
+) {
   if (!rows || !selectedFacultyIds || selectedFacultyIds.length === 0) {
     return rows ?? []
   }
@@ -196,15 +220,13 @@ scripts.get('/', async (c) => {
 
   const { data, error } = await supabase
     .from('scripts')
-    .select(`
-        ${PUBLIC_SCRIPT_COLUMNS},
-        author:profiles(username, full_name),
-        subject:subjects(name, study:studies(name, faculty:faculties(id, name, university:universities(id, name))))
-      `)
+    .select(SCRIPT_SUMMARY_SELECT)
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(applySelectedFacultyScope(data, selectedFacultyIds))
+  return c.json<Array<ScriptSummary>>(
+    applySelectedFacultyScope(data, selectedFacultyIds)
+  )
 })
 
 /** Get scripts by subject */
@@ -215,16 +237,14 @@ scripts.get('/subject/:subjectId', async (c) => {
 
   const { data, error } = await supabase
     .from('scripts')
-    .select(`
-        ${PUBLIC_SCRIPT_COLUMNS},
-        author:profiles(username, full_name),
-        subject:subjects(name, study:studies(name, faculty:faculties(id, name, university:universities(id, name))))
-      `)
+    .select(SCRIPT_SUMMARY_SELECT)
     .eq('subject_id', subjectId)
     .order('vote_score', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(applySelectedFacultyScope(data, selectedFacultyIds))
+  return c.json<Array<ScriptSummary>>(
+    applySelectedFacultyScope(data, selectedFacultyIds)
+  )
 })
 
 /** Get top scripts (by vote score) */
@@ -235,16 +255,14 @@ scripts.get('/top', async (c) => {
 
   const { data, error } = await supabase
     .from('scripts')
-    .select(`
-        ${PUBLIC_SCRIPT_COLUMNS},
-        author:profiles(username, full_name),
-        subject:subjects(name, study:studies(name, faculty:faculties(id, name, university:universities(id, name))))
-      `)
+    .select(SCRIPT_SUMMARY_SELECT)
     .order('vote_score', { ascending: false })
     .limit(limit)
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(applySelectedFacultyScope(data, selectedFacultyIds))
+  return c.json<Array<ScriptSummary>>(
+    applySelectedFacultyScope(data, selectedFacultyIds)
+  )
 })
 
 /** Get most downloaded scripts */
@@ -255,16 +273,14 @@ scripts.get('/popular', async (c) => {
 
   const { data, error } = await supabase
     .from('scripts')
-    .select(`
-        ${PUBLIC_SCRIPT_COLUMNS},
-        author:profiles(username, full_name),
-        subject:subjects(name, study:studies(name, faculty:faculties(id, name, university:universities(id, name))))
-      `)
+    .select(SCRIPT_SUMMARY_SELECT)
     .order('download_count', { ascending: false })
     .limit(limit)
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(applySelectedFacultyScope(data, selectedFacultyIds))
+  return c.json<Array<ScriptSummary>>(
+    applySelectedFacultyScope(data, selectedFacultyIds)
+  )
 })
 
 /** Search scripts */
@@ -278,11 +294,9 @@ scripts.get('/search', async (c) => {
   const supabase = createSupabaseClient(c)
   const selectedFacultyIds = await getSelectedFacultyScope(supabase)
 
-  const { data, error } = await supabase.from('scripts').select(`
-        ${PUBLIC_SCRIPT_COLUMNS},
-        author:profiles(username, full_name),
-        subject:subjects(name, study:studies(name, faculty:faculties(id, name, university:universities(id, name))))
-      `)
+  const { data, error } = await supabase
+    .from('scripts')
+    .select(SCRIPT_SUMMARY_SELECT)
 
   if (error) return c.json({ error: error.message }, 500)
 
@@ -304,7 +318,7 @@ scripts.get('/search', async (c) => {
     )
     .map(({ script }) => script)
 
-  return c.json(results)
+  return c.json<Array<ScriptSummary>>(results)
 })
 
 /** Get a single script by ID */
@@ -316,11 +330,7 @@ scripts.get('/:id', async (c) => {
 
   const { data, error } = await supabase
     .from('scripts')
-    .select(`
-        ${PUBLIC_SCRIPT_COLUMNS},
-        author:profiles(username, full_name),
-        subject:subjects(name, study:studies(name, faculty:faculties(id, name, university:universities(id, name))))
-      `)
+    .select(SCRIPT_SUMMARY_SELECT)
     .eq('id', scriptId)
     .single()
 
@@ -338,7 +348,7 @@ scripts.get('/:id', async (c) => {
     )
   }
 
-  return c.json(data)
+  return c.json<ScriptSummary>(data)
 })
 
 /** Insert a new script */
@@ -381,11 +391,7 @@ scripts.post(
         vote_score: 0,
         download_count: 0,
       })
-      .select(`
-        ${PUBLIC_SCRIPT_COLUMNS},
-        author:profiles(username, full_name),
-        subject:subjects(name, study:studies(name, faculty:faculties(id, name, university:universities(id, name))))
-      `)
+      .select(SCRIPT_SUMMARY_SELECT)
       .single()
 
     if (error) {
@@ -410,22 +416,20 @@ scripts.post(
 
     const { data: script } = await supabase
       .from('scripts')
-      .select(`
-        ${PUBLIC_SCRIPT_COLUMNS},
-        author:profiles(username, full_name),
-        subject:subjects(name, study:studies(name, faculty:faculties(id, name, university:universities(id, name))))
-      `)
+      .select(SCRIPT_SUMMARY_SELECT)
       .eq('id', data.id)
       .single()
 
     await revalidateScriptTags(c.env, scriptMutationTags(data))
     await checkScriptsUploaded(c, user.id)
 
-    return c.json({
-      success: true,
-      script: script ?? data,
-      message: 'Script uploaded successfully',
-    })
+    return c.json<{ success: boolean; script: ScriptSummary; message: string }>(
+      {
+        success: true,
+        script: script ?? data,
+        message: 'Script uploaded successfully',
+      }
+    )
   }
 )
 
@@ -487,7 +491,10 @@ scripts.patch('/:id', authMiddleware, async (c) => {
 
   await revalidateScriptTags(c.env, scriptMutationTags(data))
 
-  return c.json({ success: true, script: data })
+  return c.json<{ success: boolean; script: ScriptPatchResult }>({
+    success: true,
+    script: data,
+  })
 })
 
 /** Delete a script (only by author or admin) */
@@ -543,11 +550,12 @@ scripts.get('/my-scripts', authMiddleware, async (c) => {
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json({ scripts: data })
+  return c.json<{ scripts: Array<MyScriptSummary> }>({ scripts: data })
 })
 
 /** Record a download, deduplicated per identity (account, then IP, then device) */
 scripts.post('/:id/download', async (c) => {
+  // TODO: Should probably call file-ops get file and also save downloads count per file and not per script
   const scriptId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
 
@@ -631,7 +639,7 @@ scripts.get('/flagged/all', authMiddleware, async (c) => {
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json<Array<ScriptFlaggedSummary>>(data)
 })
 
 export default scripts

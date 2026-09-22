@@ -164,15 +164,41 @@ fileOps.post(
   }
 )
 
-/** Get pre-signed URL for downloading a file from R2 */
+/**
+ * Get a pre-signed URL for downloading a file from R2. Deliberately public
+ * (no authMiddleware) — every file in the app is downloadable by design,
+ * guests included. "Protected" here doesn't mean identity-gated; it means
+ * the requested key has to actually correspond to a real `script_files`
+ * row before we'll sign a URL for it. Previously `bucket` was a
+ * client-supplied query param passed straight to `GetObjectCommand` — this
+ * endpoint would sign a URL for *any* bucket these R2 credentials can
+ * reach, for any key string, turning it into an open pre-signed-URL
+ * generator rather than a script-download endpoint. Deriving `bucket` from
+ * the matched row instead closes that off without requiring anyone to be
+ * logged in.
+ */
 fileOps.get('/get-file/*', async (c) => {
   const key = c.req.path.replace('/api/file-ops/get-file/', '')
-  const bucket = c.req.query('bucket') || c.env.R2_BUCKET
 
   if (!key) {
     return c.json({ error: 'Key is required' }, 400)
   }
 
+  const supabase = createInternalSupabaseClient(c)
+  const { data: file } = await supabase
+    .from('script_files')
+    .select('bucket')
+    .eq('file_url', key)
+    .single()
+
+  if (!file) {
+    return c.json(
+      { error: 'File not found', details: `Key "${key}" is not a known file` },
+      404
+    )
+  }
+
+  const bucket = file.bucket
   const r2 = createS3Client(c)
 
   try {

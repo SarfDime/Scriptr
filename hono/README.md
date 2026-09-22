@@ -2,8 +2,8 @@
 
 The Hono service is Scriptr's backend. It provides authentication, profiles,
 academic catalog data, scripts, comments, flags, votes, ratings, favorites,
-profile selections (faculties/studies/subjects), and Cloudflare R2 file
-operations.
+profile selections (faculties/studies/subjects), notifications, achievement
+award-checking, user restrictions, and Cloudflare R2 file operations.
 
 ## Stack
 
@@ -79,6 +79,8 @@ is mounted below `/api`:
 - `/api/professors`
 - `/api/subjects`
 - `/api/ratings`
+- `/api/notifications`
+- `/api/restrictions`
 - `/api/internal`
 
 The complete endpoint, authentication, authorization, validation, and error reference is in [API_DOCUMENTATION.md](src/routes/API_DOCUMENTATION.md).
@@ -91,6 +93,7 @@ The complete endpoint, authentication, authorization, validation, and error refe
 - User-specific write routes require a valid Supabase session cookie.
 - Role updates are never exposed on the public profile routes.
 - Moderators currently have zero elevated access anywhere in this API — the role exists in the schema but isn't checked by any policy or route yet.
+- Restricted users (`profile_restrictions`, admin-managed via `/api/restrictions`) are blocked at the RLS layer from creating/updating scripts, comments, comment reactions/likes, flags, votes, and ratings — never from removing their own existing content. See [API_DOCUMENTATION.md](src/routes/API_DOCUMENTATION.md#role-based-access-control).
 - Route parameters are validated before database operations.
 - Uploads are restricted to the file types documented in the API reference, and scoped per-university to a distinct R2 bucket when `r2_bucket_id` is set.
 - R2 and Supabase credentials must be supplied through environment variables.

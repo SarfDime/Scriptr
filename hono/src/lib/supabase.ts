@@ -1,12 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Context } from 'hono'
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie'
-import type { Database } from '../../../shared/types/database.types'
 import {
   isProfileSubjectStatus,
   isUserRole,
 } from '../../../shared/utils/api.utils'
 import type { AuthUser, HonoEnv } from '../types/env.types'
+import type { Database } from '../types/supabase-override-types'
 
 /** Creates a Supabase client with the given context, using environment variables for the endpoint and credentials.
  * Sessions are handled via HTTP-only cookies for security and persistence.

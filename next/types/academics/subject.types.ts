@@ -1,6 +1,7 @@
 import type { PortableTextValue } from '@shared/types/portable-text.types'
 import type {
   MinimalSubjectQueryTypedResult,
+  SubjectByIdQueryResult,
   SubjectDetailQueryResult,
 } from '@shared/types/sanity.types'
 import type { WithResolvedSanityData } from '@shared/types/sanity-transform.types'
@@ -14,8 +15,9 @@ export type SubjectDetail = NonNullable<
   WithResolvedSanityData<SubjectDetailQueryResult>
 >
 
-export type SubjectExamSession = 'january' | 'june' | 'september'
-export type SubjectSemester = SubjectDetail['semester']
+export type SubjectById = NonNullable<
+  WithResolvedSanityData<SubjectByIdQueryResult>
+>
 
 export type SubjectsSidebarProps = Omit<BoxProps, 'content' | 'as'> & {
   subjects: Array<MinimalSubject>

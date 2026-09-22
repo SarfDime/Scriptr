@@ -1,10 +1,23 @@
+import type {
+  CommentByProfessor,
+  CommentByUser,
+  CommentCreateResult,
+  CommentFlaggedSummary,
+  CommentReactionWithUser,
+  CommentSummary,
+} from '@shared/types/comments.types'
+import type { PortableTextValue } from '@shared/types/portable-text.types'
 import { isAdmin } from '@shared/utils/api.utils'
-import { Hono } from 'hono'
 import {
   isPortableTextValue,
   portableTextToPlainText,
-} from '../../../shared/utils/portable-text.utils'
+} from '@shared/utils/portable-text.utils'
+import { Hono } from 'hono'
 import { checkCommentsPosted } from '../lib/achievements'
+import {
+  commentMutationTags,
+  revalidateCommentTags,
+} from '../lib/cache-revalidate-comments'
 import { requiredParam } from '../lib/request'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
@@ -12,6 +25,40 @@ import type { HonoEnv } from '../types/env.types'
 // Excludes is_flagged, which is internal moderation state and not for public consumption.
 const PUBLIC_COMMENT_COLUMNS =
   'id, author_id, content, created_at, edited, parent_id, professor_id, script_id, updated_at'
+
+/** Reused by `GET /script/:scriptId` and `PATCH /:id` — the two endpoints
+ * that select a comment with its author and professor (but no script)
+ * joined. Matches `CommentWithAuthorAndProfessor` in
+ * `shared/types/comments.types.ts`. */
+const COMMENT_WITH_AUTHOR_AND_PROFESSOR_SELECT = `${PUBLIC_COMMENT_COLUMNS}, author:profiles(username, full_name), professor:professors(name)`
+
+/** Reused by `POST /` and `POST /:commentId/replies` — both create a
+ * comment and need author, professor, and script joined (exactly one of
+ * professor/script is ever populated on a given row; the route doesn't
+ * know which ahead of the insert). Matches
+ * `CommentWithAuthorProfessorScript`. */
+const COMMENT_CREATE_SELECT = `${PUBLIC_COMMENT_COLUMNS}, author:profiles(username, full_name), professor:professors(name), script:scripts(title)`
+
+/** Reused by `GET /:commentId/reactions` and `POST /:commentId/reactions`.
+ * Matches `CommentReactionWithUser`. */
+const COMMENT_REACTION_WITH_USER_SELECT = '*, user:profiles(username)'
+
+/**
+ * `COMMENT_CREATE_SELECT`'s `script:scripts(title)` join carries `title`
+ * as raw `Json` for the same reason — narrowed one level deeper, only
+ * where that join is actually selected (`POST /` and
+ * `POST /:commentId/replies`).
+ */
+function withVerifiedScriptTitle<
+  T extends { script: { title: unknown } | null },
+>(row: T) {
+  return {
+    ...row,
+    script: row.script
+      ? { title: row.script.title as PortableTextValue }
+      : null,
+  }
+}
 
 type CommentEngagementRow = { id: string }
 
@@ -74,14 +121,14 @@ comments.get('/script/:scriptId', async (c) => {
 
   const { data, error } = await supabase
     .from('comments')
-    .select(
-      `${PUBLIC_COMMENT_COLUMNS}, author:profiles(username, full_name), professor:professors(name)`
-    )
+    .select(COMMENT_WITH_AUTHOR_AND_PROFESSOR_SELECT)
     .eq('script_id', scriptId)
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(await attachEngagement(supabase, data, sessionData.user?.id))
+
+  const engaged = await attachEngagement(supabase, data, sessionData.user?.id)
+  return c.json<Array<CommentSummary>>(engaged)
 })
 
 /** Get comments for a specific professor */
@@ -100,7 +147,9 @@ comments.get('/professor/:professorId', async (c) => {
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(await attachEngagement(supabase, data, sessionData.user?.id))
+
+  const engaged = await attachEngagement(supabase, data, sessionData.user?.id)
+  return c.json<Array<CommentByProfessor>>(engaged)
 })
 
 /** Get comments by a specific user */
@@ -119,7 +168,9 @@ comments.get('/user/:userId', async (c) => {
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(await attachEngagement(supabase, data, sessionData.user?.id))
+
+  const engaged = await attachEngagement(supabase, data, sessionData.user?.id)
+  return c.json<Array<CommentByUser>>(engaged)
 })
 
 /** Get reactions for a comment */
@@ -129,12 +180,13 @@ comments.get('/:commentId/reactions', async (c) => {
 
   const { data, error } = await supabase
     .from('comment_reactions')
-    .select('*, user:profiles(username)')
+    .select(COMMENT_REACTION_WITH_USER_SELECT)
     .eq('comment_id', commentId)
     .order('created_at', { ascending: true })
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  // comment_reactions has no Json columns — no narrowing needed.
+  return c.json<Array<CommentReactionWithUser>>(data)
 })
 
 /** Reply to a comment */
@@ -175,23 +227,37 @@ comments.post('/:commentId/replies', authMiddleware, async (c) => {
       professor_id: professor_id ?? null,
       script_id: script_id ?? null,
     })
-    .select(
-      `${PUBLIC_COMMENT_COLUMNS}, author:profiles(username, full_name), professor:professors(name), script:scripts(title)`
-    )
+    .select(COMMENT_CREATE_SELECT)
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
+  // A restricted user's insert fails RLS (is_restricted() check), surfacing here as a
+  // generic Postgres error — map it to a clear 403 instead of a raw 500.
+  if (error) {
+    if (error.code === '42501') {
+      return c.json(
+        { error: 'Your account is restricted from commenting' },
+        403
+      )
+    }
+    return c.json({ error: error.message }, 500)
+  }
+
   await checkCommentsPosted(c, user.id)
-  return c.json({
+  await revalidateCommentTags(c.env, commentMutationTags(data))
+
+  const verified = withVerifiedScriptTitle(data)
+  const reply: CommentCreateResult = {
+    ...verified,
+    reactions_count: 0,
+    reactions_by_type: {},
+    likes_count: 0,
+    my_reaction: null,
+    liked_by_me: false,
+  }
+
+  return c.json<{ success: true; reply: CommentCreateResult }>({
     success: true,
-    reply: {
-      ...data,
-      reactions_count: 0,
-      reactions_by_type: {},
-      likes_count: 0,
-      my_reaction: null,
-      liked_by_me: false,
-    },
+    reply,
   })
 })
 
@@ -216,11 +282,34 @@ comments.post('/:commentId/reactions', authMiddleware, async (c) => {
       },
       { onConflict: 'comment_id,user_id' }
     )
-    .select('*, user:profiles(username)')
+    .select(COMMENT_REACTION_WITH_USER_SELECT)
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
-  return c.json({ success: true, reaction: data })
+  // Same restriction-check mapping as comment creation — comment_reactions'
+  // INSERT/UPDATE RLS both carry is_restricted().
+  if (error) {
+    if (error.code === '42501') {
+      return c.json({ error: 'Your account is restricted from reacting' }, 403)
+    }
+    return c.json({ error: error.message }, 500)
+  }
+
+  // Reactions don't carry script_id/professor_id/author_id themselves —
+  // look the parent comment up to know which lists this affects.
+  const { data: parentComment } = await supabase
+    .from('comments')
+    .select('script_id, professor_id, author_id')
+    .eq('id', commentId)
+    .single()
+
+  if (parentComment) {
+    await revalidateCommentTags(c.env, commentMutationTags(parentComment))
+  }
+
+  return c.json<{ success: true; reaction: CommentReactionWithUser }>({
+    success: true,
+    reaction: data,
+  })
 })
 
 /** Toggle the current user's like on a comment */
@@ -228,6 +317,12 @@ comments.post('/:commentId/like', authMiddleware, async (c) => {
   const user = c.get('user')
   const commentId = requiredParam(c, 'commentId')
   const supabase = createSupabaseClient(c)
+
+  const { data: parentComment } = await supabase
+    .from('comments')
+    .select('script_id, professor_id, author_id')
+    .eq('id', commentId)
+    .single()
 
   const { data: existingLike } = await supabase
     .from('comment_likes')
@@ -244,6 +339,9 @@ comments.post('/:commentId/like', authMiddleware, async (c) => {
       .eq('user_id', user.id)
 
     if (error) return c.json({ error: error.message }, 500)
+    if (parentComment) {
+      await revalidateCommentTags(c.env, commentMutationTags(parentComment))
+    }
     return c.json({ success: true, liked: false })
   }
 
@@ -251,7 +349,18 @@ comments.post('/:commentId/like', authMiddleware, async (c) => {
     .from('comment_likes')
     .insert({ comment_id: commentId, user_id: user.id })
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) {
+    if (error.code === '42501') {
+      return c.json(
+        { error: 'Your account is restricted from liking comments' },
+        403
+      )
+    }
+    return c.json({ error: error.message }, 500)
+  }
+  if (parentComment) {
+    await revalidateCommentTags(c.env, commentMutationTags(parentComment))
+  }
   return c.json({ success: true, liked: true })
 })
 
@@ -292,30 +401,41 @@ comments.post('/', authMiddleware, async (c) => {
       script_id: script_id ?? null,
       author_id: user.id,
     })
-    .select(`
-        ${PUBLIC_COMMENT_COLUMNS},
-        author:profiles(username, full_name),
-        professor:professors(name),
-        script:scripts(title)
-      `)
+    .select(COMMENT_CREATE_SELECT)
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
+  // A restricted user's insert fails RLS (is_restricted() check), surfacing here as a
+  // generic Postgres error — map it to a clear 403 instead of a raw 500.
+  if (error) {
+    if (error.code === '42501') {
+      return c.json(
+        { error: 'Your account is restricted from commenting' },
+        403
+      )
+    }
+    return c.json({ error: error.message }, 500)
+  }
+
   await checkCommentsPosted(c, user.id)
-  return c.json({
+  await revalidateCommentTags(c.env, commentMutationTags(data))
+
+  const verified = withVerifiedScriptTitle(data)
+  const comment: CommentCreateResult = {
+    ...verified,
+    reactions_count: 0,
+    reactions_by_type: {},
+    likes_count: 0,
+    my_reaction: null,
+    liked_by_me: false,
+  }
+
+  return c.json<{ success: true; comment: CommentCreateResult }>({
     success: true,
-    comment: {
-      ...data,
-      reactions_count: 0,
-      reactions_by_type: {},
-      likes_count: 0,
-      my_reaction: null,
-      liked_by_me: false,
-    },
+    comment,
   })
 })
 
-/** Update a comment (only by author) */
+/** Update a comment (author or admin) */
 comments.patch('/:id', authMiddleware, async (c) => {
   const user = c.get('user')
   const commentId = requiredParam(c, 'id')
@@ -330,14 +450,14 @@ comments.patch('/:id', authMiddleware, async (c) => {
     return c.json({ error: 'Comment must be at least 3 characters long' }, 400)
   }
 
-  // Check if user is the author
-  const { data: existingComment } = await supabase
-    .from('comments')
-    .select('author_id')
-    .eq('id', commentId)
-    .single()
+  // Check if user is the author or an admin (RLS's UPDATE policy already
+  // allows either — this mirrors that instead of only checking authorship).
+  const [{ data: profile }, { data: existingComment }] = await Promise.all([
+    supabase.from('profiles').select('role').eq('id', user.id).single(),
+    supabase.from('comments').select('author_id').eq('id', commentId).single(),
+  ])
 
-  if (existingComment?.author_id !== user.id) {
+  if (existingComment?.author_id !== user.id && !isAdmin(profile?.role)) {
     return c.json(
       { error: 'Unauthorized: You can only edit your own comments' },
       403
@@ -352,16 +472,18 @@ comments.patch('/:id', authMiddleware, async (c) => {
       updated_at: new Date().toISOString(),
     })
     .eq('id', commentId)
-    .select(`
-        ${PUBLIC_COMMENT_COLUMNS},
-        author:profiles(username, full_name),
-        professor:professors(name)
-      `)
+    .select(COMMENT_WITH_AUTHOR_AND_PROFESSOR_SELECT)
     .single()
 
   if (error) return c.json({ error: error.message }, 500)
+
+  await revalidateCommentTags(c.env, commentMutationTags(data))
   const [engaged] = await attachEngagement(supabase, [data], user.id)
-  return c.json({ success: true, comment: engaged })
+
+  return c.json<{ success: true; comment?: CommentSummary }>({
+    success: true,
+    comment: engaged,
+  })
 })
 
 /** Delete a comment (by author or admin) */
@@ -370,10 +492,15 @@ comments.delete('/:id', authMiddleware, async (c) => {
   const commentId = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)
 
-  // Get user's role and comment author
+  // Get user's role and comment author/target (target needed for cache
+  // revalidation after delete, since the row won't exist to look up then)
   const [{ data: profile }, { data: comment }] = await Promise.all([
     supabase.from('profiles').select('role').eq('id', user.id).single(),
-    supabase.from('comments').select('author_id').eq('id', commentId).single(),
+    supabase
+      .from('comments')
+      .select('author_id, script_id, professor_id')
+      .eq('id', commentId)
+      .single(),
   ])
 
   // Check if user is author or admin
@@ -389,6 +516,9 @@ comments.delete('/:id', authMiddleware, async (c) => {
   const { error } = await supabase.from('comments').delete().eq('id', commentId)
 
   if (error) return c.json({ error: error.message }, 500)
+  if (comment) {
+    await revalidateCommentTags(c.env, commentMutationTags(comment))
+  }
   return c.json({ success: true, message: 'Comment deleted successfully' })
 })
 
@@ -418,7 +548,7 @@ comments.get('/flagged/all', authMiddleware, async (c) => {
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json<Array<CommentFlaggedSummary>>(data)
 })
 
 export default comments

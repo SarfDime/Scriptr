@@ -1,7 +1,7 @@
+import type { SubjectSemester } from '@shared/types/academic.types'
 import { Badge, type BadgeProps } from '@/components/ui/Badge'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
-import type { SubjectSemester } from '@/types/academics/subject.types'
 
 type AcademicBadgeProps = (
   | { type: 'year'; value: number }

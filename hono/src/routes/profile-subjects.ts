@@ -1,5 +1,5 @@
+import { isProfileSubjectStatus } from '@shared/utils/api.utils'
 import { Hono } from 'hono'
-import { isProfileSubjectStatus } from '../../../shared/utils/api.utils'
 import { requiredParam } from '../lib/request'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'

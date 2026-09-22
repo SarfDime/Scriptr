@@ -1,3 +1,9 @@
+import type {
+  VoteRow,
+  VoteWithScript,
+  VoteWithUser,
+  VoteWithUserAndScript,
+} from '@shared/types/votes.types'
 import { Hono } from 'hono'
 import { checkTotalScriptVotes } from '../lib/achievements'
 import { requiredParam } from '../lib/request'
@@ -5,6 +11,16 @@ import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
 const votes = new Hono<HonoEnv>()
+
+/**
+ * Reused by `/user/:userId` and `/my-votes` — the two endpoints that select
+ * the identical shape: every vote by one user, with the script it was cast
+ * on and that script's subject name. Matches `VoteWithScript` in
+ * `shared/types/votes.types.ts` exactly; keep the two in sync if this
+ * changes.
+ */
+const VOTE_WITH_SCRIPT_SELECT =
+  '*, script:scripts(id, title, subject:subjects(name))'
 
 /** List all votes across all scripts */
 votes.get('/', async (c) => {
@@ -15,8 +31,10 @@ votes.get('/', async (c) => {
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+
+  return c.json<Array<VoteWithUserAndScript>>(data)
 })
+
 /** List votes for a specific script */
 votes.get('/script/:scriptId', async (c) => {
   const scriptId = requiredParam(c, 'scriptId')
@@ -28,7 +46,7 @@ votes.get('/script/:scriptId', async (c) => {
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json<Array<VoteWithUser>>(data)
 })
 
 /** List votes cast by a specific user */
@@ -37,12 +55,12 @@ votes.get('/user/:userId', async (c) => {
   const supabase = createSupabaseClient(c)
   const { data, error } = await supabase
     .from('votes')
-    .select('*, script:scripts(id, title, subject:subjects(name))')
+    .select(VOTE_WITH_SCRIPT_SELECT)
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json<Array<VoteWithScript>>(data)
 })
 
 /** List the current user's votes */
@@ -51,12 +69,12 @@ votes.get('/my-votes', authMiddleware, async (c) => {
   const supabase = createSupabaseClient(c)
   const { data, error } = await supabase
     .from('votes')
-    .select('*, script:scripts(id, title, subject:subjects(name))')
+    .select(VOTE_WITH_SCRIPT_SELECT)
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json<Array<VoteWithScript>>(data)
 })
 
 /** Get the current user's vote for a script, or null */
@@ -72,7 +90,7 @@ votes.get('/script/:scriptId/my-vote', authMiddleware, async (c) => {
     .maybeSingle()
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json<VoteRow | null>(data)
 })
 
 /** Get vote counts and the nonnegative score for a script */
@@ -84,7 +102,7 @@ votes.get('/script/:scriptId/stats', async (c) => {
     .select('*', { count: 'exact', head: true })
     .eq('script_id', scriptId)
 
-  return c.json({
+  return c.json<{ upvotes: number; score: number }>({
     upvotes: upvotes ?? 0,
     score: Math.max(0, upvotes ?? 0),
   })
@@ -95,6 +113,8 @@ votes.post('/:scriptId', authMiddleware, async (c) => {
   const scriptId = requiredParam(c, 'scriptId')
   const supabase = createSupabaseClient(c)
 
+  // Already strongly typed from the generated `toggle_vote` RPC signature
+  // in shared/types/database.types.ts — no overrideTypes needed here.
   const { data, error } = await supabase
     .rpc('toggle_vote', { p_script_id: scriptId })
     .single()
@@ -119,7 +139,10 @@ votes.post('/:scriptId', authMiddleware, async (c) => {
     await checkTotalScriptVotes(c, script.author_id)
   }
 
-  return c.json({ voted: data.voted, vote_score: data.vote_score })
+  return c.json<{ voted: boolean; vote_score: number }>({
+    voted: data.voted,
+    vote_score: data.vote_score,
+  })
 })
 
 export default votes

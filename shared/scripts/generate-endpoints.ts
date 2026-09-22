@@ -26,9 +26,27 @@ function getLeafName(segments: Array<string>) {
 }
 
 function generateApiRoutes() {
-  const uniquePaths = Array.from(new Set(app.routes.map((r) => r.path))).filter(
-    (p) => !p.includes('*')
-  )
+  // 1. FILTER ROUTES AND CONVERT ENDPOINT WILDCARDS
+  const uniquePaths = Array.from(new Set(app.routes.map((r) => r.path)))
+    .filter((p) => {
+      if (!p.includes('*')) return true
+
+      const parts = p.split('/').filter(Boolean)
+      const isApi = parts[0] === 'api'
+      const trailingSegments = isApi ? parts.slice(1) : parts
+
+      // Discard middleware catch-alls like '/*', '/api/*', or '/api/universities/*'
+      // where '*' sits at or directly after the top-level namespace
+      if (
+        trailingSegments.includes('*') &&
+        trailingSegments.indexOf('*') <= 1
+      ) {
+        return false
+      }
+
+      return true
+    })
+    .map((p) => (p.endsWith('/*') ? p.replace('/*', '/:key') : p))
 
   // 2. BUILD ApiEndpoint UNION
   const unionMembers = uniquePaths

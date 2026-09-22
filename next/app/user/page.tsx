@@ -14,60 +14,7 @@ import {
   subjects,
   subjectsContent,
 } from '@/lib/fake-scripts-data'
-import type { PageDataProps, Script } from '@/types/components/Scripts.types'
-
-const authoredScripts: Array<Script> = [
-  {
-    title: 'Cellular Respiration Notes',
-    subject: 'Biology',
-    professor: 'Dr. Elena Park',
-    year: '2nd year',
-    likes: 28,
-    comments: 5,
-    id: 'script-7',
-    liked: false,
-    saved: false,
-    color: 'cp-rose',
-  },
-  {
-    title: 'Linear Algebra Essentials',
-    subject: 'Linear Algebra',
-    professor: 'Prof. Adrian Cole',
-    year: '1st year',
-    likes: 19,
-    comments: 4,
-    id: 'script-8',
-    liked: false,
-    saved: false,
-    color: 'cp-blue',
-  },
-]
-const favoriteScripts: Array<Script> = [
-  {
-    id: 'script-9',
-    title: 'The Cell Cycle',
-    subject: 'Biology',
-    professor: 'Dr. Elena Park',
-    year: '2nd year',
-    likes: 38,
-    comments: 6,
-    liked: true,
-    saved: true,
-    color: 'cp-rose',
-  },
-  {
-    title: 'Organic Chemistry Reactions',
-    subject: 'Organic Chemistry',
-    professor: 'Prof. Marcus Bell',
-    year: '2nd year',
-    likes: 24,
-    comments: 3,
-    id: 'script-6',
-    liked: true,
-    saved: true,
-    color: 'cp-amber',
-  },
-]
+import type { PageDataProps } from '@/types/components/Scripts.types'
 
 export default function Page({
   authoredCount = 8,
@@ -86,8 +33,8 @@ export default function Page({
     location: 'BSc Biology and Mathematics',
     subjects: ['Biology', 'Organic Chemistry', 'Linear Algebra'],
     completed: 4,
-    scripts: authoredScripts,
-    favorites: favoriteScripts,
+    scripts: FAKE_SCRIPTS,
+    favorites: FAKE_SCRIPTS,
     accent: 'blue' as const,
   }
 

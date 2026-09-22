@@ -20,6 +20,7 @@ export type ApiEndpoint =
   | '/api/subjects'
   | `/api/subjects/${string}`
   | '/api/file-ops/upload'
+  | `/api/file-ops/get-file/${string}`
   | '/api/scripts'
   | `/api/scripts/subject/${string}`
   | '/api/scripts/top'
@@ -77,6 +78,9 @@ export type ApiEndpoint =
   | `/api/ratings/subject/${string}/stats`
   | `/api/ratings/subject/${string}/my-ratings`
   | `/api/ratings/subject/${string}/${string}`
+  | '/api/restrictions'
+  | '/api/restrictions/me'
+  | `/api/restrictions/${string}`
   | `/api/internal/profiles/${string}/role`
   | '/api/internal/universities'
   | `/api/internal/universities/by-sanity/${string}`
@@ -148,6 +152,8 @@ export const apiRoutes = {
   },
   fileOps: {
     upload: '/api/file-ops/upload',
+    getFileByKey: (key: string | number) =>
+      `/api/file-ops/get-file/${key}` as const,
   },
   scripts: {
     index: '/api/scripts',
@@ -259,6 +265,12 @@ export const apiRoutes = {
       subjectId: string | number,
       ratingTypeId: string | number
     ) => `/api/ratings/subject/${subjectId}/${ratingTypeId}` as const,
+  },
+  restrictions: {
+    index: '/api/restrictions',
+    me: '/api/restrictions/me',
+    byProfileId: (profileId: string | number) =>
+      `/api/restrictions/${profileId}` as const,
   },
   internal: {
     profilesRoleById: (id: string | number) =>
