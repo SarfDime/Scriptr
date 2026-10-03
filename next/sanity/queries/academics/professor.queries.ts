@@ -33,7 +33,7 @@ faculties[]->{
   "slug": slug.current,
   name,
 },
-"subjects": *[_type == "subject" && references(^._id)] | order(year asc, name asc) {
+"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {
   _id,
   "slug": slug.current,
   name,
@@ -72,7 +72,7 @@ ${sanityFunctionQueries}
       name,
     }
   },
-  "subjects": *[_type == "subject" && references(^._id)] | order(year asc, name asc) {
+  "subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {
     _id,
     "slug": slug.current,
     name,
@@ -99,7 +99,7 @@ ${sanityFunctionQueries}
 
 /** Static params query for pre-generating all professor subroutes */
 export const professorStaticParamsQuery = groq`
-*[_type == "professor" && !(_id in path("drafts.**"))] {
+*[_type == "professor" && !(_id in path("drafts.**")) && dbId != null] {
   "professorSlug": coalesce(slug.current, _id)
 }
 `

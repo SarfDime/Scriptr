@@ -4,6 +4,7 @@ import type {
   ImageValue,
   PortableTextBlock,
   Rule,
+  SlugRule,
   StringRule,
   ValidationBuilder,
 } from 'sanity'
@@ -231,11 +232,14 @@ export const validationRules = {
     }),
 
   // -- Links / URLs --
-  urlValidation: (rule: StringRule) =>
-    rule.required().custom((value: string | undefined) => {
+  urlValidation: (rule: StringRule, isRequired: boolean = true) => {
+    const urlRule = rule.custom((value: string | undefined) => {
       if (!value) return true
       return validateLinkFormat(value)
-    }),
+    })
+
+    return isRequired ? urlRule.required() : urlRule
+  },
 
   linkSelectorInternalFieldsValidation: (rule: Rule) =>
     rule.custom((value, context) => {
@@ -276,8 +280,8 @@ export const validationRules = {
     }),
 
   // -- Slugs / identifiers --
-  slugValidation: (rule: Rule, isRequired = true) => [
-    rule.custom((value: { current: string }) => {
+  slugValidation: (rule: SlugRule, isRequired = true) => [
+    rule.custom((value) => {
       const slug = value?.current
       if (!slug) return isRequired ? 'A slug is required' : true
 

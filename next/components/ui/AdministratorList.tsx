@@ -1,7 +1,6 @@
 import { Fragment } from 'react'
 import { Box } from '@/components/common/Box'
 import { DetailLink } from '@/components/ui/DetailLink'
-import { Divider } from '@/components/ui/Divider'
 import { Person } from '@/components/ui/Person'
 import { getAcademicPath } from '@/lib/academic-routes'
 import { cn } from '@/lib/common-utils'
@@ -12,15 +11,6 @@ export const AdministratorList = ({
   layout = 'person',
   detailLinkProps,
   personProps,
-  dividerProps: {
-    showDivider,
-    className: dividerClassName,
-    orientation,
-    ...restDividerProps
-  } = {
-    showDivider: true,
-    orientation: 'vertical',
-  },
   className,
   ...rest
 }: AdministratorListProps) => {
@@ -30,13 +20,6 @@ export const AdministratorList = ({
     <Box className={cn('ui-cluster px-2 py-0', className)} {...rest}>
       {administrators.map((admin, index) => (
         <Fragment key={admin._id ?? `${admin.name}-${index}`}>
-          {index > 0 && showDivider !== false && (
-            <Divider
-              orientation={orientation}
-              className={cn('border-background-600', dividerClassName)}
-              {...restDividerProps}
-            />
-          )}
           {layout === 'detailLink' && (
             <DetailLink
               {...detailLinkProps}

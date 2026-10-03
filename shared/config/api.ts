@@ -8,9 +8,10 @@ const ACADEMIC_TYPES = [
 
 export type AcademicEntityType = (typeof ACADEMIC_TYPES)[number]
 
-const STEP_ORDER: Array<
-  Exclude<AcademicEntityType, 'professor' | 'subject'> | 'subjects' | 'account'
-> = ['university', 'faculty', 'study', 'subjects', 'account'] as const
+const STEP_ORDER: Array<'selection' | 'account'> = [
+  'selection',
+  'account',
+] as const
 
 export type RatingTargetType = 'professor' | 'subject'
 

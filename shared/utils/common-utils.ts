@@ -34,15 +34,21 @@ export const generatePath = ({
   leadingSlash?: boolean
   endsWithSlash?: boolean
 }): string => {
-  return [
-    leadingSlash ? '/' : '',
-    ...(segments || []),
-    endsWithSlash ? '/' : '',
-  ]
-    .map((seg) => seg?.trim())
-    .filter(Boolean)
-    .join('/')
-    .replace(/\/+/g, '/')
+  return (
+    [leadingSlash ? '/' : '', ...(segments || []), endsWithSlash ? '/' : '']
+      .map((seg) => seg?.trim())
+      .filter(Boolean)
+      .join('/')
+      // Replaces 2 or more slashes with a single slash,
+      // EXCEPT when they are preceded by a colon (e.g., http://)
+      .replace(/(?<!:)\/{2,}/g, '/')
+  )
 }
+
+/** Generates random key */
+export const generateRandomKey = (): string =>
+  typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2)
 
 export { camelCase, capitalize, getAttribute }

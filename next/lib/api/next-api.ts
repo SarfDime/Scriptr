@@ -1,4 +1,6 @@
 import type { QueryApiEndpointType } from '@shared/types/api.types'
+import { generatePath } from '@shared/utils/common-utils'
+import { API_URL } from '@/config/env'
 
 export type ApiFetchOptions = Omit<RequestInit, 'body'> & {
   /** Accepts a raw object for JSON, FormData for files, or standard BodyInit */
@@ -44,8 +46,7 @@ export async function apiFetch<T>(
     fetchBody = body as BodyInit | null | undefined
   }
 
-  // Optional: Prepend API_URL here if needed, e.g., generatePath({ segments: [API_URL, path] })
-  const url = path
+  const url = generatePath({ segments: [API_URL, path] })
 
   // `credentials: 'include'` is required for cookie-based auth to survive
   // a cross-origin call from the browser — fetch's default is

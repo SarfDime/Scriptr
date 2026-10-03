@@ -11,8 +11,6 @@ export default function ScriptError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
-  // useEffect(() => {}, [])
-
   return (
     <Box as='main' className='ui-container ui-section ui-stack gap-3'>
       <Text className='ui-title'>

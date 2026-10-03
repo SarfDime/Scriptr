@@ -1,20 +1,38 @@
 'use client'
 
+import type { PortableTextBlock } from '@portabletext/editor'
 import {
   ALLOWED_EXTENSIONS,
   SUBJECT_EXAM_SESSIONS,
 } from '@shared/config/shared-constants'
 import type { SubjectExamSession } from '@shared/types/academic.types'
-import { useEffect, useState } from 'react'
+import type { PortableTextValue } from '@shared/types/portable-text.types'
+import { type SubmitEvent, useEffect, useEffectEvent, useState } from 'react'
 import { useScriptUpload } from '@/hooks/useScriptsUpload'
 import { getExtension } from '@/lib/file-preview'
-import { plainTextToPortableText } from '@/lib/portable-text'
 import type { MinimalSubject } from '@/types/academics/subject.types'
 import type { SelectOptionType } from '@/types/components/Select.types'
 
 const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // ~1MB
 
 export type FileWithError = { file: File; error: string | null }
+
+function hasText(blocks: Array<PortableTextBlock>) {
+  return blocks.some((block) => {
+    if (!Array.isArray(block.children)) return false
+
+    return block.children.some(
+      (child) =>
+        typeof child === 'object' &&
+        child !== null &&
+        '_type' in child &&
+        child._type === 'span' &&
+        'text' in child &&
+        typeof child.text === 'string' &&
+        child.text.trim().length > 0
+    )
+  })
+}
 
 function validateFile(file: File): string | null {
   const extension = getExtension(file.name)
@@ -58,12 +76,17 @@ export function useCreateScriptForm({
   onCreated,
 }: UseCreateScriptFormArgs) {
   const { state, upload, reset } = useScriptUpload()
+  const notifyCreated = useEffectEvent((scriptId: string) => {
+    onCreated?.(scriptId)
+  })
 
   const subjectId = subject.dbId ?? ''
 
-  const [titleText, setTitleText] = useState('')
-  const [descriptionText, setDescriptionText] = useState('')
-  const [professorId, setProfessorId] = useState('')
+  const [title, setTitle] = useState<PortableTextValue>([])
+  const [description, setDescription] = useState<PortableTextValue>([])
+  const [professorId, setProfessorId] = useState(
+    () => subject.professors[0]?.dbId ?? ''
+  )
   const [examSession, setExamSession] = useState<SubjectExamSession>(
     SUBJECT_EXAM_SESSIONS[0] ?? 'january'
   )
@@ -74,7 +97,7 @@ export function useCreateScriptForm({
   const validFiles = files.filter((entry) => entry.error === null)
   const canSubmit =
     !isBusy &&
-    titleText.trim().length > 0 &&
+    hasText(title) &&
     subjectId.length > 0 &&
     professorId.length > 0 &&
     validFiles.length > 0
@@ -103,23 +126,22 @@ export function useCreateScriptForm({
     setReadingLinks((prev) => prev.filter((_, i) => i !== index))
 
   const resetForm = () => {
-    setTitleText('')
-    setDescriptionText('')
-    setProfessorId('')
+    setTitle([])
+    setDescription([])
+    setProfessorId(subject.professors[0]?.dbId ?? '')
     setExamSession(SUBJECT_EXAM_SESSIONS[0] ?? 'january')
     setReadingLinks([])
     setFiles([])
     reset()
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
+    event.preventDefault()
     if (!canSubmit) return
 
     await upload({
-      title: plainTextToPortableText(titleText.trim()),
-      description: descriptionText.trim()
-        ? plainTextToPortableText(descriptionText.trim())
-        : undefined,
+      title,
+      description: hasText(description) ? description : undefined,
       subjectId,
       professorId,
       examSession: examSession.trim() || undefined,
@@ -144,20 +166,18 @@ export function useCreateScriptForm({
     label: session.charAt(0).toUpperCase() + session.slice(1),
   }))
 
-  // Side effect (notifying the parent) belongs in an effect, not render body.
   useEffect(() => {
     if (state.status === 'success') {
-      onCreated?.(state.scriptId)
+      notifyCreated(state.scriptId)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, onCreated])
+  }, [state])
 
   return {
     // Field state + setters
-    titleText,
-    setTitleText,
-    descriptionText,
-    setDescriptionText,
+    title,
+    setTitle,
+    description,
+    setDescription,
     professorId,
     setProfessorId,
     examSession,

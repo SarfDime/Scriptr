@@ -4,7 +4,7 @@ import type { BoxProps } from '@/components/common/Box'
 import type { ButtonProps } from '@/components/common/Button'
 import type { NextLinkProps } from '@/components/common/NextLink'
 import type { TextProps } from '@/components/typography/Text'
-import type { MinimalSubject } from '../academics/subject.types'
+import type { MinimalSubject, SubjectDetail } from '../academics/subject.types'
 import type { SanityIconProps } from '../component.types'
 import type { ComponentColorPalettes } from './ColorPalettes.types'
 
@@ -96,10 +96,8 @@ export type ScriptCommentsLinkProps = BaseScriptAction & {
   comments: number
 } & Omit<NextLinkProps, 'children' | 'href'>
 
-export type ScriptActionsProps = Omit<BoxProps, 'title'> &
-  ScriptMeta &
+export type ScriptActionsProps = ScriptMeta &
   ScriptStats & {
-    className?: string
     title: PortableTextValue
     description?: PortableTextValue
     files: Array<ScriptFile>
@@ -117,15 +115,12 @@ export type ScriptCardProps = {
   script: ScriptDetail
 }
 
-export type ScriptsSectionProps = Omit<BoxProps, 'content' | 'as'> &
-  ScriptFiltersProps & {
-    content: PortableTextValue
-    scripts: Array<Script>
-    savedIds: Array<ScriptId>
-    likedIds: Array<ScriptId>
-    onToggleSaved: (id: ScriptId) => void
-    onToggleLiked: (id: ScriptId) => void
-  }
+export type ScriptsSectionProps = {
+  scripts: Array<ScriptDetail>
+  title?: string
+  subtitle?: string
+  parentSubject?: SubjectDetail
+} & Omit<BoxProps, 'children'>
 
 export type PageDataProps = {
   scripts?: Array<Script>

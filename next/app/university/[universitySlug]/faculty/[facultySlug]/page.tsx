@@ -2,7 +2,6 @@ import { FacultyOverviewCard } from '@/components/academics/faculty/FacultyOverv
 import { FacultyStudyExplorer } from '@/components/academics/faculty/FacultyStudyExplorer'
 import { ProfessorsSection } from '@/components/academics/professor/ProfessorsSection'
 import { BackLink } from '@/components/common/BackLink'
-import { Box } from '@/components/common/Box'
 import { PageLayout } from '@/components/layout/PageLayout'
 import {
   createAcademicMetadata,
@@ -59,24 +58,13 @@ export default async function FacultyDetailPage({
         greeting: faculty.university?.name ?? 'Faculty',
         title: faculty.name,
         actions: (
-          <Box className='ui-cluster gap-2'>
-            {faculty.university && (
-              <BackLink
-                href={getAcademicPath({
-                  type: 'university',
-                  universitySlug:
-                    faculty.university.slug ?? faculty.university._id,
-                })}
-                label={faculty.university.name}
-                variant='red'
-              />
-            )}
-            <BackLink
-              href='/universities'
-              label='← All Universities'
-              variant='brand'
-            />
-          </Box>
+          <BackLink
+            href={getAcademicPath({
+              type: 'university',
+              universitySlug: faculty.university.slug,
+            })}
+            label={faculty.university.name}
+          />
         ),
       }}
       sidebar={<ProfessorsSection professors={faculty.professors} />}

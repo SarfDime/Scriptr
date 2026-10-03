@@ -20,7 +20,10 @@ export const HeaderActions = () => {
       >
         <Bell />
         {unreadCount > 0 && (
-          <Badge className='cp-danger absolute -top-1 -right-1 px-1.5 py-0 text-[10px]'>
+          <Badge
+            className='absolute top-1 right-1 px-1.5 py-0 text-[10px]'
+            colorPalette='cp-danger'
+          >
             {unreadCount}
           </Badge>
         )}

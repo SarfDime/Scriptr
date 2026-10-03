@@ -19,6 +19,12 @@ const contentSchemas: Array<ChildSchemaType> = [
     category: 'content',
     icon: InfoOutlineIcon,
   },
+  {
+    title: 'Star Canvas',
+    schemaType: 'starCanvas',
+    category: 'content',
+    icon: InfoOutlineIcon,
+  },
 ]
 
 // People & Social

@@ -1,8 +1,7 @@
 import { ProfessorsSection } from '@/components/academics/professor/ProfessorsSection'
 import { StudyOverviewCard } from '@/components/academics/study/StudyOverviewCard'
-import { StudySubjectsExplorer } from '@/components/academics/study/StudySubjectsExplorer'
+import { SubjectsExplorer } from '@/components/academics/subject/SubjectsExplorer'
 import { BackLink } from '@/components/common/BackLink'
-import { Box } from '@/components/common/Box'
 import { PageLayout } from '@/components/layout/PageLayout'
 import {
   createAcademicMetadata,
@@ -59,37 +58,31 @@ export default async function StudyDetailPage({
         greeting: study.faculty?.name ?? 'Faculty',
         title: study.name,
         actions: (
-          <Box className='ui-cluster gap-2'>
-            {study.faculty && (
-              // NOTE: kept the pre-existing behavior of linking to the parent
-              // university, labeled with the faculty's name. If you actually
-              // want this to link to the faculty page instead, switch this to
-              // `type: 'faculty'` with both universitySlug and facultySlug.
-              <BackLink
-                href={getAcademicPath({
-                  type: 'university',
-                  universitySlug:
-                    study.faculty.university?.slug ??
-                    study.faculty.university?._id ??
-                    '',
-                })}
-                label={study.faculty.name}
-                variant='red'
-              />
-            )}
+          <>
             <BackLink
-              href='/universities'
-              label='← All Universities'
-              variant='brand'
+              href={getAcademicPath({
+                type: 'faculty',
+                universitySlug: study.faculty.university?.slug,
+                facultySlug: study.faculty?.slug,
+              })}
+              label={study.faculty.name}
             />
-          </Box>
+            <BackLink
+              href={getAcademicPath({
+                type: 'university',
+                universitySlug: study.faculty.university?.slug,
+              })}
+              label={study.faculty.university.name}
+              backLevel='twoBack'
+            />
+          </>
         ),
       }}
       sidebar={<ProfessorsSection professors={study.professors} />}
     >
       <StudyOverviewCard study={study} />
 
-      <StudySubjectsExplorer subjects={study.subjects ?? []} />
+      <SubjectsExplorer subjects={study.subjects ?? []} />
     </PageLayout>
   )
 }

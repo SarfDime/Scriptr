@@ -17,7 +17,7 @@ export const ScriptCard = ({ script }: ScriptCardProps) => {
   const color = getColorPalette({ type: 'seed', value: script.id })
 
   return (
-    <Card>
+    <Card className='ui-above'>
       <Card.Body className='flex items-start gap-3'>
         <Box
           className={cn(
@@ -28,8 +28,8 @@ export const ScriptCard = ({ script }: ScriptCardProps) => {
           <DocumentTextIcon />
         </Box>
 
-        <Box className='ui-stack min-w-0 flex-1 gap-1'>
-          <Box className='ui-cluster items-center gap-2'>
+        <Box className='ui-stack grow gap-1'>
+          <Box className='ui-cluster items-center gap-1 grow justify-between'>
             <PortableTextContent className='ui-title'>
               {script.title}
             </PortableTextContent>
@@ -46,7 +46,7 @@ export const ScriptCard = ({ script }: ScriptCardProps) => {
         </Box>
       </Card.Body>
 
-      <Card.Footer>
+      <Card.Footer className='ui-cluster flex-wrap items-center gap-2'>
         <ScriptActions
           id={script.id}
           scriptTitle={script.title}

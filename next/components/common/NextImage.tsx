@@ -20,8 +20,6 @@ export type NextImageProps = {
   objectFitProp?: ImageObjectFitType
   objectPositionProp?: ImageObjectPositionType
   imageProps?: Omit<ImageProps, 'src' | 'alt'>
-  cornerRadius?: number
-  rounded?: number
   isLoadingExt?: boolean
   sizes?: ImageProps['sizes']
 } & Omit<SkeletonBoxProps, 'src' | 'alt'> & {
@@ -48,8 +46,6 @@ export function NextImage({
   objectPositionProp,
   objectFitProp,
   imageProps,
-  cornerRadius,
-  rounded,
   asset,
   crop,
   hotspot,
@@ -67,14 +63,10 @@ export function NextImage({
           loading={isLoadingExt ?? isLoading}
           {...rest}
           className={cn(
-            `relative z-0 h-full w-full ${!isLoadingExt && !isLoading && 'rounded-none'}`,
+            `relative h-full ${!isLoadingExt && !isLoading && 'rounded-none'}`,
             priority && 'before:duration-500',
-            className,
-            rounded && cornerRadius && 'roundedImage'
+            className
           )}
-          style={{
-            '--cornerRadius': rounded ? `${cornerRadius}%` : '0',
-          }}
         >
           <Image
             {...imageProps}

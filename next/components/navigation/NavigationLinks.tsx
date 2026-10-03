@@ -17,8 +17,8 @@ const NavItem = ({ stringTitle, icon, ...rest }: NavItemType) => {
       href={slug}
       className={cn(
         'button ghost',
-        'w-full justify-start gap-3 p-3',
-        'text-left ui-caption'
+        'w-full justify-start gap-3 p-2.5',
+        'text-left text-sm'
       )}
     >
       {icon && <NextImage {...icon} />}

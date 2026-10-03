@@ -24,11 +24,6 @@ export type ContactInfo = {
   website?: string
 }
 
-// Shared property for entities that also have a street address
-export type AddressableContactInfo = ContactInfo & {
-  streetAddress?: string
-}
-
 // Extracted relation type used inside SubjectDetail and ProfessorDetail
 export type RelatedFaculty = MinimalEntity & {
   university?: MinimalEntity

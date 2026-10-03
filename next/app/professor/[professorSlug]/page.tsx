@@ -63,11 +63,20 @@ export default async function ProfessorDetailPage({
         title: professor.name,
         subtitle: professor.dbId ? `Database ID: ${professor.dbId}` : undefined,
         actions: (
-          <BackLink
-            href='/universities'
-            label='← Universities & Faculties'
-            variant='plain'
-          />
+          <>
+            {professor.universities &&
+              professor.universities.length > 0 &&
+              professor.universities.map((uni) => (
+                <BackLink
+                  key={uni._id}
+                  href={getAcademicPath({
+                    type: 'university',
+                    universitySlug: uni.slug,
+                  })}
+                  label={uni.name}
+                />
+              ))}
+          </>
         ),
       }}
       sidebar={

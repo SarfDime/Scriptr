@@ -12,6 +12,7 @@ import {
   type AppNotification,
   NOTIFICATION_PALETTE,
 } from '@/types/notifications.types'
+import { Dialog } from '../ui/Dialog'
 
 const NotificationRow = ({
   notification,
@@ -78,57 +79,44 @@ export const NotificationsAside = () => {
   const hasDismissible = notifications?.some((n) => !n?.persistent)
 
   return (
-    <>
-      {trayOpen && (
+    <Dialog
+      as='aside'
+      aria-label='Notifications'
+      isOpen={trayOpen}
+      title='Notifications'
+      hideTrigger
+      onClose={() => setTrayOpen(false)}
+      placement='right'
+      hideBackdrop={true}
+      dialogProps={{
+        className: cn(
+          'fixed top-16 z-50 ui-stack h-full w-full max-w-sm gap-3 overflow-y-auto p-4 md:min-w-[unset] md:w-full',
+          trayOpen && 'transition-transform transform translate-x-0',
+          !trayOpen && 'transition-transform transform translate-x-full',
+          'ui-above border-l'
+        ),
+      }}
+      headerProps={{
+        className: 'ui-cluster justify-between',
+      }}
+    >
+      {hasDismissible && (
         <>
-          {/* <Box
-            className='fixed inset-0 z-40 bg-background-1000/50'
-            onClick={() => setTrayOpen(false)}
-          /> */}
-          <Box
-            as='aside'
-            aria-label='Notifications'
-            className={cn(
-              'fixed top-16 right-0 z-50 ui-stack h-full w-full max-w-sm gap-3 overflow-y-auto p-4',
-              trayOpen && 'transition-transform transform translate-x-0',
-              !trayOpen && 'transition-transform transform translate-x-full',
-              'ui-above border-l'
-            )}
-          >
-            <Box className='ui-cluster items-center justify-between'>
-              <Text className='ui-title font-semibold'>Notifications</Text>
-              <Box className='ui-cluster items-center gap-1'>
-                {hasDismissible && (
-                  <Button
-                    onClick={dismissAll}
-                    className='button subtle ui-caption px-2 py-1'
-                  >
-                    Dismiss all
-                  </Button>
-                )}
-                <Button
-                  onClick={() => setTrayOpen(false)}
-                  aria-label='Close notifications'
-                  className='button subtle p-1'
-                >
-                  <CloseIcon />
-                </Button>
-              </Box>
-            </Box>
-            {notifications?.length > 0 ? (
-              <Box className='ui-stack gap-2'>
-                {notifications?.map((n) => (
-                  <NotificationRow key={n?.id} notification={n} />
-                ))}
-              </Box>
-            ) : (
-              <Text className='ui-caption text-grey-500'>
-                You're all caught up.
-              </Text>
-            )}
-          </Box>
+          <Button onClick={dismissAll} className='button subtle px-3 py-1'>
+            Dismiss all
+          </Button>
+          {/* <Divider orientation='vertical' className='h-full' /> */}
         </>
       )}
-    </>
+      {notifications?.length > 0 ? (
+        <Box className='ui-stack gap-2'>
+          {notifications?.map((n) => (
+            <NotificationRow key={n?.id} notification={n} />
+          ))}
+        </Box>
+      ) : (
+        <Text className='ui-caption text-grey-500'>You're all caught up.</Text>
+      )}
+    </Dialog>
   )
 }

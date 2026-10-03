@@ -86,7 +86,12 @@
         "noDuplicateFieldDefinitionNames": "error",
         "noDuplicateSelectors": "off",
         "noEmptyObjectKeys": "error",
-        "useReactCompiler": "error",
+        "useReactCompiler": {
+          "level": "on",
+          "options": {
+            "compilationMode": "infer"
+          }
+        },
         "useReactNamingConvention": "error"
       },
       "preset": "recommended",

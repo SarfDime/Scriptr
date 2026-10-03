@@ -24,6 +24,8 @@ import {
   revalidateScriptTags,
   scriptMutationTags,
 } from '../lib/cache-revalidate'
+import { honoLog } from '../lib/logger'
+import { deleteR2Files } from '../lib/r2'
 import { requiredParam } from '../lib/request'
 import {
   authMiddleware,
@@ -391,10 +393,45 @@ scripts.post(
         vote_score: 0,
         download_count: 0,
       })
-      .select(SCRIPT_SUMMARY_SELECT)
+      .select('id')
       .single()
 
     if (error) {
+      honoLog({
+        logLevel: 'error',
+        message: 'Failed to save script record',
+        error,
+      })
+
+      try {
+        await deleteR2Files(
+          c,
+          files.map(({ bucket, fileKey }) => ({ bucket, fileKey }))
+        )
+      } catch (cleanupError) {
+        honoLog({
+          logLevel: 'error',
+          message: 'Failed to clean up uploaded R2 files after script failure',
+          error: cleanupError,
+        })
+      }
+
+      if (error.code === '42501') {
+        return c.json({ error: 'You are not allowed to create scripts' }, 403)
+      }
+      if (error.code === '23514') {
+        return c.json(
+          { error: 'Script data violates a database constraint' },
+          400
+        )
+      }
+      if (error.code === '23503') {
+        return c.json(
+          { error: 'The selected subject or professor is no longer available' },
+          409
+        )
+      }
+
       return c.json({ error: 'Failed to save script record' }, 500)
     }
 
@@ -410,26 +447,45 @@ scripts.post(
     )
 
     if (filesError) {
+      honoLog({
+        logLevel: 'error',
+        message: 'Failed to save script files',
+        error: filesError,
+      })
       await supabase.from('scripts').delete().eq('id', data.id)
+      try {
+        await deleteR2Files(
+          c,
+          files.map(({ bucket, fileKey }) => ({ bucket, fileKey }))
+        )
+      } catch (cleanupError) {
+        honoLog({
+          logLevel: 'error',
+          message:
+            'Failed to clean up uploaded R2 files after file record failure',
+          error: cleanupError,
+        })
+      }
+      if (filesError.code === '42501') {
+        return c.json({ error: 'You are not allowed to attach files' }, 403)
+      }
+      if (filesError.code === '23503' || filesError.code === '23514') {
+        return c.json({ error: 'Invalid script file data' }, 400)
+      }
       return c.json({ error: 'Failed to save script files' }, 500)
     }
 
-    const { data: script } = await supabase
-      .from('scripts')
-      .select(SCRIPT_SUMMARY_SELECT)
-      .eq('id', data.id)
-      .single()
-
-    await revalidateScriptTags(c.env, scriptMutationTags(data))
+    await revalidateScriptTags(
+      c.env,
+      scriptMutationTags({ id: data.id, subject_id: subjectId })
+    )
     await checkScriptsUploaded(c, user.id)
 
-    return c.json<{ success: boolean; script: ScriptSummary; message: string }>(
-      {
-        success: true,
-        script: script ?? data,
-        message: 'Script uploaded successfully',
-      }
-    )
+    return c.json<{ success: true; script: { id: string }; message: string }>({
+      success: true,
+      script: { id: data.id },
+      message: 'Script uploaded successfully',
+    })
   }
 )
 
@@ -521,9 +577,30 @@ scripts.delete('/:id', authMiddleware, async (c) => {
     )
   }
 
+  const { data: files } = await supabase
+    .from('script_files')
+    .select('file_url, bucket')
+    .eq('script_id', scriptId)
+
   const { error } = await supabase.from('scripts').delete().eq('id', scriptId)
 
   if (error) return c.json({ error: error.message }, 500)
+
+  try {
+    await deleteR2Files(
+      c,
+      (files ?? []).map((file) => ({
+        fileKey: file.file_url,
+        bucket: file.bucket,
+      }))
+    )
+  } catch (cleanupError) {
+    honoLog({
+      logLevel: 'error',
+      message: 'Script deleted but R2 file cleanup failed',
+      error: cleanupError,
+    })
+  }
 
   if (script?.subject_id) {
     await revalidateScriptTags(

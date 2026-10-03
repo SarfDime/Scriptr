@@ -12,9 +12,9 @@ export const toPortableText = (
   return [
     {
       _type: 'block',
-      _key: 'block-1',
+      _key: crypto.randomUUID(),
       style: 'normal',
-      children: [{ _type: 'span', _key: 'span-1', text, marks: [] }],
+      children: [{ _type: 'span', _key: crypto.randomUUID(), text, marks: [] }],
       markDefs: [],
     },
   ]

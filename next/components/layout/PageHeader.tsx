@@ -16,7 +16,9 @@ export const PageHeader = ({
   return (
     <Box className='ui-cluster justify-between items-end'>
       <Box className='ui-stack gap-1'>
-        {greeting && <Text className='ui-title text-brand'>{greeting}</Text>}
+        {greeting && (
+          <Text className='ui-title text-brand-400'>{greeting}</Text>
+        )}
         {title && (
           <Title as='h1' className='ui-display'>
             {title}

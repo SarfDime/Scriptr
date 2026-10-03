@@ -1,6 +1,5 @@
 @layer colors {
-  /* The Light theme remains unchanged */
-  @theme {
+  @theme static {
     --color-background-50: #ffffff;
     --color-background-100: #fdfdfb;
     --color-background-150: #fcfbfa;
@@ -67,27 +66,28 @@
     --color-grey-950: #0d0d0d;
     --color-grey-1000: #000000;
 
-    --color-brand-50: #f0f5fa;
-    --color-brand-100: #dce8f2;
-    --color-brand-150: #c7d9e8;
-    --color-brand-200: #a0bdd3;
-    --color-brand-250: #88abc7;
-    --color-brand-300: #6f9bb9;
-    --color-brand-350: #5b89aa;
-    --color-brand-400: #477897;
-    --color-brand-450: #336784;
-    --color-brand: #003366;
-    --color-brand-500: #225372;
-    --color-brand-550: #07305d;
-    --color-brand-600: #0b2b53;
-    --color-brand-650: #09274c;
-    --color-brand-700: #0a2445;
-    --color-brand-750: #081d38;
-    --color-brand-800: #06162b;
-    --color-brand-850: #041021;
-    --color-brand-900: #030d1c;
-    --color-brand-950: #020812;
-    --color-brand-1000: #010408;
+    /* Light Theme Brand - Much lighter and highly saturated azure/blue */
+    --color-brand-50: #f0f8ff;
+    --color-brand-100: #d6eeff;
+    --color-brand-150: #bce4ff;
+    --color-brand-200: #a3daff;
+    --color-brand-250: #89d0ff;
+    --color-brand-300: #70c6ff;
+    --color-brand-350: #56bcff;
+    --color-brand-400: #3db2ff;
+    --color-brand-450: #24a8ff;
+    --color-brand: #0099ff; /* Base */
+    --color-brand-500: #008ae6;
+    --color-brand-550: #007acc;
+    --color-brand-600: #006bb3;
+    --color-brand-650: #005c99;
+    --color-brand-700: #004d80;
+    --color-brand-750: #003d66;
+    --color-brand-800: #002e4d;
+    --color-brand-850: #001f33;
+    --color-brand-900: #000f1a;
+    --color-brand-950: #000508;
+    --color-brand-1000: #000000;
 
     --color-golden-yellow: #ffcc04;
     --color-yellow: #dfb200;
@@ -169,27 +169,27 @@
     --color-grey-950: #fafafa;
     --color-grey-1000: #ffffff;
 
-    /* Brand stays blue/cyan to provide an accent */
-    --color-brand-50: #051619;
-    --color-brand-100: #092b2f;
-    --color-brand-150: #0b3438;
-    --color-brand-200: #0d3d42;
-    --color-brand-250: #145258;
-    --color-brand-300: #1c6970;
-    --color-brand-350: #287a82;
-    --color-brand-400: #3688b0;
-    --color-brand-450: #3b8bb5;
-    --color-brand: #3f8fba;
-    --color-brand-500: #4aabc4;
-    --color-brand-550: #519bc2;
-    --color-brand-600: #55cbd0;
-    --color-brand-650: #67d2d6;
-    --color-brand-700: #79d9dc;
-    --color-brand-750: #8ee0e2;
-    --color-brand-800: #a4e7e8;
-    --color-brand-850: #bcf0f0;
-    --color-brand-900: #d8eaf3;
-    --color-brand-950: #eaf8f8;
+    /* Dark Theme Brand - Vibrant cyber mint, scaling from shadow to light */
+    --color-brand-50: #00170f;
+    --color-brand-100: #002e1f;
+    --color-brand-150: #00452e;
+    --color-brand-200: #005c3d;
+    --color-brand-250: #00734d;
+    --color-brand-300: #008a5c;
+    --color-brand-350: #00a16b;
+    --color-brand-400: #00b87a;
+    --color-brand-450: #00cf8a;
+    --color-brand: #00e699; /* Base */
+    --color-brand-500: #1affaa;
+    --color-brand-550: #33ffb8;
+    --color-brand-600: #4dffc6;
+    --color-brand-650: #66ffd3;
+    --color-brand-700: #80ffe1;
+    --color-brand-750: #99ffee;
+    --color-brand-800: #b3fff5;
+    --color-brand-850: #ccfffa;
+    --color-brand-900: #e6fffc;
+    --color-brand-950: #f2fffe;
     --color-brand-1000: #ffffff;
   }
 }
@@ -262,26 +262,27 @@
   --color-grey-950: #fafafa;
   --color-grey-1000: #ffffff;
 
-  --color-brand-50: #051619;
-  --color-brand-100: #092b2f;
-  --color-brand-150: #0b3438;
-  --color-brand-200: #0d3d42;
-  --color-brand-250: #145258;
-  --color-brand-300: #1c6970;
-  --color-brand-350: #287a82;
-  --color-brand-400: #3688b0;
-  --color-brand-450: #3b8bb5;
-  --color-brand: #3f8fba;
-  --color-brand-500: #4aabc4;
-  --color-brand-550: #519bc2;
-  --color-brand-600: #55cbd0;
-  --color-brand-650: #67d2d6;
-  --color-brand-700: #79d9dc;
-  --color-brand-750: #8ee0e2;
-  --color-brand-800: #a4e7e8;
-  --color-brand-850: #bcf0f0;
-  --color-brand-900: #d8eaf3;
-  --color-brand-950: #eaf8f8;
+  /* Dark Theme Brand - Vibrant cyber mint, scaling from shadow to light */
+  --color-brand-50: #00170f;
+  --color-brand-100: #002e1f;
+  --color-brand-150: #00452e;
+  --color-brand-200: #005c3d;
+  --color-brand-250: #00734d;
+  --color-brand-300: #008a5c;
+  --color-brand-350: #00a16b;
+  --color-brand-400: #00b87a;
+  --color-brand-450: #00cf8a;
+  --color-brand: #00e699; /* Base */
+  --color-brand-500: #1affaa;
+  --color-brand-550: #33ffb8;
+  --color-brand-600: #4dffc6;
+  --color-brand-650: #66ffd3;
+  --color-brand-700: #80ffe1;
+  --color-brand-750: #99ffee;
+  --color-brand-800: #b3fff5;
+  --color-brand-850: #ccfffa;
+  --color-brand-900: #e6fffc;
+  --color-brand-950: #f2fffe;
   --color-brand-1000: #ffffff;
 }
 
@@ -354,25 +355,26 @@
   --color-grey-950: #0d0d0d;
   --color-grey-1000: #000000;
 
-  --color-brand-50: #f0f5fa;
-  --color-brand-100: #dce8f2;
-  --color-brand-150: #c7d9e8;
-  --color-brand-200: #a0bdd3;
-  --color-brand-250: #88abc7;
-  --color-brand-300: #6f9bb9;
-  --color-brand-350: #5b89aa;
-  --color-brand-400: #477897;
-  --color-brand-450: #336784;
-  --color-brand: #003366;
-  --color-brand-500: #225372;
-  --color-brand-550: #07305d;
-  --color-brand-600: #0b2b53;
-  --color-brand-650: #09274c;
-  --color-brand-700: #0a2445;
-  --color-brand-750: #081d38;
-  --color-brand-800: #06162b;
-  --color-brand-850: #041021;
-  --color-brand-900: #030d1c;
-  --color-brand-950: #020812;
-  --color-brand-1000: #010408;
+  /* Light Theme Brand - Much lighter and highly saturated azure/blue */
+  --color-brand-50: #f0f8ff;
+  --color-brand-100: #d6eeff;
+  --color-brand-150: #bce4ff;
+  --color-brand-200: #a3daff;
+  --color-brand-250: #89d0ff;
+  --color-brand-300: #70c6ff;
+  --color-brand-350: #56bcff;
+  --color-brand-400: #3db2ff;
+  --color-brand-450: #24a8ff;
+  --color-brand: #0099ff; /* Base */
+  --color-brand-500: #008ae6;
+  --color-brand-550: #007acc;
+  --color-brand-600: #006bb3;
+  --color-brand-650: #005c99;
+  --color-brand-700: #004d80;
+  --color-brand-750: #003d66;
+  --color-brand-800: #002e4d;
+  --color-brand-850: #001f33;
+  --color-brand-900: #000f1a;
+  --color-brand-950: #000508;
+  --color-brand-1000: #000000;
 }

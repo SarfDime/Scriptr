@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@portabletext/toolbar": "^9.0.17",
     "@sanity/asset-utils": "^2.3.0",
     "@sanity/client": "8.6.1",
     "@sanity/icons": "^5.2.2",

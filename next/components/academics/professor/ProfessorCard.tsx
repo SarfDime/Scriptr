@@ -28,12 +28,12 @@ export const ProfessorCard = ({
         type: 'professor',
         professorSlug: slug ?? _id,
       })}
-      className='group p-4 h-full flex flex-col justify-between gap-3 transition hover:border-brand-500 hover:shadow-sm'
+      className='group p-4 h-full flex flex-col justify-between gap-3 transition hover:border-brand-500 hover:shadow-sm ui-above'
     >
-      <ClickableCard.Body className='flex items-start gap-3 flex-1 min-w-0'>
+      <ClickableCard.Body className='ui-cluster'>
         <Avatar picture={picture} name={name} color={color} />
 
-        <Box className='ui-stack gap-0.5 min-w-0 flex-1'>
+        <Box className='ui-stack gap-0.5'>
           <Title
             as='h3'
             className='ui-body font-semibold group-hover:text-brand truncate'
@@ -60,15 +60,22 @@ export const ProfessorCard = ({
       </ClickableCard.Body>
 
       {subjects && subjects.length > 0 && (
-        <ClickableCard.Footer className='ui-cluster gap-1.5 pt-2 border-t border-grey-100/60'>
-          {subjects.map((subject) => (
+        <ClickableCard.Footer className='ui-cluster gap-2'>
+          {subjects.slice(0, 2).map((subject) => (
             <Badge
               key={subject._id}
-              className='cp-unstyled border border-grey-200 ui-caption'
+              className='rounded-md ui-label'
+              colorPalette={getColorPalette({ value: subject._id })}
             >
               {subject.name}
             </Badge>
           ))}
+
+          {subjects.length > 2 && (
+            <Badge className='rounded-md ui-label' colorPalette='cp-gray'>
+              +{subjects.length - 2}
+            </Badge>
+          )}
         </ClickableCard.Footer>
       )}
     </ClickableCard>

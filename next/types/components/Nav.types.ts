@@ -1,18 +1,3 @@
-// type SharedPageData = {
-//   siteName: string
-//   pageSeo?: PageSeo
-//   openGraphType: string
-//   twitterCreator: string
-//   twitterSite: string
-//   twitterCardType: string
-//   navigationMenu?: NavBarNavigationMenuType
-//   websiteFeedbackModal?: FeedbackType
-//   websiteEligibilityModals?: Array<EligibilityModalType & SharedSectionDataType>
-//   footer?: FooterDataType
-//   websiteFavicon?: SanityImageType
-//   _updatedAt?: string
-// }
-
 import type {
   LinkSelectorProps,
   SharedSectionDataType,

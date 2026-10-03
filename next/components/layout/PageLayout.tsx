@@ -60,7 +60,7 @@ export const PageLayout = ({
             title={header.title}
             subtitle={header.subtitle}
           >
-            {header.actions}
+            <Box className='ui-cluster gap-2.5'>{header.actions}</Box>
           </PageHeader>
         ) : (
           header

@@ -1,22 +1,16 @@
 import { Box } from '@/components/common/Box'
 import { Text } from '@/components/typography/Text'
 import { Radio } from '@/components/ui/radio/RadioButton'
-
-type OnboardingOption = { id: string; name: string }
-
-type OnboardingSelectStepProps = {
-  title: string
-  description: string
-  options: Array<OnboardingOption>
-  selectedId: string | null
-  onSelect: (id: string) => void
-}
+import type { OnboardingSelectStepProps } from '@/types/onboarding.types'
 
 /**
- * A single-choice onboarding step, reused for university, faculty, and
- * study selection. When exactly one option exists it renders disabled
- * and pre-selected with a tooltip explaining why, rather than asking the
- * person to confirm a choice they don't actually have.
+ * A single-choice selection block, reused for university, faculty, and
+ * study — all rendered together now rather than one at a time, so each
+ * one needs to be able to show why it can't be interacted with yet
+ * (`disabledReason`) instead of relying on not being on screen at all.
+ * When exactly one option exists it renders disabled and pre-selected
+ * with a tooltip explaining why, rather than asking the person to
+ * confirm a choice they don't actually have.
  */
 export const OnboardingSelectStep = ({
   title,
@@ -24,8 +18,13 @@ export const OnboardingSelectStep = ({
   options,
   selectedId,
   onSelect,
+  disabledReason,
 }: OnboardingSelectStepProps) => {
   const isOnlyOption = options.length === 1
+
+  const placeholder =
+    disabledReason ??
+    (options?.length === 0 ? 'No options available yet.' : null)
 
   return (
     <Box className='ui-stack gap-4'>
@@ -34,10 +33,8 @@ export const OnboardingSelectStep = ({
         <Text className='ui-caption text-grey-500'>{description}</Text>
       </Box>
 
-      {options.length === 0 ? (
-        <Text className='ui-caption text-grey-500'>
-          No options available yet.
-        </Text>
+      {placeholder ? (
+        <Text className='ui-caption text-grey-500'>{placeholder}</Text>
       ) : (
         <Box className='ui-stack gap-2'>
           {options.map((option) => (

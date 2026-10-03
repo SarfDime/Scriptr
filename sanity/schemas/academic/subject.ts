@@ -17,8 +17,42 @@ export const Subject = defineType({
   title: 'Subject',
   type: 'document',
   icon: BookIcon,
-  ...academicPreview(),
+  ...academicPreview({
+    isSubject: true,
+    selectExtra: {
+      code: 'code',
+      year: 'year',
+      semester: 'semester',
+      elective: 'elective',
+    },
+    formatSubtitle: (selection) => {
+      const { code, year, semester, elective } = selection as {
+        code?: string
+        year?: number
+        semester?: number
+        elective?: boolean
+      }
+      const parts: Array<string> = []
+      if (code) parts.push(code)
+      if (elective) parts.push('Elective')
+      if (year) parts.push(`${year}`)
+      if (semester) parts.push(`${semester}`)
+      return parts.length > 0 ? parts.join(' • ') : undefined
+    },
+  }),
   ...academicGrouping(ENTITY),
+  orderings: [
+    {
+      title: 'Year (Newest First)',
+      name: 'yearDesc',
+      by: [{ field: 'year', direction: 'desc' }],
+    },
+    {
+      title: 'Year (Oldest First)',
+      name: 'yearAsc',
+      by: [{ field: 'year', direction: 'asc' }],
+    },
+  ],
   fields: [
     ...academicFields(ENTITY, ['name', 'slug']),
     {
@@ -52,6 +86,15 @@ export const Subject = defineType({
       group: 'academic',
     },
     {
+      name: 'elective',
+      title: 'Elective',
+      type: 'boolean',
+      description: 'Indicates if this course is elective.',
+      initialValue: false,
+      fieldset: 'academic',
+      group: 'academic',
+    },
+    {
       name: 'classes',
       title: 'Classes',
       type: 'string',
@@ -62,16 +105,9 @@ export const Subject = defineType({
     {
       name: 'semester',
       title: 'Semester',
-      type: 'string',
+      type: 'number',
       description: 'Semester during which the course is offered.',
-      options: {
-        list: [
-          { title: 'Winter Semester', value: 'winter' },
-          { title: 'Summer Semester', value: 'summer' },
-        ],
-      },
-      initialValue: 'winter',
-      validation: validationRules.isRequired,
+      validation: (rule: Rule) => rule.required().min(1).max(10),
       fieldset: 'academic',
       group: 'academic',
     },
@@ -97,6 +133,7 @@ export const Subject = defineType({
       title: 'Syllabus',
       description: `Enter a URL containing this subject syllabus.`,
       grouping: 'academic',
+      validation: (rule) => validationRules.urlValidation(rule, false),
     }),
     {
       name: 'study',

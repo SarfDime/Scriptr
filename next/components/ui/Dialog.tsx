@@ -26,6 +26,7 @@ export type DialogProps = {
   closeButtonProps?: CloseButtonProps
   isOpen?: boolean
   skipCheck?: boolean
+  hideBackdrop?: boolean
   dialogProps?: Omit<
     BoxProps &
       DetailedHTMLProps<
@@ -41,7 +42,7 @@ export type DialogProps = {
   setRef?: (ref: HTMLDialogElement) => void
   closeOnOutsideClick?: boolean
   closeOnEsc?: boolean
-} & Omit<BoxProps, 'title'> &
+} & Omit<BoxProps, 'title' | 'className'> &
   Omit<ComponentPlacement, 'placement'>
 
 /** `Dialog` - A component that renders a modal dialog with customizable positioning and appearance.
@@ -78,6 +79,7 @@ export function Dialog({
   closeButtonProps,
   titleProps,
   hideTrigger,
+  hideBackdrop,
   onClose,
   onOpen,
   onToggle,
@@ -187,10 +189,10 @@ export function Dialog({
       {mounted &&
         createPortal(
           <>
-            {showBackdrop && (
+            {!hideBackdrop && showBackdrop && (
               <div
                 className={cn(
-                  'pointer-events-none fixed inset-0 bg-background-1000/50 backdrop-blur-xs starting:backdrop-blur-[0] transition-[backdrop-filter] duration-350',
+                  'pointer-events-none fixed inset-0 bg-background-250/50 backdrop-blur-xs starting:backdrop-blur-[0] transition-[backdrop-filter] duration-350',
                   Z_INDEX.DIALOG_BACKDROP
                 )}
               />
@@ -213,7 +215,6 @@ export function Dialog({
               className={cn(
                 'dialog',
                 'fixed top-[10%] w-full md:w-fit md:min-w-2xl',
-                'overflow-y-hidden',
                 getPlacementClasses({ placement, offsetX, offsetY }),
                 dialogProps?.className
               )}
@@ -229,7 +230,7 @@ export function Dialog({
                     aria-label='Close dialog'
                     {...closeButtonProps}
                     className={cn(
-                      'text-gray-500 hover:bg-brand-100 hover:text-gray-800',
+                      'button ghost p-1',
                       closeButtonProps?.className
                     )}
                   />

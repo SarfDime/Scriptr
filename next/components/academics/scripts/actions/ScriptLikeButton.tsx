@@ -27,7 +27,7 @@ export const ScriptLikeButton = ({
       {...props}
       onClick={() => setIsLiked((current) => !current)}
       className={cn(
-        'button subtle gap-1.5 px-2 py-1',
+        'button subtle gap-1.5 p-2',
         isLiked && 'text-rose-pink',
         className
       )}

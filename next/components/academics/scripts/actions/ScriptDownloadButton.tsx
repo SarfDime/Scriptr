@@ -2,14 +2,16 @@
 
 import type { ScriptFile } from '@shared/types/scripts.types'
 import { useState } from 'react'
+import { Box, type BoxProps } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { Text } from '@/components/typography/Text'
 import { downloadScript } from '@/lib/api/scripts-api'
+import { cn } from '@/lib/common-utils'
 
 export type ScriptDownloadButtonProps = {
   scriptId: string
   file: ScriptFile
-}
+} & Omit<BoxProps, 'children'>
 
 /** POST apiRoutes.scripts.downloadById records the attempt server-side
  * (service-role client, dedup'd account → IP → device per ARCHITECTURE.md
@@ -19,6 +21,8 @@ export type ScriptDownloadButtonProps = {
 export function ScriptDownloadButton({
   scriptId,
   file,
+  className,
+  ...props
 }: ScriptDownloadButtonProps) {
   const [status, setStatus] = useState<'idle' | 'pending' | 'error'>('idle')
 
@@ -34,7 +38,7 @@ export function ScriptDownloadButton({
   }
 
   return (
-    <div className='ui-stack gap-1'>
+    <Box className={cn('ui-stack gap-1', className)} {...props}>
       <Button
         onClick={handleDownload}
         disabled={status === 'pending'}
@@ -47,6 +51,6 @@ export function ScriptDownloadButton({
           Download failed — try again.
         </Text>
       )}
-    </div>
+    </Box>
   )
 }

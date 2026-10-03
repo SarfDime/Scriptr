@@ -48,12 +48,12 @@ university->{
   name,
   dbId
 },
-"studyCount": count(*[_type == "study" && references(^._id)]),
-"professorCount": count(*[_type == "professor" && references(^._id)]),
-"professors": *[_type == "professor" && references(^._id)] | order(name asc) {
+"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),
+"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),
+"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {
   ${minimalProfessorQuery}
 },
-"studies": *[_type == "study" && references(^._id)] | order(name asc) {
+"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {
   ${minimalStudyQuery}
 },
 `
@@ -91,7 +91,7 @@ ${sanityFunctionQueries}
 
 /** Static params query for pre-generating all faculty subroutes */
 const facultyStaticParamsQuery = groq`
-*[_type == "faculty" && !(_id in path("drafts.**"))] {
+*[_type == "faculty" && !(_id in path("drafts.**")) && dbId != null] {
   "facultySlug": coalesce(slug.current, _id),
   "universitySlug": coalesce(university->slug.current, university->_id)
 }

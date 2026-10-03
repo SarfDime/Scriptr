@@ -15,7 +15,10 @@ export const Faculty = defineType({
   title: 'Faculty',
   type: 'document',
   icon: MasterDetailIcon,
-  ...academicPreview(),
+  ...academicPreview({
+    icon: MasterDetailIcon,
+    pictureField: 'logo',
+  }),
   ...academicGrouping(ENTITY),
   fields: [
     ...academicFields(

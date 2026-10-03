@@ -6,6 +6,8 @@ import { Subject } from './academic/subject'
 import { University } from './academic/university'
 import { Button } from './misc/button'
 import { Person } from './misc/person'
+// Misc
+import { StarCanvas } from './misc/star-canvas'
 import { NavItem } from './navigation/nav-item'
 import { NavMenu } from './navigation/nav-menu'
 import { SubMenuItem } from './navigation/subMenuItem'
@@ -40,4 +42,5 @@ export const schemaTypes = [
   Professor,
   Subject,
   Study,
+  StarCanvas,
 ]

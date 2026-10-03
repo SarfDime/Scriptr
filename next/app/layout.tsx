@@ -10,13 +10,18 @@ import { MainLayout } from '@/components/layout/PageLayout'
 import { NotificationsAside } from '@/components/notifications/NotificationsAside'
 import { OnboardingModal } from '@/components/onboarding/OnboardingModal'
 import { DisableDraft } from '@/components/ui/DisableDraft'
-import { CustomStarCanvas } from '@/components/ui/StarCanvas'
+import {
+  CustomStarCanvas,
+  type StarCanvasSanityData,
+} from '@/components/ui/StarCanvas'
+import { ToastContainer } from '@/components/ui/toast/ToastContainer'
 import { isStaging } from '@/config/env'
 import { getDraftMode } from '@/lib/common-utils'
 import { SanityLive } from '@/sanity/lib/live'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { navMenuQuery } from '@/sanity/queries/nav.queries'
 import { onboardingCatalogQuery } from '@/sanity/queries/onboarding.queries'
+import { starCanvasQuery } from '@/sanity/queries/website.queries'
 import type { NavMenuType } from '@/types/components/Nav.types'
 import type { OnboardingCatalog } from '@/types/onboarding.types'
 import { Providers } from './providers'
@@ -152,20 +157,23 @@ export default async function RootLayout({
     query: onboardingCatalogQuery,
     fetchOrigin: `onboardingCatalog(layout)`,
   })
+
+  const starCanvasConfig = await fetchSanityData<StarCanvasSanityData>({
+    query: starCanvasQuery,
+    fetchOrigin: `starCanvasConfig(layout)`,
+  })
+
   return (
     <html
       lang='en'
       data-scroll-behavior='smooth'
-      // TODO: When implementing dark mode consider adding a class or data attribute to the HTML element to toggle dark mode styles
       className={`${antiqueOlive.variable} ${antiqueOliveCond.variable} ${matter.variable} ${bricolage.variable} antialiased`}
     >
       {/* TODO: Implement body scroll lock here or something */}
       <body>
-        <Providers>
-          <CustomStarCanvas
-            starCount={500}
-            colors={['#ffffff', '#ffe9c4', '#d4fbff']}
-          />
+        <Providers catalog={catalog}>
+          <ToastContainer />
+          <CustomStarCanvas sanityData={starCanvasConfig} />
           <NavBar {...navMenu} />
           <MainLayout>{children}</MainLayout>
           <NotificationsAside />

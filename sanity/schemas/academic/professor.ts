@@ -16,7 +16,9 @@ export const Professor = defineType({
   title: 'Professor',
   type: 'document',
   icon: UserIcon,
-  ...academicPreview(),
+  ...academicPreview({
+    icon: UserIcon,
+  }),
   ...academicGrouping(ENTITY),
   fields: [
     ...academicFields(ENTITY, ['name', 'slug', 'title', 'description']),

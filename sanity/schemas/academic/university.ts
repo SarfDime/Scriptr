@@ -14,7 +14,10 @@ export const University = defineType({
   title: 'University',
   type: 'document',
   icon: EarthGlobeIcon,
-  ...academicPreview(),
+  ...academicPreview({
+    icon: EarthGlobeIcon,
+    pictureField: 'logo',
+  }),
   ...academicGrouping(ENTITY),
   fields: [
     ...academicFields(ENTITY, [

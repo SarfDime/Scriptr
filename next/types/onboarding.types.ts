@@ -1,10 +1,3 @@
-import type { STEP_ORDER } from '@shared/config/api'
-
-/** A single selectable choice in `OnboardingSelectStep` (university,
- * faculty, or study) — distinct from the richer catalog entity types
- * above, which carry parent references. */
-export type OnBoardingStep = (typeof STEP_ORDER)[number]
-
 export type OnboardingOption = { id: string; name: string }
 
 export type OnboardingUniversity = { _id: string; dbId?: string; name: string }
@@ -69,4 +62,5 @@ export type OnboardingSelectStepProps = {
   options: Array<OnboardingOption>
   selectedId: string | null
   onSelect: (id: string) => void
+  disabledReason?: string
 }

@@ -20,7 +20,7 @@ export const ScriptCommentsLink = ({
     {...props}
     href={getAcademicPath({ scriptSlug: id, type: 'script' })}
     className={cn(
-      'ui-caption flex items-center gap-1.5 px-2 py-1 text-grey-500 hover:text-brand',
+      'ui-caption flex items-center gap-1.5 p-2 text-grey-500 hover:text-brand',
       className
     )}
     aria-label={`View comments on ${scriptTitle}`}

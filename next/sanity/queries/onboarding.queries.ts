@@ -1,19 +1,21 @@
 import { groq } from 'next-sanity'
 
 export const onboardingCatalogQuery = groq`{ 
-  "universities": *[_type == "university"]{ _id, dbId, name },
-  "faculties": *[_type == "faculty"]{ _id, dbId, name, "universityId": university._ref },
-  "studies": *[_type == "study"]{
+  "universities": *[_type == "university" && dbId != null]{ _id, dbId, name },
+  "faculties": *[_type == "faculty" && university._ref != null && dbId != null]{ _id, dbId, name, "universityId": university._ref },
+  "studies": *[_type == "study" && faculty._ref != null && dbId != null]{
     _id,
     dbId,
     name,
     "facultyId": faculty._ref,
-    "subjectsByYear": array::unique(*[_type == "subject" && study._ref == ^._id].year) | order(@ asc) {
-      "year": @,
-      "subjects": *[_type == "subject" && study._ref == ^.^._id && year == ^]{
+    "subjectsByYear": *[_type == "subject" && study._ref == ^._id && dbId != null
+        && _id == (*[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(_id asc)[0]._id)
+      ] | order(year asc){
+      year,
+      "subjects": *[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(name asc){
         _id, dbId, name, year, "studyId": study._ref
       }
-    }
+    },
   },
-  "subjects": *[_type == "subject"] | order(year asc){ _id, dbId, name, year, "studyId": study._ref }
+  "subjects": *[_type == "subject" && study._ref != null && dbId != null] | order(year asc){ _id, dbId, name, year, "studyId": study._ref }
 }`

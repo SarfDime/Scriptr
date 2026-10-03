@@ -1,0 +1,65 @@
+'use client'
+
+import { type ReactNode, useRef } from 'react'
+import { cn } from '@/lib/common-utils'
+import { DROPDOWN_CARET, type PTIconComponent } from './PTicons'
+
+export const PTDropdown = ({
+  label,
+  title,
+  icon: Icon,
+  icons,
+  iconClass,
+  children,
+}: {
+  label?: string
+  title?: string
+  icon?: PTIconComponent
+  icons?: Array<PTIconComponent>
+  iconClass?: string
+  children: ReactNode
+}) => {
+  const detailsRef = useRef<HTMLDetailsElement>(null)
+
+  const handleBlur = (event: React.FocusEvent<HTMLDetailsElement>) => {
+    if (
+      detailsRef.current &&
+      !detailsRef.current.contains(event.relatedTarget)
+    ) {
+      detailsRef.current.open = false
+    }
+  }
+
+  const displayIcons =
+    // biome-ignore lint/style/noNestedTernary: <Simplest way to do this>
+    icons && icons.length > 0 ? icons.slice(0, 3) : Icon ? [Icon] : []
+  // TODO: Make sure children don't exit screen
+  return (
+    <details ref={detailsRef} onBlur={handleBlur} className='group relative'>
+      <summary
+        title={title}
+        aria-label={title ?? label}
+        className={cn(
+          'flex list-none items-center gap-1 rounded-md border border-grey-300',
+          'cursor-pointer select-none bg-background px-2 py-1 text-fg text-xs',
+          '[&::-webkit-details-marker]:hidden'
+        )}
+      >
+        {displayIcons?.map((iconComponent, index) => {
+          const Icon = iconComponent
+          return (
+            <Icon
+              key={index}
+              className={cn('flex h-5 w-5 shrink-0', iconClass)}
+            />
+          )
+        })}
+        {label && <span className='hidden md:block'>{label}</span>}
+        <DROPDOWN_CARET className='h-4 w-4 shrink-0 transition-transform group-open:rotate-180 md:block hidden' />
+      </summary>
+      <div className='absolute z-10 mt-1 flex min-w-max flex-col items-stretch gap-0.5 rounded border border-grey-300 bg-background p-1 text-left shadow-md'>
+        {children}
+      </div>
+    </details>
+  )
+}

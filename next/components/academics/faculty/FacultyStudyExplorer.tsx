@@ -19,7 +19,7 @@ export const FacultyStudyExplorer = ({
   studies,
 }: FacultySubjectsExplorerProps) => {
   return (
-    <Card className='p-6 ui-stack gap-4'>
+    <Card className='p-0 border-0 ui-stack gap-4'>
       <Box className='ui-cluster justify-between items-center'>
         <Box className='ui-cluster gap-2 items-center'>
           <Title as='h2' className='ui-title font-bold'>

@@ -12,7 +12,7 @@ export const StudyTipCard = ({
   content?: PortableTextValue
 }) => {
   return (
-    <Card className='ui-stack gap-3 p-4'>
+    <Card className='ui-stack gap-3 p-4 ui-above'>
       <Card.Header className='flex items-center gap-2 p-0'>
         <Sparkles className='text-golden-yellow' />
         <Text className='ui-title'>{UI_STRINGS.general.studyTip}</Text>

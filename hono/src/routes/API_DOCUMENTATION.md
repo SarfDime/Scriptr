@@ -1,7 +1,8 @@
 # API Endpoints Documentation
 
 REST API reference for Scriptr. All paths are relative to `/api`
-(`http://localhost:8787/api` in local dev).
+(`http://localhost:8787/api` in local dev). Response shapes are typed in
+`shared/types/` (see [Notes](#notes)).
 
 ## Table of Contents
 - [API Endpoints Documentation](#api-endpoints-documentation)
@@ -68,7 +69,9 @@ accordingly; don't expect a flat `faculty.subjects` array.
 
 Catalog **mutations** live under `/api/internal` (below), same header — see
 [Universities](#universities) for university-specific mutations, and the
-sections below for the rest.
+sections below for the rest. These are the endpoints the Sanity Studio
+"Create in Database" / "Sync with Database" / checked-delete actions call
+(tested end to end).
 `profile_subjects`/`profile_faculties`/`profile_studies` are not catalog data
 — they're a user's own selections and stay on the normal authenticated API.
 
@@ -95,10 +98,10 @@ rules), enforced at both the API and a Postgres `CHECK` constraint, and
 unique across universities. Nullable — a university without one falls back
 to the default `R2_BUCKET` env var at upload time (see
 [File Uploads](#file-uploads) below). Delete is blocked at the application
-level by an explicit dependents check against `faculties`, independent of
-the underlying FK's `ON DELETE CASCADE` — the FK itself would not stop a
-raw SQL delete from cascading through the whole hierarchy; only this route
-does.
+level by an explicit dependents check against `faculties` (`409`),
+independent of the underlying FK's `ON DELETE CASCADE` — the FK itself would
+not stop a raw SQL delete from cascading through the whole hierarchy; only
+this route does.
 
 ---
 
@@ -186,6 +189,11 @@ required at download time, since a bare file key no longer implies a single
 global bucket once buckets are university-scoped. It's included in every
 public script response's `files` array (see [Scripts](#scripts)).
 
+`GET /file-ops/get-file/*` has no auth and does not check that the key
+belongs to a `script_files` row, so a deleted script's file stays fetchable
+(R2 objects are not removed on script deletion). Guest preview/download relies
+on this being public; see `PROGRESS.md` for the open decision.
+
 ---
 
 ## Scripts
@@ -209,10 +217,10 @@ Response excludes `is_flagged` (internal moderation state). Each file in
 
 | Route                      | Notes                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /scripts`            | Body: `{ title, description?, subjectId, professorId, examSession?, additionalReading?, files: [{ fileKey, fileType, fileSizeBytes, bucket }] }` — `files` is exactly what `POST /file-ops/upload` returns, passed straight through. `title`/`description` are Portable Text. At least one file required. Validated via a `zValidator` JSON schema (accepts both `subjectId`/`subject_id` etc. key styles). Rejected if restricted. |
+| `POST /scripts`            | Body: `{ title, description?, subjectId, professorId, examSession?, additionalReading?, files: [{ fileKey, fileType, fileSizeBytes, bucket }] }` — `files` is exactly what `POST /file-ops/upload` returns, passed straight through. `title`/`description` are Portable Text. At least one file required. Validated via a `zValidator` JSON schema (accepts both `subjectId`/`subject_id` etc. key styles). Rejected if restricted. Returns `403` for RLS authorization failures, `409` for missing subject/professor references, and `400` for database constraint violations. |
 | `GET /scripts/my-scripts`  | Current user's scripts                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `PATCH /scripts/:id`       | Author or admin. Body: `{ title?, description?, additional_reading? }`. Files are immutable — not part of this body.                                                                                                                                                                                                                                                                                                                |
-| `DELETE /scripts/:id`      | Author or admin                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `DELETE /scripts/:id`      | Author or admin. Removes the script's database records and attempts to delete all associated R2 objects.                                                                                                                                                                                                                                                                                                                            |
 | `GET /scripts/flagged/all` | Admin only                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 ---
@@ -305,6 +313,7 @@ technically allow it too.
 
 Three structurally identical resources for a user's own faculty, study, and
 subject data. All require authentication and operate on the caller only.
+These are what first-visit onboarding persists to once the user has an account.
 
 | Resource  | List                     | Get one                             | Add                                             | Remove                                 |
 | --------- | ------------------------ | ----------------------------------- | ----------------------------------------------- | -------------------------------------- |
@@ -365,18 +374,19 @@ internal secret involved):
 
 ## Notifications
 
-Own-resource, authenticated. System-generated (achievements today; restrictions
-and other types are schema-ready via the open-ended `type` column) — there is
-no user-facing create endpoint, matching `notifications` RLS (`INSERT` is
-admin/service-role only).
+Own-resource, authenticated. System-generated — there is no user-facing
+create endpoint, matching `notifications` RLS (`INSERT` is admin/service-role
+only). Emitted today for: achievements (`type: 'achievement_earned'`),
+onboarding, and account creation. The `type` column is open-ended, so new
+kinds need no migration; type-specific payload lives in `data`.
 
-| Route                             | Notes                                                     |
-| --------------------------------- | --------------------------------------------------------- |
-| `GET /notifications`              | List own notifications. Query: `is_read` (`true`/`false`) |
-| `GET /notifications/unread-count` | `{ count }`                                               |
-| `PATCH /notifications/read-all`   | Marks all unread as read                                  |
-| `PATCH /notifications/:id`        | `{ is_read }` — update one notification's read state      |
-| `DELETE /notifications/:id`       | Delete one notification                                   |
+| Route                             | Notes                                                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `GET /notifications`              | List own notifications. Query: `is_read` (`true`/`false`)                                             |
+| `GET /notifications/unread-count` | `{ count }`                                                                                           |
+| `PATCH /notifications/read-all`   | Marks all unread as read                                                                              |
+| `PATCH /notifications/:id`        | `{ is_read }` (boolean, else `400`) — update one notification's read state; `404` if not the caller's |
+| `DELETE /notifications/:id`       | Delete one notification                                                                               |
 
 ### Achievements
 
@@ -407,7 +417,8 @@ own resource (`author_id`/`user_id`/`profile_id` = `auth.uid()`), or an
 `is_admin()`-gated policy for an admin action. This is nearly everything —
 scripts/comments/profiles admin actions, all "own resource" endpoints, flags
 (list/resolve/delete, now that admin has direct SELECT/DELETE RLS), rating
-types, professor/subject ratings, profile faculties/studies/subjects.
+types, professor/subject ratings, profile faculties/studies/subjects,
+notifications, restrictions.
 
 **Use the service role** only where no RLS path exists for the caller:
 - All catalog + catalog-junction tables (`universities` → `professor_studies`)
@@ -415,6 +426,8 @@ types, professor/subject ratings, profile faculties/studies/subjects.
   only write path.
 - `POST /scripts/:id/download` — `download_events` has zero client-facing
   `INSERT` policy for any role.
+- Creating notifications and awarding achievements (`INSERT` is not granted
+  to clients).
 - `PATCH /internal/profiles/:id/role` — deliberately hardened past what RLS
   alone would require, given how sensitive the column is.
 
@@ -423,7 +436,23 @@ types, professor/subject ratings, profile faculties/studies/subjects.
 ## Authentication
 
 Authenticated endpoints require the Supabase session cookie set by
-`/api/auth/login`. `authMiddleware` verifies it and returns `401` on failure.
+`/api/auth/login` or `/api/auth/callback`. There is no Bearer-token path.
+`authMiddleware` verifies the cookie and returns `401` on failure.
+
+| Route                 | Auth     | Notes                                                                                                                                                                                                                                                                                                                    |
+| --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `POST /auth/register` | Public   | `{ email, password, username, full_name }` — all required, else `400`. Profile row is created by a database trigger. Sets `emailRedirectTo` to `{origin}/auth/callback`.                                                                                                                                                 |
+| `POST /auth/login`    | Public   | `{ email, password }`. `401` on bad credentials. Returns `{ success, user: SessionUser, session }`.                                                                                                                                                                                                                      |
+| `POST /auth/callback` | Public   | `{ access_token, refresh_token }` — establishes the session from an email-confirmation (or similar) redirect. The frontend (`useAuthCallback`) reads the tokens from the URL fragment and posts them here. Implicit flow, not PKCE. `400` if either token is missing, `401` if invalid. Returns the same shape as login. |
+| `POST /auth/logout`   | Required | Signs out and clears the cookie.                                                                                                                                                                                                                                                                                         |
+| `GET /auth/session`   | Public   | `{ user: SessionUser \| null, session: null }`-shaped; `user` is `null` when not signed in.                                                                                                                                                                                                                              |
+
+`SessionUser` (see `shared/types/auth.types.ts`) is the app-shaped user, not
+Supabase's raw auth user: `{ id, email, username, role, subjects: [{ subject_id,
+status }], selected_faculty_ids, selected_study_ids }`. `login`, `callback`,
+and `session` all return it, so the client never has to refetch `/session`
+after signing in. Responses are typed `RegisterResponse`, `LoginResponse`,
+`CallbackResponse`, `LogoutResponse`, `SessionResponse`.
 
 ## Role-Based Access Control
 
@@ -434,8 +463,8 @@ any elevated database privilege today.**
    of Supabase role — RLS closes these tables to everyone regardless.
 2. Authenticated routes generally operate on the caller's own resources.
 3. Admin-only actions: full CRUD on any `scripts`/`comments`/`profiles` row,
-   flag resolution, flag listing, rating-type management — all `is_admin()`-
-   gated in RLS, all usable via the admin's own session.
+   flag resolution, flag listing, rating-type management, user restrictions —
+   all `is_admin()`-gated in RLS, all usable via the admin's own session.
 4. **Moderators have zero elevated access anywhere in this API.** The role is
    reserved for a planned notification-trigger feature (see
    [Planned Endpoints](#planned-endpoints-not-yet-implemented)), not direct
@@ -456,9 +485,14 @@ Violations return `403` with an error payload.
 { "error": "Error message description" }
 ```
 `400` validation · `401` unauthenticated · `403` forbidden/restricted ·
-`404` not found · `409` conflict (unique/FK constraint) · `500` server error.
+`404` not found · `409` conflict (unique/FK constraint, or a catalog delete
+blocked by dependents) · `500` server error.
 
 ## Notes
+
+**Response types**: route response shapes are defined in `shared/types/` and
+applied at the route with `c.json<T>(...)` (e.g. the auth routes above), so
+`next/` and `sanity/` import the same types the API returns.
 
 **Vote system**: one `+1` per user per script, toggle behavior, `vote_score`
 clamped at zero. No downvotes exist anywhere in the schema or API.
@@ -476,14 +510,19 @@ raw bytes.
 
 **Portable Text**: `scripts.title`, `scripts.description`, `comments.content`
 are Portable Text (`jsonb` block arrays). The Postgres `CHECK` only confirms
-valid JSON under a size cap — block/mark-type validation is an API concern,
-and the renderer should only recognize an explicit block-type allow-list.
+valid JSON under a size cap — block/mark-type validation is an API concern
+that is **not yet enforced server-side**, and the renderer should only
+recognize an explicit block-type allow-list.
 
- ## Planned Endpoints (Not Yet Implemented)
+## Planned Endpoints (Not Yet Implemented)
 
 - **Individual script file removal** — RLS supports author/admin delete on
-   `script_files`; no endpoint removes a single file without deleting the
-   whole script.
- - **Moderator notification pipeline** — repeated flags notifying moderators,
-   a moderator's flag escalating to admins. No schema or backend work started;
-   moderators have no elevated access today.
+  `script_files`; no endpoint removes a single file without deleting the
+  whole script.
+- **Achievement definitions CRUD** — admin create/update/delete for
+  `achievement_definitions`; only the public read exists today.
+- **Server-side Portable Text allow-list validation** on script and comment
+  writes.
+- **Moderator notification pipeline** — repeated flags notifying moderators,
+  a moderator's flag escalating to admins. No schema or backend work started;
+  moderators have no elevated access today.

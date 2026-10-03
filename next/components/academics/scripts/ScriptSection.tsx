@@ -2,28 +2,28 @@
 
 import ChevronDownIcon from '@sanity/icons/ChevronDown'
 import { UI_STRINGS } from '@shared/config/strings'
-import { Box, type BoxProps } from '@/components/common/Box'
+import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { Text } from '@/components/typography/Text'
 import { Title } from '@/components/typography/Title'
 import { Badge } from '@/components/ui/Badge'
 import { useScriptExplorer } from '@/hooks/useScriptExplorer'
 import { cn } from '@/lib/common-utils'
-import type { ScriptDetail } from '@/types/components/Scripts.types'
+import type { ScriptsSectionProps } from '@/types/components/Scripts.types'
 import { SearchBar } from '../../typography/SearchBar'
+import { CreateScriptModal } from './CreateScriptModal'
 import { ScriptCard } from './ScriptCard'
 import { ScriptFilters } from './ScriptFilters'
 
 const VISIBLE_LIMIT = 5
 
-type ScriptsSectionProps = {
-  scripts: Array<ScriptDetail>
-} & Omit<BoxProps, 'children'>
-
 /** A component that renders a section displaying a list of scripts with search and filter functionality. */
 export const ScriptsSection = ({
   scripts,
+  title = UI_STRINGS.scripts.sectionTitle,
+  subtitle = UI_STRINGS.scripts.sectionSubtitle,
   className,
+  parentSubject,
   ...rest
 }: ScriptsSectionProps) => {
   const {
@@ -44,18 +44,17 @@ export const ScriptsSection = ({
     <Box as='section' className={cn('ui-stack gap-4', className)} {...rest}>
       <Box className='ui-cluster items-center gap-2'>
         <Title as='h2' className='ui-title font-bold'>
-          {UI_STRINGS.scripts.sectionTitle}
+          {title}
         </Title>
         <Badge className='cp-brand'>{visibleScripts.length}</Badge>
       </Box>
-      <Text className='ui-caption text-grey-500'>
-        {UI_STRINGS.scripts.sectionSubtitle}
-      </Text>
+      <Text className='ui-caption text-grey-500'>{subtitle}</Text>
 
-      <Box className='ui-cluster items-start justify-between gap-3'>
+      <Box className='ui-cluster items-start justify-between gap-3 p-[0.1px]'>
         <SearchBar
           inputVal={query}
           inputOnChange={(event) => setQuery(event.target.value)}
+          className='min-w-[50%]'
         />
 
         <ScriptFilters
@@ -65,6 +64,7 @@ export const ScriptsSection = ({
           onSubjectChange={setSubject}
           onSortChange={setSort}
         />
+        {parentSubject && <CreateScriptModal subject={parentSubject} />}
       </Box>
 
       {shownScripts.length > 0 ? (
@@ -74,7 +74,7 @@ export const ScriptsSection = ({
           ))}
         </Box>
       ) : (
-        <Text className='ui-subtitle rounded-xl border border-dashed border-grey-300 px-6 py-14 text-center text-grey-500'>
+        <Text className='ui-above ui-subtitle rounded-xl border border-dashed border-grey-300 px-6 py-14 text-center text-grey-500'>
           {UI_STRINGS.scripts.emptyState}
         </Text>
       )}

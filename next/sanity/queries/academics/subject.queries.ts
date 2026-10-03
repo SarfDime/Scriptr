@@ -124,7 +124,7 @@ ${sanityFunctionQueries}
 
 /** Static params query for pre-generating all subject subroutes */
 export const subjectStaticParamsQuery = groq`
-*[_type == "subject" && !(_id in path("drafts.**"))] {
+*[_type == "subject" && !(_id in path("drafts.**")) && dbId != null] {
   "subjectSlug": coalesce(slug.current, _id),
   "studySlug": coalesce(study->slug.current, study->_id),
   "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),

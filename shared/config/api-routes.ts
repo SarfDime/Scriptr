@@ -6,6 +6,7 @@ export type ApiEndpoint =
   | '/api/auth/register'
   | '/api/auth/login'
   | '/api/auth/logout'
+  | '/api/auth/callback'
   | '/api/auth/session'
   | '/api/auth/refresh'
   | '/api/universities'
@@ -126,6 +127,7 @@ export const apiRoutes = {
     register: '/api/auth/register',
     login: '/api/auth/login',
     logout: '/api/auth/logout',
+    callback: '/api/auth/callback',
     session: '/api/auth/session',
     refresh: '/api/auth/refresh',
   },

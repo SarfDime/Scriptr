@@ -1,4 +1,4 @@
-import { createIfNotExists, defineMigration } from 'sanity/migrate'
+import { create, createIfNotExists, defineMigration } from 'sanity/migrate'
 import type {
   SeedFaculty,
   SeedPerson,
@@ -10,7 +10,6 @@ import { faculties, persons, professors, subjects, universities } from './data'
 import {
   type AssetUploadClient,
   ref,
-  refs,
   toPortableText,
   uploadImage,
 } from './helpers'
@@ -20,7 +19,7 @@ export default defineMigration({
     'Seed academic documents (universities, faculties, persons, professors, subjects)',
 
   async *migrate(_documents, context) {
-    const client = context.client.withConfig({ apiVersion: '2024-01-01' })
+    const client = context.client.withConfig({ apiVersion: '2026-08-08' })
 
     for (const person of persons) {
       yield createIfNotExists(await personToDoc(person, client))
@@ -39,14 +38,13 @@ export default defineMigration({
     }
 
     for (const subject of subjects) {
-      yield createIfNotExists(subjectToDoc(subject))
+      yield create(subjectToDoc(subject))
     }
   },
 })
 
 async function personToDoc(seed: SeedPerson, client: AssetUploadClient) {
   return {
-    _id: seed.id,
     _type: 'person' as const,
     name: seed.name,
     title: seed.title,
@@ -57,7 +55,6 @@ async function personToDoc(seed: SeedPerson, client: AssetUploadClient) {
 
 function universityToDoc(seed: SeedUniversity) {
   return {
-    _id: seed.id,
     _type: 'university' as const,
     name: seed.name,
     description: toPortableText(seed.description),
@@ -65,31 +62,23 @@ function universityToDoc(seed: SeedUniversity) {
     telephone: seed.telephone,
     email: seed.email,
     website: seed.website,
-    rector: seed.rectorId ? ref(seed.rectorId) : undefined,
-    viceRectors: seed.viceRectorIds ? refs(seed.viceRectorIds) : undefined,
   }
 }
 
 function facultyToDoc(seed: SeedFaculty) {
   return {
-    _id: seed.id,
     _type: 'faculty' as const,
     name: seed.name,
     description: toPortableText(seed.description),
-    dean: ref(seed.deanId),
-    secretary: ref(seed.secretaryId),
-    viceDeans: seed.viceDeanIds ? refs(seed.viceDeanIds) : undefined,
     streetAddress: seed.streetAddress,
     telephone: seed.telephone,
     email: seed.email,
     website: seed.website,
-    university: ref(seed.universityId),
   }
 }
 
 async function professorToDoc(seed: SeedProfessor, client: AssetUploadClient) {
   return {
-    _id: seed.id,
     _type: 'professor' as const,
     name: seed.name,
     title: seed.title,
@@ -98,24 +87,23 @@ async function professorToDoc(seed: SeedProfessor, client: AssetUploadClient) {
     telephone: seed.telephone,
     email: seed.email,
     website: seed.website,
-    faculties: refs(seed.facultyIds),
     picture: await uploadImage(client, seed.imageUrl),
   }
 }
 
 function subjectToDoc(seed: SeedSubject) {
   return {
-    _id: seed.id,
+    _id: undefined,
     _type: 'subject' as const,
     name: seed.name,
     code: seed.code,
     description: toPortableText(seed.description),
+    keywords: seed.keywords,
     credits: seed.credits,
     syllabus: seed.syllabus,
     year: seed.year,
     semester: seed.semester,
-    examSession: seed.examSession,
-    professors: refs(seed.professorIds),
-    faculty: ref(seed.facultyId),
+    elective: seed.elective ?? false,
+    study: ref('4be2eed0-f739-43f8-9182-ef7c1ab346fe'),
   }
 }

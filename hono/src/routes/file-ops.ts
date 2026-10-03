@@ -4,7 +4,7 @@ import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { isFileType } from '../../../shared/utils/api.utils'
-import { createS3Client } from '../lib/r2'
+import { createS3Client, deleteR2Files } from '../lib/r2'
 import { authMiddleware, createInternalSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
@@ -131,9 +131,15 @@ fileOps.post(
       subjectId
     )
     const r2 = createS3Client(c)
+    const uploaded: Array<{
+      fileKey: string
+      fileType: string
+      fileSizeBytes: number
+      bucket: string
+    }> = []
 
     try {
-      const uploaded = await Promise.all(
+      await Promise.all(
         files.map(async (file) => {
           const fileType = file.name.split('.').pop()?.toLowerCase() || 'bin'
           const fileKey = `${keyPrefix}/${crypto.randomUUID()}.${fileType}`
@@ -147,12 +153,19 @@ fileOps.post(
             })
           )
 
-          return { fileKey, fileType, fileSizeBytes: file.size, bucket }
+          uploaded.push({ fileKey, fileType, fileSizeBytes: file.size, bucket })
         })
       )
 
       return c.json({ success: true, files: uploaded })
     } catch (error) {
+      // Promise.all can leave earlier files behind when a later upload fails.
+      // Remove those partial uploads before returning the failed request.
+      try {
+        await deleteR2Files(c, uploaded)
+      } catch {
+        // Keep the original upload error as the client-facing failure.
+      }
       return c.json(
         {
           error: 'Failed to upload file(s)',

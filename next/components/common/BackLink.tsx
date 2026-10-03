@@ -1,27 +1,42 @@
-import { NextLink } from '@/components/common/NextLink'
-import { Badge } from '@/components/ui/Badge'
+import ArrowLeft from '@sanity/icons/ArrowLeft'
+import ChevronLeft from '@sanity/icons/ChevronLeft'
+import DoubleChevronLeft from '@sanity/icons/DoubleChevronLeft'
+import { NextLink, type NextLinkProps } from '@/components/common/NextLink'
+import { getColorPalette } from '@/lib/color-pallette-gen'
+import { cn } from '@/lib/common-utils'
+import { Badge, type BadgeProps } from '../ui/Badge'
 
-type BackLinkVariant = 'brand' | 'red' | 'plain'
+const BACK_LINK_ICONS = {
+  oneBack: <ChevronLeft />,
+  twoBack: <DoubleChevronLeft />,
+  threeBack: <ArrowLeft />,
+} as const
 
-type BackLinkProps = {
-  href: string
+export type BackLinkProps = {
+  badgeProps?: BadgeProps
   label: string
-  variant?: BackLinkVariant
-}
+  backLevel?: keyof typeof BACK_LINK_ICONS
+} & Omit<NextLinkProps, 'children'>
 
-const variantClassName: Record<BackLinkVariant, string> = {
-  brand: 'ui-badge cp-brand-interactive',
-  red: 'ui-badge cp-red-interactive',
-  plain: 'cp-unstyled border border-grey-300',
-}
-
-export const BackLink = ({ href, label, variant = 'brand' }: BackLinkProps) =>
-  variant === 'plain' ? (
-    <NextLink href={href}>
-      <Badge className={variantClassName.plain}>{label}</Badge>
-    </NextLink>
-  ) : (
-    <NextLink href={href} className={variantClassName[variant]}>
-      {label}
+export const BackLink = ({
+  badgeProps,
+  label,
+  backLevel = 'oneBack',
+  ...rest
+}: BackLinkProps) => {
+  const colorPalette =
+    badgeProps?.colorPalette ??
+    getColorPalette({ value: label, variant: 'int' })
+  return (
+    <NextLink {...rest}>
+      <Badge
+        {...badgeProps}
+        colorPalette={colorPalette}
+        className={cn('ui-center pl-0', badgeProps?.className)}
+      >
+        {BACK_LINK_ICONS[backLevel]}
+        {label}
+      </Badge>
     </NextLink>
   )
+}

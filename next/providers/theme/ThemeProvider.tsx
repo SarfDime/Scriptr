@@ -1,6 +1,7 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, use, useEffect, useState } from 'react'
+import { useLoading } from '../loading/LoadingProvider'
 
 export type ThemeMode = 'auto' | 'light' | 'dark'
 
@@ -13,34 +14,41 @@ const ThemeContext = createContext<ThemeContextType | null>(null)
 const storageKey = 'scriptr-theme'
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [mode, setMode] = useState<ThemeMode>('auto')
+  const [mode, setModeState] = useState<ThemeMode>('auto')
+  const { startTask, finishTask } = useLoading()
 
-  useEffect(() => {
-    const savedMode = window.localStorage.getItem(storageKey)
-    if (savedMode === 'light' || savedMode === 'dark' || savedMode === 'auto') {
-      setMode(savedMode)
-    }
-  }, [])
-
-  useEffect(() => {
+  const setMode = (newMode: ThemeMode) => {
+    setModeState(newMode)
     const root = document.documentElement
-    if (mode === 'auto') {
+    if (newMode === 'auto') {
       root.removeAttribute('data-theme')
     } else {
-      root.dataset.theme = mode
+      root.dataset.theme = newMode
     }
-    window.localStorage.setItem(storageKey, mode)
-  }, [mode])
+    window.localStorage.setItem(storageKey, newMode)
+  }
 
-  return (
-    <ThemeContext.Provider value={{ mode, setMode }}>
-      {children}
-    </ThemeContext.Provider>
-  )
+  useEffect(() => {
+    startTask('theme')
+
+    const savedMode = window.localStorage.getItem(
+      storageKey
+    ) as ThemeMode | null
+    if (savedMode === 'light' || savedMode === 'dark' || savedMode === 'auto') {
+      setModeState(savedMode)
+      if (savedMode !== 'auto') {
+        document.documentElement.dataset.theme = savedMode
+      }
+    }
+
+    finishTask('theme')
+  }, [startTask, finishTask])
+
+  return <ThemeContext value={{ mode, setMode }}>{children}</ThemeContext>
 }
 
 export function useTheme() {
-  const context = useContext(ThemeContext)
+  const context = use(ThemeContext)
   if (!context) throw new Error('useTheme must be used within a ThemeProvider')
   return context
 }

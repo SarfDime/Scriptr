@@ -4,11 +4,11 @@ import { minimalFacultyQuery } from './faculty.queries'
 
 /** Minimal listing query for the unified hierarchical gallery page */
 export const universityGalleryQuery = groq`
-*[_type == "university"] | order(name asc) {
+*[_type == "university" && dbId != null] | order(name asc) {
   _id,
   "slug": slug.current,
   name,
-  "faculties": *[_type == "faculty" && references(^._id)] | order(name asc) {
+  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {
     _id,
     "slug": slug.current,
     name,
@@ -53,7 +53,7 @@ ${sanityFunctionQueries}
     title,
     image
   },
-  "faculties": *[_type == "faculty" && references(^._id)] | order(name asc) {
+  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {
     ${minimalFacultyQuery}
   }
 }
@@ -61,7 +61,7 @@ ${sanityFunctionQueries}
 
 /** Static params query for pre-generating all university subroutes */
 export const universityStaticParamsQuery = groq`
-*[_type == "university" && !(_id in path("drafts.**"))] {
+*[_type == "university" && !(_id in path("drafts.**")) && dbId != null] {
   "universitySlug": coalesce(slug.current, _id)
 }
 `

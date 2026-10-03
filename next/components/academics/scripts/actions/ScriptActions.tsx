@@ -1,5 +1,4 @@
 import { Box } from '@/components/common/Box'
-import { cn } from '@/lib/common-utils'
 import type { ScriptActionsProps } from '@/types/components/Scripts.types'
 import { ScriptDownloadButton } from './ScriptDownloadButton'
 import { ScriptLikeButton } from './ScriptLikeButton'
@@ -20,26 +19,33 @@ export const ScriptActions = ({
   title,
   description,
   files,
-  className,
-  ...rest
 }: ScriptActionsProps) => (
-  <Box
-    {...rest}
-    className={cn('ui-cluster flex-wrap items-center gap-2', className)}
-  >
-    <ScriptSaveButton id={id} scriptTitle={scriptTitle} />
-    <ScriptLikeButton id={id} scriptTitle={scriptTitle} likes={likes} />
-    <ScriptCommentsLink id={id} scriptTitle={scriptTitle} comments={comments} />
-    <Box className='ml-auto ui-cluster flex-wrap gap-2'>
+  <>
+    <Box className='ui-cluster justify-center sm:justify-start gap-2 grow'>
+      <ScriptSaveButton id={id} scriptTitle={scriptTitle} />
+      <ScriptLikeButton id={id} scriptTitle={scriptTitle} likes={likes} />
+      <ScriptCommentsLink
+        id={id}
+        scriptTitle={scriptTitle}
+        comments={comments}
+      />
+    </Box>
+    <Box className='md:ml-auto ui-cluster justify-center grow sm:grow-0 gap-2'>
       {files.map((file) => (
-        <ScriptDownloadButton key={file.id} scriptId={id} file={file} />
+        <ScriptDownloadButton
+          key={file.id}
+          scriptId={id}
+          file={file}
+          className='grow sm:grow-0'
+        />
       ))}
       <ScriptPreviewButton
         id={id}
         title={title}
         description={description}
         files={files}
+        className='grow sm:grow-0'
       />
     </Box>
-  </Box>
+  </>
 )

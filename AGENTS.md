@@ -5,38 +5,66 @@
 * `sanity/`: Sanity Studio, schema tooling.
 * `shared/`: Shared types and config.
 
-**Workflow & Editing Rules**
+**Read First**
 
-* **Check Priorities:** Always review `ARCHITECTURE.md` (system design) and `PROGRESS.md` (what's done vs. outstanding) and target workspace READMEs before starting.
-+ **Generated Files:** NEVER hand-edit `shared/types/database.types.ts`, `shared/types/sanity.types.ts` (Sanity TypeGen output — generates here now, not `next/`, so every workspace imports Sanity types from `shared/types/` instead of maintaining its own copy), `sanity/schema.json`, `hono/src/types/supabase.ts`, or `shared/config/api-routes.ts`.* **Schema Changes:** Run `npm run gen:api-types`, then grep/remove dead references across `hono/` and `next/`.
-* **Secrets:** Store exclusively in `.env`. No credentials or production data in docs/fixtures.
-* **Local Checks:** Validate the smallest affected workspace first. Do not stop at a plan—implement and verify locally. Keep PRs focused; no unrelated refactors.
+* `ARCHITECTURE.md` — how the system is designed to work (current state).
+* `PROGRESS.md` — what's built vs. outstanding. Don't propose something already listed done, and check here before assuming a feature doesn't exist.
+* Target workspace README before starting work in it.
+* `hono/src/routes/API_DOCUMENTATION.md` before touching any route — it documents the actual RLS/client model per table, which is not always what you'd guess from the route file alone.
 
-**Commands (Run from root)**
+**Global Rules**
 
-* **Dev:** `npm install`, `npm run dev:{hono|next|sanity}`
-* **Validation:** `npm run check-types` (use `--workspace {name}` for scoped checks)
-* **Formatting:** `npm run format` (Applies Biome fixes; replaces manual linting)
+* Strict TypeScript, no `any`. SOLID, composition over inheritance.
+* DRY only at 2+ real usages — don't add abstractions speculatively.
+* Types live in `shared/types/` (preferred), `next/types/`, or `hono/src/types/`. In-file types only if <3 fields and strictly local. **Anything a `hono/` route imports must live under `shared/`, never `next/types/`.**
+* Academic entity types (faculty/study/subject/etc.) are derived from the Sanity TypeGen query-result type via `WithResolvedSanityData<...>` (`shared/types/sanity-transform.types.ts`), e.g. `NonNullable<WithResolvedSanityData<StudyDetailQueryResult>>`, not hand-written. Hand-write a type only where no query-result type exists.
+* NEVER hand-edit generated files: `shared/types/database.types.ts`, `shared/types/sanity.types.ts`, `sanity/schema.json`, `hono/src/types/supabase.ts`, `shared/config/api-routes.ts`.
+  * Postgres schema change: `npm run gen:api-types`.
+  * Sanity schema change: `npm run sanity:typegen`.
+  * `shared/config/api-routes.ts` regenerates on dev or with `npm run generate-api-routes`; edit its source, `shared/config/api.ts`, instead.
+  * After any schema change, grep/remove dead references across `hono/`, `next/`, and `sanity/`, then run a full `npm run check-types`. A schema change isn't done until types are regenerated and everything typechecks.
+* Secrets only in `.env`, never in docs/fixtures/commits.
+* Validate the smallest affected workspace first; implement and verify locally, don't stop at a plan. Keep changes scoped — no unrelated refactors riding along.
+* Commands (from root): `npm run dev:{hono|next|sanity}`, `npm run check-types` (`--workspace {name}` to scope), `npm run format` (Biome; this replaces manual lint, don't run a separate linter).
+* Docs hygiene: when a feature or route changes, update `PROGRESS.md` (status), and `ARCHITECTURE.md` if the design changed. Doc filenames are uppercase (`ARCHITECTURE.md`, `PROGRESS.md`).
 
-**Architecture & Code Quality**
+**Database & Supabase**
 
-* **Core Principles:** Use SOLID principles, composition over inheritance, and strict TypeScript (no `any`).
-* **DRY:** Extract logic or UI components only if used in 2+ places. Do not add new abstractions if existing helpers work.
-* **Prefer composition over inheritance**: Build features by composing existing components and hooks rather than extending base classes.
-+ **Types:** Centralize types in `shared/types/` (preferred), `next/types/`, or `hono/src/types/`. In-file types are only allowed if they are <3 fields and strictly local. Academic entity types (faculty/study/subject/etc.) are derived from the corresponding Sanity TypeGen query-result type via `WithResolvedSanityData<...>` (`shared/types/sanity-transform.types.ts`) — e.g. `type StudyDetail = NonNullable<WithResolvedSanityData<StudyDetailQueryResult>>` — rather than hand-written. Only hand-write a type where no query-result type exists to derive from.
-
-**Frontend (`next/`)**
-
-* **UI/Styling:** Check `next/components/` and `next/STYLING_GUIDE.md` first. Use existing primitives (`Box`, `Text`), utility classes, and breakpoints. Avoid custom CSS. Add new utilities only if repeated 3+ times (and update the guide).
-* **Theming:** Use `next/providers/theme/`. Do not hardcode colors.
-* **React:** Use functional components, arrow functions, and custom hooks (`next/hooks/`). Keep state local. Target React 19+ and rely on the React Compiler rather than hand-written memoization (`useMemo`/`useCallback`/`React.memo`) — only add manual memoization where the compiler demonstrably can't help.
-* **Next.js:** Use current App Router directives (`'use client'`, `'use server'`) deliberately — default to Server Components and only opt into a Client Component where interactivity actually requires it.
-* **API Calls:** Enforce `next/lib/api.ts`'s `apiFetch` + `shared/config/api-routes.ts`'s `apiRoutes` for all backend interactions — never a new `fetch` pattern, and never hardcode a route path string. (A Hono RPC client (`hc<AppType>`) was tried first and abandoned: with ~140+ endpoints across every route file composed into one type, referencing it anywhere forced enough type instantiation to hang the editor. `apiRoutes` is plain generated path strings/functions instead, with zero dependency on Hono's types.)
-* **UX:** Always implement loading, error, and empty states. Ensure semantic HTML and ARIA compliance.
+* RLS is the real authorization boundary, not the route handler — before writing or reviewing a query, check what RLS actually grants (`pg_policies`) rather than assuming from the table's category. Two tables that look alike (e.g. `professor_ratings` vs. `professors`) can have opposite access models.
+* Client choice per query, not per file: session client (`createSupabaseClient`) when RLS alone grants the caller access (own resource, or `is_admin()`-gated); service-role client (`createInternalSupabaseClient`) only where no RLS path exists for the caller at all (catalog tables, `download_events`, notification/achievement inserts, role changes). Getting this backwards either silently 403s a legitimate caller or bypasses an intended check — see `API_DOCUMENTATION.md#client-access-patterns`.
+* Supabase MCP access is available — use it to check live schema/RLS/constraints/triggers before writing a route against a table you haven't verified this session, rather than trusting a doc or a memory of the schema. Docs drift; the database doesn't.
+* Map Postgres errors to clean HTTP codes at the route, don't let raw Postgres messages leak: `23505` → `409`, `23503` (FK) → `409` with a named-dependent message, `42501` (RLS violation) → `403`, a custom `RAISE EXCEPTION` (`P0001`) → `400` with the message as-is.
 
 **Backend (`hono/`)**
 
-* **API Design:** Use arrow functions and strict RESTful conventions (GET, POST, PATCH, DELETE). Ensure consistent HTTP status codes and error messages.
-* **Documentation:** Always update `hono/src/routes/API_DOCUMENTATION.md` and `API_TESTING_GUIDE.md` when altering routes, and reflect the change's status (done/outstanding) in `PROGRESS.md`.
-* **New route files must be mounted, not just built:** a fully-built, fully-documented route file with zero `.route()` call anywhere in `index.ts` will type-check clean and pass review — it just silently 404s in production. When adding a route file, grep `index.ts` for it as a final check before calling the work done.
-+ **Type-only Sanity imports:** `hono/` doesn't install `@sanity/client` as a real dependency, but importing Sanity TypeGen types still requires TypeScript to resolve that package's module-augmentation target. `hono/src/sanity-stub.d.ts` declares a minimal stub for this — don't remove it, and don't install `@sanity/client` for real just to silence a missing-module error here.
+* Arrow functions, RESTful conventions, consistent status codes.
+* **Typed responses:** define each route's response type in `shared/types/` and apply it at the route (`c.json<LoginResponse>(...)`). New or changed routes must add/update the shared type rather than returning an untyped object.
+* Always update `API_DOCUMENTATION.md` and `API_TESTING_GUIDE.md` when a route changes, and reflect the change in `PROGRESS.md`.
+* **Mount new route files:** a built, documented route file with no `.route()` call in `hono/src/index.ts` type-checks clean and silently 404s in production. Grep `index.ts` for it before calling the work done.
+* Restriction checks (`profile_restrictions`/`is_restricted()`) block create/update only, never delete/remove — confirm against `ARCHITECTURE.md §4` before adding or removing a check, don't infer it from a similar-looking endpoint.
+* New route files should mirror an existing sibling with the same access shape (e.g. a new own-resource table → copy `profile-subjects.ts`'s shape, not `flags.ts`'s) rather than inventing a new pattern.
+* **Type-only Sanity imports:** `hono/src/sanity-stub.d.ts` stubs `@sanity/client`'s module augmentation target so `hono/` can import Sanity TypeGen types without the package. Don't remove it, and don't install `@sanity/client` just to silence a missing-module error.
+* Auth is the Supabase session cookie only (no Bearer path); `/auth/login`, `/auth/callback`, and `/auth/session` return the app-shaped `SessionUser`.
+
+**Frontend (`next/`) — Next.js 16, React 19**
+
+* React Compiler is stable and in use — do not hand-write `useMemo`/`useCallback`/`React.memo`. Only add manual memoization where you've confirmed the compiler can't help (rare; justify it in a comment if you do).
+* Server Components by default. Add `'use client'` only where interactivity/state/effects actually require it; `'use server'` only for real Server Actions. Don't add a directive speculatively.
+* `params`/`searchParams` are `Promise`s in pages, layouts, and `generateMetadata` — this is a hard failure in 16, not a warning like 15. Always `await` them.
+* Middleware is `proxy.ts`, not `middleware.ts`, and Node.js runtime only — check which one exists before adding request-interception logic.
+* Turbopack is the default bundler; don't add webpack-specific config unless there's a documented reason to opt out.
+* `revalidateTag()` needs a `cacheLife` profile now — a bare single-argument call no longer behaves like before. Check the profile is actually attached when touching cache invalidation (scripts already use tag revalidation on mutation — see `ARCHITECTURE.md §3`).
+* `next/image` defaults changed (async decoding, `fetchPriority: auto`, new `qualities`/`minimumCacheTTL`/`imageSizes`) — don't assume 15-era defaults when reasoning about image behavior.
+* UI/styling: follow `next/STYLING_GUIDE.md` exactly — reuse `Box`/`Card`/`Button`/`Badge`/`Divider` and the `ui-*`/`cp-*` classes documented there; never invent a class absent from `styles/`. Theme via `next/providers/theme/`, never hardcoded colors. Add a new utility only if repeated 3+ times (and update the guide).
+* **API calls:** all backend calls go through `next/lib/api.ts`'s `apiFetch` with paths from `shared/config/api-routes.ts`'s `apiRoutes` — never a new `fetch` pattern, never a hardcoded path string. (A Hono RPC `hc<AppType>` client was tried and abandoned: at ~140+ endpoints it hung the editor's type checking. `apiRoutes` is plain generated path strings with no dependency on Hono's types.)
+* Every screen needs loading, error, and empty states, and semantic/ARIA-correct HTML.
+
+**Sanity (`sanity/`)**
+
+* Follow the existing entity pattern (mini-schemas, "Create in Database"/"Sync with Database"/checked-delete actions) — see `ARCHITECTURE.md §2`. A new academic entity type should extend the academic endpoint map (`getDatabaseAcademicEndpoints`) and `parentFieldFor`/`parentColumnFor` exhaustively (switch with no silent default), not add a special case.
+* Publishing must stay blocked until a document has a `dbId`; deletion must stay blocked on the internal API's dependency check (`409`) — don't bypass either for convenience.
+* `SANITY_STUDIO_INTERNAL_SECRET` (Studio) and `INTERNAL_API_SECRET` (server) must match; `SANITY_STUDIO_API_URL` must point at the real API in any non-local environment — check these before debugging Studio action failures as a logic bug.
+
+**When Unsure**
+
+* Prefer checking the live database (Supabase MCP) or the actual route/component file over trusting this document, `ARCHITECTURE.md`, or any comment — all can drift from the code. Flag drift you find rather than silently working around it.

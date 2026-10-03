@@ -1,65 +1,88 @@
 'use client'
 
+import { UI_STRINGS } from '@shared/config/strings'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 import { ScriptsSection } from '@/components/academics/scripts/ScriptSection'
+import { SubjectsSidebar } from '@/components/academics/subject/SubjectsSidebar'
 import { ActivityStats } from '@/components/common/ActivityStats'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { PageLayout } from '@/components/layout/PageLayout'
 import { ProfileCard } from '@/components/profile/ProfileCard'
-import { SubjectsSidebar } from '@/components/Subjects/SubjectsSidebar'
+import { Text } from '@/components/typography/Text'
 import { Divider } from '@/components/ui/Divider'
-import { DEFAULT_ACTIVITY_CONTENT } from '@/config/content'
-import {
-  FAKE_SCRIPTS,
-  subjects,
-  subjectsContent,
-} from '@/lib/fake-scripts-data'
-import type { PageDataProps } from '@/types/components/Scripts.types'
+import { useProfileStats } from '@/hooks/useProfileStats'
 
-export default function Page({
-  authoredCount = 8,
-  commentCount = 14,
-  activityContent = DEFAULT_ACTIVITY_CONTENT,
-  subjects: pageSubjects = subjects,
-}: PageDataProps) {
-  const profile = {
-    //TODO: Data should come from the server or user context
-    name: 'Nora Collins',
-    role: 'Student',
-    initials: 'NC',
-    bio: 'Biology and mathematics student building a calmer, more useful study library with the Scriptr community.',
-    university: 'Northbridge University',
-    faculty: 'Faculty of Science',
-    location: 'BSc Biology and Mathematics',
-    subjects: ['Biology', 'Organic Chemistry', 'Linear Algebra'],
-    completed: 4,
-    scripts: FAKE_SCRIPTS,
-    favorites: FAKE_SCRIPTS,
-    accent: 'blue' as const,
+// `subjects`/`subjectsContent` still feed SubjectsSidebar with fake data —
+// out of scope here (see this task's summary): making that dynamic means
+// resolving profile.subjects' subject_ids against Sanity, a separate
+// fetch this change doesn't add. Only the FAKE_SCRIPTS import is dropped.
+import { subjects, subjectsContent } from '@/lib/fake-scripts-data'
+import {
+  getDisplayName,
+  getFacultyName,
+  getUniversityName,
+} from '@/lib/profile-display'
+import { toScriptDetails } from '@/lib/script-display'
+import { useMyProfile } from '@/providers/ProfileProvider'
+import { useSession } from '@/providers/SessionProvider'
+
+export default function Page() {
+  const router = useRouter()
+  const { session } = useSession()
+  const profileState = useMyProfile()
+  const statsState = useProfileStats(
+    profileState.status === 'loaded' ? profileState.profile.id : null
+  )
+
+  useEffect(() => {
+    if (session.status === 'unauthenticated') {
+      router.replace('/auth')
+    }
+  }, [session.status, router])
+
+  if (session.status !== 'authenticated' || profileState.status !== 'loaded') {
+    return (
+      <PageLayout>
+        <Text className='ui-body text-center'>
+          {profileState.status === 'error'
+            ? profileState.message
+            : UI_STRINGS.profile.loadingLabel}
+        </Text>
+      </PageLayout>
+    )
   }
+
+  const { profile } = profileState
+  const displayName = getDisplayName(profile)
 
   return (
     <PageLayout
       header={{
         greeting: `Profile`,
-        title: profile.name,
+        title: displayName,
         subtitle: profile.role,
         actions: (
-          <Button className='button subtle ui-caption'>Edit profile</Button>
+          <Button className='button subtle ui-caption'>
+            {UI_STRINGS.profile.editProfileLabel}
+          </Button>
         ),
-        // Edit profile should come from shared text
       }}
       sidebar={
         <>
           <ActivityStats
-            savedCount={4}
-            authoredCount={authoredCount}
-            commentCount={commentCount}
-            content={activityContent}
+            savedCount={profile.favorite_scripts.length}
+            authoredCount={profile.scripts.length}
+            commentCount={
+              statsState.status === 'loaded'
+                ? statsState.stats.comments_made
+                : 0
+            }
           />
           <Divider />
           <SubjectsSidebar
-            subjects={pageSubjects}
+            subjects={subjects}
             content={subjectsContent}
             className='grow'
           />
@@ -68,18 +91,36 @@ export default function Page({
     >
       <Box className='ui-cluster items-stretch'>
         <ProfileCard
-          name={profile.name}
+          name={displayName}
           role={profile.role}
-          bio={profile.bio}
-          university={profile.university}
-          faculty={profile.faculty}
-          location={profile.location}
+          location=''
+          bio=''
+          // TODO: Add bio to profile or remove it from card and types, same with location
+          // TODO: Make university study and faculty links instead of just names
+          university={getUniversityName(profile)}
+          faculty={getFacultyName(profile)}
+          picture={profile.avatar_url ? { src: profile.avatar_url } : undefined}
           className='grow'
         />
       </Box>
       <Box className='ui-stack'>
         <Box className='ui-cluster items-start'>
-          <ScriptsSection scripts={FAKE_SCRIPTS} className='grow' />
+          <ScriptsSection
+            scripts={toScriptDetails(profile.scripts)}
+            title={UI_STRINGS.scripts.authoredSectionTitle}
+            subtitle={UI_STRINGS.scripts.authoredSectionSubtitle}
+            className='grow'
+          />
+        </Box>
+      </Box>
+      <Box className='ui-stack'>
+        <Box className='ui-cluster items-start'>
+          <ScriptsSection
+            scripts={toScriptDetails(profile.favorite_scripts)}
+            title={UI_STRINGS.scripts.favoritesSectionTitle}
+            subtitle={UI_STRINGS.scripts.favoritesSectionSubtitle}
+            className='grow'
+          />
         </Box>
       </Box>
     </PageLayout>

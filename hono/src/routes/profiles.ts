@@ -1,12 +1,124 @@
+import type { Context } from 'hono'
 import { Hono } from 'hono'
 import { isAdmin } from '../../../shared/utils/api.utils'
 import { requiredParam } from '../lib/request'
-import { authMiddleware, createSupabaseClient } from '../lib/supabase'
+import {
+  authMiddleware,
+  createInternalSupabaseClient,
+  createSupabaseClient,
+} from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
 // profile_achievements replaced the old profiles.achievements jsonb column.
 const PROFILE_ACHIEVEMENTS_SELECT =
   'achievements:profile_achievements(achievement_id, earned_at, achievement:achievement_definitions(title, description, metric, threshold))'
+
+/**
+ * Shared by /me, /:id, and /username/:username — a viewer can render any
+ * profile (their own or someone else's) through one shape now. All three
+ * SELECT policies on profile_faculties/profile_studies/profile_subjects
+ * are `qual: true` (public, confirmed against pg_policies), so this is
+ * safe on the plain session client even for an anonymous caller — no
+ * service-role client needed here.
+ */
+const PROFILE_ACADEMIC_SELECT =
+  'subjects:profile_subjects(subject_id, status, updated_at), selected_faculties:profile_faculties(faculty:faculties(*, university:universities(id, name))), selected_studies:profile_studies(study:studies(*, faculty:faculties(*, university:universities(id, name))))'
+
+/**
+ * The projection used for both "scripts this profile authored" and
+ * "scripts this profile favorited" — same shape either way, just reached
+ * through a different relationship (see PROFILE_SCRIPTS_SELECT and
+ * fetchFavoriteScripts below).
+ *
+ * Deliberately doesn't join professors or a subject year:
+ * `scripts.professor_id` has no direct FK to `professors.id` (only a
+ * composite FK to `subject_professors`, per `scripts_subject_professor_fkey`
+ * — confirmed via pg_constraint), and Postgres `subjects` has no `year`
+ * column at all (year only exists in Sanity — confirmed against
+ * information_schema.columns). Every other script-list endpoint in this
+ * file already omits both for the same reason (see `ScriptSummary`'s doc
+ * comment in scripts.types.ts); this follows that same, already-
+ * established limitation rather than attempting a join that would 500.
+ *
+ * `comments:comments(count)` uses PostgREST's aggregate-in-embed syntax
+ * (returns `comments: [{ count }]`) rather than a second round-trip per
+ * script. No ambiguity risk there: comments has exactly one FK to
+ * scripts (script_id), so nothing to disambiguate at that nesting level.
+ *
+ * `author:profiles!author_id` — qualified for the same reason
+ * PROFILE_SCRIPTS_SELECT below is: script_favorites bridges scripts and
+ * profiles, so an unqualified `profiles` embed here risks the same kind
+ * of ambiguity, just in the reverse direction. Included even though it's
+ * redundant for the authored-scripts case (the profile being viewed
+ * already *is* the author there) because it's not redundant for the
+ * favorited-scripts case — each favorited script's actual author is
+ * whoever wrote it, not the profile being viewed.
+ */
+const PROFILE_SCRIPT_FIELDS =
+  'id, title, vote_score, download_count, created_at, updated_at, subject:subjects(name), author:profiles!author_id(username, full_name), comments:comments(count), files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, created_at)'
+
+/**
+ * `scripts!author_id`, not a bare `scripts` — script_favorites has FKs to
+ * both profiles.id and scripts.id, so PostgREST auto-detects it as a
+ * many-to-many bridge ("profiles has scripts *through* favorites") in
+ * addition to the direct scripts.author_id -> profiles.id relationship.
+ * Left unqualified, both are valid paths and PostgREST rejects the embed
+ * as ambiguous ("more than one relationship was found for 'profiles' and
+ * 'scripts'") — this pins it to the direct authored-scripts FK
+ * specifically. This was a pre-existing latent bug on /:id and
+ * /username/:username too (they already had an unqualified
+ * `scripts:scripts(...)` embed before this file's academic-selections
+ * change), just not yet hit.
+ */
+const PROFILE_SCRIPTS_SELECT = `scripts:scripts!author_id(${PROFILE_SCRIPT_FIELDS})`
+
+/**
+ * /me only, as a direct embed — script_favorites' SELECT RLS policy
+ * scopes reads to `profile_id = auth.uid()`, which already covers "the
+ * owner reading their own favorites" without needing the internal
+ * client. Public reads (/:id, /username/:username) go through
+ * fetchFavoriteScripts below instead, using the service-role client,
+ * since the viewer there has no RLS path of their own to another user's
+ * script_favorites rows — this is a deliberate product choice (favorited
+ * scripts are shown on public profiles), not a general RLS relaxation:
+ * the table itself stays owner-only for any other direct query.
+ */
+const PROFILE_FAVORITE_SCRIPTS_SELECT = `favorite_scripts:script_favorites(script:scripts!script_id(${PROFILE_SCRIPT_FIELDS}))`
+
+/** Flattens `script_favorites`' `{ script: {...} }` embed rows into a
+ * plain `Array<ProfileScriptSummary>`, used both for /me (post-processing
+ * the direct embed above) and for the two public routes (post-processing
+ * the separate internal-client query below) — same output shape either
+ * way, matching PROFILE_SCRIPTS_SELECT's authored-scripts shape. */
+function flattenFavoriteScripts(
+  rows: Array<{ script: unknown }> | null | undefined
+) {
+  return (rows ?? []).flatMap((row) => (row.script ? [row.script] : []))
+}
+
+/**
+ * Public routes only (/:id, /username/:username) — service-role client,
+ * since the caller (anonymous, or a different logged-in user) has no RLS
+ * path to another user's script_favorites rows. `scripts!script_id`, not
+ * a bare `scripts`: script_favorites has FKs to both profiles.id and
+ * scripts.id, but there's only one path from script_favorites
+ * specifically to scripts (script_id), so this particular embed isn't
+ * actually ambiguous — qualified anyway, for the same "pin it explicitly"
+ * habit PROFILE_SCRIPTS_SELECT's comment explains, rather than relying on
+ * there never being a second FK added later.
+ */
+async function fetchFavoriteScripts(c: Context<HonoEnv>, userId: string) {
+  const supabase = createInternalSupabaseClient(c)
+
+  const { data, error } = await supabase
+    .from('script_favorites')
+    .select(`script:scripts!script_id(${PROFILE_SCRIPT_FIELDS})`)
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+
+  if (error) return []
+  return flattenFavoriteScripts(data)
+}
 
 function validateUsername(username: unknown): string | null {
   if (!username) return null
@@ -84,13 +196,17 @@ profiles.get('/me', authMiddleware, async (c) => {
   const { data, error } = await supabase
     .from('profiles')
     .select(
-      '*, subjects:profile_subjects(subject_id, status, updated_at), selected_faculties:profile_faculties(faculty:faculties(*, university:universities(id, name))), selected_studies:profile_studies(study:studies(*, faculty:faculties(*, university:universities(id, name))))'
+      `*, ${PROFILE_ACADEMIC_SELECT}, ${PROFILE_SCRIPTS_SELECT}, ${PROFILE_FAVORITE_SCRIPTS_SELECT}`
     )
     .eq('id', user.id)
     .single()
 
   if (error) return c.json({ error: error.message }, 404)
-  return c.json(data)
+
+  return c.json({
+    ...data,
+    favorite_scripts: flattenFavoriteScripts(data.favorite_scripts),
+  })
 })
 
 /** Delete current user's profile */
@@ -104,7 +220,7 @@ profiles.delete('/me', authMiddleware, async (c) => {
   return c.json({ success: true })
 })
 
-/** Get a specific user profile by username */
+/** Get a specific user profile by username (public — same shape as /:id) */
 profiles.get('/username/:username', async (c) => {
   const username = requiredParam(c, 'username')
   const supabase = createSupabaseClient(c)
@@ -115,27 +231,24 @@ profiles.get('/username/:username', async (c) => {
         id,
         username,
         full_name,
+        avatar_url,
         role,
-        ${PROFILE_ACHIEVEMENTS_SELECT},
-        subjects:profile_subjects(subject_id, status, updated_at),
         created_at,
-        scripts:scripts(
-          id,
-          title,
-          vote_score,
-          download_count,
-          created_at,
-          subject:subjects(name)
-        )
+        updated_at,
+        ${PROFILE_ACHIEVEMENTS_SELECT},
+        ${PROFILE_ACADEMIC_SELECT},
+        ${PROFILE_SCRIPTS_SELECT}
       `)
     .eq('username', username)
     .single()
 
   if (error) return c.json({ error: 'User not found' }, 404)
-  return c.json(data)
+
+  const favoriteScripts = await fetchFavoriteScripts(c, data.id)
+  return c.json({ ...data, favorite_scripts: favoriteScripts })
 })
 
-/** Get a specific user profile by ID */
+/** Get a specific user profile by ID (public — same shape as /username/:username) */
 profiles.get('/:id', async (c) => {
   const userId = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)
@@ -146,24 +259,21 @@ profiles.get('/:id', async (c) => {
         id,
         username,
         full_name,
+        avatar_url,
         role,
-        ${PROFILE_ACHIEVEMENTS_SELECT},
-        subjects:profile_subjects(subject_id, status, updated_at),
         created_at,
-        scripts:scripts(
-          id,
-          title,
-          vote_score,
-          download_count,
-          created_at,
-          subject:subjects(name)
-        )
+        updated_at,
+        ${PROFILE_ACHIEVEMENTS_SELECT},
+        ${PROFILE_ACADEMIC_SELECT},
+        ${PROFILE_SCRIPTS_SELECT}
       `)
     .eq('id', userId)
     .single()
 
   if (error) return c.json({ error: 'User not found' }, 404)
-  return c.json(data)
+
+  const favoriteScripts = await fetchFavoriteScripts(c, data.id)
+  return c.json({ ...data, favorite_scripts: favoriteScripts })
 })
 
 /** Update current user's profile */

@@ -1,9 +1,9 @@
 import type { ApiEndpoint } from '@shared/config/api-routes'
 import type { Tables } from './database.types'
 
-type UserRole = 'student' | 'moderator' | 'admin'
-type ProfileSubjectStatus = 'completed' | 'currently_taking'
-type FlagStatus = 'pending' | 'reviewed' | 'dismissed'
+type UserRole = 'student' | 'moderator' | 'admin' // TODO: Move to profile types
+type ProfileSubjectStatus = 'completed' | 'currently_taking' // TODO: Move to profile types
+type FlagStatus = 'pending' | 'reviewed' | 'dismissed' // TODO: Move to flag types
 type FlagTargetType = 'user' | 'script' | 'comment'
 type FileType =
   | 'pdf'
@@ -16,13 +16,6 @@ type FileType =
   | 'docx'
   | 'xls'
   | 'xlsx'
-
-type ProfileSubject = Pick<
-  Tables<'profile_subjects'>,
-  'subject_id' | 'updated_at'
-> & {
-  status: ProfileSubjectStatus
-}
 
 type Favorite = Pick<Tables<'script_favorites'>, 'created_at' | 'script_id'>
 
@@ -50,7 +43,6 @@ export type {
   FileType,
   FlagStatus,
   FlagTargetType,
-  ProfileSubject,
   ProfileSubjectStatus,
   QueryApiEndpointType,
   ScriptFileInput,

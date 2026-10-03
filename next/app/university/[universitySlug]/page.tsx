@@ -1,6 +1,6 @@
-import { BackLink } from '@/components/common/BackLink'
 import { Box } from '@/components/common/Box'
 import { EntityCard } from '@/components/common/EntityCard'
+import { NextImage } from '@/components/common/NextImage'
 import { PageLayout } from '@/components/layout/PageLayout'
 import { PortableTextContent } from '@/components/typography/PortableTextContent'
 import { Text } from '@/components/typography/Text'
@@ -50,7 +50,6 @@ export default async function UniversityDetailPage({
   params,
 }: AcademicDetailPageProps<UniversityRouteParams>) {
   const routeParams = await params
-
   const university = await fetchAcademicDetailOrNotFound<UniversityDetail>({
     query: universityDetailQuery,
     params: routeParams,
@@ -65,13 +64,6 @@ export default async function UniversityDetailPage({
         subtitle: university.dbId
           ? `Database ID: ${university.dbId}`
           : undefined,
-        actions: (
-          <BackLink
-            href='/universities'
-            label='← All Universities'
-            variant='plain'
-          />
-        ),
       }}
       sidebar={
         <>
@@ -177,7 +169,7 @@ export default async function UniversityDetailPage({
         </Card>
       )}
 
-      <Card className='p-6 ui-stack gap-4'>
+      <Card className='p-0 border-0 ui-stack gap-4'>
         <Box className='ui-cluster justify-between items-center'>
           <Title as='h2' className='ui-title font-bold'>
             Faculties
@@ -202,6 +194,17 @@ export default async function UniversityDetailPage({
                   Studies: faculty.studyCount,
                   Professors: faculty.professorCount,
                 })}
+                subtitle={faculty.studies.map((study) => study.name).join(', ')}
+                media={
+                  faculty.picture ? (
+                    <NextImage
+                      {...faculty.picture}
+                      alt={`${faculty.name} Logo`}
+                      fillProp
+                      className='h-10 w-10 rounded-full object-cover'
+                    />
+                  ) : undefined
+                }
               />
             ))}
           </Box>

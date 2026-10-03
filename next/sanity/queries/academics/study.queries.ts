@@ -1,6 +1,5 @@
 import { groq } from 'next-sanity'
 import { sanityFunctionQueries } from '../functions.queries'
-// import { minimalFacultyQuery } from './faculty.queries'
 import { minimalProfessorQuery } from './professor.queries'
 import { minimalSubjectQuery } from './subject.queries'
 
@@ -41,12 +40,12 @@ faculty->{
     name,
   }
 },
-"subjectCount": count(*[_type == "subject" && references(^._id)]),
-"professorCount": count(*[_type == "professor" && references(^._id)]),
-"professors": *[_type == "professor" && references(^._id)] | order(name asc) {
+"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),
+"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),
+"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {
   ${minimalProfessorQuery}
 },
-"subjects": *[_type == "subject" && references(^._id)] | order(year asc, name asc) {
+"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {
   ${minimalSubjectQuery}
 },
 `
@@ -85,7 +84,7 @@ ${sanityFunctionQueries}
 
 /** Static params query for pre-generating all study subroutes */
 export const studyStaticParamsQuery = groq`
-*[_type == "study" && !(_id in path("drafts.**"))] {
+*[_type == "study" && !(_id in path("drafts.**")) && dbId != null] {
   "studySlug": coalesce(slug.current, _id),
   "facultySlug": coalesce(faculty->slug.current, faculty->_id),
   "universitySlug": coalesce(faculty->university->slug.current, faculty->university->_id)

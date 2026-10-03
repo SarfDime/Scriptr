@@ -4,7 +4,6 @@ import { SubjectOverviewCard } from '@/components/academics/subject/SubjectOverv
 import { BackLink } from '@/components/common/BackLink'
 import { Box } from '@/components/common/Box'
 import { PageLayout } from '@/components/layout/PageLayout'
-import { Card } from '@/components/ui/Card'
 import {
   createAcademicMetadata,
   createAcademicStaticParams,
@@ -64,18 +63,26 @@ export default async function SubjectDetailPage({
         title: subject.name,
         subtitle: subject.dbId ? `Database ID: ${subject.dbId}` : undefined, //TODO: Subtitle should be short bio or something similar not dbID all across the project
         actions: study?.faculty && (
-          <BackLink
-            href={getAcademicPath({
-              type: 'faculty',
-              universitySlug:
-                study.faculty.university?.slug ??
-                study.faculty.university?._id ??
-                '',
-              facultySlug: study.faculty.slug ?? study.faculty._id,
-            })}
-            label={`← ${study.faculty.name}`}
-            variant='brand'
-          />
+          <>
+            <BackLink
+              href={getAcademicPath({
+                type: 'study',
+                universitySlug: study.faculty.university?.slug,
+                facultySlug: study.faculty.slug,
+                studySlug: study.slug,
+              })}
+              label={study.name}
+            />
+            <BackLink
+              href={getAcademicPath({
+                type: 'faculty',
+                universitySlug: study.faculty.university?.slug,
+                facultySlug: study.faculty.slug,
+              })}
+              label={study.faculty.name}
+              backLevel='twoBack'
+            />
+          </>
         ),
       }}
     >
@@ -85,10 +92,7 @@ export default async function SubjectDetailPage({
         <SubjectHighlightsCard {...subject} />
       </Box>
 
-      {/* Subject Scripts */}
-      <Card className='p-6'>
-        <ScriptsSection scripts={FAKE_SCRIPTS} />
-      </Card>
+      <ScriptsSection scripts={FAKE_SCRIPTS} parentSubject={subject} />
     </PageLayout>
   )
 }

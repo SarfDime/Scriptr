@@ -2,11 +2,11 @@
 
 import { UI_STRINGS } from '@shared/config/strings'
 import { ScriptsSection } from '@/components/academics/scripts/ScriptSection'
+import { SubjectsSidebar } from '@/components/academics/subject/SubjectsSidebar'
 import { ActivityStats } from '@/components/common/ActivityStats'
 import { Box } from '@/components/common/Box'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { PageLayout } from '@/components/layout/PageLayout'
-import { SubjectsSidebar } from '@/components/Subjects/SubjectsSidebar'
 import { Divider } from '@/components/ui/Divider'
 import { DEFAULT_ACTIVITY_CONTENT } from '@/config/content'
 import {

@@ -1,3 +1,8 @@
+import {
+  ALIGNMENT_DECORATORS,
+  type AlignmentType,
+} from '@shared/config/shared-pt-config'
+import type { PortableTextBlock } from 'next-sanity'
 import type { PortableTextValue } from '../../shared/types/portable-text.types'
 
 // Re-exported so other files can import the type via '@/lib/portable-text'
@@ -15,4 +20,12 @@ export function plainTextToPortableText(text: string): PortableTextValue {
   return [
     { _type: 'block', children: [{ _type: 'span', text }] },
   ] as unknown as PortableTextValue
+}
+
+export const getBlockTextAlignment = (
+  value: PortableTextBlock
+): AlignmentType | undefined => {
+  if (!('textAlign' in value)) return undefined
+  return ALIGNMENT_DECORATORS.find((item) => item.name === value.textAlign)
+    ?.name
 }
