@@ -1,6 +1,8 @@
 import type { Context } from 'hono'
 import { Hono } from 'hono'
+import { profileMutationTags } from '../../../shared/config/cache-tags'
 import { isAdmin } from '../../../shared/utils/api.utils'
+import { revalidateCacheTags } from '../lib/cache-revalidate'
 import { requiredParam } from '../lib/request'
 import {
   authMiddleware,
@@ -217,6 +219,7 @@ profiles.delete('/me', authMiddleware, async (c) => {
   const { error } = await supabase.from('profiles').delete().eq('id', user.id)
 
   if (error) return c.json({ error: error.message }, 500)
+  await revalidateCacheTags(c.env, profileMutationTags(user.id))
   return c.json({ success: true })
 })
 
@@ -307,6 +310,7 @@ profiles.patch('/me', authMiddleware, async (c) => {
     selected_faculty_ids,
     selected_study_ids
   )
+  await revalidateCacheTags(c.env, profileMutationTags(user.id))
 
   return c.json({ success: true, profile: data })
 })
@@ -353,6 +357,7 @@ profiles.patch('/:id', authMiddleware, async (c) => {
     selected_faculty_ids,
     selected_study_ids
   )
+  await revalidateCacheTags(c.env, profileMutationTags(targetId))
 
   return c.json({ success: true, profile: data })
 })
@@ -376,6 +381,7 @@ profiles.delete('/:id', authMiddleware, async (c) => {
   const { error } = await supabase.from('profiles').delete().eq('id', targetId)
 
   if (error) return c.json({ error: error.message }, 500)
+  await revalidateCacheTags(c.env, profileMutationTags(targetId))
   return c.json({ success: true })
 })
 

@@ -1,4 +1,5 @@
 import { apiRoutes } from '@shared/config/api-routes'
+import { PROFILE_CACHE_TAGS } from '@shared/config/cache-tags'
 import type { ProfileSubjectStatus } from '@shared/types/api.types'
 import type {
   MyProfileResponse,
@@ -23,27 +24,26 @@ export const getMyProfile = (cookie?: string) =>
 
 /**
  * Public — no auth, no cookie forwarding needed (the response is the same
- * for every viewer). `no-store` rather than tag-based caching for now:
- * this data changes on script upload/delete and profile edits, and wiring
- * that revalidation correctly (SCRIPT_CACHE_TAGS-style, but keyed by both
- * id and username) is a reasonable follow-up, not done here to keep this
- * change scoped to reading real data instead of hardcoded values.
+ * for every viewer). Script uploads/deletes, favorites changes, and profile
+ * edits revalidate the shared public-profile tag.
  */
 export const getPublicProfileById = (id: string) =>
   apiFetch<PublicProfileResponse>(apiRoutes.profiles.byId(id), {
-    cache: 'no-store',
+    cache: 'force-cache',
+    next: { tags: [PROFILE_CACHE_TAGS.public()] },
   })
 
 export const getPublicProfileByUsername = (username: string) =>
   apiFetch<PublicProfileResponse>(
     apiRoutes.profiles.usernameByUsername(username),
-    { cache: 'no-store' }
+    { cache: 'force-cache', next: { tags: [PROFILE_CACHE_TAGS.public()] } }
   )
 
-/** Public — no auth. Same no-store rationale as the two functions above. */
+/** Public — no auth. Invalidated when the profile's public stats change. */
 export const getProfileStats = (id: string) =>
   apiFetch<ProfileStats>(apiRoutes.profiles.statsById(id), {
-    cache: 'no-store',
+    cache: 'force-cache',
+    next: { tags: [PROFILE_CACHE_TAGS.stats(id)] },
   })
 
 /** Idempotent add — session client, profile_id = auth.uid() RLS. */

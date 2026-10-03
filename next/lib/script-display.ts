@@ -1,4 +1,5 @@
 import type { ProfileScriptSummary } from '@shared/types/profile.types'
+import type { ScriptSummary } from '@shared/types/scripts.types'
 import type { ScriptDetail } from '@/types/components/Scripts.types'
 
 /**
@@ -37,3 +38,18 @@ export const toScriptDetail = (script: ProfileScriptSummary): ScriptDetail => ({
 export const toScriptDetails = (
   scripts: Array<ProfileScriptSummary>
 ): Array<ScriptDetail> => scripts.map(toScriptDetail)
+
+/** Adapts the shared scripts-list response for the interactive script section. */
+export const toScriptSummaryDetails = (
+  scripts: Array<ScriptSummary>
+): Array<ScriptDetail> =>
+  scripts.map((script) => ({
+    id: script.id,
+    title: script.title,
+    subject: script.subject?.name ?? '',
+    author: script.author?.full_name || script.author?.username || '',
+    updatedAt: new Date(script.updated_at),
+    likes: script.vote_score,
+    comments: script.comments[0]?.count ?? 0,
+    files: script.files,
+  }))

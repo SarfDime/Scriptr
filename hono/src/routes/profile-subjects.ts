@@ -1,5 +1,7 @@
 import { isProfileSubjectStatus } from '@shared/utils/api.utils'
 import { Hono } from 'hono'
+import { profileMutationTags } from '../../../shared/config/cache-tags'
+import { revalidateCacheTags } from '../lib/cache-revalidate'
 import { requiredParam } from '../lib/request'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
@@ -19,6 +21,7 @@ profileSubjects.get('/', async (c) => {
     .order('updated_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
+  await revalidateCacheTags(c.env, profileMutationTags(user.id))
   return c.json(data)
 })
 
@@ -77,6 +80,7 @@ profileSubjects.delete('/:subjectId', async (c) => {
     .eq('subject_id', subjectId)
 
   if (error) return c.json({ error: error.message }, 500)
+  await revalidateCacheTags(c.env, profileMutationTags(user.id))
   return c.json({ success: true })
 })
 

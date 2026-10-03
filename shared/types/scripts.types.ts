@@ -28,7 +28,7 @@ export type ScriptStudyRef = {
 }
 
 /**
- * Matches the current `subject:subjects(sanity_id, study:studies(sanity_id, faculty:
+ * Matches the current `subject:subjects(name, sanity_id, study:studies(sanity_id, faculty:
  * faculties(sanity_id)))` join — deliberately thin. `study.faculty.id` is kept
  * only because `applySelectedFacultyScope` (hono/src/routes/scripts.ts)
  * filters on it server-side; everything else a UI needs about the subject
@@ -39,6 +39,7 @@ export type ScriptStudyRef = {
  * already establishes as the source of truth for that data).
  */
 export type ScriptSubjectRef = {
+  name: string
   sanity_id: string | null
   study: {
     sanity_id: string | null
@@ -79,6 +80,7 @@ export type ScriptSummary = {
   download_count: number
   created_at: string
   updated_at: string
+  comments: Array<{ count: number }>
   files: Array<ScriptFile>
   author: ScriptAuthorSummary | null
   subject: ScriptSubjectRef | null

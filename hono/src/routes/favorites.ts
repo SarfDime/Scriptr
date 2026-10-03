@@ -1,4 +1,6 @@
 import { Hono } from 'hono'
+import { profileMutationTags } from '../../../shared/config/cache-tags'
+import { revalidateCacheTags } from '../lib/cache-revalidate'
 import { requiredParam } from '../lib/request'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
@@ -22,6 +24,7 @@ favorites.get('/', async (c) => {
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
+  await revalidateCacheTags(c.env, profileMutationTags(user.id))
   return c.json(data)
 })
 
@@ -71,6 +74,7 @@ favorites.delete('/:scriptId', async (c) => {
     .eq('script_id', scriptId)
 
   if (error) return c.json({ error: error.message }, 500)
+  await revalidateCacheTags(c.env, profileMutationTags(user.id))
   return c.json({ success: true })
 })
 

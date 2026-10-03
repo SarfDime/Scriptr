@@ -29,3 +29,18 @@ export const DEFAULT_STUDY_TIP_CONTENT: PortableTextValue = [
     ],
   },
 ]
+
+export const SUBJECTS_SIDEBAR_CONTENT: PortableTextValue = [
+  {
+    _type: 'block',
+    _key: 'subjects-sidebar-block',
+    children: [
+      { _key: 'subjects-sidebar-title', _type: 'span', text: 'Your subjects' },
+      {
+        _key: 'subjects-sidebar-text',
+        _type: 'span',
+        text: 'Subjects from your selected studies.',
+      },
+    ],
+  },
+]

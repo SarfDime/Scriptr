@@ -9,13 +9,31 @@ export const SCRIPT_CACHE_TAGS = {
   detail: (scriptId: string) => `scripts:detail:${scriptId}`,
 }
 
+/** Public profile pages share one representation tag because a script can
+ * appear on both its author's and any number of users' favorites lists. */
+export const PROFILE_CACHE_TAGS = {
+  public: () => 'profiles:public',
+  stats: (profileId: string) => `profiles:stats:${profileId}`,
+}
+
 /** Tags to revalidate whenever a script is created, updated, or deleted. */
-export function scriptMutationTags(script: { id: string; subject_id: string }) {
+export function scriptMutationTags(script: {
+  id: string
+  subject_id: string
+  author_id: string
+}) {
   return [
     SCRIPT_CACHE_TAGS.list(),
     SCRIPT_CACHE_TAGS.detail(script.id),
     SCRIPT_CACHE_TAGS.subject(script.subject_id),
     SCRIPT_CACHE_TAGS.top(),
     SCRIPT_CACHE_TAGS.popular(),
+    PROFILE_CACHE_TAGS.public(),
+    PROFILE_CACHE_TAGS.stats(script.author_id),
   ]
+}
+
+/** Tags to revalidate when a public profile or its selections change. */
+export function profileMutationTags(profileId: string) {
+  return [PROFILE_CACHE_TAGS.public(), PROFILE_CACHE_TAGS.stats(profileId)]
 }

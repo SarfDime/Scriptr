@@ -1,3 +1,4 @@
+import { scriptMutationTags } from '@shared/config/cache-tags'
 import type {
   VoteRow,
   VoteWithScript,
@@ -6,6 +7,7 @@ import type {
 } from '@shared/types/votes.types'
 import { Hono } from 'hono'
 import { checkTotalScriptVotes } from '../lib/achievements'
+import { revalidateCacheTags } from '../lib/cache-revalidate'
 import { requiredParam } from '../lib/request'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
@@ -131,11 +133,15 @@ votes.post('/:scriptId', authMiddleware, async (c) => {
 
   const { data: script } = await supabase
     .from('scripts')
-    .select('author_id')
+    .select('author_id, subject_id')
     .eq('id', scriptId)
     .single()
 
-  if (script?.author_id) {
+  if (script?.author_id && script.subject_id) {
+    await revalidateCacheTags(
+      c.env,
+      scriptMutationTags({ id: scriptId, ...script })
+    )
     await checkTotalScriptVotes(c, script.author_id)
   }
 

@@ -39,6 +39,30 @@ export const getTopScripts = (limit = 10, cookie?: string) =>
     cachedUnlessPersonalized(cookie, [SCRIPT_CACHE_TAGS.top()])
   )
 
+/** Builds a personalized top list from individually cached public subject
+ * feeds. The selection itself stays request-specific; the script reads do
+ * not carry a cookie and therefore remain shared Data Cache entries. */
+export const getTopScriptsForSubjects = async (
+  subjectIds: Array<string>,
+  limit = 10
+) => {
+  const uniqueSubjectIds = [...new Set(subjectIds)]
+  const scripts = (
+    await Promise.all(
+      uniqueSubjectIds.map((subjectId) => getScriptsBySubject(subjectId))
+    )
+  ).flat()
+
+  return scripts
+    .sort(
+      (left, right) =>
+        right.vote_score - left.vote_score ||
+        right.download_count - left.download_count ||
+        right.updated_at.localeCompare(left.updated_at)
+    )
+    .slice(0, limit)
+}
+
 export const getPopularScripts = (limit = 10, cookie?: string) =>
   apiFetch<Array<ScriptSummary>>(
     apiRoutes.scripts.popular(limit),

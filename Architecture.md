@@ -43,7 +43,7 @@ see `PROGRESS.md`. For endpoint detail, see
 * **Storage scoping:** each university may have its own R2 bucket (`universities.r2_bucket_id`); the upload resolves it via subject → study → faculty → university, falling back to `R2_BUCKET`. Keys use dbIds: `{facultyId}/{studyId}/{subjectId}/{userId}/{uuid}.{ext}`. `script_files.bucket` records the landing bucket; `GET /file-ops/get-file/*` takes a matching `?bucket=`. That endpoint is unauthenticated and does not check keys against the DB (open decision in `PROGRESS.md`).
 * **Moderation flag:** `is_flagged` is excluded from every public response.
 * **Search:** local-first on the frontend, API fallback (`GET /scripts/search`), fuzzy-matched against Portable Text as plain text. Scripts only.
-* **Caching:** Next.js Data Cache, tagged per endpoint/id; script mutations trigger a backend webhook that revalidates only affected tags. Search and "my scripts" are never cached.
+* **Caching:** Next.js Data Cache, tagged per endpoint/id; public profile pages and stats are cached, and script/profile/favorite/vote/download/comment/role mutations trigger the backend webhook to revalidate affected script/profile tags. The homepage composes its signed-in curated feed from shared cached per-subject script reads. Search and "my scripts" are never cached.
 
 ## 4. Users, Auth, Roles & Access
 

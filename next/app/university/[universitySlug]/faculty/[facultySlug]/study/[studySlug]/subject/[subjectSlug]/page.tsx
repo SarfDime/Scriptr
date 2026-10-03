@@ -10,7 +10,8 @@ import {
   fetchAcademicDetailOrNotFound,
 } from '@/lib/academic-detail-page'
 import { getAcademicPath } from '@/lib/academic-routes'
-import { FAKE_SCRIPTS } from '@/lib/fake-scripts-data'
+import { getScriptsBySubject } from '@/lib/api/scripts-api'
+import { toScriptSummaryDetails } from '@/lib/script-display'
 import {
   subjectDetailQuery,
   subjectStaticParamsQuery,
@@ -55,6 +56,9 @@ export default async function SubjectDetailPage({
   })
 
   const study = subject.study
+  const scripts = subject.dbId
+    ? toScriptSummaryDetails(await getScriptsBySubject(subject.dbId))
+    : []
 
   return (
     <PageLayout
@@ -92,7 +96,7 @@ export default async function SubjectDetailPage({
         <SubjectHighlightsCard {...subject} />
       </Box>
 
-      <ScriptsSection scripts={FAKE_SCRIPTS} parentSubject={subject} />
+      <ScriptsSection scripts={scripts} parentSubject={subject} />
     </PageLayout>
   )
 }

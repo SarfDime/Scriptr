@@ -290,7 +290,11 @@ just the admin CRUD surface.
 
 ### Public
 `GET /profiles`, `/profiles/username/:username`, `/profiles/:id`,
-`/profiles/:id/stats` — no auth required.
+`/profiles/:id/stats` — no auth required. The Next frontend caches public
+profile and stats responses; profile, selection, favorite, script, vote, and
+download mutations revalidate those tags. A public profile response includes
+both authored scripts and favorite scripts; direct `/favorites` endpoints
+remain authenticated and owner-scoped.
 
 ### Authenticated
 `GET /profiles/me`, `PATCH /profiles/me` (`{ username?, full_name?,

@@ -1,4 +1,6 @@
 import { Hono } from 'hono'
+import { profileMutationTags } from '../../../shared/config/cache-tags'
+import { revalidateCacheTags } from '../lib/cache-revalidate'
 import { requiredParam } from '../lib/request'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
@@ -20,6 +22,7 @@ profileStudies.get('/', async (c) => {
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
+  await revalidateCacheTags(c.env, profileMutationTags(user.id))
   return c.json(data)
 })
 
@@ -73,6 +76,7 @@ profileStudies.delete('/:studyId', async (c) => {
     .eq('study_id', studyId)
 
   if (error) return c.json({ error: error.message }, 500)
+  await revalidateCacheTags(c.env, profileMutationTags(user.id))
   return c.json({ success: true })
 })
 

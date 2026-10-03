@@ -21,7 +21,7 @@ import {
   checkTotalScriptDownloads,
 } from '../lib/achievements'
 import {
-  revalidateScriptTags,
+  revalidateCacheTags,
   scriptMutationTags,
 } from '../lib/cache-revalidate'
 import { honoLog } from '../lib/logger'
@@ -36,13 +36,13 @@ import type { HonoEnv } from '../types/env.types'
 
 // Excludes is_flagged, which is internal moderation state and not for public consumption.
 const PUBLIC_SCRIPT_COLUMNS =
-  'id, title, description, subject_id, professor_id, author_id, exam_session, additional_reading, vote_score, download_count, created_at, updated_at, files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, created_at)'
+  'id, title, description, subject_id, professor_id, author_id, exam_session, additional_reading, vote_score, download_count, created_at, updated_at, comments:comments(count), files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, created_at)'
 
 /**
  * Reused by every list/detail endpoint below (`/`, `/subject/:subjectId`,
  * `/top`, `/popular`, `/search`, `/:id`) and by `POST /`'s create + refetch
  * selects — one select string instead of the same literal duplicated per
- * route. `study` only carries `sanity_id` (client-side Sanity queries
+ * route. `subject` carries its display name plus `sanity_id` (client-side Sanity queries
  * resolve faculty/university/professor metadata from it — see
  * `Architecture.md §1`) and `faculty_id` (server-side faculty scoping only,
  * via `applySelectedFacultyScope` below — never returned for display).
@@ -51,8 +51,8 @@ const PUBLIC_SCRIPT_COLUMNS =
  */
 const SCRIPT_SUMMARY_SELECT = `
     ${PUBLIC_SCRIPT_COLUMNS},
-    author:profiles(username, full_name),
-    subject:subjects(sanity_id, study:studies(sanity_id, faculty:faculties(sanity_id, id)))
+    author:profiles!author_id(username, full_name),
+    subject:subjects(name, sanity_id, study:studies(sanity_id, faculty:faculties(sanity_id, id)))
   `
 
 function applySelectedFacultyScope<T extends ScriptSummary>(
@@ -475,9 +475,13 @@ scripts.post(
       return c.json({ error: 'Failed to save script files' }, 500)
     }
 
-    await revalidateScriptTags(
+    await revalidateCacheTags(
       c.env,
-      scriptMutationTags({ id: data.id, subject_id: subjectId })
+      scriptMutationTags({
+        id: data.id,
+        subject_id: subjectId,
+        author_id: user.id,
+      })
     )
     await checkScriptsUploaded(c, user.id)
 
@@ -538,14 +542,14 @@ scripts.patch('/:id', authMiddleware, async (c) => {
     .eq('id', scriptId)
     .select(`
         *,
-        author:profiles(username, full_name),
+        author:profiles!author_id(username, full_name),
         subject:subjects(name, study:studies(name))
       `)
     .single()
 
   if (error) return c.json({ error: error.message }, 500)
 
-  await revalidateScriptTags(c.env, scriptMutationTags(data))
+  await revalidateCacheTags(c.env, scriptMutationTags(data))
 
   return c.json<{ success: boolean; script: ScriptPatchResult }>({
     success: true,
@@ -603,9 +607,13 @@ scripts.delete('/:id', authMiddleware, async (c) => {
   }
 
   if (script?.subject_id) {
-    await revalidateScriptTags(
+    await revalidateCacheTags(
       c.env,
-      scriptMutationTags({ id: scriptId, subject_id: script.subject_id })
+      scriptMutationTags({
+        id: scriptId,
+        subject_id: script.subject_id,
+        author_id: script.author_id,
+      })
     )
   }
 
@@ -632,13 +640,12 @@ scripts.get('/my-scripts', authMiddleware, async (c) => {
 
 /** Record a download, deduplicated per identity (account, then IP, then device) */
 scripts.post('/:id/download', async (c) => {
-  // TODO: Should probably call file-ops get file and also save downloads count per file and not per script
   const scriptId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
 
   const { data: script } = await supabase
     .from('scripts')
-    .select('download_count, author_id')
+    .select('download_count, author_id, subject_id')
     .eq('id', scriptId)
     .single()
 
@@ -656,6 +663,14 @@ scripts.post('/:id/download', async (c) => {
       .eq('id', scriptId)
 
     if (error) return c.json({ error: error.message }, 500)
+    await revalidateCacheTags(
+      c.env,
+      scriptMutationTags({
+        id: scriptId,
+        subject_id: script.subject_id,
+        author_id: script.author_id,
+      })
+    )
     await checkTotalScriptDownloads(c, script.author_id)
     return c.json({ success: true, counted: true })
   }
@@ -681,6 +696,14 @@ scripts.post('/:id/download', async (c) => {
     .eq('id', scriptId)
 
   if (updateError) return c.json({ error: updateError.message }, 500)
+  await revalidateCacheTags(
+    c.env,
+    scriptMutationTags({
+      id: scriptId,
+      subject_id: script.subject_id,
+      author_id: script.author_id,
+    })
+  )
   await checkTotalScriptDownloads(c, script.author_id)
   return c.json({ success: true, counted: true })
 })
@@ -705,7 +728,7 @@ scripts.get('/flagged/all', authMiddleware, async (c) => {
     .from('scripts')
     .select(`
         *,
-        author:profiles(username, full_name),
+        author:profiles!author_id(username, full_name),
         subject:subjects(name, study:studies(name)),
         flags:flags(
           *,

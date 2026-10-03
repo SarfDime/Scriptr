@@ -101,12 +101,12 @@ ${sanityFunctionQueries}
 }
 `
 
-/** Fetches a subject by its own Sanity `_id` directly — no ancestor-slug
- * scoping, unlike subjectDetailQuery above */
+/** Fetches a subject by its Sanity or database id directly — no ancestor-slug
+ * scoping, unlike subjectDetailQuery above. */
 export const subjectByIdQuery = groq`
 ${sanityFunctionQueries}
 
-*[_type == "subject" && (_id == $subjectId || _id == "drafts." + $subjectId)][0] {
+*[_type == "subject" && (_id == $subjectId || _id == "drafts." + $subjectId || dbId == $subjectId)][0] {
   ${minimalSubjectQuery}
   _type,
   dbId,

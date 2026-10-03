@@ -12,11 +12,9 @@ import { Box } from './Box'
 import { Button } from './Button'
 
 interface ActivityStatsProps {
-  /** Omit entirely when viewing someone else's profile — script_favorites
-   * has no public SELECT policy (what a person has favored is private),
-   * so there's no honest value to show here for another user. Passing 0
-   * would falsely claim "definitely nothing saved" rather than "unknown".
-   * When undefined, the saved-scripts card doesn't render at all. */
+  /** Omit for contexts where favorite data was not requested. Public profile
+   * responses intentionally include favorites through their dedicated
+   * server-side projection. */
   savedCount?: number
   authoredCount: number
   commentCount: number

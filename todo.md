@@ -16,6 +16,9 @@
 - [ ] fix weight icons in pt toolbar
 - [ ] add view background mode easter egg, by clicking on the black hole repeatedly
 - [ ] add source inline for color palettes as well
+- [ ] use strings for everything
+- [ ] make header actually show real information maybe coming from sanity?
+- [ ] add localization
 
 # NEXT and SANITY
 - [ ] Decide how to handle page data in the structure tool

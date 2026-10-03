@@ -1,6 +1,8 @@
 import { Hono } from 'hono'
+import { profileMutationTags } from '../../../shared/config/cache-tags'
 import type { Database } from '../../../shared/types/database.types'
 import { isUserRole } from '../../../shared/utils/api.utils'
+import { revalidateCacheTags } from '../lib/cache-revalidate'
 import { requiredParam } from '../lib/request'
 import { createInternalSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
@@ -223,6 +225,7 @@ internal.patch('/profiles/:id/role', async (c) => {
     .single()
 
   if (error) return c.json({ error: error.message }, 500)
+  await revalidateCacheTags(c.env, profileMutationTags(targetUserId))
   return c.json({ success: true, profile: data })
 })
 

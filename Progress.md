@@ -17,6 +17,7 @@ pieces are designed to work. Last full reconciliation: 2026-10-03.
 * **Downloads:** dedupe (account → IP → device), service-role only. **[✅]**
 * **Comments** (script/professor/user threads, replies, reactions, likes), **flags** (user create/view/delete own; admin list/resolve via RLS), **votes** (atomic `toggle_vote` RPC), **favorites**, **ratings** (types, professor/subject ratings, stats). **[✅]**
 * **Profiles:** public list/lookup/stats, `me` read/update/delete, admin patch/delete, internal-only role changes. **[✅]**
+* **Public-read caching:** script and public-profile data use tagged Next Data Cache entries; mutations revalidate affected script and profile representations. **[✅]**
 * **Profile selections:** `profile-faculties`, `profile-studies`, `profile-subjects` own-resource CRUD. **[✅]**
 * **Auth:** register, login, logout, session, and `/auth/callback` (email-confirmation token handoff, implicit flow) via the Supabase Auth cookie; no Bearer path. `/login` and `/callback` return the app-shaped session user, so the client doesn't refetch `/session`. **[✅]**
 * **Notifications:** list (optional `is_read` filter), unread count, mark one/all read, delete. Onboarding and account-creation notifications are created. **[✅]**
@@ -98,6 +99,11 @@ pieces are designed to work. Last full reconciliation: 2026-10-03.
 
 * Nested academic catalog routing (`/university/.../subject/[slug]`; professors flat at `/professor/[slug]`) with ancestor-scoped GROQ and full-chain links. **[✅]**
 * Script listing, sorting, filtering. **[✅]**
+* Homepage server rendering with cached top scripts instead of fixture data. **[✅]**
+* Subject detail pages render cached scripts for their database subject instead of fixture data. **[✅]**
+* Homepage subject sidebar uses subjects from the authenticated user’s enrolled studies, excluding completed subjects, with guest and onboarding-empty alternatives. **[✅]**
+* Signed-in user page resolves its subject sidebar from the same incomplete-study-subject data. **[✅]**
+* Homepage scripts use the selected studies’ non-completed subjects when available, otherwise cached global top scripts. **[✅]**
 * Auth, onboarding, and onboarding/account-creation notifications (see above). **[✅]**
 
 ### Todo

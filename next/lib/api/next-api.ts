@@ -132,5 +132,5 @@ export function cachedUnlessPersonalized(
 } {
   return cookie
     ? { headers: { cookie }, cache: 'no-store' }
-    : { next: { tags } }
+    : { cache: 'force-cache', next: { tags } }
 }
