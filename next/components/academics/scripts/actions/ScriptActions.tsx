@@ -1,35 +1,54 @@
 import { Box } from '@/components/common/Box'
-import { cn } from '@/lib/common-utils'
 import type { ScriptActionsProps } from '@/types/components/Scripts.types'
 import { ScriptDownloadButton } from './ScriptDownloadButton'
-import { ScriptLikeButton } from './ScriptLikeButton'
 import { ScriptPreviewButton } from './ScriptPreviewButton'
-import { ScriptSaveButton } from './ScriptSaveButton'
 import { ScriptCommentsLink } from './ScriptsCommentLink'
+import { ScriptVoteCount } from './ScriptVoteCount'
 
-/** Full action row for a single script: save, like, a comment count that
- * links to the script's detail page, download, and preview. Each action
- * is its own component — this composes them into one row and doesn't own
- * any state itself.
+/** Full action row for a single script: a read-only vote count, a comment
+ * count that links to the comments section of the script's detail page,
+ * download, and preview. Everything here is driven by props — no per-card
+ * viewer-state fetching — so cards are safe to render on static pages.
+ * Voting and saving live on the detail page.
  */
 export const ScriptActions = ({
   id,
   scriptTitle,
   likes,
   comments,
-  className,
-  ...rest
+  title,
+  description,
+  files,
 }: ScriptActionsProps) => (
-  <Box
-    {...rest}
-    className={cn('ui-cluster flex-wrap items-center gap-2', className)}
-  >
-    <ScriptSaveButton id={id} scriptTitle={scriptTitle} />
-    <ScriptLikeButton id={id} scriptTitle={scriptTitle} likes={likes} />
-    <ScriptCommentsLink id={id} scriptTitle={scriptTitle} comments={comments} />
-    <Box className='ml-auto ui-cluster gap-2'>
-      <ScriptDownloadButton id={id} />
-      <ScriptPreviewButton id={id} />
+  <>
+    <Box className='ui-cluster justify-center sm:justify-start gap-2 grow'>
+      <ScriptVoteCount votes={likes} />
+      <ScriptCommentsLink
+        id={id}
+        scriptTitle={scriptTitle}
+        comments={comments}
+      />
     </Box>
-  </Box>
+    <Box className='md:ml-auto ui-cluster justify-center grow sm:grow-0 gap-2'>
+      {files.map((file) => (
+        <ScriptDownloadButton
+          key={file.id}
+          scriptId={id}
+          file={file}
+          className='grow sm:grow-0'
+        >
+          {files.length === 1
+            ? 'Download'
+            : `Download file ${file.position + 1} (${file.file_type})`}
+        </ScriptDownloadButton>
+      ))}
+      <ScriptPreviewButton
+        id={id}
+        title={title}
+        description={description}
+        files={files}
+        className='grow sm:grow-0'
+      />
+    </Box>
+  </>
 )

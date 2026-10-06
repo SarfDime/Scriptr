@@ -1,7 +1,8 @@
+import type { ButtonType } from '@shared/types/common.types'
+import { getAttribute } from '@shared/utils/common-utils'
 import type { ReactNode } from 'react'
-import { cn, getAttribute } from '../../lib/common-utils'
-import type { ButtonType } from '../../types/common.types'
-import type { AdditionalComponentAttributes } from '../../types/component.types'
+import { cn } from '@/lib/common-utils'
+import type { AdditionalComponentAttributes } from '@/types/component.types'
 import { LoadingSpinner } from '../ui/LoadingSpinner'
 
 export type ButtonProps = {
@@ -38,6 +39,7 @@ export const Button = ({
         isLoading && 'pointer-events-none',
         disabled && 'select-none'
       )}
+      // TODO: Make aria attributes required for accessibility
     >
       {isLoading && <LoadingSpinner />}
       {children}

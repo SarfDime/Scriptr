@@ -22,3 +22,12 @@ export const TEXT_ALIGN = ['left', 'center', 'right'] as const
 export const FONT_WEIGHT = ['200', '300', '400', '600', '700', '900'] as const
 
 export type ColorCodeType = keyof typeof COLOR_CODES
+
+export const GROUPING_KEYS = [
+  'academic',
+  'information',
+  'contactInfo',
+  'administration',
+  'database',
+  'media',
+] as const

@@ -1,11 +1,12 @@
+import type { PortableTextValue } from '@shared/types/portable-text.types'
+import type { ScriptFile } from '@shared/types/scripts.types'
 import type { BoxProps } from '@/components/common/Box'
 import type { ButtonProps } from '@/components/common/Button'
 import type { NextLinkProps } from '@/components/common/NextLink'
 import type { TextProps } from '@/components/typography/Text'
-import type { MinimalSubject } from '../academics/subject.types'
+import type { MinimalSubject, SubjectDetail } from '../academics/subject.types'
 import type { SanityIconProps } from '../component.types'
 import type { ComponentColorPalettes } from './ColorPalettes.types'
-import type { PortableTextType } from './PortableText.types'
 
 // -----------------------------------------------------------------------------
 // Base Primitives & Shared Traits
@@ -21,14 +22,16 @@ export type ScriptStats = {
 }
 
 export type ScriptMeta = ScriptId & {
-  scriptTitle: string
+  scriptTitle: PortableTextValue
 }
 
 type BaseScript = ScriptId &
   ScriptStats & {
-    title: string
+    title: PortableTextValue
+    description?: PortableTextValue
     subject: string
     tag?: string
+    files?: Array<ScriptFile>
   }
 
 type BaseScriptAction = ScriptMeta & {
@@ -74,12 +77,12 @@ export type ScriptFiltersProps = {
 // Action Components & Buttons
 // -----------------------------------------------------------------------------
 
-export type ScriptDownloadButtonProps = ScriptId &
-  ButtonProps & {
-    iconProps?: SanityIconProps
+export type ScriptPreviewButtonProps = ScriptId &
+  Omit<ButtonProps, 'title'> & {
+    title: PortableTextValue
+    description?: PortableTextValue
+    files: Array<ScriptFile>
   }
-
-export type ScriptPreviewButtonProps = ScriptId & ButtonProps
 
 export type ScriptSaveButtonProps = BaseScriptAction &
   Omit<ButtonProps, 'children'>
@@ -94,10 +97,11 @@ export type ScriptCommentsLinkProps = BaseScriptAction & {
   comments: number
 } & Omit<NextLinkProps, 'children' | 'href'>
 
-export type ScriptActionsProps = BoxProps &
-  ScriptMeta &
+export type ScriptActionsProps = ScriptMeta &
   ScriptStats & {
-    className?: string
+    title: PortableTextValue
+    description?: PortableTextValue
+    files: Array<ScriptFile>
     saveButtonProps?: ScriptSaveButtonProps
     likeButtonProps?: ScriptLikeButtonProps
     commentsLinkProps?: ScriptCommentsLinkProps
@@ -112,15 +116,12 @@ export type ScriptCardProps = {
   script: ScriptDetail
 }
 
-export type ScriptsSectionProps = Omit<BoxProps, 'content' | 'as'> &
-  ScriptFiltersProps & {
-    content: PortableTextType
-    scripts: Array<Script>
-    savedIds: Array<ScriptId>
-    likedIds: Array<ScriptId>
-    onToggleSaved: (id: ScriptId) => void
-    onToggleLiked: (id: ScriptId) => void
-  }
+export type ScriptsSectionProps = {
+  scripts: Array<ScriptDetail>
+  title?: string
+  subtitle?: string
+  parentSubject?: SubjectDetail
+} & Omit<BoxProps, 'children'>
 
 export type PageDataProps = {
   scripts?: Array<Script>
@@ -128,5 +129,26 @@ export type PageDataProps = {
   greeting?: string
   authoredCount?: number
   commentCount?: number
-  activityContent?: PortableTextType
+  activityContent?: PortableTextValue
 }
+
+/*
+ * Script Upload Types
+ */
+
+export type ScriptUploadInput = {
+  title: PortableTextValue
+  description?: PortableTextValue
+  subjectId: string
+  professorId: string
+  examSession?: string | null
+  additionalReading?: Array<string>
+  files: Array<File>
+}
+
+export type ScriptUploadState =
+  | { status: 'idle' }
+  | { status: 'uploading' }
+  | { status: 'creating' }
+  | { status: 'success'; scriptId: string }
+  | { status: 'error'; message: string }

@@ -2,8 +2,9 @@ import Comment from '@sanity/icons/Comment'
 import DocumentText from '@sanity/icons/DocumentText'
 import Heart from '@sanity/icons/Heart'
 import { UI_STRINGS } from '@shared/config/strings'
+import type { PortableTextValue } from '@shared/types/portable-text.types'
 import { DEFAULT_ACTIVITY_CONTENT } from '@/config/content'
-import type { PortableTextType } from '@/types/components/PortableText.types'
+import { cn } from '@/lib/common-utils'
 import { PortableTextContent } from '../typography/PortableTextContent'
 import { Text } from '../typography/Text'
 import { Card } from '../ui/Card'
@@ -11,10 +12,13 @@ import { Box } from './Box'
 import { Button } from './Button'
 
 interface ActivityStatsProps {
-  savedCount: number
+  /** Omit for contexts where favorite data was not requested. Public profile
+   * responses intentionally include favorites through their dedicated
+   * server-side projection. */
+  savedCount?: number
   authoredCount: number
   commentCount: number
-  content?: PortableTextType
+  content?: PortableTextValue
 }
 
 export const ActivityStats = ({
@@ -32,14 +36,21 @@ export const ActivityStats = ({
         </Button>
       </Box>
 
-      <Box className='grid gap-3 md:grid-cols-3'>
-        <Card className='cp-danger p-5'>
-          <Heart />
-          <Text className='ui-stat'>{savedCount}</Text>
-          <Text className='ui-subtitle'>
-            {UI_STRINGS.activity.savedScripts}
-          </Text>
-        </Card>
+      <Box
+        className={cn(
+          'grid gap-3',
+          savedCount !== undefined ? 'md:grid-cols-3' : 'md:grid-cols-2'
+        )}
+      >
+        {savedCount !== undefined && (
+          <Card className='cp-danger p-5'>
+            <Heart />
+            <Text className='ui-stat'>{savedCount}</Text>
+            <Text className='ui-subtitle'>
+              {UI_STRINGS.activity.savedScripts}
+            </Text>
+          </Card>
+        )}
         <Card className='cp-brand p-5'>
           <DocumentText />
           <Text className='ui-stat'>{authoredCount}</Text>

@@ -11,6 +11,10 @@ export const UI_STRINGS = {
     sectionTitle: 'Subject Scripts',
     sectionSubtitle:
       'Notes and study material shared by this subject community.',
+    authoredSectionTitle: 'Authored scripts',
+    authoredSectionSubtitle: 'Scripts shared with the community.',
+    favoritesSectionTitle: 'Favorited scripts',
+    favoritesSectionSubtitle: 'Scripts saved for later.',
     searchLabel: 'Search scripts',
     searchPlaceholder: 'Search scripts by name, authors, tags...',
     emptyState: 'No scripts match these filters.',
@@ -25,10 +29,62 @@ export const UI_STRINGS = {
     actions: {
       download: 'Download',
       preview: 'Preview',
+      noFilesAttached: 'No files attached to this script.',
+    },
+
+    uploadModal: {
+      title: 'Upload a script',
+      triggerLabel: 'New script',
+      submitButtonLabel: 'Create Script',
+      cancelButtonLabel: 'Clear',
+      description: 'Add the details and files your classmates need.',
+      formTitle: 'Script title',
+      formTitleHelp: 'Use a clear, descriptive name.',
+      formDescription: 'Description',
+      formDescriptionHelp:
+        'Summarize the content, coverage, or useful context.',
+      subjectLabel: 'Subject',
+      professorLabel: 'Professor',
+      examSessionLabel: 'Exam session',
+      examSessionHelp: 'Select the session this material applies to.',
+      examSessionPlaceholder: 'e.g. Winter 2026',
+      additionalReadingLabel: 'Additional reading',
+      additionalReadingHelp:
+        'Add URLs for related notes, articles, or resources.',
+      dropzoneLabel: 'Drop files here or click to browse',
+      filesLabel: 'Files',
+      filesHelp:
+        'Add one or more supported files. You can drag files here or browse your device.',
+      removeButtonLabel: 'Remove',
+      addLinkButtonLabel: 'Add link',
+      statuses: {
+        uploading: 'Uploading files…',
+        creating: 'Creating script…',
+        error: 'An error occurred while creating the script.',
+        success: 'Script created successfully.',
+      },
+      readingLinkErrors: {
+        invalid: 'Enter a valid link, e.g. https://example.com/notes',
+        protocol: 'Only http:// and https:// links are allowed',
+        tooLong: 'This link is too long',
+        duplicate: 'This link is already in the list',
+      },
+      fieldErrors: {
+        titleRequired: 'Enter a title for your script',
+        titleTooLong: 'Script title must be 2 KB or less',
+        descriptionTooLong: 'Script description must be 50 KB or less',
+        noProfessors: 'No professors are available for this subject',
+        filesRequired: 'Add at least one file',
+        filesInvalid: 'Remove or replace the files with errors',
+      },
     },
   },
   subjects: {
     manage: 'Manage',
+  },
+  profile: {
+    loadingLabel: 'Loading your profile…',
+    editProfileLabel: 'Edit profile',
   },
   navigation: {
     home: 'Home',
@@ -50,5 +106,41 @@ export const UI_STRINGS = {
     savedScripts: 'Saved scripts',
     scriptsAuthored: 'Scripts authored',
     helpfulComments: 'Helpful comments',
+  },
+  auth: {
+    subtitle:
+      'Access your academic subjects, saved scripts, and study materials.',
+    loadingLabel: 'Checking your session…',
+    signedInTitle: "You're signed in",
+    signedInLabel: 'Signed in as',
+    continueLabel: 'Continue to Scriptr',
+    continueAsGuestLabel: 'Continue as Guest',
+    logoutButtonLabel: 'Log out',
+    login: {
+      title: 'Sign in to Scriptr',
+      emailLabel: 'Email',
+      passwordLabel: 'Password',
+      submitButtonLabel: 'Sign in',
+      switchToRegister: "Don't have an account? Create one",
+      statuses: {
+        submitting: 'Signing in…',
+      },
+    },
+    register: {
+      title: 'Create your account',
+      fullNameLabel: 'Full name',
+      usernameLabel: 'Username',
+      emailLabel: 'Email',
+      passwordLabel: 'Password',
+      submitButtonLabel: 'Create account',
+      switchToLogin: 'Already have an account? Sign in',
+      statuses: {
+        submitting: 'Creating your account…',
+      },
+    },
+    callback: {
+      processingLabel: 'Signing you in…',
+      backToSignIn: 'Back to sign in',
+    },
   },
 } as const

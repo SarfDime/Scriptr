@@ -4,6 +4,7 @@ import type {
   ImageValue,
   PortableTextBlock,
   Rule,
+  SlugRule,
   StringRule,
   ValidationBuilder,
 } from 'sanity'
@@ -203,6 +204,21 @@ const richTextValidation = (props: LengthValidationProps) => {
 }
 
 // ---------------------------------------------------------------------------
+// Link format helper — shared by every validator that needs to check a value
+// is either an https URL or an internal path (customLink, link selector).
+// ---------------------------------------------------------------------------
+
+const validateLinkFormat = (value: string): string | true => {
+  if (!value.startsWith('https:') && !value.startsWith('/')) {
+    return 'Only use https urls or internal paths starting with /'
+  }
+  if (!isExternalLink(value) && value.endsWith('/') && value.length > 1) {
+    return `A path should not end with '/'`
+  }
+  return true
+}
+
+// ---------------------------------------------------------------------------
 // Public validators
 // ---------------------------------------------------------------------------
 
@@ -216,19 +232,14 @@ export const validationRules = {
     }),
 
   // -- Links / URLs --
-  urlValidation: (rule: StringRule) =>
-    rule.required().custom((value: string | undefined) => {
+  urlValidation: (rule: StringRule, isRequired: boolean = true) => {
+    const urlRule = rule.custom((value: string | undefined) => {
       if (!value) return true
+      return validateLinkFormat(value)
+    })
 
-      if (!value.startsWith('https:') && !value.startsWith('/')) {
-        return 'Only use https urls or internal paths starting with /'
-      }
-      if (!isExternalLink(value) && value.endsWith('/') && value.length > 1) {
-        return `A path should not end with '/'`
-      }
-
-      return true
-    }),
+    return isRequired ? urlRule.required() : urlRule
+  },
 
   linkSelectorInternalFieldsValidation: (rule: Rule) =>
     rule.custom((value, context) => {
@@ -250,14 +261,7 @@ export const validationRules = {
       if (linkType !== 'custom') return true
       if (!value) return `${validationFieldTitle ?? 'Field'} cannot be empty`
 
-      if (!value.startsWith('https:') && !value.startsWith('/')) {
-        return 'Only use https urls or internal paths starting with /'
-      }
-      if (!isExternalLink(value) && value.endsWith('/')) {
-        return `A path should not end with '/'`
-      }
-
-      return true
+      return validateLinkFormat(value)
     }),
 
   customParamsValidation: (rule: Rule) =>
@@ -276,8 +280,8 @@ export const validationRules = {
     }),
 
   // -- Slugs / identifiers --
-  slugValidation: (rule: Rule, isRequired = true) => [
-    rule.custom((value: { current: string }) => {
+  slugValidation: (rule: SlugRule, isRequired = true) => [
+    rule.custom((value) => {
       const slug = value?.current
       if (!slug) return isRequired ? 'A slug is required' : true
 
@@ -308,7 +312,8 @@ export const validationRules = {
   ],
 
   // -- Misc field-specific --
-  emailValidation: (rule: Rule) => rule.required().email(),
+  emailValidation: (rule: StringRule) => rule.required().email(),
+  optionalEmailValidation: (rule: StringRule) => rule.email(),
 
   faqCategoryValidation: (rule: Rule) => [rule.required().unique()],
 

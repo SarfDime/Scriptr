@@ -2,6 +2,7 @@ import { ALIGNMENTS } from '@shared/config/shared-pt-config'
 import type { PortableTextBlock } from 'next-sanity'
 import { Children, createElement, type ReactNode } from 'react'
 import { cn } from '@/lib/common-utils'
+import { getBlockTextAlignment } from '@/lib/portable-text'
 import type { ComponentParserType } from '../../../types/components/PortableText.types'
 
 const ALIGNMENT_MAP = {
@@ -151,7 +152,9 @@ export const NormalBlock = ({
   }
 
   return renderDefaultParagraph(
-    children,
+    <span className='block' style={{ textAlign: getBlockTextAlignment(value) }}>
+      {children}
+    </span>,
     overrideElements?.p?.className,
     overrideElements?.p?.tag
   )

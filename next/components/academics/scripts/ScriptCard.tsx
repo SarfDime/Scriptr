@@ -1,8 +1,11 @@
 import DocumentTextIcon from '@sanity/icons/DocumentText'
 import { Box } from '@/components/common/Box'
+import { NextLink } from '@/components/common/NextLink'
+import { PortableTextContent } from '@/components/typography/PortableTextContent'
 import { Text } from '@/components/typography/Text'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
+import { getAcademicPath } from '@/lib/academic-routes'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn, formatUpdated } from '@/lib/common-utils'
 import type { ScriptCardProps } from '@/types/components/Scripts.types'
@@ -16,8 +19,13 @@ export const ScriptCard = ({ script }: ScriptCardProps) => {
   const color = getColorPalette({ type: 'seed', value: script.id })
 
   return (
-    <Card>
-      <Card.Body className='flex items-start gap-3'>
+    <Card className='ui-above'>
+      {/* TODO: Add hover effect */}
+      <NextLink
+        href={getAcademicPath({ type: 'script', scriptSlug: script.id })}
+        className='flex items-start gap-3'
+        aria-label={`Open ${script.author}'s script`}
+      >
         <Box
           className={cn(
             color,
@@ -27,9 +35,11 @@ export const ScriptCard = ({ script }: ScriptCardProps) => {
           <DocumentTextIcon />
         </Box>
 
-        <Box className='ui-stack min-w-0 flex-1 gap-1'>
-          <Box className='ui-cluster items-center gap-2'>
-            <Text className='ui-title'>{script.title}</Text>
+        <Box className='ui-stack grow gap-1'>
+          <Box className='ui-cluster items-center gap-1 grow justify-between'>
+            <PortableTextContent className='ui-title'>
+              {script.title}
+            </PortableTextContent>
             {script.tag && <Badge colorPalette={color}>{script.tag}</Badge>}
           </Box>
           <Text className='ui-caption text-grey-500'>
@@ -41,14 +51,17 @@ export const ScriptCard = ({ script }: ScriptCardProps) => {
             {script.author} • {formatUpdated(script.updatedAt)}
           </Text>
         </Box>
-      </Card.Body>
+      </NextLink>
 
-      <Card.Footer>
+      <Card.Footer className='ui-cluster flex-wrap items-center gap-2'>
         <ScriptActions
           id={script.id}
           scriptTitle={script.title}
           likes={script.likes}
           comments={script.comments}
+          title={script.title}
+          description={script.description}
+          files={script.files ?? []}
         />
       </Card.Footer>
     </Card>

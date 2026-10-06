@@ -1,27 +1,15 @@
-import type {
-  FontSizeLabelsType,
-  FontSizeType,
-} from '@shared/config/shared-pt-config'
+import { FONT_SIZE_STYLE_CLASSES } from '@shared/config/shared-pt-config'
 import type { PortableTextBlock, PortableTextComponentProps } from 'next-sanity'
-
-const FONT_SIZE_CLASS_MAP: Array<{
-  name: FontSizeType
-  class: FontSizeLabelsType
-}> = [
-  { name: 'h1', class: '3XL' },
-  { name: 'h2', class: '2XL' },
-  { name: 'h3', class: 'XL' },
-  { name: 'h4', class: 'LG' },
-  { name: 'h5', class: 'MD' },
-  { name: 'base', class: 'BASE' },
-  { name: 'h6', class: 'SM' },
-]
+import { getBlockTextAlignment } from '@/lib/portable-text'
 
 const FontSizeBlocks = Object.fromEntries([
-  ...FONT_SIZE_CLASS_MAP.map((style) => [
-    style.name,
-    ({ children }: PortableTextComponentProps<PortableTextBlock>) => (
-      <span className={`font-size-${style.class.toLowerCase()}`}>
+  ...Object.entries(FONT_SIZE_STYLE_CLASSES).map(([name, className]) => [
+    name,
+    ({ children, value }: PortableTextComponentProps<PortableTextBlock>) => (
+      <span
+        className={`${className} block`}
+        style={{ textAlign: getBlockTextAlignment(value) }}
+      >
         {children}
       </span>
     ),

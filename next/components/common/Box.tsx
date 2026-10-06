@@ -1,8 +1,9 @@
-import { cn, getAttribute } from '../../lib/common-utils'
+import { getAttribute } from '@shared/utils/common-utils'
+import { cn } from '@/lib/common-utils'
 import type {
   AdditionalComponentAttributes,
   BoxTags,
-} from '../../types/component.types'
+} from '@/types/component.types'
 
 export type BoxProps = AdditionalComponentAttributes & {
   as?: BoxTags

@@ -1,6 +1,6 @@
 import { PortableText } from 'next-sanity'
 
-import { cn } from '../../lib/common-utils'
+import { cn } from '@/lib/common-utils'
 import type { PortableContentProps } from '../../types/components/PortableText.types'
 import { Box } from '../common/Box'
 import { portableTextParser } from './PortableTextParser'

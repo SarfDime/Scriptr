@@ -116,6 +116,16 @@ export const FONT_SIZE_STYLES: Array<{
   { name: 'h6', label: 'SM', fontSize: '0.6rem', lineHeight: '.55rem' },
 ] as const
 
+export const FONT_SIZE_STYLE_CLASSES: Record<FontSizeType, string> = {
+  h1: 'font-size-3xl',
+  h2: 'font-size-2xl',
+  h3: 'font-size-xl',
+  h4: 'font-size-lg',
+  h5: 'font-size-md',
+  base: 'font-size-sm',
+  h6: 'font-size-sm',
+}
+
 export type {
   AlignmentType,
   ButtonVariantType,

@@ -18,4 +18,15 @@ const isDev =
   process.env.NEXT_PUBLIC_ENVIRONMENT_TYPE === 'development' ||
   !process.env.NEXT_PUBLIC_ENVIRONMENT_TYPE
 
-export { buildContext, isBuild, isDeployPreview, isDev, isProd, isStaging }
+// API
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? ''
+
+export {
+  API_URL,
+  buildContext,
+  isBuild,
+  isDeployPreview,
+  isDev,
+  isProd,
+  isStaging,
+}

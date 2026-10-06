@@ -1,3 +1,4 @@
+import type { GROUPING_KEYS } from '@shared/config/sanity-constants'
 import type { ComponentType, CSSProperties } from 'react'
 import type {
   ReferenceFilterResolverContext,
@@ -67,7 +68,19 @@ type Page = {
   // Add other relevant fields if necessary
 }
 
+type AcademicFieldOptions = {
+  grouping?: GroupingKeys
+}
+
+// ---------------------------------------------------------------------------
+// Fieldsets/Groups — shared presets so each schema only has to name which ones it
+// needs; title/description are filled in from the entity name.
+// ---------------------------------------------------------------------------
+
+type GroupingKeys = (typeof GROUPING_KEYS)[number]
+
 export type {
+  AcademicFieldOptions,
   Asset,
   ChildSchemaType,
   CombinedFilterSchemaArrayType,
@@ -76,6 +89,7 @@ export type {
   DocumentListItems,
   DocumentLists,
   FilterParams,
+  GroupingKeys,
   Page,
   Parent,
   ReferenceValue,

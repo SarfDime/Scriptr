@@ -1,19 +1,52 @@
+import type { ApiEndpoint } from '@shared/config/api-routes'
 import type { Tables } from './database.types'
 
-export type UserRole = 'student' | 'moderator'
-export type ProfileSubjectStatus = 'completed' | 'currently_taking'
-export type FlagStatus = 'pending' | 'reviewed' | 'dismissed'
-export type FlagTargetType = 'user' | 'script' | 'comment'
-export type FileType = 'pdf' | 'jpg' | 'jpeg' | 'png' | 'webp'
+type UserRole = 'student' | 'moderator' | 'admin' // TODO: Move to profile types
+type ProfileSubjectStatus = 'completed' | 'currently_taking' // TODO: Move to profile types
+type FlagStatus = 'pending' | 'reviewed' | 'dismissed' // TODO: Move to flag types
+type FlagTargetType = 'user' | 'script' | 'comment'
+type FileType =
+  | 'pdf'
+  | 'jpg'
+  | 'jpeg'
+  | 'png'
+  | 'webp'
+  | 'md'
+  | 'doc'
+  | 'docx'
+  | 'xls'
+  | 'xlsx'
 
-export type ProfileSubject = Pick<
-  Tables<'profile_subjects'>,
-  'subject_id' | 'updated_at'
-> & {
-  status: ProfileSubjectStatus
+type Favorite = Pick<Tables<'script_favorites'>, 'created_at' | 'script_id'>
+type NotificationRecord = Tables<'notifications'>
+
+/** Shape returned by POST /file-ops/upload for each uploaded file, and
+ * accepted by POST /scripts. Stays here (rather than in
+ * next/types/components/Scripts.types.ts) because hono/src/routes/scripts.ts
+ * imports it directly — anything a hono/ route needs must live under
+ * shared/, not next/types/. The corresponding *read* shape
+ * (`ScriptFile` — what a persisted script_files row actually looks like
+ * once returned by a GET endpoint) has no hono/ importer and now lives
+ * consolidated with the rest of the script API types in
+ * next/types/components/Scripts.types.ts instead of duplicated here.
+ */
+type ScriptFileInput = {
+  fileKey: string
+  fileType: FileType
+  fileSizeBytes: number
+  bucket: string
 }
 
-export type Favorite = Pick<
-  Tables<'script_favorites'>,
-  'created_at' | 'script_id'
->
+type QueryApiEndpointType = `${ApiEndpoint}${string}` | ApiEndpoint
+
+export type {
+  Favorite,
+  FileType,
+  FlagStatus,
+  FlagTargetType,
+  NotificationRecord,
+  ProfileSubjectStatus,
+  QueryApiEndpointType,
+  ScriptFileInput,
+  UserRole,
+}

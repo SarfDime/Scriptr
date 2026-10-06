@@ -24,7 +24,7 @@ export const OverviewCard = ({
   return (
     <Card
       className={cn(
-        'grid lg:grid-cols-[1.08fr_0.92fr] overflow-hidden p-0',
+        'grid lg:grid-cols-[1.08fr_0.92fr] overflow-hidden p-0 ui-above',
         className
       )}
       {...boxProps}

@@ -1,3 +1,4 @@
+import type { PortableTextValue } from '@shared/types/portable-text.types'
 import { Box } from '../common/Box'
 import { Text } from '../typography/Text'
 import { Title } from '../typography/Title'
@@ -9,14 +10,16 @@ export const PageHeader = ({
   children,
 }: {
   greeting?: string
-  title?: string
+  title?: string | PortableTextValue
   subtitle?: string
   children?: React.ReactNode
 }) => {
   return (
     <Box className='ui-cluster justify-between items-end'>
       <Box className='ui-stack gap-1'>
-        {greeting && <Text className='ui-title text-brand'>{greeting}</Text>}
+        {greeting && (
+          <Text className='ui-title text-brand-400'>{greeting}</Text>
+        )}
         {title && (
           <Title as='h1' className='ui-display'>
             {title}

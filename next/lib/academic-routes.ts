@@ -1,44 +1,39 @@
-export type AcademicEntityType =
-  | 'university'
-  | 'faculty'
-  | 'subject'
-  | 'professor' //TODO: Get these types from sanity types
-  | 'script'
-  | 'study'
-
-export type AcademicPathInput = { type: AcademicEntityType; id: string }
+export type AcademicPathInput =
+  | { type: 'university'; universitySlug: string }
+  | { type: 'faculty'; universitySlug: string; facultySlug: string }
+  | {
+      type: 'study'
+      universitySlug: string
+      facultySlug: string
+      studySlug: string
+    }
+  | {
+      type: 'subject'
+      universitySlug: string
+      facultySlug: string
+      studySlug: string
+      subjectSlug: string
+    }
+  | { type: 'professor'; professorSlug: string }
+  | { type: 'script'; scriptSlug: string } //TODO: Get these types from sanity types
 
 const cleanEntityId = (id: string): string =>
   id.startsWith('drafts.') ? id.slice('drafts.'.length) : id
 
-const getUniversityPath = (id: string): string =>
-  `/universities/${cleanEntityId(id)}`
-
-const getFacultyPath = (id: string): string => `/faculties/${cleanEntityId(id)}`
-
-const getSubjectPath = (id: string): string => `/subjects/${cleanEntityId(id)}`
-
-const getProfessorPath = (id: string): string =>
-  `/professors/${cleanEntityId(id)}`
-
-const getStudyPath = (id: string): string => `/studies/${cleanEntityId(id)}`
-
 export const getAcademicPath = (input: AcademicPathInput): string => {
-  const { type, id } = input
-
-  switch (type) {
+  switch (input.type) {
     case 'university':
-      return getUniversityPath(id)
+      return `/university/${cleanEntityId(input.universitySlug)}`
     case 'faculty':
-      return getFacultyPath(id)
-    case 'subject':
-      return getSubjectPath(id)
-    case 'professor':
-      return getProfessorPath(id)
-    case 'script':
-      return `/scripts/${cleanEntityId(id)}`
+      return `/university/${cleanEntityId(input.universitySlug)}/faculty/${cleanEntityId(input.facultySlug)}`
     case 'study':
-      return getStudyPath(id)
+      return `/university/${cleanEntityId(input.universitySlug)}/faculty/${cleanEntityId(input.facultySlug)}/study/${cleanEntityId(input.studySlug)}`
+    case 'subject':
+      return `/university/${cleanEntityId(input.universitySlug)}/faculty/${cleanEntityId(input.facultySlug)}/study/${cleanEntityId(input.studySlug)}/subject/${cleanEntityId(input.subjectSlug)}`
+    case 'professor':
+      return `/professor/${cleanEntityId(input.professorSlug)}`
+    case 'script':
+      return `/scripts/${cleanEntityId(input.scriptSlug)}`
     default:
       return '/'
   }

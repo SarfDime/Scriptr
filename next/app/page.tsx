@@ -1,181 +1,88 @@
-'use client'
-
 import { UI_STRINGS } from '@shared/config/strings'
 import { ScriptsSection } from '@/components/academics/scripts/ScriptSection'
-import { ActivityStats } from '@/components/common/ActivityStats'
+import { SubjectsSidebar } from '@/components/academics/subject/SubjectsSidebar'
 import { Box } from '@/components/common/Box'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { PageLayout } from '@/components/layout/PageLayout'
-import { SubjectsSidebar } from '@/components/Subjects/SubjectsSidebar'
+import { Text } from '@/components/typography/Text'
 import { Divider } from '@/components/ui/Divider'
-import { DEFAULT_ACTIVITY_CONTENT } from '@/config/content'
-import { FAKE_SCRIPTS } from '@/lib/fake-scripts-data'
-import type { SubjectDetail } from '@/types/academics/subject.types'
-import type { PortableTextType } from '@/types/components/PortableText.types'
-import type { PageDataProps } from '@/types/components/Scripts.types'
+import { SUBJECTS_SIDEBAR_CONTENT } from '@/config/content'
+import { getSession } from '@/lib/api/auth-api'
+import { getRequestCookieHeader } from '@/lib/api/next-api'
+import { getTopScripts, getTopScriptsForSubjects } from '@/lib/api/scripts-api'
+import {
+  getIncompleteSubjectIdsForStudies,
+  getIncompleteSubjectsForStudies,
+} from '@/lib/profile-subjects'
+import { toScriptSummaryDetails } from '@/lib/script-display'
+import type { SubjectById } from '@/types/academics/subject.types'
 
-const subjectsContent: PortableTextType = [
-  {
-    _type: 'block',
-    children: [{ _type: 'span', text: 'Your subjects' }],
-  },
-  {
-    _type: 'block',
-    children: [{ _type: 'span', text: 'Keep an eye on what is next.' }],
-  },
-]
+function renderSubjectsSidebar(
+  isAuthenticated: boolean,
+  subjects: Array<SubjectById>
+) {
+  if (!isAuthenticated) {
+    return (
+      <Box as='aside' className='ui-stack gap-3'>
+        <Text className='ui-title'>Discover subjects</Text>
+        <Text className='ui-body text-grey-500'>
+          Sign in and select your studies to see subjects tailored to you.
+        </Text>
+      </Box>
+    )
+  }
 
-const subjects: Array<SubjectDetail> = [
-  {
-    name: 'Biology',
-    code: 'BIO 201',
-    professors: [
-      {
-        _id: 'professor-3',
-        name: 'Dr. Elena Park',
-      },
-    ],
-    year: 2,
-    credits: 4,
-    semester: 'summer',
-    description: [
-      {
-        _type: 'block',
-        children: [
-          {
-            _type: 'span',
-            text: 'An in-depth study of cellular processes and laboratory techniques.',
-          },
-        ],
-      },
-    ],
-    _id: 'subject-3',
-    _type: 'subject',
-    dbId: 'bio201',
-    study: {
-      _id: 'study-1',
-      name: 'Biology',
-      faculty: {
-        _id: 'faculty-1',
-        name: 'Science',
-        university: {
-          _id: 'university-1',
-          name: 'Example University',
-        },
-      },
-    },
-    syllabus: 'bio201-syllabus.pdf',
-  },
-  {
-    name: 'Organic Chemistry',
-    code: 'CHEM 204',
-    professors: [
-      {
-        _id: 'professor-2',
-        name: 'Prof. Marcus Bell',
-      },
-    ],
-    year: 2,
-    credits: 4,
-    semester: 'summer',
-    description: [
-      {
-        _type: 'block',
-        children: [
-          {
-            _type: 'span',
-            text: 'A comprehensive study of organic reactions and mechanisms.',
-          },
-        ],
-      },
-    ],
-    _id: 'subject-4',
-    _type: 'subject',
-    dbId: 'chem204',
-    study: {
-      _id: 'study-2',
-      name: 'Chemistry',
-      faculty: {
-        _id: 'faculty-1',
-        name: 'Science',
-        university: {
-          _id: 'university-1',
-          name: 'Example University',
-        },
-      },
-    },
-    syllabus: 'chem204-syllabus.pdf',
-  },
-  {
-    name: 'Linear Algebra',
-    code: 'MATH 221',
-    professors: [
-      {
-        _id: 'professor-1',
-        name: 'Prof. Adrian Cole',
-      },
-    ],
-    year: 1,
-    credits: 4,
-    semester: 'summer',
-    description: [
-      {
-        _type: 'block',
-        children: [
-          {
-            _type: 'span',
-            text: 'An introduction to vector spaces, matrices, and linear transformations.',
-          },
-        ],
-      },
-    ],
-    _id: 'subject-5',
-    _type: 'subject',
-    dbId: 'math221',
-    study: {
-      _id: 'study-3',
-      name: 'Mathematics',
-      faculty: {
-        _id: 'faculty-1',
-        name: 'Science',
-        university: {
-          _id: 'university-1',
-          name: 'Example University',
-        },
-      },
-    },
-    syllabus: 'math221-syllabus.pdf',
-  },
-]
+  if (subjects.length === 0) {
+    return (
+      <Box as='aside' className='ui-stack gap-3'>
+        <Text className='ui-title'>Your subjects</Text>
+        <Text className='ui-body text-grey-500'>
+          Complete your study setup to see your current subjects here.
+        </Text>
+      </Box>
+    )
+  }
 
-const Page = ({
-  greeting = 'Good morning, Nora',
-  authoredCount = 8,
-  commentCount = 14,
-  activityContent = DEFAULT_ACTIVITY_CONTENT,
-  subjects: pageSubjects = subjects,
-}: PageDataProps) => {
+  return (
+    <SubjectsSidebar subjects={subjects} content={SUBJECTS_SIDEBAR_CONTENT} />
+  )
+}
+
+const Page = async () => {
+  const cookie = await getRequestCookieHeader()
+  const [session, topScripts] = await Promise.all([
+    getSession(cookie),
+    getTopScripts(),
+  ])
+  const user = session.user
+  const [subjects, incompleteSubjectIds] = user
+    ? await Promise.all([
+        getIncompleteSubjectsForStudies(user.selected_study_ids, user.subjects),
+        getIncompleteSubjectIdsForStudies(
+          user.selected_study_ids,
+          user.subjects
+        ),
+      ])
+    : [[], []]
+  const scripts = toScriptSummaryDetails(
+    incompleteSubjectIds.length > 0
+      ? await getTopScriptsForSubjects(incompleteSubjectIds)
+      : topScripts
+  )
+
   return (
     <PageLayout>
       <PageHeader
-        greeting={greeting}
+        greeting='Welcome'
         title={UI_STRINGS.home.title}
         subtitle={UI_STRINGS.home.subtitle}
       />
 
       <Divider />
-      {/* Make this class a utility class for responsive grid layout */}
       <Box className='grid gap-10 xl:grid-cols-[minmax(0,1fr)_340px]'>
-        <ScriptsSection scripts={FAKE_SCRIPTS} />
-        <SubjectsSidebar subjects={pageSubjects} content={subjectsContent} />
+        <ScriptsSection scripts={scripts} />
+        {renderSubjectsSidebar(Boolean(user), subjects)}
       </Box>
-
-      <ActivityStats // TODO: Replace hardcoded savedCount with actual data
-        savedCount={4}
-        authoredCount={authoredCount}
-        commentCount={commentCount}
-        content={activityContent}
-      />
     </PageLayout>
   )
 }

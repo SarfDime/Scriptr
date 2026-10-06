@@ -108,6 +108,10 @@ export const Website = defineType({
       name: 'navAndFooter',
       options: { collapsible: false, collapsed: false },
     },
+    {
+      name: 'theming',
+      options: { collapsible: true, collapsed: false },
+    },
   ],
   fields: [
     {
@@ -158,6 +162,18 @@ export const Website = defineType({
         'Default keywords to append to page metadata when no page-specific keywords are set.',
     },
 
+    {
+      title: 'Dark Theme Background',
+      name: 'dtBackground',
+      type: 'reference',
+      to: [{ type: 'starCanvas' }],
+    },
+    {
+      title: 'Light Theme Background',
+      name: 'ltBackground',
+      type: 'reference',
+      to: [{ type: 'starCanvas' }],
+    },
     ...WebsiteContent,
   ],
 })

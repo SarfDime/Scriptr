@@ -1,18 +1,13 @@
-import type { PersonSummary } from '../components/Person.types'
-import type { PortableTextType } from '../components/PortableText.types'
-import type { AddressableContactInfo, MinimalEntity } from './academics.types'
-import type { MinimalFaculty } from './faculty.types'
+import type {
+  UniversityDetailQueryResult,
+  UniversityGalleryQueryResult,
+} from '@shared/types/sanity.types'
+import type { WithResolvedSanityData } from '@shared/types/sanity-transform.types'
 
-export type MinimalUniversity = MinimalEntity & {
-  rector?: PersonSummary
-  viceRectors?: Array<PersonSummary>
-  faculties?: Array<MinimalFaculty>
-}
+export type UniversityGalleryData = Array<
+  NonNullable<WithResolvedSanityData<UniversityGalleryQueryResult>>
+>
 
-export type UniversityGalleryData = Array<MinimalUniversity>
-
-export type UniversityDetail = MinimalUniversity &
-  AddressableContactInfo & {
-    _type: 'university'
-    description?: PortableTextType
-  }
+export type UniversityDetail = NonNullable<
+  WithResolvedSanityData<UniversityDetailQueryResult>
+>

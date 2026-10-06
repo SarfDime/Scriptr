@@ -16,7 +16,7 @@ export const InitialsIcon = ({
   <Box
     className={cn(
       color,
-      'h-full aspect-square rounded-2xl ui-center p-6',
+      'aspect-square ui-center shrink-0 rounded-lg p-6',
       className
     )}
     {...props}

@@ -2,11 +2,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-inline: 1.5rem;
-  padding-block: 0.75rem;
+  padding-inline: 1.25rem;
+  padding-block: 0.5rem;
   border-radius: 0.75rem;
   transition:
     background-color 0.2s ease,
+    background-image 0.2s ease,
     border-color 0.2s ease,
     box-shadow 0.2s ease,
     color 0.2s ease,
@@ -111,6 +112,11 @@
 
 @utility solid {
   background-color: var(--color-brand);
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--color-brand) 85%, white),
+    var(--color-brand)
+  );
   color: var(--color-background-100);
   font-size: 1rem;
   font-weight: 600;
@@ -153,6 +159,11 @@
 
 @utility golden {
   background-color: var(--color-golden-yellow);
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--color-golden-yellow) 85%, white),
+    var(--color-golden-yellow)
+  );
   color: var(--color-brand-700);
   font-size: 1rem;
   font-weight: 600;
@@ -161,6 +172,11 @@
   @media (hover: hover) and (pointer: fine) {
     &:hover {
       background-color: var(--color-yellow);
+      background-image: linear-gradient(
+        180deg,
+        color-mix(in oklab, var(--color-yellow) 85%, white),
+        var(--color-yellow)
+      );
       box-shadow: var(--shadow-brand-transparent);
     }
   }
@@ -168,6 +184,11 @@
 
 @utility success {
   background-color: var(--color-jade);
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--color-jade) 85%, white),
+    var(--color-jade)
+  );
   color: var(--color-background-100);
   font-size: 1rem;
   font-weight: 600;
@@ -183,6 +204,11 @@
 
 @utility error {
   background-color: var(--color-error-red);
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--color-error-red) 85%, white),
+    var(--color-error-red)
+  );
   color: var(--color-background-100);
   font-size: 1rem;
   font-weight: 600;
@@ -198,13 +224,23 @@
 
 @utility warning {
   background-color: var(--color-golden-yellow);
-  color: var(--color-brand-700);
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--color-golden-yellow) 85%, white),
+    var(--color-golden-yellow)
+  );
+  color: var(--color-background-100);
   font-weight: 600;
   box-shadow: var(--shadow-sm);
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
       background-color: var(--color-yellow);
+      background-image: linear-gradient(
+        180deg,
+        color-mix(in oklab, var(--color-yellow) 85%, white),
+        var(--color-yellow)
+      );
       box-shadow: var(--shadow-brand-transparent);
     }
   }
@@ -212,6 +248,11 @@
 
 @utility danger {
   background-color: var(--color-error-red);
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--color-error-red) 85%, white),
+    var(--color-error-red)
+  );
   color: var(--color-background-100);
   font-weight: 600;
   box-shadow: var(--shadow-sm);

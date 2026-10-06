@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/complexity/noImportantStyles: <Needed> */
 .custom-array-button {
   cursor: pointer;
   span {
@@ -7,8 +8,7 @@
 }
 
 .custom-button {
-  background-color: transparent;
-  box-shadow: none;
+  background: transparent !important;
   cursor: pointer;
 
   span {
@@ -16,7 +16,7 @@
   }
 
   &[data-selected] {
-    background-color: #22344d;
+    background: #22344d !important;
 
     span {
       color: #acccfd;
@@ -24,7 +24,7 @@
   }
 
   &:hover {
-    background-color: #35383d;
+    background: #35383d !important;
   }
 
   &.compact-mode-toggle {
@@ -37,7 +37,7 @@
       width: 1.65rem;
     }
     &[data-selected] {
-      background-color: #244d22;
+      background: #244d22 !important;
 
       span {
         color: #bffdac;
@@ -45,7 +45,7 @@
     }
 
     &:hover {
-      background-color: #383d35;
+      background: #383d35 !important;
     }
   }
 }

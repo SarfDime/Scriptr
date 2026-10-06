@@ -6,8 +6,6 @@ labels: enhancement
 assignees: ""
 ---
 
-Closes #
-
 ## Summary
 
 <!-- Describe the feature in one or two sentences. -->

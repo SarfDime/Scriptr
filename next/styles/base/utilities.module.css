@@ -51,3 +51,20 @@ html {
     animation-play-state: paused;
   }
 }
+
+@theme {
+  --animate-jump: jump 3s infinite ease-in-out;
+}
+
+@keyframes jump {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  15% {
+    transform: translateY(-25%);
+  }
+  30% {
+    transform: translateY(0);
+  }
+}

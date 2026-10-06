@@ -1,23 +1,8 @@
 import type {
   LinkSelectorProps,
-  SanityImageType,
   SharedSectionDataType,
-} from '../common.types'
-
-// type SharedPageData = {
-//   siteName: string
-//   pageSeo?: PageSeo
-//   openGraphType: string
-//   twitterCreator: string
-//   twitterSite: string
-//   twitterCardType: string
-//   navigationMenu?: NavBarNavigationMenuType
-//   websiteFeedbackModal?: FeedbackType
-//   websiteEligibilityModals?: Array<EligibilityModalType & SharedSectionDataType>
-//   footer?: FooterDataType
-//   websiteFavicon?: SanityImageType
-//   _updatedAt?: string
-// }
+} from '@shared/types/common.types'
+import type { SanityImageType } from '@shared/types/sanity-transform.types'
 
 type NavItemType = {
   navItemSlug: string

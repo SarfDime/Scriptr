@@ -1,7 +1,7 @@
 import type {
   SubjectExamSession,
   SubjectSemester,
-} from '@/types/academics/subject.types'
+} from '@shared/types/academic.types'
 import type {
   ColorPaletteClass,
   ColorPaletteVariant,

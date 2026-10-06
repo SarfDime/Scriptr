@@ -5,7 +5,19 @@ const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000)
 export const FAKE_SCRIPTS: Array<ScriptDetail> = [
   {
     id: 'script-1',
-    title: 'The Cell Cycle',
+    title: [
+      {
+        _key: 'block-1',
+        _type: 'block',
+        children: [
+          {
+            _key: 'block-1-span-1',
+            _type: 'span',
+            text: 'The Cell Cycle',
+          },
+        ],
+      },
+    ],
     tag: 'Exam prep',
     subject: 'Cell Biology',
     professor: 'Dr. Elena Park',
@@ -17,7 +29,19 @@ export const FAKE_SCRIPTS: Array<ScriptDetail> = [
   },
   {
     id: 'script-2',
-    title: 'Mitosis and Meiosis',
+    title: [
+      {
+        _key: 'block-1',
+        _type: 'block',
+        children: [
+          {
+            _key: 'block-1-span-1',
+            _type: 'span',
+            text: 'Mitosis and Meiosis',
+          },
+        ],
+      },
+    ],
     tag: 'Study guide',
     subject: 'Cell Biology',
     professor: 'Dr. Elena Park',
@@ -29,7 +53,19 @@ export const FAKE_SCRIPTS: Array<ScriptDetail> = [
   },
   {
     id: 'script-3',
-    title: 'Membrane Transport',
+    title: [
+      {
+        _key: 'block-1',
+        _type: 'block',
+        children: [
+          {
+            _key: 'block-1-span-1',
+            _type: 'span',
+            text: 'Membrane Transport',
+          },
+        ],
+      },
+    ],
     tag: 'Reference',
     subject: 'Cell Biology',
     professor: 'Dr. Elena Park',
@@ -41,7 +77,19 @@ export const FAKE_SCRIPTS: Array<ScriptDetail> = [
   },
   {
     id: 'script-4',
-    title: 'DNA Replication Overview',
+    title: [
+      {
+        _key: 'block-1',
+        _type: 'block',
+        children: [
+          {
+            _key: 'block-1-span-1',
+            _type: 'span',
+            text: 'DNA Replication Overview',
+          },
+        ],
+      },
+    ],
     tag: 'Study guide',
     subject: 'Genetics',
     professor: 'Dr. Elena Park',

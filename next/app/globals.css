@@ -44,3 +44,7 @@ body {
   display: flex;
   height: 100dvh;
 }
+
+[data-sanity-icon]:not(.overwrite) {
+  @apply w-6 h-6;
+}

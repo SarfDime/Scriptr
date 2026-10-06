@@ -44,6 +44,7 @@ npm run dev:next     # Start the Next.js frontend
 npm run dev:sanity   # Start Sanity Studio
 npm run build:sanity # Build Sanity Studio
 npm run gen:api-types # Generate Supabase API types
+npm run gen:api-endpoints # Regenerate shared/config/api-routes.ts from the live route tree
 npm run check-types  # Type-check all workspaces
 npm run check-types:sanity # Type-check Sanity only
 npm run format       # Apply Biome formatting and safe fixes
@@ -82,6 +83,8 @@ Studio deployed at https://scriptr.sanity.studio
 
 ## Documentation
 
+- [Architecture & requirements](ARCHITECTURE.md)
+- [Progress & todos](PROGRESS.md)
 - [API setup](hono/README.md)
 - [API reference](hono/src/routes/API_DOCUMENTATION.md)
 - [API testing guide](hono/src/routes/API_TESTING_GUIDE.md)

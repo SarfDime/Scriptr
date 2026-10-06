@@ -102,7 +102,7 @@
   border-radius: 0.75rem;
   background: var(--color-background-100);
   color: var(--color-fg-700);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
 }
 
 @utility ui-card-header {
@@ -131,4 +131,16 @@
   svg {
     @apply w-5 h-5;
   }
+}
+
+@utility ui-above {
+  @apply border-grey-300 bg-background-300/65 backdrop-blur shadow-mdx;
+}
+
+@utility ui-above-light {
+  @apply border-grey-300 bg-background-250/85 backdrop-blur shadow-mdx;
+}
+
+@utility ui-above-dark {
+  @apply border-grey-300 bg-background-300/90 backdrop-blur shadow-mdx;
 }

@@ -1,69 +1,57 @@
-import { Hono } from 'hono'
 import {
+  isAdmin,
   isFlagStatus,
   isFlagTargetType,
-  isUserRole,
-} from '../../../shared/utils/api.utils'
+} from '@shared/utils/api.utils'
+import { Hono } from 'hono'
 import { requiredParam } from '../lib/request'
-import {
-  authMiddleware,
-  createInternalSupabaseClient,
-  createSupabaseClient,
-} from '../lib/supabase'
+import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
 const flags = new Hono<HonoEnv>()
 
-/** Get all flags (moderator only) */
+/** Get all flags (admin only) — RLS now grants admins SELECT directly */
 flags.get('/', authMiddleware, async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)
 
-  // Check if user is moderator
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .single()
 
-  if (!isUserRole(profile?.role) || profile.role !== 'moderator') {
-    return c.json({ error: 'Unauthorized: Moderator access required' }, 403)
+  if (!isAdmin(profile?.role)) {
+    return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 
   const { data, error } = await supabase
     .from('flags')
-    .select(`
-      *,
-      reporter:profiles!reporter_id(username, full_name)
-    `)
+    .select(`*, reporter:profiles!reporter_id(username, full_name)`)
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
   return c.json(data)
 })
 
-/** Get pending flags (moderator only) */
+/** Get pending flags (admin only) */
 flags.get('/pending', authMiddleware, async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)
 
-  // Check if user is moderator
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .single()
 
-  if (!isUserRole(profile?.role) || profile.role !== 'moderator') {
-    return c.json({ error: 'Unauthorized: Moderator access required' }, 403)
+  if (!isAdmin(profile?.role)) {
+    return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 
   const { data, error } = await supabase
     .from('flags')
-    .select(`
-      *,
-      reporter:profiles!reporter_id(username, full_name)
-    `)
+    .select(`*, reporter:profiles!reporter_id(username, full_name)`)
     .eq('status', 'pending')
     .order('created_at', { ascending: false })
 
@@ -71,13 +59,12 @@ flags.get('/pending', authMiddleware, async (c) => {
   return c.json(data)
 })
 
-/** Get flags by status (moderator only) */
+/** Get flags by status (admin only) */
 flags.get('/status/:status', authMiddleware, async (c) => {
   const user = c.get('user')
   const status = requiredParam(c, 'status')
   const supabase = createSupabaseClient(c)
 
-  // Validate status
   if (!isFlagStatus(status)) {
     return c.json(
       { error: 'Invalid status. Must be: pending, reviewed, or dismissed' },
@@ -85,23 +72,19 @@ flags.get('/status/:status', authMiddleware, async (c) => {
     )
   }
 
-  // Check if user is moderator
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .single()
 
-  if (!isUserRole(profile?.role) || profile.role !== 'moderator') {
-    return c.json({ error: 'Unauthorized: Moderator access required' }, 403)
+  if (!isAdmin(profile?.role)) {
+    return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 
   const { data, error } = await supabase
     .from('flags')
-    .select(`
-      *,
-      reporter:profiles!reporter_id(username, full_name)
-    `)
+    .select(`*, reporter:profiles!reporter_id(username, full_name)`)
     .eq('status', status)
     .order('created_at', { ascending: false })
 
@@ -124,7 +107,7 @@ flags.get('/my-flags', authMiddleware, async (c) => {
   return c.json(data)
 })
 
-/** Create a new flag */
+/** Create a new flag. Restriction is enforced at the RLS layer (is_restricted()). */
 flags.post('/', authMiddleware, async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)
@@ -158,7 +141,6 @@ flags.post('/', authMiddleware, async (c) => {
     targetColumn = 'target_user_id'
   }
 
-  // Check if user already flagged this target
   const { data: existingFlag } = await supabase
     .from('flags')
     .select('id')
@@ -181,15 +163,21 @@ flags.post('/', authMiddleware, async (c) => {
       reason,
       status: 'pending',
     })
-    .select(`
-      *,
-      reporter:profiles!reporter_id(username, full_name)
-    `)
+    .select(`*, reporter:profiles!reporter_id(username, full_name)`)
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
+  // A restricted user's insert fails RLS (is_restricted() check), surfacing here as a
+  // generic Postgres error — map it to a clear 403 instead of a raw 500.
+  if (error) {
+    if (error.code === '42501') {
+      return c.json(
+        { error: 'Your account is restricted from filing flags' },
+        403
+      )
+    }
+    return c.json({ error: error.message }, 500)
+  }
 
-  // Mark the target as flagged for moderator review
   if (target_type === 'script') {
     await supabase
       .from('scripts')
@@ -205,13 +193,23 @@ flags.post('/', authMiddleware, async (c) => {
   return c.json({ success: true, flag: data })
 })
 
-/** Update flag status (only the flag owner may update their own flag) */
+/** Resolve a flag's status (admin only). */
 flags.patch('/:id', authMiddleware, async (c) => {
   const user = c.get('user')
   const flagId = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)
-  const adminSupabase = createInternalSupabaseClient(c)
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!isAdmin(profile?.role)) {
+    return c.json({ error: 'Unauthorized: Admin access required' }, 403)
+  }
+
+  // Admins now have SELECT RLS on flags, so the session client can read any row.
   const { data: existingFlag, error: existingFlagError } = await supabase
     .from('flags')
     .select('reporter_id, target_script_id, target_comment_id')
@@ -220,13 +218,6 @@ flags.patch('/:id', authMiddleware, async (c) => {
 
   if (existingFlagError || !existingFlag) {
     return c.json({ error: 'Flag not found' }, 404)
-  }
-
-  if (existingFlag.reporter_id !== user.id) {
-    return c.json(
-      { error: 'Forbidden: You can only update your own flags' },
-      403
-    )
   }
 
   const { status } = await c.req.json()
@@ -238,27 +229,24 @@ flags.patch('/:id', authMiddleware, async (c) => {
     )
   }
 
-  const { data, error } = await adminSupabase
+  const { data, error } = await supabase
     .from('flags')
     .update({ status })
     .eq('id', flagId)
-    .select(`
-      *,
-      reporter:profiles!reporter_id(username, full_name)
-    `)
+    .select(`*, reporter:profiles!reporter_id(username, full_name)`)
     .single()
 
   if (error) return c.json({ error: error.message }, 500)
 
   if (status === 'dismissed' && data.target_script_id) {
-    const { data: otherFlags } = await adminSupabase
+    const { data: otherFlags } = await supabase
       .from('flags')
       .select('id')
       .eq('target_script_id', data.target_script_id)
       .eq('status', 'pending')
 
     if (!otherFlags || otherFlags.length === 0) {
-      await adminSupabase
+      await supabase
         .from('scripts')
         .update({ is_flagged: false })
         .eq('id', data.target_script_id)
@@ -266,14 +254,14 @@ flags.patch('/:id', authMiddleware, async (c) => {
   }
 
   if (status === 'dismissed' && data.target_comment_id) {
-    const { data: otherFlags } = await adminSupabase
+    const { data: otherFlags } = await supabase
       .from('flags')
       .select('id')
       .eq('target_comment_id', data.target_comment_id)
       .eq('status', 'pending')
 
     if (!otherFlags || otherFlags.length === 0) {
-      await adminSupabase
+      await supabase
         .from('comments')
         .update({ is_flagged: false })
         .eq('id', data.target_comment_id)
@@ -283,12 +271,11 @@ flags.patch('/:id', authMiddleware, async (c) => {
   return c.json({ success: true, flag: data })
 })
 
-/** Delete a flag (only the flag owner may delete their own flag) */
+/** Delete a flag (the reporter, or now an admin) */
 flags.delete('/:id', authMiddleware, async (c) => {
   const user = c.get('user')
   const flagId = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)
-  const adminSupabase = createInternalSupabaseClient(c)
 
   const { data: existingFlag, error: existingFlagError } = await supabase
     .from('flags')
@@ -301,13 +288,21 @@ flags.delete('/:id', authMiddleware, async (c) => {
   }
 
   if (existingFlag.reporter_id !== user.id) {
-    return c.json(
-      { error: 'Forbidden: You can only delete your own flags' },
-      403
-    )
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!isAdmin(profile?.role)) {
+      return c.json(
+        { error: 'Forbidden: You can only delete your own flags' },
+        403
+      )
+    }
   }
 
-  const { error } = await adminSupabase.from('flags').delete().eq('id', flagId)
+  const { error } = await supabase.from('flags').delete().eq('id', flagId)
 
   if (error) return c.json({ error: error.message }, 500)
   return c.json({ success: true, message: 'Flag deleted successfully' })

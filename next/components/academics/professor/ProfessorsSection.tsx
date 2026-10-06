@@ -10,7 +10,7 @@ export const ProfessorsSection = ({ professors }: ProfessorsSectionProps) => {
   const professorList = professors ?? []
 
   return (
-    <Card className='p-6 ui-stack gap-4'>
+    <Card className='ui-stack gap-4 border-0 p-0 bg-transparent'>
       <Box className='ui-cluster justify-between items-center'>
         <Title className='ui-title font-bold'>Professors</Title>
         <Badge className='cp-brand'>{professorList?.length} Professors</Badge>

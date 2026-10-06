@@ -1,7 +1,7 @@
+import type { SanityImageType } from '@shared/types/sanity-transform.types'
 import { Box, type BoxProps } from '@/components/common/Box'
 import { Text, type TextProps } from '@/components/typography/Text'
 import { cn } from '@/lib/common-utils'
-import type { SanityImageType } from '@/types/common.types'
 
 export type PersonType = {
   name: string

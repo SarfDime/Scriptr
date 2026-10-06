@@ -1,12 +1,16 @@
 {
-  "extends": "../tsconfig.json",
   "compilerOptions": {
-    "types": ["node"],
-    "lib": ["ESNext"],
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
-    "noEmit": true
+    "lib": ["ESNext"],
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./*"],
+      "@shared/*": ["../shared/*"]
+    },
+    "types": ["node"]
   },
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "extends": "../tsconfig.json",
+  "include": ["**/*.ts", "**/*.tsx"]
 }

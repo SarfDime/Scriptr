@@ -1,13 +1,29 @@
+import { scriptMutationTags } from '@shared/config/cache-tags'
+import type {
+  VoteRow,
+  VoteWithScript,
+  VoteWithUser,
+  VoteWithUserAndScript,
+} from '@shared/types/votes.types'
 import { Hono } from 'hono'
+import { checkTotalScriptVotes } from '../lib/achievements'
+import { revalidateCacheTags } from '../lib/cache-revalidate'
+import { honoLog } from '../lib/logger'
 import { requiredParam } from '../lib/request'
-import {
-  authMiddleware,
-  createInternalSupabaseClient,
-  createSupabaseClient,
-} from '../lib/supabase'
+import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
 const votes = new Hono<HonoEnv>()
+
+/**
+ * Reused by `/user/:userId` and `/my-votes` — the two endpoints that select
+ * the identical shape: every vote by one user, with the script it was cast
+ * on and that script's subject name. Matches `VoteWithScript` in
+ * `shared/types/votes.types.ts` exactly; keep the two in sync if this
+ * changes.
+ */
+const VOTE_WITH_SCRIPT_SELECT =
+  '*, script:scripts(id, title, subject:subjects(name))'
 
 /** List all votes across all scripts */
 votes.get('/', async (c) => {
@@ -18,7 +34,8 @@ votes.get('/', async (c) => {
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+
+  return c.json<Array<VoteWithUserAndScript>>(data)
 })
 
 /** List votes for a specific script */
@@ -32,7 +49,7 @@ votes.get('/script/:scriptId', async (c) => {
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json<Array<VoteWithUser>>(data)
 })
 
 /** List votes cast by a specific user */
@@ -41,12 +58,12 @@ votes.get('/user/:userId', async (c) => {
   const supabase = createSupabaseClient(c)
   const { data, error } = await supabase
     .from('votes')
-    .select('*, script:scripts(id, title, subject:subjects(name))')
+    .select(VOTE_WITH_SCRIPT_SELECT)
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json<Array<VoteWithScript>>(data)
 })
 
 /** List the current user's votes */
@@ -55,12 +72,12 @@ votes.get('/my-votes', authMiddleware, async (c) => {
   const supabase = createSupabaseClient(c)
   const { data, error } = await supabase
     .from('votes')
-    .select('*, script:scripts(id, title, subject:subjects(name))')
+    .select(VOTE_WITH_SCRIPT_SELECT)
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json<Array<VoteWithScript>>(data)
 })
 
 /** Get the current user's vote for a script, or null */
@@ -76,105 +93,68 @@ votes.get('/script/:scriptId/my-vote', authMiddleware, async (c) => {
     .maybeSingle()
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json<VoteRow | null>(data)
 })
 
 /** Get vote counts and the nonnegative score for a script */
 votes.get('/script/:scriptId/stats', async (c) => {
   const scriptId = requiredParam(c, 'scriptId')
   const supabase = createSupabaseClient(c)
-  const [{ count: upvotes }, { count: downvotes }] = await Promise.all([
-    supabase
-      .from('votes')
-      .select('*', { count: 'exact', head: true })
-      .eq('script_id', scriptId)
-      .eq('value', 1),
-    supabase
-      .from('votes')
-      .select('*', { count: 'exact', head: true })
-      .eq('script_id', scriptId)
-      .eq('value', -1),
-  ])
+  const { count: upvotes } = await supabase
+    .from('votes')
+    .select('*', { count: 'exact', head: true })
+    .eq('script_id', scriptId)
 
-  return c.json({
+  return c.json<{ upvotes: number; score: number }>({
     upvotes: upvotes ?? 0,
-    downvotes: downvotes ?? 0,
-    total: (upvotes ?? 0) + (downvotes ?? 0),
     score: Math.max(0, upvotes ?? 0),
   })
 })
 
 /** Toggle the current user's +1 vote for a script. */
 votes.post('/:scriptId', authMiddleware, async (c) => {
-  const user = c.get('user')
   const scriptId = requiredParam(c, 'scriptId')
-  const supabase = createInternalSupabaseClient(c)
+  const supabase = createSupabaseClient(c)
 
-  const { data: script, error: scriptError } = await supabase
+  // Already strongly typed from the generated `toggle_vote` RPC signature
+  // in shared/types/database.types.ts — no overrideTypes needed here.
+  const { data, error } = await supabase
+    .rpc('toggle_vote', { p_script_id: scriptId })
+    .single()
+
+  if (error) {
+    if (error.code === '42501') {
+      return c.json({ error: 'Your account is restricted from voting' }, 403)
+    }
+    if (error.code === 'P0002') {
+      return c.json({ error: 'Script not found' }, 404)
+    }
+    honoLog({
+      logLevel: 'error',
+      message: `Failed to toggle vote for script ${scriptId}`,
+      error,
+    })
+    return c.json({ error: 'Unable to update vote' }, 500)
+  }
+
+  const { data: script } = await supabase
     .from('scripts')
-    .select('vote_score')
+    .select('author_id, subject_id')
     .eq('id', scriptId)
     .single()
 
-  if (scriptError || !script) {
-    return c.json({ error: 'Script not found' }, 404)
+  if (script?.author_id && script.subject_id) {
+    await revalidateCacheTags(
+      c.env,
+      scriptMutationTags({ id: scriptId, ...script })
+    )
+    await checkTotalScriptVotes(c, script.author_id)
   }
 
-  const { data: existingVote, error: voteLookupError } = await supabase
-    .from('votes')
-    .select('id')
-    .eq('user_id', user.id)
-    .eq('script_id', scriptId)
-    .maybeSingle()
-
-  if (voteLookupError) {
-    return c.json({ error: voteLookupError.message }, 500)
-  }
-
-  if (existingVote) {
-    const { error: deleteError } = await supabase
-      .from('votes')
-      .delete()
-      .eq('id', existingVote.id)
-
-    if (deleteError) {
-      return c.json({ error: deleteError.message }, 500)
-    }
-
-    const nextScore = Math.max(0, script.vote_score - 1)
-    const { error: scoreError } = await supabase
-      .from('scripts')
-      .update({ vote_score: nextScore })
-      .eq('id', scriptId)
-
-    if (scoreError) {
-      return c.json({ error: scoreError.message }, 500)
-    }
-
-    return c.json({ voted: false, vote_score: nextScore })
-  }
-
-  const { error: insertError } = await supabase.from('votes').insert({
-    user_id: user.id,
-    script_id: scriptId,
-    value: 1,
+  return c.json<{ voted: boolean; vote_score: number }>({
+    voted: data.voted,
+    vote_score: data.vote_score,
   })
-
-  if (insertError) {
-    return c.json({ error: insertError.message }, 500)
-  }
-
-  const nextScore = Math.max(0, script.vote_score + 1)
-  const { error: scoreError } = await supabase
-    .from('scripts')
-    .update({ vote_score: nextScore })
-    .eq('id', scriptId)
-
-  if (scoreError) {
-    return c.json({ error: scoreError.message }, 500)
-  }
-
-  return c.json({ voted: true, vote_score: nextScore })
 })
 
 export default votes

@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.5.12/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.13/schema.json",
   "assist": {
     "actions": {
       "source": {
@@ -63,6 +63,7 @@
     "enabled": true,
     "rules": {
       "complexity": {
+        "noExtraBooleanCast": "error",
         "noForEach": "off",
         "noVoid": "error"
       },
@@ -80,6 +81,18 @@
         "noUnusedVariables": "error",
         "useExhaustiveDependencies": "warn",
         "useHookAtTopLevel": "error"
+      },
+      "nursery": {
+        "noDuplicateFieldDefinitionNames": "error",
+        "noDuplicateSelectors": "off",
+        "noEmptyObjectKeys": "error",
+        "useReactCompiler": {
+          "level": "on",
+          "options": {
+            "compilationMode": "infer"
+          }
+        },
+        "useReactNamingConvention": "error"
       },
       "preset": "recommended",
       "style": {

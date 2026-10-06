@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievement_definitions: {
+        Row: {
+          created_at: string
+          description: string | null
+          entity_type: string
+          id: string
+          metric: string
+          threshold: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          entity_type: string
+          id: string
+          metric: string
+          threshold: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          entity_type?: string
+          id?: string
+          metric?: string
+          threshold?: number
+          title?: string
+        }
+        Relationships: []
+      }
       comment_likes: {
         Row: {
           comment_id: string
@@ -306,6 +336,47 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          data: Json | null
+          id: string
+          is_read: boolean
+          profile_id: string
+          title: string
+          type: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          data?: Json | null
+          id?: string
+          is_read?: boolean
+          profile_id: string
+          title: string
+          type: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          data?: Json | null
+          id?: string
+          is_read?: boolean
+          profile_id?: string
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'notifications_profile_id_fkey'
+            columns: ['profile_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       professor_faculties: {
         Row: {
           created_at: string
@@ -335,6 +406,58 @@ export type Database = {
             columns: ['professor_id']
             isOneToOne: false
             referencedRelation: 'professors'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      professor_ratings: {
+        Row: {
+          created_at: string
+          id: string
+          professor_id: string
+          rating_type_id: string
+          score: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          professor_id: string
+          rating_type_id: string
+          score: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          professor_id?: string
+          rating_type_id?: string
+          score?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'professor_ratings_professor_id_fkey'
+            columns: ['professor_id']
+            isOneToOne: false
+            referencedRelation: 'professors'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'professor_ratings_rating_type_id_fkey'
+            columns: ['rating_type_id']
+            isOneToOne: false
+            referencedRelation: 'rating_types'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'professor_ratings_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
             referencedColumns: ['id']
           },
         ]
@@ -393,6 +516,42 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_achievements: {
+        Row: {
+          achievement_id: string
+          earned_at: string
+          id: string
+          profile_id: string
+        }
+        Insert: {
+          achievement_id: string
+          earned_at?: string
+          id?: string
+          profile_id: string
+        }
+        Update: {
+          achievement_id?: string
+          earned_at?: string
+          id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'profile_achievements_achievement_id_fkey'
+            columns: ['achievement_id']
+            isOneToOne: false
+            referencedRelation: 'achievement_definitions'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'profile_achievements_profile_id_fkey'
+            columns: ['profile_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       profile_faculties: {
         Row: {
           created_at: string
@@ -420,6 +579,42 @@ export type Database = {
           {
             foreignKeyName: 'profile_faculties_profile_id_fkey'
             columns: ['profile_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      profile_restrictions: {
+        Row: {
+          created_at: string
+          profile_id: string
+          reason: string
+          restricted_by: string
+        }
+        Insert: {
+          created_at?: string
+          profile_id: string
+          reason: string
+          restricted_by: string
+        }
+        Update: {
+          created_at?: string
+          profile_id?: string
+          reason?: string
+          restricted_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'profile_restrictions_profile_id_fkey'
+            columns: ['profile_id']
+            isOneToOne: true
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'profile_restrictions_restricted_by_fkey'
+            columns: ['restricted_by']
             isOneToOne: false
             referencedRelation: 'profiles'
             referencedColumns: ['id']
@@ -497,7 +692,6 @@ export type Database = {
       }
       profiles: {
         Row: {
-          achievements: Json
           avatar_url: string | null
           created_at: string
           full_name: string | null
@@ -507,7 +701,6 @@ export type Database = {
           username: string
         }
         Insert: {
-          achievements?: Json
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
@@ -517,7 +710,6 @@ export type Database = {
           username: string
         }
         Update: {
-          achievements?: Json
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
@@ -525,6 +717,27 @@ export type Database = {
           role?: string
           updated_at?: string
           username?: string
+        }
+        Relationships: []
+      }
+      rating_types: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          target_type: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          label: string
+          target_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          target_type?: string
         }
         Relationships: []
       }
@@ -561,21 +774,60 @@ export type Database = {
           },
         ]
       }
+      script_files: {
+        Row: {
+          bucket: string
+          created_at: string
+          file_size_bytes: number
+          file_type: string
+          file_url: string
+          id: string
+          position: number
+          script_id: string
+        }
+        Insert: {
+          bucket: string
+          created_at?: string
+          file_size_bytes: number
+          file_type: string
+          file_url: string
+          id?: string
+          position?: number
+          script_id: string
+        }
+        Update: {
+          bucket?: string
+          created_at?: string
+          file_size_bytes?: number
+          file_type?: string
+          file_url?: string
+          id?: string
+          position?: number
+          script_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'script_files_script_id_fkey'
+            columns: ['script_id']
+            isOneToOne: false
+            referencedRelation: 'scripts'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       scripts: {
         Row: {
           additional_reading: string[]
           author_id: string
           created_at: string
-          description: string | null
+          description: Json | null
           download_count: number
           exam_session: string | null
-          file_type: string
-          file_url: string
           id: string
           is_flagged: boolean
           professor_id: string
           subject_id: string
-          title: string
+          title: Json
           updated_at: string
           vote_score: number
         }
@@ -583,16 +835,14 @@ export type Database = {
           additional_reading?: string[]
           author_id: string
           created_at?: string
-          description?: string | null
+          description?: Json | null
           download_count?: number
           exam_session?: string | null
-          file_type: string
-          file_url: string
           id?: string
           is_flagged?: boolean
           professor_id: string
           subject_id: string
-          title: string
+          title: Json
           updated_at?: string
           vote_score?: number
         }
@@ -600,16 +850,14 @@ export type Database = {
           additional_reading?: string[]
           author_id?: string
           created_at?: string
-          description?: string | null
+          description?: Json | null
           download_count?: number
           exam_session?: string | null
-          file_type?: string
-          file_url?: string
           id?: string
           is_flagged?: boolean
           professor_id?: string
           subject_id?: string
-          title?: string
+          title?: Json
           updated_at?: string
           vote_score?: number
         }
@@ -699,6 +947,58 @@ export type Database = {
           },
         ]
       }
+      subject_ratings: {
+        Row: {
+          created_at: string
+          id: string
+          rating_type_id: string
+          score: number
+          subject_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          rating_type_id: string
+          score: number
+          subject_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          rating_type_id?: string
+          score?: number
+          subject_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'subject_ratings_rating_type_id_fkey'
+            columns: ['rating_type_id']
+            isOneToOne: false
+            referencedRelation: 'rating_types'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'subject_ratings_subject_id_fkey'
+            columns: ['subject_id']
+            isOneToOne: false
+            referencedRelation: 'subjects'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'subject_ratings_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       subjects: {
         Row: {
           created_at: string
@@ -736,18 +1036,21 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          r2_bucket_id: string | null
           sanity_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
+          r2_bucket_id?: string | null
           sanity_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
+          r2_bucket_id?: string | null
           sanity_id?: string | null
         }
         Relationships: []
@@ -796,7 +1099,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      is_admin: { Args: { uid: string }; Returns: boolean }
       is_moderator: { Args: { uid: string }; Returns: boolean }
+      is_restricted: { Args: { uid: string }; Returns: boolean }
+      toggle_vote: {
+        Args: { p_script_id: string }
+        Returns: {
+          vote_score: number
+          voted: boolean
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

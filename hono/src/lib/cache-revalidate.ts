@@ -1,11 +1,11 @@
 import { scriptMutationTags } from '../../../shared/config/cache-tags'
 import type { HonoEnv } from '../types/env.types'
 
-/** Best-effort call to the Next.js revalidate route so cached script fetches
- * pick up create/update/delete changes. Failures are logged, not thrown, so a
- * revalidation hiccup never fails the underlying script mutation.
+/** Best-effort call to the Next.js revalidate route so cached public reads
+ * pick up their backing-data changes. Failures are logged, not thrown, so a
+ * revalidation hiccup never fails the underlying mutation.
  */
-export async function revalidateScriptTags(
+export async function revalidateCacheTags(
   env: HonoEnv['Bindings'],
   tags: Array<string>
 ) {
@@ -25,7 +25,7 @@ export async function revalidateScriptTags(
     })
   } catch (error) {
     // biome-ignore lint/suspicious/noConsole: surfacing revalidation failures for ops visibility
-    console.error('Failed to revalidate script cache tags', error)
+    console.error('Failed to revalidate cache tags', error)
   }
 }
 

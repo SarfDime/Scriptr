@@ -1,44 +1,30 @@
 'use client'
 
-import type { SanityImageSource } from '@sanity/image-url'
 import { IMAGE_QUALITY } from '@shared/config/next-constants'
+import type { SanityImageType } from '@shared/types/sanity-transform.types'
 import Image, { type ImageProps } from 'next/image'
 import { useState } from 'react'
 import type { SkeletonBoxProps } from '@/types/components/Skeleton.types'
-import { cn, urlFor } from '../../lib/common-utils'
 import type {
   ImageObjectFitType,
   ImageObjectPositionType,
-} from '../../types/common.types'
+} from '../../../shared/types/common.types'
+import { cn, urlFor } from '../../lib/common-utils'
 import { Skeleton } from '../ui/skeleton/Skeleton'
 
 export type NextImageProps = {
-  alt?: string
   src?: string
   className?: string
-  asset?: SanityImageSource
-  crop?: {
-    top: number
-    bottom: number
-    left: number
-    right: number
-  }
-  hotspot?: {
-    x: number
-    y: number
-    height: number
-    width: number
-  }
   fillProp?: boolean
   priority?: boolean
   objectFitProp?: ImageObjectFitType
   objectPositionProp?: ImageObjectPositionType
   imageProps?: Omit<ImageProps, 'src' | 'alt'>
-  cornerRadius?: number
-  rounded?: number
   isLoadingExt?: boolean
   sizes?: ImageProps['sizes']
-} & Omit<SkeletonBoxProps, 'src' | 'alt'> & { quality?: ImageProps['quality'] }
+} & Omit<SkeletonBoxProps, 'src' | 'alt'> & {
+    quality?: ImageProps['quality']
+  } & Partial<SanityImageType>
 
 /** `NextImage` - Renders an image with optional skeleton loading and custom styling.
  *
@@ -60,8 +46,6 @@ export function NextImage({
   objectPositionProp,
   objectFitProp,
   imageProps,
-  cornerRadius,
-  rounded,
   asset,
   crop,
   hotspot,
@@ -79,14 +63,10 @@ export function NextImage({
           loading={isLoadingExt ?? isLoading}
           {...rest}
           className={cn(
-            `relative z-0 h-full w-full ${!isLoadingExt && !isLoading && 'rounded-none'}`,
+            `relative h-full ${!isLoadingExt && !isLoading && 'rounded-none'}`,
             priority && 'before:duration-500',
-            className,
-            rounded && cornerRadius && 'roundedImage'
+            className
           )}
-          style={{
-            '--cornerRadius': rounded ? `${cornerRadius}%` : '0',
-          }}
         >
           <Image
             {...imageProps}

@@ -19,11 +19,17 @@ const contentSchemas: Array<ChildSchemaType> = [
     category: 'content',
     icon: InfoOutlineIcon,
   },
+  {
+    title: 'Star Canvas',
+    schemaType: 'starCanvas',
+    category: 'content',
+    icon: InfoOutlineIcon,
+  },
 ]
 
 // People & Social
 const peopleSchemas: Array<ChildSchemaType> = [
-  { title: 'Person', schemaType: 'person', category: 'people', icon: UserIcon },
+  { title: 'Person', schemaType: 'person', category: 'people', icon: UserIcon }, // TODO: Sort people in the tool based on which academic field they belong to
 ]
 
 /** Custom structure tool for miscellaneous schema types.

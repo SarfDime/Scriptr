@@ -2,6 +2,7 @@ import './styles/main.css'
 
 import { dashboardTool } from '@sanity/dashboard'
 import { visionTool } from '@sanity/vision'
+import { ACADEMIC_TYPES, type AcademicEntityType } from '@shared/config/api'
 import { defineConfig } from 'sanity'
 import { presentationTool } from 'sanity/presentation'
 import { structureTool } from 'sanity/structure'
@@ -10,9 +11,10 @@ import { media } from 'sanity-plugin-media'
 import { mermaidContentModel } from 'sanity-plugin-mermaid-content-model'
 import { references } from 'sanity-plugin-references'
 import { smartAssetManager } from 'sanity-plugin-smart-asset-manager'
-import type { AcademicEntityType } from './actions/academicEntitySync'
 import {
   createCheckedDeleteAction,
+  createCheckedPublishAction,
+  createDeleteInDatabaseAction,
   createInDatabaseAction,
   syncWithDatabaseAction,
 } from './actions/academicEntitySync'
@@ -85,34 +87,36 @@ export default defineConfig({
     }),
   ],
   document: {
-    comments: {
-      enabled: false,
-    },
     actions: (prev, context) => {
-      const academicEntityTypes: Record<string, AcademicEntityType> = {
-        university: 'university',
-        faculty: 'faculty',
-        professor: 'professor',
-        subject: 'subject',
-        study: 'study',
+      if (!ACADEMIC_TYPES.includes(context.schemaType as AcademicEntityType)) {
+        return prev
       }
-      const entityType = academicEntityTypes[context.schemaType]
 
-      const mapped = prev?.map((originalAction) => {
-        if (originalAction?.action === 'duplicate') return CustomDuplicateAction
-        if (entityType && originalAction?.action === 'delete') {
-          return createCheckedDeleteAction(entityType)
-        }
-        return originalAction
-      })
+      const entityType = context.schemaType as AcademicEntityType
 
-      return entityType
-        ? [
-            ...mapped,
-            createInDatabaseAction(entityType),
-            syncWithDatabaseAction(entityType),
-          ]
-        : mapped
+      const originalPublish = prev.find((action) => action.action === 'publish')
+
+      const checkedPublish = originalPublish
+        ? createCheckedPublishAction(originalPublish)
+        : null
+      const createInDb = createInDatabaseAction(entityType)
+      const syncWithDb = syncWithDatabaseAction(entityType)
+      const checkedDelete = createCheckedDeleteAction(entityType)
+      const deleteInDb = createDeleteInDatabaseAction(entityType)
+      const customDuplicate = CustomDuplicateAction
+
+      // - When dbId is missing: `createInDb` is index 0 -> renders as the Main Button.
+      // - When dbId exists: `createInDb` returns null, so `publish` becomes index 0 -> renders as the Main Button.
+      return [
+        createInDb,
+        checkedPublish,
+        syncWithDb,
+        checkedDelete,
+        deleteInDb,
+        customDuplicate,
+      ].filter((action): action is NonNullable<typeof action> =>
+        Boolean(action)
+      )
     },
   },
   releases: {

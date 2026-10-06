@@ -42,7 +42,12 @@ export function InputWrapper({
     <Field {...rest}>
       <Box
         {...wrapperProps}
-        className={cn('relative flex w-full', wrapperProps?.className)}
+        className={cn(
+          'relative flex w-full overflow-hidden',
+          'bg-background-200 placeholder:text-fg-50 ring-grey-400 group-data-invalid/field:ring-error-red group-data-valid/field:ring-brand-200',
+          'rounded-md h-10 grow w-full ring-1 px-2 focus-within:ring-brand',
+          wrapperProps?.className
+        )}
       >
         {children}
         <input
@@ -52,14 +57,14 @@ export function InputWrapper({
           onClick={inputOnClick}
           maxLength={inputProps?.maxLength ?? INPUT_MAX_LENGTH}
           className={cn(
-            'focus-visible:outline-none focus-visible:ring-brand',
+            'focus-visible:outline-none grow',
             inputProps?.className
           )}
         />
 
         {inputClearButton && inputVal !== '' && (
           <Button
-            className='absolute top-0 right-0 bottom-0 h-full rounded-none px-2 opacity-70 hover:bg-gray-100 hover:opacity-100'
+            className='button absolute top-0 right-0 bottom-0 h-full rounded-none px-2 opacity-70 hover:bg-gray-100 hover:opacity-100'
             onClick={inputOnClear}
             icon={<CloseIcon />}
             type='button'

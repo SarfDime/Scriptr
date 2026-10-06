@@ -3,20 +3,21 @@
 }
 
 .rich-text-lite {
-  height: 7rem;
+  height: 15rem;
   position: relative;
   overflow: hidden;
   width: 100%;
 
   span,
   div {
-    max-height: 7rem;
+    max-height: 15rem;
   }
 }
 
 [data-pt-editor="true"] {
   > [data-pt-block] {
-    max-width: unset;
+    /* biome-ignore lint/complexity/noImportantStyles: <Needed> */
+    max-width: unset !important;
   }
 }
 

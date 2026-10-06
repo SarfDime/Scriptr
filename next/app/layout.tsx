@@ -2,18 +2,29 @@ import type { Metadata } from 'next'
 import { Bricolage_Grotesque } from 'next/font/google'
 import localFont from 'next/font/local'
 import { NavBar } from '@/components/navigation/Navbar'
-import { ThemeProvider } from '../providers/theme/ThemeProvider'
 
 import './globals.css'
 import { draftMode } from 'next/headers'
 import { VisualEditing } from 'next-sanity/visual-editing'
+import { MainLayout } from '@/components/layout/PageLayout'
+import { NotificationsAside } from '@/components/notifications/NotificationsAside'
+import { OnboardingModal } from '@/components/onboarding/OnboardingModal'
 import { DisableDraft } from '@/components/ui/DisableDraft'
+import {
+  CustomStarCanvas,
+  type StarCanvasSanityData,
+} from '@/components/ui/StarCanvas'
+import { ToastContainer } from '@/components/ui/toast/ToastContainer'
 import { isStaging } from '@/config/env'
 import { getDraftMode } from '@/lib/common-utils'
 import { SanityLive } from '@/sanity/lib/live'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { navMenuQuery } from '@/sanity/queries/nav.queries'
+import { onboardingCatalogQuery } from '@/sanity/queries/onboarding.queries'
+import { starCanvasQuery } from '@/sanity/queries/website.queries'
 import type { NavMenuType } from '@/types/components/Nav.types'
+import type { OnboardingCatalog } from '@/types/onboarding.types'
+import { Providers } from './providers'
 
 const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],
@@ -123,9 +134,10 @@ const antiqueOliveCond = localFont({
   ],
   variable: '--font-antique-olive-cond',
   display: 'swap',
-})
+}) // TODO: Clean up this file factor out the font stuff
 
 export const metadata: Metadata = {
+  // TODO: Use generateMetadata with data from sanity
   title: 'Scriptr',
   description: 'A platform for students to share and discover study materials.',
 }
@@ -141,18 +153,32 @@ export default async function RootLayout({
   })
   const isDraft = await getDraftMode(draftMode)
 
+  const catalog = await fetchSanityData<OnboardingCatalog>({
+    query: onboardingCatalogQuery,
+    fetchOrigin: `onboardingCatalog(layout)`,
+  })
+
+  const starCanvasConfig = await fetchSanityData<StarCanvasSanityData>({
+    query: starCanvasQuery,
+    fetchOrigin: `starCanvasConfig(layout)`,
+  })
+
   return (
     <html
       lang='en'
       data-scroll-behavior='smooth'
       className={`${antiqueOlive.variable} ${antiqueOliveCond.variable} ${matter.variable} ${bricolage.variable} antialiased`}
     >
-      <body // Apply all CSS variables to the root HTML element
-      >
-        <ThemeProvider>
+      {/* TODO: Implement body scroll lock here or something */}
+      <body>
+        <Providers catalog={catalog}>
+          <ToastContainer />
+          <CustomStarCanvas sanityData={starCanvasConfig} />
           <NavBar {...navMenu} />
-          {children}
-        </ThemeProvider>
+          <MainLayout>{children}</MainLayout>
+          <NotificationsAside />
+          <OnboardingModal catalog={catalog} />
+        </Providers>
         {isStaging && <SanityLive />}
         {isDraft && isStaging && (
           <>

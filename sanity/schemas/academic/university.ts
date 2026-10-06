@@ -1,13 +1,12 @@
 import EarthGlobeIcon from '@sanity/icons/EarthGlobe'
-import type { Rule } from 'sanity'
 import { defineType } from 'sanity'
 import {
-  academicDescriptionField,
-  academicNameField,
-  academicSlugField,
-  databaseIdField,
+  academicFields,
+  academicGrouping,
+  academicPreview,
 } from '../common/academicFields'
-import { customLinkField } from '../common/customLink'
+
+const ENTITY = 'university'
 
 export const University = defineType({
   // Editorial record for a university; the runtime identity lives in Postgres, linked via dbId.
@@ -15,45 +14,26 @@ export const University = defineType({
   title: 'University',
   type: 'document',
   icon: EarthGlobeIcon,
-  preview: {
-    select: { title: 'name', subtitle: 'dbId' },
-    prepare: ({ title, subtitle }) => ({
-      title,
-      subtitle: subtitle ? `DB: ${subtitle}` : 'Not linked to database',
-    }),
-  },
-  fieldsets: [
-    {
-      name: 'information',
-      title: 'Information',
-      description: 'General information for the university.',
-    },
-    {
-      name: 'contactInfo',
-      title: 'Contact Information',
-      description: 'Contact details for the university.',
-    },
-    {
-      name: 'administration',
-      title: 'Administration',
-      description: 'Administrative details for the university.',
-    },
-    {
-      name: 'database',
-      title: 'Database',
-      description: 'Database details for the university.',
-    },
-  ],
+  ...academicPreview({
+    icon: EarthGlobeIcon,
+    pictureField: 'logo',
+  }),
+  ...academicGrouping(ENTITY),
   fields: [
-    academicNameField({ fieldset: 'information' }),
-    academicDescriptionField({ fieldset: 'information' }),
-    academicSlugField(),
+    ...academicFields(ENTITY, [
+      'logo',
+      'picture',
+      'name',
+      'slug',
+      'description',
+    ]),
     {
       name: 'rector',
       title: 'Rector',
       type: 'reference',
       to: [{ type: 'person' }],
       fieldset: 'administration',
+      group: 'administration',
     },
     {
       name: 'viceRectors',
@@ -66,33 +46,29 @@ export const University = defineType({
         },
       ],
       fieldset: 'administration',
+      group: 'administration',
     },
-    customLinkField({
-      name: 'streetAddress',
-      title: 'Street Address Link',
+    ...academicFields(ENTITY, [
+      'streetAddress',
+      'telephone',
+      'email',
+      'website',
+    ]),
+    {
+      name: 'r2BucketId',
+      title: 'R2 Bucket ID',
       description:
-        'Enter a map URL or an internal path for this university address.',
-      fieldset: 'contactInfo',
-    }),
-    {
-      name: 'telephone',
-      title: 'Telephone',
+        "Cloudflare R2 bucket used for this university's file storage. Must be an existing bucket name.",
       type: 'string',
-      fieldset: 'contactInfo',
+      validation: (rule) =>
+        rule
+          .regex(/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/, {
+            name: 'r2 bucket name',
+          })
+          .warning('Should follow S3/R2 bucket naming rules'),
+      fieldset: 'database',
+      group: 'database',
     },
-    {
-      name: 'email',
-      title: 'Email',
-      type: 'string',
-      validation: (rule: Rule) => rule.email(),
-      fieldset: 'contactInfo',
-    },
-    customLinkField({
-      name: 'website',
-      title: 'Website',
-      description: 'Enter the university website URL.',
-      fieldset: 'contactInfo',
-    }),
-    databaseIdField({ fieldset: 'database' }),
+    ...academicFields(ENTITY, ['dbId']),
   ],
 })

@@ -5,11 +5,6 @@
     @apply text-brand font-semibold underline;
   }
 
-  br {
-    display: block;
-    @apply mt-0.5 md:mt-1;
-  }
-
   p:has(+ ul) {
     @apply mt-4;
   }
@@ -18,20 +13,8 @@
     @apply inline h-6 w-6 md:h-8 md:w-8 xl:h-10 xl:w-10;
   }
 
-  :is(h1, h2, h3, h4, h5, h6) {
-    @apply text-fg-700;
-  }
-
   :is(ul, ol) {
     @apply my-4 pl-6;
-  }
-
-  ul {
-    @apply list-disc;
-  }
-
-  ol {
-    @apply list-decimal;
   }
 
   blockquote {
@@ -42,6 +25,9 @@
 @utility font-size-xs {
   @apply text-[0.5rem] sm:text-xs md:text-sm lg:text-base xl:text-lg;
 }
+
+@source inline("font-size-{sm,md,lg,xl,2xl,3xl}");
+
 @utility font-size-sm {
   @apply text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl;
 }

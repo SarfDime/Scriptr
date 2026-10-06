@@ -70,11 +70,12 @@ export const customStructureTool = (build: StructureToolTypes['Build']) =>
         .title('Miscellaneous')
         .child(buildMiscellaneousStructure(build)),
 
-      build.divider().title('Misc Content'),
+      build.divider().title('Academic Sections'),
 
-      build
-        .listItem()
-        .icon(createColoredIcon(BlockElementIcon, 'sections'))
-        .title('Academic')
-        .child(buildAcademicStructure(build)),
+      // build
+      //   .listItem()
+      //   .icon(createColoredIcon(BlockElementIcon, 'sections'))
+      //   .title('Academic')
+      //   .child(buildAcademicStructure(build)),
+      ...buildAcademicStructure(build),
     ])

@@ -1,38 +1,31 @@
+import type { PortableTextValue } from '@shared/types/portable-text.types'
+import type {
+  MinimalSubjectQueryTypedResult,
+  SubjectByIdQueryResult,
+  SubjectDetailQueryResult,
+  SubjectPathQueryResult,
+} from '@shared/types/sanity.types'
+import type { WithResolvedSanityData } from '@shared/types/sanity-transform.types'
 import type { BoxProps } from '@/components/common/Box'
-import type { PortableTextType } from '../components/PortableText.types'
-import type { MinimalEntity, RelatedStudy } from './academics.types'
-import type { MinimalProfessor, ProfessorDetail } from './professor.types'
 
-export type SubjectExamSession = 'january' | 'june' | 'september'
-export type SubjectSemester = 'winter' | 'summer'
+export type MinimalSubject = NonNullable<
+  WithResolvedSanityData<MinimalSubjectQueryTypedResult>
+>
 
-export type SubjectBasicInfo = {
-  year: number
-  code?: string
-  credits?: number
-  semester?: SubjectSemester
-}
+export type SubjectDetail = NonNullable<
+  WithResolvedSanityData<SubjectDetailQueryResult>
+>
 
-export type MinimalSubject = MinimalEntity & {
-  study?: RelatedStudy
-  professors?: Array<Pick<MinimalProfessor, '_id' | 'name' | 'title'>>
-} & SubjectBasicInfo
+export type SubjectById = NonNullable<
+  WithResolvedSanityData<SubjectByIdQueryResult>
+>
 
-export type SubjectDetail = Omit<MinimalSubject, 'professors' | 'study'> & {
-  _type: 'subject'
-  description?: PortableTextType
-  syllabus?: string
-  study?: RelatedStudy
-
-  professors?: Array<
-    Pick<
-      ProfessorDetail,
-      '_id' | 'name' | 'dbId' | 'title' | 'picture' | 'email'
-    >
-  >
-}
+/** Slugs of a subject and its ancestors — just enough to build its page path. */
+export type SubjectPath = NonNullable<
+  WithResolvedSanityData<SubjectPathQueryResult>
+>
 
 export type SubjectsSidebarProps = Omit<BoxProps, 'content' | 'as'> & {
   subjects: Array<MinimalSubject>
-  content: PortableTextType
+  content: PortableTextValue
 }

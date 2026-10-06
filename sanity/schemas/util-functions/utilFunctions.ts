@@ -66,16 +66,14 @@ export const flattenFirstRichTextBlock = (
 export const sanitizeSlug = (slug?: string) => {
   if (!slug) return ''
 
-  const sanitizedInput = slug?.replaceAll(/[^a-zA-Z0-9\s]/g, '')
-
-  const sanitizedSlug = sanitizedInput
-    ?.toLowerCase()
-    ?.replaceAll(/\s+/g, '-')
-    ?.slice(0, 60)
-
-  return sanitizedSlug?.endsWith('-')
-    ? sanitizedSlug?.slice(0, -1)
-    : sanitizedSlug
+  return slug
+    .replaceAll(/[-_]+/g, ' ') // treat hyphens/underscores as word separators
+    .replaceAll(/[^a-zA-Z0-9\s]/g, '') // strip everything else that isn't alphanumeric or space
+    .toLowerCase()
+    .trim()
+    .replaceAll(/\s+/g, '-') // collapse any whitespace runs into a single hyphen
+    .slice(0, 60)
+    .replace(/-$/, '') // strip a trailing hyphen left by the slice
 }
 
 /**
@@ -283,4 +281,27 @@ export function isExternalLink(link: string) {
     link?.includes('tel:') ||
     link?.startsWith('mailto:')
   )
+}
+
+/** Converts a Sanity image ID into a URL. */
+export function convertImageIdToUrl(imageId?: string) {
+  if (!imageId) return ''
+  const projectId = 'REDACTED_SANITY_PROJECT_ID' // TODO: Replace with constant from environment or config, along with every occurrence
+  const dataset = 'production' // TODO: Replace with constant from environment or config
+
+  if (!imageId?.startsWith('image-')) {
+    throw new Error('Invalid image ID format')
+  }
+
+  // Remove the 'image-' prefix
+  const assetId = imageId?.replace('image-', '')
+
+  // Replace the last '-' before the extension with a '.'
+  const lastDashIndex = assetId.lastIndexOf('-')
+  const formattedAssetId = `${assetId.substring(
+    0,
+    lastDashIndex
+  )}.${assetId.substring(lastDashIndex + 1)}`
+
+  return `https://cdn.sanity.io/images/${projectId}/${dataset}/${formattedAssetId}`
 }

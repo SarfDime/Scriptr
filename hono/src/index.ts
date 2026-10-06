@@ -9,16 +9,22 @@ import favorites from './routes/favorites'
 import fileOps from './routes/file-ops'
 import flags from './routes/flags'
 import internal from './routes/internal'
+import notifications from './routes/notifications'
 import professors from './routes/professors'
+import profileFaculties from './routes/profile-faculties'
+import profileStudies from './routes/profile-studies'
 import profileSubjects from './routes/profile-subjects'
 import profiles from './routes/profiles'
+import ratings from './routes/ratings'
+import restrictions from './routes/restrictions'
 import scripts from './routes/scripts'
+import studies from './routes/studies'
 import subjects from './routes/subjects'
 import universities from './routes/universities'
 import votes from './routes/votes'
 import type { HonoEnv } from './types/env.types'
 
-export const app = new Hono<HonoEnv>()
+export const app = new Hono<HonoEnv>().basePath('/api')
 
 app.use('*', async (c, next) => {
   c.env = process.env as unknown as HonoEnv['Bindings']
@@ -51,6 +57,7 @@ app.use(
       'Content-Type',
       'Authorization',
       'X-Client-Info',
+      'X-Device-Id',
       'X-Internal-Secret',
     ],
     exposeHeaders: ['Content-Length', 'X-Request-Id'],
@@ -59,22 +66,26 @@ app.use(
   })
 )
 
-app.route('/api/auth', auth)
-// Catalog routes (universities/faculties/professors/subjects) are admin-managed
-// and require the x-internal-secret header; they are not public despite the mount path.
-app.route('/api/universities', universities)
-app.route('/api/faculties', faculties)
-app.route('/api/professors', professors)
-app.route('/api/subjects', subjects)
-app.route('/api/file-ops', fileOps)
-app.route('/api/scripts', scripts)
-app.route('/api/votes', votes)
-app.route('/api/comments', comments)
-app.route('/api/flags', flags)
-app.route('/api/favorites', favorites)
-app.route('/api/profiles', profiles)
-app.route('/api/profile-subjects', profileSubjects)
-app.route('/api/internal', internal)
+app.route('/auth', auth)
+app.route('/universities', universities)
+app.route('/faculties', faculties)
+app.route('/studies', studies)
+app.route('/professors', professors)
+app.route('/subjects', subjects)
+app.route('/file-ops', fileOps)
+app.route('/scripts', scripts)
+app.route('/votes', votes)
+app.route('/comments', comments)
+app.route('/flags', flags)
+app.route('/favorites', favorites)
+app.route('/profiles', profiles)
+app.route('/profile-subjects', profileSubjects)
+app.route('/profile-studies', profileStudies)
+app.route('/profile-faculties', profileFaculties)
+app.route('/notifications', notifications)
+app.route('/ratings', ratings)
+app.route('/restrictions', restrictions)
+app.route('/internal', internal)
 
 app.get('/', (c) =>
   c.json({
@@ -103,7 +114,5 @@ app.onError((err, c) => {
 app.notFound((c) => {
   return c.json({ error: 'Route not found' }, 404)
 })
-
-export type AppType = typeof app
 
 export default handle(app)

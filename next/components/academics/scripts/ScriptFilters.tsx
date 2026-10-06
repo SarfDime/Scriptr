@@ -20,13 +20,20 @@ export const ScriptFilters = ({
   onSubjectChange,
   onSortChange,
 }: ScriptFiltersProps) => {
-  const iconClass = 'rounded-md w-6 h-6'
-  const subjectOptions: Array<SelectOptionType<string>> = [
+  const iconClass = 'rounded-md'
+  const subjectOptions: Array<SelectOptionType> = [
     {
       id: 'all-subjects',
       label: UI_STRINGS.scripts.filters.allSubjects,
       value: '',
-      icon: <Documents className={cn(`cp-sky`, iconClass)} />,
+      icon: (
+        <Documents
+          className={cn(
+            getColorPalette({ value: '', type: 'seed' }),
+            iconClass
+          )}
+        />
+      ),
     },
     ...subjects.map((item) => ({
       id: `subject-${item}`,
@@ -58,9 +65,9 @@ export const ScriptFilters = ({
   ]
 
   return (
-    <Box className='ui-cluster gap-2'>
+    <Box className='ui-cluster gap-2 grow xxl:grow-0'>
       <Select
-        className='w-auto h-full bg-background-200'
+        className='w-auto grow bg-background-200'
         defaultOption={
           subjectOptions.find((option) => option.value === subject) ??
           subjectOptions[0]
@@ -87,7 +94,7 @@ export const ScriptFilters = ({
         }}
       />
       <Select<ScriptSortOption>
-        className='w-auto h-full bg-background-200'
+        className='w-auto grow bg-background-200'
         defaultOption={
           sortOptions.find((option) => option.value === sort) ?? sortOptions[0]
         }

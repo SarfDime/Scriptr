@@ -24,7 +24,10 @@ export const DetailLink = ({
       {(label || value) && (
         <NextLink
           href={href}
-          className={cn('group ui-stack gap-0.5 w-fit text-brand', className)}
+          className={cn(
+            'group ui-stack gap-0.5 w-fit text-brand bg-transparent!',
+            className
+          )}
           {...rest}
         >
           {label && (

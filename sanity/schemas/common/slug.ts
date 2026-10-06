@@ -1,5 +1,4 @@
-import type { Rule } from 'sanity'
-
+import { defineField, type SlugRule } from 'sanity'
 import { slugifyString } from '../util-functions/utilFunctions'
 import { validationRules } from '../validation'
 
@@ -26,7 +25,7 @@ export function slugSchemaField({
   group,
   fieldset,
 }: SlugProps) {
-  return {
+  return defineField({
     title: title ?? 'Section Path',
     name: name ?? 'slug',
     type: 'slug',
@@ -37,9 +36,9 @@ export function slugSchemaField({
       'A URL-friendly version of the section title used to create a link to the section',
     options: {
       source: source ?? 'title',
-      slugify: slugifyString,
+      slugify: slugifyString as unknown as (input: string) => string,
     },
-    validation: (rule: Rule) =>
+    validation: (rule: SlugRule) =>
       validationRules.slugValidation(rule, isRequired),
-  }
+  })
 }

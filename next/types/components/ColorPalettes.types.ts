@@ -1,4 +1,3 @@
-// If they all need to start with 'cp-', let's use a cleaner union and a mapped/template approach:
 type ColorName =
   | 'red'
   | 'green'
@@ -17,11 +16,9 @@ type ColorName =
 type ColorPaletteVariant = 'nb' | 'int'
 type ColorPaletteClass = `cp-${ColorName}`
 
-// Corrected template literal unions for variants
 type PalettesNB = `${ColorPaletteClass}-${ColorPaletteVariant & 'nb'}`
 type PalettesINT = `${ColorPaletteClass}-${ColorPaletteVariant & 'int'}`
 
-// Or cleaner yet, combining them directly:
 type PalettesWithVariant = `${ColorPaletteClass}-${ColorPaletteVariant}`
 
 type ComponentColorPalettes = ColorPaletteClass | PalettesWithVariant

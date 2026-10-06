@@ -1,408 +1,539 @@
 # API Testing Guide
 
-Hono API on **http://localhost:8787**. Start it from the repo root:
+A self-contained walkthrough: create every piece of test data from scratch,
+exercise every route against it, then tear it all down. No pre-loaded seed
+required — every ID used later is captured from an earlier response.
+
+Run each block in order from a shell with `curl` and `jq`. Start the API
+first:
 
 ```bash
 npm run dev:hono
+BASE=http://localhost:8787/api
 ```
 
-IDs in this database are **UUIDs**. Slug IDs like `univ-001` / `fac-001` are not valid and will 404 (or 500 on UUID columns).
+`INTERNAL_API_SECRET` must be set in `hono/.env` (restart the server after
+adding it) — every catalog route needs it:
+
+```bash
+SECRET=<value of INTERNAL_API_SECRET>
+```
+
+IDs are UUIDs. Slug-style IDs will 404 or 500 — there's no fallback.
 
 ---
 
-## Health
+## Phase 1 — Build the catalog
+
+Each entity is created, then immediately re-fetched — with nothing else in
+the database yet, a bad create or a broken embed is obvious immediately.
 
 ```bash
-curl http://localhost:8787/
-```
+# University
+UNI=$(curl -s -X POST $BASE/internal/universities \
+  -H "x-internal-secret: $SECRET" -H "Content-Type: application/json" \
+  -d '{"name":"Test University"}' | jq -r '.university.id')
 
-```json
-{
-  "status": "ok",
-  "service": "Faculty Scripts API",
-  "version": "1.0.0"
-}
-```
-
----
-
-## Auth (cookies, not Bearer)
-
-Protected routes use `authMiddleware`, which calls `supabase.auth.getUser()` against the **`sb-auth-token` HttpOnly cookie**. Sending `Authorization: Bearer <access_token>` is ignored and returns `401 {"error":"Not authenticated"}`.
-
-Use a cookie jar:
-
-```bash
-# Login with a local test account and save the session cookie
-curl -c cookies.txt -X POST http://localhost:8787/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email":"<local-test-email>",
-    "password":"<local-test-password>"
-  }' | jq '{success, user: {id: .user.id, email: .user.email}}'
-```
-
-The JSON body still includes `session.access_token` / `refresh_token`. Those are for `POST /api/auth/refresh` only, not for `Authorization` headers.
-
-Create a local test account through Supabase Auth or the register endpoint.
-Do not commit its password, session cookie, or access token.
-
-### Current session (GET /api/auth/session)
-
-There is **no** `GET /api/auth/me`.
-
-```bash
-curl -b cookies.txt http://localhost:8787/api/auth/session | jq .
-```
-
-Returns `user` with `id`, `email`, `username`, `role`, `subjects`, and `selected_faculty_ids`. Unauthenticated: `{ "user": null, "session": null }`.
-
-### Logout / refresh
-
-```bash
-curl -b cookies.txt -c cookies.txt -X POST http://localhost:8787/api/auth/logout | jq .
+curl -s $BASE/universities -H "x-internal-secret: $SECRET" | jq '.[] | {id, name}'
+curl -s $BASE/universities/$UNI -H "x-internal-secret: $SECRET" | jq '{id, name, faculties, r2_bucket_id}'
 ```
 
 ```bash
-curl -X POST http://localhost:8787/api/auth/refresh \
-  -H "Content-Type: application/json" \
-  -d '{"refresh_token":"<from login session>"}' | jq .
+# University update + sync (what the Studio "Sync with Database" action calls)
+curl -s -X PATCH $BASE/internal/universities/$UNI \
+  -H "x-internal-secret: $SECRET" -H "Content-Type: application/json" \
+  -d '{"name":"Test University (renamed)"}' | jq .
+curl -s -X POST $BASE/internal/universities/$UNI/sync \
+  -H "x-internal-secret: $SECRET" -H "Content-Type: application/json" \
+  -d '{"name":"Test University"}' | jq .
+
+# Invalid bucket name is rejected (must match S3/R2 naming rules) — expect 400
+curl -s -X PATCH $BASE/internal/universities/$UNI \
+  -H "x-internal-secret: $SECRET" -H "Content-Type: application/json" \
+  -d '{"r2_bucket_id":"Bad_Bucket"}' | jq .
 ```
 
-### Register (POST /api/auth/register)
+```bash
+# Faculty
+FAC=$(curl -s -X POST $BASE/internal/faculties \
+  -H "x-internal-secret: $SECRET" -H "Content-Type: application/json" \
+  -d "{\"name\":\"Test Faculty\",\"university_id\":\"$UNI\"}" | jq -r '.faculty.id')
 
-Requires `email`, `password`, `username`, `full_name`.
+curl -s $BASE/faculties -H "x-internal-secret: $SECRET" | jq '.[] | {id, name, subject_count, professor_count}'
+curl -s $BASE/faculties/$FAC -H "x-internal-secret: $SECRET" | jq '{id, name, university, studies, professors}'
 
----
-
-## Seed IDs (live)
-
-From the loaded seed. Re-fetch lists if your database was reseeded.
-
-### Universities (3)
-
-| Name                     | ID                                     |
-| ------------------------ | -------------------------------------- |
-| University of Technology | `ea820b10-8c0d-5922-8c32-0e205c3b3b57` |
-| State University         | `b230e48c-cbc9-5f06-8a24-ef74069269ac` |
-| Private Institute        | `d22140e4-736d-5cbb-826f-e7520152d44d` |
-
-### Faculties (5)
-
-| Name             | ID                                     | University               |
-| ---------------- | -------------------------------------- | ------------------------ |
-| Computer Science | `968000e6-7666-5f9e-9f0e-1634190f176a` | University of Technology |
-| Engineering      | `f416f208-84ca-5a1d-b017-44d3649a4ee4` | University of Technology |
-| Business         | `2010ec4e-a8d8-56d2-a386-8624089c9eea` | State University         |
-| Medicine         | `29c2aad2-d70f-535c-a982-0afaec2554da` | State University         |
-| Arts             | `3331ae65-0d53-542c-8880-4080bff35694` | Private Institute        |
-
-### Professors (5)
-
-| Name              | ID                                     |
-| ----------------- | -------------------------------------- |
-| Dr. Alice Johnson | `9775ee05-547d-5f4a-a8bc-a9e48364a1e7` |
-| Dr. Bob Smith     | `a4e58717-d125-58f8-9933-c4829e3617a5` |
-| Prof. Carol Davis | `f6394cb2-1f8d-59ce-9e81-7ef19ca2b92e` |
-| Dr. David Wilson  | `e83a42de-2ce1-54dd-bce9-86fe29924c31` |
-| Prof. Emma Brown  | `a2107863-abc6-596e-88de-d5101fe29a21` |
-
-### Subjects (6)
-
-| Name                        | Year | ID                                     | Faculty          |
-| --------------------------- | ---- | -------------------------------------- | ---------------- |
-| Data Structures             | 1    | `cc1e89dd-75d8-54e8-9ab5-7ba8be923783` | Computer Science |
-| Web Development Basics      | 2    | `647c8285-6992-5bcd-a159-cb84aafffb3d` | Computer Science |
-| Database Management Systems | 2    | `f4bce583-8cd0-5e55-a904-ecff7a0c0a95` | Computer Science |
-| Advanced Algorithms         | 3    | `a3fe1c45-fb2c-5085-8fbe-80240a6887c4` | Engineering      |
-| Cloud Computing             | 3    | `a23131a4-d39f-51ec-beda-8aa2cc6073ef` | Engineering      |
-| Microservices Architecture  | 4    | `42ac388c-7176-5627-a917-07963b467d83` | Engineering      |
-
-Shorthand used below:
+# Dependency check: the university now has a faculty, so deleting it must be blocked (409)
+curl -s -i -X DELETE $BASE/internal/universities/$UNI -H "x-internal-secret: $SECRET" | head -n 1
+```
 
 ```bash
-UNI=ea820b10-8c0d-5922-8c32-0e205c3b3b57
-FAC=968000e6-7666-5f9e-9f0e-1634190f176a   # Computer Science
-PROF=9775ee05-547d-5f4a-a8bc-a9e48364a1e7 # Dr. Alice Johnson
-SUBJ=cc1e89dd-75d8-54e8-9ab5-7ba8be923783 # Data Structures
-USER=<profile-uuid>
-SCRIPT=<script-uuid>
+# Study
+STUDY=$(curl -s -X POST $BASE/internal/studies \
+  -H "x-internal-secret: $SECRET" -H "Content-Type: application/json" \
+  -d "{\"name\":\"Test Study\",\"faculty_id\":\"$FAC\"}" | jq -r '.study.id')
+
+curl -s $BASE/studies -H "x-internal-secret: $SECRET" | jq '.[] | {id, name, subject_count}'
+curl -s $BASE/studies/$STUDY -H "x-internal-secret: $SECRET" | jq '{id, name, faculty, subjects, professors}'
+```
+
+```bash
+# Subject
+SUBJ=$(curl -s -X POST $BASE/internal/subjects \
+  -H "x-internal-secret: $SECRET" -H "Content-Type: application/json" \
+  -d "{\"name\":\"Test Subject\",\"study_id\":\"$STUDY\"}" | jq -r '.subject.id')
+
+curl -s $BASE/subjects -H "x-internal-secret: $SECRET" | jq '.[] | {id, name}'
+curl -s $BASE/subjects/$SUBJ -H "x-internal-secret: $SECRET" | jq '{id, name, study, professors, scripts}'
+```
+
+```bash
+# Two professors (need two to exercise many-to-many properly)
+PROF1=$(curl -s -X POST $BASE/internal/professors \
+  -H "x-internal-secret: $SECRET" -H "Content-Type: application/json" \
+  -d '{"name":"Dr. Test One"}' | jq -r '.professor.id')
+PROF2=$(curl -s -X POST $BASE/internal/professors \
+  -H "x-internal-secret: $SECRET" -H "Content-Type: application/json" \
+  -d '{"name":"Dr. Test Two"}' | jq -r '.professor.id')
+
+curl -s $BASE/professors -H "x-internal-secret: $SECRET" | jq '.[] | {id, name}'
+```
+
+```bash
+# Wire PROF1 into the hierarchy and confirm the joins/counts update
+curl -s -X POST $BASE/internal/professors/$PROF1/faculties/$FAC -H "x-internal-secret: $SECRET"
+curl -s -X POST $BASE/internal/professors/$PROF1/studies/$STUDY -H "x-internal-secret: $SECRET"
+curl -s -X POST $BASE/internal/subjects/$SUBJ/professors/$PROF1 -H "x-internal-secret: $SECRET"
+
+curl -s $BASE/faculties/$FAC -H "x-internal-secret: $SECRET" | jq '.professors'
+curl -s $BASE/subjects/$SUBJ -H "x-internal-secret: $SECRET" | jq '.professors'
+curl -s $BASE/professors/$PROF1 -H "x-internal-secret: $SECRET" | jq '{faculties, studies, subjects}'
 ```
 
 ---
 
-## Profiles
+## Phase 2 — Accounts
 
-### List / lookup (public)
+One regular account, one promoted to admin, so permission boundaries are
+actually testable later. Registration takes only `email`, `password`,
+`username`, and `full_name`; academic selections are set separately in
+Phase 3.
 
 ```bash
-curl http://localhost:8787/api/profiles | jq .
-curl http://localhost:8787/api/profiles/username/localstudent | jq .
-curl http://localhost:8787/api/profiles/$USER | jq .
-curl http://localhost:8787/api/profiles/$USER/stats | jq .
+curl -s -c cookies-student.txt -X POST $BASE/auth/register -H "Content-Type: application/json" \
+  -d '{"email":"student@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"localstudent","full_name":"Test Student"}'
+curl -s -c cookies-admin.txt -X POST $BASE/auth/register -H "Content-Type: application/json" \
+  -d '{"email":"admin@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"localadmin","full_name":"Test Admin"}'
+
+# Missing a required field — expect 400
+curl -s -X POST $BASE/auth/register -H "Content-Type: application/json" \
+  -d '{"email":"incomplete@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD"}' | jq .
+
+# Duplicate username and disposable-email rejection — expect 409 / 400
+curl -s -X POST $BASE/auth/register -H "Content-Type: application/json" \
+  -d '{"email":"student@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"localstudent","full_name":"Duplicate User"}' | jq .
+curl -s -X POST $BASE/auth/register -H "Content-Type: application/json" \
+  -d '{"email":"test@mailinator.com","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"disposableuser","full_name":"Disposable User"}' | jq .
+
+# Repeated attempts from the same IP are rate-limited — expect 429 after the burst
+for i in $(seq 1 11); do curl -s -o /tmp/auth-rate-limit.json -w '%{http_code}\n' -X POST $BASE/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"student@test.local","password":"wrong"}'; done | tail -n 3
 ```
 
-### Current user (auth cookie)
+> If local Supabase Auth requires email confirmation, confirm both users
+> (dashboard, or disable confirmation for local dev) before logging in.
+> `POST /auth/callback` (`{ access_token, refresh_token }`) is the endpoint the
+> frontend calls with the tokens from a real confirmation link; it can't be
+> exercised with curl without a live link, so test it through the browser.
 
 ```bash
-curl -b cookies.txt http://localhost:8787/api/profiles/me | jq .
+# Login returns the app-shaped session user (id, email, username, role, subjects, ...)
+curl -s -c cookies-student.txt -X POST $BASE/auth/login -H "Content-Type: application/json" \
+  -d '{"email":"student@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD"}' | jq '{success, user: {id, email, username, role}}'
+curl -s -c cookies-admin.txt -X POST $BASE/auth/login -H "Content-Type: application/json" \
+  -d '{"email":"admin@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD"}' | jq '{success, user: {id, email, username, role}}'
+
+# Bad credentials — expect 401
+curl -s -X POST $BASE/auth/login -H "Content-Type: application/json" \
+  -d '{"email":"student@test.local","password":"wrong"}' | jq .
+
+STUDENT=$(curl -s -b cookies-student.txt $BASE/auth/session | jq -r '.user.id')
+ADMIN=$(curl -s -b cookies-admin.txt $BASE/auth/session | jq -r '.user.id')
 ```
 
-### Update (PATCH /api/profiles/me)
-
-Not `PATCH /api/profiles`. There is no `POST /api/profiles/select-faculty`.
-`avatar_url` is not accepted on this endpoint.
-
 ```bash
-curl -b cookies.txt -X PATCH http://localhost:8787/api/profiles/me \
-  -H "Content-Type: application/json" \
-  -d '{
-    "full_name": "Sarf Dime",
-    "selected_faculty_ids": [
-      "968000e6-7666-5f9e-9f0e-1634190f176a",
-      "f416f208-84ca-5a1d-b017-44d3649a4ee4"
-    ]
-  }' | jq .
+# Promote the admin account (internal-only route)
+curl -s -X PATCH $BASE/internal/profiles/$ADMIN/role \
+  -H "x-internal-secret: $SECRET" -H "Content-Type: application/json" \
+  -d '{"role":"admin"}' | jq '.profile.role'
+
+# Confirm both sessions reflect the correct role
+curl -s -b cookies-student.txt $BASE/auth/session | jq '.user.role'   # student
+curl -s -b cookies-admin.txt $BASE/auth/session | jq '.user.role'     # admin
+curl -s $BASE/auth/session | jq .                                     # no cookie: user is null
 ```
 
-### Profile subjects
-
 ```bash
-curl -b cookies.txt http://localhost:8787/api/profile-subjects | jq .
-curl -b cookies.txt -X PUT http://localhost:8787/api/profile-subjects/$SUBJ \
-  -H "Content-Type: application/json" \
-  -d '{"status":"completed"}' | jq .
-curl -b cookies.txt -X DELETE http://localhost:8787/api/profile-subjects/$SUBJ | jq .
-```
-
-### Favorites
-
-```bash
-curl -b cookies.txt http://localhost:8787/api/favorites | jq .
-curl -b cookies.txt -X POST http://localhost:8787/api/favorites/$SCRIPT | jq .
-curl -b cookies.txt http://localhost:8787/api/favorites/$SCRIPT | jq .
-curl -b cookies.txt -X DELETE http://localhost:8787/api/favorites/$SCRIPT | jq .
-```
-
-`PATCH /api/profiles/:id/role` does not exist on the public API. Role changes are internal-only and must be sent to `/api/internal/profiles/:id/role` with the `x-internal-secret` header.
-
----
-
-## Public catalog
-
-No auth required.
-
-```bash
-curl http://localhost:8787/api/universities | jq .
-curl http://localhost:8787/api/universities/$UNI | jq .
-
-curl http://localhost:8787/api/faculties | jq .
-curl http://localhost:8787/api/faculties/$FAC | jq .
-
-curl http://localhost:8787/api/professors | jq .
-curl http://localhost:8787/api/professors/$PROF | jq .
-
-curl http://localhost:8787/api/subjects | jq .
-curl http://localhost:8787/api/subjects/$SUBJ | jq .
-```
-
-Expected counts after seed: universities **3**, faculties **5**, professors **5**, subjects **6**.
-
----
-
-## Scripts
-
-List/get/top/popular/by-subject are **public**. If a session cookie is present, list/top/popular/by-subject are filtered to the user’s selected faculties. This test user sees **5** scripts (CS + Engineering). Unauthenticated list returns all scripts (**6** in seed).
-
-```bash
-curl http://localhost:8787/api/scripts | jq 'length'
-curl -b cookies.txt http://localhost:8787/api/scripts | jq 'length'   # 5
-
-curl -b cookies.txt "http://localhost:8787/api/scripts/top?limit=10" | jq .
-curl -b cookies.txt "http://localhost:8787/api/scripts/popular?limit=10" | jq .
-curl http://localhost:8787/api/scripts/subject/$SUBJ | jq .
-```
-
-Pick a real script id from the list:
-
-```bash
-SCRIPT=$(curl -s http://localhost:8787/api/scripts | jq -r '.[0].id')
-curl http://localhost:8787/api/scripts/$SCRIPT | jq .
-```
-
-### Create (auth)
-
-Required: `title`, `subject_id` (or `subjectId`), `professor_id`, `faculty_id`, `fileKey` (or `file_url`), `fileType` (`pdf` | `jpg` | `jpeg` | `png` | `webp`).
-
-```bash
-curl -b cookies.txt -X POST http://localhost:8787/api/scripts \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"title\": \"My Study Notes\",
-    \"description\": \"Notes for Data Structures\",
-    \"subject_id\": \"$SUBJ\",
-    \"professor_id\": \"$PROF\",
-    \"faculty_id\": \"$FAC\",
-    \"fileKey\": \"s3://bucket/my-file.pdf\",
-    \"fileType\": \"pdf\"
-  }" | jq .
-```
-
-`PATCH /api/scripts/:id` and `DELETE /api/scripts/:id` are author or moderator.
-
-### Search
-
-Search is fuzzy and tolerates small spelling mistakes in titles and descriptions.
-
-```bash
-curl "http://localhost:8787/api/scripts/search?q=algoritms" | jq .
+curl -s $BASE/profiles | jq '.[] | {id, username, role}'
+curl -s -b cookies-student.txt $BASE/profiles/me | jq '{id, username, role}'
+curl -s $BASE/profiles/username/localstudent | jq '{id, username}'
+curl -s $BASE/profiles/$STUDENT/stats | jq .
 ```
 
 ---
 
-## Comments
+## Phase 3 — Academic profile (student)
+
+This is what first-visit onboarding persists once the user has an account.
 
 ```bash
-curl http://localhost:8787/api/comments | jq .
-curl http://localhost:8787/api/comments/professor/$PROF | jq .
-curl http://localhost:8787/api/comments/script/$SCRIPT | jq .
-curl http://localhost:8787/api/comments/user/$USER | jq .
-curl http://localhost:8787/api/comments/$COMMENT/reactions | jq .
+curl -s -b cookies-student.txt -X POST $BASE/profile-faculties/$FAC | jq .
+curl -s -b cookies-student.txt $BASE/profile-faculties | jq .
 
-curl -b cookies.txt -X POST http://localhost:8787/api/comments \
-  -H "Content-Type: application/json" \
-  -d "{\"content\":[{\"_type\":\"block\",\"children\":[{\"_type\":\"span\",\"text\":\"Great professor, clear lectures.\"}]}],\"professor_id\":\"$PROF\"}" | jq .
+curl -s -b cookies-student.txt -X POST $BASE/profile-studies/$STUDY | jq .
+curl -s -b cookies-student.txt $BASE/profile-studies | jq .
+
+curl -s -b cookies-student.txt -X PUT $BASE/profile-subjects/$SUBJ \
+  -H "Content-Type: application/json" -d '{"status":"currently_taking"}' | jq .
+curl -s -b cookies-student.txt $BASE/profile-subjects | jq .
+
+curl -s -b cookies-student.txt $BASE/auth/session | jq '{selected_faculty_ids, selected_study_ids, subjects}'
 ```
-
-Use exactly one of `professor_id` or `script_id` when creating a comment.
-
-Replies use the same target rule and keep the parent comment id:
-
-```bash
-curl -b cookies.txt -X POST http://localhost:8787/api/comments/$COMMENT/replies \
-  -H "Content-Type: application/json" \
-  -d "{\"content\":[{\"_type\":\"block\",\"children\":[{\"_type\":\"span\",\"text\":\"Thanks for the clarification.\"}]}],\"script_id\":\"$SCRIPT\"}" | jq .
-```
-
-Add or change a reaction with an upsert:
-
-```bash
-curl -b cookies.txt -X POST http://localhost:8787/api/comments/$COMMENT/reactions \
-  -H "Content-Type: application/json" \
-  -d '{"reaction_type":"like"}' | jq .
-```
-
-`PATCH` / `DELETE /api/comments/:id` are author (delete also allows moderator).
 
 ---
 
-## Votes
-
-### Read votes
+## Phase 4 — Scripts
 
 ```bash
-curl http://localhost:8787/api/votes | jq .
-curl http://localhost:8787/api/votes/script/$SCRIPT | jq .
-curl http://localhost:8787/api/votes/user/$USER | jq .
-curl http://localhost:8787/api/votes/script/$SCRIPT/stats | jq .
-curl -b cookies.txt http://localhost:8787/api/votes/my-votes | jq .
-curl -b cookies.txt http://localhost:8787/api/votes/script/$SCRIPT/my-vote | jq .
-```
+# Files whose extension (md) actually passes isFileType — text/plain isn't accepted despite
+# being in the upload MIME allowlist, so don't reach for a .txt file here.
+echo "# Test script content" > /tmp/test-script.md
+echo "# Second file" > /tmp/test-script-2.md
 
-### Vote toggle
+# Multi-file upload in one call. subjectId scopes the R2 bucket and key prefix.
+UPLOAD=$(curl -s -b cookies-student.txt -X POST $BASE/file-ops/upload \
+  -F "files=@/tmp/test-script.md" -F "files=@/tmp/test-script-2.md" -F "subjectId=$SUBJ")
+echo $UPLOAD | jq .                                  # { success, files: [{ fileKey, fileType, fileSizeBytes, bucket }, ...] }
+echo $UPLOAD | jq '.files | length'                  # 2
+echo $UPLOAD | jq -r '.files[0].fileKey'             # {facultyId}/{studyId}/{subjectId}/{userId}/{uuid}.md
+
+# A single file is still accepted and normalized to an array
+curl -s -b cookies-student.txt -X POST $BASE/file-ops/upload -F "files=@/tmp/test-script.md" | jq '.files | length'   # 1
+
+# files array is passed to POST /scripts exactly as returned (fileKey, fileType, fileSizeBytes, bucket)
+FILES=$(echo $UPLOAD | jq -c '.files')
+
+SCRIPT=$(curl -s -b cookies-student.txt -X POST $BASE/scripts -H "Content-Type: application/json" -d "{
+  \"title\": [{\"_type\":\"block\",\"style\":\"normal\",\"markDefs\":[],\"children\":[{\"_type\":\"span\",\"text\":\"Test Script Title\",\"marks\":[]}]}],
+  \"subject_id\": \"$SUBJ\",
+  \"professor_id\": \"$PROF1\",
+  \"files\": $FILES
+}" | jq -r '.script.id')
+
+# Unsupported Portable Text block type — expect 400 and no script created
+curl -s -b cookies-student.txt -X POST $BASE/scripts -H "Content-Type: application/json" -d "{
+  \"title\": [{\"_type\":\"image\"}],
+  \"subject_id\": \"$SUBJ\",
+  \"professor_id\": \"$PROF1\",
+  \"files\": $FILES
+}" | jq .
+```
 
 ```bash
-curl -b cookies.txt -X POST http://localhost:8787/api/votes/$SCRIPT | jq .
+curl -s $BASE/scripts | jq 'length'                       # unauthenticated: sees everything
+curl -s -b cookies-student.txt $BASE/scripts | jq 'length' # scoped to selected faculties (still 1)
+curl -s $BASE/scripts/$SCRIPT | jq '{id, title, files}'    # each file includes bucket, ordered by position
+curl -s $BASE/scripts/subject/$SUBJ | jq 'length'
+curl -s "$BASE/scripts/top?limit=5" | jq 'length'
+curl -s "$BASE/scripts/popular?limit=5" | jq 'length'
+curl -s "$BASE/scripts/search?q=Test%20Scrpit" | jq 'length'   # misspelled on purpose — fuzzy match
+curl -s -b cookies-student.txt $BASE/scripts/my-scripts | jq '.scripts | length'
 ```
 
-The first request adds a `+1` vote. Calling the same endpoint again removes the
-user's vote. Script scores are clamped at zero.
+```bash
+# Pre-signed download URL; pass the stored bucket back as ?bucket=
+KEY=$(curl -s $BASE/scripts/$SCRIPT | jq -r '.files[0].file_url')
+BUCKET=$(curl -s $BASE/scripts/$SCRIPT | jq -r '.files[0].bucket')
+curl -s "$BASE/file-ops/get-file/$KEY?bucket=$BUCKET" | jq .
+```
+
+```bash
+# Download dedupe: unauthenticated + device id (no real IP locally, so device id drives it)
+curl -s -X POST $BASE/scripts/$SCRIPT/download -H "x-device-id: test-device-1" | jq .   # counted: true
+curl -s -X POST $BASE/scripts/$SCRIPT/download -H "x-device-id: test-device-1" | jq .   # counted: false
+
+# Download dedupe: authenticated (dedupes by account instead)
+curl -s -b cookies-student.txt -X POST $BASE/scripts/$SCRIPT/download | jq .            # counted: true
+curl -s -b cookies-student.txt -X POST $BASE/scripts/$SCRIPT/download | jq .            # counted: false
+```
+
+```bash
+curl -s -b cookies-student.txt -X PATCH $BASE/scripts/$SCRIPT -H "Content-Type: application/json" \
+  -d '{"additional_reading":["https://example.com/notes"]}' | jq '.script.additional_reading'
+```
 
 ---
 
-## Internal admin
-
-Requires header `x-internal-secret` matching `INTERNAL_API_SECRET` in `hono/.env`.
-
-That variable is **not set** in the current env file, so every internal call returns **403 Forbidden** until you add it and restart the server.
+## Phase 5 — Votes
 
 ```bash
-# After INTERNAL_API_SECRET is set:
-curl http://localhost:8787/api/internal/universities \
-  -H "x-internal-secret: $INTERNAL_API_SECRET" | jq .
-
-curl -X POST http://localhost:8787/api/internal/universities \
-  -H "x-internal-secret: $INTERNAL_API_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"New University"}' | jq .
-
-curl -X PATCH http://localhost:8787/api/internal/profiles/$USER/role \
-  -H "x-internal-secret: $INTERNAL_API_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{"role":"moderator"}' | jq .
+curl -s -b cookies-student.txt -X POST $BASE/votes/$SCRIPT | jq .   # voted: true, vote_score: 1
+curl -s $BASE/votes/script/$SCRIPT/stats | jq .
+curl -s -b cookies-student.txt $BASE/votes/script/$SCRIPT/my-vote | jq .
+curl -s -b cookies-student.txt $BASE/votes/my-votes | jq .
+curl -s -X POST -b cookies-student.txt $BASE/votes/$SCRIPT | jq .   # voted: false, vote_score: 0 (toggle off)
 ```
 
-| Method       | Path                                                 | Body                                                 |
-| ------------ | ---------------------------------------------------- | ---------------------------------------------------- |
-| GET/POST     | `/api/internal/universities`                         | `{ "name" }`                                         |
-| PATCH/DELETE | `/api/internal/universities/:id`                     | `{ "name" }`                                         |
-| GET/POST     | `/api/internal/faculties`                            | `{ "name", "university_id" }`                        |
-| PATCH/DELETE | `/api/internal/faculties/:id`                        | `{ "name", "university_id" }`                        |
-| GET/POST     | `/api/internal/professors`                           | `{ "name", "picture_url?", "bio?", "faculty_ids?" }` |
-| PATCH/DELETE | `/api/internal/professors/:id`                       | `{ "name", "picture_url", "bio" }`                   |
-| POST/DELETE  | `/api/internal/professors/:id/faculties/:facultyId`  | —                                                    |
-| GET/POST     | `/api/internal/studies`                              | `{ "name", "faculty_id" }`                           |
-| PATCH/DELETE | `/api/internal/studies/:id`                          | same fields, partial                                 |
-| GET/POST     | `/api/internal/subjects`                             | `{ "name", "study_id", "professor_ids?" }`           |
-| PATCH/DELETE | `/api/internal/subjects/:id`                         | same fields, partial                                 |
-| POST/DELETE  | `/api/internal/subjects/:id/professors/:professorId` | —                                                    |
-| PATCH        | `/api/internal/profiles/:id/role`                    | `{ "role": "student"                                 | "moderator" }` |
+---
+
+## Phase 6 — Favorites
+
+```bash
+curl -s -b cookies-student.txt -X POST $BASE/favorites/$SCRIPT | jq .
+curl -s -b cookies-student.txt $BASE/favorites | jq .
+curl -s -b cookies-student.txt -X DELETE $BASE/favorites/$SCRIPT | jq .
+```
+
+Each mutation should also invalidate the signed-in user's public-profile
+cache tags so their favorite-script list refreshes.
 
 ---
 
-## Loading test data
+## Phase 7 — Comments
 
-1. Supabase Dashboard → SQL Editor → run `hono/supabase/seed-test-data.sql` (UUID seed used by the live DB) or `test-data.sql` (slug IDs — **will not match** a UUID `id` column).
-2. Confirm: `SELECT COUNT(*) FROM universities;`
+```bash
+COMMENT=$(curl -s -b cookies-student.txt -X POST $BASE/comments -H "Content-Type: application/json" -d "{
+  \"content\": [{\"_type\":\"block\",\"children\":[{\"_type\":\"span\",\"text\":\"Great script, thanks!\"}]}],
+  \"script_id\": \"$SCRIPT\"
+}" | jq -r '.comment.id')
+
+# Comments need at least 3 characters and only allow normal text blocks — expect 400
+curl -s -b cookies-student.txt -X POST $BASE/comments -H "Content-Type: application/json" -d "{
+  \"content\": [{\"_type\":\"block\",\"style\":\"h1\",\"children\":[{\"_type\":\"span\",\"text\":\"No\"}]}],
+  \"script_id\": \"$SCRIPT\"
+}" | jq .
+
+curl -s $BASE/comments/script/$SCRIPT | jq '.[] | {id, content, reactions_count, likes_count}'
+
+curl -s -b cookies-student.txt -X POST $BASE/comments/$COMMENT/replies -H "Content-Type: application/json" -d '{
+  "content": [{"_type":"block","children":[{"_type":"span","text":"Agreed."}]}],
+  "script_id": "'"$SCRIPT"'"
+}' | jq -r '.reply.id'
+
+curl -s -b cookies-student.txt -X POST $BASE/comments/$COMMENT/reactions \
+  -H "Content-Type: application/json" -d '{"reaction_type":"like"}' | jq .
+curl -s -b cookies-student.txt -X POST $BASE/comments/$COMMENT/reactions \
+  -H "Content-Type: application/json" -d '{"reaction_type":"funny"}' | jq .
+curl -s $BASE/comments/$COMMENT/reactions | jq .
+
+# Invalid reaction type — expect 400
+curl -s -b cookies-student.txt -X POST $BASE/comments/$COMMENT/reactions \
+  -H "Content-Type: application/json" -d '{"reaction_type":"👍"}' | jq .
+
+curl -s -b cookies-student.txt -X POST $BASE/comments/$COMMENT/like | jq .   # liked: true
+```
 
 ---
 
-## Suggested workflow
+## Phase 8 — Ratings
 
-1. Start the API (`npm run dev:hono`).
-2. Login with `-c cookies.txt`.
-3. `GET /api/auth/session` and `GET /api/profiles/me`.
-4. Browse catalog with real UUIDs.
-5. Create a script, then a professor comment.
-6. Skip vote until the `scripts.vote_score` permission issue is fixed.
-7. Logout and confirm `GET /api/profiles/me` is 401.
+Rating types are created fresh here rather than assumed pre-seeded, so this
+phase doesn't depend on migration state.
+
+```bash
+curl -s -b cookies-admin.txt -X POST $BASE/ratings/types -H "Content-Type: application/json" \
+  -d '{"id":"test_teaching","target_type":"professor","label":"Test Teaching"}' | jq .
+curl -s -b cookies-admin.txt -X POST $BASE/ratings/types -H "Content-Type: application/json" \
+  -d '{"id":"test_difficulty","target_type":"subject","label":"Test Difficulty"}' | jq .
+
+curl -s $BASE/ratings/types | jq '.[] | {id, target_type, label}'
+```
+
+```bash
+curl -s -b cookies-student.txt -X POST $BASE/ratings/professor/$PROF1 -H "Content-Type: application/json" \
+  -d '{"rating_type_id":"test_teaching","score":5}' | jq .
+curl -s $BASE/ratings/professor/$PROF1/stats | jq .
+curl -s -b cookies-student.txt $BASE/ratings/professor/$PROF1/my-ratings | jq .
+
+curl -s -b cookies-student.txt -X POST $BASE/ratings/subject/$SUBJ -H "Content-Type: application/json" \
+  -d '{"rating_type_id":"test_difficulty","score":3}' | jq .
+curl -s $BASE/ratings/subject/$SUBJ/stats | jq .
+
+# Rating type / target mismatch — expect 400
+curl -s -b cookies-student.txt -X POST $BASE/ratings/subject/$SUBJ -H "Content-Type: application/json" \
+  -d '{"rating_type_id":"test_teaching","score":3}' | jq .
+```
+
+## Phase 8b — Achievements & notifications
+
+```bash
+# The student's list should contain the system-generated notifications:
+# onboarding / account creation, plus the first_upload achievement from the
+# Phase 4 upload (scripts_uploaded = 1).
+curl -s -b cookies-student.txt $BASE/notifications | jq '.[] | {type, title, is_read}'
+curl -s -b cookies-student.txt "$BASE/notifications?is_read=false" | jq 'length'
+curl -s -b cookies-student.txt $BASE/notifications/unread-count | jq .
+
+NOTIF=$(curl -s -b cookies-student.txt $BASE/notifications | jq -r '.[0].id')
+curl -s -b cookies-student.txt -X PATCH $BASE/notifications/$NOTIF -H "Content-Type: application/json" -d '{"is_read":true}' | jq '.is_read'
+curl -s -b cookies-student.txt -X PATCH $BASE/notifications/$NOTIF -H "Content-Type: application/json" -d '{"is_read":"yes"}' | jq .   # 400: must be boolean
+curl -s -b cookies-student.txt -X PATCH $BASE/notifications/read-all | jq .
+curl -s -b cookies-student.txt $BASE/notifications/unread-count | jq .   # 0
+```
+
+---
+
+## Phase 9 — Flags & moderation
+
+This is the permission-sensitive part of the API — worth confirming the
+admin-vs-reporter boundary actually holds.
+
+```bash
+FLAG=$(curl -s -b cookies-student.txt -X POST $BASE/flags -H "Content-Type: application/json" -d "{
+  \"target_type\": \"comment\",
+  \"target_id\": \"$COMMENT\",
+  \"reason\": \"Testing the flag pipeline end to end\"
+}" | jq -r '.flag.id')
+
+curl -s -b cookies-student.txt $BASE/flags/my-flags | jq .
+curl -s $BASE/comments/script/$SCRIPT | jq '.[] | select(.id=="'"$COMMENT"'") | .id'  # note is_flagged isn't in the public payload
+
+# Admin: list + resolve
+curl -s -b cookies-admin.txt $BASE/flags | jq '.[] | {id, status, target_comment_id}'
+curl -s -b cookies-admin.txt $BASE/flags/pending | jq 'length'
+curl -s -b cookies-admin.txt $BASE/comments/flagged/all | jq 'length'   # should include $COMMENT
+
+curl -s -b cookies-admin.txt -X PATCH $BASE/flags/$FLAG -H "Content-Type: application/json" \
+  -d '{"status":"dismissed"}' | jq '.flag.status'
+
+curl -s -b cookies-admin.txt $BASE/comments/flagged/all | jq 'length'   # back to not including it
+```
+
+```bash
+# A second flag, deleted by admin rather than the reporter — exercises the admin-delete branch
+FLAG2=$(curl -s -b cookies-student.txt -X POST $BASE/flags -H "Content-Type: application/json" -d "{
+  \"target_type\": \"script\",
+  \"target_id\": \"$SCRIPT\",
+  \"reason\": \"Second test flag for admin deletion\"
+}" | jq -r '.flag.id')
+
+curl -s -b cookies-admin.txt -X DELETE $BASE/flags/$FLAG2 | jq .
+```
+
+---
+
+## Phase 10 — Admin content actions
+
+```bash
+curl -s -b cookies-admin.txt -X PATCH $BASE/comments/$COMMENT -H "Content-Type: application/json" \
+  -d '{"content":[{"_type":"block","children":[{"_type":"span","text":"Edited by admin."}]}]}' | jq '.comment.edited'
+
+curl -s -b cookies-admin.txt -X PATCH $BASE/profiles/$STUDENT -H "Content-Type: application/json" \
+  -d '{"full_name":"Renamed By Admin"}' | jq '.profile.full_name'
+```
+
+## Phase 10b — Restrictions
+
+Restricted users can't create or update content, but can still remove their
+own and keep favoriting. Always lift the restriction before teardown.
+
+```bash
+# Student cannot manage restrictions — expect 403
+curl -s -b cookies-student.txt -X PUT $BASE/restrictions/$STUDENT -H "Content-Type: application/json" \
+  -d '{"reason":"self restrict attempt"}' | jq .
+
+# Admin restricts the student (reason is 3–500 chars)
+curl -s -b cookies-admin.txt -X PUT $BASE/restrictions/$STUDENT -H "Content-Type: application/json" \
+  -d '{"reason":"Testing the restriction flow"}' | jq .
+curl -s -b cookies-admin.txt $BASE/restrictions | jq 'length'          # includes the student
+curl -s -b cookies-student.txt $BASE/restrictions/me | jq .             # own status, non-null
+
+# Blocked while restricted — each expect 403
+curl -s -b cookies-student.txt -X POST $BASE/comments -H "Content-Type: application/json" -d "{
+  \"content\": [{\"_type\":\"block\",\"children\":[{\"_type\":\"span\",\"text\":\"Should be blocked\"}]}],
+  \"script_id\": \"$SCRIPT\"
+}" | jq .
+curl -s -b cookies-student.txt -X POST $BASE/votes/$SCRIPT | jq .
+
+# Still allowed while restricted: favoriting, and removing own content
+curl -s -b cookies-student.txt -X POST $BASE/favorites/$SCRIPT | jq .
+curl -s -b cookies-student.txt -X DELETE $BASE/favorites/$SCRIPT | jq .
+
+# Lift it
+curl -s -b cookies-admin.txt -X DELETE $BASE/restrictions/$STUDENT | jq .
+curl -s -b cookies-admin.txt -X DELETE $BASE/restrictions/$STUDENT | jq .   # 404: not restricted
+curl -s -b cookies-student.txt $BASE/restrictions/me | jq .                  # null
+```
+
+---
+
+## Teardown
+
+Delete in reverse dependency order — children before parents — so nothing
+409s on a leftover reference. Re-run the Phase 1 list endpoints afterward to
+confirm counts are back to zero.
+
+```bash
+# Interaction data
+curl -s -b cookies-student.txt -X DELETE $BASE/ratings/professor/$PROF1/test_teaching | jq .
+curl -s -b cookies-student.txt -X DELETE $BASE/ratings/subject/$SUBJ/test_difficulty | jq .
+curl -s -b cookies-admin.txt -X DELETE $BASE/ratings/types/test_teaching | jq .
+curl -s -b cookies-admin.txt -X DELETE $BASE/ratings/types/test_difficulty | jq .
+
+curl -s -b cookies-student.txt -X DELETE $BASE/comments/$COMMENT | jq .   # cascades the reply/reactions/likes
+curl -s -b cookies-student.txt -X DELETE $BASE/scripts/$SCRIPT | jq .
+
+# Student's own academic profile
+curl -s -b cookies-student.txt -X DELETE $BASE/profile-subjects/$SUBJ | jq .
+curl -s -b cookies-student.txt -X DELETE $BASE/profile-studies/$STUDY | jq .
+curl -s -b cookies-student.txt -X DELETE $BASE/profile-faculties/$FAC | jq .
+
+# Accounts (note: this removes the profiles row, not the underlying Supabase
+# Auth user — delete those separately via the Auth dashboard/admin API if
+# you also want the login itself gone)
+curl -s -b cookies-student.txt -X DELETE $BASE/profiles/me | jq .
+curl -s -b cookies-admin.txt -X DELETE $BASE/profiles/me | jq .
+
+# Catalog, narrowest to widest
+curl -s -X DELETE $BASE/internal/professors/$PROF1/faculties/$FAC -H "x-internal-secret: $SECRET"
+curl -s -X DELETE $BASE/internal/professors/$PROF1/studies/$STUDY -H "x-internal-secret: $SECRET"
+curl -s -X DELETE $BASE/internal/subjects/$SUBJ/professors/$PROF1 -H "x-internal-secret: $SECRET"
+curl -s -X DELETE $BASE/internal/professors/$PROF1 -H "x-internal-secret: $SECRET" | jq .
+curl -s -X DELETE $BASE/internal/professors/$PROF2 -H "x-internal-secret: $SECRET" | jq .
+curl -s -X DELETE $BASE/internal/subjects/$SUBJ -H "x-internal-secret: $SECRET" | jq .
+curl -s -X DELETE $BASE/internal/studies/$STUDY -H "x-internal-secret: $SECRET" | jq .
+curl -s -X DELETE $BASE/internal/faculties/$FAC -H "x-internal-secret: $SECRET" | jq .
+curl -s -X DELETE $BASE/internal/universities/$UNI -H "x-internal-secret: $SECRET" | jq .   # now succeeds: no faculties left
+```
+
+```bash
+# Confirm a clean slate
+curl -s $BASE/universities -H "x-internal-secret: $SECRET" | jq 'length'   # 0
+curl -s $BASE/scripts | jq 'length'                                        # 0
+
+rm -f cookies-student.txt cookies-admin.txt /tmp/test-script.md /tmp/test-script-2.md
+```
+
+> Uploaded R2 objects are not deleted when a script is deleted (open decision
+> in `PROGRESS.md`); remove test objects from the bucket manually if needed.
 
 ---
 
 ## Troubleshooting
 
-### `{"error":"Not authenticated"}`
-You used a Bearer token, skipped `-b cookies.txt`, or the cookie expired (~1 hour). Login again with `-c cookies.txt`.
+| Symptom                                               | Cause                                                                                                              |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `{"error":"Not authenticated"}`                       | Missing `-b cookies-*.txt`, or the ~1h session expired — log in again                                              |
+| `{"error":"Forbidden"}` on any catalog/internal route | `x-internal-secret` header missing/wrong, or `INTERNAL_API_SECRET` unset in `hono/.env` (restart after setting it) |
+| `403` on a create/update that should work             | The account is still restricted from Phase 10b — lift it with `DELETE /restrictions/:profileId`                    |
+| `404 Route not found` on a documented endpoint        | The route file isn't mounted in `hono/src/index.ts`                                                                |
+| `invalid input syntax for type uuid`                  | A captured `jq -r` variable came back `null` — check the previous step's response shape                            |
+| `Cannot delete: still referenced by ...` / `409`      | Teardown ran out of order — delete the named dependent first                                                       |
+| Upload returns `.file` is `null`                      | The response is now `.files[]`; use `.files[0].fileKey` and send the form field as `files`, not `file`             |
+| Fuzzy search returns nothing                          | Query too far from the title/description text; threshold is intentionally strict                                   |
 
-### `{"error":"Route not found"}` / 404 on `/api/auth/me` or `PATCH /api/profiles`
-Those paths do not exist. Use `/api/auth/session` and `PATCH /api/profiles/me`.
-
-### `invalid input syntax for type uuid`
-You passed a slug (`prof-001`). Use a UUID from the tables above.
-
-### Internal `403 Forbidden`
-`INTERNAL_API_SECRET` missing or header mismatch. Header name is `x-internal-secret`.
-
-### Empty catalog
-Seed is not loaded.
-
-### CORS
-Allowed origins in `hono/src/index.ts`: `http://localhost:3000`, `http://localhost:5173`, and a placeholder Vercel origin. Browser clients must send `credentials: true`.
-
----
-
-## Notes
-
-- Cookie name: `sb-auth-token` (HttpOnly, `SameSite=Lax`, `Path=/`)
-- Server: `hono/` via `@hono/node-server`, port `8787`
-- Env file: `hono/.env` (loaded by `node --env-file=.env`)
+**Server**: `hono/` via `@hono/node-server`, port `8787`, env file
+`hono/.env`. **Auth cookie**: `sb-auth-token` (HttpOnly, `SameSite=Lax`,
+`Path=/`). **CORS**: `http://localhost:3000`, `http://localhost:5173`,
+`http://localhost:3333`, and a placeholder Vercel origin — browser clients
+need `credentials: true`.

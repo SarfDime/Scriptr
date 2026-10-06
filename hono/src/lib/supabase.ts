@@ -1,12 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Context } from 'hono'
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie'
-import type { Database } from '../../../shared/types/database.types'
 import {
   isProfileSubjectStatus,
   isUserRole,
 } from '../../../shared/utils/api.utils'
 import type { AuthUser, HonoEnv } from '../types/env.types'
+import type { Database } from '../types/supabase-override-types'
+import { honoLog } from './logger'
 
 /** Creates a Supabase client with the given context, using environment variables for the endpoint and credentials.
  * Sessions are handled via HTTP-only cookies for security and persistence.
@@ -18,7 +19,7 @@ export function createSupabaseClient(c: Context<HonoEnv>) {
     {
       auth: {
         persistSession: true,
-        autoRefreshToken: true,
+        autoRefreshToken: false,
         storageKey: 'sb-auth-token',
         storage: createCookieStorage(c),
       },
@@ -41,11 +42,8 @@ function createCookieStorage(c: Context<HonoEnv>) {
   const secure = c.env.NODE_ENV === 'production'
 
   return {
-    getItem: (key: string) => {
-      return getCookie(c, key) || null
-    },
+    getItem: (key: string) => getCookie(c, key) || null,
     setItem: (key: string, value: string) => {
-      // Parse the session data to get expiration
       try {
         const session = JSON.parse(value)
         const expiresAt = session.expires_at
@@ -63,7 +61,6 @@ function createCookieStorage(c: Context<HonoEnv>) {
           maxAge,
         })
       } catch {
-        // Fallback if parsing fails
         setCookie(c, key, value, {
           path: '/',
           httpOnly: true,
@@ -92,49 +89,49 @@ export const authMiddleware = async (
 
     const {
       data: { user },
-      error,
+      error: authError,
     } = await supabase.auth.getUser()
 
-    if (error || !user) {
+    if (authError || !user) {
       return c.json({ error: 'Not authenticated' }, 401)
     }
 
-    const [
-      { data: profile },
-      { data: profileSubjects },
-      { data: facultySelections },
-      { data: studySelections },
-    ] = await Promise.all([
-      supabase
-        .from('profiles')
-        .select('username, role')
-        .eq('id', user.id)
-        .single(),
-      supabase
-        .from('profile_subjects')
-        .select('subject_id, status')
-        .eq('profile_id', user.id),
-      supabase
-        .from('profile_faculties')
-        .select('faculty_id')
-        .eq('profile_id', user.id),
-      supabase
-        .from('profile_studies')
-        .select('study_id')
-        .eq('profile_id', user.id),
-    ])
+    // OPTIMIZATION: Fetch all related profile data in a single joined query
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select(`
+        username, 
+        role,
+        profile_subjects (subject_id, status),
+        profile_faculties (faculty_id),
+        profile_studies (study_id)
+      `)
+      .eq('id', user.id)
+      .single()
+
+    if (profileError && profileError.code !== 'PGRST116') {
+      honoLog({
+        logLevel: 'error',
+        message: 'Database error fetching profile',
+        error: profileError,
+      })
+      return c.json(
+        { error: 'Internal server error while fetching profile' },
+        500
+      )
+    }
 
     const userProfile = {
       username: profile?.username ?? user?.email,
-      role: isUserRole(profile?.role) ? profile.role : 'student',
+      role: isUserRole(profile?.role) ? profile?.role : 'student',
       subjects:
-        profileSubjects?.flatMap(({ subject_id, status }) =>
+        profile?.profile_subjects?.flatMap(({ subject_id, status }) =>
           isProfileSubjectStatus(status) ? [{ subject_id, status }] : []
         ) ?? [],
       selected_faculty_ids:
-        facultySelections?.map(({ faculty_id }) => faculty_id) ?? [],
+        profile?.profile_faculties?.map(({ faculty_id }) => faculty_id) ?? [],
       selected_study_ids:
-        studySelections?.map(({ study_id }) => study_id) ?? [],
+        profile?.profile_studies?.map(({ study_id }) => study_id) ?? [],
     }
 
     const authenticatedUser: AuthUser = {
@@ -144,8 +141,10 @@ export const authMiddleware = async (
 
     c.set('user', authenticatedUser)
 
-    return next()
+    await next()
+    return
   } catch (error) {
-    return c.json({ error: `Authentication failed: ${error}` }, 401)
+    honoLog({ logLevel: 'error', message: 'Middleware crash', error })
+    return c.json({ error: 'Internal server error' }, 500)
   }
 }

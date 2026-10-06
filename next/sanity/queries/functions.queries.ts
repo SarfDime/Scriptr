@@ -1,22 +1,17 @@
-import { groq } from 'next-sanity'
-
-const sanityImageFunction = groq`
+const sanityImageFunction = /* groq */ `
 fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};
 `
 
-const personQueryFunction = groq`
+const personQueryFunction = /* groq */ `
 fn person::full($person) = $person{
     _id,
     name,
     title,
-    defined(picture)=>{ "picture": sanityImage::full(picture) }
+    "picture": sanityImage::full(picture)
 };
-` //TODO: Check if person query works if yes ,use person::full(@) wherever a person reference is needed
+`
 
-const sanityFunctionQueries = groq`
-${sanityImageFunction}
-${personQueryFunction}
-
+const linkSelectorFunction = /* groq */ `
 fn linkSelector::full($link) = $link{
     defined(linkType) => {linkType},
     defined(page) => {
@@ -28,14 +23,18 @@ fn linkSelector::full($link) = $link{
     defined(section) => {"sectionSlug": section->.slug},
     defined(customLink) => {customLink},
 };
+`
 
+const sanityButtonFunction = /* groq */ `
 fn sanityButton::full($button) = $button{
     "buttonLabel": stringTitle,
     _id,
     defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},
     ...linkSelector::full(@),
 };
+`
 
+const portableTextFunction = /* groq */ `
 fn portableText::full($portableText) = $portableText{
     ...,
     children[]{
@@ -53,4 +52,19 @@ fn portableText::full($portableText) = $portableText{
 };
 `
 
-export { personQueryFunction, sanityFunctionQueries, sanityImageFunction }
+const sanityFunctionQueries = /* groq */ `
+${linkSelectorFunction}
+${sanityImageFunction}
+${sanityButtonFunction}
+${portableTextFunction}
+${personQueryFunction}
+`
+
+export {
+  linkSelectorFunction,
+  personQueryFunction,
+  portableTextFunction,
+  sanityButtonFunction,
+  sanityFunctionQueries,
+  sanityImageFunction,
+}

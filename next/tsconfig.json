@@ -25,7 +25,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    "**/*.mts",
+    "../hono/src/lib/cache-revalidate-comments.ts"
   ],
   "exclude": ["node_modules"]
 }

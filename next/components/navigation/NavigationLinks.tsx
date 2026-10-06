@@ -1,5 +1,3 @@
-import AddCircleIcon from '@sanity/icons/AddCircle'
-import Bell from '@sanity/icons/Bell'
 import CommentIcon from '@sanity/icons/Comment'
 import Star from '@sanity/icons/Star'
 import { UI_STRINGS } from '@shared/config/strings'
@@ -19,8 +17,8 @@ const NavItem = ({ stringTitle, icon, ...rest }: NavItemType) => {
       href={slug}
       className={cn(
         'button ghost',
-        'w-full justify-start gap-3 p-3',
-        'text-left ui-caption'
+        'w-full justify-start gap-3 p-2.5',
+        'text-left text-sm'
       )}
     >
       {icon && <NextImage {...icon} />}
@@ -71,19 +69,4 @@ export const NavigationLinks = ({
       </Box>
     </Box>
   </>
-)
-
-export const HeaderActions = () => (
-  <Box className='ml-auto flex items-center gap-2'>
-    <Button
-      className='button subtle p-2'
-      aria-label={UI_STRINGS.navigation.notifications}
-    >
-      <Bell />
-    </Button>
-    <Button className='button basic gap-2 border border-grey-300 px-3 py-2 ui-caption'>
-      <AddCircleIcon />
-      <Text>{UI_STRINGS.navigation.newScript}</Text>
-    </Button>
-  </Box>
 )

@@ -1,24 +1,23 @@
 'use client'
 
-import type { DetailedHTMLProps, DialogHTMLAttributes } from 'react'
-import { useEffect, useRef, useState } from 'react'
+import type { PortableTextValue } from '@shared/types/portable-text.types'
+import type { DetailedHTMLProps, DialogHTMLAttributes, ReactNode } from 'react'
+import { useEffect, useEffectEvent, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useBodyScrollLock } from '@/hooks/useBodyScroll'
-import { Z_INDEX } from '@/styles/style'
-import type { PortableTextType } from '@/types/components/PortableText.types'
-import { cn, getPlacementClasses } from '../../lib/common-utils'
+import { cn, getPlacementClasses } from '@/lib/common-utils'
+import { Z_INDEX } from '../../styles/style'
 import type { ComponentPlacement } from '../../types/component.types'
-import type { BoxProps } from '../common/Box'
-import { Box } from '../common/Box'
-import type { ButtonProps } from '../common/Button'
-import { Button } from '../common/Button'
+import { Box, type BoxProps } from '../common/Box'
+import { Button, type ButtonProps } from '../common/Button'
 import type { TitleProps } from '../typography/Title'
 import { Title } from '../typography/Title'
 import type { CloseButtonProps } from './CloseButton'
 import { CloseButton } from './CloseButton'
 
 export type DialogProps = {
-  title?: PortableTextType
-  children: React.ReactNode
+  title?: PortableTextValue | ReactNode
+  children: ReactNode
   placement?: ComponentPlacement['placement']
   triggerButtonProps?: ButtonProps
   headerProps?: Omit<BoxProps, 'children'>
@@ -27,6 +26,7 @@ export type DialogProps = {
   closeButtonProps?: CloseButtonProps
   isOpen?: boolean
   skipCheck?: boolean
+  hideBackdrop?: boolean
   dialogProps?: Omit<
     BoxProps &
       DetailedHTMLProps<
@@ -42,7 +42,7 @@ export type DialogProps = {
   setRef?: (ref: HTMLDialogElement) => void
   closeOnOutsideClick?: boolean
   closeOnEsc?: boolean
-} & Omit<BoxProps, 'title'> &
+} & Omit<BoxProps, 'title' | 'className'> &
   Omit<ComponentPlacement, 'placement'>
 
 /** `Dialog` - A component that renders a modal dialog with customizable positioning and appearance.
@@ -79,6 +79,7 @@ export function Dialog({
   closeButtonProps,
   titleProps,
   hideTrigger,
+  hideBackdrop,
   onClose,
   onOpen,
   onToggle,
@@ -90,45 +91,68 @@ export function Dialog({
 }: DialogProps) {
   const [showBackdrop, setShowBackdrop] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [internalDialogOpen, setInternalDialogOpen] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
 
-  useBodyScrollLock({ skipCheck, isLocked: dialogRef?.current?.open ?? false })
+  useBodyScrollLock({ skipCheck, isLocked: internalDialogOpen ?? false })
+
+  const setMountedEffect = useEffectEvent((isMounted: boolean) => {
+    setMounted(isMounted)
+  })
+
+  const setRefEffect = useEffectEvent((ref: HTMLDialogElement) => {
+    setRef?.(ref)
+  })
 
   useEffect(() => {
-    setMounted(true)
+    setMountedEffect(true)
   }, [])
 
   useEffect(() => {
     if (setRef && dialogRef?.current) {
-      setRef(dialogRef?.current)
+      setRefEffect(dialogRef?.current)
     }
   }, [setRef])
 
   const handleOpen = () => {
-    dialogRef?.current?.showModal()
+    if (dialogRef.current?.open) return
+    dialogRef.current?.showModal()
     setShowBackdrop(true)
+    setInternalDialogOpen(true)
     onOpen?.()
   }
 
   const handleClose = () => {
-    dialogRef?.current?.close()
-    onClose?.()
+    if (!dialogRef.current?.open) return
+    dialogRef.current.close()
   }
 
   const handleToggle = () => {
-    setShowBackdrop(dialogRef?.current?.open ?? false)
+    const open = dialogRef.current?.open ?? false
+    setShowBackdrop(open)
+    setInternalDialogOpen(open)
     onToggle?.()
   }
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <No need for those>
-  useEffect(() => {
-    if (setRef || !hideTrigger) return
+  const handleNativeClose = () => {
+    setShowBackdrop(false)
+    setInternalDialogOpen(false)
+    onClose?.()
+  }
+
+  const syncControlledState = useEffectEvent(() => {
+    if (setRef || !hideTrigger || !dialogRef.current) return
     if (isOpen) {
       handleOpen()
-    } else {
+    } else if (dialogRef.current.open) {
       handleClose()
     }
-  }, [isOpen, setRef])
+  })
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: isOpen drives controlled dialog state through the effect event.
+  useEffect(() => {
+    syncControlledState()
+  }, [hideTrigger, isOpen, setRef])
 
   const handleClickOutside = (e: React.MouseEvent<HTMLDialogElement>) => {
     if (!closeOnOutsideClick) return
@@ -159,57 +183,62 @@ export function Dialog({
         </Button>
       )}
 
-      {mounted && showBackdrop && (
-        <div
-          className={cn(
-            'pointer-events-none fixed inset-0 bg-background-1000/50 backdrop-blur-xs starting:backdrop-blur-[0] transition-[backdrop-filter] duration-350',
-            Z_INDEX.DIALOG_BACKDROP
-          )}
-        />
-      )}
+      {mounted &&
+        createPortal(
+          <>
+            {!hideBackdrop && showBackdrop && (
+              <div
+                className={cn(
+                  'pointer-events-none fixed inset-0 bg-background-250/50 backdrop-blur-xs starting:backdrop-blur-[0] transition-[backdrop-filter] duration-350',
+                  Z_INDEX.DIALOG_BACKDROP
+                )}
+              />
+            )}
 
-      {/* Dialog */}
-      {/* TODO: Add onKeyDown improvements for accessibility */}
-      <dialog
-        ref={dialogRef}
-        // make the dialog focusable so we can programmatically focus it and
-        // prevent the browser from auto-focusing the first focusable child
-        tabIndex={-1}
-        aria-labelledby='dialog-title'
-        {...dialogProps}
-        onClick={handleClickOutside}
-        onClose={handleClose}
-        onToggle={handleToggle}
-        onCancel={handleCancel}
-        onKeyDown={handleKeyDown}
-        className={cn(
-          'dialog',
-          'fixed top-[10%] w-full md:w-fit md:min-w-2xl',
-          'overflow-y-hidden',
-          getPlacementClasses({ placement, offsetX, offsetY }),
-          dialogProps?.className
-        )}
-      >
-        {/* Header */}
-        <Box {...headerProps}>
-          <Title id='dialog-title' as='h2' {...titleProps}>
-            {title}
-          </Title>
-          {!hideCloseButton && (
-            <CloseButton
-              onClick={handleClose}
-              aria-label='Close dialog'
-              {...closeButtonProps}
+            {/* Dialog */}
+            {/* TODO: Add onKeyDown improvements for accessibility */}
+            <dialog
+              ref={dialogRef}
+              // make the dialog focusable so we can programmatically focus it and
+              // prevent the browser from auto-focusing the first focusable child
+              tabIndex={-1}
+              aria-labelledby='dialog-title'
+              {...dialogProps}
+              onClick={handleClickOutside}
+              onClose={handleNativeClose}
+              onToggle={handleToggle}
+              onCancel={handleCancel}
+              onKeyDown={handleKeyDown}
               className={cn(
-                'text-gray-500 hover:bg-brand-100 hover:text-gray-800',
-                closeButtonProps?.className
+                'dialog',
+                'fixed top-[10%] w-full md:w-fit md:min-w-2xl',
+                getPlacementClasses({ placement, offsetX, offsetY }),
+                dialogProps?.className
               )}
-            />
-          )}
-        </Box>
-        {/* Content */}
-        {children}
-      </dialog>
+            >
+              {/* Header */}
+              <Box {...headerProps}>
+                <Title id='dialog-title' as='h2' {...titleProps}>
+                  {title}
+                </Title>
+                {!hideCloseButton && (
+                  <CloseButton
+                    onClick={handleClose}
+                    aria-label='Close dialog'
+                    {...closeButtonProps}
+                    className={cn(
+                      'button ghost p-1',
+                      closeButtonProps?.className
+                    )}
+                  />
+                )}
+              </Box>
+              {/* Content */}
+              {children}
+            </dialog>
+          </>,
+          document.body
+        )}
     </>
   )
 }

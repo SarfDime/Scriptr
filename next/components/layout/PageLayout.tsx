@@ -1,7 +1,8 @@
 import React, { type ReactNode } from 'react'
 import { cn } from '@/lib/common-utils'
-import { Box } from '../common/Box'
+import { Box, type BoxProps } from '../common/Box'
 import { Header } from '../navigation/Header'
+import { Divider, type DividerProps } from '../ui/Divider'
 import { PageHeader } from './PageHeader'
 
 export type PageHeaderConfig = {
@@ -15,9 +16,9 @@ export type PageLayoutProps = {
   header?: PageHeaderConfig | ReactNode
   sidebar?: ReactNode
   children: ReactNode
-  className?: string
-  contentClassName?: string
-}
+  dividerProps?: DividerProps & { showDivider?: boolean }
+  contentProps?: BoxProps
+} & BoxProps
 
 const isHeaderConfig = (
   header: PageHeaderConfig | ReactNode
@@ -33,45 +34,52 @@ const isHeaderConfig = (
   )
 }
 
+export const MainLayout = ({ children, className, ...rest }: BoxProps) => {
+  return (
+    <Box as='main' className={cn('ui-container', className)} {...rest}>
+      <Header />
+      {children}
+    </Box>
+  )
+}
+
 export const PageLayout = ({
   header,
   sidebar,
   children,
   className,
-  contentClassName,
+  dividerProps,
+  ...rest
 }: PageLayoutProps) => {
   return (
-    <Box as='main' className={cn('ui-container', className)}>
-      <Header />
-      <Box className={cn('ui-stack ui-section gap-6', contentClassName)}>
-        {header &&
-          (isHeaderConfig(header) ? (
-            <PageHeader
-              greeting={header.greeting}
-              title={header.title}
-              subtitle={header.subtitle}
-            >
-              {header.actions}
-            </PageHeader>
-          ) : (
-            header
-          ))}
-
-        {/* {header && <Divider />} */}
-
-        {sidebar ? (
-          <Box className='flex flex-col lg:flex-row gap-8 items-stretch w-full'>
-            <Box className='w-full lg:flex-2 min-w-0 ui-stack gap-6 flex flex-col'>
-              {children}
-            </Box>
-            <Box className='w-full lg:flex-1 min-w-0 ui-stack gap-6 flex flex-col'>
-              {sidebar}
-            </Box>
-          </Box>
+    <Box className={cn('ui-stack ui-section gap-6', className)} {...rest}>
+      {header &&
+        (isHeaderConfig(header) ? (
+          <PageHeader
+            greeting={header.greeting}
+            title={header.title}
+            subtitle={header.subtitle}
+          >
+            <Box className='ui-cluster gap-2.5'>{header.actions}</Box>
+          </PageHeader>
         ) : (
-          children
-        )}
-      </Box>
+          header
+        ))}
+
+      {dividerProps?.showDivider && <Divider {...dividerProps} />}
+
+      {sidebar ? (
+        <Box className='flex flex-col lg:flex-row gap-8 items-stretch w-full'>
+          <Box className='w-full lg:flex-2 min-w-0 ui-stack gap-6 flex flex-col'>
+            {children}
+          </Box>
+          <Box className='w-full lg:flex-1 min-w-0 ui-stack gap-6 flex flex-col'>
+            {sidebar}
+          </Box>
+        </Box>
+      ) : (
+        children
+      )}
     </Box>
   )
 }

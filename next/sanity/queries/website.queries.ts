@@ -9,3 +9,8 @@ export const websiteSeoQuery = groq`
   "defaultKeywords": defaultKeywords[]
 }
 `
+export const starCanvasQuery = groq`
+*[_id == $WEBSITE][0]{
+  dtBackground->{...}
+}.dtBackground
+`

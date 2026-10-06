@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/complexity/noImportantStyles: <Needed> */
 html,
 body {
   margin: 0;
@@ -57,18 +58,18 @@ body {
 
   [data-testid="structure-tool-list-pane"],
   [data-ui="DocumentListPane"] {
-    flex: unset;
-    min-width: 0rem;
-    width: 10rem;
+    flex: unset !important;
+    min-width: 0rem !important;
+    width: 10rem !important;
   }
 
   [data-ui="DocumentListPane"] {
-    width: 12rem;
+    width: 12rem !important;
   }
 
   [data-testid="default-preview"] * {
-    padding: 0;
-    margin: 0;
+    padding: 0 !important;
+    margin: 0 !important;
     gap: 0.35rem;
     transform: unset;
     ::before,
@@ -78,12 +79,12 @@ body {
   }
 
   [data-testid="default-preview"] {
-    padding-block: 0.3rem;
+    padding-block: 0.3rem !important;
     padding-inline: 0rem 0.25rem;
     height: unset;
 
     [data-testid="default-preview__header"] {
-      display: block;
+      display: block !important;
     }
 
     [data-testid="Media"] {
@@ -102,9 +103,12 @@ body {
     }
 
     li:has(hr) * {
-      padding: 0;
-      margin: 0;
+      margin: 0 !important;
+      padding: 0 !important;
       font-size: 0.75rem;
+      hr {
+        margin-top: 0.5rem !important;
+      }
     }
   }
 
@@ -114,25 +118,25 @@ body {
     padding: 0.75rem 0.5rem;
 
     * {
-      padding: 0;
-      margin: 0;
+      padding: 0 !important;
+      margin: 0 !important;
       font-size: 0.75rem;
     }
   }
 
   [data-testid="compact-preview"] {
-    padding: 0.1rem;
+    padding: 0.1rem !important;
     div {
-      gap: 0.05rem;
+      gap: 0.05rem !important;
     }
   }
 
   [data-testid="compact-preview__status"] {
-    padding: 0rem;
+    padding: 0rem !important;
   }
 
   [data-ui="Box"]:has(div[offset="0"]) {
-    padding: 0.25rem;
+    padding: 0.25rem !important;
   }
 
   [data-ui="Layer"]:empty {

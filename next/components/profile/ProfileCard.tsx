@@ -1,8 +1,9 @@
 import Book from '@sanity/icons/Book'
 import Confetti from '@sanity/icons/Confetti'
+import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
-import type { SanityImageType } from '@/types/common.types'
 import { Box, type BoxProps } from '../common/Box'
+import type { NextImageProps } from '../common/NextImage'
 import { Text } from '../typography/Text'
 import { Avatar } from '../ui/Avatar'
 import { Badge } from '../ui/Badge'
@@ -15,7 +16,7 @@ type ProfileCardProps = {
   university: string
   faculty: string
   location: string
-  picture?: SanityImageType
+  picture?: NextImageProps
 } & BoxProps
 
 export const ProfileCard = ({
@@ -29,17 +30,17 @@ export const ProfileCard = ({
   className,
   ...props
 }: ProfileCardProps) => {
-  const accent = 'cp-blue'
+  const color = getColorPalette({ type: 'seed', value: name })
 
   return (
-    <Card {...props} className={cn('p-6', className)}>
+    <Card {...props} className={cn('p-6 ui-above', className)}>
       <Card.Body className='flex gap-4 grow-0'>
-        <Avatar name={name} picture={picture} />
+        <Avatar name={name} picture={picture} color={color} />
 
         <Box className='ui-stack gap-1'>
           <Box className='flex flex-wrap items-center gap-2'>
             <Text className='ui-label'>{location}</Text>
-            {role && <Badge colorPalette={accent}>{role}</Badge>}
+            {role && <Badge colorPalette={color}>{role}</Badge>}
           </Box>
           <Text className='ui-body'>{bio}</Text>
         </Box>
@@ -49,6 +50,7 @@ export const ProfileCard = ({
         <Box className='ui-cluster'>
           <Book />
           <Box className='ui-stack gap-0'>
+            {/* TODO: Should be a link to the university page, remove hardcoded text */}
             <Text className='ui-label'>University</Text>
             <Text className='ui-body'>{university}</Text>
           </Box>

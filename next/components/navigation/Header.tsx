@@ -6,17 +6,17 @@ import { useState } from 'react'
 import { cn } from '@/lib/common-utils'
 import { Button } from '../common/Button'
 import { Text } from '../typography/Text'
-import { HeaderActions } from './NavigationLinks'
+import { HeaderActions } from './HeaderActions'
 
 export const Header = () => {
-  const [_mobileOpen, setMobileOpen] = useState(false)
+  const [_mobileOpen, setMobileOpen] = useState(false) // TODO: Implement mobile navigation toggle from hook or something make it global
 
   return (
     <header
       className={cn(
         'sticky top-0 z-10 flex h-16 items-center justify-between',
-        'border-b border-grey-300 bg-background-100/65 backdrop-blur',
-        'px-5 lg:px-10'
+        'border-b ui-above',
+        'px-5'
       )}
     >
       <Button
@@ -31,7 +31,6 @@ export const Header = () => {
         Thursday, September 4 <span className='mx-2 text-grey-400'>/</span> Week
         5
       </Text>
-
       <HeaderActions />
     </header>
   )

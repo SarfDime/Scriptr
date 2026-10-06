@@ -26,10 +26,10 @@ export const TOAST_ICONS = {
   info: InfoOutlineIcon,
 } as const
 export const TOAST_VARIANTS = {
-  success: 'bg-jade',
-  error: 'bg-error-red',
-  warning: 'bg-yellow-500',
-  info: 'bg-brand',
+  success: 'cp-success',
+  error: 'cp-danger',
+  warning: 'cp-warning',
+  info: 'cp-info',
 } as const
 export const BREAKPOINTS = [
   'base',

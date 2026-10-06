@@ -1,7 +1,7 @@
 import { IMAGE_QUALITY } from '@shared/config/next-constants'
+import type { PortableTextValue } from '@shared/types/portable-text.types'
+import type { SanityImageType } from '@shared/types/sanity-transform.types'
 import { IMAGE_SIZES } from '@/styles/style'
-import type { SanityImageType } from '@/types/common.types'
-import type { PortableTextType } from '@/types/components/PortableText.types'
 import { cn, convertToPlainText } from '../../lib/common-utils'
 import type { BoxProps } from './Box'
 import { NextImage, type NextImageProps } from './NextImage'
@@ -11,7 +11,7 @@ type LinkWithImageProps = {
   href: string
   linkImage: SanityImageType
   comingSoon?: boolean
-  linkTitle?: PortableTextType
+  linkTitle?: PortableTextValue
   hideExternalIcon?: boolean
   imageProps?: NextImageProps
   linkProps?: NextLinkProps
