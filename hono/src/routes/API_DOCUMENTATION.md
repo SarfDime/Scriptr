@@ -216,9 +216,9 @@ Response excludes `is_flagged` (internal moderation state). Each file in
 
 | Route                      | Notes                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /scripts`            | Body: `{ title, description?, subjectId, professorId, examSession?, additionalReading?, files: [{ fileKey, fileType, fileSizeBytes, bucket }] }` — `files` is exactly what `POST /file-ops/upload` returns, passed straight through. `title`/`description` are Portable Text. At least one file required. Validated via a `zValidator` JSON schema (accepts both `subjectId`/`subject_id` etc. key styles). Rejected if restricted. Returns `403` for RLS authorization failures, `409` for missing subject/professor references, and `400` for database constraint violations. |
+| `POST /scripts`            | Body: `{ title, description?, subjectId, professorId, examSession?, additionalReading?, files: [{ fileKey, fileType, fileSizeBytes, bucket }] }` — `files` is exactly what `POST /file-ops/upload` returns, passed straight through. `title`/`description` are Portable Text, restricted to supported text blocks, spans, styles, decorators, lists, and alignments; title must contain text and fit within 2 KiB, description within 50 KiB. At least one file required. Validated via a `zValidator` JSON schema (accepts both `subjectId`/`subject_id` etc. key styles). Rejected if restricted. Returns `403` for RLS authorization failures, `409` for missing subject/professor references, and `400` for invalid Portable Text or database constraint violations. |
 | `GET /scripts/my-scripts`  | Current user's scripts                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `PATCH /scripts/:id`       | Author or admin. Body: `{ title?, description?, additional_reading? }`. Files are immutable — not part of this body.                                                                                                                                                                                                                                                                                                                |
+| `PATCH /scripts/:id`       | Author or admin. Body: `{ title?, description?, additional_reading? }`. Updated Portable Text uses the same allow-list and byte limits as `POST /scripts`; files are immutable — not part of this body. Invalid Portable Text returns `400`.                                                                                                                                                                                                |
 | `DELETE /scripts/:id`      | Author or admin. Removes the script's database records and attempts to delete all associated R2 objects.                                                                                                                                                                                                                                                                                                                            |
 | `GET /scripts/flagged/all` | Admin only                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
@@ -236,11 +236,11 @@ required; list routes include `reactions_count`, `reactions_by_type`,
 
 | Route                                 | Notes                                                                                                       |
 | ------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `POST /comments`                      | `{ content: PortableTextValue, professor_id? \| script_id? }` — exactly one target. Supports inline decorators but rejects headings, lists, and text alignment. Rejected if restricted. |
-| `POST /comments/:commentId/replies`   | Same body shape, sets `parent_id`                                                                           |
+| `POST /comments`                      | `{ content: PortableTextValue, professor_id? \| script_id? }` — exactly one target. Supports allow-listed inline decorators on normal text blocks only; rejects custom blocks, annotations, headings, lists, and text alignment. Requires at least 3 non-whitespace characters. Rejected if restricted. |
+| `POST /comments/:commentId/replies`   | Same body shape and validation, sets `parent_id`                                                            |
 | `POST /comments/:commentId/reactions` | `{ reaction_type: 'like'\|'hate'\|'funny'\|'sad'\|'confused' }` — toggles that type independently, so one user may add multiple reaction types. Rejected if restricted. |
 | `POST /comments/:commentId/like`      | Toggle. Rejected if restricted.                                                                             |
-| `PATCH /comments/:id`                 | Author or admin. `{ content }`                                                                              |
+| `PATCH /comments/:id`                 | Author or admin. `{ content }`; same allow-list and 3-character minimum as comment creation.                 |
 | `DELETE /comments/:id`                | Author or admin                                                                                             |
 | `GET /comments/flagged/all`           | Admin only                                                                                                  |
 
@@ -512,11 +512,14 @@ flagging surfaces content for review, it never hides it.
 enforced at the API via `zValidator`, not Postgres — the database never sees
 raw bytes.
 
-**Portable Text**: `scripts.title`, `scripts.description`, `comments.content`
-are Portable Text (`jsonb` block arrays). The Postgres `CHECK` only confirms
-valid JSON under a size cap — block/mark-type validation is an API concern
-that is **not yet enforced server-side**, and the renderer should only
-recognize an explicit block-type allow-list.
+**Portable Text**: `scripts.title`, `scripts.description`, and `comments.content`
+are Portable Text (`jsonb` block arrays). The API enforces the editor allow-list:
+script content accepts text blocks with spans, known styles/decorators, configured
+lists, and alignments; comments accept normal text blocks with inline decorators
+only. Unsupported block/child types, marks, annotations, and extra fields are
+rejected with `400`. Script titles must contain text and fit within 2 KiB;
+descriptions are limited to 50 KiB. Comments require at least 3
+non-whitespace characters. Postgres also enforces its JSON size caps.
 
 ## Planned Endpoints (Not Yet Implemented)
 
@@ -525,8 +528,6 @@ recognize an explicit block-type allow-list.
   whole script.
 - **Achievement definitions CRUD** — admin create/update/delete for
   `achievement_definitions`; only the public read exists today.
-- **Server-side Portable Text allow-list validation** on script and comment
-  writes.
 - **Moderator notification pipeline** — repeated flags notifying moderators,
   a moderator's flag escalating to admins. No schema or backend work started;
   moderators have no elevated access today.

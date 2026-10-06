@@ -1,7 +1,11 @@
 'use client'
 
+import { PORTABLE_TEXT_LIMITS } from '@shared/config/portable-text-limits'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
-import { portableTextToPlainText } from '@shared/utils/portable-text.utils'
+import {
+  isCommentPortableTextValue,
+  portableTextToPlainText,
+} from '@shared/utils/portable-text.utils'
 import { useState } from 'react'
 
 /**
@@ -13,6 +17,12 @@ export function useRichTextDraft() {
   const [editorKey, setEditorKey] = useState(0)
 
   const plainText = portableTextToPlainText(content).trim()
+  const hasMinimumLength =
+    plainText.length >= PORTABLE_TEXT_LIMITS.commentMinimumCharacters
+  const isValid =
+    content !== undefined &&
+    hasMinimumLength &&
+    isCommentPortableTextValue(content)
 
   const reset = () => {
     setContent(undefined)
@@ -25,6 +35,8 @@ export function useRichTextDraft() {
     editorKey,
     hasContent: plainText.length > 0,
     characterCount: plainText.length,
+    hasMinimumLength,
+    isValid,
     reset,
   }
 }

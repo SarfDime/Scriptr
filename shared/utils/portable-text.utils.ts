@@ -1,9 +1,20 @@
+import { PORTABLE_TEXT_LIMITS } from '@shared/config/portable-text-limits'
+import {
+  ALIGNMENTS,
+  COLORS,
+  DEFAULT_DECORATOR_NAMES,
+  FONT_SIZE_STYLES,
+  FONT_WEIGHTS,
+  LIST_ITEMS,
+} from '@shared/config/shared-pt-config'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
 
 type PortableTextBlock = Extract<
   NonNullable<PortableTextValue>[number],
   { children?: unknown }
->
+> & {
+  textAlign?: string
+}
 
 export type RichTextSpan = Extract<
   NonNullable<PortableTextBlock['children']>[number],
@@ -48,16 +59,113 @@ export const isPortableTextValue = (
 export const isCommentPortableTextValue = (
   value: unknown
 ): value is PortableTextValue =>
-  isPortableTextValue(value) &&
-  value.every((block) => {
-    const record = block as Record<string, unknown>
-    return (
-      (record.style === undefined || record.style === 'normal') &&
-      !('listItem' in record) &&
-      !('level' in record) &&
-      !('textAlign' in record)
-    )
-  })
+  isPortableTextValue(value) && value.every(isCommentBlock)
+
+const PORTABLE_TEXT_DECORATORS = new Set<string>([
+  ...DEFAULT_DECORATOR_NAMES,
+  ...COLORS,
+  ...FONT_WEIGHTS,
+  'highlight-newline',
+])
+const PORTABLE_TEXT_STYLES = new Set<string>(
+  FONT_SIZE_STYLES.filter((style) => style.name !== '-').map(
+    (style) => style.name
+  )
+)
+const PORTABLE_TEXT_LISTS = new Set<string>(LIST_ITEMS.map((item) => item.name))
+const PORTABLE_TEXT_ALIGNMENTS = new Set<string>(ALIGNMENTS)
+const PORTABLE_TEXT_BLOCK_KEYS = new Set([
+  '_type',
+  '_key',
+  'style',
+  'children',
+  'markDefs',
+  'listItem',
+  'level',
+  'textAlign',
+])
+const PORTABLE_TEXT_SPAN_KEYS = new Set(['_type', '_key', 'text', 'marks'])
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value)
+
+const hasOnlyKeys = (
+  value: Record<string, unknown>,
+  allowedKeys: ReadonlySet<string>
+): boolean => Object.keys(value).every((key) => allowedKeys.has(key))
+
+const hasOptionalStringKey = (
+  value: Record<string, unknown>,
+  key: string
+): boolean => !(key in value) || typeof value[key] === 'string'
+
+const isAllowedSpan = (value: unknown): boolean => {
+  if (
+    !isRecord(value) ||
+    value._type !== 'span' ||
+    !hasOnlyKeys(value, PORTABLE_TEXT_SPAN_KEYS) ||
+    !hasOptionalStringKey(value, '_key') ||
+    typeof value.text !== 'string' ||
+    (value.marks !== undefined &&
+      (!Array.isArray(value.marks) ||
+        !value.marks.every(
+          (mark) =>
+            typeof mark === 'string' && PORTABLE_TEXT_DECORATORS.has(mark)
+        )))
+  ) {
+    return false
+  }
+
+  return true
+}
+
+const isPortableTextBlock = (value: unknown): value is PortableTextBlock => {
+  if (
+    !isRecord(value) ||
+    value._type !== 'block' ||
+    !hasOnlyKeys(value, PORTABLE_TEXT_BLOCK_KEYS) ||
+    !hasOptionalStringKey(value, '_key') ||
+    !Array.isArray(value.children) ||
+    !value.children.every(isAllowedSpan) ||
+    (value.markDefs !== undefined &&
+      (!Array.isArray(value.markDefs) || value.markDefs.length > 0))
+  ) {
+    return false
+  }
+
+  return true
+}
+
+const isScriptBlock = (value: unknown): value is PortableTextBlock => {
+  if (!isRecord(value) || !isPortableTextBlock(value)) return false
+
+  return (
+    (value.style === undefined || PORTABLE_TEXT_STYLES.has(value.style)) &&
+    (value.listItem === undefined ||
+      (typeof value.listItem === 'string' &&
+        PORTABLE_TEXT_LISTS.has(value.listItem))) &&
+    (value.level === undefined ||
+      (typeof value.level === 'number' &&
+        Number.isInteger(value.level) &&
+        value.level >= 1)) &&
+    (value.level === undefined || value.listItem !== undefined) &&
+    (value.textAlign === undefined ||
+      (typeof value.textAlign === 'string' &&
+        PORTABLE_TEXT_ALIGNMENTS.has(value.textAlign)))
+  )
+}
+
+const isCommentBlock = (value: unknown): value is PortableTextBlock =>
+  isPortableTextBlock(value) &&
+  (value.style === undefined || value.style === 'normal') &&
+  !('listItem' in value) &&
+  !('level' in value) &&
+  !('textAlign' in value)
+
+export const isScriptPortableTextValue = (
+  value: unknown
+): value is PortableTextValue =>
+  isPortableTextValue(value) && value.every(isScriptBlock)
 
 export const portableTextToPlainText = (blocks?: PortableTextInput): string => {
   // Guard against null or undefined
@@ -90,3 +198,28 @@ export const portableTextToPlainText = (blocks?: PortableTextInput): string => {
     .join('\n\n')
     .trim()
 }
+
+export const portableTextJsonByteLength = (
+  value: PortableTextValue
+): number => {
+  const serialized = JSON.stringify(value)
+  if (serialized === undefined) {
+    throw new TypeError('Portable Text value could not be serialized')
+  }
+
+  return new TextEncoder().encode(serialized).byteLength
+}
+
+export const isScriptTitlePortableTextValue = (
+  value: unknown
+): value is PortableTextValue =>
+  isScriptPortableTextValue(value) &&
+  portableTextToPlainText(value).trim().length > 0 &&
+  portableTextJsonByteLength(value) <= PORTABLE_TEXT_LIMITS.scriptTitleBytes
+
+export const isScriptDescriptionPortableTextValue = (
+  value: unknown
+): value is PortableTextValue =>
+  isScriptPortableTextValue(value) &&
+  portableTextJsonByteLength(value) <=
+    PORTABLE_TEXT_LIMITS.scriptDescriptionBytes

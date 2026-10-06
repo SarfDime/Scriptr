@@ -81,6 +81,7 @@ export function CreateScriptModal({
     new Set()
   )
   const [titleTouched, setTitleTouched] = useState(false)
+  const [descriptionTouched, setDescriptionTouched] = useState(false)
   const [filesTouched, setFilesTouched] = useState(false)
 
   const {
@@ -99,6 +100,8 @@ export function CreateScriptModal({
     removeFile,
     isBusy,
     canSubmit,
+    titleTooLong,
+    descriptionTooLong,
     professors,
     examSessions,
     uploadState,
@@ -117,16 +120,24 @@ export function CreateScriptModal({
   function resetTouched() {
     setTouchedLinks(new Set())
     setTitleTouched(false)
+    setDescriptionTouched(false)
     setFilesTouched(false)
   }
 
   // --- Title (required) ---------------------------------------------------
   const titleHasContent = portableTextToPlainText(title).trim() !== ''
-  const titleInvalid = titleTouched && !titleHasContent
+  const titleInvalid = titleTouched && (!titleHasContent || titleTooLong)
 
   const handleTitleChange = (value: Parameters<typeof setTitle>[0]) => {
     setTitleTouched(true)
     setTitle(value)
+  }
+
+  const handleDescriptionChange = (
+    value: Parameters<typeof setDescription>[0]
+  ) => {
+    setDescriptionTouched(true)
+    setDescription(value)
   }
 
   // --- Professor (required) -----------------------------------------------
@@ -182,10 +193,16 @@ export function CreateScriptModal({
   // Backstop for Enter-key submission: surface every error instead of
   // submitting.
   const handleGuardedSubmit = (event: Parameters<typeof handleSubmit>[0]) => {
-    if (hasLinkErrors) {
+    if (
+      hasLinkErrors ||
+      !titleHasContent ||
+      titleTooLong ||
+      descriptionTooLong
+    ) {
       event.preventDefault()
       setTouchedLinks(new Set(readingLinks.map((_, index) => index)))
       setTitleTouched(true)
+      setDescriptionTouched(true)
       setFilesTouched(true)
       return
     }
@@ -232,10 +249,12 @@ export function CreateScriptModal({
               labelProps={FIELD_LABEL_PROPS}
               helperText={UI_STRINGS.scripts.uploadModal.formTitleHelp}
               errorText={
-                UI_STRINGS.scripts.uploadModal.fieldErrors.titleRequired
+                titleTooLong
+                  ? UI_STRINGS.scripts.uploadModal.fieldErrors.titleTooLong
+                  : UI_STRINGS.scripts.uploadModal.fieldErrors.titleRequired
               }
               required
-              valid={titleHasContent}
+              valid={titleHasContent && !titleTooLong}
               invalid={titleInvalid}
             >
               <PortableTextEditorSection
@@ -255,17 +274,20 @@ export function CreateScriptModal({
               />
             </Field>
 
-            {/* Optional, no validation rules of its own. */}
             <Field
               className='min-w-0'
               label={UI_STRINGS.scripts.uploadModal.formDescription}
               labelProps={FIELD_LABEL_PROPS}
               helperText={UI_STRINGS.scripts.uploadModal.formDescriptionHelp}
+              errorText={
+                UI_STRINGS.scripts.uploadModal.fieldErrors.descriptionTooLong
+              }
+              invalid={descriptionTouched && descriptionTooLong}
             >
               <PortableTextEditorSection
                 key={`description-${formKey}`}
                 initialContent={description}
-                onChange={setDescription}
+                onChange={handleDescriptionChange}
                 showActions={false}
                 ariaLabel={UI_STRINGS.scripts.uploadModal.formDescription}
                 editorOptions={{ excludedStyles: ['h1', 'h2', 'h3'] }}

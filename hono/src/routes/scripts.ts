@@ -14,6 +14,8 @@ import { isAdmin, isScriptFileInput } from '../../../shared/utils/api.utils'
 import { getAttribute } from '../../../shared/utils/common-utils'
 import {
   isPortableTextValue,
+  isScriptDescriptionPortableTextValue,
+  isScriptTitlePortableTextValue,
   portableTextToPlainText,
 } from '../../../shared/utils/portable-text.utils'
 import {
@@ -187,12 +189,13 @@ const createScriptSchema = z
       }
     },
     z.object({
-      title: z.custom<PortableTextValue>(isPortableTextValue, {
-        message: 'title must be a valid Portable Text value',
+      title: z.custom<PortableTextValue>(isScriptTitlePortableTextValue, {
+        message:
+          'title must contain text and use supported Portable Text within 2 KB',
       }),
       description: z
-        .custom<PortableTextValue>(isPortableTextValue, {
-          message: 'description must be a valid Portable Text value',
+        .custom<PortableTextValue>(isScriptDescriptionPortableTextValue, {
+          message: 'description must use supported Portable Text within 50 KB',
         })
         .nullable(),
       subjectId: z.string().min(1, 'subjectId is required'),
@@ -502,10 +505,10 @@ scripts.patch('/:id', authMiddleware, async (c) => {
   const { title, description, additional_reading } = await c.req.json()
 
   if (
-    (title !== undefined && !isPortableTextValue(title)) ||
+    (title !== undefined && !isScriptTitlePortableTextValue(title)) ||
     (description !== undefined &&
       description !== null &&
-      !isPortableTextValue(description)) ||
+      !isScriptDescriptionPortableTextValue(description)) ||
     (additional_reading !== undefined &&
       (!Array.isArray(additional_reading) ||
         !additional_reading.every((url) => typeof url === 'string')))

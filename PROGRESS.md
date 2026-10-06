@@ -15,7 +15,7 @@ command, and the route-registration order in `scripts.ts`.
 
 * **Schema:** `profiles`, `scripts`/`script_files`, catalog tables + junctions, `profile_faculties`/`profile_studies`/`profile_subjects`, `download_events`, `flags`, `comments` + reactions/likes, `votes`, `script_favorites`, `rating_types`/`professor_ratings`/`subject_ratings`, `achievement_definitions`/`profile_achievements`, `notifications`, `profile_restrictions`. Constraints, indexes, Portable Text size caps, score/status `CHECK`s. **[✅]**
 * **Catalog API:** full read/write for universities, faculties, studies, subjects, professors and every junction table, gated by `x-internal-secret`, service-role client only. Universities have full CRUD + sync, with an app-level `faculties` dependents check on delete. **[✅]**
-* **Scripts:** multi-file upload, Portable Text title/description, single-subject constraint, auto-resolved hierarchy, professor validation, author/admin edit/delete, fuzzy search, faculty-scoped listing. **[✅]**
+* **Scripts:** multi-file upload, Portable Text title/description (server-side allow-list and 2 KiB/50 KiB caps), single-subject constraint, auto-resolved hierarchy, professor validation, author/admin edit/delete, fuzzy search, faculty-scoped listing. **[✅]**
 * **Downloads:** dedupe (account → IP → device), service-role only. **[✅]**
 * **Comments** (script/professor/user threads, nested replies, independently toggled multi-reactions, likes; inline-only Portable Text with headings, lists, and alignment excluded), **flags** (user create/view/delete own; admin list/resolve via RLS), **votes** (atomic `toggle_vote` RPC), **favorites**, **ratings** (types, professor/subject ratings, stats). **[✅]**
 * **Profiles:** public list/lookup/stats, `me` read/update/delete, admin patch/delete, internal-only role changes. **[✅]**
@@ -26,6 +26,7 @@ command, and the route-registration order in `scripts.ts`.
 * **Achievements:** award-check helper (metric vs `achievement_definitions.threshold` → `profile_achievements` + notification), wired into vote, download, and comment endpoints. **[✅]**
 * **Restrictions:** admin restrict/unrestrict endpoint (`restrictions.ts`, `is_admin()` RLS). **[✅]**
 * **Typed responses:** route responses are typed against types in `shared/types/` (e.g. `c.json<LoginResponse>(...)` using `auth.types.ts`), so `next/` and `sanity/` consume the same shapes. **[✅]**
+* **Portable Text validation:** script and comment write routes enforce the supported block/mark allow-list; Next.js forms enforce script byte limits and the comment minimum length locally. **[✅]**
 * Moderator role has no access checks anywhere; every elevated check is `is_admin()`. **[✅]**
 * `API_DOCUMENTATION.md` reconciled with the route set. **[✅]**
 
@@ -33,7 +34,6 @@ command, and the route-registration order in `scripts.ts`.
 
 * **Finish response typing rollout** — verify every route file uses shared response types (all routes mounted in `index.ts` must be covered; check `notifications.ts` and the rest). **[🔲]**
 * **Verify `GET /scripts/my-scripts`** — it is registered after `GET /scripts/:id` in `scripts.ts`, so Hono's first-match ordering likely routes it to `/:id` (which returns a 404 for the non-UUID). Confirm with a request; if so, move it above `/:id`. **[🔲 bug?]**
-* **Portable Text block-type allow-list validation, server-side** — Postgres `CHECK` only validates "JSON array under size limit". Needed before user-authored rich text ships. **[🔲]**
 * **Register hardening:** unique usernames, spam-email blocking, rate limiting. **[🔲]**
 * **Individual script file removal** — RLS allows it, no endpoint exists. **[🔲]**
 * **Achievement definitions CRUD** (admin) — only public read exists. **[🔲]**
@@ -144,7 +144,6 @@ Loose ideas and open questions that aren't concrete yet live in `TODO.md`.
 
 ## Suggested Order
 
-1. Server-side Portable Text allow-list validation before user content goes live.
-2. Finish response typing rollout; refresh `API_TESTING_GUIDE.md`.
-3. Register validation and hardening (client, API, rate limiting).
-4. Moderation/admin UI.
+1. Finish response typing rollout; refresh `API_TESTING_GUIDE.md`.
+2. Register validation and hardening (client, API, rate limiting).
+3. Moderation/admin UI.

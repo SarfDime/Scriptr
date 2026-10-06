@@ -1,12 +1,18 @@
 'use client'
 
 import type { PortableTextBlock } from '@portabletext/editor'
+import { PORTABLE_TEXT_LIMITS } from '@shared/config/portable-text-limits'
 import {
   ALLOWED_EXTENSIONS,
   SUBJECT_EXAM_SESSIONS,
 } from '@shared/config/shared-constants'
 import type { SubjectExamSession } from '@shared/types/academic.types'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
+import {
+  isScriptDescriptionPortableTextValue,
+  isScriptTitlePortableTextValue,
+  portableTextJsonByteLength,
+} from '@shared/utils/portable-text.utils'
 import { type SubmitEvent, useEffect, useEffectEvent, useState } from 'react'
 import { useScriptUpload } from '@/hooks/useScriptsUpload'
 import { getExtension } from '@/lib/file-preview'
@@ -95,9 +101,15 @@ export function useCreateScriptForm({
 
   const isBusy = state.status === 'uploading' || state.status === 'creating'
   const validFiles = files.filter((entry) => entry.error === null)
+  const titleTooLong =
+    portableTextJsonByteLength(title) > PORTABLE_TEXT_LIMITS.scriptTitleBytes
+  const descriptionTooLong =
+    portableTextJsonByteLength(description) >
+    PORTABLE_TEXT_LIMITS.scriptDescriptionBytes
   const canSubmit =
     !isBusy &&
-    hasText(title) &&
+    isScriptTitlePortableTextValue(title) &&
+    isScriptDescriptionPortableTextValue(description) &&
     subjectId.length > 0 &&
     professorId.length > 0 &&
     validFiles.length > 0
@@ -194,6 +206,8 @@ export function useCreateScriptForm({
     // Derived
     isBusy,
     canSubmit,
+    titleTooLong,
+    descriptionTooLong,
     professors,
     examSessions,
 

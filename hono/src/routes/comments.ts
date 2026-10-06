@@ -1,3 +1,4 @@
+import { PORTABLE_TEXT_LIMITS } from '@shared/config/portable-text-limits'
 import { isReactionType } from '@shared/config/shared-constants'
 import type {
   CommentByProfessor,
@@ -234,7 +235,10 @@ comments.post('/:commentId/replies', authMiddleware, async (c) => {
     )
   }
 
-  if (portableTextToPlainText(content).length < 3) {
+  if (
+    portableTextToPlainText(content).trim().length <
+    PORTABLE_TEXT_LIMITS.commentMinimumCharacters
+  ) {
     return c.json(
       {
         error:
@@ -444,7 +448,10 @@ comments.post('/', authMiddleware, async (c) => {
     )
   }
 
-  if (portableTextToPlainText(content).length < 3) {
+  if (
+    portableTextToPlainText(content).trim().length <
+    PORTABLE_TEXT_LIMITS.commentMinimumCharacters
+  ) {
     return c.json(
       {
         error:
@@ -506,7 +513,8 @@ comments.patch('/:id', authMiddleware, async (c) => {
 
   if (
     !isCommentPortableTextValue(content) ||
-    portableTextToPlainText(content).length < 3
+    portableTextToPlainText(content).trim().length <
+      PORTABLE_TEXT_LIMITS.commentMinimumCharacters
   ) {
     return c.json(
       {

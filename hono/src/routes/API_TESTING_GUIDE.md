@@ -213,11 +213,19 @@ curl -s -b cookies-student.txt -X POST $BASE/file-ops/upload -F "files=@/tmp/tes
 FILES=$(echo $UPLOAD | jq -c '.files')
 
 SCRIPT=$(curl -s -b cookies-student.txt -X POST $BASE/scripts -H "Content-Type: application/json" -d "{
-  \"title\": [{\"_type\":\"block\",\"children\":[{\"_type\":\"span\",\"text\":\"Test Script Title\"}]}],
+  \"title\": [{\"_type\":\"block\",\"style\":\"normal\",\"markDefs\":[],\"children\":[{\"_type\":\"span\",\"text\":\"Test Script Title\",\"marks\":[]}]}],
   \"subject_id\": \"$SUBJ\",
   \"professor_id\": \"$PROF1\",
   \"files\": $FILES
 }" | jq -r '.script.id')
+
+# Unsupported Portable Text block type — expect 400 and no script created
+curl -s -b cookies-student.txt -X POST $BASE/scripts -H "Content-Type: application/json" -d "{
+  \"title\": [{\"_type\":\"image\"}],
+  \"subject_id\": \"$SUBJ\",
+  \"professor_id\": \"$PROF1\",
+  \"files\": $FILES
+}" | jq .
 ```
 
 ```bash
@@ -287,6 +295,12 @@ COMMENT=$(curl -s -b cookies-student.txt -X POST $BASE/comments -H "Content-Type
   \"content\": [{\"_type\":\"block\",\"children\":[{\"_type\":\"span\",\"text\":\"Great script, thanks!\"}]}],
   \"script_id\": \"$SCRIPT\"
 }" | jq -r '.comment.id')
+
+# Comments need at least 3 characters and only allow normal text blocks — expect 400
+curl -s -b cookies-student.txt -X POST $BASE/comments -H "Content-Type: application/json" -d "{
+  \"content\": [{\"_type\":\"block\",\"style\":\"h1\",\"children\":[{\"_type\":\"span\",\"text\":\"No\"}]}],
+  \"script_id\": \"$SCRIPT\"
+}" | jq .
 
 curl -s $BASE/comments/script/$SCRIPT | jq '.[] | {id, content, reactions_count, likes_count}'
 

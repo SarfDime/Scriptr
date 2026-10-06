@@ -28,7 +28,7 @@ export function CommentComposer({ onClose }: { onClose: () => void }) {
   }
 
   const handleSubmit = async () => {
-    if (!draft.content || !draft.hasContent) return
+    if (!draft.content || !draft.isValid) return
     const result = await run(target, draft.content)
     if (result.ok) {
       addComment(result.data.comment)
@@ -55,9 +55,16 @@ export function CommentComposer({ onClose }: { onClose: () => void }) {
           </Box>
         )}
         <Box className='ui-cluster items-center justify-between gap-x-3 gap-y-2'>
-          <Text className='ui-caption text-grey-500'>
-            {COMMENT_STRINGS.composer.characterCount(draft.characterCount)}
-          </Text>
+          <Box className='ui-stack gap-1'>
+            <Text className='ui-caption text-grey-500'>
+              {COMMENT_STRINGS.composer.characterCount(draft.characterCount)}
+            </Text>
+            {draft.hasContent && !draft.hasMinimumLength && (
+              <Text role='alert' className='ui-caption text-red-600'>
+                {COMMENT_STRINGS.general.minimumLength}
+              </Text>
+            )}
+          </Box>
           <Box className='ui-cluster items-center justify-end gap-2'>
             <Button
               onClick={handleClear}
@@ -81,7 +88,7 @@ export function CommentComposer({ onClose }: { onClose: () => void }) {
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={!draft.hasContent || state.status === 'pending'}
+              disabled={!draft.isValid || state.status === 'pending'}
               className='button solid'
             >
               {COMMENT_STRINGS.composer.submit}

@@ -71,6 +71,8 @@ export const UI_STRINGS = {
       },
       fieldErrors: {
         titleRequired: 'Enter a title for your script',
+        titleTooLong: 'Script title must be 2 KB or less',
+        descriptionTooLong: 'Script description must be 50 KB or less',
         noProfessors: 'No professors are available for this subject',
         filesRequired: 'Add at least one file',
         filesInvalid: 'Remove or replace the files with errors',

@@ -9,6 +9,7 @@ export const COMMENT_STRINGS = {
     deletedUser: 'Deleted user',
     unknownAuthor: 'N/A',
     tryAgain: 'Please try again.',
+    minimumLength: 'Enter at least 3 characters to post.',
   },
   composer: {
     openButton: 'Write a comment',
