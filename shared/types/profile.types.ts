@@ -9,6 +9,44 @@ export type ProfileSubjectRow = {
   updated_at: string
 }
 
+export type ProfileSubjectSelection = {
+  subject_id: string
+  status: string
+  updated_at: string
+  subject: Tables<'subjects'> | null
+}
+
+export type ProfileFacultySelection = {
+  faculty_id: string
+  created_at: string
+  faculty: FacultyWithUniversity | null
+}
+
+export type ProfileStudySelection = {
+  study_id: string
+  created_at: string
+  study: StudyWithFacultyAndUniversity | null
+}
+
+export type FavoriteScriptRecord = {
+  created_at: string
+  script: {
+    id: string
+    title: PortableTextValue
+    description: PortableTextValue | null
+    subject_id: string
+    professor_id: string
+    author_id: string
+    exam_session: string | null
+    additional_reading: Array<string>
+    vote_score: number
+    download_count: number
+    created_at: string
+    updated_at: string
+    files: Array<ScriptFile>
+  } | null
+}
+
 /** Matches `university:universities(id, name)` — id/name only, not the full row. */
 export type UniversitySummary = {
   id: string

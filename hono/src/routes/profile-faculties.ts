@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { profileMutationTags } from '../../../shared/config/cache-tags'
+import type { ProfileFacultySelection } from '../../../shared/types/profile.types'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
 import { requiredParam } from '../lib/request'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
@@ -23,7 +24,7 @@ profileFaculties.get('/', async (c) => {
 
   if (error) return c.json({ error: error.message }, 500)
   await revalidateCacheTags(c.env, profileMutationTags(user.id))
-  return c.json(data)
+  return c.json<Array<ProfileFacultySelection>>(data ?? [])
 })
 
 /** Get the current user's selection record for a faculty, or null */
@@ -41,7 +42,7 @@ profileFaculties.get('/:facultyId', async (c) => {
     .maybeSingle()
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json<ProfileFacultySelection | null>(data)
 })
 
 /** Add a faculty to the current user's selections (idempotent) */
@@ -61,7 +62,7 @@ profileFaculties.post('/:facultyId', async (c) => {
     .single()
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json<ProfileFacultySelection>(data)
 })
 
 /** Remove a faculty from the current user's selections */
@@ -77,7 +78,7 @@ profileFaculties.delete('/:facultyId', async (c) => {
 
   if (error) return c.json({ error: error.message }, 500)
   await revalidateCacheTags(c.env, profileMutationTags(user.id))
-  return c.json({ success: true })
+  return c.json<{ success: true }>({ success: true })
 })
 
 export default profileFaculties

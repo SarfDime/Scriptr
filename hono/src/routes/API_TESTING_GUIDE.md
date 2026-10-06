@@ -127,6 +127,17 @@ curl -s -c cookies-admin.txt -X POST $BASE/auth/register -H "Content-Type: appli
 # Missing a required field — expect 400
 curl -s -X POST $BASE/auth/register -H "Content-Type: application/json" \
   -d '{"email":"incomplete@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD"}' | jq .
+
+# Duplicate username and disposable-email rejection — expect 409 / 400
+curl -s -X POST $BASE/auth/register -H "Content-Type: application/json" \
+  -d '{"email":"student@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"localstudent","full_name":"Duplicate User"}' | jq .
+curl -s -X POST $BASE/auth/register -H "Content-Type: application/json" \
+  -d '{"email":"test@mailinator.com","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"disposableuser","full_name":"Disposable User"}' | jq .
+
+# Repeated attempts from the same IP are rate-limited — expect 429 after the burst
+for i in $(seq 1 11); do curl -s -o /tmp/auth-rate-limit.json -w '%{http_code}\n' -X POST $BASE/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"student@test.local","password":"wrong"}'; done | tail -n 3
 ```
 
 > If local Supabase Auth requires email confirmation, confirm both users

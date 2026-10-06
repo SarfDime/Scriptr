@@ -10,11 +10,65 @@ import type {
 } from '../types/api.types'
 import { generatePath } from './common-utils'
 
+const USERNAME_PATTERN = /^[a-zA-Z0-9_-]+$/
+const DISPOSABLE_EMAIL_DOMAINS = new Set([
+  '10minutemail.com',
+  'mailinator.com',
+  'guerrillamail.com',
+  'tempmail.com',
+  'trashmail.com',
+  'yopmail.com',
+  'dispostable.com',
+  'sharklasers.com',
+  'maildrop.cc',
+  'throwawaymail.com',
+  'anonbox.net',
+])
+
 const isUserRole = (value: unknown): value is UserRole =>
   value === 'student' || value === 'moderator' || value === 'admin'
 
 function isAdmin(role: unknown): boolean {
   return role === 'admin'
+}
+
+function validateUsername(username: unknown): string | null {
+  if (typeof username !== 'string') {
+    return 'Username is required'
+  }
+
+  const normalizedUsername = username.trim()
+  if (normalizedUsername.length < 3 || normalizedUsername.length > 30) {
+    return 'Username must be between 3 and 30 characters'
+  }
+  if (!USERNAME_PATTERN.test(normalizedUsername)) {
+    return 'Username can only contain letters, numbers, hyphens, and underscores'
+  }
+  return null
+}
+
+function validateEmailAddress(email: unknown): string | null {
+  if (typeof email !== 'string') {
+    return 'Email is required'
+  }
+
+  const normalizedEmail = email.trim()
+  if (!normalizedEmail) {
+    return 'Email is required'
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+    return 'Enter a valid email address'
+  }
+  if (isDisposableEmail(normalizedEmail)) {
+    return 'Please use a permanent email address'
+  }
+  return null
+}
+
+function isDisposableEmail(email: string): boolean {
+  const domain = email.trim().split('@')[1]?.toLowerCase()
+  if (!domain) return false
+  return DISPOSABLE_EMAIL_DOMAINS.has(domain)
 }
 
 const isProfileSubjectStatus = (
@@ -103,10 +157,13 @@ export {
   apiUrl,
   getDatabaseAcademicEndpoints,
   isAdmin,
+  isDisposableEmail,
   isFileType,
   isFlagStatus,
   isFlagTargetType,
   isProfileSubjectStatus,
   isScriptFileInput,
   isUserRole,
+  validateEmailAddress,
+  validateUsername,
 }

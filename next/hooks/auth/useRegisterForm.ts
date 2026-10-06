@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { type SubmitEvent, useState } from 'react'
+import { validateEmailAddress, validateUsername } from '@shared/utils/api.utils'
 import {
   clearGuestAcademicData,
   readGuestAcademicData,
@@ -32,13 +33,21 @@ export function useRegisterForm() {
   const canSubmit =
     !isBusy &&
     fullName.trim().length > 0 &&
-    username.trim().length > 0 &&
-    email.trim().length > 0 &&
+    validateUsername(username.trim()) === null &&
+    validateEmailAddress(email.trim()) === null &&
     password.length > 0
 
   const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!canSubmit) return
+    if (!canSubmit) {
+      const usernameError = validateUsername(username.trim())
+      const emailError = validateEmailAddress(email.trim())
+      setState({
+        status: 'error',
+        message: usernameError ?? emailError ?? 'Please complete the form correctly.',
+      })
+      return
+    }
 
     setState({ status: 'submitting' })
     const guestData = readGuestAcademicData()

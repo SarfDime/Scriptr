@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { profileMutationTags } from '../../../shared/config/cache-tags'
+import type { ProfileStudySelection } from '../../../shared/types/profile.types'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
 import { requiredParam } from '../lib/request'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
@@ -23,7 +24,7 @@ profileStudies.get('/', async (c) => {
 
   if (error) return c.json({ error: error.message }, 500)
   await revalidateCacheTags(c.env, profileMutationTags(user.id))
-  return c.json(data)
+  return c.json<Array<ProfileStudySelection>>(data ?? [])
 })
 
 /** Get the current user's selection record for a study, or null */
@@ -41,7 +42,7 @@ profileStudies.get('/:studyId', async (c) => {
     .maybeSingle()
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json<ProfileStudySelection | null>(data)
 })
 
 /** Add a study to the current user's selections (idempotent) */
@@ -61,7 +62,7 @@ profileStudies.post('/:studyId', async (c) => {
     .single()
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json<ProfileStudySelection>(data)
 })
 
 /** Remove a study from the current user's selections */
@@ -77,7 +78,7 @@ profileStudies.delete('/:studyId', async (c) => {
 
   if (error) return c.json({ error: error.message }, 500)
   await revalidateCacheTags(c.env, profileMutationTags(user.id))
-  return c.json({ success: true })
+  return c.json<{ success: true }>({ success: true })
 })
 
 export default profileStudies

@@ -445,8 +445,8 @@ Authenticated endpoints require the Supabase session cookie set by
 
 | Route                 | Auth     | Notes                                                                                                                                                                                                                                                                                                                    |
 | --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `POST /auth/register` | Public   | `{ email, password, username, full_name }` — all required, else `400`. Profile row is created by a database trigger. Sets `emailRedirectTo` to `{origin}/auth/callback`.                                                                                                                                                 |
-| `POST /auth/login`    | Public   | `{ email, password }`. `401` on bad credentials. Returns `{ success, user: SessionUser, session }`.                                                                                                                                                                                                                      |
+| `POST /auth/register` | Public   | `{ email, password, username, full_name }` — all required, else `400`. Duplicate usernames return `409`, disposable email domains are rejected with `400`, and repeated attempts are `429`-limited per IP. Profile row is created by a database trigger. Sets `emailRedirectTo` to `{origin}/auth/callback`.                         |
+| `POST /auth/login`    | Public   | `{ email, password }`. `401` on bad credentials and `429` after repeated failed attempts from the same IP. Returns `{ success, user: SessionUser, session }`.                                                                                                                                                              |
 | `POST /auth/callback` | Public   | `{ access_token, refresh_token }` — establishes the session from an email-confirmation (or similar) redirect. The frontend (`useAuthCallback`) reads the tokens from the URL fragment and posts them here. Implicit flow, not PKCE. `400` if either token is missing, `401` if invalid. Returns the same shape as login. |
 | `POST /auth/logout`   | Required | Signs out and clears the cookie.                                                                                                                                                                                                                                                                                         |
 | `GET /auth/session`   | Public   | `{ user: SessionUser \| null, session: null }`-shaped; `user` is `null` when not signed in.                                                                                                                                                                                                                              |
@@ -490,7 +490,7 @@ Violations return `403` with an error payload.
 ```
 `400` validation · `401` unauthenticated · `403` forbidden/restricted ·
 `404` not found · `409` conflict (unique/FK constraint, or a catalog delete
-blocked by dependents) · `500` server error.
+blocked by dependents) · `429` too many requests · `500` server error.
 
 ## Notes
 

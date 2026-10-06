@@ -1,7 +1,7 @@
 import type { Context } from 'hono'
 import { Hono } from 'hono'
 import { profileMutationTags } from '../../../shared/config/cache-tags'
-import { isAdmin } from '../../../shared/utils/api.utils'
+import { isAdmin, validateUsername } from '../../../shared/utils/api.utils'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
 import { requiredParam } from '../lib/request'
 import {
@@ -120,21 +120,6 @@ async function fetchFavoriteScripts(c: Context<HonoEnv>, userId: string) {
 
   if (error) return []
   return flattenFavoriteScripts(data)
-}
-
-function validateUsername(username: unknown): string | null {
-  if (!username) return null
-  if (
-    typeof username !== 'string' ||
-    username.length < 3 ||
-    username.length > 30
-  ) {
-    return 'Username must be between 3 and 30 characters'
-  }
-  if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
-    return 'Username can only contain letters, numbers, hyphens, and underscores'
-  }
-  return null
 }
 
 async function syncFacultyAndStudySelections(

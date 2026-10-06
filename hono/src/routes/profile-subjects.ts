@@ -1,6 +1,7 @@
 import { isProfileSubjectStatus } from '@shared/utils/api.utils'
 import { Hono } from 'hono'
 import { profileMutationTags } from '../../../shared/config/cache-tags'
+import type { ProfileSubjectSelection } from '../../../shared/types/profile.types'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
 import { requiredParam } from '../lib/request'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
@@ -22,7 +23,7 @@ profileSubjects.get('/', async (c) => {
 
   if (error) return c.json({ error: error.message }, 500)
   await revalidateCacheTags(c.env, profileMutationTags(user.id))
-  return c.json(data)
+  return c.json<Array<ProfileSubjectSelection>>(data ?? [])
 })
 
 /** Get one of the current user's subject status records, or null */
@@ -38,7 +39,7 @@ profileSubjects.get('/:subjectId', async (c) => {
     .maybeSingle()
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json<ProfileSubjectSelection | null>(data)
 })
 
 /** Create or replace the current user's status for a subject */
@@ -65,7 +66,7 @@ profileSubjects.put('/:subjectId', async (c) => {
     .single()
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json<ProfileSubjectSelection>(data)
 })
 
 /** Remove the current user's status for a subject */
@@ -81,7 +82,7 @@ profileSubjects.delete('/:subjectId', async (c) => {
 
   if (error) return c.json({ error: error.message }, 500)
   await revalidateCacheTags(c.env, profileMutationTags(user.id))
-  return c.json({ success: true })
+  return c.json<{ success: true }>({ success: true })
 })
 
 export default profileSubjects

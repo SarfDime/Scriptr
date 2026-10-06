@@ -18,6 +18,7 @@ type FileType =
   | 'xlsx'
 
 type Favorite = Pick<Tables<'script_favorites'>, 'created_at' | 'script_id'>
+type NotificationRecord = Tables<'notifications'>
 
 /** Shape returned by POST /file-ops/upload for each uploaded file, and
  * accepted by POST /scripts. Stays here (rather than in
@@ -43,6 +44,7 @@ export type {
   FileType,
   FlagStatus,
   FlagTargetType,
+  NotificationRecord,
   ProfileSubjectStatus,
   QueryApiEndpointType,
   ScriptFileInput,

@@ -1,4 +1,7 @@
 import { Hono } from 'hono'
+import type {
+  NotificationRecord,
+} from '../../../shared/types/api.types'
 import { requiredParam } from '../lib/request'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
@@ -23,7 +26,7 @@ notifications.get('/', async (c) => {
 
   const { data, error } = await query
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json<Array<NotificationRecord>>(data ?? [])
 })
 /** Get the current user's unread notification count */
 notifications.get('/unread-count', async (c) => {
@@ -37,7 +40,7 @@ notifications.get('/unread-count', async (c) => {
     .eq('is_read', false)
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json({ count: count ?? 0 })
+  return c.json<{ count: number }>({ count: count ?? 0 })
 })
 
 /** Mark all of the current user's unread notifications as read */
@@ -52,7 +55,7 @@ notifications.patch('/read-all', async (c) => {
     .eq('is_read', false)
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json({ success: true })
+  return c.json<{ success: true }>({ success: true })
 })
 
 /** Update the read state of one of the current user's notifications */
@@ -75,7 +78,7 @@ notifications.patch('/:id', async (c) => {
     .single()
 
   if (error) return c.json({ error: 'Notification not found' }, 404)
-  return c.json(data)
+  return c.json<NotificationRecord>(data)
 })
 
 /** Delete one of the current user's notifications */
@@ -91,7 +94,7 @@ notifications.delete('/:id', async (c) => {
     .eq('profile_id', user.id)
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json({ success: true })
+  return c.json<{ success: true }>({ success: true })
 })
 
 export default notifications

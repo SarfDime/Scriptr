@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { profileMutationTags } from '../../../shared/config/cache-tags'
+import type { FavoriteScriptRecord } from '../../../shared/types/profile.types'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
 import { requiredParam } from '../lib/request'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
@@ -7,7 +8,7 @@ import type { HonoEnv } from '../types/env.types'
 
 // Mirrors scripts.ts PUBLIC_SCRIPT_COLUMNS — excludes is_flagged (internal moderation state).
 const PUBLIC_SCRIPT_COLUMNS =
-  'id, title, description, subject_id, professor_id, author_id, exam_session, additional_reading, vote_score, download_count, created_at, updated_at, files:script_files(id, file_url, file_type, file_size_bytes, position, created_at)'
+  'id, title, description, subject_id, professor_id, author_id, exam_session, additional_reading, vote_score, download_count, created_at, updated_at, files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, created_at)'
 
 const favorites = new Hono<HonoEnv>()
 
@@ -24,7 +25,7 @@ favorites.get('/', async (c) => {
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json<Array<FavoriteScriptRecord>>(data ?? [])
 })
 
 /** Get the current user's favorite record for a script, or null */
@@ -40,7 +41,7 @@ favorites.get('/:scriptId', async (c) => {
     .maybeSingle()
 
   if (error) return c.json({ error: error.message }, 500)
-  return c.json(data)
+  return c.json<FavoriteScriptRecord | null>(data)
 })
 
 /** Add a script to the current user's favorites (idempotent) */
@@ -59,7 +60,7 @@ favorites.post('/:scriptId', async (c) => {
 
   if (error) return c.json({ error: error.message }, 500)
   await revalidateCacheTags(c.env, profileMutationTags(user.id))
-  return c.json(data)
+  return c.json<FavoriteScriptRecord>(data)
 })
 
 /** Remove a script from the current user's favorites */
@@ -75,7 +76,7 @@ favorites.delete('/:scriptId', async (c) => {
 
   if (error) return c.json({ error: error.message }, 500)
   await revalidateCacheTags(c.env, profileMutationTags(user.id))
-  return c.json({ success: true })
+  return c.json<{ success: true }>({ success: true })
 })
 
 export default favorites

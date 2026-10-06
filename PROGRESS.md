@@ -32,13 +32,13 @@ command, and the route-registration order in `scripts.ts`.
 
 ### Todo
 
-* **Finish response typing rollout** — verify every route file uses shared response types (all routes mounted in `index.ts` must be covered; check `notifications.ts` and the rest). **[🔲]**
+* **Finish response typing rollout** — verify every route file uses shared response types (all routes mounted in `index.ts` must be covered; check `notifications.ts` and the rest). **[✅ done]**
 * **Verify `GET /scripts/my-scripts`** — it is registered after `GET /scripts/:id` in `scripts.ts`, so Hono's first-match ordering likely routes it to `/:id` (which returns a 404 for the non-UUID). Confirm with a request; if so, move it above `/:id`. **[🔲 bug?]**
-* **Register hardening:** unique usernames, spam-email blocking, rate limiting. **[🔲]**
+* **Register hardening:** unique usernames, spam-email blocking, rate limiting. **[✅ done]**
 * **Individual script file removal** — RLS allows it, no endpoint exists. **[🔲]**
 * **Achievement definitions CRUD** (admin) — only public read exists. **[🔲]**
 * **`faculties_university_id_fkey` is `ON DELETE CASCADE`** — conflicts with the app-level dependents-check pattern; decide on `RESTRICT`. **[🔲 decision]**
-* **`API_TESTING_GUIDE.md` refresh** — stale vs multi-file upload, universities mutation routes, auth callback. **[🔲]**
+* **`API_TESTING_GUIDE.md` refresh** — stale vs multi-file upload, universities mutation routes, auth callback. **[✅ done]**
 * **Moderator notification pipeline** (repeated flags → moderators, moderator flag → admins). **[🔲 Deferred]**
 
 ## R2 / File Storage (`hono/`)
@@ -85,7 +85,7 @@ command, and the route-registration order in `scripts.ts`.
 
 ### Todo
 
-* Register/sign-up field validation (client and API). **[🔲]**
+* Register/sign-up field validation (client and API). **[✅ done]**
 
 ## API Client & Shared Types (`shared/`, `next/`)
 
@@ -144,6 +144,14 @@ Loose ideas and open questions that aren't concrete yet live in `TODO.md`.
 
 ## Suggested Order
 
-1. Finish response typing rollout; refresh `API_TESTING_GUIDE.md`.
-2. Register validation and hardening (client, API, rate limiting).
-3. Moderation/admin UI.
+1. Fix the `GET /scripts/my-scripts` route-order bug and verify it with a real request.
+2. Add individual script file removal and the corresponding R2 cleanup flow.
+3. Resolve the open schema/policy decisions: `faculties_university_id_fkey` delete behavior, Sanity `r2BucketId` confirmation, and the semester/elective subject model changes.
+4. Implement admin achievement-definitions CRUD and the remaining moderation/admin backend checks.
+5. Finish the moderator notification pipeline for repeated-flag escalation and moderator/admin routing.
+6. Complete the moderation/admin UI and flag resolution flows.
+7. Finish the remaining frontend work in priority order: script search, script edit/delete permissions, restricted-state UI, professor/subject rating UI, profile page, notification preferences/settings, and notification pipeline UX.
+8. Close the quality pass: loading/empty/error states; strings/localization; `NextImage` `sizes` and accessibility; subject overview link fixes; Portable Text toolbar polish; and production CSS polish.
+9. Finish the storage and file-quality tasks: user avatars in R2, image/file optimization before upload, and cache headers on R2 objects.
+10. Clean up Sanity and repo hygiene: unused schemas/utilities/constants, encrypted internal secret handling, page-data decision in the structure tool, and repository-level error hygiene/TODO cleanup.
+11. Run the focused quality pass: Biome rule coverage, error hygiene, and any remaining cleanup flagged by the final code review.

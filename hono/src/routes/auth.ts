@@ -12,6 +12,8 @@ import type {
 import {
   isProfileSubjectStatus,
   isUserRole,
+  validateEmailAddress,
+  validateUsername,
 } from '../../../shared/utils/api.utils'
 import { honoLog } from '../lib/logger'
 import {
@@ -22,6 +24,23 @@ import {
 import type { HonoEnv } from '../types/env.types'
 
 const auth = new Hono<HonoEnv>()
+
+const AUTH_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000
+const AUTH_RATE_LIMIT_MAX_REQUESTS = 10
+const authRateLimitBuckets = new Map<string, number[]>()
+
+function applyAuthRateLimit(c: Parameters<typeof createSupabaseClient>[0], route: 'register' | 'login') {
+  const forwardedFor = c.req.header('x-forwarded-for')
+  const clientIp = forwardedFor?.split(',')[0]?.trim() || c.req.header('x-real-ip') || 'unknown-ip'
+  const bucketKey = `${route}:${clientIp}`
+  const now = Date.now()
+  const requests = authRateLimitBuckets.get(bucketKey) ?? []
+  const recentRequests = requests.filter((timestamp) => now - timestamp < AUTH_RATE_LIMIT_WINDOW_MS)
+  recentRequests.push(now)
+  authRateLimitBuckets.set(bucketKey, recentRequests)
+
+  return recentRequests.length > AUTH_RATE_LIMIT_MAX_REQUESTS
+}
 
 const isRegistrationAcademicProfile = (
   value: unknown
@@ -191,9 +210,18 @@ auth.post('/register', async (c) => {
   }>()
   const { email, password, username, full_name, academicProfile } = body
 
+  if (applyAuthRateLimit(c, 'register')) {
+    return c.json(
+      {
+        error: 'Too many registration attempts. Please wait a moment and try again.',
+      },
+      429
+    )
+  }
+
   if (
-    typeof email !== 'string' ||
     typeof password !== 'string' ||
+    typeof email !== 'string' ||
     typeof username !== 'string' ||
     typeof full_name !== 'string'
   ) {
@@ -201,6 +229,24 @@ auth.post('/register', async (c) => {
       { error: 'Email, password, username, and full name are required' },
       400
     )
+  }
+
+  const normalizedEmail = email.trim()
+  const normalizedUsername = username.trim()
+  const normalizedFullName = full_name.trim()
+
+  const emailError = validateEmailAddress(normalizedEmail)
+  if (emailError) {
+    return c.json({ error: emailError }, 400)
+  }
+
+  const usernameError = validateUsername(normalizedUsername)
+  if (usernameError) {
+    return c.json({ error: usernameError }, 400)
+  }
+
+  if (!normalizedFullName) {
+    return c.json({ error: 'Full name is required' }, 400)
   }
 
   if (
@@ -212,16 +258,29 @@ auth.post('/register', async (c) => {
 
   const supabase = createSupabaseClient(c)
 
+  const { data: existingUsername, error: usernameErrorLookup } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('username', normalizedUsername)
+    .maybeSingle()
+
+  if (usernameErrorLookup) {
+    return c.json({ error: usernameErrorLookup.message }, 500)
+  }
+
+  if (existingUsername) {
+    return c.json({ error: 'Username already taken' }, 409)
+  }
+
   const origin = c.req.header('origin')
 
-  // Sign up using Supabase client (your suggested approach)
   const { data, error } = await supabase.auth.signUp({
-    email,
+    email: normalizedEmail,
     password,
     options: {
       data: {
-        username,
-        full_name: full_name || '',
+        username: normalizedUsername,
+        full_name: normalizedFullName,
       },
       ...(origin ? { emailRedirectTo: `${origin}/auth/callback` } : {}),
     },
@@ -270,7 +329,7 @@ auth.post('/register', async (c) => {
     user: {
       id: data.user?.id,
       email: data.user?.email,
-      username,
+      username: normalizedUsername,
     },
     session: data.session,
   })
@@ -279,10 +338,29 @@ auth.post('/register', async (c) => {
 /** Sign in with email and password */
 auth.post('/login', async (c) => {
   const { email, password } = await c.req.json()
+
+  if (applyAuthRateLimit(c, 'login')) {
+    return c.json(
+      {
+        error: 'Too many sign-in attempts. Please wait a moment and try again.',
+      },
+      429
+    )
+  }
+
+  if (typeof email !== 'string' || typeof password !== 'string') {
+    return c.json({ error: 'Email and password are required' }, 400)
+  }
+
+  const emailError = validateEmailAddress(email)
+  if (emailError) {
+    return c.json({ error: emailError }, 400)
+  }
+
   const supabase = createSupabaseClient(c)
 
   const { data, error } = await supabase.auth.signInWithPassword({
-    email,
+    email: email.trim(),
     password,
   })
 
