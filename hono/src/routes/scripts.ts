@@ -326,6 +326,24 @@ scripts.get('/search', async (c) => {
   return c.json<Array<ScriptSummary>>(results)
 })
 
+/** Get all scripts for a user */
+scripts.get('/my-scripts', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const supabase = createSupabaseClient(c)
+
+  const { data, error } = await supabase
+    .from('scripts')
+    .select(`
+        *,
+        subject:subjects(name, study:studies(name))
+      `)
+    .eq('author_id', user.id)
+    .order('created_at', { ascending: false })
+
+  if (error) return c.json({ error: error.message }, 500)
+  return c.json<{ scripts: Array<MyScriptSummary> }>({ scripts: data })
+})
+
 /** Get a single script by ID */
 scripts.get('/:id', async (c) => {
   const scriptId = requiredParam(c, 'id')
@@ -621,24 +639,6 @@ scripts.delete('/:id', authMiddleware, async (c) => {
   }
 
   return c.json({ success: true, message: 'Script deleted successfully' })
-})
-
-/** Get all scripts for a user */
-scripts.get('/my-scripts', authMiddleware, async (c) => {
-  const user = c.get('user')
-  const supabase = createSupabaseClient(c)
-
-  const { data, error } = await supabase
-    .from('scripts')
-    .select(`
-        *,
-        subject:subjects(name, study:studies(name))
-      `)
-    .eq('author_id', user.id)
-    .order('created_at', { ascending: false })
-
-  if (error) return c.json({ error: error.message }, 500)
-  return c.json<{ scripts: Array<MyScriptSummary> }>({ scripts: data })
 })
 
 /** Record a download, deduplicated per identity (account, then IP, then device) */

@@ -33,7 +33,6 @@ command, and the route-registration order in `scripts.ts`.
 ### Todo
 
 * **Finish response typing rollout** — verify every route file uses shared response types (all routes mounted in `index.ts` must be covered; check `notifications.ts` and the rest). **[✅ done]**
-* **Verify `GET /scripts/my-scripts`** — it is registered after `GET /scripts/:id` in `scripts.ts`, so Hono's first-match ordering likely routes it to `/:id` (which returns a 404 for the non-UUID). Confirm with a request; if so, move it above `/:id`. **[🔲 bug?]**
 * **Register hardening:** unique usernames, spam-email blocking, rate limiting. **[✅ done]**
 * **Individual script file removal** — RLS allows it, no endpoint exists. **[🔲]**
 * **Achievement definitions CRUD** (admin) — only public read exists. **[🔲]**
