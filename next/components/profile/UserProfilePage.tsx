@@ -87,18 +87,16 @@ export function UserProfilePage({ subjects }: UserProfilePageProps) {
         </>
       }
     >
-      <Box className='ui-cluster items-stretch'>
-        <ProfileCard
-          name={displayName}
-          role={profile.role}
-          location=''
-          bio=''
-          university={getUniversityName(profile)}
-          faculty={getFacultyName(profile)}
-          picture={profile.avatar_url ? { src: profile.avatar_url } : undefined}
-          className='grow'
-        />
-      </Box>
+      <ProfileCard
+        name={displayName}
+        role={profile.role}
+        location=''
+        bio=''
+        university={getUniversityName(profile)}
+        faculty={getFacultyName(profile)}
+        picture={profile.avatar_url ? { src: profile.avatar_url } : undefined}
+        className='grow'
+      />
       <Box className='ui-stack'>
         <Box className='ui-cluster items-start'>
           <ScriptsSection

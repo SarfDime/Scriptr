@@ -39,6 +39,7 @@ export const Button = ({
         isLoading && 'pointer-events-none',
         disabled && 'select-none'
       )}
+      // TODO: Make aria attributes required for accessibility
     >
       {isLoading && <LoadingSpinner />}
       {children}

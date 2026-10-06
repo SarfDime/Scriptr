@@ -275,6 +275,9 @@ curl -s -b cookies-student.txt $BASE/favorites | jq .
 curl -s -b cookies-student.txt -X DELETE $BASE/favorites/$SCRIPT | jq .
 ```
 
+Each mutation should also invalidate the signed-in user's public-profile
+cache tags so their favorite-script list refreshes.
+
 ---
 
 ## Phase 7 — Comments
@@ -294,7 +297,13 @@ curl -s -b cookies-student.txt -X POST $BASE/comments/$COMMENT/replies -H "Conte
 
 curl -s -b cookies-student.txt -X POST $BASE/comments/$COMMENT/reactions \
   -H "Content-Type: application/json" -d '{"reaction_type":"like"}' | jq .
+curl -s -b cookies-student.txt -X POST $BASE/comments/$COMMENT/reactions \
+  -H "Content-Type: application/json" -d '{"reaction_type":"funny"}' | jq .
 curl -s $BASE/comments/$COMMENT/reactions | jq .
+
+# Invalid reaction type — expect 400
+curl -s -b cookies-student.txt -X POST $BASE/comments/$COMMENT/reactions \
+  -H "Content-Type: application/json" -d '{"reaction_type":"👍"}' | jq .
 
 curl -s -b cookies-student.txt -X POST $BASE/comments/$COMMENT/like | jq .   # liked: true
 ```

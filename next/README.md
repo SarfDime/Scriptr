@@ -61,6 +61,15 @@ something that scales: plain generated path strings, checked at the
 boundary by each route's own runtime validation instead of the client's
 type system.
 
+## Structuring a page
+
+Keep `page.tsx` thin: await `params`, call a loader from
+`next/lib/<feature>-page.ts` that does the fetching and returns a view model
+(typed in `next/types/components/`), and compose small components from
+`components/<area>/<feature>/`. The script detail page
+(`app/scripts/[slug]/page.tsx`) is the reference example. User-facing text
+goes in `shared/strings/<area>-strings.ts` (or `UI_STRINGS`), not inline.
+
 ## Conventions
 
 Use the existing components, styles, and API client for new screens. See the

@@ -39,6 +39,7 @@ export type StudyWithFacultyAndUniversity = Tables<'studies'> & {
 export type ProfileScriptSummary = {
   id: string
   title: PortableTextValue
+  description: PortableTextValue | null
   vote_score: number
   download_count: number
   created_at: string

@@ -44,14 +44,14 @@ const PUBLIC_SCRIPT_COLUMNS =
  * selects — one select string instead of the same literal duplicated per
  * route. `subject` carries its display name plus `sanity_id` (client-side Sanity queries
  * resolve faculty/university/professor metadata from it — see
- * `Architecture.md §1`) and `faculty_id` (server-side faculty scoping only,
+ * `ARCHITECTURE.md §1`) and `faculty_id` (server-side faculty scoping only,
  * via `applySelectedFacultyScope` below — never returned for display).
  * Matches `ScriptSummary` in `shared/types/scripts.types.ts` exactly; keep
  * the two in sync if this changes.
  */
 const SCRIPT_SUMMARY_SELECT = `
     ${PUBLIC_SCRIPT_COLUMNS},
-    author:profiles!author_id(username, full_name),
+    author:profiles!author_id(username, full_name, avatar_url),
     subject:subjects(name, sanity_id, study:studies(sanity_id, faculty:faculties(sanity_id, id)))
   `
 
@@ -542,7 +542,7 @@ scripts.patch('/:id', authMiddleware, async (c) => {
     .eq('id', scriptId)
     .select(`
         *,
-        author:profiles!author_id(username, full_name),
+        author:profiles!author_id(username, full_name, avatar_url),
         subject:subjects(name, study:studies(name))
       `)
     .single()
@@ -728,7 +728,7 @@ scripts.get('/flagged/all', authMiddleware, async (c) => {
     .from('scripts')
     .select(`
         *,
-        author:profiles!author_id(username, full_name),
+        author:profiles!author_id(username, full_name, avatar_url),
         subject:subjects(name, study:studies(name)),
         flags:flags(
           *,

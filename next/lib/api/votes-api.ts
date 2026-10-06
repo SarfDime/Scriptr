@@ -15,12 +15,13 @@ export const getScriptVoteStats = (scriptId: string) =>
     cache: 'no-store',
   })
 
-/** Session-scoped: never cached, requires the caller's cookie — same
- * pattern as getMyScripts. `null` when the caller hasn't voted on this
- * script (`GET /script/:scriptId/my-vote` uses `.maybeSingle()`). */
-export const getMyScriptVote = (scriptId: string, cookie: string) =>
+/** Session-scoped: never cached. Server callers forward their cookie, while
+ * client callers use apiFetch's included browser credentials. `null` when
+ * the caller hasn't voted on a script (`GET /script/:scriptId/my-vote`
+ * uses `.maybeSingle()`). */
+export const getMyScriptVote = (scriptId: string, cookie?: string) =>
   apiFetch<VoteRow | null>(apiRoutes.votes.scriptMyVoteByScriptId(scriptId), {
-    headers: { cookie },
+    ...(cookie && { headers: { cookie } }),
     cache: 'no-store',
   })
 

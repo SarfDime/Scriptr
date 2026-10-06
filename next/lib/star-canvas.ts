@@ -25,11 +25,13 @@ export const BODY_RADIUS = 36 // planet body radius inside the sprite (rest is r
 export const TEXTURE_PERIOD = 128 // width of the planet surface texture (one full turn)
 export const TEXTURE_HEIGHT = 64
 export const TEXTURE_VIEW = 64 // the visible half of the planet: window into the texture
-const MILKY_WAY_SPRITE_WIDTH = 2048
-const MILKY_WAY_ASPECT = 0.32 // sprite height / width
+const MILKY_WAY_ASPECT = 0.32 // height / width, before the height multiplier
 const MILKY_WAY_LENGTH = 4 // the band is this many times the configured size
-const DOT_UNIT = 2.5 // sprite px per unit of GalaxyDot size
+const MILKY_WAY_SPRITE_MAX_WIDTH = 2048 // bigger galaxies are drawn at lower resolution
+const MILKY_WAY_SPRITE_MAX_AREA = 2048 * 720 // keeps the sprites' memory in check
+const DOT_PX = 2 // on-screen px per unit of GalaxyDot size, whatever the galaxy size
 const GALAXY_DOTS = 4200 // at density 1
+const GALAXY_DOTS_MAX = 20000 // upper limit, so extreme settings can't freeze the page
 
 export const BLACK_HOLE_PRESETS: Record<string, Point> = {
   center: { x: 0.5, y: 0.48 },
@@ -94,6 +96,10 @@ const DEFAULTS: StarCanvasConfig = {
   starMaxSize: 1.3,
   starDriftSpeed: 0.012,
 
+  backgroundHazeColor: 'grey-800',
+  backgroundHazeOpacity: 0.5,
+  backgroundHazeRadius: 0.9,
+
   shootingStarChance: 0.008,
   shootingStarColor: 'sky',
 
@@ -121,6 +127,7 @@ const DEFAULTS: StarCanvasConfig = {
   blackHoleCoronaWidth: 0.6,
   enableBlackHoleFlare: true,
   blackHoleFlare: 0.7,
+  blackHoleFlareSpin: 1,
   blackHoleRingGlow: 1,
 
   planetColors: ['amber', 'rose-pink', 'sky', 'lavender', 'jade'],
@@ -145,12 +152,17 @@ const DEFAULTS: StarCanvasConfig = {
   galaxyMinSize: 320,
   galaxyMaxSize: 520,
   galaxyOpacity: 0.7,
+  galaxyWidthScale: 1,
+  galaxyHeightScale: 1,
   galaxyDensity: 1,
+  galaxyCenterDensity: 1,
+  galaxyEndDensity: 1,
   galaxyCoreColor: 'amber',
   galaxyArmColor: 'sky',
   galaxyAccentColor: 'lavender',
   galaxyDriftFactor: 0.4,
   galaxyDriftDirection: 'up-left',
+  galaxyTilt: 0,
 }
 
 /** Sanity returns `null` for unset fields, so `{...DEFAULTS, ...data}` is not enough. */
@@ -232,6 +244,7 @@ export const resolveColors = (config: StarCanvasConfig): StarCanvasColors => {
     ring: toRGB(config.blackHolePhotonRingColor),
     core: `rgb(${toRGB(config.blackHoleCoreColor)})`,
     corona: toRGB(config.blackHoleCoronaColor),
+    haze: toRGB(config.backgroundHazeColor),
     flare: mixRGB(toRGB(config.blackHolePhotonRingColor), WHITE, 0.65),
     planets: config.planetColors.map((key) => toRGB(key)),
     galaxyCore: toRGB(config.galaxyCoreColor),
@@ -255,11 +268,126 @@ const createSprite = (width: number, height = width) => {
   return { canvas, sctx: canvas.getContext('2d') }
 }
 
-const mixRGB = (a: string, b: string, t: number) => {
+export const mixRGB = (a: string, b: string, t: number) => {
   const [ar = 0, ag = 0, ab = 0] = a.split(',').map(Number)
   const [br = 0, bg = 0, bb = 0] = b.split(',').map(Number)
   const mix = (from: number, to: number) => Math.round(from + (to - from) * t)
   return `${mix(ar, br)}, ${mix(ag, bg)}, ${mix(ab, bb)}`
+}
+
+/**
+ * Adds color stops that fade `peak` opacity to 0 along a gradient with a smooth
+ * curve whose slope is also 0 at the end, so there is no visible edge where it
+ * stops. The color can blend from `from` to `to` on the way out.
+ */
+export const addFalloff = (
+  gradient: CanvasGradient,
+  from: string,
+  peak: number,
+  power = 2.4,
+  to = from
+) => {
+  const steps = 10
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps
+    gradient.addColorStop(
+      t,
+      `rgba(${mixRGB(from, to, t)}, ${peak * (1 - t) ** power})`
+    )
+  }
+}
+
+// ── Background haze ─────────────────────────────────────────────────────────
+
+const NOISE_MASK = (1 << 20) - 1
+const HAZE_DOWNSCALE = 2
+let noise: Float32Array | null = null
+
+/**
+ * A soft circle of `rgb` in the middle of the screen, `opacity` strong at the center
+ * and fading smoothly to nothing. Returns a sprite as big as the screen.
+ *
+ * A plain canvas gradient only has 256 opacity levels, and on a large, faint area that
+ * shows up as visible rings. So the sprite is painted pixel by pixel and every value
+ * (opacity and each premultiplied color channel, which is how canvases store pixels)
+ * gets a little random noise before it is rounded. Averaged over neighboring pixels
+ * the steps blend into a smooth fade.
+ */
+export const buildHazeSprite = (
+  width: number,
+  height: number,
+  rgb: string,
+  opacity: number,
+  radiusScale: number
+) => {
+  // Half the screen's resolution: a fade this soft doesn't need more, and it makes
+  // painting 4 times cheaper. The component draws it back up without smoothing, so
+  // the noise stays crisp.
+  const w = Math.max(1, Math.ceil(width / HAZE_DOWNSCALE))
+  const h = Math.max(1, Math.ceil(height / HAZE_DOWNSCALE))
+  const { canvas, sctx } = createSprite(w, h)
+  if (!sctx) return null
+
+  if (!noise) {
+    noise = new Float32Array(NOISE_MASK + 1)
+    for (let i = 0; i <= NOISE_MASK; i++) noise[i] = Math.random()
+  }
+  const random = noise
+
+  const image = sctx.createImageData(w, h)
+  const data = image.data
+  const [cr = 0, cg = 0, cb = 0] = rgb.split(',').map(Number)
+  const radius = Math.max(1, (Math.hypot(w, h) / 2) * radiusScale)
+
+  // Opacity (0-255) by distance from the middle, as a lookup table
+  const steps = 1024
+  const falloff = new Float32Array(steps + 1)
+  for (let i = 0; i <= steps; i++) {
+    falloff[i] = opacity * 255 * (1 - i / steps) ** 1.8
+  }
+
+  let pixel = 0
+  let n = 0
+
+  // Triangular noise of about one level either way: the standard way to dither.
+  // Opacity and each color channel draw their own values.
+  const triangularNoise = () =>
+    (random[n++ & NOISE_MASK] ?? 0) + (random[n++ & NOISE_MASK] ?? 0) - 1
+
+  // One color channel as stored in the pixel data. Canvases store colors
+  // premultiplied by opacity, so the value that gets dithered is the premultiplied
+  // one: color * opacity, rounded up or down at random, then converted back. It is
+  // rounded up on the way back, so that however a browser rounds when it
+  // premultiplies again, it lands on the same value.
+  const dithered = (color: number, k: number, a: number) => {
+    const premultiplied = Math.max(
+      0,
+      Math.min(a, Math.round(color * k + triangularNoise()))
+    )
+    return Math.min(255, Math.ceil((premultiplied * 255) / a))
+  }
+
+  for (let y = 0; y < h; y++) {
+    const dy = y - h / 2
+    for (let x = 0; x < w; x++) {
+      const dx = x - w / 2
+      const t = Math.sqrt(dx * dx + dy * dy) / radius
+      if (t < 1) {
+        const alpha = falloff[(t * steps) | 0] ?? 0
+        const a = Math.max(0, Math.round(alpha + triangularNoise()))
+        if (a > 0) {
+          const k = alpha / 255
+          data[pixel] = dithered(cr, k, a)
+          data[pixel + 1] = dithered(cg, k, a)
+          data[pixel + 2] = dithered(cb, k, a)
+          data[pixel + 3] = a
+        }
+      }
+      pixel += 4
+    }
+  }
+  sctx.putImageData(image, 0, 0)
+  return canvas
 }
 
 // ── Planets ─────────────────────────────────────────────────────────────────
@@ -580,7 +708,19 @@ const STAR_LAYERS = 3 // stars are split into this many groups that twinkle sepa
  * into scattered stars. Dots use x along the band (-1 to 1) and y across it; the
  * dense core covers roughly the middle fifth of the sprite.
  */
-const milkyWayDots = (count: number) => {
+const milkyWayDots = (
+  baseCount: number,
+  centerDensity: number,
+  endDensity: number
+) => {
+  // Two groups of dots: a dense one around the center and a sparser one with long
+  // tails. Their densities are set separately; with both at 1 nothing changes.
+  const coreWeight = 0.7 * centerDensity
+  const tailWeight = 0.3 * endDensity
+  const total = coreWeight + tailWeight
+  if (total <= 0) return []
+  const count = baseCount * total
+
   const bend = 0.05 + Math.random() * 0.05
   const bendPhase = Math.random() * TAU
   const bendFrequency = 1.4 + Math.random() * 1.2
@@ -603,7 +743,7 @@ const milkyWayDots = (count: number) => {
   // tail on top (30% of dots), so the band seems to flow away.
   const pickX = () => {
     for (let attempt = 0; attempt < 8; attempt++) {
-      const reach = Math.random() < 0.7 ? 0.2 : 0.5
+      const reach = Math.random() * total < coreWeight ? 0.2 : 0.5
       const side = Math.random() < 0.5 ? -1 : 1
       const x = center + side * -Math.log(1 - Math.random() * 0.999) * reach
       if (Math.abs(x) <= 1) return x
@@ -746,14 +886,30 @@ const pickGalaxyAnchor = (config: StarCanvasConfig): Point => {
 export const makeGalaxy = (config: StarCanvasConfig): Galaxy | null => {
   if (!config.enableGalaxy) return null
 
-  const count = Math.max(0, Math.round(GALAXY_DOTS * config.galaxyDensity))
+  const count = clamp(
+    Math.round(GALAXY_DOTS * config.galaxyDensity),
+    0,
+    GALAXY_DOTS_MAX
+  )
   const minSize = config.galaxyMinSize
   const size =
     minSize + Math.random() * Math.max(0, config.galaxyMaxSize - minSize)
-  const width = size * MILKY_WAY_LENGTH
+  const width = size * MILKY_WAY_LENGTH * config.galaxyWidthScale
+  const height =
+    size * MILKY_WAY_LENGTH * MILKY_WAY_ASPECT * config.galaxyHeightScale
+  // Draw the sprite 1:1 with the screen unless that would be huge
+  const spriteScale = Math.min(
+    1,
+    MILKY_WAY_SPRITE_MAX_WIDTH / Math.max(width, 1),
+    Math.sqrt(MILKY_WAY_SPRITE_MAX_AREA / Math.max(width * height, 1))
+  )
 
   return {
-    dots: milkyWayDots(count),
+    dots: milkyWayDots(
+      count,
+      config.galaxyCenterDensity,
+      config.galaxyEndDensity
+    ),
     // Layer 0: the glow, breathing very slightly. The rest: groups of stars that
     // each brighten and dim at their own pace, so the stars twinkle.
     layers: [
@@ -766,7 +922,8 @@ export const makeGalaxy = (config: StarCanvasConfig): Galaxy | null => {
       })),
     ],
     width,
-    height: width * MILKY_WAY_ASPECT,
+    height,
+    spriteScale,
     anchor: pickGalaxyAnchor(config),
   }
 }
@@ -819,8 +976,8 @@ export const buildGalaxySprites = (
   galaxy: Galaxy,
   colors: StarCanvasColors
 ) => {
-  const width = MILKY_WAY_SPRITE_WIDTH
-  const height = Math.round(width * MILKY_WAY_ASPECT)
+  const width = Math.max(1, Math.round(galaxy.width * galaxy.spriteScale))
+  const height = Math.max(1, Math.round(galaxy.height * galaxy.spriteScale))
 
   const { galaxyCore: warm, galaxyAccent: accent, galaxyArm: cool } = colors
   const softDots = [
@@ -832,7 +989,7 @@ export const buildGalaxySprites = (
   ]
   const dust = buildSoftDot('0, 0, 0')
 
-  const scale = DOT_UNIT
+  const scale = DOT_PX * galaxy.spriteScale // dots keep their on-screen size
   const rx = (width / 2) * 0.92
   const ry = (height / 2) * 0.92
 

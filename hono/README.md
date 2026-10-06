@@ -56,11 +56,13 @@ npm run dev:hono
 npm run check-types --workspace hono
 npm run format
 npm run gen:api-types
+npm run gen:api-endpoints
 ```
 
 Formatting is run from the repository root and applies Biome fixes
 automatically. `gen:api-types` regenerates the Supabase types after a schema
-change.
+change; `gen:api-endpoints` (run from the repository root) regenerates
+`shared/config/api-routes.ts` after any route is added, removed, or renamed.
 
 ## API Base Path
 
@@ -106,7 +108,7 @@ curl walkthrough covering every route is in
 - Restricted users (`profile_restrictions`, admin-managed via `/api/restrictions`) are blocked at the RLS layer from creating/updating scripts, comments, comment reactions/likes, flags, votes, and ratings — never from removing their own existing content. See [API_DOCUMENTATION.md](src/routes/API_DOCUMENTATION.md#role-based-access-control).
 - Route parameters are validated before database operations.
 - Uploads are restricted to the file types documented in the API reference, and scoped per-university to a distinct R2 bucket when `r2_bucket_id` is set.
-- `GET /api/file-ops/get-file/*` is unauthenticated (guest preview/download) and does not verify the key against `script_files`.
+- `GET /api/file-ops/get-file/*` is unauthenticated (guest preview/download) and only signs keys recorded in `script_files`, deriving the bucket from that row.
 - R2 and Supabase credentials must be supplied through environment variables.
 
 ## Response Types
@@ -124,5 +126,6 @@ Every route file (`src/routes/*.ts`) needs an explicit
 `app.route('/path', router)` call in `src/index.ts`. A route file that is
 fully built and documented but never mounted type-checks clean, passes review,
 and silently 404s in production (this already happened once with `ratings.ts`).
-Before calling route work done, grep `src/index.ts` for the new route file, and
-update `API_DOCUMENTATION.md`, `API_TESTING_GUIDE.md`, and `PROGRESS.md`.
+Before calling route work done, grep `src/index.ts` for the new route file,
+run `npm run gen:api-endpoints`, and update `API_DOCUMENTATION.md`,
+`API_TESTING_GUIDE.md`, and `PROGRESS.md`.

@@ -1,9 +1,11 @@
 import { ALLOWED_EXTENSIONS } from '@shared/config/shared-constants'
 import type { FileType } from '@shared/types/api.types'
 
-/** The only two kinds this project can render inline. Everything else
- * (images, doc/docx, xls/xlsx) falls back to download-only. */
-export type PreviewableFileKind = 'pdf' | 'text'
+/** The kinds this project can render inline. Everything else
+ * (doc/docx, xls/xlsx) falls back to download-only. */
+export type PreviewableFileKind = 'pdf' | 'text' | 'image'
+
+const IMAGE_FILE_TYPES: ReadonlyArray<FileType> = ['jpg', 'jpeg', 'png', 'webp']
 
 export function getExtension(filename: string): string {
   return filename.split('.').pop()?.toLowerCase() ?? ''
@@ -16,6 +18,7 @@ export function getPreviewableKind(
 ): PreviewableFileKind | null {
   if (fileType === 'pdf') return 'pdf'
   if (fileType === 'md') return 'text'
+  if (IMAGE_FILE_TYPES.includes(fileType)) return 'image'
   return null
 }
 
@@ -30,4 +33,13 @@ export function getFileTypeFromFilename(filename: string): FileType | null {
   )
     ? (extension as FileType)
     : null
+}
+
+/** Human-readable size for a persisted file, e.g. `850 B`, `212 KB`, `3.4 MB`. */
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  const kilobytes = bytes / 1024
+  if (kilobytes < 1024) return `${Math.round(kilobytes)} KB`
+  const megabytes = kilobytes / 1024
+  return `${megabytes.toFixed(megabytes < 10 ? 1 : 0)} MB`
 }

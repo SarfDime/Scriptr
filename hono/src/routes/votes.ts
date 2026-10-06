@@ -8,6 +8,7 @@ import type {
 import { Hono } from 'hono'
 import { checkTotalScriptVotes } from '../lib/achievements'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
+import { honoLog } from '../lib/logger'
 import { requiredParam } from '../lib/request'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
@@ -128,7 +129,12 @@ votes.post('/:scriptId', authMiddleware, async (c) => {
     if (error.code === 'P0002') {
       return c.json({ error: 'Script not found' }, 404)
     }
-    return c.json({ error: error.message }, 500)
+    honoLog({
+      logLevel: 'error',
+      message: `Failed to toggle vote for script ${scriptId}`,
+      error,
+    })
+    return c.json({ error: 'Unable to update vote' }, 500)
   }
 
   const { data: script } = await supabase

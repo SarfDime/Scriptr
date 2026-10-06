@@ -1,15 +1,18 @@
+import { isReactionType } from '@shared/config/shared-constants'
 import type {
   CommentByProfessor,
   CommentByUser,
   CommentCreateResult,
   CommentFlaggedSummary,
+  CommentReactionToggleResponse,
   CommentReactionWithUser,
   CommentSummary,
+  ReactionType,
 } from '@shared/types/comments.types'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
 import { isAdmin } from '@shared/utils/api.utils'
 import {
-  isPortableTextValue,
+  isCommentPortableTextValue,
   portableTextToPlainText,
 } from '@shared/utils/portable-text.utils'
 import { Hono } from 'hono'
@@ -18,6 +21,7 @@ import {
   commentMutationTags,
   revalidateCommentTags,
 } from '../lib/cache-revalidate-comments'
+import { honoLog } from '../lib/logger'
 import { requiredParam } from '../lib/request'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
@@ -30,14 +34,14 @@ const PUBLIC_COMMENT_COLUMNS =
  * that select a comment with its author and professor (but no script)
  * joined. Matches `CommentWithAuthorAndProfessor` in
  * `shared/types/comments.types.ts`. */
-const COMMENT_WITH_AUTHOR_AND_PROFESSOR_SELECT = `${PUBLIC_COMMENT_COLUMNS}, author:profiles(username, full_name), professor:professors(name)`
+const COMMENT_WITH_AUTHOR_AND_PROFESSOR_SELECT = `${PUBLIC_COMMENT_COLUMNS}, author:profiles!author_id(username, full_name, avatar_url), professor:professors(name)`
 
 /** Reused by `POST /` and `POST /:commentId/replies` — both create a
  * comment and need author, professor, and script joined (exactly one of
  * professor/script is ever populated on a given row; the route doesn't
  * know which ahead of the insert). Matches
  * `CommentWithAuthorProfessorScript`. */
-const COMMENT_CREATE_SELECT = `${PUBLIC_COMMENT_COLUMNS}, author:profiles(username, full_name), professor:professors(name), script:scripts(title)`
+const COMMENT_CREATE_SELECT = `${PUBLIC_COMMENT_COLUMNS}, author:profiles!author_id(username, full_name, avatar_url), professor:professors(name), script:scripts(title)`
 
 /** Reused by `GET /:commentId/reactions` and `POST /:commentId/reactions`.
  * Matches `CommentReactionWithUser`. */
@@ -61,6 +65,24 @@ function withVerifiedScriptTitle<
 }
 
 type CommentEngagementRow = { id: string }
+
+function getCurrentUserReactionTypes(
+  reactions: Array<{ reaction_type: string; user_id: string }>,
+  currentUserId: string | undefined
+): Array<ReactionType> {
+  if (!currentUserId) return []
+
+  const reactionTypes: Array<ReactionType> = []
+  for (const reaction of reactions) {
+    if (
+      reaction.user_id === currentUserId &&
+      isReactionType(reaction.reaction_type)
+    ) {
+      reactionTypes.push(reaction.reaction_type)
+    }
+  }
+  return reactionTypes
+}
 
 /** Attach reaction/like counts and the current user's own status to comment rows */
 async function attachEngagement<T extends CommentEngagementRow>(
@@ -98,12 +120,10 @@ async function attachEngagement<T extends CommentEngagementRow>(
       reactions_count: commentReactions.length,
       reactions_by_type: reactionsByType,
       likes_count: commentLikes.length,
-      my_reaction:
-        (currentUserId &&
-          commentReactions.find(
-            (reaction) => reaction.user_id === currentUserId
-          )?.reaction_type) ||
-        null,
+      my_reactions: getCurrentUserReactionTypes(
+        commentReactions,
+        currentUserId
+      ),
       liked_by_me: currentUserId
         ? commentLikes.some((like) => like.user_id === currentUserId)
         : false,
@@ -141,7 +161,7 @@ comments.get('/professor/:professorId', async (c) => {
     .from('comments')
     .select(`
         ${PUBLIC_COMMENT_COLUMNS},
-        author:profiles(username, full_name)
+        author:profiles!author_id(username, full_name, avatar_url)
       `)
     .eq('professor_id', professorId)
     .order('created_at', { ascending: false })
@@ -201,7 +221,7 @@ comments.post('/:commentId/replies', authMiddleware, async (c) => {
   }>()
 
   if (
-    !isPortableTextValue(content) ||
+    !isCommentPortableTextValue(content) ||
     (professor_id && script_id) ||
     (!professor_id && !script_id)
   ) {
@@ -215,7 +235,13 @@ comments.post('/:commentId/replies', authMiddleware, async (c) => {
   }
 
   if (portableTextToPlainText(content).length < 3) {
-    return c.json({ error: 'Reply must be at least 3 characters long' }, 400)
+    return c.json(
+      {
+        error:
+          'Reply must be at least 3 characters long and cannot contain headings, lists, or text alignment',
+      },
+      400
+    )
   }
 
   const { data, error } = await supabase
@@ -251,7 +277,7 @@ comments.post('/:commentId/replies', authMiddleware, async (c) => {
     reactions_count: 0,
     reactions_by_type: {},
     likes_count: 0,
-    my_reaction: null,
+    my_reactions: [],
     liked_by_me: false,
   }
 
@@ -261,37 +287,65 @@ comments.post('/:commentId/replies', authMiddleware, async (c) => {
   })
 })
 
-/** Add or change the current user's reaction to a comment */
+/** Toggle one reaction type for the current user. */
 comments.post('/:commentId/reactions', authMiddleware, async (c) => {
   const user = c.get('user')
   const commentId = requiredParam(c, 'commentId')
   const supabase = createSupabaseClient(c)
-  const { reaction_type } = await c.req.json()
+  const { reaction_type } = await c.req.json<{ reaction_type?: unknown }>()
+  const reactionType =
+    typeof reaction_type === 'string' ? reaction_type.trim() : ''
 
-  if (!reaction_type || typeof reaction_type !== 'string') {
-    return c.json({ error: 'reaction_type is required' }, 400)
+  if (!isReactionType(reactionType)) {
+    return c.json(
+      {
+        error: 'reaction_type must be one of: like, hate, funny, sad, confused',
+      },
+      400
+    )
   }
 
-  const { data, error } = await supabase
-    .from('comment_reactions')
-    .upsert(
-      {
-        comment_id: commentId,
-        reaction_type: reaction_type.trim(),
-        user_id: user.id,
-      },
-      { onConflict: 'comment_id,user_id' }
-    )
-    .select(COMMENT_REACTION_WITH_USER_SELECT)
-    .single()
+  const { data: existingReaction, error: existingReactionError } =
+    await supabase
+      .from('comment_reactions')
+      .select('id')
+      .eq('comment_id', commentId)
+      .eq('user_id', user.id)
+      .eq('reaction_type', reactionType)
+      .maybeSingle()
 
-  // Same restriction-check mapping as comment creation — comment_reactions'
-  // INSERT/UPDATE RLS both carry is_restricted().
+  if (existingReactionError) {
+    honoLog({
+      logLevel: 'error',
+      message: `Failed to read reactions for comment ${commentId}`,
+      error: existingReactionError,
+    })
+    return c.json({ error: 'Unable to update reaction' }, 500)
+  }
+
+  const { error } = existingReaction
+    ? await supabase
+        .from('comment_reactions')
+        .delete()
+        .eq('id', existingReaction.id)
+    : await supabase.from('comment_reactions').insert({
+        comment_id: commentId,
+        reaction_type: reactionType,
+        user_id: user.id,
+      })
+
+  // Adding a reaction is restriction-checked by RLS; removing an existing
+  // reaction remains allowed for restricted users.
   if (error) {
     if (error.code === '42501') {
       return c.json({ error: 'Your account is restricted from reacting' }, 403)
     }
-    return c.json({ error: error.message }, 500)
+    honoLog({
+      logLevel: 'error',
+      message: `Failed to update reaction for comment ${commentId}`,
+      error,
+    })
+    return c.json({ error: 'Unable to update reaction' }, 500)
   }
 
   // Reactions don't carry script_id/professor_id/author_id themselves —
@@ -306,9 +360,10 @@ comments.post('/:commentId/reactions', authMiddleware, async (c) => {
     await revalidateCommentTags(c.env, commentMutationTags(parentComment))
   }
 
-  return c.json<{ success: true; reaction: CommentReactionWithUser }>({
+  return c.json<CommentReactionToggleResponse>({
     success: true,
-    reaction: data,
+    reacted: !existingReaction,
+    reaction_type: reactionType,
   })
 })
 
@@ -376,7 +431,7 @@ comments.post('/', authMiddleware, async (c) => {
   }>()
 
   if (
-    !isPortableTextValue(content) ||
+    !isCommentPortableTextValue(content) ||
     (professor_id && script_id) ||
     (!professor_id && !script_id)
   ) {
@@ -390,7 +445,13 @@ comments.post('/', authMiddleware, async (c) => {
   }
 
   if (portableTextToPlainText(content).length < 3) {
-    return c.json({ error: 'Comment must be at least 3 characters long' }, 400)
+    return c.json(
+      {
+        error:
+          'Comment must be at least 3 characters long and cannot contain headings, lists, or text alignment',
+      },
+      400
+    )
   }
 
   const { data, error } = await supabase
@@ -425,7 +486,7 @@ comments.post('/', authMiddleware, async (c) => {
     reactions_count: 0,
     reactions_by_type: {},
     likes_count: 0,
-    my_reaction: null,
+    my_reactions: [],
     liked_by_me: false,
   }
 
@@ -444,10 +505,16 @@ comments.patch('/:id', authMiddleware, async (c) => {
   const { content } = await c.req.json<{ content?: unknown }>()
 
   if (
-    !isPortableTextValue(content) ||
+    !isCommentPortableTextValue(content) ||
     portableTextToPlainText(content).length < 3
   ) {
-    return c.json({ error: 'Comment must be at least 3 characters long' }, 400)
+    return c.json(
+      {
+        error:
+          'Comment must be at least 3 characters long and cannot contain headings, lists, or text alignment',
+      },
+      400
+    )
   }
 
   // Check if user is the author or an admin (RLS's UPDATE policy already
@@ -541,7 +608,7 @@ comments.get('/flagged/all', authMiddleware, async (c) => {
     .from('comments')
     .select(`
         ${PUBLIC_COMMENT_COLUMNS},
-        author:profiles(username, full_name),
+        author:profiles!author_id(username, full_name, avatar_url),
         flags:flags(*, reporter:profiles!reporter_id(username))
       `)
     .eq('is_flagged', true)

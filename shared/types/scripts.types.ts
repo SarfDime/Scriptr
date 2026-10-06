@@ -13,10 +13,12 @@ export type ScriptFile = {
   created_at: string
 }
 
-/** Matches `author:profiles(username, full_name)`. */
+/** Matches `author:profiles(username, full_name, avatar_url)`. Every select
+ * that returns this shape must include `avatar_url`. */
 export type ScriptAuthorSummary = {
   username: string | null
   full_name: string | null
+  avatar_url: string | null
 }
 
 /** Matches `study:studies(sanity_id, faculty_id)`. `sanity_id` drives

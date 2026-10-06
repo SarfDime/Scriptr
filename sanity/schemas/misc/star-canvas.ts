@@ -12,6 +12,7 @@ import { defineField, defineType } from 'sanity'
 const THEME_COLORS = [
   { title: 'Brand (Blue)', value: 'brand' },
   { title: 'Brand Light', value: 'brand-300' },
+  { title: 'Brand Dark', value: 'brand-850' },
   { title: 'Sky', value: 'sky' },
   { title: 'Jade', value: 'jade' },
   { title: 'Lavender', value: 'lavender' },
@@ -202,11 +203,32 @@ export const StarCanvas = defineType({
       options: { columns: 2 },
     },
     {
+      name: 'galaxyShape',
+      title: 'Shape',
+      description:
+        'Stretch the band. Stars keep their size, so a bigger band is also a sparser one: raise the density below to compensate, or leave it for a more spread out look.',
+      options: { columns: 2 },
+    },
+    {
+      name: 'galaxyDensities',
+      title: 'Density',
+      description:
+        'How many stars and clouds there are. The final density at the center is Overall × Center, and at the far ends Overall × Ends.',
+      options: { columns: 3 },
+    },
+    {
       name: 'galaxyLook',
       title: 'Look',
       options: { columns: 2 },
     },
     { name: 'galaxyColors', title: 'Colors', options: { columns: 2 } },
+    {
+      name: 'backgroundHaze',
+      title: 'Background haze',
+      description:
+        'A soft, grayish circle behind everything: strongest in the middle of the screen and fading into your normal background at the edges, so the stars and glow stand out more.',
+      options: { columns: 2 },
+    },
     {
       name: 'rimSettings',
       title: 'Ring, corona and flare',
@@ -295,6 +317,39 @@ export const StarCanvas = defineType({
       group: 'stars',
       min: 0,
       precision: 4,
+    }),
+
+    colorField(
+      'backgroundHazeColor',
+      'Haze color',
+      'A grayish space color. Default: Grey Dark',
+      'grey-800',
+      'stars',
+      'backgroundHaze'
+    ),
+    numberField({
+      name: 'backgroundHazeOpacity',
+      title: 'Haze strength',
+      description:
+        'How visible the haze is in the middle. 0 = none. Range 0–1. Default 0.5',
+      initialValue: 0.5,
+      group: 'stars',
+      fieldset: 'backgroundHaze',
+      min: 0,
+      max: 1,
+      precision: 2,
+    }),
+    numberField({
+      name: 'backgroundHazeRadius',
+      title: 'Haze size',
+      description:
+        'How far the haze reaches, as a share of the distance from the middle of the screen to its corner. 1 = all the way. Range 0.2–2. Default 0.9',
+      initialValue: 0.9,
+      group: 'stars',
+      fieldset: 'backgroundHaze',
+      min: 0.2,
+      max: 2,
+      precision: 2,
     }),
 
     // ── Shooting stars ───────────────────────────────────────────────────
@@ -541,6 +596,19 @@ export const StarCanvas = defineType({
       fieldset: 'rimSettings',
       min: 0,
       max: 1,
+      precision: 2,
+      hidden: hideIfNoFlare,
+    }),
+    numberField({
+      name: 'blackHoleFlareSpin',
+      title: 'Flare spin on hover',
+      description:
+        'While the pointer is over the black hole, the flare spins around the rim. 1 = about a turn every 10 seconds, 0 = it stays put. Range 0–5. Default 1',
+      initialValue: 1,
+      group: 'smoke',
+      fieldset: 'rimSettings',
+      min: 0,
+      max: 5,
       precision: 2,
       hidden: hideIfNoFlare,
     }),
@@ -819,6 +887,19 @@ export const StarCanvas = defineType({
       hidden: hideIfNoGalaxy,
     }),
     numberField({
+      name: 'galaxyTilt',
+      title: 'Tilt (degrees)',
+      description:
+        'Which way the Milky Way points. 0 = flat and horizontal, 30 = the right end tilts up, -30 = the left end tilts up, 90 or -90 = vertical. Range -90 to 90. Default 0',
+      initialValue: 0,
+      group: 'galaxy',
+      fieldset: 'galaxyLook',
+      min: -90,
+      max: 90,
+      precision: 1,
+      hidden: hideIfNoGalaxy,
+    }),
+    numberField({
       name: 'galaxyDriftFactor',
       title: 'Drift speed ×',
       description:
@@ -867,15 +948,67 @@ export const StarCanvas = defineType({
       hidden: hideIfNoGalaxy,
     }),
     numberField({
-      name: 'galaxyDensity',
-      title: 'Star density',
+      name: 'galaxyWidthScale',
+      title: 'Width ×',
       description:
-        'How many dots make up the galaxy. 1 = normal, lower is sparser and faster to build. Range 0.1–3. Default 1',
+        'Stretches the length of the band. 1 = normal, 2 = twice as long. Range 0.3–3. Default 1',
       initialValue: 1,
       group: 'galaxy',
-      fieldset: 'galaxyLook',
+      fieldset: 'galaxyShape',
+      min: 0.3,
+      max: 3,
+      precision: 2,
+      hidden: hideIfNoGalaxy,
+    }),
+    numberField({
+      name: 'galaxyHeightScale',
+      title: 'Height ×',
+      description:
+        'Makes the band thicker or thinner. 1 = normal, 2 = twice as thick. Range 0.2–4. Default 1',
+      initialValue: 1,
+      group: 'galaxy',
+      fieldset: 'galaxyShape',
+      min: 0.2,
+      max: 4,
+      precision: 2,
+      hidden: hideIfNoGalaxy,
+    }),
+    numberField({
+      name: 'galaxyDensity',
+      title: 'Overall ×',
+      description:
+        'Multiplies everything. Lower is also faster to build. Range 0.1–3. Default 1',
+      initialValue: 1,
+      group: 'galaxy',
+      fieldset: 'galaxyDensities',
       min: 0.1,
       max: 3,
+      precision: 2,
+      hidden: hideIfNoGalaxy,
+    }),
+    numberField({
+      name: 'galaxyCenterDensity',
+      title: 'Center ×',
+      description:
+        'Stars and clouds around the bright center. 0 = an empty center. Range 0–4. Default 1',
+      initialValue: 1,
+      group: 'galaxy',
+      fieldset: 'galaxyDensities',
+      min: 0,
+      max: 4,
+      precision: 2,
+      hidden: hideIfNoGalaxy,
+    }),
+    numberField({
+      name: 'galaxyEndDensity',
+      title: 'Ends ×',
+      description:
+        'Stars and clouds in the long tails on both sides. Higher = the band stays full farther out, 0 = no tails. Range 0–4. Default 1',
+      initialValue: 1,
+      group: 'galaxy',
+      fieldset: 'galaxyDensities',
+      min: 0,
+      max: 4,
       precision: 2,
       hidden: hideIfNoGalaxy,
     }),

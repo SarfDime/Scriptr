@@ -27,8 +27,7 @@ const getBadgeContent = (props: AcademicBadgeProps) => {
     case 'semester':
       return {
         colorPalette: getColorPalette({ type: 'semester', value: props.value }),
-        label: props.value,
-        className: 'capitalize',
+        label: `Semester ${props.value}`,
       }
     case 'code':
       return {
@@ -45,17 +44,10 @@ const getBadgeContent = (props: AcademicBadgeProps) => {
 
 /** A component that renders an academic badge based on its type and value. */
 export const AcademicBadge = ({ className, ...props }: AcademicBadgeProps) => {
-  const {
-    colorPalette,
-    label,
-    className: badgeClassName,
-  } = getBadgeContent(props)
+  const { colorPalette, label } = getBadgeContent(props)
 
   return (
-    <Badge
-      colorPalette={colorPalette}
-      className={cn('ui-caption', className, badgeClassName)}
-    >
+    <Badge colorPalette={colorPalette} className={cn('ui-caption', className)}>
       {label}
     </Badge>
   )

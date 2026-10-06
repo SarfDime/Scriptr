@@ -4,8 +4,9 @@ import type {
   CommentByProfessor,
   CommentByUser,
   CommentCreateResult,
-  CommentReactionWithUser,
+  CommentReactionToggleResponse,
   CommentSummary,
+  ReactionType,
 } from '@shared/types/comments.types'
 import type { PortableTextValue } from '@/lib/portable-text'
 import { apiFetch, cachedUnlessPersonalized } from './next-api'
@@ -18,7 +19,7 @@ function targetBody(target: CommentTarget) {
     : { professor_id: target.professorId }
 }
 
-/** Shared/cached by default. Pass `cookie` so `my_reaction`/`liked_by_me`
+/** Shared/cached by default. Pass `cookie` so `my_reactions`/`liked_by_me`
  * reflect the requesting user, not whoever's request happened to populate
  * the cache first — attachEngagement() reads the session user server-side
  * to compute those two fields. Forwarding a cookie forces `no-store` (see
@@ -65,23 +66,33 @@ export const postComment = (
  * from CommentSection.tsx, and corrected from `{ comment }` (the actual
  * key is `reply`; CommentSection was reading `.comment` off this call's
  * result too, which would have been `undefined` at runtime). */
-export const postReply = (commentId: string, content: PortableTextValue) =>
+export const postReply = (
+  commentId: string,
+  target: CommentTarget,
+  content: PortableTextValue
+) =>
   apiFetch<{ success: true; reply: CommentCreateResult }>(
     apiRoutes.comments.repliesByCommentId(commentId),
     {
       method: 'POST',
-      body: { content },
+      body: { content, ...targetBody(target) },
     }
   )
 
-/** `POST /:commentId/reactions` wraps as `{ success, reaction }`. */
-export const postReaction = (commentId: string, reactionType: string) =>
-  apiFetch<{ success: true; reaction: CommentReactionWithUser }>(
+/** `POST /:commentId/reactions` toggles one reaction type for the caller. */
+export const postReaction = (commentId: string, reactionType: ReactionType) =>
+  apiFetch<CommentReactionToggleResponse>(
     apiRoutes.comments.reactionsByCommentId(commentId),
     {
       method: 'POST',
       body: { reaction_type: reactionType },
     }
+  )
+
+export const deleteComment = (commentId: string) =>
+  apiFetch<{ success: true; message: string }>(
+    apiRoutes.comments.byId(commentId),
+    { method: 'DELETE' }
   )
 
 /** `POST /:commentId/like` wraps as `{ success, liked }`. Not
@@ -92,15 +103,3 @@ export const toggleLike = (commentId: string) =>
     apiRoutes.comments.likeByCommentId(commentId),
     { method: 'POST' }
   )
-
-/**
- * OPEN ITEM (backend, out of this file's scope): ARCHITECTURE.md §3 documents
- * scripts as tag-revalidating via a backend webhook after mutation. Comments
- * have no equivalent documented yet — without something firing
- * COMMENT_CACHE_TAGS.script/professor/user on comment/reply/reaction/like
- * mutations, an anonymous (no-cookie) cached read will keep serving the
- * pre-mutation list until the tag's default revalidation window passes.
- * CommentSection's local state already reflects new comments/reactions
- * optimistically for the acting user in that session, so this doesn't break
- * the immediate UX — it only affects other visitors' cached reads.
- */

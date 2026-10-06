@@ -1,3 +1,4 @@
+import type { PortableTextValue } from '@shared/types/portable-text.types'
 import { Box } from '../common/Box'
 import { Text } from '../typography/Text'
 import { Title } from '../typography/Title'
@@ -9,7 +10,7 @@ export const PageHeader = ({
   children,
 }: {
   greeting?: string
-  title?: string
+  title?: string | PortableTextValue
   subtitle?: string
   children?: React.ReactNode
 }) => {

@@ -3,6 +3,7 @@ import type {
   MinimalSubjectQueryTypedResult,
   SubjectByIdQueryResult,
   SubjectDetailQueryResult,
+  SubjectPathQueryResult,
 } from '@shared/types/sanity.types'
 import type { WithResolvedSanityData } from '@shared/types/sanity-transform.types'
 import type { BoxProps } from '@/components/common/Box'
@@ -17,6 +18,11 @@ export type SubjectDetail = NonNullable<
 
 export type SubjectById = NonNullable<
   WithResolvedSanityData<SubjectByIdQueryResult>
+>
+
+/** Slugs of a subject and its ancestors — just enough to build its page path. */
+export type SubjectPath = NonNullable<
+  WithResolvedSanityData<SubjectPathQueryResult>
 >
 
 export type SubjectsSidebarProps = Omit<BoxProps, 'content' | 'as'> & {

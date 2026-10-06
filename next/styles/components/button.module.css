@@ -229,7 +229,7 @@
     color-mix(in oklab, var(--color-golden-yellow) 85%, white),
     var(--color-golden-yellow)
   );
-  color: var(--color-brand-700);
+  color: var(--color-background-100);
   font-weight: 600;
   box-shadow: var(--shadow-sm);
 

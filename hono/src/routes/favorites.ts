@@ -24,7 +24,6 @@ favorites.get('/', async (c) => {
     .order('created_at', { ascending: false })
 
   if (error) return c.json({ error: error.message }, 500)
-  await revalidateCacheTags(c.env, profileMutationTags(user.id))
   return c.json(data)
 })
 
@@ -59,6 +58,7 @@ favorites.post('/:scriptId', async (c) => {
     .single()
 
   if (error) return c.json({ error: error.message }, 500)
+  await revalidateCacheTags(c.env, profileMutationTags(user.id))
   return c.json(data)
 })
 

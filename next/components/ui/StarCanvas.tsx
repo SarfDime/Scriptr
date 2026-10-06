@@ -11,9 +11,11 @@ import type {
 } from '@shared/types/star-canvas.types'
 import { useEffect, useRef, useSyncExternalStore } from 'react'
 import {
+  addFalloff,
   BLACK_HOLE_PRESETS,
   BODY_RADIUS,
   buildGalaxySprites,
+  buildHazeSprite,
   buildPlanetSprites,
   buildShadeSprite,
   buildSoftDot,
@@ -113,13 +115,17 @@ export const CustomStarCanvas = ({
     // (the stars move diagonally, so the total speed is the same as theirs)
     const galaxyDirection = GALAXY_DRIFT_DIRECTIONS[cfg.galaxyDriftDirection] ??
       GALAXY_DRIFT_DIRECTIONS['up-left'] ?? { x: -1, y: -1 }
+    // Positive tilt raises the right end (canvas angles run clockwise, so negate)
+    const galaxyTilt = (-cfg.galaxyTilt * Math.PI) / 180
     const galaxySpeed = cfg.starDriftSpeed * cfg.galaxyDriftFactor * Math.SQRT2
     let shade: HTMLCanvasElement | null = null // shared day/night overlay for planets
 
     let puff: HTMLCanvasElement | null = null // soft blob sprite for the smoke
     let corona: CanvasGradient | null = null // second glow layer, just outside the ring
     let flare: HTMLCanvasElement | null = null // soft sprite for the bright spot on the rim
-    const flareAngle = Math.random() * TAU // where on the rim the flare sits
+    let flareAngle = Math.random() * TAU // where on the rim the flare sits (spins on hover)
+    let haze: HTMLCanvasElement | null = null // grayish circle behind everything
+    let hazeTimer = 0
     let agitation = 0 // 0 (calm) to 1 (pointer close), eased
     let smokeTime = 0 // ms, runs faster while agitated
     let chaosTime = 0 // ms, drives the planets' hover chaos
@@ -151,9 +157,7 @@ export const CustomStarCanvas = ({
       const sctx = sprite.getContext('2d')
       if (sctx) {
         const g = sctx.createRadialGradient(64, 64, 0, 64, 64, 64)
-        g.addColorStop(0, `rgba(${colors.glow}, 0.55)`)
-        g.addColorStop(0.5, `rgba(${colors.glow}, 0.2)`)
-        g.addColorStop(1, `rgba(${colors.glow}, 0)`)
+        addFalloff(g, colors.glow, 0.55, 2)
         sctx.fillStyle = g
         sctx.fillRect(0, 0, 128, 128)
       }
@@ -169,13 +173,11 @@ export const CustomStarCanvas = ({
         0,
         outer
       )
-      gradient.addColorStop(0, `rgba(${colors.glow}, 0.6)`)
-      gradient.addColorStop(0.35, `rgba(${colors.glow}, 0.22)`)
-      gradient.addColorStop(1, `rgba(${colors.glow}, 0)`)
+      addFalloff(gradient, colors.glow, 0.6, 2.2) // eased, so it ends without an edge
       glow = gradient
 
-      // Corona: warm layer hugging the ring that fades out into the base glow, like
-      // the light around an eclipse. Brightest at the ring, gone at its outer edge.
+      // Corona: warm layer hugging the ring that melts into the base glow, like the
+      // light around an eclipse. Brightest at the ring, gone at its outer edge.
       corona = null
       if (cfg.blackHoleCoronaWidth > 0) {
         const edge = cfg.blackHoleRadius * (1 + cfg.blackHoleCoronaWidth)
@@ -187,13 +189,39 @@ export const CustomStarCanvas = ({
           0,
           edge
         )
-        layer.addColorStop(0, `rgba(${colors.corona}, 1)`)
-        layer.addColorStop(0.25, `rgba(${colors.corona}, 0.7)`)
-        layer.addColorStop(0.6, `rgba(${colors.corona}, 0.3)`)
-        layer.addColorStop(1, `rgba(${colors.corona}, 0)`)
+        // Fades out slowly while its color turns into the glow color, so it
+        // melts into the glow instead of ending as a separate ring
+        addFalloff(layer, colors.corona, 1, 1.8, colors.glow)
         corona = layer
       }
       flare = cfg.enableBlackHoleFlare ? buildSoftDot(colors.flare) : null
+    }
+
+    // Soft grayish circle in the middle of the screen that fades to your normal
+    // background at the edges, so everything on top is a bit easier to see. It is
+    // dithered (see buildHazeSprite) so the fade has no visible rings.
+    const buildHaze = () => {
+      window.clearTimeout(hazeTimer)
+      haze =
+        cfg.backgroundHazeOpacity > 0 && w > 0 && h > 0
+          ? buildHazeSprite(
+              w,
+              h,
+              colors.haze,
+              cfg.backgroundHazeOpacity,
+              cfg.backgroundHazeRadius
+            )
+          : null
+    }
+
+    // Painting the haze takes a few milliseconds, so while the window is being
+    // resized it waits until the resizing pauses
+    const scheduleHaze = () => {
+      window.clearTimeout(hazeTimer)
+      hazeTimer = window.setTimeout(() => {
+        buildHaze()
+        redrawIfStatic()
+      }, 150)
     }
 
     const buildSprites = () => {
@@ -235,6 +263,7 @@ export const CustomStarCanvas = ({
 
       bh = cfg.enableBlackHole ? { x: w * place.x, y: h * place.y } : null
       buildGlow()
+      scheduleHaze()
     }
 
     // ── Physics ─────────────────────────────────────────────────────────────
@@ -280,6 +309,8 @@ export const CustomStarCanvas = ({
         }
       }
       agitation += (target - agitation) * 0.04 * dt
+      // The flare spins around the rim while hovered (about a turn per 10 seconds)
+      flareAngle += dt * 16.667 * 0.0006 * cfg.blackHoleFlareSpin * agitation
       smokeTime += dt * 16.667 * (1 + 1.5 * agitation) * cfg.blackHoleSmokeSpeed
       gravityRadius =
         cfg.blackHoleGravityRadius *
@@ -322,36 +353,50 @@ export const CustomStarCanvas = ({
 
     // ── Drawing ─────────────────────────────────────────────────────────────
 
-    // Drawn first, so it sits behind everything. It drifts like the stars but more
-    // slowly (it is farther away), in the chosen direction, and each layer breathes
-    // or twinkles a little on its own. With reduced motion `now` is fixed and dt is
-    // 0, so it stays still.
+    // Drawn first (after the haze), so it sits behind everything. It drifts like the
+    // stars but more slowly (it is farther away), in the chosen direction, and each
+    // layer breathes or twinkles a little on its own. With reduced motion `now` is
+    // fixed and dt is 0, so it stays still.
     const drawGalaxy = (now: number, dt: number) => {
       if (!galaxy) return
       galaxyOffset.x += galaxyDirection.x * galaxySpeed * dt
       galaxyOffset.y += galaxyDirection.y * galaxySpeed * dt
 
+      // Half the size of the box around the tilted band, to know when it has left
+      const cos = Math.abs(Math.cos(galaxyTilt))
+      const sin = Math.abs(Math.sin(galaxyTilt))
+      const halfX = (galaxy.width * cos + galaxy.height * sin) / 2
+      const halfY = (galaxy.width * sin + galaxy.height * cos) / 2
+
       // Once it has drifted completely off one side, bring it back in from the
       // opposite side
       const centerX = w * galaxy.anchor.x + galaxyOffset.x
       const centerY = h * galaxy.anchor.y + galaxyOffset.y
-      const spanX = w + galaxy.width
-      const spanY = h + galaxy.height
-      if (centerX < -galaxy.width / 2) galaxyOffset.x += spanX
-      else if (centerX > w + galaxy.width / 2) galaxyOffset.x -= spanX
-      if (centerY < -galaxy.height / 2) galaxyOffset.y += spanY
-      else if (centerY > h + galaxy.height / 2) galaxyOffset.y -= spanY
+      if (centerX < -halfX) galaxyOffset.x += w + halfX * 2
+      else if (centerX > w + halfX) galaxyOffset.x -= w + halfX * 2
+      if (centerY < -halfY) galaxyOffset.y += h + halfY * 2
+      else if (centerY > h + halfY) galaxyOffset.y -= h + halfY * 2
 
-      const left = w * galaxy.anchor.x + galaxyOffset.x - galaxy.width / 2
-      const top = h * galaxy.anchor.y + galaxyOffset.y - galaxy.height / 2
+      ctx.save()
+      ctx.translate(
+        w * galaxy.anchor.x + galaxyOffset.x,
+        h * galaxy.anchor.y + galaxyOffset.y
+      )
+      ctx.rotate(galaxyTilt)
       for (const layer of galaxy.layers) {
         if (!layer.sprite) continue
         const swing = 0.5 + 0.5 * Math.sin(now * layer.rate + layer.phase)
         ctx.globalAlpha =
           Math.min(1, cfg.galaxyOpacity) * (1 - layer.amount * (1 - swing))
-        ctx.drawImage(layer.sprite, left, top, galaxy.width, galaxy.height)
+        ctx.drawImage(
+          layer.sprite,
+          -galaxy.width / 2,
+          -galaxy.height / 2,
+          galaxy.width,
+          galaxy.height
+        )
       }
-      ctx.globalAlpha = 1
+      ctx.restore()
     }
 
     // `lightAngle`: direction the lit side faces
@@ -629,6 +674,13 @@ export const CustomStarCanvas = ({
     // with its orbiting planets (some behind it, some in front).
     const draw = (now: number, dt: number) => {
       ctx.clearRect(0, 0, w, h)
+      if (haze) {
+        // The haze is stored at half resolution; scaling it up without smoothing
+        // keeps its fine noise (see buildHazeSprite)
+        ctx.imageSmoothingEnabled = false
+        ctx.drawImage(haze, 0, 0, w, h)
+        ctx.imageSmoothingEnabled = true
+      }
       updateAgitation(dt)
       updateOrbits(dt)
 
@@ -642,6 +694,7 @@ export const CustomStarCanvas = ({
     // ── Setup ───────────────────────────────────────────────────────────────
 
     layout()
+    buildHaze()
     const planets = makePlanets(cfg, w, h)
     orbiting.push(...planets.orbiting)
     drifting.push(...planets.drifting)
@@ -674,6 +727,7 @@ export const CustomStarCanvas = ({
     const onThemeChange = () => {
       colors = resolveColors(cfg)
       buildGlow()
+      buildHaze()
       buildSprites()
       redrawIfStatic()
     }
@@ -725,6 +779,7 @@ export const CustomStarCanvas = ({
       colorScheme.removeEventListener('change', onThemeChange)
       themeObserver.disconnect()
       cancelAnimationFrame(raf)
+      window.clearTimeout(hazeTimer)
     }
   }, [sanityData, isMobile])
 

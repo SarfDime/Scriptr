@@ -14,10 +14,8 @@ import type { ScriptDetail } from '@/types/components/Scripts.types'
  * favorited script as written by the profile owner).
  *
  * `likes` stands in for `vote_score` — the schema has no separate "likes"
- * concept for scripts, only the up/down vote score (see ARCHITECTURE.md
- * on votes vs. comment-level likes). ScriptLikeButton's own wiring is
- * unrelated to this change and untouched; flagging this mapping so it's
- * an intentional, visible choice rather than a silent one.
+ * concept for scripts, only the upvote score (see ARCHITECTURE.md on votes
+ * vs. comment-level likes).
  *
  * `professor` and `year` are left undefined — see PROFILE_SCRIPT_FIELDS'
  * comment for why neither is obtainable via a simple join today. Both are
@@ -27,6 +25,7 @@ import type { ScriptDetail } from '@/types/components/Scripts.types'
 export const toScriptDetail = (script: ProfileScriptSummary): ScriptDetail => ({
   id: script.id,
   title: script.title,
+  description: script.description ?? undefined,
   subject: script.subject?.name ?? '',
   author: script.author?.full_name || script.author?.username || '',
   updatedAt: new Date(script.updated_at),
@@ -46,6 +45,7 @@ export const toScriptSummaryDetails = (
   scripts.map((script) => ({
     id: script.id,
     title: script.title,
+    description: script.description ?? undefined,
     subject: script.subject?.name ?? '',
     author: script.author?.full_name || script.author?.username || '',
     updatedAt: new Date(script.updated_at),

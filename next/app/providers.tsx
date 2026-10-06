@@ -1,5 +1,6 @@
 'use client'
 
+import { AuthModalProvider } from '@/providers/AuthModalProvider'
 import { LoadingProvider } from '@/providers/loading/LoadingProvider'
 import { NotificationsProvider } from '@/providers/notification/NotificationProvider'
 import { OnboardingProvider } from '@/providers/onboarding/OnboardingProvider'
@@ -23,7 +24,9 @@ export function Providers({
           <SessionProvider>
             <ProfileProvider>
               <OnboardingProvider catalog={catalog}>
-                <NotificationsProvider>{children}</NotificationsProvider>
+                <NotificationsProvider>
+                  <AuthModalProvider>{children}</AuthModalProvider>
+                </NotificationsProvider>
               </OnboardingProvider>
             </ProfileProvider>
           </SessionProvider>

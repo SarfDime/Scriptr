@@ -115,47 +115,44 @@ export function Dialog({
   }, [setRef])
 
   const handleOpen = () => {
-    dialogRef?.current?.showModal()
+    if (dialogRef.current?.open) return
+    dialogRef.current?.showModal()
     setShowBackdrop(true)
+    setInternalDialogOpen(true)
     onOpen?.()
   }
 
   const handleClose = () => {
-    dialogRef?.current?.close()
-    onClose?.()
+    if (!dialogRef.current?.open) return
+    dialogRef.current.close()
   }
 
   const handleToggle = () => {
-    setShowBackdrop(dialogRef?.current?.open ?? false)
+    const open = dialogRef.current?.open ?? false
+    setShowBackdrop(open)
+    setInternalDialogOpen(open)
     onToggle?.()
   }
 
-  const handleOpenEffect = useEffectEvent(() => {
-    handleOpen()
-  })
+  const handleNativeClose = () => {
+    setShowBackdrop(false)
+    setInternalDialogOpen(false)
+    onClose?.()
+  }
 
-  const handleCloseEffect = useEffectEvent(() => {
-    handleClose()
-  })
-
-  const handleInternalOpenChange = useEffectEvent((open: boolean) =>
-    setInternalDialogOpen(open ?? false)
-  )
-
-  useEffect(() => {
-    if (setRef || !hideTrigger) return
+  const syncControlledState = useEffectEvent(() => {
+    if (setRef || !hideTrigger || !dialogRef.current) return
     if (isOpen) {
-      handleOpenEffect()
-    } else {
-      handleCloseEffect()
+      handleOpen()
+    } else if (dialogRef.current.open) {
+      handleClose()
     }
-  }, [hideTrigger, isOpen, setRef])
+  })
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <Needed for internalDialogOpen prop changes>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: isOpen drives controlled dialog state through the effect event.
   useEffect(() => {
-    if (!dialogRef?.current) return
-    handleInternalOpenChange(dialogRef?.current?.open ?? false)
-  }, [dialogRef?.current, dialogRef?.current?.open])
+    syncControlledState()
+  }, [hideTrigger, isOpen, setRef])
 
   const handleClickOutside = (e: React.MouseEvent<HTMLDialogElement>) => {
     if (!closeOnOutsideClick) return
@@ -208,7 +205,7 @@ export function Dialog({
               aria-labelledby='dialog-title'
               {...dialogProps}
               onClick={handleClickOutside}
-              onClose={handleClose}
+              onClose={handleNativeClose}
               onToggle={handleToggle}
               onCancel={handleCancel}
               onKeyDown={handleKeyDown}

@@ -33,7 +33,7 @@ export const ProfileCard = ({
   const color = getColorPalette({ type: 'seed', value: name })
 
   return (
-    <Card {...props} className={cn('p-6', className)}>
+    <Card {...props} className={cn('p-6 ui-above', className)}>
       <Card.Body className='flex gap-4 grow-0'>
         <Avatar name={name} picture={picture} color={color} />
 

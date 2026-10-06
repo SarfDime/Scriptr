@@ -7,6 +7,7 @@ import type { CommentTarget } from '@/lib/api/comments-api'
 
 export type CommentEntity = CommentEngagement & {
   id: string
+  author_id: string
   content: PortableTextValue
   author: CommentAuthorSummary | null
   parent_id: string | null

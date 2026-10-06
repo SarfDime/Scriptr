@@ -122,6 +122,20 @@ ${sanityFunctionQueries}
 }
 `
 
+/** Just the slugs needed to build a subject's page path (see
+ * `getAcademicPath({ type: 'subject' })`), looked up from the subject's Sanity
+ * or database id alone. Same `coalesce(slug.current, _id)` fallback as
+ * `subjectStaticParamsQuery`, so the result is exactly the shape the subject
+ * route resolves. */
+export const subjectPathQuery = groq`
+*[_type == "subject" && (_id == $subjectId || _id == "drafts." + $subjectId || dbId == $subjectId)][0] {
+  "subjectSlug": coalesce(slug.current, _id),
+  "studySlug": coalesce(study->slug.current, study->_id),
+  "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),
+  "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id)
+}
+`
+
 /** Static params query for pre-generating all subject subroutes */
 export const subjectStaticParamsQuery = groq`
 *[_type == "subject" && !(_id in path("drafts.**")) && dbId != null] {

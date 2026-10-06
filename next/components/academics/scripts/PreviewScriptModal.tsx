@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/Card'
 import { Dialog } from '@/components/ui/Dialog'
 import { getPreviewableKind } from '@/lib/file-preview'
 import { ScriptDownloadButton } from './actions/ScriptDownloadButton'
-import { FilePreviewContent } from './FilePreviewContent'
+import { StoredFilePreviewContent } from './FilePreviewContent'
 
 export type PreviewScriptModalProps = {
   scriptId: string
@@ -55,14 +55,15 @@ export function PreviewScriptModal({
           </PortableTextContent>
         )}
 
-        {onlyFile && onlyFileKind ? (
-          <FilePreviewContent
-            url={onlyFile.file_url}
+        {onlyFile && onlyFileKind && isOpen ? (
+          <StoredFilePreviewContent
+            fileKey={onlyFile.file_url}
             kind={onlyFileKind}
             fileName={`Script file (${onlyFile.file_type})`}
           />
           // biome-ignore lint/style/noNestedTernary: <Ignore>
         ) : files.length > 0 ? (
+          //  TODO: Figure out a better way to handle multiple files, maybe a carousel or a list with previews
           <Box className='ui-stack gap-2'>
             {files.map((file) => (
               <ScriptDownloadButton

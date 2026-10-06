@@ -21,6 +21,7 @@ export type CommentColumns = {
 export type CommentAuthorSummary = {
   username: string | null
   full_name: string | null
+  avatar_url: string | null
 }
 
 /** Matches `professor:professors(name)`. */
@@ -39,7 +40,7 @@ export type CommentEngagement = {
   reactions_count: number
   reactions_by_type: Record<string, number>
   likes_count: number
-  my_reaction: string | null
+  my_reactions: Array<ReactionType>
   liked_by_me: boolean
 }
 
@@ -76,7 +77,7 @@ export type CommentWithAuthorProfessorScript = CommentColumns & {
 }
 
 /** Matches `COMMENT_REACTION_WITH_USER_SELECT` — `GET /:commentId/reactions`
- * (array) and `POST /:commentId/reactions` (single, via upsert). */
+ * returns this shape in an array. */
 export type CommentReactionWithUser = Tables<'comment_reactions'> & {
   user: { username: string | null } | null
 }
@@ -112,3 +113,9 @@ export type CommentCreateResult = CommentWithAuthorProfessorScript &
   CommentEngagement
 
 export type ReactionType = (typeof REACTION_TYPES)[number]
+
+export type CommentReactionToggleResponse = {
+  success: true
+  reacted: boolean
+  reaction_type: ReactionType
+}

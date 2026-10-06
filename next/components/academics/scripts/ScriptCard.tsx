@@ -1,9 +1,11 @@
 import DocumentTextIcon from '@sanity/icons/DocumentText'
 import { Box } from '@/components/common/Box'
+import { NextLink } from '@/components/common/NextLink'
 import { PortableTextContent } from '@/components/typography/PortableTextContent'
 import { Text } from '@/components/typography/Text'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
+import { getAcademicPath } from '@/lib/academic-routes'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn, formatUpdated } from '@/lib/common-utils'
 import type { ScriptCardProps } from '@/types/components/Scripts.types'
@@ -18,7 +20,12 @@ export const ScriptCard = ({ script }: ScriptCardProps) => {
 
   return (
     <Card className='ui-above'>
-      <Card.Body className='flex items-start gap-3'>
+      {/* TODO: Add hover effect */}
+      <NextLink
+        href={getAcademicPath({ type: 'script', scriptSlug: script.id })}
+        className='flex items-start gap-3'
+        aria-label={`Open ${script.author}'s script`}
+      >
         <Box
           className={cn(
             color,
@@ -44,7 +51,7 @@ export const ScriptCard = ({ script }: ScriptCardProps) => {
             {script.author} • {formatUpdated(script.updatedAt)}
           </Text>
         </Box>
-      </Card.Body>
+      </NextLink>
 
       <Card.Footer className='ui-cluster flex-wrap items-center gap-2'>
         <ScriptActions
@@ -53,6 +60,7 @@ export const ScriptCard = ({ script }: ScriptCardProps) => {
           likes={script.likes}
           comments={script.comments}
           title={script.title}
+          description={script.description}
           files={script.files ?? []}
         />
       </Card.Footer>

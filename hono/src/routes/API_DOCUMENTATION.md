@@ -172,7 +172,7 @@ Internal-only, `x-internal-secret` required for all routes. Does not apply to
 | Route                      | Notes                                                                                                                                                                                                                                                                                                     |
 | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `POST /file-ops/upload`    | Authenticated. Multipart form: one or more `files` entries (a single file is accepted too — normalized to an array server-side) plus optional `subjectId`. Returns `{ success: true, files: [{ fileKey, fileType, fileSizeBytes, bucket }] }` — one entry per uploaded file, in the same order submitted. |
-| `GET /file-ops/get-file/*` | Public. Returns a pre-signed download URL for the given key. Optional `?bucket=` query param — required to resolve a file stored in a university-specific bucket rather than the default `R2_BUCKET`; omit only for files that used the fallback bucket.                                                  |
+| `GET /file-ops/get-file/*` | Public. Returns a pre-signed download URL for a key recorded in `script_files`; the endpoint resolves its bucket from that row. |
 
 **Storage scoping**: if `subjectId` is provided and resolves to a real
 subject → study → faculty → university chain, the file is stored in that
@@ -189,10 +189,9 @@ required at download time, since a bare file key no longer implies a single
 global bucket once buckets are university-scoped. It's included in every
 public script response's `files` array (see [Scripts](#scripts)).
 
-`GET /file-ops/get-file/*` has no auth and does not check that the key
-belongs to a `script_files` row, so a deleted script's file stays fetchable
-(R2 objects are not removed on script deletion). Guest preview/download relies
-on this being public; see `PROGRESS.md` for the open decision.
+`GET /file-ops/get-file/*` has no auth so guests can preview and download
+scripts, but it signs only keys recorded in `script_files` and derives their
+bucket server-side. Deleted scripts remove their associated R2 objects.
 
 ---
 
@@ -231,15 +230,15 @@ Response excludes `is_flagged` (internal moderation state). Each file in
 `GET /comments/script/:scriptId`, `/comments/professor/:professorId`,
 `/comments/user/:userId`, `/comments/:commentId/reactions` — no auth
 required; list routes include `reactions_count`, `reactions_by_type`,
-`likes_count`, `my_reaction`, `liked_by_me` when a session is present.
+`likes_count`, `my_reactions`, `liked_by_me` when a session is present.
 
 ### Authenticated
 
 | Route                                 | Notes                                                                                                       |
 | ------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `POST /comments`                      | `{ content: PortableTextValue, professor_id? \| script_id? }` — exactly one target. Rejected if restricted. |
+| `POST /comments`                      | `{ content: PortableTextValue, professor_id? \| script_id? }` — exactly one target. Supports inline decorators but rejects headings, lists, and text alignment. Rejected if restricted. |
 | `POST /comments/:commentId/replies`   | Same body shape, sets `parent_id`                                                                           |
-| `POST /comments/:commentId/reactions` | `{ reaction_type }` — upsert, replaces existing reaction. Rejected if restricted.                           |
+| `POST /comments/:commentId/reactions` | `{ reaction_type: 'like'\|'hate'\|'funny'\|'sad'\|'confused' }` — toggles that type independently, so one user may add multiple reaction types. Rejected if restricted. |
 | `POST /comments/:commentId/like`      | Toggle. Rejected if restricted.                                                                             |
 | `PATCH /comments/:id`                 | Author or admin. `{ content }`                                                                              |
 | `DELETE /comments/:id`                | Author or admin                                                                                             |
@@ -336,7 +335,8 @@ RLS, session-client-eligible.
 
 Authenticated, own resource. `GET /favorites`, `GET /favorites/:scriptId`,
 `POST /favorites/:scriptId` (idempotent), `DELETE /favorites/:scriptId`.
-**Not** restriction-checked — favoriting is always available.
+**Not** restriction-checked — favoriting is always available. Creating or
+removing a favorite revalidates the affected public-profile cache tags.
 
 ---
 

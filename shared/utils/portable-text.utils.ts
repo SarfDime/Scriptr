@@ -41,6 +41,24 @@ export const isPortableTextValue = (
   )
 }
 
+/**
+ * Comments allow inline Portable Text decorators but not presentation-level
+ * formatting such as headings, lists, or custom text alignment.
+ */
+export const isCommentPortableTextValue = (
+  value: unknown
+): value is PortableTextValue =>
+  isPortableTextValue(value) &&
+  value.every((block) => {
+    const record = block as Record<string, unknown>
+    return (
+      (record.style === undefined || record.style === 'normal') &&
+      !('listItem' in record) &&
+      !('level' in record) &&
+      !('textAlign' in record)
+    )
+  })
+
 export const portableTextToPlainText = (blocks?: PortableTextInput): string => {
   // Guard against null or undefined
   if (!blocks) return ''

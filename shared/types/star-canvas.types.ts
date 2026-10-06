@@ -38,6 +38,10 @@ export interface StarCanvasSanityData {
   starMaxSize?: number | null
   starDriftSpeed?: number | null
 
+  backgroundHazeColor?: string | null
+  backgroundHazeOpacity?: number | null
+  backgroundHazeRadius?: number | null
+
   shootingStarChance?: number | null
   shootingStarColor?: string | null
 
@@ -65,6 +69,7 @@ export interface StarCanvasSanityData {
   blackHoleCoronaWidth?: number | null
   enableBlackHoleFlare?: boolean | null
   blackHoleFlare?: number | null
+  blackHoleFlareSpin?: number | null
   blackHoleRingGlow?: number | null
 
   // Planets (shared look)
@@ -93,12 +98,17 @@ export interface StarCanvasSanityData {
   galaxyMinSize?: number | null
   galaxyMaxSize?: number | null
   galaxyOpacity?: number | null
+  galaxyWidthScale?: number | null
+  galaxyHeightScale?: number | null
   galaxyDensity?: number | null
+  galaxyCenterDensity?: number | null
+  galaxyEndDensity?: number | null
   galaxyCoreColor?: string | null
   galaxyArmColor?: string | null
   galaxyAccentColor?: string | null
   galaxyDriftFactor?: number | null
   galaxyDriftDirection?: GalaxyDriftDirection | null
+  galaxyTilt?: number | null
 }
 
 /** StarCanvasSanityData with every field present (defaults applied, nulls removed). */
@@ -114,6 +124,7 @@ export type StarCanvasColors = {
   ring: string
   core: string // "rgb(r, g, b)"
   corona: string
+  haze: string
   flare: string
   planets: Array<string>
   galaxyCore: string
@@ -196,5 +207,6 @@ export type Galaxy = {
   layers: Array<GalaxyLayer>
   width: number // on-screen length in px
   height: number // on-screen height in px
+  spriteScale: number // sprite px per screen px (below 1 for very large galaxies)
   anchor: Point // screen position as ratios (0-1)
 }

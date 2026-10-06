@@ -134,7 +134,7 @@
 }
 
 @utility ui-above {
-  @apply border-grey-300 bg-background/65 backdrop-blur shadow-mdx;
+  @apply border-grey-300 bg-background-300/65 backdrop-blur shadow-mdx;
 }
 
 @utility ui-above-light {

@@ -106,12 +106,16 @@ export const downloadScript = async (scriptId: string, file: ScriptFile) => {
     apiFetch<DownloadResponse>(apiRoutes.scripts.downloadById(scriptId), {
       method: 'POST',
     }),
-    apiFetch<{ url: string; key: string }>(
-      apiRoutes.fileOps.getFileByKey(file.file_url)
-    ),
+    getScriptFileUrl(file.file_url),
   ])
   return url
 }
+
+export const getScriptFileUrl = (fileKey: string) =>
+  apiFetch<{ url: string; key: string }>(
+    apiRoutes.fileOps.getFileByKey(fileKey),
+    { cache: 'no-store' }
+  )
 
 export const uploadFiles = async (body: FormData) => {
   const { files } = await apiFetch<UploadResponse>(apiRoutes.fileOps.upload, {

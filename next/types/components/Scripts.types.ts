@@ -28,6 +28,7 @@ export type ScriptMeta = ScriptId & {
 type BaseScript = ScriptId &
   ScriptStats & {
     title: PortableTextValue
+    description?: PortableTextValue
     subject: string
     tag?: string
     files?: Array<ScriptFile>
