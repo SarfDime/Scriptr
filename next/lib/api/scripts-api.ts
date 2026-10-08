@@ -11,8 +11,8 @@ import type {
 } from '@shared/types/scripts.types'
 import type { ScriptUploadInput } from '@/types/components/Scripts.types'
 import {
-  apiFetch,
   apiFetchPublicRead,
+  apiFetchRequired,
   cachedUnlessPersonalized,
 } from './next-api'
 
@@ -89,7 +89,7 @@ export const getPopularScripts = (limit = 10, cookie?: string) =>
  * faculties don't include this script's) resolves correctly instead of
  * serving a cached result computed for a different user or no user. */
 export const getScript = (scriptId: string, cookie?: string) =>
-  apiFetch<ScriptSummary>(
+  apiFetchRequired<ScriptSummary>(
     withQuery(apiRoutes.scripts.byId(scriptId), {
       commentCountVersion: SCRIPT_COMMENT_COUNT_CACHE_VERSION,
     }),
@@ -116,32 +116,41 @@ export const searchScripts = (query: string, cookie?: string) =>
  * `{ scripts: [...] }`, and a different (shallower) shape than every other
  * function here — see `MyScriptSummary`'s doc comment. */
 export const getMyScripts = (cookie: string) =>
-  apiFetch<{ scripts: Array<MyScriptSummary> }>(apiRoutes.scripts.myScripts, {
-    headers: { cookie },
-    cache: 'no-store',
-  })
+  apiFetchRequired<{ scripts: Array<MyScriptSummary> }>(
+    apiRoutes.scripts.myScripts,
+    {
+      headers: { cookie },
+      cache: 'no-store',
+    }
+  )
 
 export const downloadScript = async (scriptId: string, file: ScriptFile) => {
   const [, { url }] = await Promise.all([
-    apiFetch<DownloadResponse>(apiRoutes.scripts.downloadById(scriptId), {
-      method: 'POST',
-    }),
+    apiFetchRequired<DownloadResponse>(
+      apiRoutes.scripts.downloadById(scriptId),
+      {
+        method: 'POST',
+      }
+    ),
     getScriptFileUrl(file.file_url),
   ])
   return url
 }
 
 export const getScriptFileUrl = (fileKey: string) =>
-  apiFetch<{ url: string; key: string }>(
+  apiFetchRequired<{ url: string; key: string }>(
     apiRoutes.fileOps.getFileByKey(fileKey),
     { cache: 'no-store' }
   )
 
 export const uploadFiles = async (body: FormData) => {
-  const { files } = await apiFetch<UploadResponse>(apiRoutes.fileOps.upload, {
-    method: 'POST',
-    body,
-  })
+  const { files } = await apiFetchRequired<UploadResponse>(
+    apiRoutes.fileOps.upload,
+    {
+      method: 'POST',
+      body,
+    }
+  )
 
   return files
 }
@@ -150,7 +159,7 @@ export const createScript = async (
   input: ScriptUploadInput,
   files: Array<ScriptFileInput>
 ) => {
-  const { script } = await apiFetch<CreateScriptResponse>(
+  const { script } = await apiFetchRequired<CreateScriptResponse>(
     apiRoutes.scripts.index,
     {
       method: 'POST',

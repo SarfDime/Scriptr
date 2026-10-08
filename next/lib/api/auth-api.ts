@@ -9,27 +9,27 @@ import type {
   RegisterResponse,
   SessionResponse,
 } from '@shared/types/auth.types'
-import { apiFetch } from './next-api'
+import { apiFetch, apiFetchRequired } from './next-api'
 
 export const registerUser = (body: RegisterRequest) =>
-  apiFetch<RegisterResponse>(apiRoutes.auth.register, {
+  apiFetchRequired<RegisterResponse>(apiRoutes.auth.register, {
     method: 'POST',
     body,
   })
 
 export const loginUser = (body: LoginRequest) =>
-  apiFetch<LoginResponse>(apiRoutes.auth.login, {
+  apiFetchRequired<LoginResponse>(apiRoutes.auth.login, {
     method: 'POST',
     body,
   })
 
 export const logoutUser = () =>
-  apiFetch<LogoutResponse>(apiRoutes.auth.logout, {
+  apiFetchRequired<LogoutResponse>(apiRoutes.auth.logout, {
     method: 'POST',
   })
 
 export const completeAuthCallback = (body: CallbackRequest) =>
-  apiFetch<CallbackResponse>(apiRoutes.auth.callback, {
+  apiFetchRequired<CallbackResponse>(apiRoutes.auth.callback, {
     method: 'POST',
     body,
   })

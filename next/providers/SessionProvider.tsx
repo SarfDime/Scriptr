@@ -61,7 +61,7 @@ async function fetchSession(
 ): Promise<SessionState> {
   try {
     const result = await getSession()
-    const state: SessionState = result.user
+    const state: SessionState = result?.user
       ? { status: 'authenticated', user: result.user }
       : { status: 'unauthenticated' }
     setSession(state)

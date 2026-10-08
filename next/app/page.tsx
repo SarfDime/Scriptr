@@ -21,7 +21,7 @@ const Page = async () => {
     getSession(cookie),
     getTopScripts(),
   ])
-  const user = session.user
+  const user = session?.user
   const [subjects, incompleteSubjectIds] = user
     ? await Promise.all([
         getIncompleteSubjectsForStudies(user.selected_study_ids, user.subjects),

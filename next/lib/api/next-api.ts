@@ -9,11 +9,9 @@ export type ApiFetchOptions = Omit<RequestInit, 'body'> & {
 }
 
 /**
- * Thrown by apiFetch on a non-ok response. Carries the HTTP status so
- * callers (e.g. useProtectedAction) can distinguish a 403 restriction
- * rejection from other failures without string-matching the message.
- * This is the one addition to this file beyond what was uploaded — no new
- * fetching pattern, just enough on the existing error to classify it.
+ * Carries the HTTP status so callers (e.g. useProtectedAction) can distinguish
+ * a 403 restriction rejection from other failures without string-matching the
+ * message. `apiFetchRequired` rethrows this after `apiFetch` records a failure.
  */
 export class ApiError extends Error {
   status: number
@@ -28,84 +26,81 @@ export class ApiError extends Error {
 export async function apiFetch<T>(
   path: QueryApiEndpointType,
   options: ApiFetchOptions = {}
+): Promise<T | null> {
+  try {
+    const { body, headers: customHeaders, ...restOptions } = options
+    const headers = new Headers(customHeaders)
+    let fetchBody: BodyInit | null | undefined
+
+    if (body instanceof FormData) {
+      fetchBody = body
+    } else if (body && typeof body === 'object') {
+      fetchBody = JSON.stringify(body)
+      if (!headers.has('Content-Type')) {
+        headers.set('Content-Type', 'application/json')
+      }
+    } else {
+      fetchBody = body as BodyInit | null | undefined
+    }
+
+    const url = generatePath({ segments: [API_URL, path] })
+
+    const response = await fetch(url, {
+      credentials: 'include',
+      headers,
+      body: fetchBody,
+      ...restOptions,
+    })
+
+    if (!response.ok) {
+      let errorMessage = `Request failed with status ${response.status}`
+      try {
+        const errorData = await response.json()
+        errorMessage = errorData?.error ?? errorData?.message ?? errorMessage
+      } catch {
+        // Preserve the status when an upstream proxy returns HTML.
+      }
+      throw new ApiError(errorMessage, response.status)
+    }
+
+    if (response.status === 204) {
+      return {} as T
+    }
+
+    return (await response.json()) as T
+  } catch (error) {
+    nextLogs({
+      message: `API request unavailable for ${path}; continuing without API data.`,
+      logLevel: 'warn',
+      error,
+    })
+    return null
+  }
+}
+
+export async function apiFetchRequired<T>(
+  path: QueryApiEndpointType,
+  options: ApiFetchOptions = {}
 ): Promise<T> {
-  const { body, headers: customHeaders, ...restOptions } = options
-  const headers = new Headers(customHeaders)
-  let fetchBody: BodyInit | null | undefined
-
-  // 1. Smart Body Serialization
-  if (body instanceof FormData) {
-    // Browser automatically sets Content-Type to 'multipart/form-data' with the correct boundary
-    fetchBody = body
-  } else if (body && typeof body === 'object') {
-    // Auto-stringify JSON and set headers
-    fetchBody = JSON.stringify(body)
-    if (!headers.has('Content-Type')) {
-      headers.set('Content-Type', 'application/json')
-    }
-  } else {
-    fetchBody = body as BodyInit | null | undefined
+  const result = await apiFetch<T>(path, options)
+  if (result === null) {
+    throw new ApiError(`API request unavailable for ${path}`, 503)
   }
 
-  const url = generatePath({ segments: [API_URL, path] })
-
-  // `credentials: 'include'` is required for cookie-based auth to survive
-  // a cross-origin call from the browser — fetch's default is
-  // 'same-origin', which silently drops the session cookie on any request
-  // this file's Client Component callers make (postComment, postReply,
-  // postReaction, toggleLike in comments-api.ts; any equivalent future
-  // client-invoked mutation elsewhere). The three server-forwarded-cookie
-  // reads in comments-api.ts/scripts-api.ts (via getRequestCookieHeader /
-  // cachedUnlessPersonalized) are unaffected — `credentials` has no
-  // meaning for a server-to-server fetch, only for a browser one.
-  // `...restOptions` still wins if a caller ever needs to override this.
-  const response = await fetch(url, {
-    credentials: 'include',
-    headers,
-    body: fetchBody,
-    ...restOptions,
-  })
-
-  // 2. Universal Error Interception
-  if (!response.ok) {
-    let errorMessage = `Request failed with status ${response.status}`
-    try {
-      const errorData = await response.json()
-      errorMessage = errorData?.error ?? errorData?.message ?? errorMessage
-    } catch {
-      // Failsafe if the server crashes and returns non-JSON HTML
-    }
-    throw new ApiError(errorMessage, response.status)
-  }
-
-  // 3. Handle 204 No Content gracefully
-  if (response.status === 204) {
-    return {} as T
-  }
-
-  return response.json() as Promise<T>
+  return result
 }
 
 /**
- * Allows public list reads to render an empty state when the API is
- * unavailable during a build or request. Mutations and detail reads should
- * continue using apiFetch so their errors remain visible to callers.
+ * Allows public reads to render an empty state when the API is unavailable
+ * during a build or request.
  */
 export async function apiFetchPublicRead<T>(
   path: QueryApiEndpointType,
   fallback: T,
   options: ApiFetchOptions = {}
 ): Promise<T> {
-  try {
-    return await apiFetch<T>(path, options)
-  } catch (error) {
-    nextLogs({
-      message: `Public API read unavailable for ${path}; using fallback.`,
-      logLevel: 'warn',
-      error,
-    })
-    return fallback
-  }
+  const result = await apiFetch<T>(path, options)
+  return result ?? fallback
 }
 
 /**

@@ -40,6 +40,10 @@ export default async function PublicUserProfilePage({
     throw error
   }
 
+  if (!profile) {
+    notFound()
+  }
+
   const stats = await getProfileStats(profile.id)
   const displayName = getDisplayName(profile)
 

@@ -16,7 +16,7 @@ import type {
   ReactionType,
 } from '@shared/types/comments.types'
 import type { PortableTextValue } from '@/lib/portable-text'
-import { apiFetch, cachedUnlessPersonalized } from './next-api'
+import { apiFetchRequired, cachedUnlessPersonalized } from './next-api'
 
 const COMMENT_RESPONSE_CACHE_VERSION = 3
 
@@ -39,7 +39,7 @@ async function getCommentPage<T>(
   tags: Array<string>,
   options: CommentPageOptions = {}
 ): Promise<CommentPage<T>> {
-  return apiFetch<CommentPage<T>>(
+  return apiFetchRequired<CommentPage<T>>(
     withQuery(path, {
       limit: COMMENTS_PAGE_SIZE,
       offset: options.offset ?? 0,
@@ -104,7 +104,7 @@ export const getCommentReplies = (
   commentId: string,
   offset = 0
 ): Promise<CommentPage<CommentReplySummary>> =>
-  apiFetch<CommentPage<CommentReplySummary>>(
+  apiFetchRequired<CommentPage<CommentReplySummary>>(
     withQuery(apiRoutes.comments.repliesByCommentId(commentId), {
       limit: COMMENT_REPLIES_PAGE_SIZE,
       offset,
@@ -121,7 +121,7 @@ export const postComment = (
   target: CommentTarget,
   content: PortableTextValue
 ) =>
-  apiFetch<{ success: true; comment: CommentCreateResult }>(
+  apiFetchRequired<{ success: true; comment: CommentCreateResult }>(
     apiRoutes.comments.index,
     {
       method: 'POST',
@@ -130,7 +130,7 @@ export const postComment = (
   )
 
 export const patchComment = (commentId: string, content: PortableTextValue) =>
-  apiFetch<{ success: true; comment: CommentSummary }>(
+  apiFetchRequired<{ success: true; comment: CommentSummary }>(
     apiRoutes.comments.byId(commentId),
     {
       method: 'PATCH',
@@ -143,7 +143,7 @@ export const patchComment = (commentId: string, content: PortableTextValue) =>
  * key is `reply`; CommentSection was reading `.comment` off this call's
  * result too, which would have been `undefined` at runtime). */
 export const postReply = (commentId: string, content: PortableTextValue) =>
-  apiFetch<{ success: true; reply: CommentCreateResult }>(
+  apiFetchRequired<{ success: true; reply: CommentCreateResult }>(
     apiRoutes.comments.repliesByCommentId(commentId),
     {
       method: 'POST',
@@ -153,7 +153,7 @@ export const postReply = (commentId: string, content: PortableTextValue) =>
 
 /** `POST /:commentId/reactions` toggles one reaction type for the caller. */
 export const postReaction = (commentId: string, reactionType: ReactionType) =>
-  apiFetch<CommentReactionToggleResponse>(
+  apiFetchRequired<CommentReactionToggleResponse>(
     apiRoutes.comments.reactionsByCommentId(commentId),
     {
       method: 'POST',
@@ -162,7 +162,7 @@ export const postReaction = (commentId: string, reactionType: ReactionType) =>
   )
 
 export const deleteComment = (commentId: string) =>
-  apiFetch<{
+  apiFetchRequired<{
     success: true
     message: string
     totalCommentCount: number
@@ -170,7 +170,7 @@ export const deleteComment = (commentId: string) =>
 
 /** `POST /:commentId/like` wraps as `{ success, liked }`. */
 export const toggleLike = (commentId: string) =>
-  apiFetch<{ success: true; liked: boolean }>(
+  apiFetchRequired<{ success: true; liked: boolean }>(
     apiRoutes.comments.likeByCommentId(commentId),
     { method: 'POST' }
   )

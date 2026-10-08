@@ -7,7 +7,7 @@ import { getUserSubjectsForStudies } from '@/lib/profile-subjects'
 export default async function Page() {
   const session = await getSession(await getRequestCookieHeader())
 
-  if (!session.user) {
+  if (!session?.user) {
     redirect('/auth')
   }
 

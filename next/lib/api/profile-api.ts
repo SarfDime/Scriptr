@@ -6,7 +6,7 @@ import type {
   ProfileSubjectStatus,
   PublicProfileResponse,
 } from '@shared/types/profile.types'
-import { apiFetch } from './next-api'
+import { apiFetchPublicRead, apiFetchRequired } from './next-api'
 
 /**
  * Session-scoped, like getSession/getMyScriptVote: never cached. Two call
@@ -17,7 +17,7 @@ import { apiFetch } from './next-api'
  * convention regardless.
  */
 export const getMyProfile = (cookie?: string) =>
-  apiFetch<MyProfileResponse>(apiRoutes.profiles.me, {
+  apiFetchRequired<MyProfileResponse>(apiRoutes.profiles.me, {
     cache: 'no-store',
     ...(cookie ? { headers: { cookie } } : {}),
   })
@@ -28,27 +28,41 @@ export const getMyProfile = (cookie?: string) =>
  * edits revalidate the shared public-profile tag.
  */
 export const getPublicProfileById = (id: string) =>
-  apiFetch<PublicProfileResponse>(apiRoutes.profiles.byId(id), {
-    cache: 'force-cache',
-    next: { tags: [PROFILE_CACHE_TAGS.public()] },
-  })
+  apiFetchPublicRead<PublicProfileResponse | null>(
+    apiRoutes.profiles.byId(id),
+    null,
+    {
+      cache: 'force-cache',
+      next: { tags: [PROFILE_CACHE_TAGS.public()] },
+    }
+  )
 
 export const getPublicProfileByUsername = (username: string) =>
-  apiFetch<PublicProfileResponse>(
+  apiFetchPublicRead<PublicProfileResponse | null>(
     apiRoutes.profiles.usernameByUsername(username),
+    null,
     { cache: 'force-cache', next: { tags: [PROFILE_CACHE_TAGS.public()] } }
   )
 
 /** Public — no auth. Invalidated when the profile's public stats change. */
 export const getProfileStats = (id: string) =>
-  apiFetch<ProfileStats>(apiRoutes.profiles.statsById(id), {
-    cache: 'force-cache',
-    next: { tags: [PROFILE_CACHE_TAGS.stats(id)] },
-  })
+  apiFetchPublicRead<ProfileStats>(
+    apiRoutes.profiles.statsById(id),
+    {
+      scripts_uploaded: 0,
+      total_votes_received: 0,
+      total_downloads: 0,
+      comments_made: 0,
+    },
+    {
+      cache: 'force-cache',
+      next: { tags: [PROFILE_CACHE_TAGS.stats(id)] },
+    }
+  )
 
 /** Idempotent add — session client, profile_id = auth.uid() RLS. */
 export const addProfileFaculty = (facultyId: string) =>
-  apiFetch(apiRoutes.profileFaculties.byFacultyId(facultyId), {
+  apiFetchRequired(apiRoutes.profileFaculties.byFacultyId(facultyId), {
     method: 'POST',
   })
 
@@ -61,13 +75,15 @@ export const addProfileFaculty = (facultyId: string) =>
  * already lists.
  */
 export const addProfileStudy = (studyId: string) =>
-  apiFetch(apiRoutes.profileStudies.byStudyId(studyId), { method: 'POST' })
+  apiFetchRequired(apiRoutes.profileStudies.byStudyId(studyId), {
+    method: 'POST',
+  })
 
 export const setProfileSubjectStatus = (
   subjectId: string,
   status: ProfileSubjectStatus
 ) =>
-  apiFetch(apiRoutes.profileSubjects.bySubjectId(subjectId), {
+  apiFetchRequired(apiRoutes.profileSubjects.bySubjectId(subjectId), {
     method: 'PUT',
     body: { status },
   })

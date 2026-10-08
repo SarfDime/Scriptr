@@ -1,10 +1,12 @@
 import { apiRoutes } from '@shared/config/api-routes'
 import type { FlagRow, FlagTargetType } from '@shared/types/api.types'
-import { apiFetch } from './next-api'
+import { apiFetchRequired } from './next-api'
 
 /** Current user's flags, used to avoid duplicate report submissions. */
 export const getMyFlags = () =>
-  apiFetch<Array<FlagRow>>(apiRoutes.flags.myFlags, { cache: 'no-store' })
+  apiFetchRequired<Array<FlagRow>>(apiRoutes.flags.myFlags, {
+    cache: 'no-store',
+  })
 
 /**
  * POST apiRoutes.flags.index body is { target_type, target_id, reason } — a
@@ -16,7 +18,7 @@ export const submitFlag = async (
   targetId: string,
   reason: string
 ) => {
-  return apiFetch(apiRoutes.flags.index, {
+  return apiFetchRequired(apiRoutes.flags.index, {
     method: 'POST',
     body: { target_type: targetType, target_id: targetId, reason },
   })
