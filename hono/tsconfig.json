@@ -6,7 +6,8 @@
     "lib": ["ESNext"],
     "paths": {
       "@/*": ["./*"],
-      "@shared/*": ["../shared/*"]
+      "@shared/*": ["../shared/*"],
+      "@sanity/client": ["./src/sanity-stub.d.ts"]
     },
     "typeRoots": ["../node_modules/@types"],
     "types": ["node"]
