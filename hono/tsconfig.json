@@ -9,7 +9,7 @@
       "@shared/*": ["../shared/*"],
       "@sanity/client": ["./src/sanity-stub.d.ts"]
     },
-    "typeRoots": ["../node_modules/@types"],
+    "typeRoots": ["../node_modules/@types", "../shared/types"],
     "types": ["node"]
   },
   "exclude": ["node_modules"],
