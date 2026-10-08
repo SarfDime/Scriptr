@@ -36,19 +36,15 @@ export const ProfessorCard = ({
         <Box className='ui-stack gap-0.5'>
           <Title
             as='h3'
-            className='ui-body font-semibold group-hover:text-brand truncate'
+            className='ui-body-strong group-hover:text-brand truncate'
           >
             {name}
           </Title>
 
-          {title && (
-            <Text className='ui-caption text-grey-500 truncate'>{title}</Text>
-          )}
+          {title && <Text className='ui-caption truncate'>{title}</Text>}
 
           {facultyNames && (
-            <Text className='ui-caption text-grey-500 line-clamp-2'>
-              {facultyNames}
-            </Text>
+            <Text className='ui-caption line-clamp-2'>{facultyNames}</Text>
           )}
 
           {universities && universities?.length > 0 && (

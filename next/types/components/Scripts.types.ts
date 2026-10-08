@@ -114,7 +114,7 @@ export type ScriptActionsProps = ScriptMeta &
 
 export type ScriptCardProps = {
   script: ScriptDetail
-}
+} & Omit<BoxProps, 'children'>
 
 export type ScriptsSectionProps = {
   scripts: Array<ScriptDetail>

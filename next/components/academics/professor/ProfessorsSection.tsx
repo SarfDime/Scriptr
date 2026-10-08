@@ -1,7 +1,6 @@
 import { Box } from '@/components/common/Box'
+import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
-import { Title } from '@/components/typography/Title'
-import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import type { ProfessorsSectionProps } from '@/types/academics/professor.types'
 import { ProfessorCard } from './ProfessorCard'
@@ -11,10 +10,7 @@ export const ProfessorsSection = ({ professors }: ProfessorsSectionProps) => {
 
   return (
     <Card className='ui-stack gap-4 border-0 p-0 bg-transparent'>
-      <Box className='ui-cluster justify-between items-center'>
-        <Title className='ui-title font-bold'>Professors</Title>
-        <Badge className='cp-brand'>{professorList?.length} Professors</Badge>
-      </Box>
+      <SectionHeader title='Professors' count={professorList.length} />
 
       {professorList.length > 0 ? (
         <Box className='ui-stack'>
@@ -23,7 +19,7 @@ export const ProfessorsSection = ({ professors }: ProfessorsSectionProps) => {
           ))}
         </Box>
       ) : (
-        <Text className='ui-caption text-grey-500'>
+        <Text className='ui-caption'>
           No professors assigned to this faculty.
         </Text>
       )}

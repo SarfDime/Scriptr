@@ -8,10 +8,8 @@ export type ApiEndpoint =
   | '/api/auth/logout'
   | '/api/auth/callback'
   | '/api/auth/session'
-  | '/api/auth/refresh'
   | '/api/universities'
   | `/api/universities/${string}`
-  | `/api/universities/${string}/sync`
   | '/api/faculties'
   | `/api/faculties/${string}`
   | '/api/studies'
@@ -27,8 +25,9 @@ export type ApiEndpoint =
   | '/api/scripts/top'
   | '/api/scripts/popular'
   | '/api/scripts/search'
-  | `/api/scripts/${string}`
   | '/api/scripts/my-scripts'
+  | `/api/scripts/${string}/files/${string}`
+  | `/api/scripts/${string}`
   | `/api/scripts/${string}/download`
   | '/api/scripts/flagged/all'
   | '/api/votes'
@@ -41,8 +40,8 @@ export type ApiEndpoint =
   | `/api/comments/script/${string}`
   | `/api/comments/professor/${string}`
   | `/api/comments/user/${string}`
-  | `/api/comments/${string}/reactions`
   | `/api/comments/${string}/replies`
+  | `/api/comments/${string}/reactions`
   | `/api/comments/${string}/like`
   | '/api/comments'
   | `/api/comments/${string}`
@@ -129,12 +128,10 @@ export const apiRoutes = {
     logout: '/api/auth/logout',
     callback: '/api/auth/callback',
     session: '/api/auth/session',
-    refresh: '/api/auth/refresh',
   },
   universities: {
     index: '/api/universities',
     byId: (id: string | number) => `/api/universities/${id}` as const,
-    syncById: (id: string | number) => `/api/universities/${id}/sync` as const,
   },
   faculties: {
     index: '/api/faculties',
@@ -164,8 +161,12 @@ export const apiRoutes = {
     top: (limit?: number) => withQuery('/api/scripts/top', { limit }),
     popular: (limit?: number) => withQuery('/api/scripts/popular', { limit }),
     search: (query: string) => withQuery('/api/scripts/search', { q: query }),
-    byId: (id: string | number) => `/api/scripts/${id}` as const,
     myScripts: '/api/scripts/my-scripts',
+    filesByScriptIdAndFileId: (
+      scriptId: string | number,
+      fileId: string | number
+    ) => `/api/scripts/${scriptId}/files/${fileId}` as const,
+    byId: (id: string | number) => `/api/scripts/${id}` as const,
     downloadById: (id: string | number) =>
       `/api/scripts/${id}/download` as const,
     flaggedAll: '/api/scripts/flagged/all',
@@ -191,10 +192,10 @@ export const apiRoutes = {
       `/api/comments/professor/${professorId}` as const,
     userByUserId: (userId: string | number) =>
       `/api/comments/user/${userId}` as const,
-    reactionsByCommentId: (commentId: string | number) =>
-      `/api/comments/${commentId}/reactions` as const,
     repliesByCommentId: (commentId: string | number) =>
       `/api/comments/${commentId}/replies` as const,
+    reactionsByCommentId: (commentId: string | number) =>
+      `/api/comments/${commentId}/reactions` as const,
     likeByCommentId: (commentId: string | number) =>
       `/api/comments/${commentId}/like` as const,
     index: '/api/comments',

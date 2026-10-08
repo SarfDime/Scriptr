@@ -15,7 +15,7 @@ export type AcademicPathInput =
       subjectSlug: string
     }
   | { type: 'professor'; professorSlug: string }
-  | { type: 'script'; scriptSlug: string } //TODO: Get these types from sanity types
+  | { type: 'script'; scriptSlug: string } // Deferred: derive these types from Sanity.
 
 const cleanEntityId = (id: string): string =>
   id.startsWith('drafts.') ? id.slice('drafts.'.length) : id

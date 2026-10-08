@@ -1,9 +1,9 @@
 {
+  "extends": "../shared/tsconfig.base.json",
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
     "lib": ["ESNext"],
-    "noEmit": true,
     "paths": {
       "@/*": ["./*"],
       "@shared/*": ["../shared/*"]
@@ -11,6 +11,5 @@
     "types": ["node"]
   },
   "exclude": ["node_modules"],
-  "extends": "../tsconfig.json",
-  "include": ["**/*.ts", "**/*.tsx"]
+  "include": ["**/*.ts", "**/*.tsx", "../shared/**/*.ts"]
 }

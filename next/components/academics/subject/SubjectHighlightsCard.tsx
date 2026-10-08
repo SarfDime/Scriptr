@@ -20,7 +20,7 @@ export const SubjectHighlightsCard = ({
   const colorBorder = getColorPalette({ type: 'seed', value: _id })
   return (
     <Card className='p-6 ui-stack gap-4 ui-above'>
-      <Text className='ui-caption text-grey-500 uppercase tracking-wide'>
+      <Text className='ui-caption uppercase tracking-wide'>
         Curriculum details
       </Text>
 
@@ -31,7 +31,7 @@ export const SubjectHighlightsCard = ({
         {semester && <AcademicBadge type='semester' value={semester} />}
       </Box>
 
-      <Text className='ui-body text-grey-500'>
+      <Text className='ui-body text-fg-muted'>
         Use this course's shared scripts and syllabus to revisit key material in
         your own time.
       </Text>

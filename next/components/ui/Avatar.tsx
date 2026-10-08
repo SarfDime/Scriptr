@@ -27,7 +27,9 @@ export const Avatar = ({
               'rounded-md h-full aspect-square ui-center p-6',
               picture?.className
             )}
+            objectFitProp='cover'
             fillProp
+            sizes='4rem'
           />
         ) : (
           <InitialsIcon

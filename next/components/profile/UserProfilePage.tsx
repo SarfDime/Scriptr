@@ -10,7 +10,6 @@ import { PageLayout } from '@/components/layout/PageLayout'
 import { ProfileCard } from '@/components/profile/ProfileCard'
 import { Text } from '@/components/typography/Text'
 import { Divider } from '@/components/ui/Divider'
-import { SUBJECTS_SIDEBAR_CONTENT } from '@/config/content'
 import { useProfileStats } from '@/hooks/useProfileStats'
 import {
   getDisplayName,
@@ -18,7 +17,7 @@ import {
   getUniversityName,
 } from '@/lib/profile-display'
 import { toScriptDetails } from '@/lib/script-display'
-import { useMyProfile } from '@/providers/ProfileProvider'
+import { useMyProfile, useMyProfileActions } from '@/providers/ProfileProvider'
 import type { SubjectById } from '@/types/academics/subject.types'
 
 type UserProfilePageProps = {
@@ -27,6 +26,7 @@ type UserProfilePageProps = {
 
 export function UserProfilePage({ subjects }: UserProfilePageProps) {
   const profileState = useMyProfile()
+  const { refresh } = useMyProfileActions()
   const statsState = useProfileStats(
     profileState.status === 'loaded' ? profileState.profile.id : null
   )
@@ -34,11 +34,18 @@ export function UserProfilePage({ subjects }: UserProfilePageProps) {
   if (profileState.status !== 'loaded') {
     return (
       <PageLayout>
-        <Text className='ui-body text-center'>
-          {profileState.status === 'error'
-            ? profileState.message
-            : UI_STRINGS.profile.loadingLabel}
-        </Text>
+        <Box className='ui-stack items-center gap-3'>
+          <Text className='ui-body text-center'>
+            {profileState.status === 'error'
+              ? profileState.message
+              : UI_STRINGS.profile.loadingLabel}
+          </Text>
+          {profileState.status === 'error' && (
+            <Button className='button button-sm subtle' onClick={refresh}>
+              {UI_STRINGS.profile.retryLabel}
+            </Button>
+          )}
+        </Box>
       </PageLayout>
     )
   }
@@ -53,7 +60,7 @@ export function UserProfilePage({ subjects }: UserProfilePageProps) {
         title: displayName,
         subtitle: profile.role,
         actions: (
-          <Button className='button subtle ui-caption'>
+          <Button className='button button-sm subtle'>
             {UI_STRINGS.profile.editProfileLabel}
           </Button>
         ),
@@ -70,20 +77,7 @@ export function UserProfilePage({ subjects }: UserProfilePageProps) {
             }
           />
           <Divider />
-          {subjects.length > 0 ? (
-            <SubjectsSidebar
-              subjects={subjects}
-              content={SUBJECTS_SIDEBAR_CONTENT}
-              className='grow'
-            />
-          ) : (
-            <Box as='aside' className='ui-stack gap-3'>
-              <Text className='ui-title'>Your subjects</Text>
-              <Text className='ui-body text-grey-500'>
-                Complete your study setup to see your current subjects here.
-              </Text>
-            </Box>
-          )}
+          <SubjectsSidebar subjects={subjects} className='grow' />
         </>
       }
     >

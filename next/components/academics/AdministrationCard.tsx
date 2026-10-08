@@ -1,8 +1,8 @@
 import { cn } from '@/lib/common-utils'
 import type { PersonSummary } from '@/types/components/Person.types'
 import { Box } from '../common/Box'
+import { SectionHeader } from '../common/SectionHeader'
 import { Text } from '../typography/Text'
-import { Title } from '../typography/Title'
 import { Card } from '../ui/Card'
 
 export type AdministrationCardProps = {
@@ -31,30 +31,22 @@ export const AdministrationCard = ({
 
   return (
     <Card className={cn('p-6 ui-stack gap-4', className)}>
-      <Title as='h3' className='ui-title font-semibold'>
-        {title}
-      </Title>
+      <SectionHeader as='h3' title={title} />
       {leader && (
         <Box className='ui-stack gap-0.5'>
-          <Text className='ui-caption font-bold text-grey-500'>
-            {leaderLabel}
-          </Text>
-          <Text className='ui-body font-medium'>{leader.name}</Text>
-          {leader.title && (
-            <Text className='ui-caption text-grey-500'>{leader.title}</Text>
-          )}
+          <Text className='ui-label'>{leaderLabel}</Text>
+          <Text className='ui-body-strong'>{leader.name}</Text>
+          {leader.title && <Text className='ui-caption'>{leader.title}</Text>}
         </Box>
       )}
       {hasDeputies && (
         <Box className='ui-stack gap-2'>
-          <Text className='ui-caption font-bold text-grey-500'>
-            {deputiesLabel}
-          </Text>
+          <Text className='ui-label'>{deputiesLabel}</Text>
           {deputies?.map((deputy) => (
             <Box key={deputy._id} className='ui-stack gap-0.5'>
-              <Text className='ui-body font-medium'>{deputy.name}</Text>
+              <Text className='ui-body-strong'>{deputy.name}</Text>
               {deputy.title && (
-                <Text className='ui-caption text-grey-500'>{deputy.title}</Text>
+                <Text className='ui-caption'>{deputy.title}</Text>
               )}
             </Box>
           ))}
@@ -62,7 +54,7 @@ export const AdministrationCard = ({
       )}
       {secretary && (
         <Box className='ui-stack gap-0.5'>
-          <Text className='ui-caption font-bold text-grey-500'>Secretary</Text>
+          <Text className='ui-label'>Secretary</Text>
           <Text className='ui-body'>{secretary}</Text>
         </Box>
       )}

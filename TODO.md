@@ -9,6 +9,7 @@ Concrete work (bugs, features, cleanups with a clear outcome) is tracked in
 - [ ] CSS `transition-behavior` (https://tailwindcss.com/docs/transition-behavior) for transitions like the notification shade popping up.
 - [ ] Make the header show real content, possibly sourced from Sanity.
 - [ ] Add a "source inline" option for the color palettes as well (clarify what this should cover).
+- [ ] Add salts and encryption for secrets like `INTERNAL_API_SECRET` and `SANITY_STUDIO_INTERNAL_SECRET`, since they are sent in headers and are not encrypted. So this way all projects can have their salts set by env and it would match across projects so they can easily verify each other's requests.
 
 ## Visual ideas
 

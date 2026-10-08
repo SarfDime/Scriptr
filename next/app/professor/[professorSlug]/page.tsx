@@ -1,6 +1,7 @@
 import { BackLink } from '@/components/common/BackLink'
 import { Box } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
+import { SectionHeader } from '@/components/common/SectionHeader'
 import { PageLayout } from '@/components/layout/PageLayout'
 import { PortableTextContent } from '@/components/typography/PortableTextContent'
 import { Text } from '@/components/typography/Text'
@@ -71,7 +72,7 @@ export default async function ProfessorDetailPage({
                   key={uni._id}
                   href={getAcademicPath({
                     type: 'university',
-                    universitySlug: uni.slug,
+                    universitySlug: uni.slug ?? uni._id,
                   })}
                   label={uni.name}
                 />
@@ -86,38 +87,28 @@ export default async function ProfessorDetailPage({
             professor.email ||
             professor.website) && (
             <Card className='p-6 ui-stack gap-3'>
-              <Title as='h3' className='ui-title font-semibold'>
-                Contact Details
-              </Title>
+              <SectionHeader as='h3' title='Contact Details' />
               {professor.office && (
                 <Box className='ui-stack gap-0.5'>
-                  <Text className='ui-caption font-bold text-grey-500'>
-                    Office
-                  </Text>
+                  <Text className='ui-label'>Office</Text>
                   <Text className='ui-body'>{professor.office}</Text>
                 </Box>
               )}
               {professor.telephone && (
                 <Box className='ui-stack gap-0.5'>
-                  <Text className='ui-caption font-bold text-grey-500'>
-                    Phone
-                  </Text>
+                  <Text className='ui-label'>Phone</Text>
                   <Text className='ui-body'>{professor.telephone}</Text>
                 </Box>
               )}
               {professor.email && (
                 <Box className='ui-stack gap-0.5'>
-                  <Text className='ui-caption font-bold text-grey-500'>
-                    Email
-                  </Text>
+                  <Text className='ui-label'>Email</Text>
                   <Text className='ui-body'>{professor.email}</Text>
                 </Box>
               )}
               {professor.website && (
                 <Box className='ui-stack gap-0.5'>
-                  <Text className='ui-caption font-bold text-grey-500'>
-                    Website
-                  </Text>
+                  <Text className='ui-label'>Website</Text>
                   <a
                     href={professor.website}
                     target='_blank'
@@ -133,9 +124,7 @@ export default async function ProfessorDetailPage({
 
           {professor.faculties && professor.faculties.length > 0 && (
             <Card className='p-6 ui-stack gap-3'>
-              <Title as='h3' className='ui-title font-semibold'>
-                Affiliated Faculties
-              </Title>
+              <SectionHeader as='h3' title='Affiliated Faculties' />
               <Box className='ui-stack gap-2'>
                 {professor.faculties.map((fac) => (
                   <Box key={fac._id} className='ui-stack gap-0.5'>
@@ -146,14 +135,12 @@ export default async function ProfessorDetailPage({
                           fac.university?.slug ?? fac.university?._id ?? '',
                         facultySlug: fac.slug ?? fac._id,
                       })}
-                      className='ui-body font-medium text-brand hover:underline'
+                      className='ui-body-strong text-brand hover:underline'
                     >
                       {fac.name}
                     </NextLink>
                     {fac.university && (
-                      <Text className='ui-caption text-grey-500'>
-                        {fac.university.name}
-                      </Text>
+                      <Text className='ui-caption'>{fac.university.name}</Text>
                     )}
                   </Box>
                 ))}
@@ -165,23 +152,17 @@ export default async function ProfessorDetailPage({
     >
       {professor.bio && (
         <Card className='p-6 ui-stack gap-3'>
-          <Title as='h2' className='ui-title font-bold'>
-            Biography
-          </Title>
+          <SectionHeader title='Biography' />
           <PortableTextContent>{professor.bio}</PortableTextContent>
         </Card>
       )}
 
       {/* Subjects Taught */}
       <Card className='p-6 ui-stack gap-4'>
-        <Box className='ui-cluster justify-between items-center'>
-          <Title as='h2' className='ui-title font-bold'>
-            Courses Taught
-          </Title>
-          <Badge className='cp-brand'>
-            {professor.subjects?.length ?? 0} Courses
-          </Badge>
-        </Box>
+        <SectionHeader
+          title='Courses Taught'
+          count={`${professor.subjects?.length ?? 0} Courses`}
+        />
 
         {professor.subjects && professor.subjects.length > 0 ? (
           <Box className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
@@ -210,7 +191,7 @@ export default async function ProfessorDetailPage({
                     <Box className='ui-cluster justify-between items-start gap-2'>
                       <Title
                         as='h3'
-                        className='ui-body font-semibold group-hover:text-brand'
+                        className='ui-body-strong group-hover:text-brand'
                       >
                         {subject.name}
                       </Title>
@@ -239,7 +220,7 @@ export default async function ProfessorDetailPage({
             })}
           </Box>
         ) : (
-          <Text className='ui-caption text-grey-500'>
+          <Text className='ui-caption'>
             No courses listed for this professor.
           </Text>
         )}

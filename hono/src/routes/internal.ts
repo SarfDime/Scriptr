@@ -3,7 +3,7 @@ import { profileMutationTags } from '../../../shared/config/cache-tags'
 import type { Database } from '../../../shared/types/database.types'
 import { isUserRole } from '../../../shared/utils/api.utils'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
-import { requiredParam } from '../lib/request'
+import { databaseErrorResponse, requiredParam } from '../lib/request'
 import { createInternalSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
@@ -13,6 +13,45 @@ type TableName =
   | 'professor_studies'
 
 type InternalSupabase = ReturnType<typeof createInternalSupabaseClient>
+
+const R2_BUCKET_ID_PATTERN = /^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/
+
+function isValidR2BucketId(value: unknown): value is string {
+  return typeof value === 'string' && R2_BUCKET_ID_PATTERN.test(value)
+}
+
+function validateR2BucketId(value: unknown) {
+  if (value !== undefined && value !== null && !isValidR2BucketId(value)) {
+    return 'r2_bucket_id must be a valid R2/S3 bucket name'
+  }
+  return null
+}
+
+function normalizeR2BucketId(value: unknown): string | null | undefined {
+  if (value === undefined || value === null) return value
+  return isValidR2BucketId(value) ? value : undefined
+}
+
+function mapPostgresError(
+  error: { code?: string; message: string },
+  dependentMessage = 'This record still has dependents.'
+) {
+  switch (error.code) {
+    case '23505':
+      return { status: 409 as const, body: { error: 'Already exists' } }
+    case '23503':
+      return { status: 409 as const, body: { error: dependentMessage } }
+    case '42501':
+      return { status: 403 as const, body: { error: 'Forbidden' } }
+    case 'P0001':
+      return { status: 400 as const, body: { error: error.message } }
+    default:
+      return {
+        status: 500 as const,
+        body: { error: 'Unable to complete the request' },
+      }
+  }
+}
 
 async function syncProfessorFacultyAssignments(
   supabase: InternalSupabase,
@@ -224,7 +263,7 @@ internal.patch('/profiles/:id/role', async (c) => {
     .select()
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   await revalidateCacheTags(c.env, profileMutationTags(targetUserId))
   return c.json({ success: true, profile: data })
 })
@@ -234,7 +273,7 @@ internal.get('/universities', async (c) => {
   const supabase = createInternalSupabaseClient(c)
   const { data, error } = await supabase.from('universities').select('*')
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json(data)
 })
 
@@ -252,11 +291,13 @@ internal.get('/universities/by-sanity/:sanityId', async (c) => {
 /** Create a university, or return the existing one already linked to this Sanity document */
 internal.post('/universities', async (c) => {
   const supabase = createInternalSupabaseClient(c)
-  const { name, sanity_id } = await c.req.json()
+  const { name, sanity_id, r2_bucket_id } = await c.req.json()
 
-  if (!name) {
+  if (typeof name !== 'string' || name.trim().length === 0) {
     return c.json({ error: 'Name is required' }, 400)
   }
+  const bucketError = validateR2BucketId(r2_bucket_id)
+  if (bucketError) return c.json({ error: bucketError }, 400)
 
   const existing = await findBySanityId(supabase, 'universities', sanity_id)
   if (existing) {
@@ -265,18 +306,21 @@ internal.post('/universities', async (c) => {
 
   const { data, error } = await supabase
     .from('universities')
-    .insert({ name, sanity_id: sanity_id ?? null })
+    .insert({
+      name,
+      sanity_id: typeof sanity_id === 'string' ? sanity_id : null,
+      r2_bucket_id: r2_bucket_id ?? null,
+    })
     .select()
     .single()
 
   if (error) {
+    const mapped = mapPostgresError(error)
     if (error.code === '23505') {
-      return c.json(
-        { error: 'This Sanity document is already linked to a university' },
-        409
-      )
+      mapped.body.error =
+        'This Sanity document is already linked to a university'
     }
-    return c.json({ error: error.message }, 500)
+    return c.json(mapped.body, mapped.status)
   }
 
   return c.json({ success: true, university: data })
@@ -286,16 +330,35 @@ internal.post('/universities', async (c) => {
 internal.patch('/universities/:id', async (c) => {
   const universityId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
-  const { name } = await c.req.json()
+  const { name, r2_bucket_id } = await c.req.json()
+
+  if (
+    name !== undefined &&
+    (typeof name !== 'string' || name.trim().length === 0)
+  ) {
+    return c.json({ error: 'name must be a non-empty string' }, 400)
+  }
+  const bucketError = validateR2BucketId(r2_bucket_id)
+  if (bucketError) return c.json({ error: bucketError }, 400)
+
+  const update: { name?: string; r2_bucket_id?: string | null } = {}
+  if (name !== undefined) update.name = name
+  if (r2_bucket_id !== undefined) update.r2_bucket_id = r2_bucket_id
+  if (Object.keys(update).length === 0) {
+    return c.json({ error: 'No updatable fields provided' }, 400)
+  }
 
   const { data, error } = await supabase
     .from('universities')
-    .update({ name })
+    .update(update)
     .eq('id', universityId)
     .select()
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) {
+    const mapped = mapPostgresError(error)
+    return c.json(mapped.body, mapped.status)
+  }
   return c.json({ success: true, university: data })
 })
 
@@ -303,11 +366,13 @@ internal.patch('/universities/:id', async (c) => {
 internal.post('/universities/:id/sync', async (c) => {
   const universityId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
-  const { name } = await c.req.json()
+  const { name, r2_bucket_id } = await c.req.json()
 
-  if (!name) {
+  if (typeof name !== 'string' || name.trim().length === 0) {
     return c.json({ error: 'Name is required' }, 400)
   }
+  const bucketError = validateR2BucketId(r2_bucket_id)
+  if (bucketError) return c.json({ error: bucketError }, 400)
 
   const { data: existingUniversity, error: existingError } = await supabase
     .from('universities')
@@ -315,19 +380,30 @@ internal.post('/universities/:id/sync', async (c) => {
     .eq('id', universityId)
     .maybeSingle()
 
-  if (existingError) return c.json({ error: existingError.message }, 500)
+  if (existingError) {
+    const mapped = mapPostgresError(existingError)
+    return c.json(mapped.body, mapped.status)
+  }
   if (!existingUniversity) {
     return c.json({ error: 'University database record not found' }, 404)
   }
 
   const { data, error } = await supabase
     .from('universities')
-    .update({ name })
+    .update({
+      name,
+      ...(r2_bucket_id !== undefined
+        ? { r2_bucket_id: normalizeR2BucketId(r2_bucket_id) }
+        : {}),
+    })
     .eq('id', universityId)
     .select()
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) {
+    const mapped = mapPostgresError(error)
+    return c.json(mapped.body, mapped.status)
+  }
   return c.json({ success: true, university: data })
 })
 
@@ -352,7 +428,10 @@ internal.delete('/universities/:id', async (c) => {
     .delete()
     .eq('id', universityId)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) {
+    const mapped = mapPostgresError(error)
+    return c.json(mapped.body, mapped.status)
+  }
   return c.json({ success: true, message: 'University deleted successfully' })
 })
 
@@ -361,7 +440,7 @@ internal.get('/faculties', async (c) => {
   const supabase = createInternalSupabaseClient(c)
   const { data, error } = await supabase.from('faculties').select('*')
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json(data)
 })
 
@@ -403,7 +482,7 @@ internal.post('/faculties', async (c) => {
         409
       )
     }
-    return c.json({ error: error.message }, 500)
+    return databaseErrorResponse(c, error)
   }
 
   return c.json({ success: true, faculty: data })
@@ -422,7 +501,7 @@ internal.patch('/faculties/:id', async (c) => {
     .select()
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json({ success: true, faculty: data })
 })
 
@@ -442,7 +521,7 @@ internal.post('/faculties/:id/sync', async (c) => {
     .eq('id', facultyId)
     .maybeSingle()
 
-  if (existingError) return c.json({ error: existingError.message }, 500)
+  if (existingError) return databaseErrorResponse(c, existingError)
   if (!existingFaculty) {
     return c.json({ error: 'Faculty database record not found' }, 404)
   }
@@ -454,7 +533,7 @@ internal.post('/faculties/:id/sync', async (c) => {
     .select()
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json({ success: true, faculty: data })
 })
 
@@ -489,7 +568,7 @@ internal.delete('/faculties/:id', async (c) => {
     .delete()
     .eq('id', facultyId)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json({ success: true, message: 'Faculty deleted successfully' })
 })
 
@@ -501,7 +580,7 @@ internal.get('/studies', async (c) => {
     .select('*, faculty:faculties(id, name, university:universities(id, name))')
     .order('name', { ascending: true })
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json(data)
 })
 
@@ -529,7 +608,7 @@ internal.post('/studies', async (c) => {
     if (error.code === '23505') {
       return c.json({ error: 'This study already exists in this faculty' }, 409)
     }
-    return c.json({ error: error.message }, 500)
+    return databaseErrorResponse(c, error)
   }
 
   return c.json({ success: true, study: data })
@@ -548,7 +627,7 @@ internal.patch('/studies/:id', async (c) => {
     .select()
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json({ success: true, study: data })
 })
 
@@ -569,7 +648,7 @@ internal.post('/studies/:id/sync', async (c) => {
     .select()
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json({ success: true, study: data })
 })
 
@@ -600,7 +679,7 @@ internal.delete('/studies/:id', async (c) => {
 
   const { error } = await supabase.from('studies').delete().eq('id', studyId)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json({
     success: true,
     message: 'Study deleted successfully',
@@ -612,7 +691,7 @@ internal.get('/professors', async (c) => {
   const supabase = createInternalSupabaseClient(c)
   const { data, error } = await supabase.from('professors').select('*')
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json(data)
 })
 
@@ -653,7 +732,7 @@ internal.post('/professors', async (c) => {
         409
       )
     }
-    return c.json({ error: error.message }, 500)
+    return databaseErrorResponse(c, error)
   }
 
   if (Array.isArray(faculty_ids) && faculty_ids.length > 0) {
@@ -690,7 +769,7 @@ internal.patch('/professors/:id', async (c) => {
     .select()
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json({ success: true, professor: data })
 })
 
@@ -707,7 +786,7 @@ internal.post('/professors/:id/studies/:studyId', async (c) => {
       { onConflict: 'professor_id,study_id' }
     )
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json({ success: true, message: 'Professor assigned to study' })
 })
 
@@ -723,7 +802,7 @@ internal.delete('/professors/:id/studies/:studyId', async (c) => {
     .eq('professor_id', professorId)
     .eq('study_id', studyId)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json({ success: true, message: 'Professor removed from study' })
 })
 
@@ -743,7 +822,7 @@ internal.post('/professors/:id/sync', async (c) => {
     .eq('id', professorId)
     .maybeSingle()
 
-  if (existingError) return c.json({ error: existingError.message }, 500)
+  if (existingError) return databaseErrorResponse(c, existingError)
   if (!existingProfessor) {
     return c.json({ error: 'Professor database record not found' }, 404)
   }
@@ -755,7 +834,7 @@ internal.post('/professors/:id/sync', async (c) => {
     .select()
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
 
   try {
     await syncProfessorFacultyAssignments(
@@ -820,7 +899,7 @@ internal.delete('/professors/:id', async (c) => {
     .delete()
     .eq('id', professorId)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json({ success: true, message: 'Professor deleted successfully' })
 })
 
@@ -838,7 +917,7 @@ internal.post('/professors/:id/faculties/:facultyId', async (c) => {
     { onConflict: 'professor_id,faculty_id' }
   )
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json({ success: true, message: 'Professor assigned to faculty' })
 })
 
@@ -854,7 +933,7 @@ internal.delete('/professors/:id/faculties/:facultyId', async (c) => {
     .eq('professor_id', professorId)
     .eq('faculty_id', facultyId)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json({ success: true, message: 'Professor removed from faculty' })
 })
 
@@ -863,7 +942,7 @@ internal.get('/subjects', async (c) => {
   const supabase = createInternalSupabaseClient(c)
   const { data, error } = await supabase.from('subjects').select('*')
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json(data)
 })
 
@@ -908,7 +987,7 @@ internal.post('/subjects', async (c) => {
         409
       )
     }
-    return c.json({ error: error.message }, 500)
+    return databaseErrorResponse(c, error)
   }
 
   if (
@@ -943,7 +1022,7 @@ internal.patch('/subjects/:id', async (c) => {
     .select()
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json({ success: true, subject: data })
 })
 
@@ -963,7 +1042,7 @@ internal.post('/subjects/:id/sync', async (c) => {
     .eq('id', subjectId)
     .maybeSingle()
 
-  if (existingError) return c.json({ error: existingError.message }, 500)
+  if (existingError) return databaseErrorResponse(c, existingError)
   if (!existingSubject) {
     return c.json({ error: 'Subject database record not found' }, 404)
   }
@@ -978,7 +1057,7 @@ internal.post('/subjects/:id/sync', async (c) => {
     .select()
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
 
   try {
     await syncSubjectProfessorAssignments(
@@ -1029,7 +1108,7 @@ internal.delete('/subjects/:id', async (c) => {
 
   const { error } = await supabase.from('subjects').delete().eq('id', subjectId)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json({ success: true, message: 'Subject deleted successfully' })
 })
 
@@ -1044,7 +1123,7 @@ internal.post('/subjects/:id/professors/:professorId', async (c) => {
     professor_id: professorId,
   })
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json({ success: true, message: 'Professor assigned to subject' })
 })
 
@@ -1060,7 +1139,7 @@ internal.delete('/subjects/:id/professors/:professorId', async (c) => {
     .eq('subject_id', subjectId)
     .eq('professor_id', professorId)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json({ success: true, message: 'Professor removed from subject' })
 })
 
@@ -1077,7 +1156,7 @@ internal.get('/comments', async (c) => {
       `)
     .order('created_at', { ascending: false })
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json(data)
 })
 

@@ -29,7 +29,7 @@ export const TOAST_VARIANTS = {
   success: 'cp-success',
   error: 'cp-danger',
   warning: 'cp-warning',
-  info: 'cp-info',
+  info: 'cp-brand',
 } as const
 export const BREAKPOINTS = [
   'base',

@@ -2,6 +2,7 @@ import { BoltIcon } from '@sanity/icons/Bolt'
 import { CircleIcon } from '@sanity/icons/Circle'
 import { ColorWheelIcon } from '@sanity/icons/ColorWheel'
 import { EarthGlobeIcon } from '@sanity/icons/EarthGlobe'
+import { MobileDeviceIcon } from '@sanity/icons/MobileDevice'
 import { MoonIcon } from '@sanity/icons/Moon'
 import { RocketIcon } from '@sanity/icons/Rocket'
 import { SparklesIcon } from '@sanity/icons/Sparkles'
@@ -42,6 +43,21 @@ const hideIfNoFlare = ({ parent }: Context) => !parent?.enableBlackHoleFlare
 
 // Orbiting planets need the black hole to orbit
 const hideIfNoBlackHole = ({ parent }: Context) => !parent?.enableBlackHole
+
+// The Mobile tab is always shown, so its fields also check the feature is on
+// (on desktop, and on mobile once its own switch exists)
+const hideIfNoMobileBlackHole = ({ parent }: Context) =>
+  !parent?.enableBlackHole || parent?.mobileEnableBlackHole === false
+
+const hideIfNoMobileGalaxy = ({ parent }: Context) =>
+  !parent?.enableGalaxy || parent?.mobileEnableGalaxy === false
+
+const hideUnlessCustomMobilePosition = ({ parent }: Context) =>
+  hideIfNoMobileBlackHole({ parent }) ||
+  parent?.mobileBlackHolePresetPosition !== 'custom'
+
+const hideUnlessCustomMobileGalaxyPosition = ({ parent }: Context) =>
+  hideIfNoMobileGalaxy({ parent }) || parent?.mobileGalaxyPosition !== 'custom'
 
 // The black hole tabs disappear entirely while the black hole is switched off
 const blackHoleDisabled = ({ value }: { value?: unknown }) =>
@@ -143,6 +159,7 @@ export const StarCanvas = defineType({
       icon: ColorWheelIcon,
       hidden: blackHoleDisabled,
     },
+    { name: 'mobile', title: 'Mobile', icon: MobileDeviceIcon },
   ],
 
   // Sub-sections inside a tab (2 columns for related number pairs)
@@ -237,6 +254,20 @@ export const StarCanvas = defineType({
       options: { columns: 2 },
     },
     { name: 'glowColors', title: 'Colors' },
+    {
+      name: 'mobileBlackHolePlacement',
+      title: 'Black hole placement',
+      description:
+        'Where the black hole sits on phones and touch tablets. Same as desktop uses the placement from the Black Hole tab.',
+      options: { columns: 2 },
+    },
+    {
+      name: 'mobileGalaxyPlacement',
+      title: 'Milky Way placement',
+      description:
+        'Where the Milky Way sits on phones and touch tablets. Same as desktop uses the placement from the Galaxy tab.',
+      options: { columns: 2 },
+    },
   ],
 
   preview: {
@@ -1082,5 +1113,134 @@ export const StarCanvas = defineType({
       'colors',
       'glowColors'
     ),
+
+    // ── Mobile ───────────────────────────────────────────────────────────
+    numberField({
+      name: 'mobileScale',
+      title: 'Mobile scale',
+      description:
+        'Phones and touch tablets get a smaller, calmer version: star, planet and shooting-star counts, sizes and speeds, the black hole (size, glow, gravity, smoke, ripple) and the Milky Way (size, opacity, density) are all multiplied by this. 1 = same as desktop, 0.5 = half. Range 0.1–1. Default 0.5',
+      initialValue: 0.5,
+      group: 'mobile',
+      min: 0.1,
+      max: 1,
+      precision: 2,
+    }),
+
+    defineField({
+      name: 'mobileEnableBlackHole',
+      title: 'Show black hole on mobile',
+      description:
+        'Turn off to leave the black hole out on phones and touch tablets. This also removes its gravity, smoke and orbiting planets there. Only applies while the black hole is enabled on desktop.',
+      type: 'boolean',
+      group: 'mobile',
+      hidden: hideIfNoBlackHole,
+      initialValue: true,
+    }),
+    defineField({
+      name: 'mobileBlackHolePresetPosition',
+      title: 'Placement',
+      description:
+        'Pick a preset, Custom to set the exact position below, or Same as desktop.',
+      type: 'string',
+      group: 'mobile',
+      fieldset: 'mobileBlackHolePlacement',
+      hidden: hideIfNoMobileBlackHole,
+      options: {
+        list: [
+          { title: 'Same as desktop', value: 'desktop' },
+          { title: 'Center', value: 'center' },
+          { title: 'Top-right', value: 'top-right' },
+          { title: 'Bottom-right', value: 'bottom-right' },
+          { title: 'Custom', value: 'custom' },
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'desktop',
+    }),
+    numberField({
+      name: 'mobileBlackHoleXRatio',
+      title: 'Horizontal position',
+      description: '0 = left edge, 0.5 = center, 1 = right edge. Default 0.5',
+      initialValue: 0.5,
+      group: 'mobile',
+      fieldset: 'mobileBlackHolePlacement',
+      min: 0,
+      max: 1,
+      precision: 4,
+      hidden: hideUnlessCustomMobilePosition,
+    }),
+    numberField({
+      name: 'mobileBlackHoleYRatio',
+      title: 'Vertical position',
+      description: '0 = top, 0.5 = center, 1 = bottom. Default 0.48',
+      initialValue: 0.48,
+      group: 'mobile',
+      fieldset: 'mobileBlackHolePlacement',
+      min: 0,
+      max: 1,
+      precision: 4,
+      hidden: hideUnlessCustomMobilePosition,
+    }),
+
+    defineField({
+      name: 'mobileEnableGalaxy',
+      title: 'Show Milky Way on mobile',
+      description:
+        'Turn off to leave the Milky Way out on phones and touch tablets. Only applies while the Milky Way is enabled on desktop.',
+      type: 'boolean',
+      group: 'mobile',
+      hidden: hideIfNoGalaxy,
+      initialValue: true,
+    }),
+    defineField({
+      name: 'mobileGalaxyPosition',
+      title: 'General location',
+      description:
+        'Pick an area, Random for anywhere, Custom to set the exact spot below, or Same as desktop.',
+      type: 'string',
+      group: 'mobile',
+      fieldset: 'mobileGalaxyPlacement',
+      hidden: hideIfNoMobileGalaxy,
+      options: {
+        list: [
+          { title: 'Same as desktop', value: 'desktop' },
+          { title: 'Top-left', value: 'top-left' },
+          { title: 'Top-right', value: 'top-right' },
+          { title: 'Bottom-left', value: 'bottom-left' },
+          { title: 'Bottom-right', value: 'bottom-right' },
+          { title: 'Left', value: 'left' },
+          { title: 'Right', value: 'right' },
+          { title: 'Center', value: 'center' },
+          { title: 'Random (anywhere)', value: 'random' },
+          { title: 'Custom', value: 'custom' },
+        ],
+      },
+      initialValue: 'desktop',
+    }),
+    numberField({
+      name: 'mobileGalaxyXRatio',
+      title: 'Horizontal position',
+      description: '0 = left edge, 1 = right edge. Default 0.2',
+      initialValue: 0.2,
+      group: 'mobile',
+      fieldset: 'mobileGalaxyPlacement',
+      min: 0,
+      max: 1,
+      precision: 3,
+      hidden: hideUnlessCustomMobileGalaxyPosition,
+    }),
+    numberField({
+      name: 'mobileGalaxyYRatio',
+      title: 'Vertical position',
+      description: '0 = top, 1 = bottom. Default 0.78',
+      initialValue: 0.78,
+      group: 'mobile',
+      fieldset: 'mobileGalaxyPlacement',
+      min: 0,
+      max: 1,
+      precision: 3,
+      hidden: hideUnlessCustomMobileGalaxyPosition,
+    }),
   ],
 })

@@ -1,6 +1,7 @@
 import CheckmarkIcon from '@sanity/icons/Checkmark'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
+import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
 import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/lib/common-utils'
@@ -35,18 +36,13 @@ export const OnboardingSubjectsStep = ({
 
   return (
     <Box className='ui-stack gap-4'>
-      <Box className='ui-stack gap-1'>
-        <Text className='ui-title font-semibold'>
-          Which years have you finished?
-        </Text>
-        <Text className='ui-caption text-grey-500'>
-          Mark a whole year done at once, or check off individual subjects below
-          — fine-tune this later from your profile too.
-        </Text>
-      </Box>
+      <SectionHeader
+        title='Which years have you finished?'
+        subtitle='Mark a whole year done at once, or check off individual subjects below — fine-tune this later from your profile too.'
+      />
 
       {placeholder ? (
-        <Text className='ui-caption text-grey-500'>{placeholder}</Text>
+        <Text className='ui-caption'>{placeholder}</Text>
       ) : (
         <Box className='ui-stack gap-3'>
           {[...subjectsByYear.entries()].map(([year, subjects]) => {
@@ -62,7 +58,7 @@ export const OnboardingSubjectsStep = ({
               >
                 <Box className='ui-cluster items-center justify-between'>
                   <Box className='ui-cluster items-center gap-2'>
-                    <Text className='ui-body font-medium'>Year {year}</Text>
+                    <Text className='ui-body-strong'>Year {year}</Text>
                     <Badge className='cp-unstyled border border-grey-200'>
                       {completedCount}/{subjects.length} subjects
                     </Badge>
@@ -74,7 +70,7 @@ export const OnboardingSubjectsStep = ({
                         : onCompleteYear(year)
                     }
                     className={cn(
-                      'button gap-1.5 px-3 py-1.5 text-xs rounded-full',
+                      'button button-sm gap-1.5 px-3 py-1.5 rounded-full',
                       isYearComplete ? 'subtle' : 'outline'
                     )}
                   >

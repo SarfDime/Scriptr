@@ -4,7 +4,7 @@ import { QUERY_CONFIG } from '@shared/config/api'
 import { camelCase, capitalize } from '@shared/utils/common-utils'
 import fs from 'fs'
 import path from 'path'
-import { app } from '../../hono/src'
+import { app } from '../src'
 
 function getLeafName(segments: Array<string>) {
   if (segments.length === 0) return 'index'
@@ -26,7 +26,6 @@ function getLeafName(segments: Array<string>) {
 }
 
 function generateApiRoutes() {
-  // 1. FILTER ROUTES AND CONVERT ENDPOINT WILDCARDS
   const uniquePaths = Array.from(new Set(app.routes.map((r) => r.path)))
     .filter((p) => {
       if (!p.includes('*')) return true
@@ -35,8 +34,6 @@ function generateApiRoutes() {
       const isApi = parts[0] === 'api'
       const trailingSegments = isApi ? parts.slice(1) : parts
 
-      // Discard middleware catch-alls like '/*', '/api/*', or '/api/universities/*'
-      // where '*' sits at or directly after the top-level namespace
       if (
         trailingSegments.includes('*') &&
         trailingSegments.indexOf('*') <= 1
@@ -48,7 +45,6 @@ function generateApiRoutes() {
     })
     .map((p) => (p.endsWith('/*') ? p.replace('/*', '/:key') : p))
 
-  // 2. BUILD ApiEndpoint UNION
   const unionMembers = uniquePaths
     .map((p) => {
       const hasParam = p.includes(':')
@@ -66,7 +62,6 @@ function generateApiRoutes() {
 
   output += `export type ApiEndpoint =\n${unionMembers};\n\n`
 
-  // 3. BUILD withQuery FUNCTION
   output += `export function withQuery(
   path: ApiEndpoint,
   params?: Record<string, string | number | boolean | undefined>
@@ -81,7 +76,6 @@ function generateApiRoutes() {
   return query ? (\`\${path}?\${query}\` as const) : path
 }\n\n`
 
-  // 4. BUILD apiRoutes
   const routeGroups: Record<
     string,
     Array<{ path: string; params: Array<string>; name: string }>
@@ -116,7 +110,6 @@ function generateApiRoutes() {
       const queryConf = QUERY_CONFIG[route.path]
 
       if (queryConf) {
-        // Handles paths with queries (with or without URL slugs)
         if (route.params.length > 0) {
           const pathArgs = route.params
             .map((p) => `${camelCase(p)}: string | number`)
@@ -127,14 +120,12 @@ function generateApiRoutes() {
           output += `    ${route.name}: (${queryConf.args}) => withQuery('${route.path}', ${queryConf.paramsObj}),\n`
         }
       } else if (route.params.length > 0) {
-        // Dynamic routes with URL slugs only
         const args = route.params
           .map((p) => `${camelCase(p)}: string | number`)
           .join(', ')
         const templatePath = route.path.replace(/:([a-zA-Z0-9_]+)/g, '${$1}')
         output += `    ${route.name}: (${args}) => \`${templatePath}\` as const,\n`
       } else {
-        // Static routes
         output += `    ${route.name}: '${route.path}',\n`
       }
     }
@@ -143,7 +134,7 @@ function generateApiRoutes() {
   output += `} as const;\n\n`
   output += `export type ApiRoutes = typeof apiRoutes;\n`
 
-  const outputPath = path.join(__dirname, '../config/api-routes.ts')
+  const outputPath = path.join('shared/config/api-routes.ts')
   fs.writeFileSync(outputPath, output)
   // biome-ignore lint/suspicious/noConsole: console log for successful generation
   console.log(`✅ Generated API routes successfully to ${outputPath}`)

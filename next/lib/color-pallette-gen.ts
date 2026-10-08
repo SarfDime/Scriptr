@@ -62,8 +62,16 @@ const getSemesterColor = (
   variant?: ColorPaletteVariant
 ) => {
   const map: Record<SubjectSemester, ColorPaletteClass> = {
-    winter: 'cp-rose',
-    summer: 'cp-blue',
+    1: 'cp-rose',
+    2: 'cp-blue',
+    3: 'cp-amber',
+    4: 'cp-brand',
+    5: 'cp-green',
+    6: 'cp-sky',
+    7: 'cp-warning',
+    8: 'cp-success',
+    9: 'cp-danger',
+    10: 'cp-yellow',
   }
   return applyVariant(map[semester ?? ''] ?? 'cp-gray', variant)
 }
@@ -110,7 +118,7 @@ const getSeedColor = (seed: string, variant?: ColorPaletteVariant) => {
 type ColorPaletteInput =
   | { type?: 'seed'; value: string; variant?: ColorPaletteVariant }
   | { type: 'year'; value: number; variant?: ColorPaletteVariant }
-  | { type: 'semester'; value: string; variant?: ColorPaletteVariant }
+  | { type: 'semester'; value: number; variant?: ColorPaletteVariant }
   | { type: 'exam'; value: string; variant?: ColorPaletteVariant }
   | { type: 'credits'; value: number; variant?: ColorPaletteVariant }
 

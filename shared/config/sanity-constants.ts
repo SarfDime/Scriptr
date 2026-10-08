@@ -1,4 +1,6 @@
 export const API_VERSION = '2026-08-08'
+export const SANITY_PROJECT_ID = 'REDACTED_SANITY_PROJECT_ID'
+export const SANITY_DATASET = 'production'
 export const COLOR_CODES = {
   warning: 'var(--warn-orange)',
   error: 'var(--error-red)',

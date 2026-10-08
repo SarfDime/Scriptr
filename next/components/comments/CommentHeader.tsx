@@ -15,6 +15,7 @@ export function CommentHeader({
   author,
   createdAt,
   isRoot,
+  edited = false,
   replyingTo,
 }: CommentHeaderProps) {
   const name = getAuthorDisplayName(author)
@@ -41,14 +42,24 @@ export function CommentHeader({
             avatarUrl={author?.avatar_url}
             isRoot={isRoot}
           />
-          <Text className='ui-label text-grey-500'>{name}</Text>
+          <Text className='ui-label'>{name}</Text>
         </Box>
       )}
-      <Text className='ui-caption text-grey-500'>
-        {new Date(createdAt).toLocaleDateString()}
-      </Text>
+      <time
+        dateTime={createdAt}
+        className='ui-caption'
+        suppressHydrationWarning
+      >
+        {new Intl.DateTimeFormat('en-US', {
+          dateStyle: 'medium',
+          timeZone: 'UTC',
+        }).format(new Date(createdAt))}
+      </time>
+      {edited && (
+        <Text className='ui-caption'>{COMMENT_STRINGS.general.edited}</Text>
+      )}
       {replyingTo && (
-        <Text className='ui-caption text-grey-500'>
+        <Text className='ui-caption'>
           {COMMENT_STRINGS.reply.replyingTo(replyingTo)}
         </Text>
       )}

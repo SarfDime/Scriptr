@@ -1,4 +1,5 @@
 import type { BREAKPOINTS } from '@shared/config/next-constants'
+import type { ButtonVariantType } from '@shared/config/shared-pt-config'
 import type { PortableTextValue } from './portable-text.types'
 import type { SanityImageType } from './sanity-transform.types'
 
@@ -22,12 +23,7 @@ type SanityImageSrcType = {
 type SanityButton = {
   _id: string
   buttonLabel?: PortableTextValue
-  buttonColorVariant?:
-    | 'solid'
-    | 'solid alternate'
-    | 'outline'
-    | 'transparent'
-    | 'transparent alternate'
+  buttonColorVariant?: ButtonVariantType
 } & LinkSelectorProps
 
 type ImageObjectFitType = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down'

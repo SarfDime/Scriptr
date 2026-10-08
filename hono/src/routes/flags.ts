@@ -4,7 +4,8 @@ import {
   isFlagTargetType,
 } from '@shared/utils/api.utils'
 import { Hono } from 'hono'
-import { requiredParam } from '../lib/request'
+import { honoLog } from '../lib/logger'
+import { databaseErrorResponse, requiredParam } from '../lib/request'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
@@ -30,7 +31,7 @@ flags.get('/', authMiddleware, async (c) => {
     .select(`*, reporter:profiles!reporter_id(username, full_name)`)
     .order('created_at', { ascending: false })
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json(data)
 })
 
@@ -55,7 +56,7 @@ flags.get('/pending', authMiddleware, async (c) => {
     .eq('status', 'pending')
     .order('created_at', { ascending: false })
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json(data)
 })
 
@@ -88,7 +89,7 @@ flags.get('/status/:status', authMiddleware, async (c) => {
     .eq('status', status)
     .order('created_at', { ascending: false })
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json(data)
 })
 
@@ -103,7 +104,7 @@ flags.get('/my-flags', authMiddleware, async (c) => {
     .eq('reporter_id', user.id)
     .order('created_at', { ascending: false })
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json(data)
 })
 
@@ -130,6 +131,30 @@ flags.post('/', authMiddleware, async (c) => {
 
   if (reason.trim().length < 10) {
     return c.json({ error: 'Reason must be at least 10 characters long' }, 400)
+  }
+
+  if (target_type === 'script' || target_type === 'comment') {
+    const table = target_type === 'script' ? 'scripts' : 'comments'
+    const { data: target, error: targetError } = await supabase
+      .from(table)
+      .select('author_id')
+      .eq('id', target_id)
+      .maybeSingle()
+
+    if (targetError) {
+      honoLog({
+        logLevel: 'error',
+        message: `Failed to verify ${target_type} report target`,
+        error: targetError,
+      })
+      return c.json({ error: 'Unable to verify report target' }, 500)
+    }
+    if (!target) {
+      return c.json({ error: `${target_type} not found` }, 404)
+    }
+    if (target.author_id === user.id) {
+      return c.json({ error: `You cannot report your own ${target_type}` }, 403)
+    }
   }
 
   let targetColumn: 'target_script_id' | 'target_comment_id' | 'target_user_id'
@@ -175,7 +200,7 @@ flags.post('/', authMiddleware, async (c) => {
         403
       )
     }
-    return c.json({ error: error.message }, 500)
+    return databaseErrorResponse(c, error)
   }
 
   if (target_type === 'script') {
@@ -236,7 +261,7 @@ flags.patch('/:id', authMiddleware, async (c) => {
     .select(`*, reporter:profiles!reporter_id(username, full_name)`)
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
 
   if (status === 'dismissed' && data.target_script_id) {
     const { data: otherFlags } = await supabase
@@ -304,7 +329,7 @@ flags.delete('/:id', authMiddleware, async (c) => {
 
   const { error } = await supabase.from('flags').delete().eq('id', flagId)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json({ success: true, message: 'Flag deleted successfully' })
 })
 

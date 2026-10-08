@@ -1,11 +1,13 @@
 'use client'
 
 import Heart from '@sanity/icons/Heart'
+import { UI_STRINGS } from '@shared/config/strings'
 import { useState } from 'react'
 import { Button } from '@/components/common/Button'
 import { Text } from '@/components/typography/Text'
 import { Divider } from '@/components/ui/Divider'
 import { useProtectedAction } from '@/hooks/useProtectedAction'
+import { useRequireSignIn } from '@/hooks/useRequireSignIn'
 import { cn } from '@/lib/common-utils'
 
 export type VoteResult = {
@@ -27,6 +29,7 @@ export type VoteButtonProps = {
   /** `full`: label + divider + count. `compact`: icon + count. */
   variant?: 'full' | 'compact'
   className?: string
+  disabled?: boolean
 }
 
 /**
@@ -46,15 +49,18 @@ export function VoteButton({
   noun,
   variant = 'full',
   className,
+  disabled = false,
 }: VoteButtonProps) {
   const [voted, setVoted] = useState(initialVoted)
   const [count, setCount] = useState(initialCount)
   const lowerLabel = label.toLowerCase()
+  const requireSignIn = useRequireSignIn()
   const { state, run } = useProtectedAction(action, {
-    errorTitle: `Couldn’t update ${lowerLabel}`,
+    errorTitle: UI_STRINGS.general.couldNotUpdate(lowerLabel),
   })
 
   const handleClick = async () => {
+    if (!requireSignIn()) return
     const wasVoted = voted
     const previousCount = count
     setVoted(!wasVoted)
@@ -74,18 +80,18 @@ export function VoteButton({
   }
 
   const ariaLabel = voted
-    ? `Remove ${lowerLabel} from ${noun}`
-    : `${label} ${noun}`
+    ? UI_STRINGS.general.removeVote(label, noun, count)
+    : UI_STRINGS.general.addVote(label, noun, count)
 
   if (variant === 'compact') {
     return (
       <Button
         onClick={handleClick}
-        disabled={state.status === 'pending'}
+        disabled={disabled || state.status === 'pending'}
         aria-pressed={voted}
         aria-label={ariaLabel}
         className={cn(
-          'button subtle gap-1.5 text-xs',
+          'button button-sm subtle gap-1.5',
           voted && 'text-rose-pink',
           className
         )}
@@ -99,11 +105,11 @@ export function VoteButton({
   return (
     <Button
       onClick={handleClick}
-      disabled={state.status === 'pending'}
+      disabled={disabled || state.status === 'pending'}
       aria-pressed={voted}
       aria-label={ariaLabel}
       className={cn(
-        'group button subtle gap-1.5 text-xs hover:text-rose-pink hover:bg-rose-pink/5 pl-3',
+        'group button button-sm subtle gap-1.5 hover:text-rose-pink hover:bg-rose-pink/5 pl-3',
         voted && 'cp-rose',
         className
       )}

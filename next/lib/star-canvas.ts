@@ -18,7 +18,6 @@ export const WHITE = '255, 255, 255'
 // Phones (any orientation) and touch-only tablets
 export const MOBILE_QUERY =
   '(max-width: 767px), (hover: none) and (pointer: coarse)'
-export const MOBILE_SCALE = 0.5 // MOBILE_SCALED_KEYS are multiplied by this on mobile
 
 export const SPRITE_SIZE = 128 // planet sprites are drawn at this size, then scaled
 export const BODY_RADIUS = 36 // planet body radius inside the sprite (rest is ring space)
@@ -27,11 +26,20 @@ export const TEXTURE_HEIGHT = 64
 export const TEXTURE_VIEW = 64 // the visible half of the planet: window into the texture
 const MILKY_WAY_ASPECT = 0.32 // height / width, before the height multiplier
 const MILKY_WAY_LENGTH = 4 // the band is this many times the configured size
-const MILKY_WAY_SPRITE_MAX_WIDTH = 2048 // bigger galaxies are drawn at lower resolution
-const MILKY_WAY_SPRITE_MAX_AREA = 2048 * 720 // keeps the sprites' memory in check
+const MILKY_WAY_SPRITE_MAX_WIDTH = 1600 // bigger galaxies are drawn at lower resolution
+const MILKY_WAY_SPRITE_MAX_AREA = 1600 * 560 // keeps the sprites' memory (and repaint cost) low
 const DOT_PX = 2 // on-screen px per unit of GalaxyDot size, whatever the galaxy size
-const GALAXY_DOTS = 4200 // at density 1
+const GALAXY_DOTS = 2600 // at density 1
 const GALAXY_DOTS_MAX = 20000 // upper limit, so extreme settings can't freeze the page
+// Layer 0 (clouds, glow, dust) only holds big soft shapes, so it is painted at this share of
+// the resolution and stretched when drawn. Measured against full resolution the picture
+// differs by under 0.5 of 255 brightness levels on average, and the layer needs a quarter
+// of the memory.
+const NEBULA_RESOLUTION = 0.4
+// Dots that add less than one of the 255 brightness levels are dropped. Below half a level
+// that changes no pixel; between half and one it slightly thins the faintest nebula
+// wisps, which is the trade for painting fewer dots.
+const MIN_DOT_LEVEL = 1
 
 export const BLACK_HOLE_PRESETS: Record<string, Point> = {
   center: { x: 0.5, y: 0.48 },
@@ -63,6 +71,7 @@ const GALAXY_ANCHORS: Record<string, Point> = {
   right: { x: 0.85, y: 0.5 },
 }
 
+// Multiplied by the config's `mobileScale` on mobile
 const MOBILE_SCALED_KEYS = [
   'starCount',
   'starMinSize',
@@ -163,6 +172,17 @@ const DEFAULTS: StarCanvasConfig = {
   galaxyDriftFactor: 0.4,
   galaxyDriftDirection: 'up-left',
   galaxyTilt: 0,
+
+  mobileScale: 0.5,
+  mobileEnableBlackHole: true,
+  mobileEnableGalaxy: true,
+  // 'desktop' = phones use the desktop placement
+  mobileBlackHolePresetPosition: 'desktop',
+  mobileBlackHoleXRatio: 0.5,
+  mobileBlackHoleYRatio: 0.48,
+  mobileGalaxyPosition: 'desktop',
+  mobileGalaxyXRatio: 0.2,
+  mobileGalaxyYRatio: 0.78,
 }
 
 /** Sanity returns `null` for unset fields, so `{...DEFAULTS, ...data}` is not enough. */
@@ -182,10 +202,28 @@ export const withDefaults = (
 
 export const scaleForMobile = (config: StarCanvasConfig): StarCanvasConfig => {
   const scaled: StarCanvasConfig = { ...config }
-  for (const key of MOBILE_SCALED_KEYS) scaled[key] = config[key] * MOBILE_SCALE
+  for (const key of MOBILE_SCALED_KEYS) {
+    scaled[key] = config[key] * config.mobileScale
+  }
   scaled.starCount = Math.round(scaled.starCount)
   scaled.planetCount = Math.round(scaled.planetCount)
   scaled.freePlanetCount = Math.round(scaled.freePlanetCount)
+
+  // Either can be switched off on phones (no black hole also means no orbiting planets)
+  if (!config.mobileEnableBlackHole) scaled.enableBlackHole = false
+  if (!config.mobileEnableGalaxy) scaled.enableGalaxy = false
+
+  // Placement has its own mobile setting; 'desktop' keeps the desktop one
+  if (config.mobileBlackHolePresetPosition !== 'desktop') {
+    scaled.blackHolePresetPosition = config.mobileBlackHolePresetPosition
+    scaled.blackHoleXRatio = config.mobileBlackHoleXRatio
+    scaled.blackHoleYRatio = config.mobileBlackHoleYRatio
+  }
+  if (config.mobileGalaxyPosition !== 'desktop') {
+    scaled.galaxyPosition = config.mobileGalaxyPosition
+    scaled.galaxyXRatio = config.mobileGalaxyXRatio
+    scaled.galaxyYRatio = config.mobileGalaxyYRatio
+  }
   return scaled
 }
 
@@ -770,18 +808,22 @@ const milkyWayDots = (
   const starLayer = () => 1 + Math.floor(Math.random() * STAR_LAYERS)
 
   // Thousands of tiny, crisp, colored stars; some drift well outside the band
-  const stars = Array.from({ length: count * 4 }, (): GalaxyDot => {
-    const x = pickX()
-    const spread = Math.random() < 0.3 ? 1.9 : 1
-    return {
-      x,
-      y: middle(x) + gauss() * fan(x) * spread,
-      size: 0.8 + Math.random() * 1.4,
-      alpha: (0.3 + Math.random() * 0.6) * (1 - 0.55 * away(x)),
-      tone: starTone(),
-      layer: starLayer(),
+  // (fewer than before, each a little brighter to make up for it)
+  const stars = Array.from(
+    { length: Math.round(count * 2.5) },
+    (): GalaxyDot => {
+      const x = pickX()
+      const spread = Math.random() < 0.3 ? 1.9 : 1
+      return {
+        x,
+        y: middle(x) + gauss() * fan(x) * spread,
+        size: 0.9 + Math.random() * 1.4,
+        alpha: (0.4 + Math.random() * 0.6) * (1 - 0.55 * away(x)),
+        tone: starTone(),
+        layer: starLayer(),
+      }
     }
-  })
+  )
 
   // A handful of brighter stars
   const bright = Array.from({ length: 14 }, (): GalaxyDot => {
@@ -798,7 +840,7 @@ const milkyWayDots = (
 
   // Fine grain: faint, unresolved stars
   const grain = Array.from(
-    { length: Math.round(count * 0.8) },
+    { length: Math.round(count * 0.5) },
     (): GalaxyDot => {
       const x = pickX()
       const y = middle(x) + gauss() * fan(x)
@@ -806,7 +848,7 @@ const milkyWayDots = (
         x,
         y,
         size: 3 + Math.random() * 4,
-        alpha: (0.015 + Math.random() * 0.03) * (1 - 0.6 * away(x)),
+        alpha: (0.025 + Math.random() * 0.05) * (1 - 0.6 * away(x)),
         tone: cloudTone(x, y),
       }
     }
@@ -814,7 +856,7 @@ const milkyWayDots = (
 
   // The colored clouds: big, faint and lumpy, and bigger and fainter the farther out
   const clouds = Array.from(
-    { length: Math.round(count / 4) },
+    { length: Math.round(count / 6) },
     (): GalaxyDot => {
       const x = pickX()
       const y = middle(x) + gauss() * fan(x) * 1.2
@@ -822,7 +864,7 @@ const milkyWayDots = (
         x,
         y,
         size: (40 + Math.random() * 70) * (1 + away(x)),
-        alpha: (0.004 + Math.random() * 0.01) * (1 - 0.7 * away(x)),
+        alpha: (0.006 + Math.random() * 0.014) * (1 - 0.7 * away(x)),
         tone: cloudTone(x, y),
       }
     }
@@ -847,7 +889,7 @@ const milkyWayDots = (
   ]
 
   // Dust: a few soft, scattered dark patches (no lane, so nothing forms a line)
-  const dust = Array.from({ length: Math.round(count / 45) }, (): GalaxyDot => {
+  const dust = Array.from({ length: Math.round(count / 60) }, (): GalaxyDot => {
     const x = pickX()
     return {
       x,
@@ -859,7 +901,10 @@ const milkyWayDots = (
     }
   })
 
-  return [...clouds, ...grain, ...glow, ...stars, ...bright, ...dust]
+  // Drops the faintest dots (see MIN_DOT_LEVEL)
+  return [...clouds, ...grain, ...glow, ...stars, ...bright, ...dust].filter(
+    (dot) => dot.alpha * 255 >= MIN_DOT_LEVEL
+  )
 }
 
 /** "General location": a preset area with a little randomness, or exact when custom. */
@@ -976,9 +1021,6 @@ export const buildGalaxySprites = (
   galaxy: Galaxy,
   colors: StarCanvasColors
 ) => {
-  const width = Math.max(1, Math.round(galaxy.width * galaxy.spriteScale))
-  const height = Math.max(1, Math.round(galaxy.height * galaxy.spriteScale))
-
   const { galaxyCore: warm, galaxyAccent: accent, galaxyArm: cool } = colors
   const softDots = [
     buildSoftDot(warm),
@@ -989,11 +1031,17 @@ export const buildGalaxySprites = (
   ]
   const dust = buildSoftDot('0, 0, 0')
 
-  const scale = DOT_PX * galaxy.spriteScale // dots keep their on-screen size
-  const rx = (width / 2) * 0.92
-  const ry = (height / 2) * 0.92
-
   galaxy.layers.forEach((layer, index) => {
+    // Layer 0 is painted smaller (see NEBULA_RESOLUTION). The galaxy is always drawn at
+    // its full on-screen size, so nothing else needs to know.
+    const resolution = index === 0 ? NEBULA_RESOLUTION : 1
+    const spriteScale = galaxy.spriteScale * resolution
+    const width = Math.max(1, Math.round(galaxy.width * spriteScale))
+    const height = Math.max(1, Math.round(galaxy.height * spriteScale))
+    const scale = DOT_PX * spriteScale // dots keep their on-screen size
+    const rx = (width / 2) * 0.92
+    const ry = (height / 2) * 0.92
+
     const { canvas, sctx } = createSprite(width, height)
     if (!sctx) return
 

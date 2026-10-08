@@ -1,156 +1,252 @@
 # Scriptr: Progress & Todos
 
-What's built, what's outstanding. See `ARCHITECTURE.md` for how the finished
-pieces are designed to work. Last full reconciliation: 2026-10-03. Spot-checked against the code on
-2026-10-06: file-op key verification, R2 cleanup, the `apiRoutes` generator
-command, and the route-registration order in `scripts.ts`.
+What's built and what's outstanding. See `ARCHITECTURE.md` for the current
+system design and `TODO.md` for ideas that are not yet concrete work.
 
-> **Standing rule:** any change to the Postgres or Sanity schema must be
-> followed by `npm run gen:api-types` / `npm run sanity:typegen` and a clean
+Last reconciled: 2026-10-08.
+
+> **Standing rule:** any Postgres or Sanity schema change is followed by
+> `npm run gen:api-types` / `npm run sanity:typegen` and a clean
 > `npm run check-types` before it counts as done.
 
-## Backend API (`hono/`)
+## Backend API
 
 ### Done
 
-* **Schema:** `profiles`, `scripts`/`script_files`, catalog tables + junctions, `profile_faculties`/`profile_studies`/`profile_subjects`, `download_events`, `flags`, `comments` + reactions/likes, `votes`, `script_favorites`, `rating_types`/`professor_ratings`/`subject_ratings`, `achievement_definitions`/`profile_achievements`, `notifications`, `profile_restrictions`. Constraints, indexes, Portable Text size caps, score/status `CHECK`s. **[✅]**
-* **Catalog API:** full read/write for universities, faculties, studies, subjects, professors and every junction table, gated by `x-internal-secret`, service-role client only. Universities have full CRUD + sync, with an app-level `faculties` dependents check on delete. **[✅]**
-* **Scripts:** multi-file upload, Portable Text title/description (server-side allow-list and 2 KiB/50 KiB caps), single-subject constraint, auto-resolved hierarchy, professor validation, author/admin edit/delete, fuzzy search, faculty-scoped listing. **[✅]**
-* **Downloads:** dedupe (account → IP → device), service-role only. **[✅]**
-* **Comments** (script/professor/user threads, nested replies, independently toggled multi-reactions, likes; inline-only Portable Text with headings, lists, and alignment excluded), **flags** (user create/view/delete own; admin list/resolve via RLS), **votes** (atomic `toggle_vote` RPC), **favorites**, **ratings** (types, professor/subject ratings, stats). **[✅]**
-* **Profiles:** public list/lookup/stats, `me` read/update/delete, admin patch/delete, internal-only role changes. **[✅]**
-* **Public-read caching:** script and public-profile data use tagged Next Data Cache entries; mutations revalidate affected script and profile representations. **[✅]**
-* **Profile selections:** `profile-faculties`, `profile-studies`, `profile-subjects` own-resource CRUD. **[✅]**
-* **Auth:** register, login, logout, session, and `/auth/callback` (email-confirmation token handoff, implicit flow) via the Supabase Auth cookie; no Bearer path. `/login` and `/callback` return the app-shaped session user, so the client doesn't refetch `/session`. **[✅]**
-* **Notifications:** list (optional `is_read` filter), unread count, mark one/all read, delete. Onboarding and account-creation notifications are created. **[✅]**
-* **Achievements:** award-check helper (metric vs `achievement_definitions.threshold` → `profile_achievements` + notification), wired into vote, download, and comment endpoints. **[✅]**
-* **Restrictions:** admin restrict/unrestrict endpoint (`restrictions.ts`, `is_admin()` RLS). **[✅]**
-* **Typed responses:** route responses are typed against types in `shared/types/` (e.g. `c.json<LoginResponse>(...)` using `auth.types.ts`), so `next/` and `sanity/` consume the same shapes. **[✅]**
-* **Portable Text validation:** script and comment write routes enforce the supported block/mark allow-list; Next.js forms enforce script byte limits and the comment minimum length locally. **[✅]**
-* Moderator role has no access checks anywhere; every elevated check is `is_admin()`. **[✅]**
-* `API_DOCUMENTATION.md` reconciled with the route set. **[✅]**
+- **Academic catalog:** the University → Faculty → Study → Subject hierarchy, **[✅]**
+  Professors, junction tables, validation, dependency checks, and internal
+  catalog synchronization are implemented.
+- **Script API:** scripts support Portable Text metadata, multi-file uploads, **[✅]**
+  subject/professor validation, hierarchy resolution, author/admin management,
+  fuzzy search, faculty-scoped listing, and individual file removal.
+- **Comments and moderation:** threaded comments and replies, pagination, **[✅]**
+  reactions, likes, flags, author/admin moderation, rate limits, Portable Text
+  validation, engagement aggregation, and cached comment pages are implemented.
+- **Profiles and user selections:** public profiles, the authenticated **[✅]**
+  `me` resource, admin management, and faculty/study/subject selections are
+  implemented.
+- **Votes, favorites, and ratings:** atomic script voting, favorites, rating **[✅]**
+  types, professor/subject ratings, and rating statistics are implemented.
+- **Authentication and authorization:** registration, login, logout, session **[✅]**
+  refresh, email-confirmation callback, cookie-based sessions, protected
+  mutations, registration/login hardening, and admin-only access controls are
+  implemented.
+- **Notifications and achievements:** notification delivery and management, **[✅]**
+  onboarding/account notifications, and metric-based achievement awarding are
+  implemented.
+- **User restrictions:** admin restriction management and database-enforced **[✅]**
+  restrictions on protected mutations are implemented.
+- **Caching and revalidation:** tagged Next.js Data Cache entries and backend **[✅]**
+  mutation-driven revalidation for public scripts and profiles are implemented.
+- **Typed API contract:** route response types live in `shared/types/` and **[✅]**
+  are consumed consistently by the frontend and Studio.
 
 ### Todo
 
-* **Finish response typing rollout** — verify every route file uses shared response types (all routes mounted in `index.ts` must be covered; check `notifications.ts` and the rest). **[✅ done]**
-* **Register hardening:** unique usernames, spam-email blocking, rate limiting. **[✅ done]**
-* **Individual script file removal** — RLS allows it, no endpoint exists. **[🔲]**
-* **Achievement definitions CRUD** (admin) — only public read exists. **[🔲]**
-* **`faculties_university_id_fkey` is `ON DELETE CASCADE`** — conflicts with the app-level dependents-check pattern; decide on `RESTRICT`. **[🔲 decision]**
-* **`API_TESTING_GUIDE.md` refresh** — stale vs multi-file upload, universities mutation routes, auth callback. **[✅ done]**
-* **Moderator notification pipeline** (repeated flags → moderators, moderator flag → admins). **[🔲 Deferred]**
+- **Achievement definitions CRUD:** add admin management for **[🔲]**
+  `achievement_definitions`; public reading already exists.
+- **Catalog delete policy:** decide whether **[🔲]**
+  `faculties_university_id_fkey` should use `RESTRICT` instead of
+  `CASCADE` to match the application-level dependency checks.
+- **University storage configuration:** persist `r2_bucket_id` through the **[✅]**
+  internal university create/update/sync routes.
+- **Duplicate university mutations:** consolidate the legacy **[✅]**
+  `/api/universities` mutation routes with the canonical
+  `/api/internal/universities` write path.
+- **File-optional scripts:** allow a script to be created without an initial **[🔲]**
+  file, then update the create UI and documentation around empty-file states.
+- **Production request logging:** disable the development-oriented **[✅]**
+  `honoLogRequest` output in production.
+- **Moderator notifications:** add escalation for repeated flags and route **[🔲]**
+  moderator-generated flags to admins.
+- **Deferred TODO audit:** validation, Studio navigation, accessibility,
+  metadata, and viewport refinements remain explicitly marked `Deferred` in
+  their source files; the existing Button aria TODO remains intentionally
+  unchanged.
 
-## R2 / File Storage (`hono/`)
+## R2 / File Storage
 
 ### Done
 
-* Multi-file `POST /file-ops/upload` (one `{ fileKey, fileType, fileSizeBytes, bucket }` per file). **[✅]**
-* Keys: `{facultyId}/{studyId}/{subjectId}/{userId}/{uuid}.{ext}`, falling back to `{userId}/...`. **[✅]**
-* University-scoped buckets (`universities.r2_bucket_id`, `resolveStorageScope()`, `?bucket=` on get-file) and `script_files.bucket`. **[✅]**
-* R2 cleanup for deleted scripts and failed script creation. **[✅]**
+- **Multi-file R2 uploads:** validated uploads, deterministic project/user keys, **[✅]**
+  per-university bucket resolution, recorded storage metadata, and public
+  preview/download signing are implemented.
+- **Storage cleanup:** failed script creation, failed uploads, and deleted **[✅]**
+  scripts clean up their associated R2 objects on a best-effort basis.
 
 ### Todo
 
-* **Sanity `r2BucketId` field on the University schema** — drafted, not confirmed applied; verify (sync was tested without it being confirmed). **[🔲 unconfirmed]**
-* **User avatars** — optimize and store them in R2. **[🔲]**
-* **Optimize images and files before they are written to R2.** **[🔲]**
-* **Cache headers on R2 objects** — set proper caching headers. **[🔲]**
+- **User avatars:** optimize and store avatar files in R2. **[🔲]**
+- **File optimization:** optimize images and other supported files before R2 **[🔲]**
+  storage.
+- **Object caching:** add appropriate cache headers to R2 objects. **[🔲]**
 
-## Sanity CMS (`sanity/`)
+## Sanity CMS
 
 ### Done
 
-* Models, relationships and initialization sets for all 5 entities. **[✅]**
-* "Create in Database" / "Sync with Database" actions, publish blocked until a DB id exists, dependency-checked delete (`409`), exhaustive `parentFieldFor`/`parentColumnFor`. **[✅]**
-* Slug generation and reusable mini-schemas. **[✅]**
-* **Academic sync/delete workflows tested end-to-end and working** (create, sync, checked delete) across entity types. **[✅]**
-* Environment wiring confirmed (`INTERNAL_API_SECRET` / `SANITY_STUDIO_INTERNAL_SECRET` match; `SANITY_STUDIO_API_URL` set for deployed Studio). **[✅]**
+- **Academic content model:** University, Faculty, Study, Subject, and Professor **[✅]**
+  schemas, relationships, reusable schema pieces, and slug handling are
+  implemented.
+- **Database synchronization:** Create in Database, Sync with Database, **[✅]**
+  publish gating, and dependency-checked deletion are implemented and tested
+  across academic entity types.
+- **Studio/API integration:** internal API authentication, deployed API **[✅]**
+  configuration, and shared academic endpoint/type mappings are wired up.
 
 ### Todo
 
-* Remove unused schemas, utils and constants. Encrypt the internal secret with a shared salt across environments. **[🔲]**
-* Decide how to handle page data in the structure tool. **[🔲]**
-* **Semesters as numbers** — change the Sanity field and the DB/API consumers. **[🔲]**
-* **Elective subjects** — they have no semester or year, so they need a different data shape and different UI handling. **[🔲]**
+- **Studio cleanup:** remove unused schemas, utilities, and constants. **[🔲]**
+- **Secret handling:** decide whether the internal secret should be encrypted **[🔲]**
+  or otherwise protected with a shared environment-specific mechanism.
+- **Structure tool:** decide how page data should be represented and improve **[🔲]**
+  the structure tool around that model.
+- **Semester model:** change semesters from the current representation to **[🔲]**
+  numeric values and update Sanity, database, API, and consumers.
+- **Elective subjects:** define a data shape and UI behavior for electives that **[🔲]**
+  do not have the normal semester/year fields.
 
-## Auth & Onboarding (`hono/`, `next/`)
+## Auth & Onboarding
 
 ### Done
 
-* Authentication end to end: backend routes above plus the frontend flows (register, login, logout, session, email-confirmation callback). **[✅]**
-* First-visit onboarding (university/faculty/study/subject selection). **[✅]**
-* Notifications for onboarding and account creation. **[✅]**
-* Sign-in/sign-up modal: `ui-above` frosted dialog with the forms on an inner panel. **[✅]**
+- **End-to-end authentication:** backend and frontend registration, login, **[✅]**
+  logout, session handling, email confirmation, and protected actions work
+  together.
+- **Onboarding:** first-visit university, faculty, study, and subject **[✅]**
+  selection is implemented and persisted.
+- **Account notifications:** onboarding and account-creation notifications are **[✅]**
+  integrated.
 
-### Todo
-
-* Register/sign-up field validation (client and API). **[✅ done]**
-
-## API Client & Shared Types (`shared/`, `next/`)
-
-### Done
-
-* **No Hono RPC client** (`hc<AppType>` hung `tsc`/`tsserver` at ~140 endpoints); routes are plain unchained statements. **[✅ decision]**
-* **Generated `apiRoutes` + `apiFetch`:** `shared/config/api-routes.ts` (auto-generated from `shared/config/api.ts`; regenerate with `npm run gen:api-endpoints`), `next/lib/api.ts` `apiFetch`, `shared/utils/api.utils.ts` (`apiUrl`, `getDatabaseAcademicEndpoints`). Sanity and Next both use it. **[✅]**
-* **Typed route responses in `shared/types/`** (see Backend). **[✅]**
-* Sanity TypeGen output lives in `shared/types/`; academic entity types derive from query results via `WithResolvedSanityData`; `hono/src/sanity-stub.d.ts` supports this. **[✅]**
-* `npm run gen:api-endpoints` (regenerates `apiRoutes`; it does not run on dev) is documented in `AGENTS.md`, `README.md` and `hono/README.md`. **[✅]**
-
-### Todo
-
-* Move the `UserRole`/`ProfileSubjectStatus`/`FlagStatus` types out of `api.types.ts` as its TODOs note. **[🔲]**
-
-## Frontend (`next/`)
+## API Client & Shared Types
 
 ### Done
 
-* Nested academic catalog routing (`/university/.../subject/[slug]`; professors flat at `/professor/[slug]`) with ancestor-scoped GROQ and full-chain links. **[✅]**
-* Script listing, sorting, filtering. **[✅]**
-* Homepage server rendering with cached top scripts instead of fixture data; with selected studies' non-completed subjects when available, otherwise the cached global top scripts. **[✅]**
-* Subject detail pages render cached scripts for their database subject instead of fixture data. **[✅]**
-* Homepage and signed-in user page subject sidebars use the authenticated user's enrolled, non-completed subjects, with guest and onboarding-empty alternatives. **[✅]**
-* Portable Text **editor** component (shared config with `PortableTextContent`) and its use in script title/description fields. **[✅]**
-* Create-script flow: subject-scoped creation, Portable Text title/description, professor and exam-session selection, additional reading, and validated multi-file upload via `apiFetch`. **[✅]**
-* **Script detail page (`/scripts/[slug]`):** multiple files, Portable Text title/description, comments, downloads, previews. Thin page + loader (`next/lib/script-detail-page.ts`) + small components in `next/components/academics/scripts/detail/`; frosted info/reading and files surfaces that wrap by available space; container-query file cards (image thumbnails, matching Preview/Download buttons with icons); framed preview modal; empty states for files and additional reading. Strings in `shared/strings/scripts-strings.ts`. **[✅]**
+- **Generated API client surface:** `apiRoutes` is generated from the route **[✅]**
+  configuration and `apiFetch` provides the shared frontend request layer,
+  with domain-specific wrappers.
+- **Shared contracts:** API response types, Sanity TypeGen output, academic **[✅]** **[✅]**
+  entity transformations, and shared configuration are centralized in
+  `shared/`.
+- **Scalable route typing:** the Hono RPC client was intentionally replaced by **[✅]** **[✅]**
+  generated route paths after the full route graph became too expensive for
+  TypeScript tooling.
+- **API endpoint generation:** `npm run gen:api-endpoints` is documented and **[✅]** **[✅]**
+  used to keep generated route paths synchronized with the Hono route tree.
 
 ### Todo
 
-* Script search (local-first + API fallback). **[🔲]**
-* Loading, empty, error states across pages and search. **[🔲]**
-* Script edit/delete permissions in UI; guest download/preview with dedupe. **[🔲]**
-* "You've been restricted" UI state on protected actions. **[🔲]**
-* Professor/subject rating UI. **[🔲]**
-* Profile page (academic data, achievements). **[🔲]**
-* Notification preferences/settings and additional notification kinds. **[🔲]**
-* Admin UI: academic sync + dependency checks, `professor_studies`, user restrictions, flag resolution/moderation views, suspicious-download review. **[🔲]**
-* **Strings:** finish moving inline user-facing text into `shared/strings/<area>-strings.ts` / `UI_STRINGS` (script detail and comments are done; the rest are not). **[🔲]**
-* **Localization.** **[🔲]**
-* **`NextImage`:** require the `sizes` prop whenever `fillProp` is true. **[🔲]**
-* **Accessibility:** require aria attributes on buttons and links (type-level). **[🔲]**
-* **Subject overview card links** are wrong — fix. **[🔲 bug]**
-* **Portable Text toolbar:** fix list numbering increments, add an accent for the selected item, fix the weight icons. **[🔲]**
-* Polish: z-index variables, confirm modal, don't render closed dialogs, image sizes, mobile, accessibility, production CSS obfuscation. **[🔲]**
+- **Shared type cleanup:** move `UserRole`, **[✅]**
+  `ProfileSubjectStatus`, and `FlagStatus` out of `api.types.ts` into
+  their appropriate shared type modules.
+
+## Frontend
+
+### Done
+
+- **Academic navigation:** nested university/faculty/study/subject routing and **[✅]**
+  flat professor pages use ancestor-scoped Sanity queries and complete links.
+- **Script discovery:** script listing, sorting, filtering, cached homepage and **[✅]**
+  subject feeds, and the backend fuzzy-search capability are implemented.
+- **Script creation:** subject-scoped creation, Portable Text editing, **[✅]**
+  professor/exam-session selection, additional reading, validated multi-file
+  uploads, protected-action handling, and success/error flows are implemented.
+- **Script detail experience:** script metadata, Portable Text content, files, **[✅]**
+  previews, downloads, comments, additional reading, and empty states are
+  implemented.
+- **Comments and engagement UI:** threaded comments, replies, reactions, **[✅]**
+  likes, moderation actions, votes, favorites, and related API integration are
+  implemented.
+- **Authentication and onboarding UI:** auth flows, onboarding, protected **[✅]**
+  actions, account state, and responsive auth dialogs are implemented.
+- **Responsive navigation and dialogs:** the responsive navbar, mobile drawer, **[✅]**
+  persistent desktop collapse state, shared dialog behavior, and responsive
+  layout primitives are implemented.
+- **Homepage visual system:** the animated canvas background, configurable **[✅]**
+  mobile behavior, and Studio controls for its major visual elements are
+  implemented.
+- **Portable Text UI:** shared editor/content behavior and toolbar styling are **[✅]**
+  implemented.
+- **Shared UI architecture:** reusable components, shared strings for completed **[✅]**
+  feature areas, thin page loaders, and the shared API client are in place.
+
+### Todo
+
+- **Script search UI:** connect the existing local/API search capability to the **[🔲]**
+  frontend search experience.
+- **State coverage:** finish loading, empty, and error states across remaining **[🔲]**
+  pages and flows.
+- **Script management UI:** finish edit/delete permissions and the remaining **[🔲]**
+  guest preview/download behavior.
+- **Restriction UX:** add the dedicated restricted-user state for protected **[🔲]**
+  actions.
+- **Ratings UI:** add professor and subject rating interfaces. **[🔲]**
+- **Profile experience:** finish the profile page with academic data, **[🔲]**
+  achievements, activity, and the revised subject layout.
+- **Notification settings:** add notification preferences and remaining **[🔲]**
+  notification kinds/UX.
+- **Admin UI:** add academic synchronization/dependency tools, **[🔲]**
+  `professor_studies`, user restrictions, flag resolution/moderation, and
+  suspicious-download review.
+- **Strings and localization:** finish moving remaining inline user-facing **[🔲]**
+  strings into the shared string system, then add localization.
+- **Accessibility and image contracts:** require appropriate ARIA attributes **[🔲]**
+  and require `sizes` when `NextImage` uses `fillProp`.
+- **Subject navigation:** fix incorrect subject overview card links. **[🔲]**
+- **Portable Text toolbar:** fix list-numbering behavior and weight icons. **[🔲]**
+- **Operation-error UX:** standardize operation failures as toasts where **[🔲]**
+  appropriate and document the convention in `ARCHITECTURE.md`.
+- **Study tips:** provide study tips for guests and users without onboarding **[🔲]**
+  data, sourced from Sanity.
+- **UI polish:** finish remaining z-index, modal lifecycle, image sizing, **[🔲]**
+  mobile, accessibility, and production CSS polish.
 
 ## Tooling & Quality
 
+### Done
+
+- **Monorepo TypeScript setup:** shared strict compiler configuration is used **[✅]**
+  across the workspaces, with workspace-specific includes and aliases.
+- **Next.js modernization:** Next.js 16, Turbopack, React Compiler, and a **[✅]**
+  minimal supported `next.config.ts` are in place; stale package-import
+  optimization and development cache flags were removed.
+- **Build and type-check pipeline:** workspace builds and type-checks are **[✅]**
+  wired through the root npm scripts, with generated API and schema types kept
+  separate from source.
+- **Security hardening:** database-backed authorization, vote RPC **[✅]**
+  hardening, restricted trigger execution, and generic API database-error
+  responses are implemented.
+- **Documentation alignment:** the API reference and testing guide have been **[✅]**
+  reconciled with the current route set.
+
 ### Todo
 
-* **Biome:** enable more rules not covered today, mostly nursery rules. **[🔲]**
-* **Error hygiene:** verify user-facing errors don't leak sensitive information or internal implementation details. **[🔲]**
-* **In-code `TODO` comments:** audit and resolve them across the project. **[🔲]**
-
-Loose ideas and open questions that aren't concrete yet live in `TODO.md`.
+- **Biome coverage:** enable additional useful rules after reviewing their **[🔲]**
+  signal-to-noise ratio.
+- **Error hygiene:** complete the project-wide review of user-facing errors, **[🔲]**
+  ensuring stack traces, database details, and other internal information are
+  never exposed.
+- **TODO audit:** review remaining in-code `TODO` comments and either resolve **[🔲]**
+  them or convert them into tracked work.
 
 ## Suggested Order
 
-1. Fix the `GET /scripts/my-scripts` route-order bug and verify it with a real request.
-2. Add individual script file removal and the corresponding R2 cleanup flow.
-3. Resolve the open schema/policy decisions: `faculties_university_id_fkey` delete behavior, Sanity `r2BucketId` confirmation, and the semester/elective subject model changes.
-4. Implement admin achievement-definitions CRUD and the remaining moderation/admin backend checks.
-5. Finish the moderator notification pipeline for repeated-flag escalation and moderator/admin routing.
-6. Complete the moderation/admin UI and flag resolution flows.
-7. Finish the remaining frontend work in priority order: script search, script edit/delete permissions, restricted-state UI, professor/subject rating UI, profile page, notification preferences/settings, and notification pipeline UX.
-8. Close the quality pass: loading/empty/error states; strings/localization; `NextImage` `sizes` and accessibility; subject overview link fixes; Portable Text toolbar polish; and production CSS polish.
-9. Finish the storage and file-quality tasks: user avatars in R2, image/file optimization before upload, and cache headers on R2 objects.
-10. Clean up Sanity and repo hygiene: unused schemas/utilities/constants, encrypted internal secret handling, page-data decision in the structure tool, and repository-level error hygiene/TODO cleanup.
-11. Run the focused quality pass: Biome rule coverage, error hygiene, and any remaining cleanup flagged by the final code review.
+1. Resolve the catalog/storage decisions: `r2_bucket_id` persistence,
+   duplicate university mutations, and the faculty-delete policy.
+2. Decide and implement the script-without-file model.
+3. Add achievement-definition CRUD and the remaining backend moderation
+   capabilities.
+4. Complete moderator notifications and the admin/moderation UI.
+5. Finish the main frontend product gaps: search UI, script management,
+   restriction UX, ratings, profile, and notification settings.
+6. Close frontend quality work: state coverage, strings/localization,
+   accessibility, image contracts, navigation fixes, toolbar behavior, and
+   remaining UI polish.
+7. Complete R2 improvements: avatars, file optimization, and object cache
+   headers.
+8. Finish Sanity cleanup and structure/schema decisions.
+9. Complete the tooling quality pass: Biome rules, error hygiene, and
+   in-code TODO cleanup.
+
+Loose ideas and open questions that are not concrete enough for this list live
+in `TODO.md`.

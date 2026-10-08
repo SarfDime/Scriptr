@@ -17,7 +17,7 @@ export type CommentColumns = {
   updated_at: string
 }
 
-/** Matches `author:profiles(username, full_name)`. */
+/** Matches `author:profiles(username, full_name, avatar_url)`. */
 export type CommentAuthorSummary = {
   username: string | null
   full_name: string | null
@@ -34,8 +34,7 @@ export type CommentScriptTitleSummary = {
   title: PortableTextValue
 }
 
-/** The five fields `attachEngagement()` appends to every comment row it
- * processes: reaction/like counts plus the current viewer's own status. */
+/** Engagement counts and the current viewer's own status. */
 export type CommentEngagement = {
   reactions_count: number
   reactions_by_type: Record<string, number>
@@ -49,18 +48,6 @@ export type CommentEngagement = {
  * `attachEngagement()` runs. */
 export type CommentWithAuthorAndProfessor = CommentColumns & {
   author: CommentAuthorSummary | null
-  professor: CommentProfessorSummary | null
-}
-
-/** Matches `GET /professor/:professorId`'s select (author only — the
- * professor is already known from the URL), before `attachEngagement()`. */
-export type CommentWithAuthorOnly = CommentColumns & {
-  author: CommentAuthorSummary | null
-}
-
-/** Matches `GET /user/:userId`'s select (professor only — the author is
- * already known from the URL), before `attachEngagement()`. */
-export type CommentWithProfessorOnly = CommentColumns & {
   professor: CommentProfessorSummary | null
 }
 
@@ -96,15 +83,27 @@ export type CommentFlaggedSummary = CommentColumns & {
 // Response shapes (post-`attachEngagement()` — what the client receives)
 // -----------------------------------------------------------------------------
 
-/** `GET /script/:scriptId`'s response shape (`Array<CommentSummary>`
- * directly), and `PATCH /:id`'s `{ success, comment }` shape. */
+/** A root comment as returned by the paginated comment-list routes and
+ * `PATCH /:id`'s `{ success, comment }` response. */
 export type CommentSummary = CommentWithAuthorAndProfessor & CommentEngagement
 
-/** `GET /professor/:professorId`'s response shape — `Array<CommentByProfessor>` directly. */
-export type CommentByProfessor = CommentWithAuthorOnly & CommentEngagement
+export type CommentPage<T> = {
+  items: Array<T>
+  hasMore: boolean
+  /** Number of top-level rows (or direct replies on a reply page). */
+  totalCount: number
+  /** Total comments matching the target, including nested replies. */
+  totalCommentCount?: number
+}
 
-/** `GET /user/:userId`'s response shape — `Array<CommentByUser>` directly. */
-export type CommentByUser = CommentWithProfessorOnly & CommentEngagement
+export type CommentReplySummary = CommentSummary & {
+  has_replies: boolean
+}
+
+export type CommentWithReplyPreview = CommentSummary & {
+  replies: Array<CommentReplySummary>
+  replies_has_more: boolean
+}
 
 /** `POST /`'s `{ success, comment }` shape and `POST /:commentId/replies`'s
  * `{ success, reply }` shape — identical, just wrapped under a different

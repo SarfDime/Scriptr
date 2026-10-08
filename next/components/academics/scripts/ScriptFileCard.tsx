@@ -1,16 +1,19 @@
 'use client'
 
+import EyeOpen from '@sanity/icons/EyeOpen'
+import { UI_STRINGS } from '@shared/config/strings'
 import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
 import type { ScriptFile } from '@shared/types/scripts.types'
 import { useState } from 'react'
 import { Box } from '@/components/common/Box'
+import { Button } from '@/components/common/Button'
 import { Text } from '@/components/typography/Text'
 import { Badge } from '@/components/ui/Badge'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
 import { formatFileSize, getPreviewableKind } from '@/lib/file-preview'
+import { ScriptDownloadButton } from './actions/ScriptDownloadButton'
 import { FilePreviewModal } from './FilePreviewModal'
-import { ScriptFileActions } from './ScriptFileActions'
 import { ScriptFileThumbnail } from './ScriptFileThumbnail'
 import { ScriptPanel } from './ScriptPanel'
 
@@ -39,6 +42,8 @@ export function ScriptFileCard({
   const displayPosition = file.position + 1
   const fileName = SCRIPT_STRINGS.file.name(displayPosition, file.file_type)
   const openPreview = () => setIsPreviewOpen(true)
+
+  const buttonClass = cn('grow button-md', isWide && '@md:min-w-28 @md:grow-0')
 
   return (
     // `@container` makes the card the query container for the `@md:` variants
@@ -79,23 +84,34 @@ export function ScriptFileCard({
                 {SCRIPT_STRINGS.file.label(displayPosition)}
               </Text>
               <Badge colorPalette={color}>{file.file_type.toUpperCase()}</Badge>
-              <Text className='ui-caption text-grey-500'>
+              <Text className='ui-caption'>
                 {formatFileSize(file.file_size_bytes)}
               </Text>
             </Box>
             {isWide && (
-              <Text className='ui-caption text-grey-500'>
+              <Text className='ui-caption'>
                 {SCRIPT_STRINGS.file.summary(file.file_type, Boolean(kind))}
               </Text>
             )}
           </Box>
-          <ScriptFileActions
-            scriptId={scriptId}
-            file={file}
-            canPreview={Boolean(kind)}
-            isWide={isWide}
-            onPreview={openPreview}
-          />
+          <Box className='ui-cluster gap-2'>
+            {Boolean(kind) && (
+              <Button
+                onClick={openPreview}
+                className={cn('button hollow', buttonClass)}
+              >
+                <EyeOpen className={'overwrite size-5 shrink-0'} />
+                {UI_STRINGS.scripts.actions.preview}
+              </Button>
+            )}
+            <ScriptDownloadButton
+              scriptId={scriptId}
+              file={file}
+              className={cn('solid', buttonClass)}
+            >
+              {UI_STRINGS.scripts.actions.download}
+            </ScriptDownloadButton>
+          </Box>
         </Box>
       </Box>
       {kind && (

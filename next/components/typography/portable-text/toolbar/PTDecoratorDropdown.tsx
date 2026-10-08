@@ -2,7 +2,6 @@
 
 import { useEditor, useEditorSelector } from '@portabletext/editor'
 import { PT_STRINGS } from '@shared/config/pt-strings'
-import { useMemo } from 'react'
 import { activeDecoratorsSelector } from './activeDecoratorsSelector'
 import { PTDropdown } from './PTDropdown'
 import { type PTIconComponent, resolveDecoratorIcon } from './PTicons'
@@ -24,7 +23,7 @@ export const DecoratorDropdown = ({
   fallbackIcon?: PTIconComponent
 }) => {
   const editor = useEditor()
-  const selector = useMemo(() => activeDecoratorsSelector(names), [names])
+  const selector = activeDecoratorsSelector(names)
   const active = useEditorSelector(editor, selector)
 
   const toggle = (name: string) => {
@@ -37,7 +36,13 @@ export const DecoratorDropdown = ({
     .filter((icon): icon is PTIconComponent => Boolean(icon))
 
   return (
-    <PTDropdown label={label} title={title} icon={fallbackIcon} icons={icons}>
+    <PTDropdown
+      label={label}
+      title={title}
+      icon={fallbackIcon}
+      icons={icons}
+      active={active.length > 0}
+    >
       {names.map((name) => (
         <RowButton
           key={name}

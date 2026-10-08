@@ -30,7 +30,7 @@ const ColorDecorators: Record<
     <span className='text-brand'>{children}</span>
   ),
   'brand-light': ({ children }: PortableTextMarkComponentProps) => (
-    <span className='text-brand-400'>{children}</span>
+    <span className='text-brand-500'>{children}</span>
   ),
   muted: ({ children }: PortableTextMarkComponentProps) => (
     <span className='text-grey'>{children}</span>

@@ -18,12 +18,9 @@ import {
 } from './FilePreviewContent'
 
 // Wider than the dialog default so PDFs and images have room; `md:min-w-0`
-// cancels the default minimum width, and the padding is moved off the dialog
-// so the header bar can run edge to edge.
-const PREVIEW_DIALOG_CLASS =
-  'overflow-hidden rounded-2xl border border-grey-300 bg-background-100 p-0 shadow-lg md:w-[min(64rem,calc(100vw-2rem))] md:min-w-0'
-const PREVIEW_HEADER_CLASS =
-  'flex items-center justify-between gap-3 border-b border-grey-300 bg-background-200 px-5 py-3'
+// cancels the default minimum width.
+const PREVIEW_DIALOG_CLASS = 'md:w-[min(64rem,calc(100vw-2rem))] md:min-w-0'
+const PREVIEW_HEADER_CLASS = 'bg-background-200 py-3'
 
 // Either an already-uploaded remote file (ScriptDetailPage, PreviewScriptModal)
 // or a local File the user just picked, not yet uploaded (CreateScriptModal).
@@ -91,7 +88,7 @@ export function FilePreviewModal({
             if (!event.defaultPrevented) setIsOpen(true)
           }}
           className={cn(
-            'button outline px-3 py-1.5 ui-caption',
+            'button button-sm hollow px-3 py-1.5',
             buttonProps.className
           )}
         >

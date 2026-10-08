@@ -27,7 +27,7 @@ export const ScriptCommentsLink = ({
       ],
     })}
     className={cn(
-      'ui-caption flex items-center gap-1.5 p-2 text-grey-500 hover:text-brand',
+      'ui-caption flex items-center gap-1.5 p-2 hover:text-brand',
       className
     )}
     aria-label={`View comments on ${scriptTitle}`}

@@ -55,7 +55,7 @@ export const academicGrouping = (
   entity: AcademicEntityType,
   keys: Array<GroupingKeys> = [...GROUPING_KEYS]
 ) => {
-  // TODO: Maybe add customization in the future, along with overrides
+  // Deferred: consider customization and overrides.
   const grouping = keys.map((key) => ({
     name: key,
     title: GROUPING_PRESETS[key].title,
@@ -256,7 +256,7 @@ export const academicBioField = (
   // 'string' goes through defineField's dedicated string overload, which
   // demands a StringRule-typed validator; richTextLite has no such overload,
   // so the generic Rule-typed validationRules.isRequired fits it directly.
-  return type === 'string' // TODO: Maybe remove bio
+  return type === 'string' // Deferred: consider removing bio.
     ? defineField({
         name: 'bio',
         title,

@@ -3,7 +3,7 @@ import { Hono } from 'hono'
 import { profileMutationTags } from '../../../shared/config/cache-tags'
 import type { ProfileSubjectSelection } from '../../../shared/types/profile.types'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
-import { requiredParam } from '../lib/request'
+import { databaseErrorResponse, requiredParam } from '../lib/request'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
@@ -21,7 +21,7 @@ profileSubjects.get('/', async (c) => {
     .eq('profile_id', user.id)
     .order('updated_at', { ascending: false })
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   await revalidateCacheTags(c.env, profileMutationTags(user.id))
   return c.json<Array<ProfileSubjectSelection>>(data ?? [])
 })
@@ -38,7 +38,7 @@ profileSubjects.get('/:subjectId', async (c) => {
     .eq('subject_id', subjectId)
     .maybeSingle()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json<ProfileSubjectSelection | null>(data)
 })
 
@@ -65,7 +65,7 @@ profileSubjects.put('/:subjectId', async (c) => {
     .select('subject_id, status, updated_at, subject:subjects(*)')
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json<ProfileSubjectSelection>(data)
 })
 
@@ -80,7 +80,7 @@ profileSubjects.delete('/:subjectId', async (c) => {
     .eq('profile_id', user.id)
     .eq('subject_id', subjectId)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   await revalidateCacheTags(c.env, profileMutationTags(user.id))
   return c.json<{ success: true }>({ success: true })
 })

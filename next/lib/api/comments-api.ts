@@ -1,17 +1,31 @@
-import { apiRoutes } from '@shared/config/api-routes'
+import type { ApiEndpoint } from '@shared/config/api-routes'
+import { apiRoutes, withQuery } from '@shared/config/api-routes'
 import { COMMENT_CACHE_TAGS } from '@shared/config/comments-cache-tags'
+import {
+  COMMENT_REPLIES_PAGE_SIZE,
+  COMMENTS_PAGE_SIZE,
+  type CommentSort,
+} from '@shared/config/shared-constants'
 import type {
-  CommentByProfessor,
-  CommentByUser,
   CommentCreateResult,
+  CommentPage,
   CommentReactionToggleResponse,
+  CommentReplySummary,
   CommentSummary,
+  CommentWithReplyPreview,
   ReactionType,
 } from '@shared/types/comments.types'
 import type { PortableTextValue } from '@/lib/portable-text'
 import { apiFetch, cachedUnlessPersonalized } from './next-api'
 
+const COMMENT_RESPONSE_CACHE_VERSION = 3
+
 export type CommentTarget = { scriptId: string } | { professorId: string }
+
+export type CommentPageOptions = {
+  offset?: number
+  sort?: CommentSort
+}
 
 function targetBody(target: CommentTarget) {
   return 'scriptId' in target
@@ -19,30 +33,83 @@ function targetBody(target: CommentTarget) {
     : { professor_id: target.professorId }
 }
 
+async function getCommentPage<T>(
+  path: ApiEndpoint,
+  cookie: string | undefined,
+  tags: Array<string>,
+  options: CommentPageOptions = {}
+): Promise<CommentPage<T>> {
+  return apiFetch<CommentPage<T>>(
+    withQuery(path, {
+      limit: COMMENTS_PAGE_SIZE,
+      offset: options.offset ?? 0,
+      sort: options.sort ?? 'newest',
+      commentResponseVersion: COMMENT_RESPONSE_CACHE_VERSION,
+    }),
+    typeof window === 'undefined'
+      ? cachedUnlessPersonalized(cookie, tags)
+      : { cache: 'no-store' }
+  )
+}
+
 /** Shared/cached by default. Pass `cookie` so `my_reactions`/`liked_by_me`
  * reflect the requesting user, not whoever's request happened to populate
  * the cache first — attachEngagement() reads the session user server-side
- * to compute those two fields. Forwarding a cookie forces `no-store` (see
- * cachedUnlessPersonalized) for the same cross-user leak reason as
- * scripts-api.ts. */
-export const getScriptComments = (scriptId: string, cookie?: string) =>
-  apiFetch<Array<CommentSummary>>(
+ * to compute those two fields. */
+export const getScriptComments = (
+  scriptId: string,
+  cookie?: string,
+  options?: CommentPageOptions
+) =>
+  getCommentPage<CommentWithReplyPreview>(
     apiRoutes.comments.scriptByScriptId(scriptId),
-    cachedUnlessPersonalized(cookie, [COMMENT_CACHE_TAGS.script(scriptId)])
+    cookie,
+    [COMMENT_CACHE_TAGS.script(scriptId)],
+    options
   )
 
-export const getProfessorComments = (professorId: string, cookie?: string) =>
-  apiFetch<Array<CommentByProfessor>>(
+export const getProfessorComments = (
+  professorId: string,
+  cookie?: string,
+  options?: CommentPageOptions
+) =>
+  getCommentPage<CommentWithReplyPreview>(
     apiRoutes.comments.professorByProfessorId(professorId),
-    cachedUnlessPersonalized(cookie, [
-      COMMENT_CACHE_TAGS.professor(professorId),
-    ])
+    cookie,
+    [COMMENT_CACHE_TAGS.professor(professorId)],
+    options
   )
 
-export const getUserComments = (userId: string, cookie?: string) =>
-  apiFetch<Array<CommentByUser>>(
+export const getUserComments = (
+  userId: string,
+  cookie?: string,
+  options?: CommentPageOptions
+) =>
+  getCommentPage<CommentWithReplyPreview>(
     apiRoutes.comments.userByUserId(userId),
-    cachedUnlessPersonalized(cookie, [COMMENT_CACHE_TAGS.user(userId)])
+    cookie,
+    [COMMENT_CACHE_TAGS.user(userId)],
+    options
+  )
+
+export const getTargetComments = (
+  target: CommentTarget,
+  options: CommentPageOptions = {}
+): Promise<CommentPage<CommentWithReplyPreview>> =>
+  'scriptId' in target
+    ? getScriptComments(target.scriptId, undefined, options)
+    : getProfessorComments(target.professorId, undefined, options)
+
+export const getCommentReplies = (
+  commentId: string,
+  offset = 0
+): Promise<CommentPage<CommentReplySummary>> =>
+  apiFetch<CommentPage<CommentReplySummary>>(
+    withQuery(apiRoutes.comments.repliesByCommentId(commentId), {
+      limit: COMMENT_REPLIES_PAGE_SIZE,
+      offset,
+    }),
+    { cache: 'no-store' }
   )
 
 /** `POST /` (hono/src/routes/comments.ts) wraps its `CommentCreateResult`
@@ -62,20 +129,25 @@ export const postComment = (
     }
   )
 
+export const patchComment = (commentId: string, content: PortableTextValue) =>
+  apiFetch<{ success: true; comment: CommentSummary }>(
+    apiRoutes.comments.byId(commentId),
+    {
+      method: 'PATCH',
+      body: { content },
+    }
+  )
+
 /** `POST /:commentId/replies` wraps as `{ success, reply }` — moved here
  * from CommentSection.tsx, and corrected from `{ comment }` (the actual
  * key is `reply`; CommentSection was reading `.comment` off this call's
  * result too, which would have been `undefined` at runtime). */
-export const postReply = (
-  commentId: string,
-  target: CommentTarget,
-  content: PortableTextValue
-) =>
+export const postReply = (commentId: string, content: PortableTextValue) =>
   apiFetch<{ success: true; reply: CommentCreateResult }>(
     apiRoutes.comments.repliesByCommentId(commentId),
     {
       method: 'POST',
-      body: { content, ...targetBody(target) },
+      body: { content },
     }
   )
 
@@ -90,14 +162,13 @@ export const postReaction = (commentId: string, reactionType: ReactionType) =>
   )
 
 export const deleteComment = (commentId: string) =>
-  apiFetch<{ success: true; message: string }>(
-    apiRoutes.comments.byId(commentId),
-    { method: 'DELETE' }
-  )
+  apiFetch<{
+    success: true
+    message: string
+    totalCommentCount: number
+  }>(apiRoutes.comments.byId(commentId), { method: 'DELETE' })
 
-/** `POST /:commentId/like` wraps as `{ success, liked }`. Not
- * restriction-checked (API_DOCUMENTATION.md) — call directly, no
- * useProtectedAction wrapper, matching favorites/vote-removal treatment. */
+/** `POST /:commentId/like` wraps as `{ success, liked }`. */
 export const toggleLike = (commentId: string) =>
   apiFetch<{ success: true; liked: boolean }>(
     apiRoutes.comments.likeByCommentId(commentId),

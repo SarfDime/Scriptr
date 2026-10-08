@@ -10,6 +10,7 @@ export const PTDropdown = ({
   icon: Icon,
   icons,
   iconClass,
+  active = false,
   children,
 }: {
   label?: string
@@ -17,6 +18,8 @@ export const PTDropdown = ({
   icon?: PTIconComponent
   icons?: Array<PTIconComponent>
   iconClass?: string
+  /** Something inside is selected: the trigger takes the accent. */
+  active?: boolean
   children: ReactNode
 }) => {
   const detailsRef = useRef<HTMLDetailsElement>(null)
@@ -33,7 +36,7 @@ export const PTDropdown = ({
   const displayIcons =
     // biome-ignore lint/style/noNestedTernary: <Simplest way to do this>
     icons && icons.length > 0 ? icons.slice(0, 3) : Icon ? [Icon] : []
-  // TODO: Make sure children don't exit screen
+  // Deferred: keep dropdown children within the viewport.
   return (
     <details ref={detailsRef} onBlur={handleBlur} className='group relative'>
       <summary
@@ -42,7 +45,8 @@ export const PTDropdown = ({
         className={cn(
           'flex list-none items-center gap-1 rounded-md border border-grey-300',
           'cursor-pointer select-none bg-background px-2 py-1 text-fg text-xs',
-          '[&::-webkit-details-marker]:hidden'
+          '[&::-webkit-details-marker]:hidden',
+          active && 'border-brand-350 bg-brand-350 text-background'
         )}
       >
         {displayIcons?.map((iconComponent, index) => {

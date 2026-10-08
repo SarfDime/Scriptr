@@ -6,6 +6,7 @@ import { ScriptDetailItem } from './ScriptDetailItem'
 
 export type ScriptInfoFooterProps = {
   scriptId: string
+  isAuthor: boolean
   /** ISO timestamp of the script's last update. */
   updatedAt: string
 }
@@ -14,6 +15,7 @@ export type ScriptInfoFooterProps = {
  * on the right, under their own divider. */
 export function ScriptInfoFooter({
   scriptId,
+  isAuthor,
   updatedAt,
 }: ScriptInfoFooterProps) {
   return (
@@ -25,12 +27,14 @@ export function ScriptInfoFooter({
             {new Date(updatedAt).toLocaleDateString()}
           </ScriptDetailItem>
         </dl>
-        <FlagReportButton
-          targetType='script'
-          targetId={scriptId}
-          triggerLabel={SCRIPT_STRINGS.info.reportTrigger}
-          triggerClassName='button cp-warning-int shrink-0 gap-1.5 px-3 py-1.5 text-xs font-medium'
-        />
+        {!isAuthor && (
+          <FlagReportButton
+            targetType='script'
+            targetId={scriptId}
+            triggerLabel={SCRIPT_STRINGS.info.reportTrigger}
+            triggerClassName='button button-sm cp-warning-int shrink-0 gap-1.5 px-3 py-1.5 font-medium'
+          />
+        )}
       </Box>
     </Box>
   )

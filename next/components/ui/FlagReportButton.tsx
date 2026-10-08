@@ -1,26 +1,26 @@
 'use client'
 
 import WarningIcon from '@sanity/icons/WarningOutline'
-import type { FlagTargetType } from '@shared/types/api.types'
+import { UI_STRINGS } from '@shared/config/strings'
+import type { FlagRow, FlagTargetType } from '@shared/types/api.types'
 import { useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
-import { Text } from '@/components/typography/Text'
 import { useProtectedAction } from '@/hooks/useProtectedAction'
 import { useRequireSignIn } from '@/hooks/useRequireSignIn'
-import { submitFlag } from '@/lib/api/common-api'
+import { getMyFlags, submitFlag } from '@/lib/api/common-api'
+import { useToast } from '@/providers/toaster/ToasterProvider'
 import { TextArea } from '../typography/TextArea'
 import { Dialog } from './Dialog'
 
 export type FlagReportButtonProps = {
   targetType: FlagTargetType
   targetId: string
+  canReport?: boolean
   triggerLabel?: string
   /** Classes for the trigger button. Defaults to the attention-grabbing `button warning`; include `gap-1.5` in custom classes so the icon and label are spaced; pass something quieter where reports repeat (e.g. on every comment). */
   triggerClassName?: string
 }
-
-const MIN_REASON_LENGTH = 10
 
 /**
  * Reuses the shared Dialog for modal chrome. Flag creation is
@@ -35,80 +35,138 @@ const MIN_REASON_LENGTH = 10
 export function FlagReportButton({
   targetType,
   targetId,
-  triggerLabel = 'Report',
+  canReport = true,
+  triggerLabel = UI_STRINGS.flags.report,
   triggerClassName = 'button warning gap-1.5',
 }: FlagReportButtonProps) {
   const [reason, setReason] = useState('')
-  const [submitted, setSubmitted] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
+  const [hasPendingFlag, setHasPendingFlag] = useState<boolean | null>(null)
+  const [isCheckingFlag, setIsCheckingFlag] = useState(false)
   const requireSignIn = useRequireSignIn()
+  const { addToast } = useToast()
   const { state, run, reset } = useProtectedAction(submitFlag, {
-    errorTitle: 'Couldn’t submit report',
+    errorTitle: UI_STRINGS.flags.submitError,
   })
 
-  const isReasonValid = reason.trim().length >= MIN_REASON_LENGTH
+  const isReasonValid =
+    reason.trim().length >= UI_STRINGS.flags.minimumReasonLength
 
   const handleSubmit = async () => {
     if (!isReasonValid) return
     const result = await run(targetType, targetId, reason.trim())
-    if (result.ok) setSubmitted(true)
+    if (result.ok) {
+      setHasPendingFlag(true)
+      handleClose()
+      addToast({
+        type: 'success',
+        title: UI_STRINGS.flags.reportSubmitted,
+        description: UI_STRINGS.flags.submitted,
+      })
+    }
   }
 
-  const handleOpen = () => {
-    if (requireSignIn()) setIsOpen(true)
+  const flagMatchesTarget = (flag: FlagRow) => {
+    if (flag.status !== 'pending') return false
+
+    if (targetType === 'script') return flag.target_script_id === targetId
+    if (targetType === 'comment') return flag.target_comment_id === targetId
+    return flag.target_user_id === targetId
+  }
+
+  const handleOpen = async () => {
+    if (!requireSignIn()) return
+
+    if (hasPendingFlag) {
+      addToast({
+        type: 'info',
+        title: UI_STRINGS.flags.alreadyReportedTitle,
+        description: UI_STRINGS.flags.alreadyReportedDescription,
+      })
+      return
+    }
+
+    if (hasPendingFlag === false) {
+      setIsOpen(true)
+      return
+    }
+
+    setIsCheckingFlag(true)
+    try {
+      const flags = await getMyFlags()
+      const alreadyReported = flags.some(flagMatchesTarget)
+      setHasPendingFlag(alreadyReported)
+
+      if (alreadyReported) {
+        addToast({
+          type: 'info',
+          title: UI_STRINGS.flags.alreadyReportedTitle,
+          description: UI_STRINGS.flags.alreadyReportedDescription,
+        })
+        return
+      }
+
+      setIsOpen(true)
+    } catch {
+      addToast({
+        type: 'error',
+        title: UI_STRINGS.flags.checkStatusError,
+        description: UI_STRINGS.general.tryAgain,
+      })
+    } finally {
+      setIsCheckingFlag(false)
+    }
   }
 
   const handleClose = () => {
     setIsOpen(false)
     setReason('')
-    setSubmitted(false)
     reset()
   }
 
+  if (!canReport) return null
+
   return (
     <>
-      <Button onClick={handleOpen} className={triggerClassName}>
+      <Button
+        onClick={handleOpen}
+        disabled={isCheckingFlag}
+        className={triggerClassName}
+      >
         <WarningIcon />
         {triggerLabel}
       </Button>
-      <Dialog
-        title='Report content'
-        hideTrigger
-        isOpen={isOpen}
-        onClose={handleClose}
-      >
-        <Box className='ui-stack gap-3 p-4'>
-          {submitted ? (
-            <Text className='ui-body'>
-              Thanks — this has been reported for review.
-            </Text>
-          ) : (
-            <>
-              <Text className='ui-subtitle'>
-                Let us know what&apos;s wrong with this {targetType}. Reports
-                are reviewed by admins.
-              </Text>
-              <TextArea
-                value={reason}
-                inputOnChange={(event) => setReason(event.target.value)}
-                placeholder='Describe the issue (min. 10 characters)'
-                className='ui-card p-2 w-full'
-                rows={4}
-                aria-label='Report reason'
-              />
-              <Box className='ui-cluster gap-2 justify-end'>
-                <Button
-                  onClick={handleSubmit}
-                  disabled={!isReasonValid || state.status === 'pending'}
-                  className='button solid'
-                >
-                  Submit report
-                </Button>
-              </Box>
-            </>
-          )}
-        </Box>
-      </Dialog>
+      {isOpen && (
+        <Dialog
+          title={UI_STRINGS.flags.reportContent}
+          hideTrigger
+          isOpen={isOpen}
+          onClose={handleClose}
+        >
+          <Box className='ui-stack gap-3 p-5'>
+            <p className='ui-subtitle'>
+              {UI_STRINGS.flags.description(targetType)}
+            </p>
+            <TextArea
+              value={reason}
+              inputOnChange={(event) => setReason(event.target.value)}
+              placeholder={UI_STRINGS.flags.reasonPlaceholder}
+              className='ui-card p-2 w-full'
+              rows={4}
+              aria-label={UI_STRINGS.flags.reasonLabel}
+            />
+            <Box className='ui-cluster gap-2 justify-end'>
+              <Button
+                onClick={handleSubmit}
+                disabled={!isReasonValid || state.status === 'pending'}
+                className='button solid'
+              >
+                {UI_STRINGS.flags.submit}
+              </Button>
+            </Box>
+          </Box>
+        </Dialog>
+      )}
     </>
   )
 }

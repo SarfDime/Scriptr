@@ -1,4 +1,4 @@
-import { apiRoutes } from '@shared/config/api-routes'
+import { apiRoutes, withQuery } from '@shared/config/api-routes'
 import { SCRIPT_CACHE_TAGS } from '@shared/config/cache-tags'
 import type { ScriptFileInput } from '@shared/types/api.types'
 import type {
@@ -12,6 +12,8 @@ import type {
 import type { ScriptUploadInput } from '@/types/components/Scripts.types'
 import { apiFetch, cachedUnlessPersonalized } from './next-api'
 
+const SCRIPT_COMMENT_COUNT_CACHE_VERSION = 2
+
 /** Shared/cached by default. Pass `cookie` to reflect the caller's
  * faculty-scoped result — scripts.ts's list endpoints filter by the
  * session's selected faculties when a user is present, via
@@ -20,13 +22,17 @@ import { apiFetch, cachedUnlessPersonalized } from './next-api'
  * from another user's cache entry. */
 export const getScripts = (cookie?: string) =>
   apiFetch<Array<ScriptSummary>>(
-    apiRoutes.scripts.index,
+    withQuery(apiRoutes.scripts.index, {
+      commentCountVersion: SCRIPT_COMMENT_COUNT_CACHE_VERSION,
+    }),
     cachedUnlessPersonalized(cookie, [SCRIPT_CACHE_TAGS.list()])
   )
 
 export const getScriptsBySubject = (subjectId: string, cookie?: string) =>
   apiFetch<Array<ScriptSummary>>(
-    apiRoutes.scripts.subjectBySubjectId(subjectId),
+    withQuery(apiRoutes.scripts.subjectBySubjectId(subjectId), {
+      commentCountVersion: SCRIPT_COMMENT_COUNT_CACHE_VERSION,
+    }),
     cachedUnlessPersonalized(cookie, [
       SCRIPT_CACHE_TAGS.subject(subjectId),
       SCRIPT_CACHE_TAGS.list(),
@@ -35,7 +41,7 @@ export const getScriptsBySubject = (subjectId: string, cookie?: string) =>
 
 export const getTopScripts = (limit = 10, cookie?: string) =>
   apiFetch<Array<ScriptSummary>>(
-    apiRoutes.scripts.top(limit),
+    `${apiRoutes.scripts.top(limit)}&commentCountVersion=${SCRIPT_COMMENT_COUNT_CACHE_VERSION}`,
     cachedUnlessPersonalized(cookie, [SCRIPT_CACHE_TAGS.top()])
   )
 
@@ -65,7 +71,7 @@ export const getTopScriptsForSubjects = async (
 
 export const getPopularScripts = (limit = 10, cookie?: string) =>
   apiFetch<Array<ScriptSummary>>(
-    apiRoutes.scripts.popular(limit),
+    `${apiRoutes.scripts.popular(limit)}&commentCountVersion=${SCRIPT_COMMENT_COUNT_CACHE_VERSION}`,
     cachedUnlessPersonalized(cookie, [SCRIPT_CACHE_TAGS.popular()])
   )
 
@@ -76,7 +82,9 @@ export const getPopularScripts = (limit = 10, cookie?: string) =>
  * serving a cached result computed for a different user or no user. */
 export const getScript = (scriptId: string, cookie?: string) =>
   apiFetch<ScriptSummary>(
-    apiRoutes.scripts.byId(scriptId),
+    withQuery(apiRoutes.scripts.byId(scriptId), {
+      commentCountVersion: SCRIPT_COMMENT_COUNT_CACHE_VERSION,
+    }),
     cachedUnlessPersonalized(cookie, [SCRIPT_CACHE_TAGS.detail(scriptId)])
   )
 

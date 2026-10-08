@@ -42,29 +42,30 @@ export type Subject = {
   _updatedAt: string
   _rev: string
   name: string
-  slug: Slug
+  slug?: Slug
   code: string
   description?: RichTextLite
   keywords?: Array<string>
   credits: number
   year: number
+  elective?: boolean
   classes?: string
-  semester: 'winter' | 'summer'
+  semester: number
   professors: Array<
     {
       _key: string
     } & ProfessorReference
   >
-  syllabus: string
+  syllabus?: string
   study: StudyReference
   dbId?: string
 }
 
-export type FacultyReference = {
+export type SanityImageAssetReference = {
   _ref: string
   _type: 'reference'
   _weak?: boolean
-  [internalGroqTypeReferenceTo]?: 'faculty'
+  [internalGroqTypeReferenceTo]?: 'sanity.imageAsset'
 }
 
 export type PersonReference = {
@@ -74,6 +75,13 @@ export type PersonReference = {
   [internalGroqTypeReferenceTo]?: 'person'
 }
 
+export type FacultyReference = {
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'faculty'
+}
+
 export type Study = {
   _id: string
   _type: 'study'
@@ -81,19 +89,19 @@ export type Study = {
   _updatedAt: string
   _rev: string
   name: string
-  slug: Slug
+  slug?: Slug
+  picture?: {
+    asset?: SanityImageAssetReference
+    media?: unknown
+    hotspot?: SanityImageHotspot
+    crop?: SanityImageCrop
+    _type: 'image'
+  }
   description?: RichTextLite
   studentCount?: number
-  faculty: FacultyReference
   assistant?: PersonReference
+  faculty: FacultyReference
   dbId?: string
-}
-
-export type SanityImageAssetReference = {
-  _ref: string
-  _type: 'reference'
-  _weak?: boolean
-  [internalGroqTypeReferenceTo]?: 'sanity.imageAsset'
 }
 
 export type ButtonReference = {
@@ -140,47 +148,6 @@ export type RichTextLite = Array<{
   _key: string
 }>
 
-export type Slug = {
-  _type: 'slug'
-  current: string
-  source?: string
-}
-
-export type Professor = {
-  _id: string
-  _type: 'professor'
-  _createdAt: string
-  _updatedAt: string
-  _rev: string
-  name: string
-  slug: Slug
-  title?: string
-  description?: RichTextLite
-  picture?: {
-    asset?: SanityImageAssetReference
-    media?: unknown
-    hotspot?: SanityImageHotspot
-    crop?: SanityImageCrop
-    _type: 'image'
-  }
-  bio?: RichTextLite
-  officeLocation: string
-  telephone?: string
-  email?: string
-  website: string
-  faculties: Array<
-    {
-      _key: string
-    } & FacultyReference
-  >
-  studies?: Array<
-    {
-      _key: string
-    } & StudyReference
-  >
-  dbId?: string
-}
-
 export type SanityImageCrop = {
   _type: 'sanity.imageCrop'
   top: number
@@ -197,6 +164,47 @@ export type SanityImageHotspot = {
   width: number
 }
 
+export type Slug = {
+  _type: 'slug'
+  current: string
+  source?: string
+}
+
+export type Professor = {
+  _id: string
+  _type: 'professor'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  name: string
+  slug?: Slug
+  title?: string
+  description?: RichTextLite
+  picture?: {
+    asset?: SanityImageAssetReference
+    media?: unknown
+    hotspot?: SanityImageHotspot
+    crop?: SanityImageCrop
+    _type: 'image'
+  }
+  bio?: RichTextLite
+  officeLocation?: string
+  telephone?: string
+  email?: string
+  website?: string
+  faculties: Array<
+    {
+      _key: string
+    } & FacultyReference
+  >
+  studies?: Array<
+    {
+      _key: string
+    } & StudyReference
+  >
+  dbId?: string
+}
+
 export type UniversityReference = {
   _ref: string
   _type: 'reference'
@@ -211,7 +219,7 @@ export type Faculty = {
   _updatedAt: string
   _rev: string
   name: string
-  slug: Slug
+  slug?: Slug
   description?: RichTextLite
   studentCount?: number
   bio: string
@@ -239,7 +247,7 @@ export type Faculty = {
   streetAddress: string
   telephone: string
   email: string
-  website: string
+  website?: string
   university: UniversityReference
   dbId?: string
 }
@@ -265,7 +273,7 @@ export type University = {
     _type: 'image'
   }
   name: string
-  slug: Slug
+  slug?: Slug
   description?: RichTextLite
   rector?: PersonReference
   viceRectors?: Array<
@@ -276,7 +284,7 @@ export type University = {
   streetAddress: string
   telephone?: string
   email?: string
-  website: string
+  website?: string
   r2BucketId?: string
   dbId?: string
 }
@@ -403,6 +411,13 @@ export type InfoBlock = {
   >
 }
 
+export type StarCanvasReference = {
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'starCanvas'
+}
+
 export type NavMenuReference = {
   _ref: string
   _type: 'reference'
@@ -422,6 +437,8 @@ export type Website = {
   defaultSeoTitle?: string
   defaultSeoDescription?: string
   defaultKeywords?: Array<string>
+  dtBackground?: StarCanvasReference
+  ltBackground?: StarCanvasReference
   navAndFooterFields?: string
   navMenu: NavMenuReference
   pagesFields?: string
@@ -435,6 +452,299 @@ export type Website = {
       _key: string
     } & UniversityReference
   >
+}
+
+export type StarCanvas = {
+  _id: string
+  _type: 'starCanvas'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  starCount?: number
+  starColors?: Array<
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  >
+  starMinSize?: number
+  starMaxSize?: number
+  starDriftSpeed?: number
+  backgroundHazeColor?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  backgroundHazeOpacity?: number
+  backgroundHazeRadius?: number
+  shootingStarChance?: number
+  shootingStarColor?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  enableBlackHole?: boolean
+  blackHolePresetPosition?: 'center' | 'top-right' | 'bottom-right' | 'custom'
+  blackHoleXRatio?: number
+  blackHoleYRatio?: number
+  blackHoleRadius?: number
+  blackHoleGlowRadius?: number
+  blackHoleGravityRadius?: number
+  blackHoleGravityForce?: number
+  blackHoleHoverReachMultiplier?: number
+  blackHoleHoverGravityMultiplier?: number
+  blackHoleSmokeWisps?: number
+  blackHoleSmokeIntensity?: number
+  blackHoleSmokeSpeed?: number
+  blackHoleEdgeRipple?: number
+  blackHoleHoverRipple?: number
+  blackHoleCoronaWidth?: number
+  enableBlackHoleFlare?: boolean
+  blackHoleFlare?: number
+  blackHoleFlareSpin?: number
+  blackHoleRingGlow?: number
+  planetColors?: Array<
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  >
+  planetMinSize?: number
+  planetMaxSize?: number
+  planetRingChance?: number
+  planetSizeRarity?: number
+  enablePlanets?: boolean
+  planetCount?: number
+  planetOrbitMinRatio?: number
+  planetOrbitMaxRatio?: number
+  planetOrbitTilt?: number
+  planetSpeed?: number
+  planetHoverChaos?: number
+  freePlanetCount?: number
+  freePlanetDriftSpeed?: number
+  enableGalaxy?: boolean
+  galaxyPosition?:
+    | 'top-left'
+    | 'top-right'
+    | 'bottom-left'
+    | 'bottom-right'
+    | 'left'
+    | 'right'
+    | 'center'
+    | 'random'
+    | 'custom'
+  galaxyXRatio?: number
+  galaxyYRatio?: number
+  galaxyMinSize?: number
+  galaxyMaxSize?: number
+  galaxyTilt?: number
+  galaxyDriftFactor?: number
+  galaxyDriftDirection?:
+    | 'up-left'
+    | 'up'
+    | 'up-right'
+    | 'left'
+    | 'right'
+    | 'down-left'
+    | 'down'
+    | 'down-right'
+  galaxyOpacity?: number
+  galaxyWidthScale?: number
+  galaxyHeightScale?: number
+  galaxyDensity?: number
+  galaxyCenterDensity?: number
+  galaxyEndDensity?: number
+  galaxyCoreColor?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  galaxyArmColor?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  galaxyAccentColor?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  blackHoleCoreColor?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  blackHolePhotonRingColor?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  blackHoleBaseGlowColor?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  blackHoleCoronaColor?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  mobileScale?: number
+  mobileEnableBlackHole?: boolean
+  mobileBlackHolePresetPosition?:
+    | 'desktop'
+    | 'center'
+    | 'top-right'
+    | 'bottom-right'
+    | 'custom'
+  mobileBlackHoleXRatio?: number
+  mobileBlackHoleYRatio?: number
+  mobileEnableGalaxy?: boolean
+  mobileGalaxyPosition?:
+    | 'desktop'
+    | 'top-left'
+    | 'top-right'
+    | 'bottom-left'
+    | 'bottom-right'
+    | 'left'
+    | 'right'
+    | 'center'
+    | 'random'
+    | 'custom'
+  mobileGalaxyXRatio?: number
+  mobileGalaxyYRatio?: number
 }
 
 export type Person = {
@@ -770,16 +1080,16 @@ export type AllSanitySchemaTypes =
   | ProfessorReference
   | StudyReference
   | Subject
-  | FacultyReference
-  | PersonReference
-  | Study
   | SanityImageAssetReference
+  | PersonReference
+  | FacultyReference
+  | Study
   | ButtonReference
   | RichTextLite
-  | Slug
-  | Professor
   | SanityImageCrop
   | SanityImageHotspot
+  | Slug
+  | Professor
   | UniversityReference
   | Faculty
   | University
@@ -791,8 +1101,10 @@ export type AllSanitySchemaTypes =
   | FooterReference
   | Button
   | InfoBlock
+  | StarCanvasReference
   | NavMenuReference
   | Website
+  | StarCanvas
   | Person
   | SubMenuItem
   | NavItem
@@ -821,7 +1133,7 @@ export type AllSanitySchemaTypes =
 // Query: fn linkSelector::full($link) = $link{    defined(linkType) => {linkType},    defined(page) => {    "pageSlug": select(            page->._type == "page" => page->.pageSlug,            page->.slug        )    },    defined(section) => {"sectionSlug": section->.slug},    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "faculty"  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)  && university->slug.current == $universitySlug][0] {  _id,  "slug": slug.current,  name,  description,}
 export type FacultySeoQueryResult = {
   _id: string
-  slug: string
+  slug: string | null
   name: string
   description: RichTextLite | null
 } | null
@@ -831,7 +1143,7 @@ export type FacultySeoQueryResult = {
 // Query: fn linkSelector::full($link) = $link{    defined(linkType) => {linkType},    defined(page) => {    "pageSlug": select(            page->._type == "page" => page->.pageSlug,            page->.slug        )    },    defined(section) => {"sectionSlug": section->.slug},    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "faculty"  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)  && university->slug.current == $universitySlug][0]{_id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),dean->{  _id,  name,  title,  "picture": sanityImage::full(picture)},secretary->{  _id,  name,  title,  "picture": sanityImage::full(picture)},viceDeans[]->{  _id,  name,  title,  "picture": sanityImage::full(picture)},university->{  _id,  "slug": slug.current,  name,  dbId},"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {  _id,dbId,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),assistant->{  _id,  name,  title,  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  dbId,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  name,  dbId,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},},},}
 export type MinimalFacultyTypedQueryResult = {
   _id: string
-  slug: string
+  slug: string | null
   name: string
   studentCount: number | null
   picture: {
@@ -875,7 +1187,7 @@ export type MinimalFacultyTypedQueryResult = {
   }> | null
   university: {
     _id: string
-    slug: string
+    slug: string | null
     name: string
     dbId: string | null
   }
@@ -883,7 +1195,7 @@ export type MinimalFacultyTypedQueryResult = {
   professorCount: number
   professors: Array<{
     _id: string
-    slug: string
+    slug: string | null
     dbId: string | null
     name: string
     title: string | null
@@ -895,22 +1207,22 @@ export type MinimalFacultyTypedQueryResult = {
     } | null
     faculties: Array<{
       _id: string
-      slug: string
+      slug: string | null
       name: string
       university: {
         _id: string
-        slug: string
+        slug: string | null
         name: string
       }
     }>
     universities: Array<{
       _id: string
-      slug: string
+      slug: string | null
       name: string
     }>
     subjects: Array<{
       _id: string
-      slug: string
+      slug: string | null
       name: string
       code: string
     }>
@@ -918,10 +1230,15 @@ export type MinimalFacultyTypedQueryResult = {
   studies: Array<{
     _id: string
     dbId: string | null
-    slug: string
+    slug: string | null
     name: string
     studentCount: number | null
-    picture: null
+    picture: {
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
     assistant: {
       _id: string
       name: string
@@ -935,11 +1252,11 @@ export type MinimalFacultyTypedQueryResult = {
     } | null
     faculty: {
       _id: string
-      slug: string
+      slug: string | null
       name: string
       university: {
         _id: string
-        slug: string
+        slug: string | null
         name: string
       }
     }
@@ -947,7 +1264,7 @@ export type MinimalFacultyTypedQueryResult = {
     professorCount: number
     professors: Array<{
       _id: string
-      slug: string
+      slug: string | null
       dbId: string | null
       name: string
       title: string | null
@@ -959,22 +1276,22 @@ export type MinimalFacultyTypedQueryResult = {
       } | null
       faculties: Array<{
         _id: string
-        slug: string
+        slug: string | null
         name: string
         university: {
           _id: string
-          slug: string
+          slug: string | null
           name: string
         }
       }>
       universities: Array<{
         _id: string
-        slug: string
+        slug: string | null
         name: string
       }>
       subjects: Array<{
         _id: string
-        slug: string
+        slug: string | null
         name: string
         code: string
       }>
@@ -982,37 +1299,37 @@ export type MinimalFacultyTypedQueryResult = {
     subjects: Array<{
       _id: string
       dbId: string | null
-      slug: string
+      slug: string | null
       name: string
       code: string
       credits: number
       year: number
-      semester: 'summer' | 'winter'
+      semester: number
       description: RichTextLite | null
-      syllabus: string
+      syllabus: string | null
       faculty: {
         _id: string
-        slug: string
+        slug: string | null
         name: string
         dbId: string | null
         university: {
           _id: string
-          slug: string
+          slug: string | null
           name: string
         }
       }
       study: {
         _id: string
-        slug: string
+        slug: string | null
         name: string
         dbId: string | null
         faculty: {
           _id: string
-          slug: string
+          slug: string | null
           name: string
           university: {
             _id: string
-            slug: string
+            slug: string | null
             name: string
           }
         }
@@ -1020,7 +1337,7 @@ export type MinimalFacultyTypedQueryResult = {
       professors: Array<{
         _id: string
         dbId: string | null
-        slug: string
+        slug: string | null
         name: string
         title: string | null
       }>
@@ -1033,7 +1350,7 @@ export type MinimalFacultyTypedQueryResult = {
 // Query: fn linkSelector::full($link) = $link{    defined(linkType) => {linkType},    defined(page) => {    "pageSlug": select(            page->._type == "page" => page->.pageSlug,            page->.slug        )    },    defined(section) => {"sectionSlug": section->.slug},    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "faculty"  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)  && university->slug.current == $universitySlug][0] {  _id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),dean->{  _id,  name,  title,  "picture": sanityImage::full(picture)},secretary->{  _id,  name,  title,  "picture": sanityImage::full(picture)},viceDeans[]->{  _id,  name,  title,  "picture": sanityImage::full(picture)},university->{  _id,  "slug": slug.current,  name,  dbId},"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {  _id,dbId,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),assistant->{  _id,  name,  title,  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  dbId,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  name,  dbId,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},},},  _type,  dbId,  description,  streetAddress,  telephone,  email,  website,}
 export type FacultyDetailQueryResult = {
   _id: string
-  slug: string
+  slug: string | null
   name: string
   studentCount: number | null
   picture: {
@@ -1077,7 +1394,7 @@ export type FacultyDetailQueryResult = {
   }> | null
   university: {
     _id: string
-    slug: string
+    slug: string | null
     name: string
     dbId: string | null
   }
@@ -1085,7 +1402,7 @@ export type FacultyDetailQueryResult = {
   professorCount: number
   professors: Array<{
     _id: string
-    slug: string
+    slug: string | null
     dbId: string | null
     name: string
     title: string | null
@@ -1097,22 +1414,22 @@ export type FacultyDetailQueryResult = {
     } | null
     faculties: Array<{
       _id: string
-      slug: string
+      slug: string | null
       name: string
       university: {
         _id: string
-        slug: string
+        slug: string | null
         name: string
       }
     }>
     universities: Array<{
       _id: string
-      slug: string
+      slug: string | null
       name: string
     }>
     subjects: Array<{
       _id: string
-      slug: string
+      slug: string | null
       name: string
       code: string
     }>
@@ -1120,10 +1437,15 @@ export type FacultyDetailQueryResult = {
   studies: Array<{
     _id: string
     dbId: string | null
-    slug: string
+    slug: string | null
     name: string
     studentCount: number | null
-    picture: null
+    picture: {
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
     assistant: {
       _id: string
       name: string
@@ -1137,11 +1459,11 @@ export type FacultyDetailQueryResult = {
     } | null
     faculty: {
       _id: string
-      slug: string
+      slug: string | null
       name: string
       university: {
         _id: string
-        slug: string
+        slug: string | null
         name: string
       }
     }
@@ -1149,7 +1471,7 @@ export type FacultyDetailQueryResult = {
     professorCount: number
     professors: Array<{
       _id: string
-      slug: string
+      slug: string | null
       dbId: string | null
       name: string
       title: string | null
@@ -1161,22 +1483,22 @@ export type FacultyDetailQueryResult = {
       } | null
       faculties: Array<{
         _id: string
-        slug: string
+        slug: string | null
         name: string
         university: {
           _id: string
-          slug: string
+          slug: string | null
           name: string
         }
       }>
       universities: Array<{
         _id: string
-        slug: string
+        slug: string | null
         name: string
       }>
       subjects: Array<{
         _id: string
-        slug: string
+        slug: string | null
         name: string
         code: string
       }>
@@ -1184,37 +1506,37 @@ export type FacultyDetailQueryResult = {
     subjects: Array<{
       _id: string
       dbId: string | null
-      slug: string
+      slug: string | null
       name: string
       code: string
       credits: number
       year: number
-      semester: 'summer' | 'winter'
+      semester: number
       description: RichTextLite | null
-      syllabus: string
+      syllabus: string | null
       faculty: {
         _id: string
-        slug: string
+        slug: string | null
         name: string
         dbId: string | null
         university: {
           _id: string
-          slug: string
+          slug: string | null
           name: string
         }
       }
       study: {
         _id: string
-        slug: string
+        slug: string | null
         name: string
         dbId: string | null
         faculty: {
           _id: string
-          slug: string
+          slug: string | null
           name: string
           university: {
             _id: string
-            slug: string
+            slug: string | null
             name: string
           }
         }
@@ -1222,7 +1544,7 @@ export type FacultyDetailQueryResult = {
       professors: Array<{
         _id: string
         dbId: string | null
-        slug: string
+        slug: string | null
         name: string
         title: string | null
       }>
@@ -1234,7 +1556,7 @@ export type FacultyDetailQueryResult = {
   streetAddress: string
   telephone: string
   email: string
-  website: string
+  website: string | null
 } | null
 
 // Source: ../next/sanity/queries/academics/faculty.queries.ts
@@ -1250,7 +1572,7 @@ export type FacultyStaticParamsQueryResult = Array<{
 // Query: *[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {  _id,  "slug": slug.current,  name,  bio}
 export type ProfessorSeoQueryResult = {
   _id: string
-  slug: string
+  slug: string | null
   name: string
   bio: RichTextLite | null
 } | null
@@ -1260,7 +1582,7 @@ export type ProfessorSeoQueryResult = {
 // Query: fn linkSelector::full($link) = $link{    defined(linkType) => {linkType},    defined(page) => {    "pageSlug": select(            page->._type == "page" => page->.pageSlug,            page->.slug        )    },    defined(section) => {"sectionSlug": section->.slug},    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {_id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},}
 export type MinimalProfessorTypedQueryResult = {
   _id: string
-  slug: string
+  slug: string | null
   dbId: string | null
   name: string
   title: string | null
@@ -1272,22 +1594,22 @@ export type MinimalProfessorTypedQueryResult = {
   } | null
   faculties: Array<{
     _id: string
-    slug: string
+    slug: string | null
     name: string
     university: {
       _id: string
-      slug: string
+      slug: string | null
       name: string
     }
   }>
   universities: Array<{
     _id: string
-    slug: string
+    slug: string | null
     name: string
   }>
   subjects: Array<{
     _id: string
-    slug: string
+    slug: string | null
     name: string
     code: string
   }>
@@ -1298,7 +1620,7 @@ export type MinimalProfessorTypedQueryResult = {
 // Query: fn linkSelector::full($link) = $link{    defined(linkType) => {linkType},    defined(page) => {    "pageSlug": select(            page->._type == "page" => page->.pageSlug,            page->.slug        )    },    defined(section) => {"sectionSlug": section->.slug},    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},  _type,  bio,  office,  telephone,  email,  website,  faculties[]->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    }  },  "subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {    _id,    "slug": slug.current,    name,    year,    code,    credits,    study->{      _id,      "slug": slug.current,      faculty->{        _id,        "slug": slug.current,        name,        university->{          _id,          "slug": slug.current,          name,        }      }    }  }}
 export type ProfessorDetailQueryResult = {
   _id: string
-  slug: string
+  slug: string | null
   dbId: string | null
   name: string
   title: string | null
@@ -1310,36 +1632,36 @@ export type ProfessorDetailQueryResult = {
   } | null
   faculties: Array<{
     _id: string
-    slug: string
+    slug: string | null
     name: string
     university: {
       _id: string
-      slug: string
+      slug: string | null
       name: string
     }
   }>
   universities: Array<{
     _id: string
-    slug: string
+    slug: string | null
     name: string
   }>
   subjects: Array<{
     _id: string
-    slug: string
+    slug: string | null
     name: string
     year: number
     code: string
     credits: number
     study: {
       _id: string
-      slug: string
+      slug: string | null
       faculty: {
         _id: string
-        slug: string
+        slug: string | null
         name: string
         university: {
           _id: string
-          slug: string
+          slug: string | null
           name: string
         }
       }
@@ -1350,7 +1672,7 @@ export type ProfessorDetailQueryResult = {
   office: null
   telephone: string | null
   email: string | null
-  website: string
+  website: string | null
 } | null
 
 // Source: ../next/sanity/queries/academics/professor.queries.ts
@@ -1365,7 +1687,7 @@ export type ProfessorStaticParamsQueryResult = Array<{
 // Query: *[_type == "study"  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)  && faculty->slug.current == $facultySlug  && faculty->university->slug.current == $universitySlug][0] {  _id,  "slug": slug.current,  name,  description,}
 export type StudySeoQueryResult = {
   _id: string
-  slug: string
+  slug: string | null
   name: string
   description: RichTextLite | null
 } | null
@@ -1376,10 +1698,15 @@ export type StudySeoQueryResult = {
 export type MinimalStudyTypedQueryResult = {
   _id: string
   dbId: string | null
-  slug: string
+  slug: string | null
   name: string
   studentCount: number | null
-  picture: null
+  picture: {
+    asset: SanityImageAssetReference | null
+    crop: SanityImageCrop | null
+    hotspot: SanityImageHotspot | null
+    alt: string | null
+  } | null
   assistant: {
     _id: string
     name: string
@@ -1393,11 +1720,11 @@ export type MinimalStudyTypedQueryResult = {
   } | null
   faculty: {
     _id: string
-    slug: string
+    slug: string | null
     name: string
     university: {
       _id: string
-      slug: string
+      slug: string | null
       name: string
     }
   }
@@ -1405,7 +1732,7 @@ export type MinimalStudyTypedQueryResult = {
   professorCount: number
   professors: Array<{
     _id: string
-    slug: string
+    slug: string | null
     dbId: string | null
     name: string
     title: string | null
@@ -1417,22 +1744,22 @@ export type MinimalStudyTypedQueryResult = {
     } | null
     faculties: Array<{
       _id: string
-      slug: string
+      slug: string | null
       name: string
       university: {
         _id: string
-        slug: string
+        slug: string | null
         name: string
       }
     }>
     universities: Array<{
       _id: string
-      slug: string
+      slug: string | null
       name: string
     }>
     subjects: Array<{
       _id: string
-      slug: string
+      slug: string | null
       name: string
       code: string
     }>
@@ -1440,37 +1767,37 @@ export type MinimalStudyTypedQueryResult = {
   subjects: Array<{
     _id: string
     dbId: string | null
-    slug: string
+    slug: string | null
     name: string
     code: string
     credits: number
     year: number
-    semester: 'summer' | 'winter'
+    semester: number
     description: RichTextLite | null
-    syllabus: string
+    syllabus: string | null
     faculty: {
       _id: string
-      slug: string
+      slug: string | null
       name: string
       dbId: string | null
       university: {
         _id: string
-        slug: string
+        slug: string | null
         name: string
       }
     }
     study: {
       _id: string
-      slug: string
+      slug: string | null
       name: string
       dbId: string | null
       faculty: {
         _id: string
-        slug: string
+        slug: string | null
         name: string
         university: {
           _id: string
-          slug: string
+          slug: string | null
           name: string
         }
       }
@@ -1478,7 +1805,7 @@ export type MinimalStudyTypedQueryResult = {
     professors: Array<{
       _id: string
       dbId: string | null
-      slug: string
+      slug: string | null
       name: string
       title: string | null
     }>
@@ -1491,10 +1818,15 @@ export type MinimalStudyTypedQueryResult = {
 export type StudyDetailQueryResult = {
   _id: string
   dbId: string | null
-  slug: string
+  slug: string | null
   name: string
   studentCount: number | null
-  picture: null
+  picture: {
+    asset: SanityImageAssetReference | null
+    crop: SanityImageCrop | null
+    hotspot: SanityImageHotspot | null
+    alt: string | null
+  } | null
   assistant: {
     _id: string
     name: string
@@ -1508,11 +1840,11 @@ export type StudyDetailQueryResult = {
   } | null
   faculty: {
     _id: string
-    slug: string
+    slug: string | null
     name: string
     university: {
       _id: string
-      slug: string
+      slug: string | null
       name: string
     }
   }
@@ -1520,7 +1852,7 @@ export type StudyDetailQueryResult = {
   professorCount: number
   professors: Array<{
     _id: string
-    slug: string
+    slug: string | null
     dbId: string | null
     name: string
     title: string | null
@@ -1532,22 +1864,22 @@ export type StudyDetailQueryResult = {
     } | null
     faculties: Array<{
       _id: string
-      slug: string
+      slug: string | null
       name: string
       university: {
         _id: string
-        slug: string
+        slug: string | null
         name: string
       }
     }>
     universities: Array<{
       _id: string
-      slug: string
+      slug: string | null
       name: string
     }>
     subjects: Array<{
       _id: string
-      slug: string
+      slug: string | null
       name: string
       code: string
     }>
@@ -1555,37 +1887,37 @@ export type StudyDetailQueryResult = {
   subjects: Array<{
     _id: string
     dbId: string | null
-    slug: string
+    slug: string | null
     name: string
     code: string
     credits: number
     year: number
-    semester: 'summer' | 'winter'
+    semester: number
     description: RichTextLite | null
-    syllabus: string
+    syllabus: string | null
     faculty: {
       _id: string
-      slug: string
+      slug: string | null
       name: string
       dbId: string | null
       university: {
         _id: string
-        slug: string
+        slug: string | null
         name: string
       }
     }
     study: {
       _id: string
-      slug: string
+      slug: string | null
       name: string
       dbId: string | null
       faculty: {
         _id: string
-        slug: string
+        slug: string | null
         name: string
         university: {
           _id: string
-          slug: string
+          slug: string | null
           name: string
         }
       }
@@ -1593,7 +1925,7 @@ export type StudyDetailQueryResult = {
     professors: Array<{
       _id: string
       dbId: string | null
-      slug: string
+      slug: string | null
       name: string
       title: string | null
     }>
@@ -1620,7 +1952,7 @@ export type StudyStaticParamsQueryResult = Array<{
 // Query: *[_type == "subject"  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)  && study->slug.current == $studySlug  && study->faculty->slug.current == $facultySlug  && study->faculty->university->slug.current == $universitySlug][0] {  _id,  "slug": slug.current,  name,  description,}
 export type SubjectSeoQueryResult = {
   _id: string
-  slug: string
+  slug: string | null
   name: string
   description: RichTextLite | null
 } | null
@@ -1631,37 +1963,37 @@ export type SubjectSeoQueryResult = {
 export type MinimalSubjectQueryTypedResult = {
   _id: string
   dbId: string | null
-  slug: string
+  slug: string | null
   name: string
   code: string
   credits: number
   year: number
-  semester: 'summer' | 'winter'
+  semester: number
   description: RichTextLite | null
-  syllabus: string
+  syllabus: string | null
   faculty: {
     _id: string
-    slug: string
+    slug: string | null
     name: string
     dbId: string | null
     university: {
       _id: string
-      slug: string
+      slug: string | null
       name: string
     }
   }
   study: {
     _id: string
-    slug: string
+    slug: string | null
     name: string
     dbId: string | null
     faculty: {
       _id: string
-      slug: string
+      slug: string | null
       name: string
       university: {
         _id: string
-        slug: string
+        slug: string | null
         name: string
       }
     }
@@ -1669,7 +2001,7 @@ export type MinimalSubjectQueryTypedResult = {
   professors: Array<{
     _id: string
     dbId: string | null
-    slug: string
+    slug: string | null
     name: string
     title: string | null
   }>
@@ -1681,44 +2013,44 @@ export type MinimalSubjectQueryTypedResult = {
 export type SubjectDetailQueryResult = {
   _id: string
   dbId: string | null
-  slug: string
+  slug: string | null
   name: string
   code: string
   credits: number
   year: number
-  semester: 'summer' | 'winter'
+  semester: number
   description: RichTextLite | null
-  syllabus: string
+  syllabus: string | null
   faculty: {
     _id: string
-    slug: string
+    slug: string | null
     name: string
     dbId: string | null
     university: {
       _id: string
-      slug: string
+      slug: string | null
       name: string
     }
   }
   study: {
     _id: string
-    slug: string
+    slug: string | null
     name: string
     dbId: string | null
     faculty: {
       _id: string
-      slug: string
+      slug: string | null
       name: string
       university: {
         _id: string
-        slug: string
+        slug: string | null
         name: string
       }
     }
   }
   professors: Array<{
     _id: string
-    slug: string
+    slug: string | null
     name: string
     dbId: string | null
     title: string | null
@@ -1740,44 +2072,44 @@ export type SubjectDetailQueryResult = {
 export type SubjectByIdQueryResult = {
   _id: string
   dbId: string | null
-  slug: string
+  slug: string | null
   name: string
   code: string
   credits: number
   year: number
-  semester: 'summer' | 'winter'
+  semester: number
   description: RichTextLite | null
-  syllabus: string
+  syllabus: string | null
   faculty: {
     _id: string
-    slug: string
+    slug: string | null
     name: string
     dbId: string | null
     university: {
       _id: string
-      slug: string
+      slug: string | null
       name: string
     }
   }
   study: {
     _id: string
-    slug: string
+    slug: string | null
     name: string
     dbId: string | null
     faculty: {
       _id: string
-      slug: string
+      slug: string | null
       name: string
       university: {
         _id: string
-        slug: string
+        slug: string | null
         name: string
       }
     }
   }
   professors: Array<{
     _id: string
-    slug: string
+    slug: string | null
     name: string
     dbId: string | null
     title: string | null
@@ -1818,11 +2150,11 @@ export type SubjectStaticParamsQueryResult = Array<{
 // Query: *[_type == "university" && dbId != null] | order(name asc) {  _id,  "slug": slug.current,  name,  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {    _id,    "slug": slug.current,    name,  }}
 export type UniversityGalleryQueryResult = Array<{
   _id: string
-  slug: string
+  slug: string | null
   name: string
   faculties: Array<{
     _id: string
-    slug: string
+    slug: string | null
     name: string
   }>
 }>
@@ -1832,7 +2164,7 @@ export type UniversityGalleryQueryResult = Array<{
 // Query: *[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {  _id,  "slug": slug.current,  name,  description,}
 export type UniversitySeoQueryResult = {
   _id: string
-  slug: string
+  slug: string | null
   name: string
   description: RichTextLite | null
 } | null
@@ -1842,7 +2174,7 @@ export type UniversitySeoQueryResult = {
 // Query: fn linkSelector::full($link) = $link{    defined(linkType) => {linkType},    defined(page) => {    "pageSlug": select(            page->._type == "page" => page->.pageSlug,            page->.slug        )    },    defined(section) => {"sectionSlug": section->.slug},    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {  _id,  "slug": slug.current,  dbId,  _type,  name,  description,  streetAddress,  telephone,  email,  website,  rector->{    _id,    name,    title,    image  },  viceRectors[]->{    _id,    name,    title,    image  },  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {    _id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),dean->{  _id,  name,  title,  "picture": sanityImage::full(picture)},secretary->{  _id,  name,  title,  "picture": sanityImage::full(picture)},viceDeans[]->{  _id,  name,  title,  "picture": sanityImage::full(picture)},university->{  _id,  "slug": slug.current,  name,  dbId},"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {  _id,dbId,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),assistant->{  _id,  name,  title,  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  dbId,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  name,  dbId,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},},},  }}
 export type UniversityDetailQueryResult = {
   _id: string
-  slug: string
+  slug: string | null
   dbId: string | null
   _type: 'university'
   name: string
@@ -1850,7 +2182,7 @@ export type UniversityDetailQueryResult = {
   streetAddress: string
   telephone: string | null
   email: string | null
-  website: string
+  website: string | null
   rector: {
     _id: string
     name: string
@@ -1865,7 +2197,7 @@ export type UniversityDetailQueryResult = {
   }> | null
   faculties: Array<{
     _id: string
-    slug: string
+    slug: string | null
     name: string
     studentCount: number | null
     picture: {
@@ -1909,7 +2241,7 @@ export type UniversityDetailQueryResult = {
     }> | null
     university: {
       _id: string
-      slug: string
+      slug: string | null
       name: string
       dbId: string | null
     }
@@ -1917,7 +2249,7 @@ export type UniversityDetailQueryResult = {
     professorCount: number
     professors: Array<{
       _id: string
-      slug: string
+      slug: string | null
       dbId: string | null
       name: string
       title: string | null
@@ -1929,22 +2261,22 @@ export type UniversityDetailQueryResult = {
       } | null
       faculties: Array<{
         _id: string
-        slug: string
+        slug: string | null
         name: string
         university: {
           _id: string
-          slug: string
+          slug: string | null
           name: string
         }
       }>
       universities: Array<{
         _id: string
-        slug: string
+        slug: string | null
         name: string
       }>
       subjects: Array<{
         _id: string
-        slug: string
+        slug: string | null
         name: string
         code: string
       }>
@@ -1952,10 +2284,15 @@ export type UniversityDetailQueryResult = {
     studies: Array<{
       _id: string
       dbId: string | null
-      slug: string
+      slug: string | null
       name: string
       studentCount: number | null
-      picture: null
+      picture: {
+        asset: SanityImageAssetReference | null
+        crop: SanityImageCrop | null
+        hotspot: SanityImageHotspot | null
+        alt: string | null
+      } | null
       assistant: {
         _id: string
         name: string
@@ -1969,11 +2306,11 @@ export type UniversityDetailQueryResult = {
       } | null
       faculty: {
         _id: string
-        slug: string
+        slug: string | null
         name: string
         university: {
           _id: string
-          slug: string
+          slug: string | null
           name: string
         }
       }
@@ -1981,7 +2318,7 @@ export type UniversityDetailQueryResult = {
       professorCount: number
       professors: Array<{
         _id: string
-        slug: string
+        slug: string | null
         dbId: string | null
         name: string
         title: string | null
@@ -1993,22 +2330,22 @@ export type UniversityDetailQueryResult = {
         } | null
         faculties: Array<{
           _id: string
-          slug: string
+          slug: string | null
           name: string
           university: {
             _id: string
-            slug: string
+            slug: string | null
             name: string
           }
         }>
         universities: Array<{
           _id: string
-          slug: string
+          slug: string | null
           name: string
         }>
         subjects: Array<{
           _id: string
-          slug: string
+          slug: string | null
           name: string
           code: string
         }>
@@ -2016,37 +2353,37 @@ export type UniversityDetailQueryResult = {
       subjects: Array<{
         _id: string
         dbId: string | null
-        slug: string
+        slug: string | null
         name: string
         code: string
         credits: number
         year: number
-        semester: 'summer' | 'winter'
+        semester: number
         description: RichTextLite | null
-        syllabus: string
+        syllabus: string | null
         faculty: {
           _id: string
-          slug: string
+          slug: string | null
           name: string
           dbId: string | null
           university: {
             _id: string
-            slug: string
+            slug: string | null
             name: string
           }
         }
         study: {
           _id: string
-          slug: string
+          slug: string | null
           name: string
           dbId: string | null
           faculty: {
             _id: string
-            slug: string
+            slug: string | null
             name: string
             university: {
               _id: string
-              slug: string
+              slug: string | null
               name: string
             }
           }
@@ -2054,7 +2391,7 @@ export type UniversityDetailQueryResult = {
         professors: Array<{
           _id: string
           dbId: string | null
-          slug: string
+          slug: string | null
           name: string
           title: string | null
         }>
@@ -2460,7 +2797,7 @@ export type NavMenuQueryResult =
 
 // Source: ../next/sanity/queries/onboarding.queries.ts
 // Variable: onboardingCatalogQuery
-// Query: {   "universities": *[_type == "university" && dbId != null]{ _id, dbId, name },  "faculties": *[_type == "faculty" && university._ref != null && dbId != null]{ _id, dbId, name, "universityId": university._ref },  "studies": *[_type == "study" && faculty._ref != null && dbId != null]{    _id,    dbId,    name,    "facultyId": faculty._ref,    "subjectsByYear": *[_type == "subject" && study._ref == ^._id && dbId != null        && _id == (*[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(_id asc)[0]._id)      ] | order(year asc){      year,      "subjects": *[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(name asc){        _id, dbId, name, year, "studyId": study._ref      }    },  },  "subjects": *[_type == "subject" && study._ref != null && dbId != null] | order(year asc){ _id, dbId, name, year, "studyId": study._ref }}
+// Query: {  "universities": *[_type == "university" && dbId != null]{ _id, dbId, name },  "faculties": *[_type == "faculty" && university._ref != null && dbId != null]{ _id, dbId, name, "universityId": university._ref },  "studies": *[_type == "study" && faculty._ref != null && dbId != null]{    _id,    dbId,    name,    "facultyId": faculty._ref,    "subjectsByYear": *[_type == "subject" && study._ref == ^._id && dbId != null        && _id == (*[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(_id asc)[0]._id)      ] | order(year asc){      year,      "subjects": *[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(name asc){        _id, dbId, name, year, "studyId": study._ref      }    },  },  "subjects": *[_type == "subject" && study._ref != null && dbId != null] | order(year asc){      _id,  dbId,  "slug": slug.current,  name,  code,  credits,  year,  semester,  "faculty": study->faculty->{    _id,    "slug": slug.current,    name,    dbId,    university->{      _id,      "slug": slug.current,      name,    },  },  study->{    _id,    "slug": slug.current,    name,    dbId,    faculty->{      _id,      "slug": slug.current,      name,      university->{        _id,        "slug": slug.current,        name,      },    },  },  professors[]->{    _id,    dbId,    "slug": slug.current,    name,    title,  },  }}
 export type OnboardingCatalogQueryResult = {
   universities: Array<{
     _id: string
@@ -2492,9 +2829,46 @@ export type OnboardingCatalogQueryResult = {
   subjects: Array<{
     _id: string
     dbId: string
+    slug: string | null
     name: string
+    code: string
+    credits: number
     year: number
-    studyId: string
+    semester: number
+    faculty: {
+      _id: string
+      slug: string | null
+      name: string
+      dbId: string | null
+      university: {
+        _id: string
+        slug: string | null
+        name: string
+      }
+    }
+    study: {
+      _id: string
+      slug: string | null
+      name: string
+      dbId: string | null
+      faculty: {
+        _id: string
+        slug: string | null
+        name: string
+        university: {
+          _id: string
+          slug: string | null
+          name: string
+        }
+      }
+    }
+    professors: Array<{
+      _id: string
+      dbId: string | null
+      slug: string | null
+      name: string
+      title: string | null
+    }>
   }>
 }
 
@@ -2521,7 +2895,298 @@ export type WebsiteSeoQueryResult =
 // Source: ../next/sanity/queries/website.queries.ts
 // Variable: starCanvasQuery
 // Query: *[_id == $WEBSITE][0]{  dtBackground->{...}}.dtBackground
-export type StarCanvasQueryResult = null
+export type StarCanvasQueryResult = null | {
+  _id: string
+  _type: 'starCanvas'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  starCount?: number
+  starColors?: Array<
+    | 'amber'
+    | 'background-1000'
+    | 'background-50'
+    | 'brand-300'
+    | 'brand-850'
+    | 'brand'
+    | 'error-red'
+    | 'golden-yellow'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'sky'
+    | 'yellow'
+  >
+  starMinSize?: number
+  starMaxSize?: number
+  starDriftSpeed?: number
+  backgroundHazeColor?:
+    | 'amber'
+    | 'background-1000'
+    | 'background-50'
+    | 'brand-300'
+    | 'brand-850'
+    | 'brand'
+    | 'error-red'
+    | 'golden-yellow'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'sky'
+    | 'yellow'
+  backgroundHazeOpacity?: number
+  backgroundHazeRadius?: number
+  shootingStarChance?: number
+  shootingStarColor?:
+    | 'amber'
+    | 'background-1000'
+    | 'background-50'
+    | 'brand-300'
+    | 'brand-850'
+    | 'brand'
+    | 'error-red'
+    | 'golden-yellow'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'sky'
+    | 'yellow'
+  enableBlackHole?: boolean
+  blackHolePresetPosition?: 'bottom-right' | 'center' | 'custom' | 'top-right'
+  blackHoleXRatio?: number
+  blackHoleYRatio?: number
+  blackHoleRadius?: number
+  blackHoleGlowRadius?: number
+  blackHoleGravityRadius?: number
+  blackHoleGravityForce?: number
+  blackHoleHoverReachMultiplier?: number
+  blackHoleHoverGravityMultiplier?: number
+  blackHoleSmokeWisps?: number
+  blackHoleSmokeIntensity?: number
+  blackHoleSmokeSpeed?: number
+  blackHoleEdgeRipple?: number
+  blackHoleHoverRipple?: number
+  blackHoleCoronaWidth?: number
+  enableBlackHoleFlare?: boolean
+  blackHoleFlare?: number
+  blackHoleFlareSpin?: number
+  blackHoleRingGlow?: number
+  planetColors?: Array<
+    | 'amber'
+    | 'background-1000'
+    | 'background-50'
+    | 'brand-300'
+    | 'brand-850'
+    | 'brand'
+    | 'error-red'
+    | 'golden-yellow'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'sky'
+    | 'yellow'
+  >
+  planetMinSize?: number
+  planetMaxSize?: number
+  planetRingChance?: number
+  planetSizeRarity?: number
+  enablePlanets?: boolean
+  planetCount?: number
+  planetOrbitMinRatio?: number
+  planetOrbitMaxRatio?: number
+  planetOrbitTilt?: number
+  planetSpeed?: number
+  planetHoverChaos?: number
+  freePlanetCount?: number
+  freePlanetDriftSpeed?: number
+  enableGalaxy?: boolean
+  galaxyPosition?:
+    | 'bottom-left'
+    | 'bottom-right'
+    | 'center'
+    | 'custom'
+    | 'left'
+    | 'random'
+    | 'right'
+    | 'top-left'
+    | 'top-right'
+  galaxyXRatio?: number
+  galaxyYRatio?: number
+  galaxyMinSize?: number
+  galaxyMaxSize?: number
+  galaxyTilt?: number
+  galaxyDriftFactor?: number
+  galaxyDriftDirection?:
+    | 'down-left'
+    | 'down-right'
+    | 'down'
+    | 'left'
+    | 'right'
+    | 'up-left'
+    | 'up-right'
+    | 'up'
+  galaxyOpacity?: number
+  galaxyWidthScale?: number
+  galaxyHeightScale?: number
+  galaxyDensity?: number
+  galaxyCenterDensity?: number
+  galaxyEndDensity?: number
+  galaxyCoreColor?:
+    | 'amber'
+    | 'background-1000'
+    | 'background-50'
+    | 'brand-300'
+    | 'brand-850'
+    | 'brand'
+    | 'error-red'
+    | 'golden-yellow'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'sky'
+    | 'yellow'
+  galaxyArmColor?:
+    | 'amber'
+    | 'background-1000'
+    | 'background-50'
+    | 'brand-300'
+    | 'brand-850'
+    | 'brand'
+    | 'error-red'
+    | 'golden-yellow'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'sky'
+    | 'yellow'
+  galaxyAccentColor?:
+    | 'amber'
+    | 'background-1000'
+    | 'background-50'
+    | 'brand-300'
+    | 'brand-850'
+    | 'brand'
+    | 'error-red'
+    | 'golden-yellow'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'sky'
+    | 'yellow'
+  blackHoleCoreColor?:
+    | 'amber'
+    | 'background-1000'
+    | 'background-50'
+    | 'brand-300'
+    | 'brand-850'
+    | 'brand'
+    | 'error-red'
+    | 'golden-yellow'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'sky'
+    | 'yellow'
+  blackHolePhotonRingColor?:
+    | 'amber'
+    | 'background-1000'
+    | 'background-50'
+    | 'brand-300'
+    | 'brand-850'
+    | 'brand'
+    | 'error-red'
+    | 'golden-yellow'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'sky'
+    | 'yellow'
+  blackHoleBaseGlowColor?:
+    | 'amber'
+    | 'background-1000'
+    | 'background-50'
+    | 'brand-300'
+    | 'brand-850'
+    | 'brand'
+    | 'error-red'
+    | 'golden-yellow'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'sky'
+    | 'yellow'
+  blackHoleCoronaColor?:
+    | 'amber'
+    | 'background-1000'
+    | 'background-50'
+    | 'brand-300'
+    | 'brand-850'
+    | 'brand'
+    | 'error-red'
+    | 'golden-yellow'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'sky'
+    | 'yellow'
+  mobileScale?: number
+  mobileEnableBlackHole?: boolean
+  mobileBlackHolePresetPosition?:
+    | 'bottom-right'
+    | 'center'
+    | 'custom'
+    | 'desktop'
+    | 'top-right'
+  mobileBlackHoleXRatio?: number
+  mobileBlackHoleYRatio?: number
+  mobileEnableGalaxy?: boolean
+  mobileGalaxyPosition?:
+    | 'bottom-left'
+    | 'bottom-right'
+    | 'center'
+    | 'custom'
+    | 'desktop'
+    | 'left'
+    | 'random'
+    | 'right'
+    | 'top-left'
+    | 'top-right'
+  mobileGalaxyXRatio?: number
+  mobileGalaxyYRatio?: number
+}
 
 // Query TypeMap
 declare global {
@@ -2549,7 +3214,7 @@ declare global {
     '\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {\n  _id,\n  "slug": slug.current,\n  dbId,\n  _type,\n  name,\n  description,\n  streetAddress,\n  telephone,\n  email,\n  website,\n  rector->{\n    _id,\n    name,\n    title,\n    image\n  },\n  viceRectors[]->{\n    _id,\n    name,\n    title,\n    image\n  },\n  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {\n    \n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\ndean->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nsecretary->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nviceDeans[]->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nuniversity->{\n  _id,\n  "slug": slug.current,\n  name,\n  dbId\n},\n"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  dbId,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  name,\n  dbId,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n},\n\n  }\n}\n': UniversityDetailQueryResult
     '\n*[_type == "university" && !(_id in path("drafts.**")) && dbId != null] {\n  "universitySlug": coalesce(slug.current, _id)\n}\n': UniversityStaticParamsQueryResult
     '\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\n*[_id == $WEBSITE][0]{\n  "navMenu": navMenu->{\n    defined(title) => {title},\n    defined(websiteLogo)=>{ "websiteLogo": sanityImage::full(websiteLogo) },\n    navItems[]->{\n      stringTitle,\n      stringSubtitle,\n      ...linkSelector::full(@),\n      defined(new) => {new},\n      defined(comingSoon) => {comingSoon},\n      defined(disabled) => {disabled},\n    },\n  }\n}.navMenu': NavMenuQueryResult
-    '{ \n  "universities": *[_type == "university" && dbId != null]{ _id, dbId, name },\n  "faculties": *[_type == "faculty" && university._ref != null && dbId != null]{ _id, dbId, name, "universityId": university._ref },\n  "studies": *[_type == "study" && faculty._ref != null && dbId != null]{\n    _id,\n    dbId,\n    name,\n    "facultyId": faculty._ref,\n    "subjectsByYear": *[_type == "subject" && study._ref == ^._id && dbId != null\n        && _id == (*[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(_id asc)[0]._id)\n      ] | order(year asc){\n      year,\n      "subjects": *[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(name asc){\n        _id, dbId, name, year, "studyId": study._ref\n      }\n    },\n  },\n  "subjects": *[_type == "subject" && study._ref != null && dbId != null] | order(year asc){ _id, dbId, name, year, "studyId": study._ref }\n}': OnboardingCatalogQueryResult
+    '\n{\n  "universities": *[_type == "university" && dbId != null]{ _id, dbId, name },\n  "faculties": *[_type == "faculty" && university._ref != null && dbId != null]{ _id, dbId, name, "universityId": university._ref },\n  "studies": *[_type == "study" && faculty._ref != null && dbId != null]{\n    _id,\n    dbId,\n    name,\n    "facultyId": faculty._ref,\n    "subjectsByYear": *[_type == "subject" && study._ref == ^._id && dbId != null\n        && _id == (*[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(_id asc)[0]._id)\n      ] | order(year asc){\n      year,\n      "subjects": *[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(name asc){\n        _id, dbId, name, year, "studyId": study._ref\n      }\n    },\n  },\n  "subjects": *[_type == "subject" && study._ref != null && dbId != null] | order(year asc){\n    \n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  code,\n  credits,\n  year,\n  semester,\n  "faculty": study->faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    dbId,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n  study->{\n    _id,\n    "slug": slug.current,\n    name,\n    dbId,\n    faculty->{\n      _id,\n      "slug": slug.current,\n      name,\n      university->{\n        _id,\n        "slug": slug.current,\n        name,\n      },\n    },\n  },\n  professors[]->{\n    _id,\n    dbId,\n    "slug": slug.current,\n    name,\n    title,\n  },\n\n  }\n}': OnboardingCatalogQueryResult
     '\n*[_id == $WEBSITE][0]{\n  "siteName": coalesce(siteName, websiteTitle, "Scriptr"),\n  "siteUrl": coalesce(siteUrl, ""),\n  "defaultSeoTitle": coalesce(defaultSeoTitle, websiteTitle, "Scriptr"),\n  "defaultSeoDescription": coalesce(defaultSeoDescription, ""),\n  "defaultKeywords": defaultKeywords[]\n}\n': WebsiteSeoQueryResult
     '\n*[_id == $WEBSITE][0]{\n  dtBackground->{...}\n}.dtBackground\n': StarCanvasQueryResult
   }

@@ -4,6 +4,7 @@ import type { ScriptFile } from '@shared/types/scripts.types'
 import { ScriptFileCard } from '@/components/academics/scripts/ScriptFileCard'
 import { ScriptSurface } from '@/components/academics/scripts/ScriptSurface'
 import { Box } from '@/components/common/Box'
+import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
 import { cn } from '@/lib/common-utils'
 
@@ -21,11 +22,8 @@ export function ScriptFilesSection({
   files,
 }: ScriptFilesSectionProps) {
   return (
-    <ScriptSurface className='ui-stack min-w-0 grow-[100] basis-[24rem] gap-3'>
-      <Box className='ui-cluster items-center gap-2'>
-        <Text className='ui-title'>{SCRIPT_STRINGS.files.title}</Text>
-        <Text className='ui-caption text-grey-500'>{files.length}</Text>
-      </Box>
+    <ScriptSurface className='ui-stack min-w-0 grow-100 basis-[24rem] gap-3'>
+      <SectionHeader title={SCRIPT_STRINGS.files.title} count={files.length} />
       {files.length === 0 ? (
         <Text className='ui-subtitle'>
           {UI_STRINGS.scripts.actions.noFilesAttached}
@@ -44,7 +42,7 @@ export function ScriptFilesSection({
         <Box
           className={cn(
             'grid grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] items-start gap-3',
-            files.length === 1 && 'max-w-[38rem]'
+            files.length === 1 && 'max-w-152'
           )}
         >
           {files.map((file) => (

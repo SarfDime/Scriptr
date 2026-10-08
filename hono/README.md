@@ -37,7 +37,10 @@ R2_ACCESS_KEY_ID=your_access_key
 R2_SECRET_ACCESS_KEY=your_secret_key
 R2_BUCKET=your_bucket_name
 R2_PUBLIC_URL=your_public_r2_domain
+NODE_ENV=development
 PORT=8787
+NEXT_REVALIDATE_URL=http://localhost:3000/api/revalidate
+REVALIDATE_SECRET=development_secret_key
 ```
 
 Universities can override `R2_BUCKET` per-university via
@@ -46,6 +49,10 @@ Universities can override `R2_BUCKET` per-university via
 
 `INTERNAL_API_SECRET` must match `SANITY_STUDIO_INTERNAL_SECRET` in the Sanity
 Studio environment, or every Studio sync/delete action fails.
+
+`NEXT_REVALIDATE_URL` and `REVALIDATE_SECRET` configure the cache-revalidation
+webhook the API calls after mutations; `REVALIDATE_SECRET` must match the
+value in the frontend's environment (`next/.env.example`).
 
 Never commit `.env` files or storage credentials.
 
@@ -99,7 +106,7 @@ curl walkthrough covering every route is in
 ## Security Notes
 
 - Academic catalog routes (`/api/universities`, `/api/faculties`, `/api/studies`, `/api/professors`, `/api/subjects`) are **not** public — every request, reads included, requires the `x-internal-secret` header matching `INTERNAL_API_SECRET`. RLS closes these tables to every Supabase role, admin included; there is no session-based access path at all.
-- Catalog writes and role changes are only exposed on `/api/internal` and also require `x-internal-secret`, including universities' mutation routes.
+- Catalog writes and role changes are exposed on `/api/internal` and require `x-internal-secret`; `/api/universities` is read-only.
 - Authentication uses the Supabase session cookie only (no Bearer-token path). `POST /api/auth/callback` establishes the session from the tokens in an email-confirmation link.
 - Rating types (`/api/ratings/types`) are the one lookup table that's actually public to read; only mutation is admin-gated, via `is_admin()` RLS on the admin's own session — no internal secret involved there.
 - User-specific write routes require a valid Supabase session cookie.

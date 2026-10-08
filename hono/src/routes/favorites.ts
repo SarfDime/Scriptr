@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { profileMutationTags } from '../../../shared/config/cache-tags'
 import type { FavoriteScriptRecord } from '../../../shared/types/profile.types'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
-import { requiredParam } from '../lib/request'
+import { databaseErrorResponse, requiredParam } from '../lib/request'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
@@ -24,7 +24,7 @@ favorites.get('/', async (c) => {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json<Array<FavoriteScriptRecord>>(data ?? [])
 })
 
@@ -40,7 +40,7 @@ favorites.get('/:scriptId', async (c) => {
     .eq('script_id', scriptId)
     .maybeSingle()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json<FavoriteScriptRecord | null>(data)
 })
 
@@ -58,7 +58,7 @@ favorites.post('/:scriptId', async (c) => {
     .select(`created_at, script:scripts(${PUBLIC_SCRIPT_COLUMNS})`)
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   await revalidateCacheTags(c.env, profileMutationTags(user.id))
   return c.json<FavoriteScriptRecord>(data)
 })
@@ -74,7 +74,7 @@ favorites.delete('/:scriptId', async (c) => {
     .eq('user_id', user.id)
     .eq('script_id', scriptId)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   await revalidateCacheTags(c.env, profileMutationTags(user.id))
   return c.json<{ success: true }>({ success: true })
 })

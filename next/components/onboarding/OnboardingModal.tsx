@@ -97,14 +97,9 @@ export const OnboardingModal = ({ catalog }: OnboardingModalProps) => {
       title='Set up your studies'
       hideTrigger
       onClose={() => handleClose(false)}
-      dialogProps={{
-        className: 'p-6 md:min-w-xl rounded-lg ui-above-light',
-      }}
-      headerProps={{
-        className: 'ui-cluster justify-between',
-      }}
+      dialogProps={{ className: 'md:min-w-xl' }}
     >
-      <Box className='ui-stack gap-6 pt-4'>
+      <Box className='ui-stack gap-6 p-6'>
         {wizard.step === 'selection' && (
           <>
             <Box className='ui-stack gap-6'>
@@ -183,7 +178,7 @@ export const OnboardingModal = ({ catalog }: OnboardingModalProps) => {
               <Button
                 onClick={handleContinue}
                 disabled={!canContinue || isSaving}
-                className='button solid text-xs'
+                className='button button-sm solid'
               >
                 {isSaving ? 'Saving…' : 'Continue'}
               </Button>

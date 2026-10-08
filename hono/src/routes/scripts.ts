@@ -28,7 +28,7 @@ import {
 } from '../lib/cache-revalidate'
 import { honoLog } from '../lib/logger'
 import { deleteR2Files } from '../lib/r2'
-import { requiredParam } from '../lib/request'
+import { databaseErrorResponse, requiredParam } from '../lib/request'
 import {
   authMiddleware,
   createInternalSupabaseClient,
@@ -36,9 +36,10 @@ import {
 } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
-// Excludes is_flagged, which is internal moderation state and not for public consumption.
+// Excludes is_flagged and the comments aggregate, which uses the separately
+// permissioned get_script_comment_counts RPC.
 const PUBLIC_SCRIPT_COLUMNS =
-  'id, title, description, subject_id, professor_id, author_id, exam_session, additional_reading, vote_score, download_count, created_at, updated_at, comments:comments(count), files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, created_at)'
+  'id, title, description, subject_id, professor_id, author_id, exam_session, additional_reading, vote_score, download_count, created_at, updated_at, files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, created_at)'
 
 /**
  * Reused by every list/detail endpoint below (`/`, `/subject/:subjectId`,
@@ -57,7 +58,7 @@ const SCRIPT_SUMMARY_SELECT = `
     subject:subjects(name, sanity_id, study:studies(sanity_id, faculty:faculties(sanity_id, id)))
   `
 
-function applySelectedFacultyScope<T extends ScriptSummary>(
+function applySelectedFacultyScope<T extends Pick<ScriptSummary, 'subject'>>(
   rows: Array<T> | null,
   selectedFacultyIds: Array<string> | null
 ) {
@@ -69,6 +70,39 @@ function applySelectedFacultyScope<T extends ScriptSummary>(
     const facultyId = row.subject?.study?.faculty?.id
     return !facultyId || selectedFacultyIds.includes(facultyId)
   })
+}
+
+async function attachCommentCounts(
+  supabase: ReturnType<typeof createSupabaseClient>,
+  rows: Array<Omit<ScriptSummary, 'comments'>>
+): Promise<Array<ScriptSummary> | null> {
+  const counts = new Map<string, number>()
+  const batchSize = 100
+
+  for (let offset = 0; offset < rows.length; offset += batchSize) {
+    const scriptIds = rows.slice(offset, offset + batchSize).map(({ id }) => id)
+    const { data, error } = await supabase.rpc('get_script_comment_counts', {
+      p_script_ids: scriptIds,
+    })
+
+    if (error) {
+      honoLog({
+        logLevel: 'error',
+        message: 'Failed to fetch script comment counts',
+        error,
+      })
+      return null
+    }
+
+    for (const row of data) {
+      counts.set(row.script_id, row.comment_count)
+    }
+  }
+
+  return rows.map((row) => ({
+    ...row,
+    comments: [{ count: counts.get(row.id) ?? 0 }],
+  }))
 }
 
 /** Resolve the requester's dedupe identity for downloads: account, then IP, then device. */
@@ -228,10 +262,15 @@ scripts.get('/', async (c) => {
     .select(SCRIPT_SUMMARY_SELECT)
     .order('created_at', { ascending: false })
 
-  if (error) return c.json({ error: error.message }, 500)
-  return c.json<Array<ScriptSummary>>(
+  if (error) return databaseErrorResponse(c, error)
+  const scriptsWithCounts = await attachCommentCounts(
+    supabase,
     applySelectedFacultyScope(data, selectedFacultyIds)
   )
+  if (!scriptsWithCounts) {
+    return c.json({ error: 'Failed to fetch scripts' }, 500)
+  }
+  return c.json<Array<ScriptSummary>>(scriptsWithCounts)
 })
 
 /** Get scripts by subject */
@@ -246,10 +285,15 @@ scripts.get('/subject/:subjectId', async (c) => {
     .eq('subject_id', subjectId)
     .order('vote_score', { ascending: false })
 
-  if (error) return c.json({ error: error.message }, 500)
-  return c.json<Array<ScriptSummary>>(
+  if (error) return databaseErrorResponse(c, error)
+  const scriptsWithCounts = await attachCommentCounts(
+    supabase,
     applySelectedFacultyScope(data, selectedFacultyIds)
   )
+  if (!scriptsWithCounts) {
+    return c.json({ error: 'Failed to fetch scripts' }, 500)
+  }
+  return c.json<Array<ScriptSummary>>(scriptsWithCounts)
 })
 
 /** Get top scripts (by vote score) */
@@ -264,10 +308,15 @@ scripts.get('/top', async (c) => {
     .order('vote_score', { ascending: false })
     .limit(limit)
 
-  if (error) return c.json({ error: error.message }, 500)
-  return c.json<Array<ScriptSummary>>(
+  if (error) return databaseErrorResponse(c, error)
+  const scriptsWithCounts = await attachCommentCounts(
+    supabase,
     applySelectedFacultyScope(data, selectedFacultyIds)
   )
+  if (!scriptsWithCounts) {
+    return c.json({ error: 'Failed to fetch scripts' }, 500)
+  }
+  return c.json<Array<ScriptSummary>>(scriptsWithCounts)
 })
 
 /** Get most downloaded scripts */
@@ -282,10 +331,15 @@ scripts.get('/popular', async (c) => {
     .order('download_count', { ascending: false })
     .limit(limit)
 
-  if (error) return c.json({ error: error.message }, 500)
-  return c.json<Array<ScriptSummary>>(
+  if (error) return databaseErrorResponse(c, error)
+  const scriptsWithCounts = await attachCommentCounts(
+    supabase,
     applySelectedFacultyScope(data, selectedFacultyIds)
   )
+  if (!scriptsWithCounts) {
+    return c.json({ error: 'Failed to fetch scripts' }, 500)
+  }
+  return c.json<Array<ScriptSummary>>(scriptsWithCounts)
 })
 
 /** Search scripts */
@@ -303,9 +357,13 @@ scripts.get('/search', async (c) => {
     .from('scripts')
     .select(SCRIPT_SUMMARY_SELECT)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
 
-  const filteredData = applySelectedFacultyScope(data, selectedFacultyIds)
+  const scopedData = applySelectedFacultyScope(data, selectedFacultyIds)
+  const filteredData = await attachCommentCounts(supabase, scopedData)
+  if (!filteredData) {
+    return c.json({ error: 'Failed to fetch scripts' }, 500)
+  }
 
   const results = filteredData
     .map((script) => ({
@@ -340,8 +398,79 @@ scripts.get('/my-scripts', authMiddleware, async (c) => {
     .eq('author_id', user.id)
     .order('created_at', { ascending: false })
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json<{ scripts: Array<MyScriptSummary> }>({ scripts: data })
+})
+
+/** Remove a single file from a script (author or admin only) */
+scripts.delete('/:scriptId/files/:fileId', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const scriptId = requiredParam(c, 'scriptId')
+  const fileId = requiredParam(c, 'fileId')
+  const supabase = createSupabaseClient(c)
+
+  const [
+    { data: file, error: fileError },
+    { data: script },
+    { data: profile },
+  ] = await Promise.all([
+    supabase
+      .from('script_files')
+      .select('id, file_url, bucket, script_id')
+      .eq('id', fileId)
+      .eq('script_id', scriptId)
+      .single(),
+    supabase
+      .from('scripts')
+      .select('author_id, subject_id')
+      .eq('id', scriptId)
+      .single(),
+    supabase.from('profiles').select('role').eq('id', user.id).single(),
+  ])
+
+  if (fileError || !file) {
+    return c.json({ error: 'Script file not found' }, 404)
+  }
+
+  if (script?.author_id !== user.id && !isAdmin(profile?.role)) {
+    return c.json(
+      {
+        error: 'Unauthorized: You can only remove files from your own scripts',
+      },
+      403
+    )
+  }
+
+  const { error } = await supabase
+    .from('script_files')
+    .delete()
+    .eq('id', fileId)
+    .eq('script_id', scriptId)
+
+  if (error) return databaseErrorResponse(c, error)
+
+  try {
+    await deleteR2Files(c, [{ bucket: file.bucket, fileKey: file.file_url }])
+  } catch (cleanupError) {
+    honoLog({
+      logLevel: 'error',
+      message: 'Script file deleted from DB but R2 cleanup failed',
+      error: cleanupError,
+    })
+  }
+
+  if (script?.subject_id) {
+    await revalidateCacheTags(
+      c.env,
+      scriptMutationTags({
+        id: scriptId,
+        subject_id: script.subject_id,
+        author_id: script.author_id,
+      })
+    )
+  }
+
+  return c.json({ success: true, message: 'Script file deleted successfully' })
 })
 
 /** Get a single script by ID */
@@ -357,9 +486,29 @@ scripts.get('/:id', async (c) => {
     .eq('id', scriptId)
     .single()
 
-  if (error) return c.json({ error: error.message }, 404)
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return c.json({ error: 'Script not found' }, 404)
+    }
 
-  const facultyId = data.subject?.study?.faculty?.id
+    honoLog({
+      logLevel: 'error',
+      message: 'Failed to fetch script',
+      error,
+    })
+    return c.json({ error: 'Failed to fetch script' }, 500)
+  }
+
+  const scriptsWithCounts = await attachCommentCounts(supabase, [data])
+  if (!scriptsWithCounts) {
+    return c.json({ error: 'Failed to fetch script' }, 500)
+  }
+  const [scriptWithCounts] = scriptsWithCounts
+  if (!scriptWithCounts) {
+    return c.json({ error: 'Failed to fetch script' }, 500)
+  }
+
+  const facultyId = scriptWithCounts.subject?.study?.faculty?.id
   if (
     selectedFacultyIds &&
     selectedFacultyIds.length > 0 &&
@@ -371,7 +520,7 @@ scripts.get('/:id', async (c) => {
     )
   }
 
-  return c.json<ScriptSummary>(data)
+  return c.json<ScriptSummary>(scriptWithCounts)
 })
 
 /** Insert a new script */
@@ -568,7 +717,7 @@ scripts.patch('/:id', authMiddleware, async (c) => {
       `)
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
 
   await revalidateCacheTags(c.env, scriptMutationTags(data))
 
@@ -609,7 +758,7 @@ scripts.delete('/:id', authMiddleware, async (c) => {
 
   const { error } = await supabase.from('scripts').delete().eq('id', scriptId)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
 
   try {
     await deleteR2Files(
@@ -665,7 +814,7 @@ scripts.post('/:id/download', async (c) => {
       .update({ download_count: (script.download_count || 0) + 1 })
       .eq('id', scriptId)
 
-    if (error) return c.json({ error: error.message }, 500)
+    if (error) return databaseErrorResponse(c, error)
     await revalidateCacheTags(
       c.env,
       scriptMutationTags({
@@ -690,7 +839,7 @@ scripts.post('/:id/download', async (c) => {
     if (insertError.code === '23505') {
       return c.json({ success: true, counted: false })
     }
-    return c.json({ error: insertError.message }, 500)
+    return databaseErrorResponse(c, insertError)
   }
 
   const { error: updateError } = await supabase
@@ -698,7 +847,7 @@ scripts.post('/:id/download', async (c) => {
     .update({ download_count: (script.download_count || 0) + 1 })
     .eq('id', scriptId)
 
-  if (updateError) return c.json({ error: updateError.message }, 500)
+  if (updateError) return databaseErrorResponse(c, updateError)
   await revalidateCacheTags(
     c.env,
     scriptMutationTags({
@@ -741,7 +890,7 @@ scripts.get('/flagged/all', authMiddleware, async (c) => {
     .eq('is_flagged', true)
     .order('created_at', { ascending: false })
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json<Array<ScriptFlaggedSummary>>(data)
 })
 

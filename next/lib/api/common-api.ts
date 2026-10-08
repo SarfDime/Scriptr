@@ -1,6 +1,10 @@
 import { apiRoutes } from '@shared/config/api-routes'
-import type { FlagTargetType } from '@shared/types/api.types'
+import type { FlagRow, FlagTargetType } from '@shared/types/api.types'
 import { apiFetch } from './next-api'
+
+/** Current user's flags, used to avoid duplicate report submissions. */
+export const getMyFlags = () =>
+  apiFetch<Array<FlagRow>>(apiRoutes.flags.myFlags, { cache: 'no-store' })
 
 /**
  * POST apiRoutes.flags.index body is { target_type, target_id, reason } — a

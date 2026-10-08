@@ -61,6 +61,12 @@ export const isCommentPortableTextValue = (
 ): value is PortableTextValue =>
   isPortableTextValue(value) && value.every(isCommentBlock)
 
+export const isValidCommentPortableTextValue = (
+  value: unknown
+): value is PortableTextValue =>
+  isCommentPortableTextValue(value) &&
+  portableTextJsonByteLength(value) <= PORTABLE_TEXT_LIMITS.commentMaximumBytes
+
 const PORTABLE_TEXT_DECORATORS = new Set<string>([
   ...DEFAULT_DECORATOR_NAMES,
   ...COLORS,

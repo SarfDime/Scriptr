@@ -22,20 +22,19 @@
   ::selection {
     background: var(--color-brand-100);
   }
-
-  :root[data-theme="dark"] .ui-card {
-    box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 18%);
-  }
 }
 
 @utility ui-container {
-  max-width: var(--nav-width-offset);
+  max-width: var(--nav-container-width, var(--nav-width-offset));
   flex-grow: 1;
   min-height: 100dvh;
   overflow-y: auto;
   margin-left: auto;
+  transition: max-width 300ms ease-in-out;
 
-  @media (max-width: 992px) {
+  /* Below the `lg` breakpoint, where the navbar is off-canvas. */
+  /* biome-ignore lint/correctness/noUnknownFunction: <This is not unknown> */
+  @media (width < theme(--breakpoint-lg)) {
     max-width: unset;
   }
 }
@@ -46,28 +45,44 @@
   flex-grow: 1;
 }
 
+/*
+ * Typography scale. Sizes are fixed here on purpose: the responsive
+ * `font-size-*` scale in portable-text.module.css is for authored rich text
+ * only. Color and weight belong to the class; do not re-add `font-*` or
+ * `text-<color>` utilities next to a ui-* class.
+ */
 @utility ui-display {
-  @apply font-olive font-size-2xl font-black text-fg-700 leading-tight tracking-tighter;
+  @apply font-olive text-3xl font-bold leading-tight tracking-tight text-fg-700 sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl;
+}
+
+/* Rich text rendered inside a heading takes the heading's color. */
+:is(.ui-display, .ui-title) .pt-text {
+  color: inherit;
 }
 
 @utility ui-title {
-  @apply font-size-sm font-medium text-fg-700;
+  @apply text-base font-semibold text-fg-700 md:text-lg;
 }
 
 @utility ui-subtitle {
-  @apply text-sm text-fg-400;
+  @apply text-sm text-fg-muted;
 }
 
 @utility ui-body {
   @apply text-base text-fg;
 }
 
+/* Entity and person names inside body-sized content. */
+@utility ui-body-strong {
+  @apply text-base font-semibold text-fg;
+}
+
 @utility ui-label {
-  @apply text-xs font-medium text-fg-400;
+  @apply text-xs font-semibold text-fg-muted;
 }
 
 @utility ui-caption {
-  @apply text-xs text-fg-400;
+  @apply text-xs text-fg-muted;
 }
 
 @utility ui-stat {
@@ -119,7 +134,7 @@
   margin-top: auto;
   padding-top: 1rem;
   border-top: 1px solid var(--color-grey-300);
-  color: var(--color-fg-400);
+  color: var(--color-fg-muted);
 }
 
 @utility ui-badge {
@@ -133,14 +148,27 @@
   }
 }
 
+@utility ui-above-defaults {
+  @apply rounded-xl border border-background-300;
+  @apply p-4 gap-4 rounded-xl;
+}
+
 @utility ui-above {
-  @apply border-grey-300 bg-background-300/65 backdrop-blur shadow-mdx;
+  @apply bg-background-300/50 backdrop-blur-xl;
+  @apply ui-above-defaults;
 }
 
 @utility ui-above-light {
-  @apply border-grey-300 bg-background-250/85 backdrop-blur shadow-mdx;
+  @apply bg-background-300/65 backdrop-blur-2xl;
+  @apply ui-above-defaults;
 }
 
 @utility ui-above-dark {
-  @apply border-grey-300 bg-background-300/90 backdrop-blur shadow-mdx;
+  @apply border-grey-300 bg-background-200/95 backdrop-blur-3xl;
+  @apply ui-above-defaults;
+}
+
+@utility ui-above-inside {
+  @apply bg-background-150/60;
+  @apply ui-above-defaults border-background-300/70 rounded-lg;
 }

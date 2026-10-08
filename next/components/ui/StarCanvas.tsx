@@ -21,7 +21,6 @@ import {
   buildSoftDot,
   GALAXY_DRIFT_DIRECTIONS,
   MOBILE_QUERY,
-  MOBILE_SCALE,
   makeGalaxy,
   makePlanets,
   resolveColors,
@@ -60,6 +59,12 @@ const FLARE_ARCS = Array.from({ length: 12 }, (_, i) => {
   }
 })
 
+// The haze never changes, so the backdrop canvas is only painted when something invalidates
+// it (first paint, resize, theme). The galaxy has a canvas of its own, just big enough for
+// itself: its drift and tilt are a CSS transform (done by the compositor, no repainting), and
+// only its twinkle needs a repaint, a few times a second.
+const GALAXY_PAINT_MS = 350
+
 const subscribeToMobile = (onChange: () => void) => {
   const query = window.matchMedia(MOBILE_QUERY)
   query.addEventListener('change', onChange)
@@ -74,6 +79,8 @@ export const CustomStarCanvas = ({
   sanityData?: StarCanvasSanityData | null
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const backdropRef = useRef<HTMLCanvasElement>(null)
+  const galaxyRef = useRef<HTMLCanvasElement>(null)
   const isMobile = useSyncExternalStore(
     subscribeToMobile,
     getIsMobile,
@@ -82,13 +89,26 @@ export const CustomStarCanvas = ({
 
   useEffect(() => {
     const canvas = canvasRef.current
+    const backdrop = backdropRef.current
+    const galaxyCanvas = galaxyRef.current
     const ctx = canvas?.getContext('2d')
-    if (!canvas || !ctx) return
+    const backdropCtx = backdrop?.getContext('2d')
+    const galaxyCtx = galaxyCanvas?.getContext('2d')
+    if (
+      !canvas ||
+      !ctx ||
+      !backdrop ||
+      !backdropCtx ||
+      !galaxyCanvas ||
+      !galaxyCtx
+    ) {
+      return
+    }
 
     const cfg = isMobile
       ? scaleForMobile(withDefaults(sanityData))
       : withDefaults(sanityData)
-    const motionScale = isMobile ? MOBILE_SCALE : 1
+    const motionScale = isMobile ? cfg.mobileScale : 1
     const reducedMotion = window.matchMedia(
       '(prefers-reduced-motion: reduce)'
     ).matches
@@ -118,6 +138,25 @@ export const CustomStarCanvas = ({
     // Positive tilt raises the right end (canvas angles run clockwise, so negate)
     const galaxyTilt = (-cfg.galaxyTilt * Math.PI) / 180
     const galaxySpeed = cfg.starDriftSpeed * cfg.galaxyDriftFactor * Math.SQRT2
+    let backdropStale = true // haze needs painting (first paint, resize, theme)
+    let galaxyStale = true // sprites changed: repaint the galaxy canvas at once
+    let lastGalaxyPaint = 0
+    // The galaxy canvas is the galaxy's sprite size (1 px per sprite px, no device pixel
+    // ratio) and is shown at the galaxy's on-screen size
+    const galaxyW = galaxy
+      ? Math.max(1, Math.round(galaxy.width * galaxy.spriteScale))
+      : 0
+    const galaxyH = galaxy
+      ? Math.max(1, Math.round(galaxy.height * galaxy.spriteScale))
+      : 0
+    if (galaxy) {
+      galaxyCanvas.width = galaxyW
+      galaxyCanvas.height = galaxyH
+      galaxyCanvas.style.width = `${galaxy.width}px`
+      galaxyCanvas.style.height = `${galaxy.height}px`
+    } else {
+      galaxyCanvas.style.display = 'none'
+    }
     let shade: HTMLCanvasElement | null = null // shared day/night overlay for planets
 
     let puff: HTMLCanvasElement | null = null // soft blob sprite for the smoke
@@ -212,6 +251,7 @@ export const CustomStarCanvas = ({
               cfg.backgroundHazeRadius
             )
           : null
+      backdropStale = true
     }
 
     // Painting the haze takes a few milliseconds, so while the window is being
@@ -237,6 +277,7 @@ export const CustomStarCanvas = ({
         planet.ringFront = sprites.ringFront
       }
       if (galaxy) buildGalaxySprites(galaxy, colors)
+      galaxyStale = true
     }
 
     // Sizes the canvas, keeps existing stars in place on resize, and rebuilds the
@@ -250,6 +291,10 @@ export const CustomStarCanvas = ({
       canvas.width = w * dpr
       canvas.height = h * dpr
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      backdrop.width = w * dpr // resizing clears it, so it has to be repainted
+      backdrop.height = h * dpr
+      backdropCtx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      backdropStale = true
 
       if (prevW && prevH) {
         const floating: Array<Point> = [...stars, ...drifting]
@@ -353,10 +398,10 @@ export const CustomStarCanvas = ({
 
     // ── Drawing ─────────────────────────────────────────────────────────────
 
-    // Drawn first (after the haze), so it sits behind everything. It drifts like the
-    // stars but more slowly (it is farther away), in the chosen direction, and each
-    // layer breathes or twinkles a little on its own. With reduced motion `now` is
-    // fixed and dt is 0, so it stays still.
+    // Drifts like the stars but more slowly (it is farther away), in the chosen direction.
+    // Only the position is updated here, as a CSS transform on the galaxy's own canvas
+    // (see paintGalaxy for the twinkle). `dt` is in frames; with reduced motion it is 0,
+    // so the galaxy stays still.
     const drawGalaxy = (now: number, dt: number) => {
       if (!galaxy) return
       galaxyOffset.x += galaxyDirection.x * galaxySpeed * dt
@@ -377,26 +422,52 @@ export const CustomStarCanvas = ({
       if (centerY < -halfY) galaxyOffset.y += h + halfY * 2
       else if (centerY > h + halfY) galaxyOffset.y -= h + halfY * 2
 
-      ctx.save()
-      ctx.translate(
-        w * galaxy.anchor.x + galaxyOffset.x,
+      // Drift and tilt cost nothing: the compositor moves the canvas
+      galaxyCanvas.style.transform = `translate(${
+        w * galaxy.anchor.x + galaxyOffset.x
+      }px, ${
         h * galaxy.anchor.y + galaxyOffset.y
-      )
-      ctx.rotate(galaxyTilt)
+      }px) rotate(${galaxyTilt}rad) translate(${-galaxy.width / 2}px, ${
+        -galaxy.height / 2
+      }px)`
+      galaxyCanvas.style.display = 'block'
+
+      if (galaxyStale || now - lastGalaxyPaint >= GALAXY_PAINT_MS) {
+        paintGalaxy(now)
+      }
+    }
+
+    // The layers on top of each other, each at its own twinkle brightness. Only runs a few
+    // times a second (and when the sprites change).
+    const paintGalaxy = (now: number) => {
+      if (!galaxy) return
+      lastGalaxyPaint = now
+      galaxyStale = false
+      galaxyCtx.clearRect(0, 0, galaxyW, galaxyH)
       for (const layer of galaxy.layers) {
         if (!layer.sprite) continue
         const swing = 0.5 + 0.5 * Math.sin(now * layer.rate + layer.phase)
-        ctx.globalAlpha =
+        galaxyCtx.globalAlpha =
           Math.min(1, cfg.galaxyOpacity) * (1 - layer.amount * (1 - swing))
-        ctx.drawImage(
-          layer.sprite,
-          -galaxy.width / 2,
-          -galaxy.height / 2,
-          galaxy.width,
-          galaxy.height
-        )
+        galaxyCtx.drawImage(layer.sprite, 0, 0, galaxyW, galaxyH)
       }
-      ctx.restore()
+      galaxyCtx.globalAlpha = 1
+    }
+
+    // The haze, on the backdrop canvas. It never moves, so it is only painted when it
+    // changed.
+    const drawBackdrop = () => {
+      if (!backdropStale) return
+      backdropStale = false
+
+      backdropCtx.clearRect(0, 0, w, h)
+      if (haze) {
+        // The haze is stored at half resolution; scaling it up without smoothing
+        // keeps its fine noise (see buildHazeSprite)
+        backdropCtx.imageSmoothingEnabled = false
+        backdropCtx.drawImage(haze, 0, 0, w, h)
+        backdropCtx.imageSmoothingEnabled = true
+      }
     }
 
     // `lightAngle`: direction the lit side faces
@@ -670,21 +741,16 @@ export const CustomStarCanvas = ({
       ctx.restore()
     }
 
-    // Back to front: galaxy, stars, free planets, shooting stars, then the hole
-    // with its orbiting planets (some behind it, some in front).
+    // Back to front: haze (backdrop canvas), galaxy (its own canvas), then on this canvas
+    // stars, free planets, shooting stars, and the hole with its orbiting planets (some
+    // behind it, some in front).
     const draw = (now: number, dt: number) => {
+      drawBackdrop()
+      drawGalaxy(now, dt)
       ctx.clearRect(0, 0, w, h)
-      if (haze) {
-        // The haze is stored at half resolution; scaling it up without smoothing
-        // keeps its fine noise (see buildHazeSprite)
-        ctx.imageSmoothingEnabled = false
-        ctx.drawImage(haze, 0, 0, w, h)
-        ctx.imageSmoothingEnabled = true
-      }
       updateAgitation(dt)
       updateOrbits(dt)
 
-      drawGalaxy(now, dt)
       drawStars(now, dt)
       drawDrifting(dt)
       drawMeteors(dt)
@@ -783,11 +849,25 @@ export const CustomStarCanvas = ({
     }
   }, [sanityData, isMobile])
 
+  // Same z-index: the later one in the DOM paints on top
   return (
-    <canvas
-      ref={canvasRef}
-      aria-hidden
-      className='pointer-events-none fixed inset-0 z-[-1] h-full w-full'
-    />
+    <>
+      <canvas
+        ref={backdropRef}
+        aria-hidden
+        className='pointer-events-none fixed inset-0 z-[-1] h-full w-full'
+      />
+      <canvas
+        ref={galaxyRef}
+        aria-hidden
+        className='pointer-events-none fixed top-0 left-0 z-[-1] origin-top-left will-change-transform'
+        style={{ display: 'none' }}
+      />
+      <canvas
+        ref={canvasRef}
+        aria-hidden
+        className='pointer-events-none fixed inset-0 z-[-1] h-full w-full'
+      />
+    </>
   )
 }

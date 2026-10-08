@@ -27,15 +27,23 @@ const auth = new Hono<HonoEnv>()
 
 const AUTH_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000
 const AUTH_RATE_LIMIT_MAX_REQUESTS = 10
-const authRateLimitBuckets = new Map<string, number[]>()
+const authRateLimitBuckets = new Map<string, Array<number>>()
 
-function applyAuthRateLimit(c: Parameters<typeof createSupabaseClient>[0], route: 'register' | 'login') {
+function applyAuthRateLimit(
+  c: Parameters<typeof createSupabaseClient>[0],
+  route: 'register' | 'login'
+) {
   const forwardedFor = c.req.header('x-forwarded-for')
-  const clientIp = forwardedFor?.split(',')[0]?.trim() || c.req.header('x-real-ip') || 'unknown-ip'
+  const clientIp =
+    forwardedFor?.split(',')[0]?.trim() ||
+    c.req.header('x-real-ip') ||
+    'unknown-ip'
   const bucketKey = `${route}:${clientIp}`
   const now = Date.now()
   const requests = authRateLimitBuckets.get(bucketKey) ?? []
-  const recentRequests = requests.filter((timestamp) => now - timestamp < AUTH_RATE_LIMIT_WINDOW_MS)
+  const recentRequests = requests.filter(
+    (timestamp) => now - timestamp < AUTH_RATE_LIMIT_WINDOW_MS
+  )
   recentRequests.push(now)
   authRateLimitBuckets.set(bucketKey, recentRequests)
 
@@ -110,6 +118,18 @@ async function bootstrapAcademicProfile(
     }
   }
 
+  const { data: studySubjects, error: studySubjectsError } =
+    academicProfile.studyId
+      ? await supabase
+          .from('subjects')
+          .select('id')
+          .eq('study_id', academicProfile.studyId)
+      : { data: [], error: null }
+
+  if (studySubjectsError) {
+    throw studySubjectsError
+  }
+
   const { error: facultyInsertError } = await supabase
     .from('profile_faculties')
     .upsert(
@@ -130,17 +150,27 @@ async function bootstrapAcademicProfile(
     if (studyInsertError) throw studyInsertError
   }
 
-  if (academicProfile.completedSubjectIds.length > 0) {
+  const subjectStatusById = new Map<string, 'currently_taking' | 'completed'>()
+  for (const subject of studySubjects ?? []) {
+    subjectStatusById.set(subject.id, 'currently_taking')
+  }
+
+  for (const subjectId of academicProfile.completedSubjectIds) {
+    subjectStatusById.set(subjectId, 'completed')
+  }
+
+  const subjectRows = Array.from(subjectStatusById.entries()).map(
+    ([subjectId, status]) => ({
+      profile_id: profileId,
+      subject_id: subjectId,
+      status,
+    })
+  )
+
+  if (subjectRows.length > 0) {
     const { error: subjectsInsertError } = await supabase
       .from('profile_subjects')
-      .upsert(
-        academicProfile.completedSubjectIds.map((subjectId) => ({
-          profile_id: profileId,
-          subject_id: subjectId,
-          status: 'completed' as const,
-        })),
-        { onConflict: 'profile_id,subject_id' }
-      )
+      .upsert(subjectRows, { onConflict: 'profile_id,subject_id' })
 
     if (subjectsInsertError) throw subjectsInsertError
   }
@@ -213,7 +243,8 @@ auth.post('/register', async (c) => {
   if (applyAuthRateLimit(c, 'register')) {
     return c.json(
       {
-        error: 'Too many registration attempts. Please wait a moment and try again.',
+        error:
+          'Too many registration attempts. Please wait a moment and try again.',
       },
       429
     )
@@ -265,7 +296,7 @@ auth.post('/register', async (c) => {
     .maybeSingle()
 
   if (usernameErrorLookup) {
-    return c.json({ error: usernameErrorLookup.message }, 500)
+    return c.json({ error: 'Unable to check username availability' }, 500)
   }
 
   if (existingUsername) {
@@ -436,15 +467,49 @@ auth.get('/session', async (c) => {
   try {
     const {
       data: { session },
-      error,
+      error: sessionError,
     } = await supabase.auth.getSession()
 
-    if (error || !session) {
+    if (sessionError || !session) {
       return c.json<SessionResponse>({ user: null, session: null })
     }
 
+    const refreshSession = async () => {
+      const { data, error } = await supabase.auth.refreshSession()
+      if (error || !data.session) {
+        await supabase.auth.signOut({ scope: 'local' })
+        return null
+      }
+      return data.session
+    }
+
+    let activeSession = session
+    const expiresSoon =
+      !session.expires_at ||
+      session.expires_at <= Math.floor(Date.now() / 1000) + 60
+
+    if (expiresSoon) {
+      const refreshedSession = await refreshSession()
+      if (!refreshedSession) {
+        return c.json<SessionResponse>({ user: null, session: null })
+      }
+      activeSession = refreshedSession
+    } else {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
+      if (userError || !user) {
+        const refreshedSession = await refreshSession()
+        if (!refreshedSession) {
+          return c.json<SessionResponse>({ user: null, session: null })
+        }
+        activeSession = refreshedSession
+      }
+    }
+
     return c.json<SessionResponse>({
-      user: await buildSessionUser(supabase, session.user),
+      user: await buildSessionUser(supabase, activeSession.user),
     })
   } catch (_error) {
     return c.json<SessionResponse>({ user: null, session: null })

@@ -1,3 +1,7 @@
+import {
+  SANITY_DATASET,
+  SANITY_PROJECT_ID,
+} from '@shared/config/sanity-constants'
 import type { PortableTextBlock } from 'sanity'
 import type { StructureBuilder } from 'sanity/structure'
 import { Iframe } from 'sanity-plugin-iframe-pane'
@@ -84,11 +88,9 @@ export const slugifyString = (input: Array<PortableTextBlock>) => {
   return sanitizeSlug(flattenedInput)
 }
 
-// The url that will be passed to the Iframe plugin
-const iFrameUrl = (
-  { slug }: { slug: string } // TODO: Change when staging is live
-) =>
-  `${process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://staging-tontine-com.netlify.app'}/api/draft?secret=PREVIEWMODE&slug=${slug}`
+// The URL that will be passed to the Iframe plugin.
+const iFrameUrl = ({ slug }: { slug: string }) =>
+  `${process.env.SANITY_STUDIO_PREVIEW_ORIGIN ?? 'http://localhost:3000'}/api/draft?secret=PREVIEWMODE&slug=${slug}`
 
 /**
  * Generates the editing document slug needed for the iFrameUrl
@@ -286,9 +288,6 @@ export function isExternalLink(link: string) {
 /** Converts a Sanity image ID into a URL. */
 export function convertImageIdToUrl(imageId?: string) {
   if (!imageId) return ''
-  const projectId = 'REDACTED_SANITY_PROJECT_ID' // TODO: Replace with constant from environment or config, along with every occurrence
-  const dataset = 'production' // TODO: Replace with constant from environment or config
-
   if (!imageId?.startsWith('image-')) {
     throw new Error('Invalid image ID format')
   }
@@ -303,5 +302,5 @@ export function convertImageIdToUrl(imageId?: string) {
     lastDashIndex
   )}.${assetId.substring(lastDashIndex + 1)}`
 
-  return `https://cdn.sanity.io/images/${projectId}/${dataset}/${formattedAssetId}`
+  return `https://cdn.sanity.io/images/${SANITY_PROJECT_ID}/${SANITY_DATASET}/${formattedAssetId}`
 }

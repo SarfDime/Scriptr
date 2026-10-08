@@ -38,7 +38,12 @@ export const MainLayout = ({ children, className, ...rest }: BoxProps) => {
   return (
     <Box as='main' className={cn('ui-container', className)} {...rest}>
       <Header />
-      {children}
+      {/* The container grows to full width while the navbar is collapsed (so the
+          header spans the screen); page content keeps its docked-navbar width
+          and is centered. */}
+      <Box className='mx-auto w-full lg:max-w-(--nav-width-offset)'>
+        {children}
+      </Box>
     </Box>
   )
 }

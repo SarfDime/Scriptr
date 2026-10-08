@@ -1,0 +1,28 @@
+/*
+ * Semantic color tokens: roles that must resolve differently per theme.
+ * Use these (e.g. `text-fg-muted`) instead of picking a grey/fg step by hand;
+ * the fg and grey scales are not monotonic and flip direction in dark mode.
+ */
+@layer colors {
+  @theme static {
+    /* Secondary text: >= 4.5:1 on the page background in both themes. */
+    --color-fg-muted: var(--color-fg-350);
+  }
+}
+
+:root {
+  /* Scales every alpha in shadows.module.css. */
+  --shadow-strength: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-fg-muted: var(--color-fg-300);
+    --shadow-strength: 1.8;
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-fg-muted: var(--color-fg-300);
+  --shadow-strength: 1.8;
+}

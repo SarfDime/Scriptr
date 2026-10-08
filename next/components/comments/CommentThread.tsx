@@ -1,13 +1,12 @@
 import { MAX_THREAD_DEPTH } from '@shared/config/shared-constants'
-import { Children, Fragment, isValidElement, type ReactNode } from 'react'
+import { Children, isValidElement, type ReactNode } from 'react'
 import { Box } from '@/components/common/Box'
 import { cn } from '@/lib/common-utils'
-import { CommentDivider } from './CommentDivider'
 
 /**
- * Layout for the replies under one comment: a divider between siblings and,
- * while still within `MAX_THREAD_DEPTH`, a thread line down the left. Deeper
- * replies stay flat at the same indent.
+ * Layout for the replies under one comment and, while still within
+ * `MAX_THREAD_DEPTH`, a thread line down the left. Deeper replies stay flat at
+ * the same indent.
  *
  * It takes already-rendered replies as `children` instead of rendering
  * `CommentItem` itself, which keeps it free of a circular import with it.
@@ -35,12 +34,7 @@ export function CommentThread({
           )
       )}
     >
-      {replies.map((reply, index) => (
-        <Fragment key={String(reply.key)}>
-          {index > 0 && <CommentDivider />}
-          {reply}
-        </Fragment>
-      ))}
+      {replies}
     </Box>
   )
 }

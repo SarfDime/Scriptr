@@ -1,0 +1,25 @@
+'use client'
+
+import { cn } from '@/lib/common-utils'
+import { useNav } from '@/providers/nav/NavProvider'
+import { Button, type ButtonProps } from '../common/Button'
+
+type NavToggleProps = {
+  action: 'open' | 'close'
+} & Omit<ButtonProps, 'onClick'>
+
+/**
+ * The only client-side piece of the navbar chrome: a button that shows or
+ * hides it. Everything else reacts to the state through CSS.
+ */
+export const NavToggle = ({ action, className, ...rest }: NavToggleProps) => {
+  const { openNav, closeNav } = useNav()
+
+  return (
+    <Button
+      className={cn('button subtle p-1.5', className)}
+      {...rest}
+      onClick={action === 'open' ? openNav : closeNav}
+    />
+  )
+}

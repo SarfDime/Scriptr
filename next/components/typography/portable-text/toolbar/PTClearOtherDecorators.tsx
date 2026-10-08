@@ -41,7 +41,7 @@ const getDecoratorCategory = (decorator: string) => {
  * choosing "center" clears "left"/"right" if either was already active.
  */
 export const ClearOtherDecorators = () => {
-  // TODO: Make a shared thing, is the same in sanity
+  // Deferred: share this decorator logic with Sanity.
   const editor = useEditor()
 
   useEffect(() => {

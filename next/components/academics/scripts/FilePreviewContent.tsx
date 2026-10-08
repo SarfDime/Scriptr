@@ -28,14 +28,29 @@ export function FilePreviewContent({
   fileName,
 }: FilePreviewContentProps) {
   if (kind === 'image') {
+    if (url.startsWith('blob:')) {
+      return (
+        <Box className='relative h-[70vh] w-full overflow-hidden rounded-lg bg-background-200'>
+          {/* biome-ignore lint/performance/noImgElement: Blob URLs are local, transient files and cannot use Next image optimization. */}
+          <img
+            src={url}
+            alt={fileName}
+            className='block h-full w-full rounded-lg object-contain'
+          />
+        </Box>
+      )
+    }
+
     // Fill mode needs a sized, positioned parent. Local `blob:` URLs (the
-    // create-script flow) are served as-is by next/image automatically.
+    // create-script flow) use the native image path above because they are
+    // not eligible for Next's image optimization.
     return (
       <Box className='relative h-[70vh] w-full overflow-hidden rounded-lg bg-background-200'>
         <NextImage
           src={url}
           alt={fileName}
           fillProp
+          sizes='(min-width: 768px) 70vw, 100vw'
           className='rounded-lg object-contain'
         />
       </Box>
@@ -123,7 +138,7 @@ function TextFilePreview({ url, fileName }: { url: string; fileName: string }) {
       .then((response) => {
         if (!response.ok) throw new Error('Failed to load file')
         return response.text()
-        // TODO: Cache file since they never change
+        // Deferred: cache files because their contents never change.
       })
       .then((text) => {
         if (!cancelled) setState({ status: 'ready', text })

@@ -2,6 +2,7 @@ import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
 import { ScriptPanel } from '@/components/academics/scripts/ScriptPanel'
 import { Box } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
+import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
 import { getLinkAddress, getLinkLabel } from '@/lib/script-detail'
 
@@ -12,18 +13,14 @@ export function ScriptAdditionalReading({ links }: { links: Array<string> }) {
   return (
     <ScriptPanel
       aria-label={SCRIPT_STRINGS.additionalReading.title}
-      className='min-w-0 grow basis-[14rem] gap-3'
+      className='min-w-0 grow basis-56 gap-3'
     >
-      <Box className='ui-cluster items-center gap-2'>
-        <Text className='ui-title'>
-          {SCRIPT_STRINGS.additionalReading.title}
-        </Text>
-        {links.length > 0 && (
-          <Text className='ui-caption text-grey-500'>{links.length}</Text>
-        )}
-      </Box>
+      <SectionHeader
+        title={SCRIPT_STRINGS.additionalReading.title}
+        count={links.length > 0 ? links.length : undefined}
+      />
       {links.length === 0 ? (
-        <Text className='ui-caption text-grey-500'>
+        <Text className='ui-caption'>
           {SCRIPT_STRINGS.additionalReading.empty}
         </Text>
       ) : (
@@ -53,7 +50,7 @@ function ReadingLink({ link }: { link: string }) {
         <Text className='ui-label truncate'>{label}</Text>
         {/* A bare domain would only repeat the headline. */}
         {address !== label && (
-          <Text className='ui-caption truncate text-grey-500'>{address}</Text>
+          <Text className='ui-caption truncate'>{address}</Text>
         )}
       </Box>
     </NextLink>

@@ -1,7 +1,6 @@
 // Website ID
 const sanityWebsiteId = process.env.NEXT_PUBLIC_SANITY_WEBSITE_ID
-const websiteDomain =
-  process.env.NETLIFY_WEBSITE_DOMAIN ?? 'TODO: WEBSITE_DOMAIN for production'
+const websiteDomain = process.env.NEXT_PUBLIC_SITE_URL ?? ''
 
 // SANITY
 const sanityAuthToken = process.env.SANITY_AUTH_TOKEN

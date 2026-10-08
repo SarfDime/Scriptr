@@ -26,7 +26,7 @@ export function TextArea({
       <textarea
         {...rest}
         className={cn(
-          'focus-visible:outline-none focus-visible:ring-brand',
+          'focus-visible:outline-none focus-visible:ring-brand ui-above-inside',
           rest?.className
         )}
         onChange={inputOnChange}

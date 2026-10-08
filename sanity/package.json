@@ -1,26 +1,24 @@
 {
   "dependencies": {
     "@sanity/asset-utils": "^2.3.0",
-    "@sanity/client": "^8.6.1",
-    "@sanity/dashboard": "^6.0.18",
-    "@sanity/icons": "^5.2.2",
-    "@sanity/ui": "^4.2.1",
-    "@sanity/vision": "^6.13.2",
-    "oxc-transform-react": "^0.149.0",
+    "@sanity/client": "^8.9.0",
+    "@sanity/dashboard": "^6.0.19",
+    "@sanity/icons": "^5.2.3",
+    "@sanity/ui": "^4.4.0",
+    "@sanity/vision": "^6.18.0",
     "react": "^19.3.0",
     "react-compiler-runtime": "^1.0.0",
     "react-dom": "^19.3.0",
-    "sanity": "^6.13.2",
-    "sanity-plugin-dashboard-widget-netlify": "^3.0.18",
-    "sanity-plugin-iframe-pane": "^5.0.35",
-    "sanity-plugin-media": "^6.1.8",
-    "sanity-plugin-mermaid-content-model": "^1.0.1",
+    "sanity": "^6.18.0",
+    "sanity-plugin-iframe-pane": "^5.0.37",
+    "sanity-plugin-media": "^6.3.2",
+    "sanity-plugin-mermaid-content-model": "^2.0.0",
     "sanity-plugin-references": "^1.2.0",
     "sanity-plugin-smart-asset-manager": "^2.0.1",
     "styled-components": "6.5.3"
   },
   "devDependencies": {
-    "@sanity/cli": "^8.11.0",
+    "@sanity/cli": "^8.15.0",
     "babel-plugin-react-compiler": "^1.0.0"
   },
   "keywords": [

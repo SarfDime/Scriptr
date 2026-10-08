@@ -23,6 +23,7 @@ export const PTListDropdown = () => {
       label={PT_STRINGS.toolbar.list.label}
       title={PT_STRINGS.toolbar.list.title}
       icon={LIST_ICON}
+      active={Boolean(activeList)}
     >
       {LIST_ITEMS.map((l) => (
         <RowButton

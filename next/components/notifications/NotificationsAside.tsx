@@ -32,7 +32,7 @@ const NotificationRow = ({
       )}
     >
       <Box className='ui-cluster items-start justify-between gap-2'>
-        <Text className='ui-body font-medium'>{notification.title}</Text>
+        <Text className='ui-body-strong'>{notification.title}</Text>
         {!notification.persistent && (
           <Button
             onClick={() => dismiss(notification.id)}
@@ -44,7 +44,7 @@ const NotificationRow = ({
         )}
       </Box>
       {notification.body && (
-        <Text className='ui-caption text-grey-500'>{notification.body}</Text>
+        <Text className='ui-caption'>{notification.body}</Text>
       )}
       {notification.action?.kind === 'link' && notification.action.href && (
         <NextLink
@@ -61,7 +61,7 @@ const NotificationRow = ({
             markRead(notification.id)
             open()
           }}
-          className='button subtle w-fit ui-caption px-2 py-1'
+          className='button button-sm subtle w-fit'
         >
           {notification.action.label}
         </Button>
@@ -90,10 +90,10 @@ export const NotificationsAside = () => {
       hideBackdrop={true}
       dialogProps={{
         className: cn(
-          'fixed top-16 z-50 ui-stack h-full w-full max-w-sm gap-3 overflow-y-auto p-4 md:min-w-[unset] md:w-full',
+          'fixed top-16 z-50 ui-stack h-full w-full max-w-sm overflow-y-auto md:min-w-[unset] md:w-full',
           trayOpen && 'transition-transform transform translate-x-0',
           !trayOpen && 'transition-transform transform translate-x-full',
-          'ui-above border-l'
+          'ui-above rounded-none border-r-0 border-b-0 border-t-0'
         ),
       }}
       headerProps={{
@@ -115,7 +115,7 @@ export const NotificationsAside = () => {
           ))}
         </Box>
       ) : (
-        <Text className='ui-caption text-grey-500'>You're all caught up.</Text>
+        <Text className='ui-caption'>You're all caught up.</Text>
       )}
     </Dialog>
   )

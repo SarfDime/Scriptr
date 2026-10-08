@@ -95,7 +95,7 @@ export const SubjectFilters = ({
         triggerProps={{
           'aria-label': 'Filter by year',
           className:
-            'button ghost min-w-36 rounded-lg border border-grey-300 px-3 py-2 ui-caption',
+            'button button-sm ghost min-w-36 rounded-lg border border-grey-300 px-3 py-2',
         }}
       />
 
@@ -107,7 +107,7 @@ export const SubjectFilters = ({
         triggerProps={{
           'aria-label': 'Sort subjects',
           className:
-            'button ghost min-w-36 rounded-lg border border-grey-300 px-3 py-2 ui-caption',
+            'button button-sm ghost min-w-36 rounded-lg border border-grey-300 px-3 py-2',
         }}
         icon={
           sort === 'Professor A-Z' ? (

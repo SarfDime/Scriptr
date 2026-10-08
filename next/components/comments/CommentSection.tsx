@@ -1,7 +1,7 @@
 'use client'
 
 import { COMMENTS_SECTION_ID } from '@shared/config/shared-constants'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { Box } from '@/components/common/Box'
 import type { CommentSectionProps } from '@/types/components/comments/Comments.types'
 import { CommentComposer } from './CommentComposer'
@@ -27,12 +27,19 @@ export function CommentSection({
 
 function CommentSectionBody() {
   const [isComposing, setIsComposing] = useState(false)
+  const headingId = useId()
 
   return (
     // scroll-mt keeps the heading clear of the sticky nav when jumped to via
     // the `#comments` link on script cards.
-    <Box id={COMMENTS_SECTION_ID} className='ui-stack gap-4 scroll-mt-20'>
+    <Box
+      as='section'
+      id={COMMENTS_SECTION_ID}
+      aria-labelledby={headingId}
+      className='ui-stack scroll-mt-20 ui-above'
+    >
       <CommentsHeader
+        headingId={headingId}
         isComposing={isComposing}
         onWriteClick={() => setIsComposing(true)}
       />

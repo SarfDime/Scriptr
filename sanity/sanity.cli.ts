@@ -1,9 +1,13 @@
+import {
+  SANITY_DATASET,
+  SANITY_PROJECT_ID,
+} from '@shared/config/sanity-constants'
 import { defineCliConfig } from 'sanity/cli'
 
 export default defineCliConfig({
   api: {
-    projectId: 'REDACTED_SANITY_PROJECT_ID',
-    dataset: 'production',
+    projectId: process.env.SANITY_STUDIO_PROJECT_ID ?? SANITY_PROJECT_ID,
+    dataset: process.env.SANITY_STUDIO_DATASET ?? SANITY_DATASET,
   },
   deployment: {
     appId: 'REDACTED_SANITY_APP_ID',

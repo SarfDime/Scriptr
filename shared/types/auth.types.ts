@@ -1,4 +1,4 @@
-import type { ProfileSubjectStatus, UserRole } from './api.types'
+import type { ProfileSubjectStatus, UserRole } from './profile.types'
 
 // ── Requests ────────────────────────────────────────────────────────────
 

@@ -1,9 +1,6 @@
 import type { ApiEndpoint } from '@shared/config/api-routes'
 import type { Tables } from './database.types'
 
-type UserRole = 'student' | 'moderator' | 'admin' // TODO: Move to profile types
-type ProfileSubjectStatus = 'completed' | 'currently_taking' // TODO: Move to profile types
-type FlagStatus = 'pending' | 'reviewed' | 'dismissed' // TODO: Move to flag types
 type FlagTargetType = 'user' | 'script' | 'comment'
 type FileType =
   | 'pdf'
@@ -18,6 +15,7 @@ type FileType =
   | 'xlsx'
 
 type Favorite = Pick<Tables<'script_favorites'>, 'created_at' | 'script_id'>
+type FlagRow = Tables<'flags'>
 type NotificationRecord = Tables<'notifications'>
 
 /** Shape returned by POST /file-ops/upload for each uploaded file, and
@@ -42,11 +40,9 @@ type QueryApiEndpointType = `${ApiEndpoint}${string}` | ApiEndpoint
 export type {
   Favorite,
   FileType,
-  FlagStatus,
+  FlagRow,
   FlagTargetType,
   NotificationRecord,
-  ProfileSubjectStatus,
   QueryApiEndpointType,
   ScriptFileInput,
-  UserRole,
 }

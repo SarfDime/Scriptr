@@ -47,6 +47,7 @@ export const PTAlignmentDropdown = () => {
       label={PT_STRINGS.toolbar.align.label}
       title={PT_STRINGS.toolbar.align.title}
       icon={ALIGN_ICON}
+      active={Boolean(activeAlignment)}
       icons={
         activeAlignment
           ? [resolveDecoratorIcon(activeAlignment)].filter(

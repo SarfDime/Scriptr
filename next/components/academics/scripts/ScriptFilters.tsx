@@ -90,7 +90,7 @@ export const ScriptFilters = ({
         triggerProps={{
           'aria-label': UI_STRINGS.scripts.filters.subjectLabel,
           className:
-            'button ghost min-w-36 rounded-lg border border-grey-300 px-3 py-2 ui-caption',
+            'button button-sm ghost min-w-36 rounded-lg border border-grey-300 px-3 py-2',
         }}
       />
       <Select<ScriptSortOption>
@@ -103,7 +103,7 @@ export const ScriptFilters = ({
         triggerProps={{
           'aria-label': UI_STRINGS.scripts.filters.sortLabel,
           className:
-            'button ghost min-w-36 rounded-lg border border-grey-300 px-3 py-2 ui-caption',
+            'button button-sm ghost min-w-36 rounded-lg border border-grey-300 px-3 py-2',
         }}
         icon={
           sort === 'Title A-Z' ? (

@@ -9,7 +9,6 @@ const withBundleAnalyzer = bundleAnalyzer({
 // Define base Next.js configuration with TypeScript types
 const nextConfig = {
   poweredByHeader: false,
-  trailingSlash: true,
   reactStrictMode: true,
   images: {
     remotePatterns: [
@@ -30,25 +29,6 @@ const nextConfig = {
     qualities: [65, 85, 91],
   },
   reactCompiler: true,
-  experimental: {
-    turbopackFileSystemCacheForDev: true,
-    optimizePackageImports: [
-      'tailwind-merge',
-      'clsx',
-      '@tailwindcss/postcss',
-      'axios',
-      'axios-retry',
-      '@sanity/icons',
-      '@sanity/asset-utils',
-      '@mux/mux-video-react',
-      'embla-carousel-autoplay',
-      'embla-carousel-react',
-      'next-share',
-      'next-i18n-router',
-      'cookies-next',
-      'react-turnstile',
-    ],
-  },
 } satisfies NextConfig
 
 const bundleAnalyzerConfig = withBundleAnalyzer(nextConfig)

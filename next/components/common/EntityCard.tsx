@@ -32,12 +32,13 @@ export type EntityCardProps = {
 
 /**
  * `min-w-0 overflow-hidden` on the card root: when the card is a flex/grid
- * item, its min-content width would otherwise be the longest `truncate`d
- * (nowrap) line, so long text grows the card past its container instead of
- * truncating.
+ * item, its min-content width would otherwise be the longest nowrap line, so
+ * long text grows the card past its container. From `md` up the lines
+ * truncate; below it they wrap (`overflow-wrap: anywhere` also lets a single
+ * long word break, which `break-words` does not do inside flex/grid items).
  */
 const defaultClassName =
-  'group p-4 h-full min-w-0 overflow-hidden ui-stack gap-2 transition hover:border-brand-500 hover:shadow-sm ui-above'
+  'group p-4 h-full min-w-0 overflow-hidden ui-stack gap-2 transition-colors hover:border-brand-200/50 ui-above'
 
 export const EntityCard = ({
   href,
@@ -62,21 +63,27 @@ export const EntityCard = ({
           <Box className='ui-cluster w-full min-w-0 flex-nowrap items-center justify-between gap-2'>
             <Title
               as='h3'
-              className='ui-body min-w-0 truncate font-semibold group-hover:text-brand'
+              className='ui-body-strong min-w-0 max-md:[overflow-wrap:anywhere] md:truncate transition-colors group-hover:text-brand-500'
             >
               {title}
             </Title>
             {headerAside && <Box className='shrink-0'>{headerAside}</Box>}
           </Box>
 
-          {subtitle && <Text className='ui-caption truncate'>{subtitle}</Text>}
+          {subtitle && (
+            <Text className='ui-caption max-md:[overflow-wrap:anywhere] md:truncate'>
+              {subtitle}
+            </Text>
+          )}
 
           {caption && (
-            <Text className='ui-caption truncate font-medium'>{caption}</Text>
+            <Text className='ui-caption font-medium max-md:[overflow-wrap:anywhere] md:truncate'>
+              {caption}
+            </Text>
           )}
 
           {secondaryCaption && (
-            <Text className='ui-caption truncate font-medium'>
+            <Text className='ui-caption font-medium max-md:[overflow-wrap:anywhere] md:truncate'>
               {secondaryCaption}
             </Text>
           )}
@@ -85,7 +92,7 @@ export const EntityCard = ({
 
       {footer ??
         (stats && stats.length > 0 && (
-          <ClickableCard.Footer className='ui-cluster mt-auto flex-wrap gap-2 pt-2'>
+          <ClickableCard.Footer className='ui-cluster mt-auto flex-wrap gap-2 pt-2.5 transition-colors duration-300 group-hover:border-t-brand-300'>
             {stats.map((stat, i) => (
               <Text key={stat.label} className='ui-caption'>
                 {i > 0 && '• '}

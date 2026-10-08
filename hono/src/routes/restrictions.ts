@@ -1,6 +1,6 @@
 import { isAdmin } from '@shared/utils/api.utils'
 import { Hono } from 'hono'
-import { requiredParam } from '../lib/request'
+import { databaseErrorResponse, requiredParam } from '../lib/request'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
@@ -31,7 +31,7 @@ restrictions.get('/', async (c) => {
     .select(RESTRICTION_COLUMNS)
     .order('created_at', { ascending: false })
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json(data)
 })
 
@@ -46,7 +46,7 @@ restrictions.get('/me', async (c) => {
     .eq('profile_id', user.id)
     .maybeSingle()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json(data)
 })
 
@@ -63,7 +63,7 @@ restrictions.get('/:profileId', async (c) => {
     .eq('profile_id', profileId)
     .maybeSingle()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json(data)
 })
 
@@ -116,7 +116,7 @@ restrictions.put('/:profileId', async (c) => {
     .select(RESTRICTION_COLUMNS)
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json({ success: true, restriction: data })
 })
 
@@ -143,7 +143,7 @@ restrictions.delete('/:profileId', async (c) => {
     .select('profile_id')
     .maybeSingle()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   if (!data) {
     return c.json({ error: 'This user is not currently restricted' }, 404)
   }

@@ -12,6 +12,13 @@ import { useSession } from '@/providers/SessionProvider'
 import { LoginForm } from './LoginForm'
 import { RegisterForm } from './RegisterForm'
 
+// Below `md` the card fills the screen under the header: no frame, rounding
+// or shadow. From `md` up it is the usual framed card.
+const AUTH_CARD_CLASS = [
+  'w-full max-w-md p-6 ui-stack gap-4 ui-above',
+  'max-md:max-w-none max-md:flex-1 max-md:rounded-none max-md:border-0 max-md:shadow-none',
+].join(' ')
+
 /**
  * The whole card is a Client Component rather than just the forms: its
  * title and body both branch on session status (loading/authenticated/
@@ -28,7 +35,7 @@ export function AuthCard() {
 
   if (session.status === 'loading') {
     return (
-      <Card className='w-full max-w-md p-6 ui-stack gap-4 ui-above'>
+      <Card className={AUTH_CARD_CLASS}>
         <Text className='ui-body text-center'>
           {UI_STRINGS.auth.loadingLabel}
         </Text>
@@ -40,14 +47,14 @@ export function AuthCard() {
     const displayName = session.user.username || session.user.email || ''
 
     return (
-      <Card className='w-full max-w-md p-6 ui-stack gap-4 ui-above'>
+      <Card className={AUTH_CARD_CLASS}>
         <Card.Header>
-          <Title as='h1' className='ui-title font-bold text-center'>
+          <Title as='h1' className='ui-title text-center'>
             {UI_STRINGS.auth.signedInTitle}
           </Title>
         </Card.Header>
         <Card.Body className='ui-stack gap-4 text-center'>
-          <Text className='ui-body text-grey-500'>
+          <Text className='ui-body text-fg-muted'>
             {UI_STRINGS.auth.signedInLabel} {displayName}
           </Text>
           <NextLink href='/' className='w-full'>
@@ -67,14 +74,14 @@ export function AuthCard() {
   }
 
   return (
-    <Card className='w-full max-w-md p-6 ui-stack gap-4 ui-above'>
+    <Card className={AUTH_CARD_CLASS}>
       <Card.Header>
-        <Title as='h1' className='ui-title font-bold text-center'>
+        <Title as='h1' className='ui-title text-center'>
           {mode === 'login'
             ? UI_STRINGS.auth.login.title
             : UI_STRINGS.auth.register.title}
         </Title>
-        <Text className='ui-body text-grey-500 text-center'>
+        <Text className='ui-body text-fg-muted text-center'>
           {UI_STRINGS.auth.subtitle}
         </Text>
       </Card.Header>

@@ -1,4 +1,5 @@
 import { Box } from '@/components/common/Box'
+import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
 import { Radio } from '@/components/ui/radio/RadioButton'
 import type { OnboardingSelectStepProps } from '@/types/onboarding.types'
@@ -28,13 +29,10 @@ export const OnboardingSelectStep = ({
 
   return (
     <Box className='ui-stack gap-4'>
-      <Box className='ui-stack gap-1'>
-        <Text className='ui-title font-semibold'>{title}</Text>
-        <Text className='ui-caption text-grey-500'>{description}</Text>
-      </Box>
+      <SectionHeader title={title} subtitle={description} />
 
       {placeholder ? (
-        <Text className='ui-caption text-grey-500'>{placeholder}</Text>
+        <Text className='ui-caption'>{placeholder}</Text>
       ) : (
         <Box className='ui-stack gap-2'>
           {options.map((option) => (

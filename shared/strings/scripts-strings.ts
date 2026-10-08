@@ -47,6 +47,19 @@ export const SCRIPT_STRINGS = {
         canPreview ? 'preview available' : 'download to view'
       }`,
   },
+  vote: {
+    upvote: 'Upvote',
+    downvote: 'Downvote',
+    score: (score: number) => `Score: ${score}`,
+  },
+  favorite: {
+    favorite: 'Favorite',
+    add: 'Add to favorites',
+    remove: 'Remove from favorites',
+    failedTitleAdd: 'Failed to add script to favorites',
+    failedTitleRemove: 'Failed to remove script from favorites',
+    failedDescription: 'Please try again.',
+  },
   download: {
     failedTitle: 'Download failed',
     failedDescription: 'Please try again.',
@@ -55,6 +68,11 @@ export const SCRIPT_STRINGS = {
   },
   preview: {
     loadFailed: (fileName: string) => `Couldn't load ${fileName} for preview.`,
+    filesTitle: 'Files',
+    filesSubtitle: 'Choose a file to preview or download.',
+    previewing: (fileName: string) => `Previewing ${fileName}`,
+    previewFile: (fileName: string) => `Preview ${fileName}`,
+    noPreviewSelected: 'Choose a previewable file to view it here.',
   },
   description: {
     title: 'Description',

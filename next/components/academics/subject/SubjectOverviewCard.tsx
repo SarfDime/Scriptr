@@ -30,7 +30,7 @@ export const SubjectOverviewCard = ({
     <Card className='p-6 ui-stack gap-5 ui-above'>
       <Box className='ui-cluster items-start justify-between gap-5'>
         <Box className='ui-stack gap-2'>
-          <Text className='ui-caption text-grey-500 uppercase tracking-wide'>
+          <Text className='ui-caption uppercase tracking-wide'>
             Subject overview
           </Text>
           {description && (

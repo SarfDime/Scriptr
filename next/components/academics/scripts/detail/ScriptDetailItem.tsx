@@ -11,7 +11,7 @@ export function ScriptDetailItem({
 }) {
   return (
     <Box className='ui-stack gap-0.5'>
-      <dt className='ui-caption text-grey-500'>{label}</dt>
+      <dt className='ui-caption'>{label}</dt>
       <dd className='ui-label'>{children}</dd>
     </Box>
   )

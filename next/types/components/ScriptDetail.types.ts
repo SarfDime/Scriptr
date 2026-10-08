@@ -9,6 +9,7 @@ export type ScriptDetailViewModel = {
   files: Array<ScriptFile>
   voteScore: number
   hasVoted: boolean
+  isAuthor: boolean
   isSaved: boolean
   /** `null` renders the subject as plain text. */
   subjectHref: string | null

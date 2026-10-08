@@ -107,7 +107,7 @@
           "type": "inline",
           "name": "slug"
         },
-        "optional": false
+        "optional": true
       },
       "code": {
         "type": "objectAttribute",
@@ -148,6 +148,13 @@
         },
         "optional": false
       },
+      "elective": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "boolean"
+        },
+        "optional": true
+      },
       "classes": {
         "type": "objectAttribute",
         "value": {
@@ -158,17 +165,7 @@
       "semester": {
         "type": "objectAttribute",
         "value": {
-          "type": "union",
-          "of": [
-            {
-              "type": "string",
-              "value": "winter"
-            },
-            {
-              "type": "string",
-              "value": "summer"
-            }
-          ]
+          "type": "number"
         },
         "optional": false
       },
@@ -199,7 +196,7 @@
         "value": {
           "type": "string"
         },
-        "optional": false
+        "optional": true
       },
       "study": {
         "type": "objectAttribute",
@@ -220,7 +217,7 @@
   },
   {
     "type": "type",
-    "name": "faculty.reference",
+    "name": "sanity.imageAsset.reference",
     "value": {
       "type": "object",
       "attributes": {
@@ -245,7 +242,7 @@
           "optional": true
         }
       },
-      "dereferencesTo": "faculty"
+      "dereferencesTo": "sanity.imageAsset"
     }
   },
   {
@@ -276,6 +273,36 @@
         }
       },
       "dereferencesTo": "person"
+    }
+  },
+  {
+    "type": "type",
+    "name": "faculty.reference",
+    "value": {
+      "type": "object",
+      "attributes": {
+        "_ref": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "string"
+          }
+        },
+        "_type": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "string",
+            "value": "reference"
+          }
+        },
+        "_weak": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "boolean"
+          },
+          "optional": true
+        }
+      },
+      "dereferencesTo": "faculty"
     }
   },
   {
@@ -326,7 +353,54 @@
           "type": "inline",
           "name": "slug"
         },
-        "optional": false
+        "optional": true
+      },
+      "picture": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "object",
+          "attributes": {
+            "asset": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "inline",
+                "name": "sanity.imageAsset.reference"
+              },
+              "optional": true
+            },
+            "media": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "unknown"
+              },
+              "optional": true
+            },
+            "hotspot": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "inline",
+                "name": "sanity.imageHotspot"
+              },
+              "optional": true
+            },
+            "crop": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "inline",
+                "name": "sanity.imageCrop"
+              },
+              "optional": true
+            },
+            "_type": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string",
+                "value": "image"
+              }
+            }
+          }
+        },
+        "optional": true
       },
       "description": {
         "type": "objectAttribute",
@@ -343,14 +417,6 @@
         },
         "optional": true
       },
-      "faculty": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "inline",
-          "name": "faculty.reference"
-        },
-        "optional": false
-      },
       "assistant": {
         "type": "objectAttribute",
         "value": {
@@ -359,6 +425,14 @@
         },
         "optional": true
       },
+      "faculty": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "inline",
+          "name": "faculty.reference"
+        },
+        "optional": false
+      },
       "dbId": {
         "type": "objectAttribute",
         "value": {
@@ -366,36 +440,6 @@
         },
         "optional": true
       }
-    }
-  },
-  {
-    "type": "type",
-    "name": "sanity.imageAsset.reference",
-    "value": {
-      "type": "object",
-      "attributes": {
-        "_ref": {
-          "type": "objectAttribute",
-          "value": {
-            "type": "string"
-          }
-        },
-        "_type": {
-          "type": "objectAttribute",
-          "value": {
-            "type": "string",
-            "value": "reference"
-          }
-        },
-        "_weak": {
-          "type": "objectAttribute",
-          "value": {
-            "type": "boolean"
-          },
-          "optional": true
-        }
-      },
-      "dereferencesTo": "sanity.imageAsset"
     }
   },
   {
@@ -707,237 +751,6 @@
     }
   },
   {
-    "name": "slug",
-    "type": "type",
-    "value": {
-      "type": "object",
-      "attributes": {
-        "_type": {
-          "type": "objectAttribute",
-          "value": {
-            "type": "string",
-            "value": "slug"
-          }
-        },
-        "current": {
-          "type": "objectAttribute",
-          "value": {
-            "type": "string"
-          },
-          "optional": false
-        },
-        "source": {
-          "type": "objectAttribute",
-          "value": {
-            "type": "string"
-          },
-          "optional": true
-        }
-      }
-    }
-  },
-  {
-    "name": "professor",
-    "type": "document",
-    "attributes": {
-      "_id": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "string"
-        }
-      },
-      "_type": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "string",
-          "value": "professor"
-        }
-      },
-      "_createdAt": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "string"
-        }
-      },
-      "_updatedAt": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "string"
-        }
-      },
-      "_rev": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "string"
-        }
-      },
-      "name": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "string"
-        },
-        "optional": false
-      },
-      "slug": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "inline",
-          "name": "slug"
-        },
-        "optional": false
-      },
-      "title": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "string"
-        },
-        "optional": true
-      },
-      "description": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "inline",
-          "name": "richTextLite"
-        },
-        "optional": true
-      },
-      "picture": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "object",
-          "attributes": {
-            "asset": {
-              "type": "objectAttribute",
-              "value": {
-                "type": "inline",
-                "name": "sanity.imageAsset.reference"
-              },
-              "optional": true
-            },
-            "media": {
-              "type": "objectAttribute",
-              "value": {
-                "type": "unknown"
-              },
-              "optional": true
-            },
-            "hotspot": {
-              "type": "objectAttribute",
-              "value": {
-                "type": "inline",
-                "name": "sanity.imageHotspot"
-              },
-              "optional": true
-            },
-            "crop": {
-              "type": "objectAttribute",
-              "value": {
-                "type": "inline",
-                "name": "sanity.imageCrop"
-              },
-              "optional": true
-            },
-            "_type": {
-              "type": "objectAttribute",
-              "value": {
-                "type": "string",
-                "value": "image"
-              }
-            }
-          }
-        },
-        "optional": true
-      },
-      "bio": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "inline",
-          "name": "richTextLite"
-        },
-        "optional": true
-      },
-      "officeLocation": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "string"
-        },
-        "optional": false
-      },
-      "telephone": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "string"
-        },
-        "optional": true
-      },
-      "email": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "string"
-        },
-        "optional": true
-      },
-      "website": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "string"
-        },
-        "optional": false
-      },
-      "faculties": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "array",
-          "of": {
-            "type": "object",
-            "attributes": {
-              "_key": {
-                "type": "objectAttribute",
-                "value": {
-                  "type": "string"
-                }
-              }
-            },
-            "rest": {
-              "type": "inline",
-              "name": "faculty.reference"
-            }
-          }
-        },
-        "optional": false
-      },
-      "studies": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "array",
-          "of": {
-            "type": "object",
-            "attributes": {
-              "_key": {
-                "type": "objectAttribute",
-                "value": {
-                  "type": "string"
-                }
-              }
-            },
-            "rest": {
-              "type": "inline",
-              "name": "study.reference"
-            }
-          }
-        },
-        "optional": true
-      },
-      "dbId": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "string"
-        },
-        "optional": true
-      }
-    }
-  },
-  {
     "name": "sanity.imageCrop",
     "type": "type",
     "value": {
@@ -1026,6 +839,237 @@
     }
   },
   {
+    "name": "slug",
+    "type": "type",
+    "value": {
+      "type": "object",
+      "attributes": {
+        "_type": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "string",
+            "value": "slug"
+          }
+        },
+        "current": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "string"
+          },
+          "optional": false
+        },
+        "source": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "string"
+          },
+          "optional": true
+        }
+      }
+    }
+  },
+  {
+    "name": "professor",
+    "type": "document",
+    "attributes": {
+      "_id": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "_type": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string",
+          "value": "professor"
+        }
+      },
+      "_createdAt": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "_updatedAt": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "_rev": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "name": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": false
+      },
+      "slug": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "inline",
+          "name": "slug"
+        },
+        "optional": true
+      },
+      "title": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
+      "description": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "inline",
+          "name": "richTextLite"
+        },
+        "optional": true
+      },
+      "picture": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "object",
+          "attributes": {
+            "asset": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "inline",
+                "name": "sanity.imageAsset.reference"
+              },
+              "optional": true
+            },
+            "media": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "unknown"
+              },
+              "optional": true
+            },
+            "hotspot": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "inline",
+                "name": "sanity.imageHotspot"
+              },
+              "optional": true
+            },
+            "crop": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "inline",
+                "name": "sanity.imageCrop"
+              },
+              "optional": true
+            },
+            "_type": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string",
+                "value": "image"
+              }
+            }
+          }
+        },
+        "optional": true
+      },
+      "bio": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "inline",
+          "name": "richTextLite"
+        },
+        "optional": true
+      },
+      "officeLocation": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
+      "telephone": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
+      "email": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
+      "website": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
+      "faculties": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "array",
+          "of": {
+            "type": "object",
+            "attributes": {
+              "_key": {
+                "type": "objectAttribute",
+                "value": {
+                  "type": "string"
+                }
+              }
+            },
+            "rest": {
+              "type": "inline",
+              "name": "faculty.reference"
+            }
+          }
+        },
+        "optional": false
+      },
+      "studies": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "array",
+          "of": {
+            "type": "object",
+            "attributes": {
+              "_key": {
+                "type": "objectAttribute",
+                "value": {
+                  "type": "string"
+                }
+              }
+            },
+            "rest": {
+              "type": "inline",
+              "name": "study.reference"
+            }
+          }
+        },
+        "optional": true
+      },
+      "dbId": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      }
+    }
+  },
+  {
     "type": "type",
     "name": "university.reference",
     "value": {
@@ -1103,7 +1147,7 @@
           "type": "inline",
           "name": "slug"
         },
-        "optional": false
+        "optional": true
       },
       "description": {
         "type": "objectAttribute",
@@ -1285,7 +1329,7 @@
         "value": {
           "type": "string"
         },
-        "optional": false
+        "optional": true
       },
       "university": {
         "type": "objectAttribute",
@@ -1446,7 +1490,7 @@
           "type": "inline",
           "name": "slug"
         },
-        "optional": false
+        "optional": true
       },
       "description": {
         "type": "objectAttribute",
@@ -1512,7 +1556,7 @@
         "value": {
           "type": "string"
         },
-        "optional": false
+        "optional": true
       },
       "r2BucketId": {
         "type": "objectAttribute",
@@ -2253,6 +2297,36 @@
   },
   {
     "type": "type",
+    "name": "starCanvas.reference",
+    "value": {
+      "type": "object",
+      "attributes": {
+        "_ref": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "string"
+          }
+        },
+        "_type": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "string",
+            "value": "reference"
+          }
+        },
+        "_weak": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "boolean"
+          },
+          "optional": true
+        }
+      },
+      "dereferencesTo": "starCanvas"
+    }
+  },
+  {
+    "type": "type",
     "name": "navMenu.reference",
     "value": {
       "type": "object",
@@ -2361,6 +2435,22 @@
         },
         "optional": true
       },
+      "dtBackground": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "inline",
+          "name": "starCanvas.reference"
+        },
+        "optional": true
+      },
+      "ltBackground": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "inline",
+          "name": "starCanvas.reference"
+        },
+        "optional": true
+      },
       "navAndFooterFields": {
         "type": "objectAttribute",
         "value": {
@@ -2424,6 +2514,1454 @@
               "name": "university.reference"
             }
           }
+        },
+        "optional": true
+      }
+    }
+  },
+  {
+    "name": "starCanvas",
+    "type": "document",
+    "attributes": {
+      "_id": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "_type": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string",
+          "value": "starCanvas"
+        }
+      },
+      "_createdAt": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "_updatedAt": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "_rev": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "starCount": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "starColors": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "array",
+          "of": {
+            "type": "union",
+            "of": [
+              {
+                "type": "string",
+                "value": "brand"
+              },
+              {
+                "type": "string",
+                "value": "brand-300"
+              },
+              {
+                "type": "string",
+                "value": "brand-850"
+              },
+              {
+                "type": "string",
+                "value": "sky"
+              },
+              {
+                "type": "string",
+                "value": "jade"
+              },
+              {
+                "type": "string",
+                "value": "lavender"
+              },
+              {
+                "type": "string",
+                "value": "rose-pink"
+              },
+              {
+                "type": "string",
+                "value": "amber"
+              },
+              {
+                "type": "string",
+                "value": "golden-yellow"
+              },
+              {
+                "type": "string",
+                "value": "yellow"
+              },
+              {
+                "type": "string",
+                "value": "error-red"
+              },
+              {
+                "type": "string",
+                "value": "background-50"
+              },
+              {
+                "type": "string",
+                "value": "grey-200"
+              },
+              {
+                "type": "string",
+                "value": "grey-300"
+              },
+              {
+                "type": "string",
+                "value": "grey-800"
+              },
+              {
+                "type": "string",
+                "value": "background-1000"
+              }
+            ]
+          }
+        },
+        "optional": true
+      },
+      "starMinSize": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "starMaxSize": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "starDriftSpeed": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "backgroundHazeColor": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "brand"
+            },
+            {
+              "type": "string",
+              "value": "brand-300"
+            },
+            {
+              "type": "string",
+              "value": "brand-850"
+            },
+            {
+              "type": "string",
+              "value": "sky"
+            },
+            {
+              "type": "string",
+              "value": "jade"
+            },
+            {
+              "type": "string",
+              "value": "lavender"
+            },
+            {
+              "type": "string",
+              "value": "rose-pink"
+            },
+            {
+              "type": "string",
+              "value": "amber"
+            },
+            {
+              "type": "string",
+              "value": "golden-yellow"
+            },
+            {
+              "type": "string",
+              "value": "yellow"
+            },
+            {
+              "type": "string",
+              "value": "error-red"
+            },
+            {
+              "type": "string",
+              "value": "background-50"
+            },
+            {
+              "type": "string",
+              "value": "grey-200"
+            },
+            {
+              "type": "string",
+              "value": "grey-300"
+            },
+            {
+              "type": "string",
+              "value": "grey-800"
+            },
+            {
+              "type": "string",
+              "value": "background-1000"
+            }
+          ]
+        },
+        "optional": true
+      },
+      "backgroundHazeOpacity": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "backgroundHazeRadius": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "shootingStarChance": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "shootingStarColor": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "brand"
+            },
+            {
+              "type": "string",
+              "value": "brand-300"
+            },
+            {
+              "type": "string",
+              "value": "brand-850"
+            },
+            {
+              "type": "string",
+              "value": "sky"
+            },
+            {
+              "type": "string",
+              "value": "jade"
+            },
+            {
+              "type": "string",
+              "value": "lavender"
+            },
+            {
+              "type": "string",
+              "value": "rose-pink"
+            },
+            {
+              "type": "string",
+              "value": "amber"
+            },
+            {
+              "type": "string",
+              "value": "golden-yellow"
+            },
+            {
+              "type": "string",
+              "value": "yellow"
+            },
+            {
+              "type": "string",
+              "value": "error-red"
+            },
+            {
+              "type": "string",
+              "value": "background-50"
+            },
+            {
+              "type": "string",
+              "value": "grey-200"
+            },
+            {
+              "type": "string",
+              "value": "grey-300"
+            },
+            {
+              "type": "string",
+              "value": "grey-800"
+            },
+            {
+              "type": "string",
+              "value": "background-1000"
+            }
+          ]
+        },
+        "optional": true
+      },
+      "enableBlackHole": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "boolean"
+        },
+        "optional": true
+      },
+      "blackHolePresetPosition": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "center"
+            },
+            {
+              "type": "string",
+              "value": "top-right"
+            },
+            {
+              "type": "string",
+              "value": "bottom-right"
+            },
+            {
+              "type": "string",
+              "value": "custom"
+            }
+          ]
+        },
+        "optional": true
+      },
+      "blackHoleXRatio": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "blackHoleYRatio": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "blackHoleRadius": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "blackHoleGlowRadius": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "blackHoleGravityRadius": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "blackHoleGravityForce": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "blackHoleHoverReachMultiplier": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "blackHoleHoverGravityMultiplier": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "blackHoleSmokeWisps": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "blackHoleSmokeIntensity": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "blackHoleSmokeSpeed": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "blackHoleEdgeRipple": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "blackHoleHoverRipple": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "blackHoleCoronaWidth": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "enableBlackHoleFlare": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "boolean"
+        },
+        "optional": true
+      },
+      "blackHoleFlare": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "blackHoleFlareSpin": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "blackHoleRingGlow": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "planetColors": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "array",
+          "of": {
+            "type": "union",
+            "of": [
+              {
+                "type": "string",
+                "value": "brand"
+              },
+              {
+                "type": "string",
+                "value": "brand-300"
+              },
+              {
+                "type": "string",
+                "value": "brand-850"
+              },
+              {
+                "type": "string",
+                "value": "sky"
+              },
+              {
+                "type": "string",
+                "value": "jade"
+              },
+              {
+                "type": "string",
+                "value": "lavender"
+              },
+              {
+                "type": "string",
+                "value": "rose-pink"
+              },
+              {
+                "type": "string",
+                "value": "amber"
+              },
+              {
+                "type": "string",
+                "value": "golden-yellow"
+              },
+              {
+                "type": "string",
+                "value": "yellow"
+              },
+              {
+                "type": "string",
+                "value": "error-red"
+              },
+              {
+                "type": "string",
+                "value": "background-50"
+              },
+              {
+                "type": "string",
+                "value": "grey-200"
+              },
+              {
+                "type": "string",
+                "value": "grey-300"
+              },
+              {
+                "type": "string",
+                "value": "grey-800"
+              },
+              {
+                "type": "string",
+                "value": "background-1000"
+              }
+            ]
+          }
+        },
+        "optional": true
+      },
+      "planetMinSize": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "planetMaxSize": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "planetRingChance": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "planetSizeRarity": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "enablePlanets": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "boolean"
+        },
+        "optional": true
+      },
+      "planetCount": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "planetOrbitMinRatio": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "planetOrbitMaxRatio": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "planetOrbitTilt": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "planetSpeed": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "planetHoverChaos": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "freePlanetCount": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "freePlanetDriftSpeed": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "enableGalaxy": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "boolean"
+        },
+        "optional": true
+      },
+      "galaxyPosition": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "top-left"
+            },
+            {
+              "type": "string",
+              "value": "top-right"
+            },
+            {
+              "type": "string",
+              "value": "bottom-left"
+            },
+            {
+              "type": "string",
+              "value": "bottom-right"
+            },
+            {
+              "type": "string",
+              "value": "left"
+            },
+            {
+              "type": "string",
+              "value": "right"
+            },
+            {
+              "type": "string",
+              "value": "center"
+            },
+            {
+              "type": "string",
+              "value": "random"
+            },
+            {
+              "type": "string",
+              "value": "custom"
+            }
+          ]
+        },
+        "optional": true
+      },
+      "galaxyXRatio": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "galaxyYRatio": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "galaxyMinSize": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "galaxyMaxSize": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "galaxyTilt": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "galaxyDriftFactor": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "galaxyDriftDirection": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "up-left"
+            },
+            {
+              "type": "string",
+              "value": "up"
+            },
+            {
+              "type": "string",
+              "value": "up-right"
+            },
+            {
+              "type": "string",
+              "value": "left"
+            },
+            {
+              "type": "string",
+              "value": "right"
+            },
+            {
+              "type": "string",
+              "value": "down-left"
+            },
+            {
+              "type": "string",
+              "value": "down"
+            },
+            {
+              "type": "string",
+              "value": "down-right"
+            }
+          ]
+        },
+        "optional": true
+      },
+      "galaxyOpacity": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "galaxyWidthScale": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "galaxyHeightScale": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "galaxyDensity": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "galaxyCenterDensity": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "galaxyEndDensity": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "galaxyCoreColor": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "brand"
+            },
+            {
+              "type": "string",
+              "value": "brand-300"
+            },
+            {
+              "type": "string",
+              "value": "brand-850"
+            },
+            {
+              "type": "string",
+              "value": "sky"
+            },
+            {
+              "type": "string",
+              "value": "jade"
+            },
+            {
+              "type": "string",
+              "value": "lavender"
+            },
+            {
+              "type": "string",
+              "value": "rose-pink"
+            },
+            {
+              "type": "string",
+              "value": "amber"
+            },
+            {
+              "type": "string",
+              "value": "golden-yellow"
+            },
+            {
+              "type": "string",
+              "value": "yellow"
+            },
+            {
+              "type": "string",
+              "value": "error-red"
+            },
+            {
+              "type": "string",
+              "value": "background-50"
+            },
+            {
+              "type": "string",
+              "value": "grey-200"
+            },
+            {
+              "type": "string",
+              "value": "grey-300"
+            },
+            {
+              "type": "string",
+              "value": "grey-800"
+            },
+            {
+              "type": "string",
+              "value": "background-1000"
+            }
+          ]
+        },
+        "optional": true
+      },
+      "galaxyArmColor": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "brand"
+            },
+            {
+              "type": "string",
+              "value": "brand-300"
+            },
+            {
+              "type": "string",
+              "value": "brand-850"
+            },
+            {
+              "type": "string",
+              "value": "sky"
+            },
+            {
+              "type": "string",
+              "value": "jade"
+            },
+            {
+              "type": "string",
+              "value": "lavender"
+            },
+            {
+              "type": "string",
+              "value": "rose-pink"
+            },
+            {
+              "type": "string",
+              "value": "amber"
+            },
+            {
+              "type": "string",
+              "value": "golden-yellow"
+            },
+            {
+              "type": "string",
+              "value": "yellow"
+            },
+            {
+              "type": "string",
+              "value": "error-red"
+            },
+            {
+              "type": "string",
+              "value": "background-50"
+            },
+            {
+              "type": "string",
+              "value": "grey-200"
+            },
+            {
+              "type": "string",
+              "value": "grey-300"
+            },
+            {
+              "type": "string",
+              "value": "grey-800"
+            },
+            {
+              "type": "string",
+              "value": "background-1000"
+            }
+          ]
+        },
+        "optional": true
+      },
+      "galaxyAccentColor": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "brand"
+            },
+            {
+              "type": "string",
+              "value": "brand-300"
+            },
+            {
+              "type": "string",
+              "value": "brand-850"
+            },
+            {
+              "type": "string",
+              "value": "sky"
+            },
+            {
+              "type": "string",
+              "value": "jade"
+            },
+            {
+              "type": "string",
+              "value": "lavender"
+            },
+            {
+              "type": "string",
+              "value": "rose-pink"
+            },
+            {
+              "type": "string",
+              "value": "amber"
+            },
+            {
+              "type": "string",
+              "value": "golden-yellow"
+            },
+            {
+              "type": "string",
+              "value": "yellow"
+            },
+            {
+              "type": "string",
+              "value": "error-red"
+            },
+            {
+              "type": "string",
+              "value": "background-50"
+            },
+            {
+              "type": "string",
+              "value": "grey-200"
+            },
+            {
+              "type": "string",
+              "value": "grey-300"
+            },
+            {
+              "type": "string",
+              "value": "grey-800"
+            },
+            {
+              "type": "string",
+              "value": "background-1000"
+            }
+          ]
+        },
+        "optional": true
+      },
+      "blackHoleCoreColor": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "brand"
+            },
+            {
+              "type": "string",
+              "value": "brand-300"
+            },
+            {
+              "type": "string",
+              "value": "brand-850"
+            },
+            {
+              "type": "string",
+              "value": "sky"
+            },
+            {
+              "type": "string",
+              "value": "jade"
+            },
+            {
+              "type": "string",
+              "value": "lavender"
+            },
+            {
+              "type": "string",
+              "value": "rose-pink"
+            },
+            {
+              "type": "string",
+              "value": "amber"
+            },
+            {
+              "type": "string",
+              "value": "golden-yellow"
+            },
+            {
+              "type": "string",
+              "value": "yellow"
+            },
+            {
+              "type": "string",
+              "value": "error-red"
+            },
+            {
+              "type": "string",
+              "value": "background-50"
+            },
+            {
+              "type": "string",
+              "value": "grey-200"
+            },
+            {
+              "type": "string",
+              "value": "grey-300"
+            },
+            {
+              "type": "string",
+              "value": "grey-800"
+            },
+            {
+              "type": "string",
+              "value": "background-1000"
+            }
+          ]
+        },
+        "optional": true
+      },
+      "blackHolePhotonRingColor": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "brand"
+            },
+            {
+              "type": "string",
+              "value": "brand-300"
+            },
+            {
+              "type": "string",
+              "value": "brand-850"
+            },
+            {
+              "type": "string",
+              "value": "sky"
+            },
+            {
+              "type": "string",
+              "value": "jade"
+            },
+            {
+              "type": "string",
+              "value": "lavender"
+            },
+            {
+              "type": "string",
+              "value": "rose-pink"
+            },
+            {
+              "type": "string",
+              "value": "amber"
+            },
+            {
+              "type": "string",
+              "value": "golden-yellow"
+            },
+            {
+              "type": "string",
+              "value": "yellow"
+            },
+            {
+              "type": "string",
+              "value": "error-red"
+            },
+            {
+              "type": "string",
+              "value": "background-50"
+            },
+            {
+              "type": "string",
+              "value": "grey-200"
+            },
+            {
+              "type": "string",
+              "value": "grey-300"
+            },
+            {
+              "type": "string",
+              "value": "grey-800"
+            },
+            {
+              "type": "string",
+              "value": "background-1000"
+            }
+          ]
+        },
+        "optional": true
+      },
+      "blackHoleBaseGlowColor": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "brand"
+            },
+            {
+              "type": "string",
+              "value": "brand-300"
+            },
+            {
+              "type": "string",
+              "value": "brand-850"
+            },
+            {
+              "type": "string",
+              "value": "sky"
+            },
+            {
+              "type": "string",
+              "value": "jade"
+            },
+            {
+              "type": "string",
+              "value": "lavender"
+            },
+            {
+              "type": "string",
+              "value": "rose-pink"
+            },
+            {
+              "type": "string",
+              "value": "amber"
+            },
+            {
+              "type": "string",
+              "value": "golden-yellow"
+            },
+            {
+              "type": "string",
+              "value": "yellow"
+            },
+            {
+              "type": "string",
+              "value": "error-red"
+            },
+            {
+              "type": "string",
+              "value": "background-50"
+            },
+            {
+              "type": "string",
+              "value": "grey-200"
+            },
+            {
+              "type": "string",
+              "value": "grey-300"
+            },
+            {
+              "type": "string",
+              "value": "grey-800"
+            },
+            {
+              "type": "string",
+              "value": "background-1000"
+            }
+          ]
+        },
+        "optional": true
+      },
+      "blackHoleCoronaColor": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "brand"
+            },
+            {
+              "type": "string",
+              "value": "brand-300"
+            },
+            {
+              "type": "string",
+              "value": "brand-850"
+            },
+            {
+              "type": "string",
+              "value": "sky"
+            },
+            {
+              "type": "string",
+              "value": "jade"
+            },
+            {
+              "type": "string",
+              "value": "lavender"
+            },
+            {
+              "type": "string",
+              "value": "rose-pink"
+            },
+            {
+              "type": "string",
+              "value": "amber"
+            },
+            {
+              "type": "string",
+              "value": "golden-yellow"
+            },
+            {
+              "type": "string",
+              "value": "yellow"
+            },
+            {
+              "type": "string",
+              "value": "error-red"
+            },
+            {
+              "type": "string",
+              "value": "background-50"
+            },
+            {
+              "type": "string",
+              "value": "grey-200"
+            },
+            {
+              "type": "string",
+              "value": "grey-300"
+            },
+            {
+              "type": "string",
+              "value": "grey-800"
+            },
+            {
+              "type": "string",
+              "value": "background-1000"
+            }
+          ]
+        },
+        "optional": true
+      },
+      "mobileScale": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "mobileEnableBlackHole": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "boolean"
+        },
+        "optional": true
+      },
+      "mobileBlackHolePresetPosition": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "desktop"
+            },
+            {
+              "type": "string",
+              "value": "center"
+            },
+            {
+              "type": "string",
+              "value": "top-right"
+            },
+            {
+              "type": "string",
+              "value": "bottom-right"
+            },
+            {
+              "type": "string",
+              "value": "custom"
+            }
+          ]
+        },
+        "optional": true
+      },
+      "mobileBlackHoleXRatio": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "mobileBlackHoleYRatio": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "mobileEnableGalaxy": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "boolean"
+        },
+        "optional": true
+      },
+      "mobileGalaxyPosition": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "desktop"
+            },
+            {
+              "type": "string",
+              "value": "top-left"
+            },
+            {
+              "type": "string",
+              "value": "top-right"
+            },
+            {
+              "type": "string",
+              "value": "bottom-left"
+            },
+            {
+              "type": "string",
+              "value": "bottom-right"
+            },
+            {
+              "type": "string",
+              "value": "left"
+            },
+            {
+              "type": "string",
+              "value": "right"
+            },
+            {
+              "type": "string",
+              "value": "center"
+            },
+            {
+              "type": "string",
+              "value": "random"
+            },
+            {
+              "type": "string",
+              "value": "custom"
+            }
+          ]
+        },
+        "optional": true
+      },
+      "mobileGalaxyXRatio": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "mobileGalaxyYRatio": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
         },
         "optional": true
       }

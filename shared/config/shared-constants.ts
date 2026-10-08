@@ -33,13 +33,13 @@ export const REACTION_TYPES = [
 
 export const REACTION_TYPE_DETAILS: Record<
   (typeof REACTION_TYPES)[number],
-  { emoji: string; label: string }
+  { emoji: string }
 > = {
-  like: { emoji: '👍', label: 'Like' },
-  hate: { emoji: '👎', label: 'Dislike' },
-  funny: { emoji: '😂', label: 'Funny' },
-  sad: { emoji: '😢', label: 'Sad' },
-  confused: { emoji: '😕', label: 'Confused' },
+  like: { emoji: '👍' },
+  hate: { emoji: '👎' },
+  funny: { emoji: '😂' },
+  sad: { emoji: '😢' },
+  confused: { emoji: '😕' },
 }
 
 export const isReactionType = (
@@ -49,6 +49,11 @@ export const isReactionType = (
 
 /** Comments */
 export const COMMENTS_SECTION_ID = 'comments'
+export const COMMENTS_PAGE_SIZE = 2
+export const COMMENT_REPLIES_PAGE_SIZE = 10
+export const COMMENT_REPLIES_PREVIEW_SIZE = 5
+export const COMMENT_SORT_OPTIONS = ['newest', 'top'] as const
+export type CommentSort = (typeof COMMENT_SORT_OPTIONS)[number]
 /** How many reply levels get their own indentation. Anything deeper is
  * rendered flat at the last indented level with a "replying to …" cue —
  * past ~3 levels the indent just squeezes the text, especially on mobile. */

@@ -4,6 +4,7 @@ import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { isFileType } from '../../../shared/utils/api.utils'
+import { honoLog } from '../lib/logger'
 import { createS3Client, deleteR2Files } from '../lib/r2'
 import { authMiddleware, createInternalSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
@@ -150,6 +151,7 @@ fileOps.post(
               Key: fileKey,
               Body: Buffer.from(await file.arrayBuffer()),
               ContentType: file.type,
+              CacheControl: 'public, max-age=31536000, immutable',
             })
           )
 
@@ -159,6 +161,11 @@ fileOps.post(
 
       return c.json({ success: true, files: uploaded })
     } catch (error) {
+      honoLog({
+        logLevel: 'error',
+        message: 'Failed to upload file(s)',
+        error,
+      })
       // Promise.all can leave earlier files behind when a later upload fails.
       // Remove those partial uploads before returning the failed request.
       try {
@@ -166,13 +173,7 @@ fileOps.post(
       } catch {
         // Keep the original upload error as the client-facing failure.
       }
-      return c.json(
-        {
-          error: 'Failed to upload file(s)',
-          details: error instanceof Error ? error.message : undefined,
-        },
-        500
-      )
+      return c.json({ error: 'Failed to upload file(s)' }, 500)
     }
   }
 )
@@ -243,13 +244,12 @@ fileOps.get('/get-file/*', async (c) => {
       )
     }
 
-    return c.json(
-      {
-        error: 'Failed to generate download URL',
-        details: error instanceof Error ? error?.message : error,
-      },
-      500
-    )
+    honoLog({
+      logLevel: 'error',
+      message: 'Failed to generate download URL',
+      error,
+    })
+    return c.json({ error: 'Failed to generate download URL' }, 500)
   }
 })
 

@@ -1,6 +1,5 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { type SubmitEvent, useState } from 'react'
 import { useSession } from '@/providers/SessionProvider'
 
@@ -15,7 +14,6 @@ export type LoginFormState =
  * the actual mutation delegated elsewhere). */
 export function useLoginForm() {
   const { login } = useSession()
-  const router = useRouter()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -35,7 +33,6 @@ export function useLoginForm() {
       setState({ status: 'error', message: result.message })
       return
     }
-    router.push('/')
   }
 
   return {

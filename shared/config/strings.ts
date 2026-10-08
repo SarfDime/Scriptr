@@ -1,6 +1,35 @@
 export const UI_STRINGS = {
   general: {
     studyTip: 'Study tip',
+    restrictedAction:
+      "This action isn't available right now — your account is currently restricted.",
+    actionUnavailable: 'Action unavailable',
+    tryAgain: 'Please try again.',
+    unexpectedError: 'Something went wrong',
+    signInRequired: 'Sign in to continue.',
+    sessionExpired: 'Your session expired. Please sign in and try again.',
+    couldNotUpdate: (label: string) => `Couldn’t update ${label}`,
+    addVote: (label: string, noun: string, count: number) =>
+      `${label} ${noun} (${count})`,
+    removeVote: (label: string, noun: string, count: number) =>
+      `Remove ${label.toLowerCase()} from ${noun} (${count})`,
+  },
+  flags: {
+    report: 'Report',
+    submitError: 'Couldn’t submit report',
+    reportSubmitted: 'Report submitted',
+    alreadyReportedTitle: 'Already reported',
+    alreadyReportedDescription:
+      'You already have a pending report for this item.',
+    checkStatusError: 'Couldn’t check report status',
+    reportContent: 'Report content',
+    submitted: 'Thanks — this has been reported for review.',
+    description: (targetType: string) =>
+      `Let us know what’s wrong with this ${targetType}. Reports are reviewed by admins.`,
+    reasonPlaceholder: 'Describe the issue (min. 10 characters)',
+    reasonLabel: 'Report reason',
+    submit: 'Submit report',
+    minimumReasonLength: 10,
   },
   home: {
     title: 'Make studying feel a little lighter.',
@@ -13,7 +42,7 @@ export const UI_STRINGS = {
       'Notes and study material shared by this subject community.',
     authoredSectionTitle: 'Authored scripts',
     authoredSectionSubtitle: 'Scripts shared with the community.',
-    favoritesSectionTitle: 'Favorited scripts',
+    favoritesSectionTitle: 'Favorite scripts',
     favoritesSectionSubtitle: 'Scripts saved for later.',
     searchLabel: 'Search scripts',
     searchPlaceholder: 'Search scripts by name, authors, tags...',
@@ -81,12 +110,22 @@ export const UI_STRINGS = {
   },
   subjects: {
     manage: 'Manage',
+    sidebarTitle: 'Your subjects',
+    sidebarSubtitle: 'Subjects from your selected studies.',
+    emptyState: 'Complete your study setup to see your current subjects here.',
+    guestStudyPrompt:
+      'Choose a study during onboarding to see your subjects here.',
+    guestNoIncompleteSubjects:
+      'All subjects in your selected study are marked complete.',
   },
   profile: {
     loadingLabel: 'Loading your profile…',
+    loadError: `We couldn't load your profile. Please try again.`,
     editProfileLabel: 'Edit profile',
+    retryLabel: 'Try again',
   },
   navigation: {
+    account: 'Account',
     home: 'Home',
     api: 'API',
     auth: 'Auth',
@@ -100,8 +139,11 @@ export const UI_STRINGS = {
     notifications: 'Notifications',
     closeNavigation: 'Close navigation',
     openNavigation: 'Open navigation',
+    mainNavigation: 'Main navigation',
   },
   activity: {
+    title: 'Your activity',
+    subtitle: 'A quick view of the work you have been making.',
     view: 'View activity',
     savedScripts: 'Saved scripts',
     scriptsAuthored: 'Scripts authored',
