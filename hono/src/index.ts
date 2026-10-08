@@ -1,5 +1,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+/// <reference path="./sanity-stub.d.ts" />
+
 import { handle } from 'hono/vercel'
 import { honoLog, honoLogRequest } from './lib/logger'
 import auth from './routes/auth'
