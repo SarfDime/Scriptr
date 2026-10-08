@@ -1,6 +1,5 @@
 {
   "extends": "../shared/tsconfig.base.json",
-  "files": ["src/sanity-stub.d.ts", "../shared/types/sanity-client-stub.d.ts"],
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
@@ -13,5 +12,5 @@
     "types": ["node"]
   },
   "exclude": ["node_modules"],
-  "include": ["**/*.ts", "**/*.tsx", "../shared/**/*.ts"]
+  "include": ["**/*.ts", "**/*.tsx"]
 }
