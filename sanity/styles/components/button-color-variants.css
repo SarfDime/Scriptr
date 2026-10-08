@@ -54,30 +54,15 @@
   width: max-content;
 }
 
-.button-variant-preview.transparent {
+.button-variant-preview.hollow {
   color: #1a4b9a;
   outline: 2px solid rgba(26, 75, 154, 0.8);
   background: transparent;
 }
 
-.button-variant-preview.transparent.alternate {
-  color: #fff;
-  outline: 2px solid rgba(255, 255, 255, 0.8);
-  background: transparent;
-  &.preview-icon,
-  &.portable-button {
-    background: var(--light-cerulean-blue);
-  }
-}
-
 .button-variant-preview.solid {
   color: #fff;
   background: linear-gradient(135deg, #1a4b9a, #2f6bd8);
-}
-
-.button-variant-preview.solid.inverted {
-  color: #1a4b9a;
-  background: #fff;
 }
 
 .button-variant-preview.subtle {
@@ -100,3 +85,5 @@
   color: #fff;
   background: #e25757;
 }
+
+/* TODO: Add rest of variants and nest the styles */

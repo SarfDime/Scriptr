@@ -1,12 +1,11 @@
 import { Hono } from 'hono'
-import { requiredParam } from '../lib/request'
+import { databaseErrorResponse, requiredParam } from '../lib/request'
 import { createInternalSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
 const studies = new Hono<HonoEnv>()
 
 // Academic catalog data is admin-managed; not exposed to end users directly.
-// TODO: Verify all of these are operational since it was just a copy from faculties route
 studies.use('*', async (c, next) => {
   const secret = c.req.header('x-internal-secret')
   const expected = c.env.INTERNAL_API_SECRET
@@ -29,7 +28,7 @@ studies.get('/', async (c) => {
     )
     .order('name', { ascending: true })
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
 
   const withCounts = data?.map(({ subjects, ...study }) => ({
     ...study,

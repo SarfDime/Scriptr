@@ -1,4 +1,5 @@
 import BookIcon from '@sanity/icons/Book'
+import { Page } from '../schemas/pages/page'
 import type { StructureToolTypes } from '../types/common.types'
 import { createColoredIcon } from './icon-helpers'
 
@@ -6,8 +7,6 @@ import { createColoredIcon } from './icon-helpers'
 export const buildPageStructure = async (
   build: StructureToolTypes['Build']
 ) => {
-  const pageType = 'page' // TODO: Import type from schema
-
   return build
     .list()
     .title('Pages')
@@ -16,6 +15,6 @@ export const buildPageStructure = async (
         .listItem()
         .title('All Pages')
         .icon(createColoredIcon(BookIcon, 'pages'))
-        .child(build.documentTypeList(pageType).title('All Pages on website')),
+        .child(build.documentTypeList(Page.name).title('All Pages on website')),
     ])
 }

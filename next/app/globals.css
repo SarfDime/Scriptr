@@ -23,6 +23,16 @@ svg {
   font-size: 1.75rem;
 }
 
+/*
+ * NavProvider's wrapper is `display: contents` and carries the navbar state.
+ * While the docked navbar is collapsed, the main container (`ui-container`)
+ * grows to the full viewport width so the header can span the screen; the
+ * page content inside it keeps its `--nav-width-offset` max width.
+ */
+[data-nav-collapsed="true"] {
+  --nav-container-width: 100dvw;
+}
+
 @theme {
   /* Default sans font */
   --font-sans: var(--font-matter), sans-serif;

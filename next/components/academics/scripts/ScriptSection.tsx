@@ -4,9 +4,8 @@ import ChevronDownIcon from '@sanity/icons/ChevronDown'
 import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
+import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
-import { Title } from '@/components/typography/Title'
-import { Badge } from '@/components/ui/Badge'
 import { useScriptExplorer } from '@/hooks/useScriptExplorer'
 import { cn } from '@/lib/common-utils'
 import type { ScriptsSectionProps } from '@/types/components/Scripts.types'
@@ -41,14 +40,16 @@ export const ScriptsSection = ({
   const hasMore = visibleScripts.length > VISIBLE_LIMIT
 
   return (
-    <Box as='section' className={cn('ui-stack gap-4', className)} {...rest}>
-      <Box className='ui-cluster items-center gap-2'>
-        <Title as='h2' className='ui-title font-bold'>
-          {title}
-        </Title>
-        <Badge className='cp-brand'>{visibleScripts.length}</Badge>
-      </Box>
-      <Text className='ui-caption text-grey-500'>{subtitle}</Text>
+    <Box
+      as='section'
+      className={cn('ui-stack gap-4 ui-above p-4', className)}
+      {...rest}
+    >
+      <SectionHeader
+        title={title}
+        subtitle={subtitle}
+        count={visibleScripts.length}
+      />
 
       <Box className='ui-cluster items-start justify-between gap-3 p-[0.1px]'>
         <SearchBar
@@ -68,13 +69,17 @@ export const ScriptsSection = ({
       </Box>
 
       {shownScripts.length > 0 ? (
-        <Box className='ui-stack gap-3'>
+        <Box className='grid-auto-fit gap-3 [--grid-min:22rem]'>
           {shownScripts.map((script) => (
-            <ScriptCard key={script.id} script={script} />
+            <ScriptCard
+              key={script.id}
+              script={script}
+              className='ui-above-inside'
+            />
           ))}
         </Box>
       ) : (
-        <Text className='ui-above ui-subtitle rounded-xl border border-dashed border-grey-300 px-6 py-14 text-center text-grey-500'>
+        <Text className='ui-above-inside ui-subtitle rounded-xl border border-dashed border-grey-300 px-6 py-14 text-center'>
           {UI_STRINGS.scripts.emptyState}
         </Text>
       )}

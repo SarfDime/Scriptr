@@ -23,7 +23,7 @@ export function ScriptDetailOverview({
 
   return (
     <Box className='flex flex-wrap gap-4'>
-      <ScriptSurface className='flex min-w-0 grow basis-[34rem] flex-wrap gap-3'>
+      <ScriptSurface className='flex min-w-0 grow basis-136 flex-wrap gap-3'>
         <ScriptInfoPanel detail={detail} />
         <ScriptAdditionalReading links={script.additional_reading} />
       </ScriptSurface>

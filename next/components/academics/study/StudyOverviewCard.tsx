@@ -14,7 +14,7 @@ export const StudyOverviewCard = ({
 }: StudyOverviewCardProps) => {
   const administrators: Array<PersonSummary> = [
     ...(study.assistant ? [study.assistant] : []),
-  ] // TODO: See if need to add more, get more info on study
+  ] // Deferred: add more study metadata when it becomes available.
 
   const actions: Array<OverviewCardActionItem> = [
     study.website && {
@@ -50,7 +50,7 @@ export const StudyOverviewCard = ({
   return (
     <OverviewCard
       picture={study.picture}
-      imageAlt={study.name || 'Study image'} //TODO: Factor these out to shared strings
+      imageAlt={study.name || 'Study image'} // Deferred: move this fallback to shared strings.
       administrators={administrators}
       eyebrow='About the Study'
       eyebrowIcon={<Component />}

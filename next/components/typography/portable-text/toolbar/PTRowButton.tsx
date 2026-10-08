@@ -24,7 +24,7 @@ export const RowButton = ({
     className={cn(
       'flex w-full items-center justify-start gap-1.5 rounded px-2 py-1',
       'text-left text-xs capitalize',
-      'button subtle justify-start rounded border-0 px-2 py-1 text-left text-xs shadow-none outline-0',
+      'button button-sm subtle justify-start rounded border-0 text-left shadow-none outline-0',
       active && 'bg-brand-350 text-background'
     )}
   >

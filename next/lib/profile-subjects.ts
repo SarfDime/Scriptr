@@ -35,6 +35,50 @@ export async function getCurrentlyTakingSubjects(
   ).filter((subject): subject is SubjectById => subject !== null)
 }
 
+async function getSelectedStudySubjectIds(
+  studyIds: Array<string>
+): Promise<Array<string>> {
+  if (studyIds.length === 0) return []
+
+  const catalog = await getOnboardingCatalog()
+  const selectedStudyIds = new Set(studyIds)
+  const selectedSanityStudyIds = new Set(
+    catalog.studies.flatMap((study) =>
+      study.dbId && selectedStudyIds.has(study.dbId) ? [study._id] : []
+    )
+  )
+
+  return catalog.subjects.flatMap((subject) =>
+    subject.dbId && selectedSanityStudyIds.has(subject.study._id)
+      ? [subject.dbId]
+      : []
+  )
+}
+
+export async function getUserSubjectsForStudies(
+  studyIds: Array<string>,
+  selections: Array<SessionUserSubject>
+): Promise<Array<SubjectById>> {
+  const selectedSubjectIds = new Set(
+    selections.map(({ subject_id }) => subject_id)
+  )
+  const subjectIds = (await getSelectedStudySubjectIds(studyIds)).filter(
+    (subjectId) => selectedSubjectIds.has(subjectId)
+  )
+
+  return (
+    await Promise.all(
+      subjectIds.map((subjectId) =>
+        fetchSanityData<SubjectById | null>({
+          query: subjectByIdQuery,
+          params: { subjectId },
+          fetchOrigin: `profile-subject-${subjectId}`,
+        })
+      )
+    )
+  ).filter((subject): subject is SubjectById => subject !== null)
+}
+
 export async function getIncompleteSubjectIdsForStudies(
   studyIds: Array<string>,
   selections: Array<SessionUserSubject>
@@ -56,7 +100,7 @@ export async function getIncompleteSubjectIdsForStudies(
 
   return catalog.subjects.flatMap((subject) =>
     subject.dbId &&
-    selectedSanityStudyIds.has(subject.studyId) &&
+    selectedSanityStudyIds.has(subject.study._id) &&
     !completedSubjectIds.has(subject.dbId)
       ? [subject.dbId]
       : []

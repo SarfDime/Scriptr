@@ -58,7 +58,7 @@ export function CustomPortableTextInput(
       <PortableTextInput
         {...props}
         renderBlock={RenderBlock}
-        // TODO: When this is available use it, it's better.
+        // Deferred: use the improved API when it becomes available.
         // renderChild={RenderChild}
       />
     </div>

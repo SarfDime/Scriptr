@@ -62,15 +62,24 @@ export default async function StudyDetailPage({
             <BackLink
               href={getAcademicPath({
                 type: 'faculty',
-                universitySlug: study.faculty.university?.slug,
-                facultySlug: study.faculty?.slug,
+                universitySlug:
+                  study.faculty.university?.slug ??
+                  study.faculty.university?._id ??
+                  routeParams.universitySlug,
+                facultySlug:
+                  study.faculty?.slug ??
+                  study.faculty?._id ??
+                  routeParams.facultySlug,
               })}
               label={study.faculty.name}
             />
             <BackLink
               href={getAcademicPath({
                 type: 'university',
-                universitySlug: study.faculty.university?.slug,
+                universitySlug:
+                  study.faculty.university?.slug ??
+                  study.faculty.university?._id ??
+                  routeParams.universitySlug,
               })}
               label={study.faculty.university.name}
               backLevel='twoBack'

@@ -1,3 +1,10 @@
+import type { OnboardingCatalogQueryResult } from '@shared/types/sanity.types'
+import type { WithResolvedSanityData } from '@shared/types/sanity-transform.types'
+
+type ResolvedOnboardingCatalog = NonNullable<
+  WithResolvedSanityData<OnboardingCatalogQueryResult>
+>
+
 export type OnboardingOption = { id: string; name: string }
 
 export type OnboardingUniversity = { _id: string; dbId?: string; name: string }
@@ -33,7 +40,7 @@ export type OnboardingCatalog = {
   universities: Array<OnboardingUniversity>
   faculties: Array<OnboardingFaculty>
   studies: Array<OnboardingStudy>
-  subjects: Array<OnboardingSubject>
+  subjects: ResolvedOnboardingCatalog['subjects']
 }
 
 export type GuestAcademicData = {

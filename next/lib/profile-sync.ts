@@ -1,6 +1,8 @@
-import type { ProfileSubjectStatus } from '@shared/types/api.types'
 import type { RegistrationAcademicProfile } from '@shared/types/auth.types'
-import type { MyProfileResponse } from '@shared/types/profile.types'
+import type {
+  MyProfileResponse,
+  ProfileSubjectStatus,
+} from '@shared/types/profile.types'
 import {
   addProfileFaculty,
   addProfileStudy,

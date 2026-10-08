@@ -3,11 +3,12 @@ import type { User } from '@supabase/supabase-js'
 import type {
   ProfileSubjectStatus,
   UserRole,
-} from '../../../shared/types/api.types'
+} from '../../../shared/types/profile.types'
 
 // Define your environment variable types
 export type Env = {
   NODE_ENV?: 'development' | 'test' | 'production'
+  CORS_ORIGINS?: string
   SUPABASE_URL: string
   SUPABASE_PUBLISHABLE_KEY: string
   SUPABASE_SECRET_KEY: string

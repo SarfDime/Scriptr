@@ -1099,6 +1099,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_script_comment_counts: {
+        Args: { p_script_ids: string[] }
+        Returns: {
+          comment_count: number
+          script_id: string
+        }[]
+      }
+      get_top_comment_ids: {
+        Args: {
+          p_author_id: string
+          p_limit: number
+          p_offset: number
+          p_professor_id: string
+          p_script_id: string
+        }
+        Returns: {
+          comment_id: string
+        }[]
+      }
       is_admin: { Args: { uid: string }; Returns: boolean }
       is_moderator: { Args: { uid: string }; Returns: boolean }
       is_restricted: { Args: { uid: string }; Returns: boolean }

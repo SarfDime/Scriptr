@@ -1,12 +1,14 @@
 import './styles/main.css'
 
-import { dashboardTool } from '@sanity/dashboard'
 import { visionTool } from '@sanity/vision'
 import { ACADEMIC_TYPES, type AcademicEntityType } from '@shared/config/api'
+import {
+  SANITY_DATASET,
+  SANITY_PROJECT_ID,
+} from '@shared/config/sanity-constants'
 import { defineConfig } from 'sanity'
 import { presentationTool } from 'sanity/presentation'
 import { structureTool } from 'sanity/structure'
-import { netlifyWidget } from 'sanity-plugin-dashboard-widget-netlify'
 import { media } from 'sanity-plugin-media'
 import { mermaidContentModel } from 'sanity-plugin-mermaid-content-model'
 import { references } from 'sanity-plugin-references'
@@ -29,8 +31,8 @@ export default defineConfig({
   name: 'scriptr',
   title: 'Scriptr',
 
-  projectId: 'REDACTED_SANITY_PROJECT_ID',
-  dataset: 'production',
+  projectId: SANITY_PROJECT_ID,
+  dataset: SANITY_DATASET,
 
   reactStrictMode: true,
   babel: { reactCompiler: true },
@@ -59,31 +61,12 @@ export default defineConfig({
     mermaidContentModel(),
     presentationTool({
       previewUrl: {
-        origin: // TODO: Change this when staging is live
-          process.env.SANITY_STUDIO_PREVIEW_ORIGIN ??
-          'https://staging-tontine-com.netlify.app/',
+        origin:
+          process.env.SANITY_STUDIO_PREVIEW_ORIGIN ?? 'http://localhost:3000',
         previewMode: {
           enable: '/api/draft-mode/enable',
         },
       },
-    }),
-    dashboardTool({
-      title: 'Deploy',
-      widgets: [
-        netlifyWidget({
-          sites: [
-            {
-              // TODO: Change this when staging is live and add prod deploy also
-              title: 'Placeholder',
-              name: 'tontine-production',
-              url: 'https://tontine.com/',
-              apiId: 'f0567eac-c53b-4ad88bb29e9',
-              buildHookId: '6435968097f4af',
-              branch: 'production',
-            },
-          ],
-        }),
-      ],
     }),
   ],
   document: {

@@ -145,7 +145,7 @@ const buildLengthRules = ({ rule, max, maxWarning }: LengthValidationProps) => {
   const rules = [
     // Min validation causes a bug with validation on rich text, hence the custom validation below.
     // Max validation is still required here (alongside the custom one below) to power the char counter.
-    // TODO: Add min here for string fields too — needs a revamp, skipping for now since it'd just
+    // Deferred: add min here for string fields after the validation revamp.
     // double up the warning message.
     max &&
       rule.max(max).error(`You are allowed to write up to ${max} characters`),

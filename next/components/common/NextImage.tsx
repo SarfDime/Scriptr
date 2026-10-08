@@ -12,19 +12,27 @@ import type {
 import { cn, urlFor } from '../../lib/common-utils'
 import { Skeleton } from '../ui/skeleton/Skeleton'
 
-export type NextImageProps = {
+type NextImageBaseProps = {
   src?: string
   className?: string
-  fillProp?: boolean
   priority?: boolean
   objectFitProp?: ImageObjectFitType
   objectPositionProp?: ImageObjectPositionType
   imageProps?: Omit<ImageProps, 'src' | 'alt'>
   isLoadingExt?: boolean
-  sizes?: ImageProps['sizes']
 } & Omit<SkeletonBoxProps, 'src' | 'alt'> & {
     quality?: ImageProps['quality']
   } & Partial<SanityImageType>
+
+export type NextImageProps =
+  | (NextImageBaseProps & {
+      fillProp: true
+      sizes: ImageProps['sizes']
+    })
+  | (NextImageBaseProps & {
+      fillProp?: false
+      sizes?: ImageProps['sizes']
+    })
 
 /** `NextImage` - Renders an image with optional skeleton loading and custom styling.
  *

@@ -52,34 +52,36 @@ export const ConfirmAction = ({
   return (
     <>
       {trigger(() => setIsOpen(true))}
-      <Dialog
-        title={title}
-        hideTrigger
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        dialogProps={{ className: 'p-6 md:min-w-md' }}
-      >
-        <Box className='ui-stack gap-4 pt-3'>
-          <Text className='ui-body text-grey-500'>{description}</Text>
-          <Box className='ui-cluster justify-end gap-2'>
-            <Button
-              onClick={() => setIsOpen(false)}
-              className='button basic ui-caption px-3 py-1.5'
-            >
-              {cancelLabel}
-            </Button>
-            <Button
-              onClick={handleConfirm}
-              className={cn(
-                'button ui-caption px-3 py-1.5',
-                destructive ? 'danger' : 'solid'
-              )}
-            >
-              {confirmLabel}
-            </Button>
+      {isOpen && (
+        <Dialog
+          title={title}
+          hideTrigger
+          isOpen={isOpen}
+          onClose={() => setIsOpen(false)}
+          dialogProps={{ className: 'md:min-w-md' }}
+        >
+          <Box className='ui-stack gap-4 p-5'>
+            <Text className='ui-body'>{description}</Text>
+            <Box className='ui-cluster justify-end gap-2'>
+              <Button
+                onClick={() => setIsOpen(false)}
+                className='button button-sm basic px-3 py-1.5'
+              >
+                {cancelLabel}
+              </Button>
+              <Button
+                onClick={handleConfirm}
+                className={cn(
+                  'button button-sm px-3 py-1.5',
+                  destructive ? 'danger' : 'solid'
+                )}
+              >
+                {confirmLabel}
+              </Button>
+            </Box>
           </Box>
-        </Box>
-      </Dialog>
+        </Dialog>
+      )}
     </>
   )
 }

@@ -15,12 +15,21 @@ import { ScriptActions } from './actions/ScriptActions'
  * and optional tag, subject/professor/year context, author and last-
  * updated info, and the full set of script actions.
  */
-export const ScriptCard = ({ script }: ScriptCardProps) => {
+export const ScriptCard = ({
+  script,
+  className,
+  ...props
+}: ScriptCardProps) => {
   const color = getColorPalette({ type: 'seed', value: script.id })
 
   return (
-    <Card className='ui-above'>
-      {/* TODO: Add hover effect */}
+    <Card
+      className={cn(
+        'group transition-colors hover:border-brand-300/50',
+        className
+      )}
+      {...props}
+    >
       <NextLink
         href={getAcademicPath({ type: 'script', scriptSlug: script.id })}
         className='flex items-start gap-3'
@@ -42,18 +51,18 @@ export const ScriptCard = ({ script }: ScriptCardProps) => {
             </PortableTextContent>
             {script.tag && <Badge colorPalette={color}>{script.tag}</Badge>}
           </Box>
-          <Text className='ui-caption text-grey-500'>
+          <Text className='ui-caption'>
             {script.subject}
             {script.professor && ` • ${script.professor}`}
             {script.year !== undefined && ` • Year ${script.year}`}
           </Text>
-          <Text className='ui-caption text-grey-400'>
+          <Text className='ui-caption'>
             {script.author} • {formatUpdated(script.updatedAt)}
           </Text>
         </Box>
       </NextLink>
 
-      <Card.Footer className='ui-cluster flex-wrap items-center gap-2'>
+      <Card.Footer className='ui-cluster flex-wrap items-center gap-2 transition-colors duration-300 group-hover:border-t-brand-300'>
         <ScriptActions
           id={script.id}
           scriptTitle={script.title}

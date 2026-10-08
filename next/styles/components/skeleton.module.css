@@ -1,15 +1,26 @@
+/*
+ * Skeletons are a quiet neutral wash, not a brand color: the fill is a few
+ * percent of the foreground color over the page background (so it flips with
+ * the theme) and breathes between two close steps.
+ */
 @layer skeleton {
   @theme {
-    --animate-pulse: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) forwards infinite;
+    --animate-pulse: pulse 1.8s ease-in-out infinite;
     @keyframes pulse {
-      0% {
-        background-color: var(--color-brand-800);
+      0%,
+      100% {
+        background-color: color-mix(
+          in srgb,
+          var(--color-fg-1000) 5%,
+          var(--color-background-100)
+        );
       }
       50% {
-        background-color: var(--color-brand-600);
-      }
-      100% {
-        background-color: var(--color-background-700);
+        background-color: color-mix(
+          in srgb,
+          var(--color-fg-1000) 9%,
+          var(--color-background-100)
+        );
       }
     }
   }

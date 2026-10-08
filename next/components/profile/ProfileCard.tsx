@@ -50,7 +50,7 @@ export const ProfileCard = ({
         <Box className='ui-cluster'>
           <Book />
           <Box className='ui-stack gap-0'>
-            {/* TODO: Should be a link to the university page, remove hardcoded text */}
+            {/* Deferred: link this label to the university page. */}
             <Text className='ui-label'>University</Text>
             <Text className='ui-body'>{university}</Text>
           </Box>

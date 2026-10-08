@@ -7,7 +7,7 @@ import { Text } from '@/components/typography/Text'
 import { ConfirmAction } from '@/components/ui/ConfirmAction'
 import { useDeleteComment } from '@/hooks/comments/useDeleteComment'
 
-/** Delete with a confirmation step. Only rendered for the comment's author. */
+/** Delete with a confirmation step. Rendered for the author or an admin. */
 export function CommentDeleteButton({ commentId }: { commentId: string }) {
   const { isDeleting, remove } = useDeleteComment(commentId)
 

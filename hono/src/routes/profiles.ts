@@ -3,7 +3,8 @@ import { Hono } from 'hono'
 import { profileMutationTags } from '../../../shared/config/cache-tags'
 import { isAdmin, validateUsername } from '../../../shared/utils/api.utils'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
-import { requiredParam } from '../lib/request'
+import { honoLog } from '../lib/logger'
+import { databaseErrorResponse, requiredParam } from '../lib/request'
 import {
   authMiddleware,
   createInternalSupabaseClient,
@@ -42,10 +43,9 @@ const PROFILE_ACADEMIC_SELECT =
  * comment in scripts.types.ts); this follows that same, already-
  * established limitation rather than attempting a join that would 500.
  *
- * `comments:comments(count)` uses PostgREST's aggregate-in-embed syntax
- * (returns `comments: [{ count }]`) rather than a second round-trip per
- * script. No ambiguity risk there: comments has exactly one FK to
- * scripts (script_id), so nothing to disambiguate at that nesting level.
+ * Comment counts are attached separately through the restricted
+ * `get_script_comment_counts` RPC; comments are intentionally not directly
+ * selectable by table-level grants.
  *
  * `author:profiles!author_id` — qualified for the same reason
  * PROFILE_SCRIPTS_SELECT below is: script_favorites bridges scripts and
@@ -57,7 +57,7 @@ const PROFILE_ACADEMIC_SELECT =
  * whoever wrote it, not the profile being viewed.
  */
 const PROFILE_SCRIPT_FIELDS =
-  'id, title, description, vote_score, download_count, created_at, updated_at, subject:subjects(name), author:profiles!author_id(username, full_name), comments:comments(count), files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, created_at)'
+  'id, title, description, vote_score, download_count, created_at, updated_at, subject:subjects(name), author:profiles!author_id(username, full_name), files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, created_at)'
 
 /**
  * `scripts!author_id`, not a bare `scripts` — script_favorites has FKs to
@@ -92,10 +92,57 @@ const PROFILE_FAVORITE_SCRIPTS_SELECT = `favorite_scripts:script_favorites(scrip
  * the direct embed above) and for the two public routes (post-processing
  * the separate internal-client query below) — same output shape either
  * way, matching PROFILE_SCRIPTS_SELECT's authored-scripts shape. */
-function flattenFavoriteScripts(
-  rows: Array<{ script: unknown }> | null | undefined
-) {
+function flattenFavoriteScripts<T extends { id: string }>(
+  rows: Array<{ script: T | null }> | null | undefined
+): Array<T> {
   return (rows ?? []).flatMap((row) => (row.script ? [row.script] : []))
+}
+
+async function attachScriptCommentCounts<T extends { id: string }>(
+  c: Context<HonoEnv>,
+  scripts: Array<T>
+): Promise<Array<T & { comments: Array<{ count: number }> }> | null> {
+  const counts = new Map<string, number>()
+  const supabase = createSupabaseClient(c)
+
+  for (let offset = 0; offset < scripts.length; offset += 100) {
+    const scriptIds = scripts.slice(offset, offset + 100).map(({ id }) => id)
+    const { data, error } = await supabase.rpc('get_script_comment_counts', {
+      p_script_ids: scriptIds,
+    })
+    if (error) {
+      honoLog({
+        logLevel: 'error',
+        message: 'Failed to fetch profile script comment counts',
+        error,
+      })
+      return null
+    }
+
+    for (const row of data) {
+      counts.set(row.script_id, row.comment_count)
+    }
+  }
+
+  return scripts.map((script) => ({
+    ...script,
+    comments: [{ count: counts.get(script.id) ?? 0 }],
+  }))
+}
+
+function profileQueryErrorResponse(
+  c: Context<HonoEnv>,
+  error: { code?: string; message: string }
+) {
+  if (error.code === 'PGRST116') {
+    return c.json({ error: 'User not found' }, 404)
+  }
+  honoLog({
+    logLevel: 'error',
+    message: 'Failed to fetch profile',
+    error,
+  })
+  return c.json({ error: 'Unable to load this profile' }, 500)
 }
 
 /**
@@ -171,7 +218,7 @@ profiles.get('/', async (c) => {
     )
     .order('created_at', { ascending: false })
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json(data)
 })
 
@@ -188,11 +235,20 @@ profiles.get('/me', authMiddleware, async (c) => {
     .eq('id', user.id)
     .single()
 
-  if (error) return c.json({ error: error.message }, 404)
+  if (error) return profileQueryErrorResponse(c, error)
+
+  const [scripts, favoriteScripts] = await Promise.all([
+    attachScriptCommentCounts(c, data.scripts),
+    attachScriptCommentCounts(c, flattenFavoriteScripts(data.favorite_scripts)),
+  ])
+  if (!scripts || !favoriteScripts) {
+    return c.json({ error: 'Unable to load this profile' }, 500)
+  }
 
   return c.json({
     ...data,
-    favorite_scripts: flattenFavoriteScripts(data.favorite_scripts),
+    scripts,
+    favorite_scripts: favoriteScripts,
   })
 })
 
@@ -203,7 +259,7 @@ profiles.delete('/me', authMiddleware, async (c) => {
 
   const { error } = await supabase.from('profiles').delete().eq('id', user.id)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   await revalidateCacheTags(c.env, profileMutationTags(user.id))
   return c.json({ success: true })
 })
@@ -230,10 +286,18 @@ profiles.get('/username/:username', async (c) => {
     .eq('username', username)
     .single()
 
-  if (error) return c.json({ error: 'User not found' }, 404)
+  if (error) return profileQueryErrorResponse(c, error)
 
-  const favoriteScripts = await fetchFavoriteScripts(c, data.id)
-  return c.json({ ...data, favorite_scripts: favoriteScripts })
+  const [scripts, favoriteScripts] = await Promise.all([
+    attachScriptCommentCounts(c, data.scripts),
+    fetchFavoriteScripts(c, data.id).then((rows) =>
+      attachScriptCommentCounts(c, rows)
+    ),
+  ])
+  if (!scripts || !favoriteScripts) {
+    return c.json({ error: 'Unable to load this profile' }, 500)
+  }
+  return c.json({ ...data, scripts, favorite_scripts: favoriteScripts })
 })
 
 /** Get a specific user profile by ID (public — same shape as /username/:username) */
@@ -258,10 +322,18 @@ profiles.get('/:id', async (c) => {
     .eq('id', userId)
     .single()
 
-  if (error) return c.json({ error: 'User not found' }, 404)
+  if (error) return profileQueryErrorResponse(c, error)
 
-  const favoriteScripts = await fetchFavoriteScripts(c, data.id)
-  return c.json({ ...data, favorite_scripts: favoriteScripts })
+  const [scripts, favoriteScripts] = await Promise.all([
+    attachScriptCommentCounts(c, data.scripts),
+    fetchFavoriteScripts(c, data.id).then((rows) =>
+      attachScriptCommentCounts(c, rows)
+    ),
+  ])
+  if (!scripts || !favoriteScripts) {
+    return c.json({ error: 'Unable to load this profile' }, 500)
+  }
+  return c.json({ ...data, scripts, favorite_scripts: favoriteScripts })
 })
 
 /** Update current user's profile */
@@ -286,7 +358,7 @@ profiles.patch('/me', authMiddleware, async (c) => {
     if (error.code === '23505') {
       return c.json({ error: 'Username already taken' }, 400)
     }
-    return c.json({ error: error.message }, 500)
+    return databaseErrorResponse(c, error)
   }
 
   await syncFacultyAndStudySelections(
@@ -333,7 +405,7 @@ profiles.patch('/:id', authMiddleware, async (c) => {
     if (error.code === '23505') {
       return c.json({ error: 'Username already taken' }, 400)
     }
-    return c.json({ error: error.message }, 500)
+    return databaseErrorResponse(c, error)
   }
 
   await syncFacultyAndStudySelections(
@@ -365,7 +437,7 @@ profiles.delete('/:id', authMiddleware, async (c) => {
 
   const { error } = await supabase.from('profiles').delete().eq('id', targetId)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   await revalidateCacheTags(c.env, profileMutationTags(targetId))
   return c.json({ success: true })
 })
@@ -401,7 +473,7 @@ profiles.get('/:id/stats', async (c) => {
 
   const { count: commentsCount } = await supabase
     .from('comments')
-    .select('*', { count: 'exact', head: true })
+    .select('id', { count: 'exact', head: true })
     .eq('author_id', userId)
 
   return c.json({

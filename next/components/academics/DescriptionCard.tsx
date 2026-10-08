@@ -1,7 +1,7 @@
 import type { PortableTextValue } from '@shared/types/portable-text.types'
 import { cn } from '@/lib/common-utils'
+import { SectionHeader } from '../common/SectionHeader'
 import { PortableTextContent } from '../typography/PortableTextContent'
-import { Title } from '../typography/Title'
 import { Card } from '../ui/Card'
 
 export type DescriptionCardProps = {
@@ -21,11 +21,7 @@ export const DescriptionCard = ({
 
   return (
     <Card className={cn('p-6 ui-stack gap-3', className)}>
-      {title && (
-        <Title as='h2' className='ui-title font-bold'>
-          {title}
-        </Title>
-      )}
+      {title && <SectionHeader title={title} />}
       <PortableTextContent>{description}</PortableTextContent>
     </Card>
   )

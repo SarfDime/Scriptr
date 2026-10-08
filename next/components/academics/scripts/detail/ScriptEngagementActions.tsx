@@ -7,6 +7,7 @@ export type ScriptEngagementActionsProps = {
   hasVoted: boolean
   voteScore: number
   isSaved: boolean
+  isAuthor: boolean
 }
 
 /** Upvote and save, side by side and sharing the row. */
@@ -15,15 +16,18 @@ export function ScriptEngagementActions({
   hasVoted,
   voteScore,
   isSaved,
+  isAuthor,
 }: ScriptEngagementActionsProps) {
   return (
     <Box className='ui-cluster items-center gap-2'>
-      <ScriptVoteButton
-        scriptId={scriptId}
-        initialVoted={hasVoted}
-        initialScore={voteScore}
-        className='grow'
-      />
+      {(!isAuthor || hasVoted) && (
+        <ScriptVoteButton
+          scriptId={scriptId}
+          initialVoted={hasVoted}
+          initialScore={voteScore}
+          className='grow'
+        />
+      )}
       <ScriptSaveButton
         scriptId={scriptId}
         initialSaved={isSaved}

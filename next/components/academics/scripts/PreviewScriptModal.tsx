@@ -1,16 +1,24 @@
 'use client'
 
+import EyeOpen from '@sanity/icons/EyeOpen'
 import { UI_STRINGS } from '@shared/config/strings'
+import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
 import type { ScriptFile } from '@shared/types/scripts.types'
+import { useEffect, useState } from 'react'
 import { Box } from '@/components/common/Box'
+import { Button } from '@/components/common/Button'
 import { PortableTextContent } from '@/components/typography/PortableTextContent'
 import { Text } from '@/components/typography/Text'
+import { Title } from '@/components/typography/Title'
+import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { Dialog } from '@/components/ui/Dialog'
-import { getPreviewableKind } from '@/lib/file-preview'
+import { getColorPalette } from '@/lib/color-pallette-gen'
+import { formatFileSize, getPreviewableKind } from '@/lib/file-preview'
 import { ScriptDownloadButton } from './actions/ScriptDownloadButton'
 import { StoredFilePreviewContent } from './FilePreviewContent'
+import { ScriptPanel } from './ScriptPanel'
 
 export type PreviewScriptModalProps = {
   scriptId: string
@@ -21,13 +29,6 @@ export type PreviewScriptModalProps = {
   onClose: () => void
 }
 
-/**
- * Preview surface for a whole script: title, description, and its files.
- * If there's exactly one file and it's a previewable type (pdf or md),
- * that file is shown inline. Otherwise — multiple files, zero files, or a
- * single non-previewable file — falls back to a ScriptDownloadButton per
- * file, same as the script detail page's own file list.
- */
 export function PreviewScriptModal({
   scriptId,
   title,
@@ -36,49 +37,159 @@ export function PreviewScriptModal({
   isOpen,
   onClose,
 }: PreviewScriptModalProps) {
-  const onlyFile = files.length === 1 ? files[0] : null
-  const onlyFileKind = onlyFile ? getPreviewableKind(onlyFile.file_type) : null
+  const firstPreviewableFile = files.find((file) =>
+    Boolean(getPreviewableKind(file.file_type))
+  )
+  const [selectedFileId, setSelectedFileId] = useState<string | null>(
+    firstPreviewableFile?.id ?? null
+  )
+  const selectedFile =
+    files.find((file) => file.id === selectedFileId) ?? firstPreviewableFile
+  const selectedFileKind = selectedFile
+    ? getPreviewableKind(selectedFile.file_type)
+    : null
+
+  useEffect(() => {
+    if (
+      !isOpen ||
+      (selectedFileId !== null &&
+        files.some((file) => file.id === selectedFileId))
+    ) {
+      return
+    }
+
+    setSelectedFileId(firstPreviewableFile?.id ?? null)
+  }, [files, firstPreviewableFile, isOpen, selectedFileId])
 
   return (
     <Dialog
-      title={
-        <PortableTextContent renderWrapper={false}>{title}</PortableTextContent>
-      }
+      title={<PortableTextContent>{title}</PortableTextContent>}
       hideTrigger
       isOpen={isOpen}
       onClose={onClose}
+      dialogProps={{
+        className:
+          'overflow-hidden md:top-0 md:bottom-0 md:my-auto md:max-h-[90vh] md:w-[min(72rem,calc(100vw-2rem))] md:min-w-0 open:flex open:flex-col',
+      }}
     >
-      <Card.Body className='ui-stack gap-4'>
+      <Card.Body className='ui-stack min-h-0 flex-1 gap-4 overflow-y-auto p-5'>
         {description && (
-          <PortableTextContent renderWrapper={false}>
-            {description}
-          </PortableTextContent>
+          <ScriptPanel as='div'>
+            <PortableTextContent>{description}</PortableTextContent>
+          </ScriptPanel>
         )}
 
-        {onlyFile && onlyFileKind && isOpen ? (
-          <StoredFilePreviewContent
-            fileKey={onlyFile.file_url}
-            kind={onlyFileKind}
-            fileName={`Script file (${onlyFile.file_type})`}
-          />
-          // biome-ignore lint/style/noNestedTernary: <Ignore>
-        ) : files.length > 0 ? (
-          //  TODO: Figure out a better way to handle multiple files, maybe a carousel or a list with previews
-          <Box className='ui-stack gap-2'>
-            {files.map((file) => (
-              <ScriptDownloadButton
-                key={file.id}
-                scriptId={scriptId}
-                file={file}
-              />
-            ))}
-          </Box>
-        ) : (
-          <Text className='ui-caption text-grey-500'>
+        {files.length === 0 ? (
+          <Text className='ui-caption'>
             {UI_STRINGS.scripts.actions.noFilesAttached}
           </Text>
+        ) : (
+          <Box className='grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(17rem,0.65fr)]'>
+            <ScriptPanel as='div' className='min-w-0'>
+              {selectedFile && selectedFileKind && isOpen ? (
+                <>
+                  <Text className='ui-label' aria-live='polite'>
+                    {SCRIPT_STRINGS.preview.previewing(
+                      getFileName(selectedFile)
+                    )}
+                  </Text>
+                  <StoredFilePreviewContent
+                    fileKey={selectedFile.file_url}
+                    kind={selectedFileKind}
+                    fileName={getFileName(selectedFile)}
+                  />
+                </>
+              ) : (
+                <Text className='ui-caption'>
+                  {SCRIPT_STRINGS.preview.noPreviewSelected}
+                </Text>
+              )}
+            </ScriptPanel>
+
+            <Box className='ui-stack min-w-0 gap-3'>
+              <Box className='ui-stack gap-1'>
+                <Title as='h3' className='ui-title'>
+                  {SCRIPT_STRINGS.preview.filesTitle}
+                </Title>
+                <Text className='ui-caption'>
+                  {SCRIPT_STRINGS.preview.filesSubtitle}
+                </Text>
+              </Box>
+
+              {files.map((file) => (
+                <PreviewFileRow
+                  key={file.id}
+                  file={file}
+                  scriptId={scriptId}
+                  isSelected={selectedFile?.id === file.id}
+                  onPreview={() => setSelectedFileId(file.id)}
+                />
+              ))}
+            </Box>
+          </Box>
         )}
       </Card.Body>
     </Dialog>
+  )
+}
+
+function getFileName(file: ScriptFile) {
+  return SCRIPT_STRINGS.file.name(file.position + 1, file.file_type)
+}
+
+function PreviewFileRow({
+  file,
+  scriptId,
+  isSelected,
+  onPreview,
+}: {
+  file: ScriptFile
+  scriptId: string
+  isSelected: boolean
+  onPreview: () => void
+}) {
+  const fileName = getFileName(file)
+  const kind = getPreviewableKind(file.file_type)
+  const color = getColorPalette({ type: 'seed', value: file.file_type })
+
+  return (
+    <ScriptPanel
+      as='div'
+      className='ui-stack min-w-0 gap-3 p-3'
+      aria-current={isSelected || undefined}
+    >
+      <Box className='ui-cluster min-w-0 items-center gap-2'>
+        <Text className='ui-label'>
+          {SCRIPT_STRINGS.file.label(file.position + 1)}
+        </Text>
+        <Badge colorPalette={color}>{file.file_type.toUpperCase()}</Badge>
+        <Text className='ui-caption'>
+          {formatFileSize(file.file_size_bytes)}
+        </Text>
+      </Box>
+      <Text className='ui-caption'>
+        {SCRIPT_STRINGS.file.summary(file.file_type, Boolean(kind))}
+      </Text>
+      <Box className='ui-cluster gap-2'>
+        {kind && (
+          <Button
+            onClick={onPreview}
+            aria-label={SCRIPT_STRINGS.preview.previewFile(fileName)}
+            aria-pressed={isSelected}
+            className='button button-sm hollow grow'
+          >
+            <EyeOpen className='overwrite size-4 shrink-0' />
+            {UI_STRINGS.scripts.actions.preview}
+          </Button>
+        )}
+        <ScriptDownloadButton
+          scriptId={scriptId}
+          file={file}
+          className='button-sm subtle grow'
+        >
+          {UI_STRINGS.scripts.actions.download}
+        </ScriptDownloadButton>
+      </Box>
+    </ScriptPanel>
   )
 }

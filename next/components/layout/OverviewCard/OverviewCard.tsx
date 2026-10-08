@@ -34,8 +34,10 @@ export const OverviewCard = ({
           <NextImage
             {...picture}
             alt={imageAlt ?? ''}
-            className='absolute inset-0 h-full w-full object-cover'
+            className='absolute inset-0 h-full w-full'
+            objectFitProp='cover'
             fillProp
+            sizes='(min-width: 1024px) 50vw, 100vw'
           />
         )}
 
@@ -50,8 +52,8 @@ export const OverviewCard = ({
 
       <Card.Body className='flex flex-col justify-between p-6 ui-stack gap-6'>
         <Box className='ui-stack gap-3'>
-          <Box className='flex items-center justify-between gap-4'>
-            <Text className='ui-caption uppercase tracking-[0.16em] font-bold text-grey-500'>
+          <Box className='flex items-center justify-between gap-4 ui-above-inside'>
+            <Text className='ui-label uppercase tracking-[0.16em]'>
               {eyebrow}
             </Text>
             {eyebrowIcon && (
@@ -62,7 +64,7 @@ export const OverviewCard = ({
           </Box>
 
           {description && (
-            <PortableTextContent className='ui-body text-fg-400'>
+            <PortableTextContent className='ui-body text-fg-400 ui-above-inside'>
               {description}
             </PortableTextContent>
           )}

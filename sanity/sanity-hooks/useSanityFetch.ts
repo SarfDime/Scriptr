@@ -49,7 +49,7 @@
 
 //   return { data, loading, error, refetch }
 // }
-// TODO: Check if works
+// Deferred: verify this hook against the production Studio fetch flow.
 
 import { API_VERSION } from '@shared/config/sanity-constants'
 import { useCallback, useEffect, useState } from 'react'

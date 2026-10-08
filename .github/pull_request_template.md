@@ -6,6 +6,7 @@
 
 - [ ] Hono API
 - [ ] Next.js frontend
+- [ ] Sanity Studio or schema
 - [ ] Supabase or authentication
 - [ ] Cloudflare R2 or file uploads
 - [ ] Tooling or documentation
@@ -18,6 +19,8 @@
 
 - [ ] `npm run check-types`
 - [ ] `npm run format`
+- [ ] Generated files regenerated when needed (`npm run gen:api-types`, `npm run sanity:typegen`, `npm run gen:api-endpoints`)
+- [ ] Docs updated (`PROGRESS.md`; `API_DOCUMENTATION.md` and `API_TESTING_GUIDE.md` for route changes; `ARCHITECTURE.md` if the design changed)
 - [ ] Relevant manual testing completed
 
 ## Security and data considerations

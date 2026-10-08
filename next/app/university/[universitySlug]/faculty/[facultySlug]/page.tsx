@@ -61,7 +61,7 @@ export default async function FacultyDetailPage({
           <BackLink
             href={getAcademicPath({
               type: 'university',
-              universitySlug: faculty.university.slug,
+              universitySlug: faculty.university.slug ?? faculty.university._id,
             })}
             label={faculty.university.name}
           />

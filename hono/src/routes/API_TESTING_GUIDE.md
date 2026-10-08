@@ -47,7 +47,8 @@ curl -s -X POST $BASE/internal/universities/$UNI/sync \
   -H "x-internal-secret: $SECRET" -H "Content-Type: application/json" \
   -d '{"name":"Test University"}' | jq .
 
-# Invalid bucket name is rejected (must match S3/R2 naming rules) — expect 400
+# Invalid bucket name is rejected (must match S3/R2 naming rules) — expect 400.
+# Invalid bucket names are rejected by the canonical internal write path.
 curl -s -X PATCH $BASE/internal/universities/$UNI \
   -H "x-internal-secret: $SECRET" -H "Content-Type: application/json" \
   -d '{"r2_bucket_id":"Bad_Bucket"}' | jq .
@@ -173,12 +174,24 @@ curl -s -b cookies-admin.txt $BASE/auth/session | jq '.user.role'     # admin
 curl -s $BASE/auth/session | jq .                                     # no cookie: user is null
 ```
 
+`GET /auth/session` refreshes a valid session only when its access token
+expires within 60 seconds. Access tokens are configured for one week in
+`hono/supabase/config.toml`; hosted Supabase projects must have the same JWT
+expiry configured in their Auth settings. If the refresh token is invalid or
+expired, the endpoint clears the local session and returns `user: null`.
+
 ```bash
 curl -s $BASE/profiles | jq '.[] | {id, username, role}'
 curl -s -b cookies-student.txt $BASE/profiles/me | jq '{id, username, role}'
 curl -s $BASE/profiles/username/localstudent | jq '{id, username}'
 curl -s $BASE/profiles/$STUDENT/stats | jq .
 ```
+
+Profile script summaries preserve their `comments: [{ count }]` response
+shape. Counts include replies as well as root comments. If a profile query
+fails because of a database error, the API returns a generic `500` rather
+than exposing the underlying database message; a missing profile returns
+`404`.
 
 ---
 
@@ -251,10 +264,9 @@ curl -s -b cookies-student.txt $BASE/scripts/my-scripts | jq '.scripts | length'
 ```
 
 ```bash
-# Pre-signed download URL; pass the stored bucket back as ?bucket=
+# Pre-signed download URL (valid for 1 hour); the bucket is resolved server-side from script_files
 KEY=$(curl -s $BASE/scripts/$SCRIPT | jq -r '.files[0].file_url')
-BUCKET=$(curl -s $BASE/scripts/$SCRIPT | jq -r '.files[0].bucket')
-curl -s "$BASE/file-ops/get-file/$KEY?bucket=$BUCKET" | jq .
+curl -s "$BASE/file-ops/get-file/$KEY" | jq .
 ```
 
 ```bash
@@ -270,6 +282,12 @@ curl -s -b cookies-student.txt -X POST $BASE/scripts/$SCRIPT/download | jq .    
 ```bash
 curl -s -b cookies-student.txt -X PATCH $BASE/scripts/$SCRIPT -H "Content-Type: application/json" \
   -d '{"additional_reading":["https://example.com/notes"]}' | jq '.script.additional_reading'
+
+# Remove a single uploaded file while keeping the script itself.
+FILE_ID=$(curl -s -b cookies-student.txt $BASE/scripts/$SCRIPT | jq -r '.files[1].id // empty')
+if [ -n "$FILE_ID" ]; then
+  curl -s -b cookies-student.txt -X DELETE "$BASE/scripts/$SCRIPT/files/$FILE_ID" | jq .
+fi
 ```
 
 ---
@@ -277,11 +295,13 @@ curl -s -b cookies-student.txt -X PATCH $BASE/scripts/$SCRIPT -H "Content-Type: 
 ## Phase 5 — Votes
 
 ```bash
-curl -s -b cookies-student.txt -X POST $BASE/votes/$SCRIPT | jq .   # voted: true, vote_score: 1
+curl -s -b cookies-admin.txt -X POST $BASE/votes/$SCRIPT | jq .   # voted: true, vote_score: 1
+# SCRIPT was created by the student; this self-vote must return 403.
+curl -s -b cookies-student.txt -X POST $BASE/votes/$SCRIPT | jq .
 curl -s $BASE/votes/script/$SCRIPT/stats | jq .
-curl -s -b cookies-student.txt $BASE/votes/script/$SCRIPT/my-vote | jq .
-curl -s -b cookies-student.txt $BASE/votes/my-votes | jq .
-curl -s -X POST -b cookies-student.txt $BASE/votes/$SCRIPT | jq .   # voted: false, vote_score: 0 (toggle off)
+curl -s -b cookies-admin.txt $BASE/votes/script/$SCRIPT/my-vote | jq .
+curl -s -b cookies-admin.txt $BASE/votes/my-votes | jq .
+curl -s -X POST -b cookies-admin.txt $BASE/votes/$SCRIPT | jq .   # voted: false, vote_score: 0 (toggle off)
 ```
 
 ---
@@ -301,11 +321,20 @@ cache tags so their favorite-script list refreshes.
 
 ## Phase 7 — Comments
 
+Comment-list endpoints return two top-level comments per page by default and
+include up to five immediate replies per comment before replies are paged on
+demand.
+
 ```bash
 COMMENT=$(curl -s -b cookies-student.txt -X POST $BASE/comments -H "Content-Type: application/json" -d "{
   \"content\": [{\"_type\":\"block\",\"children\":[{\"_type\":\"span\",\"text\":\"Great script, thanks!\"}]}],
   \"script_id\": \"$SCRIPT\"
 }" | jq -r '.comment.id')
+
+# The comment author cannot add a like or reaction to their own comment.
+curl -s -b cookies-student.txt -X POST $BASE/comments/$COMMENT/like | jq . # expect 403
+curl -s -b cookies-student.txt -X POST $BASE/comments/$COMMENT/reactions \
+  -H "Content-Type: application/json" -d '{"reaction_type":"funny"}' | jq . # expect 403
 
 # Comments need at least 3 characters and only allow normal text blocks — expect 400
 curl -s -b cookies-student.txt -X POST $BASE/comments -H "Content-Type: application/json" -d "{
@@ -313,12 +342,26 @@ curl -s -b cookies-student.txt -X POST $BASE/comments -H "Content-Type: applicat
   \"script_id\": \"$SCRIPT\"
 }" | jq .
 
-curl -s $BASE/comments/script/$SCRIPT | jq '.[] | {id, content, reactions_count, likes_count}'
+curl -s "$BASE/comments/script/$SCRIPT?limit=20&offset=0&sort=newest" \
+  | jq '{totalCount, totalCommentCount, items: [.items[] | {id, content, reactions_count, likes_count, replies: (.replies | length), replies_has_more}]}'
+
+# Top ranks root comments by combined heart likes and emoji reactions.
+curl -s "$BASE/comments/script/$SCRIPT?sort=top" \
+  | jq '{hasMore, totalCount, firstComment: .items[0].id}'
 
 curl -s -b cookies-student.txt -X POST $BASE/comments/$COMMENT/replies -H "Content-Type: application/json" -d '{
-  "content": [{"_type":"block","children":[{"_type":"span","text":"Agreed."}]}],
-  "script_id": "'"$SCRIPT"'"
+  "content": [{"_type":"block","children":[{"_type":"span","text":"Agreed."}]}]
 }' | jq -r '.reply.id'
+
+# Replies load independently in chronological pages.
+curl -s "$BASE/comments/$COMMENT/replies?limit=10&offset=0" \
+  | jq '{hasMore, totalCount, items: [.items[] | {id, has_replies}]}'
+
+# Reply target is copied from its parent; a supplied mismatched target is ignored.
+# Comment/reply writes are limited to 10 per 15 minutes per account; combined
+# comment likes/reactions are limited to 15 per minute per account.
+# An author trying to like/react to their own comment receives 403 when adding
+# engagement; existing self-engagement can still be removed.
 
 curl -s -b cookies-student.txt -X POST $BASE/comments/$COMMENT/reactions \
   -H "Content-Type: application/json" -d '{"reaction_type":"like"}' | jq .
@@ -389,14 +432,26 @@ This is the permission-sensitive part of the API — worth confirming the
 admin-vs-reporter boundary actually holds.
 
 ```bash
-FLAG=$(curl -s -b cookies-student.txt -X POST $BASE/flags -H "Content-Type: application/json" -d "{
+# The student authored both targets; self-reports must return 403.
+curl -s -b cookies-student.txt -X POST $BASE/flags -H "Content-Type: application/json" -d "{
+  \"target_type\": \"comment\",
+  \"target_id\": \"$COMMENT\",
+  \"reason\": \"Trying to report my own comment\"
+}" | jq . # expect 403
+curl -s -b cookies-student.txt -X POST $BASE/flags -H "Content-Type: application/json" -d "{
+  \"target_type\": \"script\",
+  \"target_id\": \"$SCRIPT\",
+  \"reason\": \"Trying to report my own script\"
+}" | jq . # expect 403
+
+FLAG=$(curl -s -b cookies-admin.txt -X POST $BASE/flags -H "Content-Type: application/json" -d "{
   \"target_type\": \"comment\",
   \"target_id\": \"$COMMENT\",
   \"reason\": \"Testing the flag pipeline end to end\"
 }" | jq -r '.flag.id')
 
 curl -s -b cookies-student.txt $BASE/flags/my-flags | jq .
-curl -s $BASE/comments/script/$SCRIPT | jq '.[] | select(.id=="'"$COMMENT"'") | .id'  # note is_flagged isn't in the public payload
+curl -s $BASE/comments/script/$SCRIPT | jq '.items[] | select(.id=="'"$COMMENT"'") | .id'  # note is_flagged isn't in the public payload
 
 # Admin: list + resolve
 curl -s -b cookies-admin.txt $BASE/flags | jq '.[] | {id, status, target_comment_id}'
@@ -411,7 +466,7 @@ curl -s -b cookies-admin.txt $BASE/comments/flagged/all | jq 'length'   # back t
 
 ```bash
 # A second flag, deleted by admin rather than the reporter — exercises the admin-delete branch
-FLAG2=$(curl -s -b cookies-student.txt -X POST $BASE/flags -H "Content-Type: application/json" -d "{
+FLAG2=$(curl -s -b cookies-admin.txt -X POST $BASE/flags -H "Content-Type: application/json" -d "{
   \"target_type\": \"script\",
   \"target_id\": \"$SCRIPT\",
   \"reason\": \"Second test flag for admin deletion\"
@@ -514,8 +569,9 @@ curl -s $BASE/scripts | jq 'length'                                        # 0
 rm -f cookies-student.txt cookies-admin.txt /tmp/test-script.md /tmp/test-script-2.md
 ```
 
-> Uploaded R2 objects are not deleted when a script is deleted (open decision
-> in `PROGRESS.md`); remove test objects from the bucket manually if needed.
+> Deleting a script (or a single script file) removes its R2 objects on a
+> best-effort basis; failures are logged server-side only, so check the bucket
+> for leftovers if a delete errored.
 
 ---
 
@@ -523,7 +579,7 @@ rm -f cookies-student.txt cookies-admin.txt /tmp/test-script.md /tmp/test-script
 
 | Symptom                                               | Cause                                                                                                              |
 | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `{"error":"Not authenticated"}`                       | Missing `-b cookies-*.txt`, or the ~1h session expired — log in again                                              |
+| `{"error":"Not authenticated"}`                       | Missing `-b cookies-*.txt`, or the session expired or was cleared (access tokens last one week) — log in again                                              |
 | `{"error":"Forbidden"}` on any catalog/internal route | `x-internal-secret` header missing/wrong, or `INTERNAL_API_SECRET` unset in `hono/.env` (restart after setting it) |
 | `403` on a create/update that should work             | The account is still restricted from Phase 10b — lift it with `DELETE /restrictions/:profileId`                    |
 | `404 Route not found` on a documented endpoint        | The route file isn't mounted in `hono/src/index.ts`                                                                |

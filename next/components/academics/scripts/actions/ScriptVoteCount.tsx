@@ -14,12 +14,7 @@ export const ScriptVoteCount = ({
   votes: number
   className?: string
 }) => (
-  <Box
-    className={cn(
-      'ui-caption flex items-center gap-1.5 p-2 text-grey-500',
-      className
-    )}
-  >
+  <Box className={cn('ui-caption flex items-center gap-1.5 p-2', className)}>
     <Heart />
     <Text>{votes}</Text>
     <Text className='sr-only'>{votes === 1 ? 'upvote' : 'upvotes'}</Text>

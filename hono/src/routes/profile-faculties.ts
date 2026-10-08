@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { profileMutationTags } from '../../../shared/config/cache-tags'
 import type { ProfileFacultySelection } from '../../../shared/types/profile.types'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
-import { requiredParam } from '../lib/request'
+import { databaseErrorResponse, requiredParam } from '../lib/request'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
@@ -22,7 +22,7 @@ profileFaculties.get('/', async (c) => {
     .eq('profile_id', user.id)
     .order('created_at', { ascending: false })
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   await revalidateCacheTags(c.env, profileMutationTags(user.id))
   return c.json<Array<ProfileFacultySelection>>(data ?? [])
 })
@@ -41,7 +41,7 @@ profileFaculties.get('/:facultyId', async (c) => {
     .eq('faculty_id', facultyId)
     .maybeSingle()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json<ProfileFacultySelection | null>(data)
 })
 
@@ -61,7 +61,7 @@ profileFaculties.post('/:facultyId', async (c) => {
     )
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json<ProfileFacultySelection>(data)
 })
 
@@ -76,7 +76,7 @@ profileFaculties.delete('/:facultyId', async (c) => {
     .eq('profile_id', user.id)
     .eq('faculty_id', facultyId)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   await revalidateCacheTags(c.env, profileMutationTags(user.id))
   return c.json<{ success: true }>({ success: true })
 })

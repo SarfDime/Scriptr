@@ -1,7 +1,9 @@
-import type { ProfileSubjectStatus } from './api.types'
 import type { Tables } from './database.types'
 import type { PortableTextValue } from './portable-text.types'
 import type { ScriptFile } from './scripts.types'
+
+export type UserRole = 'student' | 'moderator' | 'admin'
+export type ProfileSubjectStatus = 'completed' | 'currently_taking'
 
 export type ProfileSubjectRow = {
   subject_id: string
@@ -71,8 +73,8 @@ export type StudyWithFacultyAndUniversity = Tables<'studies'> & {
  * no direct FK to `professors.id` (only a composite FK to
  * `subject_professors`), and Postgres `subjects` has no `year` column at
  * all (year only exists in Sanity) — confirmed against the live schema.
- * `comments` is PostgREST's count-aggregate embed (`comments(count)`), so
- * it arrives as a one-element array, not a number.
+ * `comments` is attached from the `get_script_comment_counts` RPC, so it
+ * arrives as a one-element array, not a number.
  */
 export type ProfileScriptSummary = {
   id: string

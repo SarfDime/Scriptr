@@ -10,6 +10,7 @@ export function CommentLikeButton({
   commentId,
   initialLiked,
   initialCount,
+  disabled = false,
 }: CommentLikeButtonProps) {
   const { api } = useCommentsServices()
 
@@ -24,6 +25,10 @@ export function CommentLikeButton({
       label={COMMENT_STRINGS.actions.like}
       noun={COMMENT_STRINGS.general.commentNoun}
       variant='compact'
+      disabled={disabled}
+      className={
+        disabled ? 'disabled:opacity-100 disabled:filter-none' : undefined
+      }
     />
   )
 }

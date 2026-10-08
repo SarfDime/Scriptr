@@ -1,7 +1,6 @@
 # Next.js Frontend
 
-This directory contains the Next.js frontend, reusable components, styling, and
-API test pages. The Hono service in `../hono` is the application backend.
+This directory contains the Next.js frontend, reusable components, and styling. The Hono service in `../hono` is the application backend.
 
 ## Development
 
@@ -24,7 +23,11 @@ NEXT_PUBLIC_SANITY_PROJECT_ID=your_project_id
 NEXT_PUBLIC_SANITY_DATASET=your_dataset
 NEXT_PUBLIC_ENVIRONMENT_TYPE=development
 SANITY_AUTH_TOKEN=your_token
+REVALIDATE_SECRET=development_secret_key
 ```
+
+`REVALIDATE_SECRET` protects `POST /api/revalidate`, which the Hono API calls to
+invalidate cache tags; it must match `REVALIDATE_SECRET` in `hono/.env`.
 
 Do not expose private tokens through variables prefixed with `NEXT_PUBLIC_`.
 
@@ -43,9 +46,11 @@ Never hand-write a `fetch` call against a hardcoded path. Two pieces work togeth
 - **`shared/config/api-routes.ts`** — auto-generated (do not hand-edit), exports
   `apiRoutes`, an object of path-builder functions/constants covering every
   route (e.g. `apiRoutes.scripts.popular(limit)`, `apiRoutes.universities.byId(id)`).
-- **`next/lib/api.ts`**'s `apiFetch` — wraps `fetch` with JSON/FormData body
-  handling and centralized error parsing (throws on non-2xx, with the
-  server's `error`/`message` field as the thrown error's message).
+- **`next/lib/api/next-api.ts`**'s `apiFetch` — wraps `fetch` with JSON/FormData
+  body handling, `credentials: 'include'`, and centralized error parsing (throws
+  an `ApiError` on non-2xx, with the server's `error`/`message` field as its
+  message and the HTTP status on `.status`). Per-domain wrappers live in
+  `next/lib/api/*-api.ts`.
 
 ```ts
 apiFetch<ScriptsResponse>(apiRoutes.scripts.popular(limit), {

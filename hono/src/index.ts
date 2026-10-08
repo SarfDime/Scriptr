@@ -35,23 +35,29 @@ app.use('*', async (c, next) => {
   const startedAt = Date.now()
   await next()
 
-  honoLogRequest({
-    method: c.req.method,
-    path: c.req.path,
-    status: c.res.status,
-    durationMs: Date.now() - startedAt,
-  })
+  if (c.env.NODE_ENV !== 'production') {
+    honoLogRequest({
+      method: c.req.method,
+      path: c.req.path,
+      status: c.res.status,
+      durationMs: Date.now() - startedAt,
+    })
+  }
 })
 
 app.use(
   '*',
   cors({
-    origin: [
-      'https://your-vercel-app.vercel.app',
-      'http://localhost:3000',
-      'http://localhost:5173',
-      'http://localhost:3333',
-    ],
+    origin: (origin) => {
+      const allowedOrigins = [
+        'http://localhost:3000',
+        'http://localhost:5173',
+        'http://localhost:3333',
+        ...(process.env.CORS_ORIGINS?.split(',') ?? []),
+      ].map((value) => value.trim())
+
+      return allowedOrigins.includes(origin) ? origin : ''
+    },
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowHeaders: [
       'Content-Type',

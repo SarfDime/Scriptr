@@ -1,5 +1,6 @@
 'use client'
 
+import { PORTABLE_TEXT_LIMITS } from '@shared/config/portable-text-limits'
 import { COMMENT_STRINGS } from '@shared/strings/comments-strings'
 import { useState } from 'react'
 import { Box } from '@/components/common/Box'
@@ -7,6 +8,7 @@ import { Button } from '@/components/common/Button'
 import { PortableTextContent } from '@/components/typography/PortableTextContent'
 import { Text } from '@/components/typography/Text'
 import { Card } from '@/components/ui/Card'
+import { ConfirmAction } from '@/components/ui/ConfirmAction'
 import { useProtectedAction } from '@/hooks/useProtectedAction'
 import { useRichTextDraft } from '@/hooks/useRichTextDraft'
 import { CommentEditor } from './CommentEditor'
@@ -37,31 +39,43 @@ export function CommentComposer({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <Card className='ui-above'>
+    <Card className='ui-above-inside'>
       <Card.Body className='ui-stack gap-3'>
         <CommentEditor
           key={draft.editorKey}
           onChange={draft.setContent}
           ariaLabel={COMMENT_STRINGS.composer.editorAriaLabel}
+          className='bg-background-250'
+          autoFocus
         />
+        {(state.status === 'error' || state.status === 'restricted') && (
+          <Text role='alert' className='text-danger-600'>
+            {state.message}
+          </Text>
+        )}
         {showPreview && draft.content && draft.hasContent && (
-          <Box className='ui-stack gap-1 rounded-lg bg-background-100/85 p-3'>
-            <Text className='ui-caption text-grey-500'>
+          <Box className='ui-stack gap-1 rounded-lg bg-background-250 p-3'>
+            <Text className='ui-caption'>
               {COMMENT_STRINGS.composer.previewLabel}
             </Text>
-            <PortableTextContent renderWrapper={false}>
-              {draft.content}
-            </PortableTextContent>
+            <PortableTextContent>{draft.content}</PortableTextContent>
           </Box>
         )}
         <Box className='ui-cluster items-center justify-between gap-x-3 gap-y-2'>
           <Box className='ui-stack gap-1'>
-            <Text className='ui-caption text-grey-500'>
+            <Text className='ui-caption'>
               {COMMENT_STRINGS.composer.characterCount(draft.characterCount)}
             </Text>
             {draft.hasContent && !draft.hasMinimumLength && (
-              <Text role='alert' className='ui-caption text-red-600'>
-                {COMMENT_STRINGS.general.minimumLength}
+              <Text role='alert' className='ui-caption text-danger-600'>
+                {COMMENT_STRINGS.general.minimumLength()}
+              </Text>
+            )}
+            {draft.isTooLarge && (
+              <Text role='alert' className='ui-caption text-danger-600'>
+                {COMMENT_STRINGS.validation.maximumSize(
+                  PORTABLE_TEXT_LIMITS.commentMaximumBytes
+                )}
               </Text>
             )}
           </Box>
@@ -76,6 +90,7 @@ export function CommentComposer({ onClose }: { onClose: () => void }) {
             <Button
               onClick={() => setShowPreview((open) => !open)}
               disabled={!draft.hasContent}
+              isActive={showPreview}
               aria-pressed={showPreview}
               className='button ghost'
             >
@@ -83,9 +98,24 @@ export function CommentComposer({ onClose }: { onClose: () => void }) {
                 ? COMMENT_STRINGS.composer.hidePreview
                 : COMMENT_STRINGS.composer.showPreview}
             </Button>
-            <Button onClick={onClose} className='button subtle'>
-              {COMMENT_STRINGS.composer.cancel}
-            </Button>
+            {draft.hasContent ? (
+              <ConfirmAction
+                title={COMMENT_STRINGS.moderation.discardTitle}
+                description={COMMENT_STRINGS.moderation.discardDescription}
+                confirmLabel={COMMENT_STRINGS.moderation.discardConfirm}
+                cancelLabel={COMMENT_STRINGS.composer.cancel}
+                onConfirm={onClose}
+                trigger={(open) => (
+                  <Button onClick={open} className='button subtle'>
+                    {COMMENT_STRINGS.composer.cancel}
+                  </Button>
+                )}
+              />
+            ) : (
+              <Button onClick={onClose} className='button subtle'>
+                {COMMENT_STRINGS.composer.cancel}
+              </Button>
+            )}
             <Button
               onClick={handleSubmit}
               disabled={!draft.isValid || state.status === 'pending'}

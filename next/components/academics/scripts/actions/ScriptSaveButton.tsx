@@ -1,6 +1,7 @@
 'use client'
 
 import BookmarkIcon from '@sanity/icons/Bookmark'
+import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
 import { useState } from 'react'
 import { Button } from '@/components/common/Button'
 import { Text } from '@/components/typography/Text'
@@ -49,9 +50,9 @@ export function ScriptSaveButton({
       addToast({
         type: 'error',
         title: wasSaved
-          ? 'Couldn’t remove from favorites'
-          : 'Couldn’t save script',
-        description: 'Please try again.',
+          ? SCRIPT_STRINGS.favorite.failedTitleRemove
+          : SCRIPT_STRINGS.favorite.failedTitleAdd,
+        description: SCRIPT_STRINGS.favorite.failedDescription,
       })
     } finally {
       setIsPending(false)
@@ -63,15 +64,17 @@ export function ScriptSaveButton({
       onClick={handleClick}
       disabled={isPending}
       aria-pressed={saved}
-      aria-label={saved ? 'Remove script from favorites' : 'Save script'}
+      aria-label={
+        saved ? SCRIPT_STRINGS.favorite.remove : SCRIPT_STRINGS.favorite.add
+      }
       className={cn(
-        'button subtle gap-1.5',
-        saved && 'text-golden-yellow',
+        'button subtle button-sm gap-1.5',
+        saved && 'cp-yellow',
         className
       )}
     >
-      <BookmarkIcon className={cn(saved && 'fill-golden-yellow')} />
-      <Text>{saved ? 'Saved' : 'Save'}</Text>
+      <BookmarkIcon className={cn(saved && 'fill-current')} />
+      <Text>{SCRIPT_STRINGS.favorite.favorite}</Text>
     </Button>
   )
 }

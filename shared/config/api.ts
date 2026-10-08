@@ -4,7 +4,7 @@ const ACADEMIC_TYPES = [
   'professor',
   'subject',
   'study',
-] as const // TODO: Use Sanity generated types here
+] as const
 
 export type AcademicEntityType = (typeof ACADEMIC_TYPES)[number]
 

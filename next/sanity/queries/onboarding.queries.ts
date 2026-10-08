@@ -1,6 +1,52 @@
 import { groq } from 'next-sanity'
 
-export const onboardingCatalogQuery = groq`{ 
+const onboardingSidebarSubjectQuery = /* groq */ `
+  _id,
+  dbId,
+  "slug": slug.current,
+  name,
+  code,
+  credits,
+  year,
+  semester,
+  "faculty": study->faculty->{
+    _id,
+    "slug": slug.current,
+    name,
+    dbId,
+    university->{
+      _id,
+      "slug": slug.current,
+      name,
+    },
+  },
+  study->{
+    _id,
+    "slug": slug.current,
+    name,
+    dbId,
+    faculty->{
+      _id,
+      "slug": slug.current,
+      name,
+      university->{
+        _id,
+        "slug": slug.current,
+        name,
+      },
+    },
+  },
+  professors[]->{
+    _id,
+    dbId,
+    "slug": slug.current,
+    name,
+    title,
+  },
+`
+
+export const onboardingCatalogQuery = groq`
+{
   "universities": *[_type == "university" && dbId != null]{ _id, dbId, name },
   "faculties": *[_type == "faculty" && university._ref != null && dbId != null]{ _id, dbId, name, "universityId": university._ref },
   "studies": *[_type == "study" && faculty._ref != null && dbId != null]{
@@ -17,5 +63,7 @@ export const onboardingCatalogQuery = groq`{
       }
     },
   },
-  "subjects": *[_type == "subject" && study._ref != null && dbId != null] | order(year asc){ _id, dbId, name, year, "studyId": study._ref }
+  "subjects": *[_type == "subject" && study._ref != null && dbId != null] | order(year asc){
+    ${onboardingSidebarSubjectQuery}
+  }
 }`

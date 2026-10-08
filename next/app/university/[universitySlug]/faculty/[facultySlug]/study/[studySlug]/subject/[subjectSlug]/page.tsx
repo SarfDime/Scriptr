@@ -65,23 +65,35 @@ export default async function SubjectDetailPage({
       header={{
         greeting: study?.name ?? 'Subject',
         title: subject.name,
-        subtitle: subject.dbId ? `Database ID: ${subject.dbId}` : undefined, //TODO: Subtitle should be short bio or something similar not dbID all across the project
+        subtitle: subject.dbId ? `Database ID: ${subject.dbId}` : undefined, // Deferred: use a short bio instead of dbId.
         actions: study?.faculty && (
           <>
             <BackLink
               href={getAcademicPath({
                 type: 'study',
-                universitySlug: study.faculty.university?.slug,
-                facultySlug: study.faculty.slug,
-                studySlug: study.slug,
+                universitySlug:
+                  study.faculty.university?.slug ??
+                  study.faculty.university?._id ??
+                  routeParams.universitySlug,
+                facultySlug:
+                  study.faculty.slug ??
+                  study.faculty._id ??
+                  routeParams.facultySlug,
+                studySlug: study.slug ?? study._id ?? routeParams.studySlug,
               })}
               label={study.name}
             />
             <BackLink
               href={getAcademicPath({
                 type: 'faculty',
-                universitySlug: study.faculty.university?.slug,
-                facultySlug: study.faculty.slug,
+                universitySlug:
+                  study.faculty.university?.slug ??
+                  study.faculty.university?._id ??
+                  routeParams.universitySlug,
+                facultySlug:
+                  study.faculty.slug ??
+                  study.faculty._id ??
+                  routeParams.facultySlug,
               })}
               label={study.faculty.name}
               backLevel='twoBack'

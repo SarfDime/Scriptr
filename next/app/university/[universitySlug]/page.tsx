@@ -1,11 +1,10 @@
 import { Box } from '@/components/common/Box'
 import { EntityCard } from '@/components/common/EntityCard'
 import { NextImage } from '@/components/common/NextImage'
+import { SectionHeader } from '@/components/common/SectionHeader'
 import { PageLayout } from '@/components/layout/PageLayout'
 import { PortableTextContent } from '@/components/typography/PortableTextContent'
 import { Text } from '@/components/typography/Text'
-import { Title } from '@/components/typography/Title'
-import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import {
   createAcademicMetadata,
@@ -72,38 +71,28 @@ export default async function UniversityDetailPage({
             university.email ||
             university.website) && (
             <Card className='p-6 ui-stack gap-3'>
-              <Title as='h3' className='ui-title font-semibold'>
-                Contact & Location
-              </Title>
+              <SectionHeader as='h3' title='Contact & Location' />
               {university.streetAddress && (
                 <Box className='ui-stack gap-0.5'>
-                  <Text className='ui-caption font-bold text-grey-500'>
-                    Address
-                  </Text>
+                  <Text className='ui-label'>Address</Text>
                   <Text className='ui-body'>{university.streetAddress}</Text>
                 </Box>
               )}
               {university.telephone && (
                 <Box className='ui-stack gap-0.5'>
-                  <Text className='ui-caption font-bold text-grey-500'>
-                    Phone
-                  </Text>
+                  <Text className='ui-label'>Phone</Text>
                   <Text className='ui-body'>{university.telephone}</Text>
                 </Box>
               )}
               {university.email && (
                 <Box className='ui-stack gap-0.5'>
-                  <Text className='ui-caption font-bold text-grey-500'>
-                    Email
-                  </Text>
+                  <Text className='ui-label'>Email</Text>
                   <Text className='ui-body'>{university.email}</Text>
                 </Box>
               )}
               {university.website && (
                 <Box className='ui-stack gap-0.5'>
-                  <Text className='ui-caption font-bold text-grey-500'>
-                    Website
-                  </Text>
+                  <Text className='ui-label'>Website</Text>
                   <a
                     href={university.website}
                     target='_blank'
@@ -120,19 +109,15 @@ export default async function UniversityDetailPage({
           {(university.rector ||
             (university.viceRectors && university.viceRectors.length > 0)) && (
             <Card className='p-6 ui-stack gap-4'>
-              <Title as='h3' className='ui-title font-semibold'>
-                Administration
-              </Title>
+              <SectionHeader as='h3' title='Administration' />
               {university.rector && (
                 <Box className='ui-stack gap-0.5'>
-                  <Text className='ui-caption font-bold text-grey-500'>
-                    Rector
-                  </Text>
-                  <Text className='ui-body font-medium'>
+                  <Text className='ui-label'>Rector</Text>
+                  <Text className='ui-body-strong'>
                     {university.rector.name}
                   </Text>
                   {university.rector.title && (
-                    <Text className='ui-caption text-grey-500'>
+                    <Text className='ui-caption'>
                       {university.rector.title}
                     </Text>
                   )}
@@ -140,16 +125,12 @@ export default async function UniversityDetailPage({
               )}
               {university.viceRectors && university.viceRectors.length > 0 && (
                 <Box className='ui-stack gap-2'>
-                  <Text className='ui-caption font-bold text-grey-500'>
-                    Vice Rectors
-                  </Text>
+                  <Text className='ui-label'>Vice Rectors</Text>
                   {university.viceRectors.map((vr) => (
                     <Box key={vr._id} className='ui-stack gap-0.5'>
-                      <Text className='ui-body font-medium'>{vr.name}</Text>
+                      <Text className='ui-body-strong'>{vr.name}</Text>
                       {vr.title && (
-                        <Text className='ui-caption text-grey-500'>
-                          {vr.title}
-                        </Text>
+                        <Text className='ui-caption'>{vr.title}</Text>
                       )}
                     </Box>
                   ))}
@@ -162,22 +143,16 @@ export default async function UniversityDetailPage({
     >
       {university.description && (
         <Card className='p-6 ui-stack gap-3'>
-          <Title as='h2' className='ui-title font-bold'>
-            About {university.name}
-          </Title>
+          <SectionHeader title={`About ${university.name}`} />
           <PortableTextContent>{university.description}</PortableTextContent>
         </Card>
       )}
 
       <Card className='p-0 border-0 ui-stack gap-4'>
-        <Box className='ui-cluster justify-between items-center'>
-          <Title as='h2' className='ui-title font-bold'>
-            Faculties
-          </Title>
-          <Badge className='cp-brand'>
-            {university.faculties?.length ?? 0} Faculties
-          </Badge>
-        </Box>
+        <SectionHeader
+          title='Faculties'
+          count={`${university.faculties?.length ?? 0} Faculties`}
+        />
 
         {university.faculties && university.faculties.length > 0 ? (
           <Box className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
@@ -201,7 +176,9 @@ export default async function UniversityDetailPage({
                       {...faculty.picture}
                       alt={`${faculty.name} Logo`}
                       fillProp
-                      className='h-10 w-10 rounded-full object-cover'
+                      sizes='(min-width: 640px) 50vw, 100vw'
+                      className='h-10 w-10 rounded-full'
+                      objectFitProp='cover'
                     />
                   ) : undefined
                 }
@@ -209,7 +186,7 @@ export default async function UniversityDetailPage({
             ))}
           </Box>
         ) : (
-          <Text className='ui-caption text-grey-500'>
+          <Text className='ui-caption'>
             No faculties listed for this university.
           </Text>
         )}

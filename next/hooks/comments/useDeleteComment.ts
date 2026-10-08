@@ -13,10 +13,10 @@ export function useDeleteComment(commentId: string) {
   const remove = async () => {
     setIsDeleting(true)
     try {
-      await api.deleteComment(commentId)
+      const result = await api.deleteComment(commentId)
       // Removing it from the tree unmounts the comment — no need to reset
       // isDeleting on the success path.
-      removeComment(commentId)
+      removeComment(commentId, result.totalCommentCount)
     } catch {
       setIsDeleting(false)
       addToast({

@@ -1,5 +1,6 @@
 'use client'
 
+import { UI_STRINGS } from '@shared/config/strings'
 import { useState } from 'react'
 import { ApiError } from '@/lib/api/next-api'
 import { useAuthModal } from '@/providers/AuthModalProvider'
@@ -28,9 +29,6 @@ type ProtectedActionOptions = {
   errorTitle?: string
 }
 
-const DEFAULT_RESTRICTED_MESSAGE =
-  "This action isn't available right now — your account is currently restricted."
-
 function isRestrictedError(error: unknown): boolean {
   // Per API_DOCUMENTATION.md, a 403 from these routes only ever means a
   // restriction rejection — apiFetch's ApiError carries the status needed
@@ -57,59 +55,108 @@ export function useProtectedAction<Args extends Array<unknown>, T>(
   options?: ProtectedActionOptions
 ) {
   const [state, setState] = useState<ProtectedActionState>({ status: 'idle' })
-  const { session } = useSession()
+  const { session, refresh, logout } = useSession()
   const { addToast } = useToast()
   const { open: openAuthModal } = useAuthModal()
   const errorTitle = options?.errorTitle
 
   const run = async (...args: Args): Promise<ProtectedActionResult<T>> => {
-    // Skip the doomed request for guests. `loading` falls through: the API
-    // is the source of truth until the session has resolved.
-    if (session.status === 'unauthenticated') {
+    const currentSession =
+      session.status === 'loading' ? await refresh() : session
+    if (currentSession.status !== 'authenticated') {
+      setState({
+        status: 'error',
+        message: UI_STRINGS.general.signInRequired,
+      })
       openAuthModal()
+      addToast({
+        type: 'error',
+        title: errorTitle ?? UI_STRINGS.general.actionUnavailable,
+        description: UI_STRINGS.general.signInRequired,
+      })
       return { ok: false }
     }
 
     setState({ status: 'pending' })
 
+    let actionError: unknown
     try {
       const data = await action(...args)
       setState({ status: 'idle' })
       return { ok: true, data }
     } catch (error) {
-      // The session expired (or was never recognized) mid-flight.
       if (isUnauthenticatedError(error)) {
-        setState({ status: 'idle' })
-        openAuthModal()
-        return { ok: false }
-      }
-
-      if (isRestrictedError(error)) {
-        setState({ status: 'restricted', message: DEFAULT_RESTRICTED_MESSAGE })
-        if (errorTitle) {
+        const refreshedSession = await refresh()
+        if (refreshedSession.status === 'authenticated') {
+          try {
+            const data = await action(...args)
+            setState({ status: 'idle' })
+            return { ok: true, data }
+          } catch (retryError) {
+            if (isUnauthenticatedError(retryError)) {
+              await logout()
+              setState({
+                status: 'error',
+                message: UI_STRINGS.general.sessionExpired,
+              })
+              openAuthModal()
+              addToast({
+                type: 'error',
+                title: errorTitle ?? UI_STRINGS.general.actionUnavailable,
+                description: UI_STRINGS.general.sessionExpired,
+              })
+              return { ok: false }
+            }
+            actionError = retryError
+          }
+        } else {
+          setState({
+            status: 'error',
+            message: UI_STRINGS.general.sessionExpired,
+          })
+          openAuthModal()
           addToast({
             type: 'error',
-            title: 'Action unavailable',
-            description: DEFAULT_RESTRICTED_MESSAGE,
+            title: errorTitle ?? UI_STRINGS.general.actionUnavailable,
+            description: UI_STRINGS.general.sessionExpired,
           })
+          return { ok: false }
         }
-        return { ok: false }
+      } else {
+        actionError = error
       }
+    }
 
+    if (isRestrictedError(actionError)) {
       setState({
-        status: 'error',
-        message:
-          error instanceof Error ? error.message : 'Something went wrong',
+        status: 'restricted',
+        message: UI_STRINGS.general.restrictedAction,
       })
       if (errorTitle) {
         addToast({
           type: 'error',
-          title: errorTitle,
-          description: 'Please try again.',
+          title: UI_STRINGS.general.actionUnavailable,
+          description: UI_STRINGS.general.restrictedAction,
         })
       }
       return { ok: false }
     }
+
+    setState({
+      status: 'error',
+      message:
+        actionError instanceof Error
+          ? actionError.message
+          : UI_STRINGS.general.unexpectedError,
+    })
+    if (errorTitle) {
+      addToast({
+        type: 'error',
+        title: errorTitle,
+        description: UI_STRINGS.general.tryAgain,
+      })
+    }
+    return { ok: false }
   }
 
   const reset = () => setState({ status: 'idle' })

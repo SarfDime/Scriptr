@@ -69,6 +69,21 @@ export const removeComment = (
         : undefined,
     }))
 
+export const updateComment = (
+  comments: Array<CommentEntity>,
+  updatedComment: CommentEntity
+): Array<CommentEntity> =>
+  comments.map((comment) =>
+    comment.id === updatedComment.id
+      ? { ...updatedComment, replies: comment.replies }
+      : {
+          ...comment,
+          replies: comment.replies
+            ? updateComment(comment.replies, updatedComment)
+            : undefined,
+        }
+  )
+
 export const countComments = (comments: Array<CommentEntity>): number =>
   comments.reduce(
     (total, comment) => total + 1 + countComments(comment.replies ?? []),

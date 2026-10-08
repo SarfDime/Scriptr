@@ -9,16 +9,11 @@ import { Text } from '@/components/typography/Text'
 import { Dialog } from '@/components/ui/Dialog'
 import { useSession } from '@/providers/SessionProvider'
 
-// `ui-above` frosted surface with the padding moved off the dialog so the
-// header bar runs edge to edge; `md:min-w-0` cancels the dialog's default
-// minimum width, which is wider than a form needs.
-const AUTH_DIALOG_CLASS =
-  'ui-above overflow-hidden rounded-2xl border p-0 md:w-[min(28rem,calc(100vw-2rem))] md:min-w-0'
-const AUTH_HEADER_CLASS =
-  'flex items-center justify-between gap-3 border-b border-grey-300 px-5 py-4'
+// Narrower than the dialog default: `md:min-w-0` cancels its minimum width,
+// which is wider than a form needs.
+const AUTH_DIALOG_CLASS = 'md:w-[min(28rem,calc(100vw-2rem))] md:min-w-0'
 // The forms sit on the same inner fill as the script page panels.
-const AUTH_PANEL_CLASS =
-  'rounded-xl border border-grey-200 bg-background-100/60 p-4'
+const AUTH_PANEL_CLASS = 'rounded-xl border border-grey-200 ui-above-inside p-4'
 
 type AuthMode = 'login' | 'register'
 
@@ -62,8 +57,6 @@ export function AuthModalProvider({ children }: { children: ReactNode }) {
             ? UI_STRINGS.auth.login.title
             : UI_STRINGS.auth.register.title
         }
-        headerProps={{ className: AUTH_HEADER_CLASS }}
-        titleProps={{ className: 'ui-title text-base font-semibold' }}
         dialogProps={{ className: AUTH_DIALOG_CLASS }}
         isOpen={isVisible}
         onClose={() => setIsOpen(false)}
@@ -71,7 +64,7 @@ export function AuthModalProvider({ children }: { children: ReactNode }) {
         {/* Mounted only while visible, so the forms start fresh every time. */}
         {isVisible && (
           <Box className='ui-stack gap-4 p-5'>
-            <Text className='ui-body text-grey-500'>
+            <Text className='ui-body text-fg-muted'>
               {UI_STRINGS.auth.subtitle}
             </Text>
             <Box className={AUTH_PANEL_CLASS}>

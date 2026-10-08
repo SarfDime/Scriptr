@@ -2,7 +2,7 @@
 
 import type { PortableTextValue } from '@shared/types/portable-text.types'
 import type { DetailedHTMLProps, DialogHTMLAttributes, ReactNode } from 'react'
-import { useEffect, useEffectEvent, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useBodyScrollLock } from '@/hooks/useBodyScroll'
 import { cn, getPlacementClasses } from '@/lib/common-utils'
@@ -14,6 +14,21 @@ import type { TitleProps } from '../typography/Title'
 import { Title } from '../typography/Title'
 import type { CloseButtonProps } from './CloseButton'
 import { CloseButton } from './CloseButton'
+
+/**
+ * Default look of a centered dialog. Below `md` it fills the screen: square,
+ * borderless, scrolling inside. From `md` up it is a framed, frosted card with
+ * a width of its own content. The padding sits on the header and on the
+ * content, not on the dialog, so the header bar runs edge to edge. Override any
+ * of it through `dialogProps.className` (later classes win).
+ */
+const CENTERED_DIALOG_CLASS = cn(
+  'dialog fixed top-0 m-0 w-full max-w-full overflow-y-auto p-0 text-fg ui-above-light',
+  'max-md:h-dvh max-md:max-h-dvh max-md:rounded-none max-md:border-0',
+  'md:top-[10%] md:max-h-[85dvh] md:w-fit md:min-w-2xl md:max-w-[calc(100vw-2rem)] md:shadow-lg'
+)
+const CENTERED_HEADER_CLASS =
+  'flex items-center justify-between gap-3 border-b border-grey-300 px-5 py-4'
 
 export type DialogProps = {
   title?: PortableTextValue | ReactNode
@@ -89,6 +104,8 @@ export function Dialog({
   closeOnOutsideClick = true,
   closeOnEsc = true,
 }: DialogProps) {
+  const titleId = useId()
+  const isCentered = placement === 'center'
   const [showBackdrop, setShowBackdrop] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [internalDialogOpen, setInternalDialogOpen] = useState(false)
@@ -149,10 +166,10 @@ export function Dialog({
     }
   })
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: isOpen drives controlled dialog state through the effect event.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Controlled state is synchronized when inputs or the portal mount change.
   useEffect(() => {
     syncControlledState()
-  }, [hideTrigger, isOpen, setRef])
+  }, [hideTrigger, isOpen, mounted, setRef])
 
   const handleClickOutside = (e: React.MouseEvent<HTMLDialogElement>) => {
     if (!closeOnOutsideClick) return
@@ -196,29 +213,44 @@ export function Dialog({
             )}
 
             {/* Dialog */}
-            {/* TODO: Add onKeyDown improvements for accessibility */}
+            {/* Deferred: improve keyboard handling for this dialog. */}
             <dialog
               ref={dialogRef}
               // make the dialog focusable so we can programmatically focus it and
               // prevent the browser from auto-focusing the first focusable child
               tabIndex={-1}
-              aria-labelledby='dialog-title'
               {...dialogProps}
+              aria-labelledby={titleId}
               onClick={handleClickOutside}
               onClose={handleNativeClose}
               onToggle={handleToggle}
               onCancel={handleCancel}
               onKeyDown={handleKeyDown}
               className={cn(
-                'dialog',
-                'fixed top-[10%] w-full md:w-fit md:min-w-2xl',
+                isCentered
+                  ? CENTERED_DIALOG_CLASS
+                  : 'dialog fixed top-[10%] w-full md:w-fit md:min-w-2xl',
                 getPlacementClasses({ placement, offsetX, offsetY }),
                 dialogProps?.className
               )}
             >
               {/* Header */}
-              <Box {...headerProps}>
-                <Title id='dialog-title' as='h2' {...titleProps}>
+              <Box
+                {...headerProps}
+                className={cn(
+                  isCentered && CENTERED_HEADER_CLASS,
+                  headerProps?.className
+                )}
+              >
+                <Title
+                  {...titleProps}
+                  className={cn(
+                    isCentered && 'ui-title min-w-0',
+                    titleProps?.className
+                  )}
+                  id={titleId}
+                  as='h2'
+                >
                   {title}
                 </Title>
                 {!hideCloseButton && (

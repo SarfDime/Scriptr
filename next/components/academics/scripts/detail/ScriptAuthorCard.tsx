@@ -34,13 +34,9 @@ export function ScriptAuthorCard({
         />
       </Box>
       <Box className='ui-stack min-w-0 gap-0.5'>
-        <Text className='ui-caption text-grey-500'>
-          {SCRIPT_STRINGS.info.uploadedBy}
-        </Text>
+        <Text className='ui-caption'>{SCRIPT_STRINGS.info.uploadedBy}</Text>
         <Text className='ui-label truncate'>{name}</Text>
-        {username && (
-          <Text className='ui-caption truncate text-grey-500'>@{username}</Text>
-        )}
+        {username && <Text className='ui-caption truncate'>@{username}</Text>}
       </Box>
     </>
   )

@@ -1,7 +1,7 @@
 import { cn } from '@/lib/common-utils'
 import { Box } from '../common/Box'
+import { SectionHeader } from '../common/SectionHeader'
 import { Text } from '../typography/Text'
-import { Title } from '../typography/Title'
 import { Card } from '../ui/Card'
 
 export type ContactInfoCardProps = {
@@ -29,32 +29,28 @@ export const ContactInfoCard = ({
 
   return (
     <Card className={cn('p-6 ui-stack gap-3', className)}>
-      <Title as='h3' className='ui-title font-semibold'>
-        {title}
-      </Title>
+      <SectionHeader as='h3' title={title} />
       {streetAddress && (
         <Box className='ui-stack gap-0.5'>
-          <Text className='ui-caption font-bold text-grey-500'>
-            {addressLabel}
-          </Text>
+          <Text className='ui-label'>{addressLabel}</Text>
           <Text className='ui-body'>{streetAddress}</Text>
         </Box>
       )}
       {telephone && (
         <Box className='ui-stack gap-0.5'>
-          <Text className='ui-caption font-bold text-grey-500'>Phone</Text>
+          <Text className='ui-label'>Phone</Text>
           <Text className='ui-body'>{telephone}</Text>
         </Box>
       )}
       {email && (
         <Box className='ui-stack gap-0.5'>
-          <Text className='ui-caption font-bold text-grey-500'>Email</Text>
+          <Text className='ui-label'>Email</Text>
           <Text className='ui-body'>{email}</Text>
         </Box>
       )}
       {website && (
         <Box className='ui-stack gap-0.5'>
-          <Text className='ui-caption font-bold text-grey-500'>Website</Text>
+          <Text className='ui-label'>Website</Text>
           <a
             href={website}
             target='_blank'

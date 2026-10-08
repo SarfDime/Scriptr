@@ -4,6 +4,8 @@ import { PORTABLE_TEXT_LIMITS } from '@shared/config/portable-text-limits'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
 import {
   isCommentPortableTextValue,
+  isValidCommentPortableTextValue,
+  portableTextJsonByteLength,
   portableTextToPlainText,
 } from '@shared/utils/portable-text.utils'
 import { useState } from 'react'
@@ -19,10 +21,15 @@ export function useRichTextDraft() {
   const plainText = portableTextToPlainText(content).trim()
   const hasMinimumLength =
     plainText.length >= PORTABLE_TEXT_LIMITS.commentMinimumCharacters
+  const isTooLarge =
+    content !== undefined &&
+    isCommentPortableTextValue(content) &&
+    portableTextJsonByteLength(content) >
+      PORTABLE_TEXT_LIMITS.commentMaximumBytes
   const isValid =
     content !== undefined &&
     hasMinimumLength &&
-    isCommentPortableTextValue(content)
+    isValidCommentPortableTextValue(content)
 
   const reset = () => {
     setContent(undefined)
@@ -36,6 +43,7 @@ export function useRichTextDraft() {
     hasContent: plainText.length > 0,
     characterCount: plainText.length,
     hasMinimumLength,
+    isTooLarge,
     isValid,
     reset,
   }

@@ -17,12 +17,33 @@ html {
   @apply pointer-events-none grayscale filter;
 }
 
-@layer gridStyles {
-  @theme {
-    --single: 1fr;
-    --repeat-2: repeat(2, 1fr);
-    --repeat-3: repeat(3, 1fr);
-  }
+/*
+ * Grid shortcuts. minmax(0, 1fr) lets tracks shrink below their content's
+ * min-width, so long words, URLs and tables can't blow the grid out.
+ * They are utilities, so variants work: `grid-single md:grid-repeat-2`.
+ */
+@utility grid-single {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@utility grid-repeat-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@utility grid-repeat-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* Responsive without breakpoints; minimum column width via `[--grid-min:12rem]` (default 16rem). */
+@utility grid-auto-fit {
+  display: grid;
+  grid-template-columns: repeat(
+      auto-fit,
+      minmax(min(var(--grid-min, 16rem), 100%), 1fr)
+    );
 }
 
 @keyframes scroll-left {

@@ -1,5 +1,6 @@
 'use client'
 
+import { UI_STRINGS } from '@shared/config/strings'
 import type { MyProfileResponse } from '@shared/types/profile.types'
 import {
   createContext,
@@ -8,7 +9,6 @@ import {
   useEffect,
   useState,
 } from 'react'
-import { ApiError } from '@/lib/api/next-api'
 import { getMyProfile } from '@/lib/api/profile-api'
 import { useSession } from './SessionProvider'
 
@@ -26,21 +26,19 @@ type ProfileContextValue = {
 
 const ProfileContext = createContext<ProfileContextValue | null>(null)
 
-function extractErrorMessage(error: unknown): string {
-  return error instanceof ApiError || error instanceof Error
-    ? error.message
-    : 'Something went wrong'
-}
-
 /** Module-level, like SessionProvider's fetchSession — the effect below
  * calls it without pulling a `refresh` closure into its dependency
  * array, since React guarantees setFetchState's identity is stable. */
 async function fetchProfile(setFetchState: (state: ProfileFetchState) => void) {
+  setFetchState({ status: 'loading' })
   try {
     const profile = await getMyProfile()
     setFetchState({ status: 'loaded', profile })
-  } catch (error) {
-    setFetchState({ status: 'error', message: extractErrorMessage(error) })
+  } catch {
+    setFetchState({
+      status: 'error',
+      message: UI_STRINGS.profile.loadError,
+    })
   }
 }
 
@@ -104,4 +102,12 @@ export function useMyProfile() {
     throw new Error('useMyProfile must be used within a ProfileProvider')
   }
   return context.profile
+}
+
+export function useMyProfileActions() {
+  const context = useContext(ProfileContext)
+  if (!context) {
+    throw new Error('useMyProfileActions must be used within a ProfileProvider')
+  }
+  return { refresh: context.refresh }
 }

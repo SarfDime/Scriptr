@@ -104,6 +104,8 @@ function createLogger({ identifier }: { identifier: string }) {
    * 2xx → success, 4xx → warn, 5xx → error.
    */
   function logRequest({ method, path, status, durationMs }: RequestLogParams) {
+    if (process.env.NODE_ENV === 'production') return
+
     const level: LogLevel =
       // biome-ignore lint/style/noNestedTernary: <Simplest way>
       status >= 500 ? 'error' : status >= 400 ? 'warn' : 'success'

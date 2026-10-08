@@ -1,9 +1,9 @@
 import { apiRoutes } from '@shared/config/api-routes'
 import { PROFILE_CACHE_TAGS } from '@shared/config/cache-tags'
-import type { ProfileSubjectStatus } from '@shared/types/api.types'
 import type {
   MyProfileResponse,
   ProfileStats,
+  ProfileSubjectStatus,
   PublicProfileResponse,
 } from '@shared/types/profile.types'
 import { apiFetch } from './next-api'

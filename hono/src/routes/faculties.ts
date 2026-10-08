@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { requiredParam } from '../lib/request'
+import { databaseErrorResponse, requiredParam } from '../lib/request'
 import { createInternalSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
@@ -28,7 +28,7 @@ faculties.get('/', async (c) => {
     )
     .order('name', { ascending: true })
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
 
   const withCounts = data?.map(({ studies, ...faculty }) => ({
     ...faculty,

@@ -1,8 +1,6 @@
 import { Hono } from 'hono'
-import type {
-  NotificationRecord,
-} from '../../../shared/types/api.types'
-import { requiredParam } from '../lib/request'
+import type { NotificationRecord } from '../../../shared/types/api.types'
+import { databaseErrorResponse, requiredParam } from '../lib/request'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
@@ -25,7 +23,7 @@ notifications.get('/', async (c) => {
   if (isRead === 'false') query = query.eq('is_read', false)
 
   const { data, error } = await query
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json<Array<NotificationRecord>>(data ?? [])
 })
 /** Get the current user's unread notification count */
@@ -39,7 +37,7 @@ notifications.get('/unread-count', async (c) => {
     .eq('profile_id', user.id)
     .eq('is_read', false)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json<{ count: number }>({ count: count ?? 0 })
 })
 
@@ -54,7 +52,7 @@ notifications.patch('/read-all', async (c) => {
     .eq('profile_id', user.id)
     .eq('is_read', false)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json<{ success: true }>({ success: true })
 })
 
@@ -93,7 +91,7 @@ notifications.delete('/:id', async (c) => {
     .eq('id', notificationId)
     .eq('profile_id', user.id)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json<{ success: true }>({ success: true })
 })
 

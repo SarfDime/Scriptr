@@ -11,7 +11,15 @@ import { ScriptMetaList } from './ScriptMetaList'
  * and last-updated/report. Shares its row with the additional reading panel
  * and stretches to the same height. */
 export function ScriptInfoPanel({ detail }: { detail: ScriptDetailViewModel }) {
-  const { scriptId, script, voteScore, hasVoted, isSaved, subjectHref } = detail
+  const {
+    scriptId,
+    script,
+    voteScore,
+    hasVoted,
+    isSaved,
+    isAuthor,
+    subjectHref,
+  } = detail
 
   return (
     <ScriptPanel
@@ -24,10 +32,15 @@ export function ScriptInfoPanel({ detail }: { detail: ScriptDetailViewModel }) {
         hasVoted={hasVoted}
         voteScore={voteScore}
         isSaved={isSaved}
+        isAuthor={isAuthor}
       />
       <Divider />
       <ScriptMetaList script={script} subjectHref={subjectHref} />
-      <ScriptInfoFooter scriptId={scriptId} updatedAt={script.updated_at} />
+      <ScriptInfoFooter
+        scriptId={scriptId}
+        isAuthor={isAuthor}
+        updatedAt={script.updated_at}
+      />
     </ScriptPanel>
   )
 }

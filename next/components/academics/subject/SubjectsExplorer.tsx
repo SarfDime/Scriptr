@@ -2,10 +2,9 @@
 
 import { SubjectCard } from '@/components/academics/subject/SubjectCard'
 import { Box } from '@/components/common/Box'
+import { SectionHeader } from '@/components/common/SectionHeader'
 import { SearchBar } from '@/components/typography/SearchBar'
 import { Text } from '@/components/typography/Text'
-import { Title } from '@/components/typography/Title'
-import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { useSubjectExplorer } from '@/hooks/useSubjectExplorer'
 import type { MinimalSubject } from '@/types/academics/subject.types'
@@ -28,13 +27,8 @@ export const SubjectsExplorer = ({ subjects }: SubjectsExplorerProps) => {
   } = useSubjectExplorer(subjects)
 
   return (
-    <Card className='p-0 border-0 ui-stack gap-4 bg-transparent'>
-      <Box className='ui-cluster items-center gap-2'>
-        <Title as='h2' className='ui-title font-bold'>
-          Subjects
-        </Title>
-        <Badge className='cp-brand'>{visibleSubjects.length}</Badge>
-      </Box>
+    <Card className='ui-stack ui-above'>
+      <SectionHeader title='Subjects' count={visibleSubjects.length} />
 
       <Box className='ui-cluster items-start justify-between gap-3'>
         <SearchBar
@@ -62,9 +56,7 @@ export const SubjectsExplorer = ({ subjects }: SubjectsExplorerProps) => {
           ))}
         </Box>
       ) : (
-        <Text className='ui-caption text-grey-500'>
-          No subjects match those filters.
-        </Text>
+        <Text className='ui-caption'>No subjects match those filters.</Text>
       )}
     </Card>
   )

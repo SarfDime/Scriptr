@@ -1,8 +1,7 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { type SubmitEvent, useState } from 'react'
 import { validateEmailAddress, validateUsername } from '@shared/utils/api.utils'
+import { type SubmitEvent, useState } from 'react'
 import {
   clearGuestAcademicData,
   readGuestAcademicData,
@@ -18,8 +17,6 @@ export type RegisterFormState =
   | { status: 'awaiting-confirmation'; message: string }
 
 export function useRegisterForm() {
-  const router = useRouter()
-
   const { register } = useSession()
   const { catalog } = useOnboarding()
 
@@ -44,7 +41,8 @@ export function useRegisterForm() {
       const emailError = validateEmailAddress(email.trim())
       setState({
         status: 'error',
-        message: usernameError ?? emailError ?? 'Please complete the form correctly.',
+        message:
+          usernameError ?? emailError ?? 'Please complete the form correctly.',
       })
       return
     }
@@ -81,7 +79,6 @@ export function useRegisterForm() {
       setState({ status: 'awaiting-confirmation', message: result.message })
       return
     }
-    router.push('/')
   }
 
   return {

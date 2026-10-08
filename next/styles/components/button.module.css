@@ -1,14 +1,58 @@
+/*
+ * Button sizing lives in the components layer so that any utility on the
+ * element (text-xs, px-2, p-2, rounded-md, ui-caption, ...) overrides it
+ * regardless of CSS source order. Variants below only set color, surface and
+ * emphasis, never size.
+ */
+@layer components {
+  .button {
+    padding-inline: 1.25rem;
+    padding-block: 0.5rem;
+    border-radius: 0.75rem;
+    font-size: 1rem;
+  }
+
+  .button-sm {
+    padding-inline: 0.5rem;
+    padding-block: 0.25rem;
+    font-size: 0.75rem;
+  }
+
+  .button-md {
+    padding-inline: 0.75rem;
+    padding-block: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  /* Filled variants share one recipe; each only sets --button-bg/--button-fg. */
+  :is(.solid, .success, .danger, .error, .warning, .golden) {
+    background-color: var(--button-bg);
+    background-image: linear-gradient(
+      160deg,
+      color-mix(in oklab, var(--button-bg) 85%, var(--color-background-50) 50%),
+      var(--button-bg)
+    );
+    color: var(--button-fg);
+    font-weight: 600;
+    box-shadow: var(--shadow-button);
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        box-shadow: var(--shadow-button-hover);
+        opacity: 0.9;
+      }
+    }
+  }
+}
+
 @utility button {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-inline: 1.25rem;
-  padding-block: 0.5rem;
-  border-radius: 0.75rem;
   transition:
     background-color 0.2s ease,
     background-image 0.2s ease,
-    border-color 0.2s ease,
+    outline-color 0.2s ease,
     box-shadow 0.2s ease,
     color 0.2s ease,
     opacity 0.2s ease,
@@ -37,21 +81,50 @@
   &[data-active="true"]:not(:disabled) {
     background-color: var(--color-brand-100);
     color: var(--color-brand-700);
-    box-shadow: var(--shadow-brand-transparent);
+    box-shadow: inset 0 0 0 1px
+      color-mix(in srgb, var(--color-brand) 35%, transparent);
   }
 }
 
-@utility outline {
-  border: 1px solid var(--color-brand-300);
+/* --- Filled variants (surface recipe in the components layer above) --- */
+
+/* brand-550 keeps white text >= 4.5:1 in light mode (dark mode pairs it with dark ink). */
+@utility solid {
+  --button-bg: var(--color-brand-550);
+  --button-fg: var(--color-background-100);
+}
+
+/* Dark ink derived from the fill: white on jade is only ~2.7:1. */
+@utility success {
+  --button-bg: var(--color-jade);
+  --button-fg: color-mix(in oklab, var(--color-jade) 20%, black);
+}
+
+@utility danger {
+  --button-bg: var(--color-error-red);
+  --button-fg: var(--color-background-100);
+}
+
+/* Ink is derived from the fill so it stays dark in both themes. */
+@utility warning {
+  --button-bg: var(--color-golden-yellow);
+  --button-fg: color-mix(in oklab, var(--color-golden-yellow) 20%, black);
+}
+
+/* --- Quiet variants --- */
+
+@utility hollow {
+  outline: 2px solid var(--color-brand);
   background-color: transparent;
   color: var(--color-brand);
   font-weight: 600;
+  box-shadow: var(--shadow-button);
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
-      border-color: var(--color-brand-400);
+      outline-color: var(--color-brand-300);
       background-color: var(--color-brand-50);
-      box-shadow: var(--shadow-brand-transparent);
+      box-shadow: var(--shadow-button-hover);
     }
   }
 }
@@ -68,11 +141,23 @@
   }
 }
 
+@utility basic {
+  color: var(--color-fg-700);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      color: var(--color-brand);
+      box-shadow: var(--shadow-sm);
+    }
+  }
+}
+
 @utility link {
   padding: 0;
   border-radius: 0;
   background-color: transparent;
   color: var(--color-brand);
+  font-size: inherit;
   text-decoration: underline;
   text-decoration-color: transparent;
   text-underline-offset: 0.2em;
@@ -85,182 +170,28 @@
   }
 }
 
-@utility transparent {
-  color: var(--color-brand);
-  outline: 1px solid color-mix(in oklab, var(--color-brand) 80%, transparent);
-  font-size: 1rem;
-  font-weight: 600;
-
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      background-color: var(--color-brand-50);
-      color: var(--color-brand);
-      box-shadow: var(--shadow-brand-transparent);
-    }
-  }
-}
-
-@utility basic {
-  color: var(--color-background-900);
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      color: var(--color-brand);
-      box-shadow: var(--shadow-brand-transparent);
-    }
-  }
-}
-
-@utility solid {
-  background-color: var(--color-brand);
-  background-image: linear-gradient(
-    180deg,
-    color-mix(in oklab, var(--color-brand) 85%, white),
-    var(--color-brand)
-  );
-  color: var(--color-background-100);
-  font-size: 1rem;
-  font-weight: 600;
-  box-shadow: var(--shadow-sm);
-
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      box-shadow: var(--shadow-brand-light);
-      opacity: 0.9;
-    }
-  }
-}
-
 @utility inverted {
   background-color: var(--color-background-100);
   color: var(--color-brand);
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
-      box-shadow: var(--shadow-brand-transparent);
+      box-shadow: var(--shadow-sm);
     }
   }
 }
 
 @utility subtle {
   background-color: var(--color-grey-200);
-  color: var(--color-grey-550);
+  color: var(--color-fg-muted);
   outline: 1px solid var(--outline-light);
-  font-size: 1rem;
   font-weight: 600;
   box-shadow: var(--shadow-sm);
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
       background-color: var(--color-brand-50);
-      box-shadow: var(--shadow-brand-transparent);
-    }
-  }
-}
-
-@utility golden {
-  background-color: var(--color-golden-yellow);
-  background-image: linear-gradient(
-    180deg,
-    color-mix(in oklab, var(--color-golden-yellow) 85%, white),
-    var(--color-golden-yellow)
-  );
-  color: var(--color-brand-700);
-  font-size: 1rem;
-  font-weight: 600;
-  box-shadow: var(--shadow-sm);
-
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      background-color: var(--color-yellow);
-      background-image: linear-gradient(
-        180deg,
-        color-mix(in oklab, var(--color-yellow) 85%, white),
-        var(--color-yellow)
-      );
-      box-shadow: var(--shadow-brand-transparent);
-    }
-  }
-}
-
-@utility success {
-  background-color: var(--color-jade);
-  background-image: linear-gradient(
-    180deg,
-    color-mix(in oklab, var(--color-jade) 85%, white),
-    var(--color-jade)
-  );
-  color: var(--color-background-100);
-  font-size: 1rem;
-  font-weight: 600;
-  box-shadow: var(--shadow-sm);
-
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      box-shadow: var(--shadow-brand-light);
-      opacity: 0.9;
-    }
-  }
-}
-
-@utility error {
-  background-color: var(--color-error-red);
-  background-image: linear-gradient(
-    180deg,
-    color-mix(in oklab, var(--color-error-red) 85%, white),
-    var(--color-error-red)
-  );
-  color: var(--color-background-100);
-  font-size: 1rem;
-  font-weight: 600;
-  box-shadow: var(--shadow-sm);
-
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      box-shadow: var(--shadow-brand-light);
-      opacity: 0.9;
-    }
-  }
-}
-
-@utility warning {
-  background-color: var(--color-golden-yellow);
-  background-image: linear-gradient(
-    180deg,
-    color-mix(in oklab, var(--color-golden-yellow) 85%, white),
-    var(--color-golden-yellow)
-  );
-  color: var(--color-background-100);
-  font-weight: 600;
-  box-shadow: var(--shadow-sm);
-
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      background-color: var(--color-yellow);
-      background-image: linear-gradient(
-        180deg,
-        color-mix(in oklab, var(--color-yellow) 85%, white),
-        var(--color-yellow)
-      );
-      box-shadow: var(--shadow-brand-transparent);
-    }
-  }
-}
-
-@utility danger {
-  background-color: var(--color-error-red);
-  background-image: linear-gradient(
-    180deg,
-    color-mix(in oklab, var(--color-error-red) 85%, white),
-    var(--color-error-red)
-  );
-  color: var(--color-background-100);
-  font-weight: 600;
-  box-shadow: var(--shadow-sm);
-
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      box-shadow: var(--shadow-brand-light);
-      opacity: 0.9;
+      box-shadow: var(--shadow-md);
     }
   }
 }

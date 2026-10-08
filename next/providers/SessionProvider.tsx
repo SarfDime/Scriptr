@@ -39,7 +39,7 @@ type SessionContextValue = {
   loginWithTokens: (tokens: CallbackRequest) => Promise<AuthActionResult>
   register: (fields: RegisterRequest) => Promise<RegisterResult>
   logout: () => Promise<void>
-  refresh: () => Promise<void>
+  refresh: () => Promise<SessionState>
 }
 
 const SessionContext = createContext<SessionContextValue | null>(null)
@@ -56,19 +56,23 @@ function extractErrorMessage(error: unknown): string {
  * — it only ever receives `setSession`, whose identity React guarantees
  * is stable.
  */
-async function fetchSession(setSession: (state: SessionState) => void) {
+async function fetchSession(
+  setSession: (state: SessionState) => void
+): Promise<SessionState> {
   try {
     const result = await getSession()
-    setSession(
-      result.user
-        ? { status: 'authenticated', user: result.user }
-        : { status: 'unauthenticated' }
-    )
+    const state: SessionState = result.user
+      ? { status: 'authenticated', user: result.user }
+      : { status: 'unauthenticated' }
+    setSession(state)
+    return state
   } catch {
     // GET /session never throws on the backend — it catches internally
     // and returns `{ user: null }` — so this only fires on a genuine
     // network failure. Treated as logged-out either way.
-    setSession({ status: 'unauthenticated' })
+    const state: SessionState = { status: 'unauthenticated' }
+    setSession(state)
+    return state
   }
 }
 

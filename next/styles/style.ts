@@ -1,10 +1,3 @@
-const MARKDOWN_COLOR_CODES = {
-  cerulean: '#2975bf',
-  gold: '#ffcc04',
-  darkGrey: '#4d5155',
-  red: '#e53e3e',
-  green: '##22b573',
-}
 const Z_INDEX = {
   TOASTER: 'z-101',
   DIALOG_BACKDROP: 'z-100',
@@ -51,4 +44,4 @@ const IMAGE_SIZES = {
     '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw',
 }
 
-export { IMAGE_SIZES, MARKDOWN_COLOR_CODES, Z_INDEX }
+export { IMAGE_SIZES, Z_INDEX }

@@ -3,20 +3,24 @@
 import { COMMENT_STRINGS } from '@shared/strings/comments-strings'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
-import { Text } from '@/components/typography/Text'
+import { SectionHeader } from '@/components/common/SectionHeader'
 import { useRequireSignIn } from '@/hooks/useRequireSignIn'
+import { cn } from '@/lib/common-utils'
+import { Divider } from '../ui/Divider'
 import { useCommentsState } from './CommentsProvider'
 
 /** Title, total count, and the button that opens the composer (signed-out
  * visitors get the login modal instead). */
 export function CommentsHeader({
   isComposing,
+  headingId,
   onWriteClick,
 }: {
   isComposing: boolean
+  headingId: string
   onWriteClick: () => void
 }) {
-  const { commentCount } = useCommentsState()
+  const { commentCount, setSort, sort } = useCommentsState()
   const requireSignIn = useRequireSignIn()
 
   const handleWriteClick = () => {
@@ -24,15 +28,49 @@ export function CommentsHeader({
   }
 
   return (
-    <Box className='ui-cluster items-center justify-between gap-2'>
-      <Box className='ui-cluster items-center gap-2'>
-        <Text className='ui-title'>{COMMENT_STRINGS.general.title}</Text>
-        <Text className='ui-caption text-grey-500'>{commentCount}</Text>
-      </Box>
-      {!isComposing && (
-        <Button onClick={handleWriteClick} className='button solid'>
-          {COMMENT_STRINGS.composer.openButton}
-        </Button>
+    <Box className='ui-stack gap-2'>
+      <SectionHeader
+        title={COMMENT_STRINGS.general.title}
+        count={commentCount}
+        titleProps={{ id: headingId }}
+        actions={
+          !isComposing && (
+            <Button onClick={handleWriteClick} className='button solid'>
+              {COMMENT_STRINGS.composer.openButton}
+            </Button>
+          )
+        }
+      />
+      {commentCount > 0 && (
+        <Box
+          className='ui-cluster items-center gap-2'
+          role='group'
+          aria-label={COMMENT_STRINGS.general.sortComments}
+        >
+          <Button
+            type='button'
+            className={cn(
+              'button button-md',
+              sort === 'newest' ? 'solid' : 'subtle'
+            )}
+            aria-pressed={sort === 'newest'}
+            onClick={() => setSort('newest')}
+          >
+            {COMMENT_STRINGS.general.newest}
+          </Button>
+          <Button
+            type='button'
+            className={cn(
+              'button button-md',
+              sort === 'top' ? 'solid' : 'subtle'
+            )}
+            aria-pressed={sort === 'top'}
+            onClick={() => setSort('top')}
+          >
+            {COMMENT_STRINGS.general.top}
+          </Button>
+          <Divider className='mt-3' />
+        </Box>
       )}
     </Box>
   )

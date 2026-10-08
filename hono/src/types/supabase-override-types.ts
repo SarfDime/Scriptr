@@ -40,6 +40,21 @@ export type Database = Override<
     public: Override<
       GenDatabase['public'],
       {
+        Functions: Override<
+          GenDatabase['public']['Functions'],
+          {
+            get_top_comment_ids: {
+              Args: {
+                p_script_id: string | null
+                p_professor_id: string | null
+                p_author_id: string | null
+                p_limit: number
+                p_offset: number
+              }
+              Returns: Array<{ comment_id: string }>
+            }
+          }
+        >
         Tables: Override<
           GenDatabase['public']['Tables'],
           {

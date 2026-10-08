@@ -49,7 +49,7 @@ export const Professor = defineType({
       ],
       description:
         'Assign this professor to one or more faculties in the database.',
-      validation: (rule: Rule) => rule.required().min(1), // TODO: All faculties must be assigned to the same university, so after choosing the first one show only faculties from that university
+      validation: (rule: Rule) => rule.required().min(1), // Deferred: constrain faculties to one university.
       fieldset: 'database',
       group: 'database',
     },
@@ -70,7 +70,7 @@ export const Professor = defineType({
             }: {
               document: { faculties?: Array<{ _ref: string }> }
               parent: Array<{ _ref: string }>
-              // TODO: Type Properly
+              // Deferred: replace this callback's inferred value with a schema type.
             }) => {
               // 1. Get currently chosen faculty IDs
               const selectedFacultyIds =

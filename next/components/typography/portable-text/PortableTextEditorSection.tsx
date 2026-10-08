@@ -25,6 +25,7 @@ export type PortableTextEditorSectionProps = {
   onSaveSuccess?: () => void
   showActions?: boolean
   ariaLabel?: string
+  autoFocus?: boolean
   editorOptions?: PortableTextEditorOptions
   editorClassName?: string
   editorContainerClassName?: string
@@ -50,6 +51,7 @@ export const PortableTextEditorSection = ({
   onSaveSuccess,
   showActions = true,
   ariaLabel,
+  autoFocus = false,
   editorOptions,
   editorClassName,
   editorContainerClassName,
@@ -109,6 +111,7 @@ export const PortableTextEditorSection = ({
         <Toolbar {...editorOptions} />
         <PortableTextEditable
           aria-label={ariaLabel}
+          autoFocus={autoFocus}
           onKeyDown={(event) => {
             if (singleLine && event.key === 'Enter') {
               event.preventDefault()

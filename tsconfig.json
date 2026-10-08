@@ -1,24 +1,7 @@
 {
+  "extends": "./shared/tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2024",
-    "strict": true,
-    "skipLibCheck": true,
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "noEmit": true,
-    "isolatedModules": true,
-    "verbatimModuleSyntax": true,
-    "allowImportingTsExtensions": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noUncheckedSideEffectImports": true,
     "paths": {
-      "@/*": ["./next/*"],
       "@shared/*": ["./shared/*"]
     }
   },

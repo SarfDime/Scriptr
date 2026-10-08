@@ -18,14 +18,16 @@ export const COLORS = [
 export const FONT_WEIGHTS = ['semibold', 'strong', 'black'] as const
 export const ALIGNMENTS = ['left', 'center', 'right'] as const
 export const BUTTON_VARIANTS = [
-  'transparent',
-  'transparent alternate',
   'solid',
-  'solid inverted',
+  'hollow',
+  'ghost',
+  'link',
+  'basic',
+  'inverted',
   'subtle',
-  'golden',
   'success',
-  'error',
+  'warning',
+  'danger',
 ] as const
 /** 'strong' and 'code' are deliberately excluded: 'strong' is superseded by the
  *  weight decorator above, and 'code' isn't offered in this field. Confirm this

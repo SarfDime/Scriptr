@@ -36,8 +36,6 @@
     "source.sortImports": "never"
   },
   "editor.defaultFormatter": "biomejs.biome",
-  // Tailwind Intellisense power-up
-  // Extend scope of supported attributes with {anything}Classes/Styling/Props etc:
   "tailwindCSS.classAttributes": [
     "class",
     "className",
@@ -57,12 +55,10 @@
     "classNames"
   ],
   "tailwindCSS.experimental.classRegex": [
-    // tailwind-variants
     [
       "tv\\(([^)])\\)",
       "[\"']([^\"']).?[\"']"
     ],
-    // Wrap style objects in /*tw*/ before/after comments
     [
       "\\/\\tw\\/ ([^]) \\/\\tw\\/",
       "'([^']*)'"

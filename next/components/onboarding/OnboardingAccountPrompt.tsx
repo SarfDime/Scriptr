@@ -3,7 +3,7 @@
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { NextLink } from '@/components/common/NextLink'
-import { Text } from '@/components/typography/Text'
+import { SectionHeader } from '@/components/common/SectionHeader'
 
 type OnboardingAccountPromptProps = {
   onContinueAsGuest: () => void
@@ -17,13 +17,10 @@ export const OnboardingAccountPrompt = ({
   onCreateAccount,
 }: OnboardingAccountPromptProps) => (
   <Box className='ui-stack gap-4'>
-    <Box className='ui-stack gap-1'>
-      <Text className='ui-title font-semibold'>Save your progress</Text>
-      <Text className='ui-caption text-grey-500'>
-        Without an account, this only lives in this browser. Create an account
-        to keep it synced across your devices.
-      </Text>
-    </Box>
+    <SectionHeader
+      title='Save your progress'
+      subtitle='Without an account, this only lives in this browser. Create an account to keep it synced across your devices.'
+    />
     <Box className='ui-cluster gap-2 justify-center flex-1'>
       <Button
         onClick={onContinueAsGuest}

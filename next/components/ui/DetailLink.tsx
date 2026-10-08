@@ -34,7 +34,7 @@ export const DetailLink = ({
             <Text
               {...labelProps}
               className={cn(
-                'ui-caption font-bold text-current/90 group-hover:text-current/70',
+                'ui-label text-current/90 group-hover:text-current/70',
                 labelProps?.className
               )}
             >

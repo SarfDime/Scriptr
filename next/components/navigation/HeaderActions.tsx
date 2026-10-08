@@ -28,7 +28,7 @@ export const HeaderActions = () => {
           </Badge>
         )}
       </Button>
-      <Button className='button basic gap-2 border border-grey-300 px-3 py-2 ui-caption'>
+      <Button className='button button-sm basic gap-2 border border-grey-300 px-3 py-2'>
         <AddCircle />
         <Text>{UI_STRINGS.navigation.newScript}</Text>
       </Button>

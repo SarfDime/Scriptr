@@ -3,7 +3,7 @@ import { Box } from '@/components/common/Box'
 import { EntityCard } from '@/components/common/EntityCard'
 import { ClickableCard } from '@/components/ui/Card'
 import { getAcademicPath } from '@/lib/academic-routes'
-import type { MinimalSubject } from '@/types/academics/subject.types'
+import type { SubjectSidebarItem } from '@/types/academics/subject.types'
 
 export const SubjectCard = ({
   _id,
@@ -15,7 +15,7 @@ export const SubjectCard = ({
   semester,
   professors = [],
   study,
-}: MinimalSubject) => {
+}: SubjectSidebarItem) => {
   const [firstProfessor, ...restProfessors] = professors ?? []
 
   const universitySlug =
@@ -47,9 +47,9 @@ export const SubjectCard = ({
           : undefined
       }
       headerAside={code && <AcademicBadge type='code' value={code} />}
-      className='group gap-4'
+      className='group gap-4 ui-above-inside'
       footer={
-        <ClickableCard.Footer className='ui-cluster w-full flex-wrap items-center justify-between gap-2 pt-2'>
+        <ClickableCard.Footer className='ui-cluster w-full flex-wrap items-center justify-between gap-2 pt-2.5 transition-colors duration-300 group-hover:border-t-brand-300'>
           <Box className='ui-cluster flex-wrap gap-2'>
             {year && <AcademicBadge type='year' value={year} />}
             {credits && <AcademicBadge type='credits' value={credits} />}

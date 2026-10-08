@@ -1,21 +1,12 @@
+import { BUTTON_VARIANTS } from '@shared/config/shared-pt-config'
 import { useFormValue } from 'sanity'
-import type {
-  ButtonColorVariantInputProps,
-  ButtonVariantOption,
-} from '../types/button.types'
+import type { ButtonColorVariantInputProps } from '../types/button.types'
 import { VariantListInput } from './VariantListInput'
 
-const DEFAULT_BUTTON_VARIANTS: Array<ButtonVariantOption> = [
-  { title: 'Unset', value: undefined },
-  { title: 'Transparent', value: 'transparent' },
-  { title: 'Transparent White', value: 'transparent alternate' },
-  { title: 'Solid', value: 'solid' },
-  { title: 'Solid Inverted', value: 'solid inverted' },
-  { title: 'Subtle', value: 'subtle' },
-  { title: 'Gold', value: 'golden' },
-  { title: 'Success', value: 'success' },
-  { title: 'Error', value: 'error' },
-]
+const DEFAULT_BUTTON_VARIANTS = BUTTON_VARIANTS.map((variant) => ({
+  title: variant.charAt(0).toUpperCase() + variant.slice(1),
+  value: variant,
+}))
 
 /** Button list input */
 export function ButtonColorVariantInput(props: ButtonColorVariantInputProps) {

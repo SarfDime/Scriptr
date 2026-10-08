@@ -9,7 +9,7 @@ import { Hono } from 'hono'
 import { checkTotalScriptVotes } from '../lib/achievements'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
 import { honoLog } from '../lib/logger'
-import { requiredParam } from '../lib/request'
+import { databaseErrorResponse, requiredParam } from '../lib/request'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
@@ -33,7 +33,7 @@ votes.get('/', async (c) => {
     .select('*, user:profiles(username), script:scripts(title)')
     .order('created_at', { ascending: false })
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
 
   return c.json<Array<VoteWithUserAndScript>>(data)
 })
@@ -48,7 +48,7 @@ votes.get('/script/:scriptId', async (c) => {
     .eq('script_id', scriptId)
     .order('created_at', { ascending: false })
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json<Array<VoteWithUser>>(data)
 })
 
@@ -62,7 +62,7 @@ votes.get('/user/:userId', async (c) => {
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json<Array<VoteWithScript>>(data)
 })
 
@@ -76,7 +76,7 @@ votes.get('/my-votes', authMiddleware, async (c) => {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json<Array<VoteWithScript>>(data)
 })
 
@@ -92,7 +92,7 @@ votes.get('/script/:scriptId/my-vote', authMiddleware, async (c) => {
     .eq('script_id', scriptId)
     .maybeSingle()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json<VoteRow | null>(data)
 })
 
@@ -124,6 +124,9 @@ votes.post('/:scriptId', authMiddleware, async (c) => {
 
   if (error) {
     if (error.code === '42501') {
+      if (error.message === 'You cannot vote on your own script') {
+        return c.json({ error: error.message }, 403)
+      }
       return c.json({ error: 'Your account is restricted from voting' }, 403)
     }
     if (error.code === 'P0002') {

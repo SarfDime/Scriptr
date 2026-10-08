@@ -5,39 +5,39 @@ REST API reference for Scriptr. All paths are relative to `/api`
 `shared/types/` (see [Notes](#notes)).
 
 ## Table of Contents
-- [API Endpoints Documentation](#api-endpoints-documentation)
-  - [Table of Contents](#table-of-contents)
-  - [Catalog](#catalog)
-  - [Universities](#universities)
-  - [Professors](#professors)
-  - [Studies](#studies)
-  - [Subjects](#subjects)
-  - [File Uploads](#file-uploads)
-  - [Scripts](#scripts)
-    - [Public](#public)
-    - [Authenticated](#authenticated)
-  - [Comments](#comments)
-    - [Public](#public-1)
-    - [Authenticated](#authenticated-1)
-  - [Flags](#flags)
-  - [Restrictions](#restrictions)
-  - [Profiles](#profiles)
-    - [Public](#public-2)
-    - [Authenticated](#authenticated-2)
-    - [Admin](#admin)
-    - [Internal](#internal)
-  - [Profile Selections](#profile-selections)
-  - [Favorites](#favorites)
-  - [Votes](#votes)
-  - [Ratings](#ratings)
-  - [Notifications](#notifications)
-    - [Achievements](#achievements)
-  - [Client Access Patterns](#client-access-patterns)
-  - [Authentication](#authentication)
-  - [Role-Based Access Control](#role-based-access-control)
-  - [Error Responses](#error-responses)
-  - [Notes](#notes)
-  - [Planned Endpoints (Not Yet Implemented)](#planned-endpoints-not-yet-implemented)
+- [Catalog](#catalog)
+- [Universities](#universities)
+- [Faculties](#faculties)
+- [Professors](#professors)
+- [Studies](#studies)
+- [Subjects](#subjects)
+- [Internal Lookups](#internal-lookups)
+- [File Uploads](#file-uploads)
+- [Scripts](#scripts)
+  - [Public](#public)
+  - [Authenticated](#authenticated)
+- [Comments](#comments)
+  - [Public](#public-1)
+  - [Authenticated](#authenticated-1)
+- [Flags](#flags)
+- [Restrictions](#restrictions)
+- [Profiles](#profiles)
+  - [Public](#public-2)
+  - [Authenticated](#authenticated-2)
+  - [Admin](#admin)
+  - [Internal](#internal)
+- [Profile Selections](#profile-selections)
+- [Favorites](#favorites)
+- [Votes](#votes)
+- [Ratings](#ratings)
+- [Notifications](#notifications)
+  - [Achievements](#achievements)
+- [Client Access Patterns](#client-access-patterns)
+- [Authentication](#authentication)
+- [Role-Based Access Control](#role-based-access-control)
+- [Error Responses](#error-responses)
+- [Notes](#notes)
+- [Planned Endpoints (Not Yet Implemented)](#planned-endpoints-not-yet-implemented)
 
 ---
 
@@ -87,10 +87,10 @@ Internal-only, `x-internal-secret` required for all routes (reads and writes).
 
 | Route                                  | Body                                                 |
 | -------------------------------------- | ---------------------------------------------------- |
-| `POST /internal/universities`          | `{ name, sanity_id?, r2_bucket_id? }`                |
-| `PATCH /internal/universities/:id`     | `{ name?, r2_bucket_id? }`                           |
+| `POST /internal/universities`          | `{ name, sanity_id?, r2_bucket_id? }` — returns the existing row (`existing: true`) if the Sanity document is already linked |
+| `PATCH /internal/universities/:id`     | `{ name?, r2_bucket_id? }`             |
 | `DELETE /internal/universities/:id`    | — (blocked if any faculties still reference it)      |
-| `POST /internal/universities/:id/sync` | `{ name, r2_bucket_id? }` — full re-sync from Sanity |
+| `POST /internal/universities/:id/sync` | `{ name, r2_bucket_id? }` — full re-sync from Sanity (`404` if the database row doesn't exist) |
 
 `r2_bucket_id` is the Cloudflare R2 bucket used for this university's file
 storage — must match `^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$` (S3/R2 bucket naming
@@ -102,6 +102,23 @@ level by an explicit dependents check against `faculties` (`409`),
 independent of the underlying FK's `ON DELETE CASCADE` — the FK itself would
 not stop a raw SQL delete from cascading through the whole hierarchy; only
 this route does.
+
+---
+
+## Faculties
+
+Internal-only, `x-internal-secret` required for all routes (reads and writes).
+
+**Reads**: `GET /faculties`, `GET /faculties/:id` (see [Catalog](#catalog)).
+
+**Mutations** (`/api/internal`):
+
+| Route                               | Body                                                                                                                           |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `POST /internal/faculties`          | `{ name, university_id, sanity_id? }` — returns the existing row (`existing: true`) if the Sanity document is already linked |
+| `PATCH /internal/faculties/:id`     | `{ name?, university_id? }`                                                                                                    |
+| `DELETE /internal/faculties/:id`    | — (`409` if referenced by studies, professor assignments, or user faculty selections)                                        |
+| `POST /internal/faculties/:id/sync` | `{ name, university_id }` — `404` if the database row doesn't exist                                                           |
 
 ---
 
@@ -167,12 +184,24 @@ Internal-only, `x-internal-secret` required for all routes. Does not apply to
 
 ---
 
+## Internal Lookups
+
+Read-only helpers under `/api/internal` (`x-internal-secret`, service-role client).
+
+| Route                                                                            | Response                                                                              |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `GET /internal/{universities,faculties,studies,professors,subjects}`             | Plain rows, no embeds                                                                 |
+| `GET /internal/{universities,faculties,professors,subjects}/by-sanity/:sanityId` | The row linked to a Sanity document, or `404` ("Not linked to a database record yet") |
+| `GET /internal/comments`                                                         | All comments with author (`username`, `full_name`) and professor name, newest first   |
+
+---
+
 ## File Uploads
 
 | Route                      | Notes                                                                                                                                                                                                                                                                                                     |
 | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `POST /file-ops/upload`    | Authenticated. Multipart form: one or more `files` entries (a single file is accepted too — normalized to an array server-side) plus optional `subjectId`. Returns `{ success: true, files: [{ fileKey, fileType, fileSizeBytes, bucket }] }` — one entry per uploaded file, in the same order submitted. |
-| `GET /file-ops/get-file/*` | Public. Returns a pre-signed download URL for a key recorded in `script_files`; the endpoint resolves its bucket from that row. |
+| `GET /file-ops/get-file/*` | Public. Returns `{ url, key }`: a pre-signed download URL (valid for 1 hour) for a key recorded in `script_files`; the endpoint resolves its bucket from that row and ignores any `?bucket=` query param. |
 
 **Storage scoping**: if `subjectId` is provided and resolves to a real
 subject → study → faculty → university chain, the file is stored in that
@@ -211,6 +240,10 @@ bucket server-side. Deleted scripts remove their associated R2 objects.
 
 Response excludes `is_flagged` (internal moderation state). Each file in
 `files` includes `bucket` (see [File Uploads](#file-uploads)).
+Script summary responses include `comments: [{ count }]`, counting all
+comments and replies. Comment-list responses include `totalCount` for
+top-level threads (used for root pagination) and `totalCommentCount` for all
+comments, including replies.
 
 ### Authenticated
 
@@ -220,6 +253,7 @@ Response excludes `is_flagged` (internal moderation state). Each file in
 | `GET /scripts/my-scripts`  | Current user's scripts                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `PATCH /scripts/:id`       | Author or admin. Body: `{ title?, description?, additional_reading? }`. Updated Portable Text uses the same allow-list and byte limits as `POST /scripts`; files are immutable — not part of this body. Invalid Portable Text returns `400`.                                                                                                                                                                                                |
 | `DELETE /scripts/:id`      | Author or admin. Removes the script's database records and attempts to delete all associated R2 objects.                                                                                                                                                                                                                                                                                                                            |
+| `DELETE /scripts/:scriptId/files/:fileId` | Author or admin. Removes a single `script_files` row and attempts to delete that R2 object while leaving the rest of the script intact. `404` if the file doesn't belong to that script. Does not prevent removing a script's last file.                                                                                                                                                                                                                             |
 | `GET /scripts/flagged/all` | Admin only                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 ---
@@ -228,21 +262,44 @@ Response excludes `is_flagged` (internal moderation state). Each file in
 
 ### Public
 `GET /comments/script/:scriptId`, `/comments/professor/:professorId`,
-`/comments/user/:userId`, `/comments/:commentId/reactions` — no auth
+`/comments/user/:userId`, `/comments/:commentId/reactions`,
+`/comments/:commentId/replies` — no auth
 required; list routes include `reactions_count`, `reactions_by_type`,
 `likes_count`, `my_reactions`, `liked_by_me` when a session is present.
+The three comment-list routes return only top-level comments and accept
+`limit` (1–2, default 2), `offset` (default 0), and `sort` (`newest` by
+default, or `top`). `top` ranks root comments by combined heart likes and
+emoji reactions. Responses are `{ items, hasMore, totalCount, totalCommentCount }`; each root
+includes up to five chronological immediate replies and `replies_has_more`.
+`totalCount` counts top-level threads for pagination; `totalCommentCount`
+counts every comment matching the target, including replies.
+`GET /comments/:commentId/replies` returns `{ items, hasMore, totalCount }`
+for one chronological reply page (`limit` 1–10, default 10, and `offset`
+default 0). Replies with nested replies expose `has_replies`, allowing the UI
+to fetch each deeper level on demand. Reaction and like counts in comment
+responses include all users' engagement; the API aggregates those rows
+server-side and only returns counts and the current viewer's own status.
+The frontend retains fetched root and reply pages while the comment section
+is mounted, and requests additional pages only when a user expands them.
+Rate-limit buckets are currently process-local; deployments with multiple API
+instances enforce the limits independently on each instance.
 
 ### Authenticated
 
 | Route                                 | Notes                                                                                                       |
 | ------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `POST /comments`                      | `{ content: PortableTextValue, professor_id? \| script_id? }` — exactly one target. Supports allow-listed inline decorators on normal text blocks only; rejects custom blocks, annotations, headings, lists, and text alignment. Requires at least 3 non-whitespace characters. Rejected if restricted. |
-| `POST /comments/:commentId/replies`   | Same body shape and validation, sets `parent_id`                                                            |
-| `POST /comments/:commentId/reactions` | `{ reaction_type: 'like'\|'hate'\|'funny'\|'sad'\|'confused' }` — toggles that type independently, so one user may add multiple reaction types. Rejected if restricted. |
-| `POST /comments/:commentId/like`      | Toggle. Rejected if restricted.                                                                             |
-| `PATCH /comments/:id`                 | Author or admin. `{ content }`; same allow-list and 3-character minimum as comment creation.                 |
-| `DELETE /comments/:id`                | Author or admin                                                                                             |
-| `GET /comments/flagged/all`           | Admin only                                                                                                  |
+| `POST /comments`                      | `{ content: PortableTextValue, professor_id? \| script_id? }` — exactly one target. Supports allow-listed inline decorators on normal text blocks only; rejects custom blocks, annotations, headings, lists, and text alignment. Requires at least 3 non-whitespace characters and is limited to 10 KiB serialized JSON. Max 10 comments per 15 minutes per account. Rejected if restricted. |
+| `POST /comments/:commentId/replies`   | `{ content }`; target is copied from the parent and enforced by a database trigger. Same content validation and 10-per-15-minute per-account limit as top-level comments. |
+| `POST /comments/:commentId/reactions` | `{ reaction_type: 'like'\|'hate'\|'funny'\|'sad'\|'confused' }` — toggles that type independently, so one user may add multiple reaction types. Authors cannot like or react to their own comments. Combined with likes, max 15 toggles per minute per account. Rejected if restricted. |
+| `POST /comments/:commentId/like`      | Toggle. Authors cannot like or react to their own comments. Shares the 15-per-minute engagement limit with reactions. Rejected if restricted. |
+| `PATCH /comments/:id`                 | Author or admin. `{ content }`; same allow-list, 3-character minimum, and 10 KiB limit as comment creation. `404` if missing. |
+| `DELETE /comments/:id`                | Author or admin. `404` if missing. Returns the updated `totalCommentCount` for the script/professor target, including replies deleted by cascade. |
+| `GET /comments/flagged/all`           | Admin only; internal service-role query after the route verifies the admin session, because `is_flagged` is not selectable by public roles. |
+
+Comment and reply list responses are bounded to one page. Database
+errors map unique/FK conflicts to `409`, permission errors to `403`, custom
+Postgres exceptions to `400`, and other failures to a generic `500` response;
+raw Postgres details are logged server-side only.
 
 ---
 
@@ -253,7 +310,7 @@ Single `flags` table for scripts, users, and comments
 
 | Route                                                   | Access                                                                                                                                         |
 | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /flags`                                           | Any authenticated, non-restricted user. `{ target_type: 'user'\|'script'\|'comment', target_id, reason (≥10 chars) }`                          |
+| `POST /flags`                                           | Any authenticated, non-restricted user. `{ target_type: 'user'\|'script'\|'comment', target_id, reason (≥10 chars) }`. Authors cannot report their own scripts or comments (`403`); each reporter can have only one pending flag per target (`400` for a duplicate). |
 | `GET /flags/my-flags`                                   | Reporter, own flags only                                                                                                                       |
 | `DELETE /flags/:id`                                     | Reporter (own flag) **or** admin (any flag). Not restriction-checked.                                                                          |
 | `GET /flags`, `/flags/pending`, `/flags/status/:status` | Admin only — RLS grants admins direct `SELECT`                                                                                                 |
@@ -294,6 +351,11 @@ profile and stats responses; profile, selection, favorite, script, vote, and
 download mutations revalidate those tags. A public profile response includes
 both authored scripts and favorite scripts; direct `/favorites` endpoints
 remain authenticated and owner-scoped.
+Each script's `comments` field is an array containing one `{ count }` item;
+the count includes root comments and replies and is read through the
+`get_script_comment_counts` RPC rather than a direct comments-table embed.
+Missing profiles return `404`; profile database failures return a generic
+`500` response rather than exposing database details.
 
 ### Authenticated
 `GET /profiles/me`, `PATCH /profiles/me` (`{ username?, full_name?,
@@ -347,7 +409,7 @@ removing a favorite revalidates the affected public-profile cache tags.
 | `GET /votes`, `/votes/script/:scriptId`, `/votes/user/:userId` | Public   | —                                                                                                                                                                                                                                                                                                                                                                                  |
 | `GET /votes/script/:scriptId/stats`                            | Public   | `{ upvotes, score }`                                                                                                                                                                                                                                                                                                                                                               |
 | `GET /votes/my-votes`, `/votes/script/:scriptId/my-vote`       | Required | —                                                                                                                                                                                                                                                                                                                                                                                  |
-| `POST /votes/:scriptId`                                        | Required | Toggle. First call adds a vote, second removes it. `vote_score` is clamped at zero. Runs through a single atomic `toggle_vote` RPC (`security definer`, keyed off `auth.uid()` internally) rather than a read-then-write, so it can't race and can't be called with an arbitrary score delta. Casting is rejected if restricted; removing is not. Returns `{ voted, vote_score }`. |
+| `POST /votes/:scriptId`                                        | Required | Toggle. First call adds a vote, second removes it. Script authors cannot vote for their own scripts, but may remove an existing vote. `vote_score` is clamped at zero. Runs through a single atomic `toggle_vote` RPC (`security definer`, keyed off `auth.uid()` internally) rather than a read-then-write, so it can't race and can't be called with an arbitrary score delta. Casting is rejected if restricted; removing is not. Returns `{ voted, vote_score }`. |
 
 ---
 
@@ -449,7 +511,7 @@ Authenticated endpoints require the Supabase session cookie set by
 | `POST /auth/login`    | Public   | `{ email, password }`. `401` on bad credentials and `429` after repeated failed attempts from the same IP. Returns `{ success, user: SessionUser, session }`.                                                                                                                                                              |
 | `POST /auth/callback` | Public   | `{ access_token, refresh_token }` — establishes the session from an email-confirmation (or similar) redirect. The frontend (`useAuthCallback`) reads the tokens from the URL fragment and posts them here. Implicit flow, not PKCE. `400` if either token is missing, `401` if invalid. Returns the same shape as login. |
 | `POST /auth/logout`   | Required | Signs out and clears the cookie.                                                                                                                                                                                                                                                                                         |
-| `GET /auth/session`   | Public   | `{ user: SessionUser \| null, session: null }`-shaped; `user` is `null` when not signed in.                                                                                                                                                                                                                              |
+| `GET /auth/session`   | Public   | `{ user: SessionUser \| null, session: null }`-shaped; refreshes sessions only when they expire within 60 seconds, and clears invalid/expired sessions when refresh fails. Access tokens are configured for one week to minimize refreshes.                                                                                                                                                                                                                                                                                              |
 
 `SessionUser` (see `shared/types/auth.types.ts`) is the app-shaped user, not
 Supabase's raw auth user: `{ id, email, username, role, subjects: [{ subject_id,
@@ -519,13 +581,11 @@ lists, and alignments; comments accept normal text blocks with inline decorators
 only. Unsupported block/child types, marks, annotations, and extra fields are
 rejected with `400`. Script titles must contain text and fit within 2 KiB;
 descriptions are limited to 50 KiB. Comments require at least 3
-non-whitespace characters. Postgres also enforces its JSON size caps.
+non-whitespace characters and 10 KiB of serialized JSON. Postgres also
+enforces its JSON size caps.
 
 ## Planned Endpoints (Not Yet Implemented)
 
-- **Individual script file removal** — RLS supports author/admin delete on
-  `script_files`; no endpoint removes a single file without deleting the
-  whole script.
 - **Achievement definitions CRUD** — admin create/update/delete for
   `achievement_definitions`; only the public read exists today.
 - **Moderator notification pipeline** — repeated flags notifying moderators,

@@ -17,6 +17,7 @@ import {
 import { ToastContainer } from '@/components/ui/toast/ToastContainer'
 import { isStaging } from '@/config/env'
 import { getDraftMode } from '@/lib/common-utils'
+import { NavProvider } from '@/providers/nav/NavProvider'
 import { SanityLive } from '@/sanity/lib/live'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { navMenuQuery } from '@/sanity/queries/nav.queries'
@@ -134,10 +135,10 @@ const antiqueOliveCond = localFont({
   ],
   variable: '--font-antique-olive-cond',
   display: 'swap',
-}) // TODO: Clean up this file factor out the font stuff
+}) // Deferred: factor font setup out of this file.
 
 export const metadata: Metadata = {
-  // TODO: Use generateMetadata with data from sanity
+  // Deferred: use generateMetadata with data from Sanity.
   title: 'Scriptr',
   description: 'A platform for students to share and discover study materials.',
 }
@@ -169,13 +170,15 @@ export default async function RootLayout({
       data-scroll-behavior='smooth'
       className={`${antiqueOlive.variable} ${antiqueOliveCond.variable} ${matter.variable} ${bricolage.variable} antialiased`}
     >
-      {/* TODO: Implement body scroll lock here or something */}
+      {/* Deferred: implement body scroll locking here. */}
       <body>
         <Providers catalog={catalog}>
           <ToastContainer />
           <CustomStarCanvas sanityData={starCanvasConfig} />
-          <NavBar {...navMenu} />
-          <MainLayout>{children}</MainLayout>
+          <NavProvider>
+            <NavBar {...navMenu} />
+            <MainLayout>{children}</MainLayout>
+          </NavProvider>
           <NotificationsAside />
           <OnboardingModal catalog={catalog} />
         </Providers>

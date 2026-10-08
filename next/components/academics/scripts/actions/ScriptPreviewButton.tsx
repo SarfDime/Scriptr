@@ -31,7 +31,7 @@ export const ScriptPreviewButton = ({
           onClick?.(event)
           setIsOpen(true)
         }}
-        className={cn('button solid text-xs', className)}
+        className={cn('button button-sm solid', className)}
         data-script-id={id}
       >
         {children ?? UI_STRINGS.scripts.actions.preview}

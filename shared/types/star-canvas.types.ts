@@ -31,6 +31,10 @@ export type GalaxyDriftDirection =
   | 'down'
   | 'down-right'
 
+/** 'desktop' = phones use the desktop placement. */
+export type MobileBlackHolePosition = BlackHolePosition | 'desktop'
+export type MobileGalaxyPosition = GalaxyPosition | 'desktop'
+
 export interface StarCanvasSanityData {
   starCount?: number | null
   starColors?: Array<string> | null
@@ -109,6 +113,17 @@ export interface StarCanvasSanityData {
   galaxyDriftFactor?: number | null
   galaxyDriftDirection?: GalaxyDriftDirection | null
   galaxyTilt?: number | null
+
+  // Mobile (phones and touch tablets)
+  mobileScale?: number | null
+  mobileEnableBlackHole?: boolean | null
+  mobileEnableGalaxy?: boolean | null
+  mobileBlackHolePresetPosition?: MobileBlackHolePosition | null
+  mobileBlackHoleXRatio?: number | null
+  mobileBlackHoleYRatio?: number | null
+  mobileGalaxyPosition?: MobileGalaxyPosition | null
+  mobileGalaxyXRatio?: number | null
+  mobileGalaxyYRatio?: number | null
 }
 
 /** StarCanvasSanityData with every field present (defaults applied, nulls removed). */

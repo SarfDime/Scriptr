@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { isAdmin } from '../../../shared/utils/api.utils'
-import { requiredParam } from '../lib/request'
+import { databaseErrorResponse, requiredParam } from '../lib/request'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
@@ -39,7 +39,10 @@ function ratingErrorResponse(error: { code?: string; message: string }) {
   if (error.code === 'P0001') {
     return { body: { error: error.message }, status: 400 as const }
   }
-  return { body: { error: error.message }, status: 500 as const }
+  return {
+    body: { error: 'Unable to complete the rating request' },
+    status: 500 as const,
+  }
 }
 
 /* ---------------------------------------------------------------------- */
@@ -77,7 +80,7 @@ ratings.get('/types', async (c) => {
   }
 
   const { data, error } = await query
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json(data)
 })
 
@@ -134,7 +137,7 @@ ratings.post('/types', authMiddleware, async (c) => {
     if (error.code === '23505') {
       return c.json({ error: 'A rating type with this id already exists' }, 409)
     }
-    return c.json({ error: error.message }, 500)
+    return databaseErrorResponse(c, error)
   }
 
   return c.json({ success: true, rating_type: data })
@@ -163,7 +166,7 @@ ratings.patch('/types/:id', authMiddleware, async (c) => {
     .select()
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json({ success: true, rating_type: data })
 })
 
@@ -186,7 +189,7 @@ ratings.delete('/types/:id', authMiddleware, async (c) => {
         409
       )
     }
-    return c.json({ error: error.message }, 500)
+    return databaseErrorResponse(c, error)
   }
 
   return c.json({
@@ -206,7 +209,7 @@ ratings.get('/professor/:professorId', async (c) => {
     .eq('professor_id', professorId)
     .order('created_at', { ascending: false })
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json(data)
 })
 
@@ -220,7 +223,7 @@ ratings.get('/professor/:professorId/stats', async (c) => {
     .select('rating_type_id, score')
     .eq('professor_id', professorId)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
 
   const byType: Record<string, { total: number; count: number }> = {}
   for (const row of data ?? []) {
@@ -253,7 +256,7 @@ ratings.get('/professor/:professorId/my-ratings', authMiddleware, async (c) => {
     .eq('professor_id', professorId)
     .eq('user_id', user.id)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json(data)
 })
 
@@ -306,7 +309,7 @@ ratings.delete(
       .eq('user_id', user.id)
       .eq('rating_type_id', ratingTypeId)
 
-    if (error) return c.json({ error: error.message }, 500)
+    if (error) return databaseErrorResponse(c, error)
     return c.json({ success: true })
   }
 )
@@ -322,7 +325,7 @@ ratings.get('/subject/:subjectId', async (c) => {
     .eq('subject_id', subjectId)
     .order('created_at', { ascending: false })
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json(data)
 })
 
@@ -336,7 +339,7 @@ ratings.get('/subject/:subjectId/stats', async (c) => {
     .select('rating_type_id, score')
     .eq('subject_id', subjectId)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
 
   const byType: Record<string, { total: number; count: number }> = {}
   for (const row of data ?? []) {
@@ -369,7 +372,7 @@ ratings.get('/subject/:subjectId/my-ratings', authMiddleware, async (c) => {
     .eq('subject_id', subjectId)
     .eq('user_id', user.id)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return databaseErrorResponse(c, error)
   return c.json(data)
 })
 
@@ -422,7 +425,7 @@ ratings.delete(
       .eq('user_id', user.id)
       .eq('rating_type_id', ratingTypeId)
 
-    if (error) return c.json({ error: error.message }, 500)
+    if (error) return databaseErrorResponse(c, error)
     return c.json({ success: true })
   }
 )

@@ -1,6 +1,7 @@
 import type { ScriptSummary } from '@shared/types/scripts.types'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
+import { getSession } from '@/lib/api/auth-api'
 import { getScriptComments } from '@/lib/api/comments-api'
 import { getFavorite } from '@/lib/api/favorites-api'
 import { ApiError } from '@/lib/api/next-api'
@@ -30,7 +31,7 @@ export const loadScriptDetailPage = async (
     throw error
   }
 
-  const [voteStats, comments, myVote, myFavorite, subjectHref] =
+  const [voteStats, comments, myVote, myFavorite, session, subjectHref] =
     await Promise.all([
       getScriptVoteStats(scriptId),
       getScriptComments(scriptId, cookieHeader),
@@ -40,6 +41,7 @@ export const loadScriptDetailPage = async (
       cookieHeader
         ? getFavorite(scriptId, cookieHeader).catch(() => null)
         : null,
+      cookieHeader ? getSession(cookieHeader).catch(() => null) : null,
       // Resolves the subject's real slug chain from Sanity; `null` (plain
       // text, no link) if anything is missing or Sanity is unavailable.
       getSubjectPath(script.subject?.sanity_id ?? null),
@@ -55,6 +57,7 @@ export const loadScriptDetailPage = async (
       // never `{ voted: boolean }`. "Has the current user voted" is
       // `myVote !== null`.
       hasVoted: myVote !== null,
+      isAuthor: session?.user?.id === script.author_id,
       isSaved: myFavorite !== null,
       subjectHref,
     },

@@ -2,12 +2,11 @@ import type { AcademicEntityType } from '@shared/config/api'
 import { type ApiEndpoint, apiRoutes } from '@shared/config/api-routes'
 import type {
   FileType,
-  FlagStatus,
   FlagTargetType,
-  ProfileSubjectStatus,
   ScriptFileInput,
-  UserRole,
 } from '../types/api.types'
+import type { FlagStatus } from '../types/flags.types'
+import type { ProfileSubjectStatus, UserRole } from '../types/profile.types'
 import { generatePath } from './common-utils'
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_-]+$/

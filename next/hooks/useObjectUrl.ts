@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 /**
  * Creates (and revokes) a `blob:` object URL for a local `File` — used to
@@ -9,13 +9,22 @@ import { useEffect } from 'react'
  * Returns `null` while there's no file.
  */
 export function useObjectUrl(file: File | null): string | null {
-  const url = file ? URL.createObjectURL(file) : null
+  const [url, setUrl] = useState<string | null>(null)
 
   useEffect(() => {
-    return () => {
-      if (url) URL.revokeObjectURL(url)
+    if (!file) {
+      // biome-ignore lint/nursery/useReactCompiler: Resetting derived external-resource state when the source file is removed.
+      setUrl(null)
+      return
     }
-  }, [url])
+
+    const objectUrl = URL.createObjectURL(file)
+    setUrl(objectUrl)
+
+    return () => {
+      URL.revokeObjectURL(objectUrl)
+    }
+  }, [file])
 
   return url
 }

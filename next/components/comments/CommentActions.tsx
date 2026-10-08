@@ -1,10 +1,12 @@
 'use client'
 
+import EditIcon from '@sanity/icons/Edit'
 import ReplyIcon from '@sanity/icons/Undo'
 import { COMMENT_STRINGS } from '@shared/strings/comments-strings'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { Text } from '@/components/typography/Text'
+import { Divider } from '@/components/ui/Divider'
 import { FlagReportButton } from '@/components/ui/FlagReportButton'
 import { cn } from '@/lib/common-utils'
 import type { CommentActionsProps } from '@/types/components/comments/CommentThread.types'
@@ -23,31 +25,50 @@ export function CommentActions({
   comment,
   isReplyOpen,
   onToggleReply,
+  onEdit,
 }: CommentActionsProps) {
-  const { currentUserId } = useCommentsServices()
+  const { currentUserId, currentUserRole } = useCommentsServices()
   const isAuthor = currentUserId === comment.author_id
+  const canManage = isAuthor || currentUserRole === 'admin'
+  const hasReactions = Object.values(comment.reactions_by_type).some(
+    (count) => count > 0
+  )
 
   return (
-    <Box className='ui-cluster items-center gap-x-3 gap-y-1'>
-      <Box className='ui-cluster items-center gap-1'>
+    <Box className='ui-cluster items-center gap-x-3 gap-y-3'>
+      <Box className='ui-cluster items-center gap-3'>
         <CommentLikeButton
           commentId={comment.id}
           initialLiked={comment.liked_by_me}
           initialCount={comment.likes_count}
+          disabled={isAuthor}
         />
+        {hasReactions && (
+          <Divider orientation='vertical' className='h-4 self-center' />
+        )}
         <CommentReactions
           commentId={comment.id}
           initialMine={comment.my_reactions}
           initialCounts={comment.reactions_by_type}
+          disabled={isAuthor}
         />
+        {hasReactions && (
+          <Divider orientation='vertical' className='h-4 self-center' />
+        )}
       </Box>
 
       <Box className='ui-cluster items-center gap-3'>
+        {canManage && (
+          <Button onClick={onEdit} className='button subtle button-sm gap-1.5'>
+            <EditIcon />
+            <Text className='text-xs'>{COMMENT_STRINGS.actions.edit}</Text>
+          </Button>
+        )}
         <Button
           onClick={onToggleReply}
           aria-expanded={isReplyOpen}
           className={cn(
-            'button subtle gap-1.5 p-2',
+            'button subtle button-sm gap-1.5',
             isReplyOpen && 'text-brand'
           )}
         >
@@ -58,11 +79,12 @@ export function CommentActions({
         <FlagReportButton
           targetType='comment'
           targetId={comment.id}
+          canReport={!isAuthor}
           triggerLabel={COMMENT_STRINGS.actions.report}
-          triggerClassName='button subtle gap-1.5 p-2 text-xs'
+          triggerClassName='button button-sm subtle gap-1.5'
         />
 
-        {isAuthor && <CommentDeleteButton commentId={comment.id} />}
+        {canManage && <CommentDeleteButton commentId={comment.id} />}
       </Box>
     </Box>
   )
