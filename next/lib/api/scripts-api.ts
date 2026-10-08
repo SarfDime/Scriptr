@@ -10,7 +10,11 @@ import type {
   UploadResponse,
 } from '@shared/types/scripts.types'
 import type { ScriptUploadInput } from '@/types/components/Scripts.types'
-import { apiFetch, cachedUnlessPersonalized } from './next-api'
+import {
+  apiFetch,
+  apiFetchPublicRead,
+  cachedUnlessPersonalized,
+} from './next-api'
 
 const SCRIPT_COMMENT_COUNT_CACHE_VERSION = 2
 
@@ -21,18 +25,20 @@ const SCRIPT_COMMENT_COUNT_CACHE_VERSION = 2
  * cachedUnlessPersonalized) so one user's scoped result is never served
  * from another user's cache entry. */
 export const getScripts = (cookie?: string) =>
-  apiFetch<Array<ScriptSummary>>(
+  apiFetchPublicRead<Array<ScriptSummary>>(
     withQuery(apiRoutes.scripts.index, {
       commentCountVersion: SCRIPT_COMMENT_COUNT_CACHE_VERSION,
     }),
+    [],
     cachedUnlessPersonalized(cookie, [SCRIPT_CACHE_TAGS.list()])
   )
 
 export const getScriptsBySubject = (subjectId: string, cookie?: string) =>
-  apiFetch<Array<ScriptSummary>>(
+  apiFetchPublicRead<Array<ScriptSummary>>(
     withQuery(apiRoutes.scripts.subjectBySubjectId(subjectId), {
       commentCountVersion: SCRIPT_COMMENT_COUNT_CACHE_VERSION,
     }),
+    [],
     cachedUnlessPersonalized(cookie, [
       SCRIPT_CACHE_TAGS.subject(subjectId),
       SCRIPT_CACHE_TAGS.list(),
@@ -40,8 +46,9 @@ export const getScriptsBySubject = (subjectId: string, cookie?: string) =>
   )
 
 export const getTopScripts = (limit = 10, cookie?: string) =>
-  apiFetch<Array<ScriptSummary>>(
+  apiFetchPublicRead<Array<ScriptSummary>>(
     `${apiRoutes.scripts.top(limit)}&commentCountVersion=${SCRIPT_COMMENT_COUNT_CACHE_VERSION}`,
+    [],
     cachedUnlessPersonalized(cookie, [SCRIPT_CACHE_TAGS.top()])
   )
 
@@ -70,8 +77,9 @@ export const getTopScriptsForSubjects = async (
 }
 
 export const getPopularScripts = (limit = 10, cookie?: string) =>
-  apiFetch<Array<ScriptSummary>>(
+  apiFetchPublicRead<Array<ScriptSummary>>(
     `${apiRoutes.scripts.popular(limit)}&commentCountVersion=${SCRIPT_COMMENT_COUNT_CACHE_VERSION}`,
+    [],
     cachedUnlessPersonalized(cookie, [SCRIPT_CACHE_TAGS.popular()])
   )
 
@@ -93,10 +101,14 @@ export const getScript = (scriptId: string, cookie?: string) =>
  * consistency with the other list endpoints; there's no cache trade-off
  * either way since this is already `no-store`. */
 export const searchScripts = (query: string, cookie?: string) =>
-  apiFetch<Array<ScriptSummary>>(apiRoutes.scripts.search(query), {
-    ...(cookie && { headers: { cookie } }),
-    cache: 'no-store',
-  })
+  apiFetchPublicRead<Array<ScriptSummary>>(
+    apiRoutes.scripts.search(query),
+    [],
+    {
+      ...(cookie && { headers: { cookie } }),
+      cache: 'no-store',
+    }
+  )
 
 /** Never cached: results are scoped to the requesting user's session, and
  * the endpoint requires auth unconditionally (authMiddleware) — so `cookie`

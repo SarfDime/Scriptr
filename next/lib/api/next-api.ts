@@ -1,6 +1,7 @@
 import type { QueryApiEndpointType } from '@shared/types/api.types'
 import { generatePath } from '@shared/utils/common-utils'
 import { API_URL } from '@/config/env'
+import { nextLogs } from '@/lib/logger'
 
 export type ApiFetchOptions = Omit<RequestInit, 'body'> & {
   /** Accepts a raw object for JSON, FormData for files, or standard BodyInit */
@@ -83,6 +84,28 @@ export async function apiFetch<T>(
   }
 
   return response.json() as Promise<T>
+}
+
+/**
+ * Allows public list reads to render an empty state when the API is
+ * unavailable during a build or request. Mutations and detail reads should
+ * continue using apiFetch so their errors remain visible to callers.
+ */
+export async function apiFetchPublicRead<T>(
+  path: QueryApiEndpointType,
+  fallback: T,
+  options: ApiFetchOptions = {}
+): Promise<T> {
+  try {
+    return await apiFetch<T>(path, options)
+  } catch (error) {
+    nextLogs({
+      message: `Public API read unavailable for ${path}; using fallback.`,
+      logLevel: 'warn',
+      error,
+    })
+    return fallback
+  }
 }
 
 /**

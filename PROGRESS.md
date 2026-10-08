@@ -144,6 +144,9 @@ Last reconciled: 2026-10-08.
 
 ### Done
 
+- **Public API fallback:** public script feeds and search render empty states
+  when the API is unavailable; authenticated reads and mutations still surface
+  errors. **[✅]**
 - **Academic navigation:** nested university/faculty/study/subject routing and **[✅]**
   flat professor pages use ancestor-scoped Sanity queries and complete links.
 - **Script discovery:** script listing, sorting, filtering, cached homepage and **[✅]**
