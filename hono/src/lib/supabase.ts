@@ -39,7 +39,8 @@ export function createInternalSupabaseClient(c: Context<HonoEnv>) {
 
 /** Proper cookie storage with full read/write support */
 function createCookieStorage(c: Context<HonoEnv>) {
-  const secure = c.env.NODE_ENV === 'production'
+  const secure =
+    c.env.NODE_ENV === 'production' || c.req.url.startsWith('https://')
   const sameSite = secure ? 'None' : 'Lax'
 
   return {
