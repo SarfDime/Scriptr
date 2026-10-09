@@ -8,6 +8,8 @@ export type ApiFetchOptions = Omit<RequestInit, 'body'> & {
   body?: Record<string, unknown> | FormData | BodyInit | null
 }
 
+const API_REQUEST_TIMEOUT_MS = 10_000
+
 /**
  * Carries the HTTP status so callers (e.g. useProtectedAction) can distinguish
  * a 403 restriction rejection from other failures without string-matching the
@@ -44,12 +46,17 @@ export async function apiFetch<T>(
     }
 
     const url = generatePath({ segments: [API_URL, path] })
+    const timeoutSignal = AbortSignal.timeout(API_REQUEST_TIMEOUT_MS)
+    const signal = restOptions.signal
+      ? AbortSignal.any([restOptions.signal, timeoutSignal])
+      : timeoutSignal
 
     const response = await fetch(url, {
       credentials: 'include',
       headers,
       body: fetchBody,
       ...restOptions,
+      signal,
     })
 
     if (!response.ok) {
