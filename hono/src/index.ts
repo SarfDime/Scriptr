@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 /// <reference path="./sanity-stub.d.ts" />
 
+import { getRequestListener } from '@hono/node-server'
 import { honoLog, honoLogRequest } from './lib/logger'
 import auth from './routes/auth'
 import comments from './routes/comments'
@@ -122,4 +123,4 @@ app.notFound((c) => {
   return c.json({ error: 'Route not found' }, 404)
 })
 
-export default app
+export default getRequestListener(app.fetch)
