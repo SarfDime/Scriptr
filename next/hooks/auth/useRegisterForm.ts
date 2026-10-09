@@ -1,5 +1,6 @@
 'use client'
 
+import { UI_STRINGS } from '@shared/config/strings'
 import { validateEmailAddress, validateUsername } from '@shared/utils/api.utils'
 import { type SubmitEvent, useState } from 'react'
 import {
@@ -9,6 +10,7 @@ import {
 import { getRegistrationAcademicProfile } from '@/lib/profile-sync'
 import { useOnboarding } from '@/providers/onboarding/OnboardingProvider'
 import { useSession } from '@/providers/SessionProvider'
+import { useToast } from '@/providers/toaster/ToasterProvider'
 
 export type RegisterFormState =
   | { status: 'idle' }
@@ -19,6 +21,7 @@ export type RegisterFormState =
 export function useRegisterForm() {
   const { register } = useSession()
   const { catalog } = useOnboarding()
+  const { addToast } = useToast()
 
   const [fullName, setFullName] = useState('')
   const [username, setUsername] = useState('')
@@ -42,7 +45,17 @@ export function useRegisterForm() {
       setState({
         status: 'error',
         message:
-          usernameError ?? emailError ?? 'Please complete the form correctly.',
+          usernameError ??
+          emailError ??
+          UI_STRINGS.auth.register.statuses.incompleteForm,
+      })
+      addToast({
+        title: UI_STRINGS.auth.register.statuses.errorTitle,
+        description:
+          usernameError ??
+          emailError ??
+          UI_STRINGS.auth.register.statuses.incompleteForm,
+        type: 'error',
       })
       return
     }
@@ -53,8 +66,13 @@ export function useRegisterForm() {
     if (guestData.onboardingCompletedAt && !academicProfile) {
       setState({
         status: 'error',
-        message:
-          'Your academic selections could not be prepared. Please reopen onboarding and try again.',
+        message: UI_STRINGS.auth.register.statuses.academicProfileUnavailable,
+      })
+      addToast({
+        title: UI_STRINGS.auth.register.statuses.errorTitle,
+        description:
+          UI_STRINGS.auth.register.statuses.academicProfileUnavailable,
+        type: 'error',
       })
       return
     }
@@ -68,17 +86,33 @@ export function useRegisterForm() {
 
     if (!result.ok) {
       setState({ status: 'error', message: result.message })
+      addToast({
+        title: UI_STRINGS.auth.register.statuses.errorTitle,
+        description: result.message,
+        type: 'error',
+      })
       return
     }
-
-    clearGuestAcademicData()
 
     // `requiresEmailConfirmation` reflects Supabase's own project setting
     // (data.session === null on signUp) — not something this form decides.
     if (result.requiresEmailConfirmation) {
       setState({ status: 'awaiting-confirmation', message: result.message })
+      addToast({
+        title: UI_STRINGS.auth.register.statuses.successTitle,
+        description: result.message,
+        type: 'success',
+      })
       return
     }
+
+    clearGuestAcademicData()
+    addToast({
+      title: UI_STRINGS.auth.register.statuses.successTitle,
+      description: UI_STRINGS.auth.register.statuses.successDescription,
+      type: 'success',
+    })
+    setState({ status: 'idle' })
   }
 
   return {

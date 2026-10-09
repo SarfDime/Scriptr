@@ -36,7 +36,6 @@ export const PTDropdown = ({
   const displayIcons =
     // biome-ignore lint/style/noNestedTernary: <Simplest way to do this>
     icons && icons.length > 0 ? icons.slice(0, 3) : Icon ? [Icon] : []
-  // Deferred: keep dropdown children within the viewport.
   return (
     <details ref={detailsRef} onBlur={handleBlur} className='group relative'>
       <summary
@@ -61,7 +60,7 @@ export const PTDropdown = ({
         {label && <span className='hidden md:block'>{label}</span>}
         <DROPDOWN_CARET className='h-4 w-4 shrink-0 transition-transform group-open:rotate-180 md:block hidden' />
       </summary>
-      <div className='absolute z-10 mt-1 flex min-w-max flex-col items-stretch gap-0.5 rounded border border-grey-300 bg-background p-1 text-left shadow-md'>
+      <div className='absolute right-0 z-10 mt-1 flex max-w-[calc(100vw-1rem)] min-w-max flex-col items-stretch gap-0.5 overflow-x-auto rounded border border-grey-300 bg-background p-1 text-left shadow-md'>
         {children}
       </div>
     </details>

@@ -31,7 +31,6 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
   if (state.status === 'awaiting-confirmation') {
     return (
       <Card.Body className='ui-stack gap-4 text-center'>
-        <Text className='ui-caption text-success-600'>{state.message}</Text>
         <Button
           onClick={onSwitchToLogin}
           className='button subtle w-full justify-center'
@@ -109,10 +108,6 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           <Text className='ui-caption'>
             {UI_STRINGS.auth.register.statuses.submitting}
           </Text>
-        )}
-
-        {state.status === 'error' && (
-          <Text className='ui-caption text-danger-600'>{state.message}</Text>
         )}
       </Card.Body>
 

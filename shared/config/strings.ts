@@ -6,6 +6,8 @@ export const UI_STRINGS = {
     actionUnavailable: 'Action unavailable',
     tryAgain: 'Please try again.',
     unexpectedError: 'Something went wrong',
+    apiUnavailable:
+      'Scriptr is temporarily unavailable. Please try again in a moment.',
     signInRequired: 'Sign in to continue.',
     sessionExpired: 'Your session expired. Please sign in and try again.',
     couldNotUpdate: (label: string) => `Couldn’t update ${label}`,
@@ -66,7 +68,7 @@ export const UI_STRINGS = {
       triggerLabel: 'New script',
       submitButtonLabel: 'Create Script',
       cancelButtonLabel: 'Clear',
-      description: 'Add the details and files your classmates need.',
+      description: 'Add the details your classmates need. Files are optional.',
       formTitle: 'Script title',
       formTitleHelp: 'Use a clear, descriptive name.',
       formDescription: 'Description',
@@ -83,7 +85,7 @@ export const UI_STRINGS = {
       dropzoneLabel: 'Drop files here or click to browse',
       filesLabel: 'Files',
       filesHelp:
-        'Add one or more supported files. You can drag files here or browse your device.',
+        'Optionally add supported files by dragging them here or browsing your device.',
       removeButtonLabel: 'Remove',
       addLinkButtonLabel: 'Add link',
       statuses: {
@@ -103,13 +105,16 @@ export const UI_STRINGS = {
         titleTooLong: 'Script title must be 2 KB or less',
         descriptionTooLong: 'Script description must be 50 KB or less',
         noProfessors: 'No professors are available for this subject',
-        filesRequired: 'Add at least one file',
         filesInvalid: 'Remove or replace the files with errors',
       },
     },
   },
   subjects: {
     manage: 'Manage',
+    title: 'Subjects',
+    searchPlaceholder: 'Search subjects, codes, or professors',
+    noSubjects: 'No subjects are available for this study yet.',
+    noMatchingSubjects: 'No subjects match those filters.',
     sidebarTitle: 'Your subjects',
     sidebarSubtitle: 'Subjects from your selected studies.',
     emptyState: 'Complete your study setup to see your current subjects here.',
@@ -117,6 +122,30 @@ export const UI_STRINGS = {
       'Choose a study during onboarding to see your subjects here.',
     guestNoIncompleteSubjects:
       'All subjects in your selected study are marked complete.',
+  },
+  academics: {
+    studiesTitle: 'Studies',
+    noStudies: 'No studies are available for this faculty yet.',
+    noFaculties: 'No faculties are listed for this university yet.',
+    noProfessorCourses: 'No courses are listed for this professor yet.',
+    studyImageAlt: 'Study image',
+    studyAbout: 'About the Study',
+    visitWebsite: 'Visit website',
+    location: 'Location',
+    professor: {
+      contactDetails: 'Contact details',
+      office: 'Office',
+      phone: 'Phone',
+      email: 'Email',
+      website: 'Website',
+      affiliatedFaculties: 'Affiliated faculties',
+      biography: 'Biography',
+      coursesTaught: 'Courses taught',
+      courseCount: (count: number) =>
+        `${count} ${count === 1 ? 'course' : 'courses'}`,
+      year: (year: number) => `Year ${year}`,
+      ects: (credits: number) => `${credits} ECTS`,
+    },
   },
   profile: {
     loadingLabel: 'Loading your profile…',
@@ -166,6 +195,9 @@ export const UI_STRINGS = {
       switchToRegister: "Don't have an account? Create one",
       statuses: {
         submitting: 'Signing in…',
+        errorTitle: 'Sign-in failed',
+        successTitle: 'Signed in',
+        successDescription: 'Welcome back.',
       },
     },
     register: {
@@ -178,6 +210,12 @@ export const UI_STRINGS = {
       switchToLogin: 'Already have an account? Sign in',
       statuses: {
         submitting: 'Creating your account…',
+        errorTitle: 'Could not create account',
+        successTitle: 'Account created',
+        successDescription: 'Welcome to Scriptr.',
+        incompleteForm: 'Please complete the form correctly.',
+        academicProfileUnavailable:
+          'Your academic selections could not be prepared. Please reopen onboarding and try again.',
       },
     },
     callback: {

@@ -23,5 +23,8 @@ export const getDisplayName = (
 export const getUniversityName = (profile: ProfileCore) =>
   getPrimaryFaculty(profile)?.university?.name ?? ''
 
+export const getUniversityId = (profile: ProfileCore) =>
+  getPrimaryFaculty(profile)?.university?.id
+
 export const getFacultyName = (profile: ProfileCore) =>
   getPrimaryFaculty(profile)?.name ?? ''

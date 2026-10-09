@@ -176,6 +176,37 @@ async function bootstrapAcademicProfile(
   }
 }
 
+async function ensureProfile(
+  c: Parameters<typeof createInternalSupabaseClient>[0],
+  profileId: string,
+  username: string,
+  fullName: string
+) {
+  const { error } = await createInternalSupabaseClient(c)
+    .from('profiles')
+    .upsert(
+      { id: profileId, username, full_name: fullName },
+      { onConflict: 'id' }
+    )
+
+  if (error) throw error
+}
+
+async function rollbackRegistrationUser(
+  c: Parameters<typeof createInternalSupabaseClient>[0],
+  userId: string
+) {
+  const { error } =
+    await createInternalSupabaseClient(c).auth.admin.deleteUser(userId)
+  if (error) {
+    honoLog({
+      message: 'Failed to roll back account after registration failure',
+      logLevel: 'error',
+      error,
+    })
+  }
+}
+
 type SupabaseInstance = ReturnType<typeof createSupabaseClient>
 
 /**
@@ -321,8 +352,16 @@ auth.post('/register', async (c) => {
     return c.json({ error: error.message }, 400)
   }
 
-  if (data.user?.id && academicProfile) {
+  const isNewUser = data.user?.identities?.length !== 0
+
+  if (data.user?.id && isNewUser && academicProfile) {
     try {
+      await ensureProfile(
+        c,
+        data.user.id,
+        normalizedUsername,
+        normalizedFullName
+      )
       await bootstrapAcademicProfile(c, data.user.id, academicProfile)
     } catch (bootstrapError) {
       honoLog({
@@ -330,21 +369,34 @@ auth.post('/register', async (c) => {
         logLevel: 'error',
         error: bootstrapError,
       })
-      const { error: cleanupError } = await createInternalSupabaseClient(
-        c
-      ).auth.admin.deleteUser(data.user.id)
-      if (cleanupError) {
-        honoLog({
-          message:
-            'Failed to roll back account after profile bootstrap failure',
-          logLevel: 'error',
-          error: cleanupError,
-        })
-      }
+      await rollbackRegistrationUser(c, data.user.id)
+
       return c.json(
         {
-          error: 'Account created, but the academic profile could not be saved',
+          error: 'We could not complete your registration. Please try again.',
         },
+        500
+      )
+    }
+  }
+
+  if (data.user?.id && isNewUser && !academicProfile) {
+    try {
+      await ensureProfile(
+        c,
+        data.user.id,
+        normalizedUsername,
+        normalizedFullName
+      )
+    } catch (profileError) {
+      honoLog({
+        message: 'Registration profile bootstrap failed',
+        logLevel: 'error',
+        error: profileError,
+      })
+      await rollbackRegistrationUser(c, data.user.id)
+      return c.json(
+        { error: 'Your account could not be completed. Please try again.' },
         500
       )
     }

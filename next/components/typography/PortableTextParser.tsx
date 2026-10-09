@@ -35,7 +35,7 @@ export const portableTextParser = ({
             className='sm:max-h-[40vh] w-[-webkit-fill-available]'
             style={{ aspectRatio: value?.aspectRatio }}
             imageProps={{ className: 'w-unset' }}
-            sizes={IMAGE_SIZES.FEATURED_SECTION_IMAGE_OPTIMIZATION}
+            sizes={IMAGE_SIZES.PORTABLE_TEXT_IMAGE}
           />
         )
       },

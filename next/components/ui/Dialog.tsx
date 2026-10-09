@@ -110,6 +110,7 @@ export function Dialog({
   const [mounted, setMounted] = useState(false)
   const [internalDialogOpen, setInternalDialogOpen] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const triggerRef = useRef<HTMLElement | null>(null)
 
   useBodyScrollLock({ skipCheck, isLocked: internalDialogOpen ?? false })
 
@@ -133,6 +134,10 @@ export function Dialog({
 
   const handleOpen = () => {
     if (dialogRef.current?.open) return
+    triggerRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null
     dialogRef.current?.showModal()
     setShowBackdrop(true)
     setInternalDialogOpen(true)
@@ -155,7 +160,14 @@ export function Dialog({
     setShowBackdrop(false)
     setInternalDialogOpen(false)
     onClose?.()
+    triggerRef.current?.focus()
+    triggerRef.current = null
   }
+
+  useEffect(() => {
+    if (!internalDialogOpen) return
+    dialogRef.current?.focus()
+  }, [internalDialogOpen])
 
   const syncControlledState = useEffectEvent(() => {
     if (setRef || !hideTrigger || !dialogRef.current) return
@@ -189,6 +201,29 @@ export function Dialog({
       e.preventDefault()
       e.stopPropagation()
     }
+
+    if (e.key !== 'Tab' || !dialogRef.current) return
+
+    const focusable = Array.from(
+      dialogRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+      )
+    )
+    if (focusable.length === 0) {
+      e.preventDefault()
+      dialogRef.current.focus()
+      return
+    }
+
+    const first = focusable[0] as HTMLElement
+    const last = focusable[focusable.length - 1] as HTMLElement
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault()
+      last.focus()
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault()
+      first.focus()
+    }
   }
 
   return (
@@ -213,7 +248,6 @@ export function Dialog({
             )}
 
             {/* Dialog */}
-            {/* Deferred: improve keyboard handling for this dialog. */}
             <dialog
               ref={dialogRef}
               // make the dialog focusable so we can programmatically focus it and

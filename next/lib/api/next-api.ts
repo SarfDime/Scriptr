@@ -77,10 +77,13 @@ export async function apiFetch<T>(
     return (await response.json()) as T
   } catch (error) {
     nextLogs({
-      message: `API request unavailable for ${path}; continuing without API data.`,
+      message: `API request failed or is unavailable for ${path}.`,
       logLevel: 'warn',
       error,
     })
+    if (error instanceof ApiError) {
+      throw error
+    }
     return null
   }
 }
@@ -106,8 +109,17 @@ export async function apiFetchPublicRead<T>(
   fallback: T,
   options: ApiFetchOptions = {}
 ): Promise<T> {
-  const result = await apiFetch<T>(path, options)
-  return result ?? fallback
+  try {
+    const result = await apiFetch<T>(path, options)
+    return result ?? fallback
+  } catch (error) {
+    nextLogs({
+      message: `Public API read failed for ${path}; using the fallback value.`,
+      logLevel: 'warn',
+      error,
+    })
+    return fallback
+  }
 }
 
 /**

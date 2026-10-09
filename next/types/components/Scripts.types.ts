@@ -1,6 +1,6 @@
 import type { PortableTextValue } from '@shared/types/portable-text.types'
 import type { ScriptFile } from '@shared/types/scripts.types'
-import type { BoxProps } from '@/components/common/Box'
+import type { BoxPropsWithoutChildren } from '@/components/common/Box'
 import type { ButtonProps } from '@/components/common/Button'
 import type { NextLinkProps } from '@/components/common/NextLink'
 import type { TextProps } from '@/components/typography/Text'
@@ -114,14 +114,14 @@ export type ScriptActionsProps = ScriptMeta &
 
 export type ScriptCardProps = {
   script: ScriptDetail
-} & Omit<BoxProps, 'children'>
+} & BoxPropsWithoutChildren
 
 export type ScriptsSectionProps = {
   scripts: Array<ScriptDetail>
   title?: string
   subtitle?: string
   parentSubject?: SubjectDetail
-} & Omit<BoxProps, 'children'>
+} & BoxPropsWithoutChildren
 
 export type PageDataProps = {
   scripts?: Array<Script>

@@ -34,11 +34,6 @@ export const linkSelector = [
     to: [{ type: 'page' }],
     hidden: ({ document }) => document?.linkType === 'custom',
     validation: validationRules.linkSelectorInternalFieldsValidation as never,
-
-    // Deferred: dynamically list pages and academic entities here.
-    // (possibly hardcode the main pages?),
-    // possibly fetch from university all the way down to the specific page?
-    // probably best to hardcode and then fetch individually
   }),
   defineField({
     name: 'section',

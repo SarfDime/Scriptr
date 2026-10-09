@@ -11,8 +11,6 @@ export function DisableDraft({ currentPath }: { currentPath?: string }) {
 
   if (isPresentationTool) return null
 
-  // Deferred: restore this draft-disable endpoint when it is available.
-
   const href = path ? `/api/disable-draft?slug=${path}` : `/api/disable-draft`
 
   return (

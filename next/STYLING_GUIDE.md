@@ -231,6 +231,7 @@ Notes:
   round the element itself.
 - **`NextImage`** applies `className` to its skeleton wrapper, not the `<img>`.
   Use `objectFitProp='cover'` to crop (the default is contain) and pass `sizes`.
+  Always select `sizes` from the shared `IMAGE_SIZES` registry.
 - **`Dialog`** styles itself with inline Tailwind merged with `cn` (there is no
   `.dialog` CSS). A centered dialog (the default) fills the screen below `md`:
   square, borderless, scrolling inside. From `md` up it is a framed

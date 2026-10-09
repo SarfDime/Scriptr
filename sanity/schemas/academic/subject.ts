@@ -1,5 +1,5 @@
 import BookIcon from '@sanity/icons/Book'
-import type { Rule } from 'sanity'
+import type { Rule, ValidationContext } from 'sanity'
 import { defineType } from 'sanity'
 import {
   academicFields,
@@ -124,7 +124,8 @@ export const Subject = defineType({
       ],
       description:
         'Assign one or more professors to this subject in the database.',
-      validation: (rule: Rule) => rule.required().min(1),
+      validation: (rule: Rule) =>
+        rule.required().min(1).custom(validateProfessorsBelongToStudy),
       fieldset: 'database',
       group: 'database',
     },
@@ -143,10 +144,44 @@ export const Subject = defineType({
       description:
         'Used to create the database record. The faculty is inherited from the selected study.',
       validation: validationRules.isRequired,
-      // Deferred: validate that assigned professors belong to the selected study.
       fieldset: 'database',
       group: 'database',
     },
     ...academicFields(ENTITY, ['dbId']),
   ],
 })
+
+async function validateProfessorsBelongToStudy(
+  value: unknown,
+  context: ValidationContext
+) {
+  if (!Array.isArray(value) || value.length === 0) return true
+
+  const professorIds = value.flatMap((item) =>
+    typeof item === 'object' &&
+    item !== null &&
+    '_ref' in item &&
+    typeof item._ref === 'string'
+      ? [item._ref]
+      : []
+  )
+  const studyId =
+    typeof context.document?.study === 'object' &&
+    context.document.study !== null &&
+    '_ref' in context.document.study &&
+    typeof context.document.study._ref === 'string'
+      ? context.document.study._ref
+      : null
+
+  if (!studyId || professorIds.length === 0) return true
+
+  const client = context.getClient({ apiVersion: '2025-01-01' })
+  const validProfessorIds = await client.fetch<Array<string>>(
+    '*[_id in $professorIds && $studyId in studies[]._ref]._id',
+    { professorIds, studyId }
+  )
+
+  return validProfessorIds.length === professorIds.length
+    ? true
+    : 'All assigned professors must belong to the selected study.'
+}

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { BoxProps } from '@/components/common/Box'
+import type { BoxProps, BoxPropsWithoutChildren } from '@/components/common/Box'
 import type { NextImageProps } from '@/components/common/NextImage'
 import type { DetailLinkProps } from '@/components/ui/DetailLink'
 import type { PersonProps } from '@/components/ui/Person'
@@ -25,7 +25,7 @@ type AdministratorListProps = {
   layout?: 'person' | 'detailLink'
   detailLinkProps?: Omit<DetailLinkProps, 'href'>
   personProps?: PersonProps
-} & Omit<BoxProps, 'children'>
+} & BoxPropsWithoutChildren
 
 type OverviewCardProps = {
   picture?: Omit<NextImageProps, 'alt' | 'className' | 'fillProp'>

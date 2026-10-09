@@ -5,6 +5,7 @@ import { Text } from '@/components/typography/Text'
 import { Card } from '@/components/ui/Card'
 import { Divider } from '@/components/ui/Divider'
 import { cn } from '@/lib/common-utils'
+import { IMAGE_SIZES } from '@/styles/style'
 import type { OverviewCardProps } from '@/types/components/OverviewCard.types'
 import { AdministratorList } from '../../ui/AdministratorList'
 import { OverviewCardAction } from './OverviewCardAction'
@@ -37,7 +38,7 @@ export const OverviewCard = ({
             className='absolute inset-0 h-full w-full'
             objectFitProp='cover'
             fillProp
-            sizes='(min-width: 1024px) 50vw, 100vw'
+            sizes={IMAGE_SIZES.OVERVIEW_CARD}
           />
         )}
 

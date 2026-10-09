@@ -14,6 +14,7 @@ import { useProfileStats } from '@/hooks/useProfileStats'
 import {
   getDisplayName,
   getFacultyName,
+  getUniversityId,
   getUniversityName,
 } from '@/lib/profile-display'
 import { toScriptDetails } from '@/lib/script-display'
@@ -87,6 +88,7 @@ export function UserProfilePage({ subjects }: UserProfilePageProps) {
         location=''
         bio=''
         university={getUniversityName(profile)}
+        universitySlug={getUniversityId(profile)}
         faculty={getFacultyName(profile)}
         picture={profile.avatar_url ? { src: profile.avatar_url } : undefined}
         className='grow'

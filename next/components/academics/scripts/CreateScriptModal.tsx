@@ -84,7 +84,6 @@ export function CreateScriptModal({
   )
   const [titleTouched, setTitleTouched] = useState(false)
   const [descriptionTouched, setDescriptionTouched] = useState(false)
-  const [filesTouched, setFilesTouched] = useState(false)
 
   const {
     title,
@@ -124,7 +123,6 @@ export function CreateScriptModal({
     setTouchedLinks(new Set())
     setTitleTouched(false)
     setDescriptionTouched(false)
-    setFilesTouched(false)
   }
 
   // --- Title (required) ---------------------------------------------------
@@ -170,19 +168,16 @@ export function CreateScriptModal({
     )
   }
 
-  // --- Files (required, each must pass validation) -------------------------
+  // --- Files (optional, each must pass validation) -------------------------
   const hasFileErrors = files.some((entry) => entry.error !== null)
-  const filesMissing = filesTouched && files.length === 0
-  const filesInvalid = hasFileErrors || filesMissing
-  const filesValid = files.length > 0 && !hasFileErrors
+  const filesInvalid = hasFileErrors
+  const filesValid = !hasFileErrors
 
   const handleAddFiles = (list: FileList | null) => {
-    setFilesTouched(true)
     addFiles(list)
   }
 
   const handleRemoveFile = (index: number) => {
-    setFilesTouched(true)
     removeFile(index)
   }
 
@@ -206,7 +201,6 @@ export function CreateScriptModal({
       setTouchedLinks(new Set(readingLinks.map((_, index) => index)))
       setTitleTouched(true)
       setDescriptionTouched(true)
-      setFilesTouched(true)
       return
     }
     return handleSubmit(event)
@@ -442,9 +436,8 @@ export function CreateScriptModal({
                   errorText={
                     hasFileErrors
                       ? UI_STRINGS.scripts.uploadModal.fieldErrors.filesInvalid
-                      : UI_STRINGS.scripts.uploadModal.fieldErrors.filesRequired
+                      : undefined
                   }
-                  required
                   valid={filesValid}
                   invalid={filesInvalid}
                 >

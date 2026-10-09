@@ -1,3 +1,4 @@
+import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { EntityCard } from '@/components/common/EntityCard'
 import { NextImage } from '@/components/common/NextImage'
@@ -17,6 +18,7 @@ import {
   universityDetailQuery,
   universityStaticParamsQuery,
 } from '@/sanity/queries/academics/university.queries'
+import { IMAGE_SIZES } from '@/styles/style'
 import type {
   AcademicDetailPageProps,
   UniversityRouteParams,
@@ -60,9 +62,6 @@ export default async function UniversityDetailPage({
       header={{
         greeting: 'University',
         title: university.name,
-        subtitle: university.dbId
-          ? `Database ID: ${university.dbId}`
-          : undefined,
       }}
       sidebar={
         <>
@@ -176,7 +175,7 @@ export default async function UniversityDetailPage({
                       {...faculty.picture}
                       alt={`${faculty.name} Logo`}
                       fillProp
-                      sizes='(min-width: 640px) 50vw, 100vw'
+                      sizes={IMAGE_SIZES.UNIVERSITY_HERO}
                       className='h-10 w-10 rounded-full'
                       objectFitProp='cover'
                     />
@@ -186,9 +185,7 @@ export default async function UniversityDetailPage({
             ))}
           </Box>
         ) : (
-          <Text className='ui-caption'>
-            No faculties listed for this university.
-          </Text>
+          <Text className='ui-caption'>{UI_STRINGS.academics.noFaculties}</Text>
         )}
       </Card>
     </PageLayout>

@@ -65,7 +65,6 @@ export default async function SubjectDetailPage({
       header={{
         greeting: study?.name ?? 'Subject',
         title: subject.name,
-        subtitle: subject.dbId ? `Database ID: ${subject.dbId}` : undefined, // Deferred: use a short bio instead of dbId.
         actions: study?.faculty && (
           <>
             <BackLink

@@ -8,11 +8,13 @@ import { Text } from '@/components/typography/Text'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { getScriptFileUrl } from '@/lib/api/scripts-api'
 import type { PreviewableFileKind } from '@/lib/file-preview'
+import { IMAGE_SIZES } from '@/styles/style'
 
 export type FilePreviewContentProps = {
   url: string
   kind: PreviewableFileKind
   fileName: string
+  cacheKey?: string
 }
 
 /**
@@ -26,6 +28,7 @@ export function FilePreviewContent({
   url,
   kind,
   fileName,
+  cacheKey,
 }: FilePreviewContentProps) {
   if (kind === 'image') {
     if (url.startsWith('blob:')) {
@@ -50,7 +53,7 @@ export function FilePreviewContent({
           src={url}
           alt={fileName}
           fillProp
-          sizes='(min-width: 768px) 70vw, 100vw'
+          sizes={IMAGE_SIZES.FILE_PREVIEW}
           className='rounded-lg object-contain'
         />
       </Box>
@@ -67,7 +70,13 @@ export function FilePreviewContent({
     )
   }
 
-  return <TextFilePreview url={url} fileName={fileName} />
+  return (
+    <TextFilePreview
+      url={url}
+      fileName={fileName}
+      cacheKey={cacheKey ?? fileName}
+    />
+  )
 }
 
 type StoredFileUrlState =
@@ -117,7 +126,14 @@ export function StoredFilePreviewContent({
     )
   }
 
-  return <FilePreviewContent url={state.url} kind={kind} fileName={fileName} />
+  return (
+    <FilePreviewContent
+      url={state.url}
+      kind={kind}
+      fileName={fileName}
+      cacheKey={fileKey}
+    />
+  )
 }
 
 type TextFilePreviewState =
@@ -125,22 +141,40 @@ type TextFilePreviewState =
   | { status: 'error' }
   | { status: 'ready'; text: string }
 
-function TextFilePreview({ url, fileName }: { url: string; fileName: string }) {
+const textFileCache = new Map<string, string>()
+
+function TextFilePreview({
+  url,
+  fileName,
+  cacheKey,
+}: {
+  url: string
+  fileName: string
+  cacheKey: string
+}) {
   const [state, setState] = useState<TextFilePreviewState>({
     status: 'loading',
   })
 
   useEffect(() => {
     let cancelled = false
+    const cachedText = textFileCache.get(cacheKey)
+    if (cachedText !== undefined) {
+      setState({ status: 'ready', text: cachedText })
+      return () => {
+        cancelled = true
+      }
+    }
+
     setState({ status: 'loading' })
 
     fetch(url)
       .then((response) => {
         if (!response.ok) throw new Error('Failed to load file')
         return response.text()
-        // Deferred: cache files because their contents never change.
       })
       .then((text) => {
+        textFileCache.set(cacheKey, text)
         if (!cancelled) setState({ status: 'ready', text })
       })
       .catch(() => {
@@ -150,7 +184,7 @@ function TextFilePreview({ url, fileName }: { url: string; fileName: string }) {
     return () => {
       cancelled = true
     }
-  }, [url])
+  }, [cacheKey, url])
 
   if (state.status === 'loading') {
     return <LoadingSpinner />

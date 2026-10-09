@@ -22,8 +22,7 @@ export function useScriptUpload() {
       for (const file of input.files) {
         formData.append('files', file)
       }
-
-      const files = await uploadFiles(formData)
+      const files = input.files.length > 0 ? await uploadFiles(formData) : []
 
       setState({ status: 'creating' })
       const script = await createScript(input, files)
@@ -39,16 +38,6 @@ export function useScriptUpload() {
   )
 
   const upload = async (input: ScriptUploadInput) => {
-    if (input.files.length === 0) {
-      setState({ status: 'error', message: 'At least one file is required' })
-      addToast({
-        type: 'error',
-        title: UI_STRINGS.scripts.uploadModal.statuses.error,
-        description: 'At least one file is required.',
-      })
-      return
-    }
-
     const result = await runProtected(input)
     if (!result.ok) setState({ status: 'idle' })
   }

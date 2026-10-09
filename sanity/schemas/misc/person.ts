@@ -55,7 +55,7 @@ export const Person = defineType({
     {
       name: 'website',
       title: `Person's website`,
-      type: 'url', // Deferred: replace with the link-selector custom link.
+      type: 'url',
       validation: validationRules.isRequired,
     },
     {

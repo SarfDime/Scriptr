@@ -7,6 +7,7 @@ import { NextImage } from '@/components/common/NextImage'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 import { cn } from '@/lib/common-utils'
 import type { getPreviewableKind } from '@/lib/file-preview'
+import { IMAGE_SIZES } from '@/styles/style'
 import { useStoredFileUrl } from './FilePreviewContent'
 
 export type ScriptFileThumbnailProps = {
@@ -98,7 +99,7 @@ function ImageThumbnail({
         alt={SCRIPT_STRINGS.file.thumbnailAlt(fileName)}
         fillProp
         objectFitProp='cover'
-        sizes='320px'
+        sizes={IMAGE_SIZES.SCRIPT_THUMBNAIL}
       />
     </Box>
   )

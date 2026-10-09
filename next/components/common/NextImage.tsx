@@ -18,7 +18,7 @@ type NextImageBaseProps = {
   priority?: boolean
   objectFitProp?: ImageObjectFitType
   objectPositionProp?: ImageObjectPositionType
-  imageProps?: Omit<ImageProps, 'src' | 'alt'>
+  imageProps?: Omit<ImageProps, 'src' | 'alt' | 'sizes'>
   isLoadingExt?: boolean
 } & Omit<SkeletonBoxProps, 'src' | 'alt'> & {
     quality?: ImageProps['quality']

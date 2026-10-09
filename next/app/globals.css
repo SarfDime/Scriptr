@@ -33,6 +33,13 @@ svg {
   --nav-container-width: 100dvw;
 }
 
+/* The page scrolls inside ui-container rather than body. Keep that surface
+ * still while either modal overlay is active. */
+body:has([data-nav-open="true"]) .ui-container,
+body:has(dialog[open]) .ui-container {
+  overflow: hidden;
+}
+
 @theme {
   /* Default sans font */
   --font-sans: var(--font-matter), sans-serif;

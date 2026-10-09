@@ -1,5 +1,6 @@
 'use client'
 
+import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { EntityCard } from '@/components/common/EntityCard'
 import { SectionHeader } from '@/components/common/SectionHeader'
@@ -13,13 +14,15 @@ type FacultySubjectsExplorerProps = {
   studies: Array<MinimalStudy>
 }
 
-// Deferred: move these strings to the shared strings file.
 export const FacultyStudyExplorer = ({
   studies,
 }: FacultySubjectsExplorerProps) => {
   return (
     <Card className='p-0 border-0 ui-stack gap-4'>
-      <SectionHeader title='Studies' count={studies.length} />
+      <SectionHeader
+        title={UI_STRINGS.academics.studiesTitle}
+        count={studies.length}
+      />
 
       {studies.length > 0 ? (
         <Box className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
@@ -49,7 +52,7 @@ export const FacultyStudyExplorer = ({
           })}
         </Box>
       ) : (
-        <Text className='ui-caption'>No studies match those filters.</Text>
+        <Text className='ui-caption'>{UI_STRINGS.academics.noStudies}</Text>
       )}
     </Card>
   )

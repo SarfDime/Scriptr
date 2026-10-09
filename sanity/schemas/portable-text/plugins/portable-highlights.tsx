@@ -5,25 +5,6 @@ import {
   type PortableTextInputProps,
 } from 'sanity'
 
-// ^ Same from bellow.
-// export const RenderChild = ({ value, children }) => {
-//   const text = value?.text
-
-//   if (text === '\n') {
-//     return (
-//       <span className='block w-full bg-lavender/30 caret-black'>
-//         {children}
-//       </span>
-//     )
-//   }
-
-//   if (typeof text !== 'string' || !text.includes('\n')) {
-//     return <>{children}</>
-//   }
-
-//   return <span data-empty='true'>{children}</span>
-// }
-
 export const RenderBlock = ({
   value,
   children,
@@ -55,12 +36,7 @@ export function CustomPortableTextInput(
 ) {
   return (
     <div className={`richtext ${props?.customClassName ?? ''}`}>
-      <PortableTextInput
-        {...props}
-        renderBlock={RenderBlock}
-        // Deferred: use the improved API when it becomes available.
-        // renderChild={RenderChild}
-      />
+      <PortableTextInput {...props} renderBlock={RenderBlock} />
     </div>
   )
 }

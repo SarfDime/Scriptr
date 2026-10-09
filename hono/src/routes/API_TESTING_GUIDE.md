@@ -243,6 +243,14 @@ SCRIPT=$(curl -s -b cookies-student.txt -X POST $BASE/scripts -H "Content-Type: 
   \"files\": $FILES
 }" | jq -r '.script.id')
 
+# A script may also be created without files; omit `files` or send `[]`.
+curl -s -b cookies-student.txt -X POST $BASE/scripts -H "Content-Type: application/json" -d "{
+  \"title\": [{\"_type\":\"block\",\"style\":\"normal\",\"markDefs\":[],\"children\":[{\"_type\":\"span\",\"text\":\"Fileless Script\",\"marks\":[]}]}],
+  \"subject_id\": \"$SUBJ\",
+  \"professor_id\": \"$PROF1\",
+  \"files\": []
+}" | jq .
+
 # Unsupported Portable Text block type — expect 400 and no script created
 curl -s -b cookies-student.txt -X POST $BASE/scripts -H "Content-Type: application/json" -d "{
   \"title\": [{\"_type\":\"image\"}],

@@ -1,5 +1,6 @@
 'use client'
 
+import { UI_STRINGS } from '@shared/config/strings'
 import { SubjectCard } from '@/components/academics/subject/SubjectCard'
 import { Box } from '@/components/common/Box'
 import { SectionHeader } from '@/components/common/SectionHeader'
@@ -28,14 +29,17 @@ export const SubjectsExplorer = ({ subjects }: SubjectsExplorerProps) => {
 
   return (
     <Card className='ui-stack ui-above'>
-      <SectionHeader title='Subjects' count={visibleSubjects.length} />
+      <SectionHeader
+        title={UI_STRINGS.subjects.title}
+        count={visibleSubjects.length}
+      />
 
       <Box className='ui-cluster items-start justify-between gap-3'>
         <SearchBar
           inputVal={query}
           inputOnChange={(event) => setQuery(event.target.value)}
           inputProps={{
-            placeholder: 'Search subjects, codes, or professors',
+            placeholder: UI_STRINGS.subjects.searchPlaceholder,
           }}
           className='min-w-[50%]'
         />
@@ -56,7 +60,11 @@ export const SubjectsExplorer = ({ subjects }: SubjectsExplorerProps) => {
           ))}
         </Box>
       ) : (
-        <Text className='ui-caption'>No subjects match those filters.</Text>
+        <Text className='ui-caption'>
+          {subjects.length === 0
+            ? UI_STRINGS.subjects.noSubjects
+            : UI_STRINGS.subjects.noMatchingSubjects}
+        </Text>
       )}
     </Card>
   )

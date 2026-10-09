@@ -9,9 +9,9 @@ import type { OnboardingSelectStepProps } from '@/types/onboarding.types'
  * study — all rendered together now rather than one at a time, so each
  * one needs to be able to show why it can't be interacted with yet
  * (`disabledReason`) instead of relying on not being on screen at all.
- * When exactly one option exists it renders disabled and pre-selected
- * with a tooltip explaining why, rather than asking the person to
- * confirm a choice they don't actually have.
+ * When exactly one option exists it is still clickable. Auto-selection normally
+ * fills it in, but keeping the option interactive prevents hydration timing
+ * from leaving the wizard with an apparently dead control.
  */
 export const OnboardingSelectStep = ({
   title,
@@ -21,8 +21,6 @@ export const OnboardingSelectStep = ({
   onSelect,
   disabledReason,
 }: OnboardingSelectStepProps) => {
-  const isOnlyOption = options.length === 1
-
   const placeholder =
     disabledReason ??
     (options?.length === 0 ? 'No options available yet.' : null)
@@ -41,19 +39,9 @@ export const OnboardingSelectStep = ({
               label={option.name}
               value={option.id}
               checked={selectedId === option.id}
-              onChange={() => !isOnlyOption && onSelect(option.id)}
+              onChange={() => onSelect(option.id)}
               hasBorder
-              disabled={isOnlyOption}
-              title={
-                isOnlyOption
-                  ? `${option.name} is the only available option`
-                  : undefined
-              }
-              aria-label={
-                isOnlyOption
-                  ? `${option.name} is the only available option, selected automatically`
-                  : option.name
-              }
+              aria-label={option.name}
             />
           ))}
         </Box>

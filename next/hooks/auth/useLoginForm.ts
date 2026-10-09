@@ -1,7 +1,9 @@
 'use client'
 
+import { UI_STRINGS } from '@shared/config/strings'
 import { type SubmitEvent, useState } from 'react'
 import { useSession } from '@/providers/SessionProvider'
+import { useToast } from '@/providers/toaster/ToasterProvider'
 
 export type LoginFormState =
   | { status: 'idle' }
@@ -14,6 +16,7 @@ export type LoginFormState =
  * the actual mutation delegated elsewhere). */
 export function useLoginForm() {
   const { login } = useSession()
+  const { addToast } = useToast()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -31,8 +34,19 @@ export function useLoginForm() {
 
     if (!result.ok) {
       setState({ status: 'error', message: result.message })
+      addToast({
+        title: UI_STRINGS.auth.login.statuses.errorTitle,
+        description: result.message,
+        type: 'error',
+      })
       return
     }
+
+    addToast({
+      title: UI_STRINGS.auth.login.statuses.successTitle,
+      description: UI_STRINGS.auth.login.statuses.successDescription,
+      type: 'success',
+    })
   }
 
   return {

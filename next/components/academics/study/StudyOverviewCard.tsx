@@ -3,6 +3,7 @@ import EarthGlobe from '@sanity/icons/EarthGlobe'
 import Envelope from '@sanity/icons/Envelope'
 import Marker from '@sanity/icons/Marker'
 import User from '@sanity/icons/User'
+import { UI_STRINGS } from '@shared/config/strings'
 import { OverviewCard } from '@/components/layout/OverviewCard/OverviewCard'
 import type { StudyOverviewCardProps } from '@/types/academics/study.types'
 import type { OverviewCardActionItem } from '@/types/components/OverviewCard.types'
@@ -14,13 +15,13 @@ export const StudyOverviewCard = ({
 }: StudyOverviewCardProps) => {
   const administrators: Array<PersonSummary> = [
     ...(study.assistant ? [study.assistant] : []),
-  ] // Deferred: add more study metadata when it becomes available.
+  ]
 
   const actions: Array<OverviewCardActionItem> = [
     study.website && {
       key: 'website',
       icon: <EarthGlobe />,
-      label: 'Visit website',
+      label: UI_STRINGS.academics.visitWebsite,
       href: study.website,
       colorPalette: 'cp-brand',
     },
@@ -33,7 +34,7 @@ export const StudyOverviewCard = ({
     study.streetAddress && {
       key: 'location',
       icon: <Marker />,
-      label: 'Location',
+      label: UI_STRINGS.academics.location,
       href: study.streetAddress,
       colorPalette: 'cp-rose',
     },
@@ -50,9 +51,9 @@ export const StudyOverviewCard = ({
   return (
     <OverviewCard
       picture={study.picture}
-      imageAlt={study.name || 'Study image'} // Deferred: move this fallback to shared strings.
+      imageAlt={study.name || UI_STRINGS.academics.studyImageAlt}
       administrators={administrators}
-      eyebrow='About the Study'
+      eyebrow={UI_STRINGS.academics.studyAbout}
       eyebrowIcon={<Component />}
       description={study.description}
       actions={actions}

@@ -111,8 +111,7 @@ export function useCreateScriptForm({
     isScriptTitlePortableTextValue(title) &&
     isScriptDescriptionPortableTextValue(description) &&
     subjectId.length > 0 &&
-    professorId.length > 0 &&
-    validFiles.length > 0
+    professorId.length > 0
 
   const addFiles = (incoming: FileList | null) => {
     if (!incoming) return

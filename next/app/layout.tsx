@@ -135,10 +135,9 @@ const antiqueOliveCond = localFont({
   ],
   variable: '--font-antique-olive-cond',
   display: 'swap',
-}) // Deferred: factor font setup out of this file.
+})
 
 export const metadata: Metadata = {
-  // Deferred: use generateMetadata with data from Sanity.
   title: 'Scriptr',
   description: 'A platform for students to share and discover study materials.',
 }
@@ -170,7 +169,6 @@ export default async function RootLayout({
       data-scroll-behavior='smooth'
       className={`${antiqueOlive.variable} ${antiqueOliveCond.variable} ${matter.variable} ${bricolage.variable} antialiased`}
     >
-      {/* Deferred: implement body scroll locking here. */}
       <body>
         <Providers catalog={catalog}>
           <ToastContainer />

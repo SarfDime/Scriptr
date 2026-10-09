@@ -1,5 +1,9 @@
 import UserIcon from '@sanity/icons/User'
-import type { Rule } from 'sanity'
+import type {
+  ReferenceFilterResolverContext,
+  Rule,
+  ValidationContext,
+} from 'sanity'
 import { defineType } from 'sanity'
 import {
   academicFields,
@@ -9,6 +13,15 @@ import {
 import { filterExistingReferences } from '../util-functions/schemaFilters'
 
 const ENTITY = 'professor'
+type ReferenceItem = { _ref: string }
+type ProfessorDocument = { faculties?: Array<ReferenceItem> }
+type ProfessorStudyFilterContext = Pick<
+  ReferenceFilterResolverContext,
+  'getClient'
+> & {
+  document: ProfessorDocument
+  parent: Array<ReferenceItem>
+}
 
 export const Professor = defineType({
   // Editorial record for a professor; the runtime identity lives in Postgres, linked via dbId.
@@ -49,7 +62,8 @@ export const Professor = defineType({
       ],
       description:
         'Assign this professor to one or more faculties in the database.',
-      validation: (rule: Rule) => rule.required().min(1), // Deferred: constrain faculties to one university.
+      validation: (rule: Rule) =>
+        rule.required().min(1).custom(validateFacultyUniversities),
       fieldset: 'database',
       group: 'database',
     },
@@ -64,14 +78,7 @@ export const Professor = defineType({
           options: {
             disableNew: true,
             // Combines existing reference filter with faculty check
-            filter: ({
-              document,
-              parent,
-            }: {
-              document: { faculties?: Array<{ _ref: string }> }
-              parent: Array<{ _ref: string }>
-              // Deferred: replace this callback's inferred value with a schema type.
-            }) => {
+            filter: ({ document, parent }: ProfessorStudyFilterContext) => {
               // 1. Get currently chosen faculty IDs
               const selectedFacultyIds =
                 document?.faculties?.map((f) => f._ref).filter(Boolean) || []
@@ -95,3 +102,31 @@ export const Professor = defineType({
     ...academicFields(ENTITY, ['dbId']),
   ],
 })
+
+async function validateFacultyUniversities(
+  value: unknown,
+  context: ValidationContext
+) {
+  if (!Array.isArray(value) || value.length < 2) return true
+
+  const facultyIds = value.flatMap((item) =>
+    typeof item === 'object' &&
+    item !== null &&
+    '_ref' in item &&
+    typeof item._ref === 'string'
+      ? [item._ref]
+      : []
+  )
+  if (facultyIds.length < 2) return true
+
+  const client = context.getClient({ apiVersion: '2025-01-01' })
+  const universities = await client.fetch<Array<string | null>>(
+    '*[_id in $facultyIds].university._ref',
+    { facultyIds }
+  )
+  const uniqueUniversities = new Set(universities.filter(Boolean))
+
+  return uniqueUniversities.size <= 1
+    ? true
+    : 'All assigned faculties must belong to the same university.'
+}

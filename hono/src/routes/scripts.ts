@@ -242,7 +242,8 @@ const createScriptSchema = z
             message: 'Invalid file input',
           })
         )
-        .min(1, 'At least one file is required'),
+        .optional()
+        .default([]),
     })
   )
   .refine((body) => portableTextToPlainText(body.title).length > 0, {

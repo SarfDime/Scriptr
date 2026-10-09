@@ -1,3 +1,4 @@
+import { UI_STRINGS } from '@shared/config/strings'
 import { BackLink } from '@/components/common/BackLink'
 import { Box } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
@@ -62,7 +63,6 @@ export default async function ProfessorDetailPage({
       header={{
         greeting: professor.title ?? 'Academic Staff',
         title: professor.name,
-        subtitle: professor.dbId ? `Database ID: ${professor.dbId}` : undefined,
         actions: (
           <>
             {professor.universities &&
@@ -86,145 +86,173 @@ export default async function ProfessorDetailPage({
             professor.telephone ||
             professor.email ||
             professor.website) && (
-            <Card className='p-6 ui-stack gap-3'>
-              <SectionHeader as='h3' title='Contact Details' />
-              {professor.office && (
-                <Box className='ui-stack gap-0.5'>
-                  <Text className='ui-label'>Office</Text>
-                  <Text className='ui-body'>{professor.office}</Text>
-                </Box>
-              )}
-              {professor.telephone && (
-                <Box className='ui-stack gap-0.5'>
-                  <Text className='ui-label'>Phone</Text>
-                  <Text className='ui-body'>{professor.telephone}</Text>
-                </Box>
-              )}
-              {professor.email && (
-                <Box className='ui-stack gap-0.5'>
-                  <Text className='ui-label'>Email</Text>
-                  <Text className='ui-body'>{professor.email}</Text>
-                </Box>
-              )}
-              {professor.website && (
-                <Box className='ui-stack gap-0.5'>
-                  <Text className='ui-label'>Website</Text>
-                  <a
-                    href={professor.website}
-                    target='_blank'
-                    rel='noreferrer'
-                    className='ui-body text-brand hover:underline break-all'
-                  >
-                    {professor.website}
-                  </a>
-                </Box>
-              )}
-            </Card>
+            <Box className='ui-stack gap-3 ui-above rounded-xl border p-3'>
+              <Card className='ui-stack gap-4 ui-above-inside rounded-lg border p-4'>
+                <SectionHeader
+                  as='h3'
+                  title={UI_STRINGS.academics.professor.contactDetails}
+                />
+                {professor.office && (
+                  <Box className='ui-stack gap-0.5'>
+                    <Text className='ui-label'>
+                      {UI_STRINGS.academics.professor.office}
+                    </Text>
+                    <Text className='ui-body'>{professor.office}</Text>
+                  </Box>
+                )}
+                {professor.telephone && (
+                  <Box className='ui-stack gap-0.5'>
+                    <Text className='ui-label'>
+                      {UI_STRINGS.academics.professor.phone}
+                    </Text>
+                    <Text className='ui-body'>{professor.telephone}</Text>
+                  </Box>
+                )}
+                {professor.email && (
+                  <Box className='ui-stack gap-0.5'>
+                    <Text className='ui-label'>
+                      {UI_STRINGS.academics.professor.email}
+                    </Text>
+                    <Text className='ui-body'>{professor.email}</Text>
+                  </Box>
+                )}
+                {professor.website && (
+                  <Box className='ui-stack gap-0.5'>
+                    <Text className='ui-label'>
+                      {UI_STRINGS.academics.professor.website}
+                    </Text>
+                    <a
+                      href={professor.website}
+                      target='_blank'
+                      rel='noreferrer'
+                      className='ui-body break-all text-brand hover:underline'
+                    >
+                      {professor.website}
+                    </a>
+                  </Box>
+                )}
+              </Card>
+            </Box>
           )}
 
           {professor.faculties && professor.faculties.length > 0 && (
-            <Card className='p-6 ui-stack gap-3'>
-              <SectionHeader as='h3' title='Affiliated Faculties' />
-              <Box className='ui-stack gap-2'>
-                {professor.faculties.map((fac) => (
-                  <Box key={fac._id} className='ui-stack gap-0.5'>
-                    <NextLink
-                      href={getAcademicPath({
-                        type: 'faculty',
-                        universitySlug:
-                          fac.university?.slug ?? fac.university?._id ?? '',
-                        facultySlug: fac.slug ?? fac._id,
-                      })}
-                      className='ui-body-strong text-brand hover:underline'
-                    >
-                      {fac.name}
-                    </NextLink>
-                    {fac.university && (
-                      <Text className='ui-caption'>{fac.university.name}</Text>
-                    )}
-                  </Box>
-                ))}
-              </Box>
-            </Card>
+            <Box className='ui-stack gap-3 ui-above rounded-xl border p-3'>
+              <Card className='ui-stack gap-4 ui-above-inside rounded-lg border p-4'>
+                <SectionHeader
+                  as='h3'
+                  title={UI_STRINGS.academics.professor.affiliatedFaculties}
+                />
+                <Box className='ui-stack gap-2'>
+                  {professor.faculties.map((fac) => (
+                    <Box key={fac._id} className='ui-stack gap-0.5'>
+                      <NextLink
+                        href={getAcademicPath({
+                          type: 'faculty',
+                          universitySlug:
+                            fac.university?.slug ?? fac.university?._id ?? '',
+                          facultySlug: fac.slug ?? fac._id,
+                        })}
+                        className='ui-body-strong text-brand hover:underline'
+                      >
+                        {fac.name}
+                      </NextLink>
+                      {fac.university && (
+                        <Text className='ui-caption'>
+                          {fac.university.name}
+                        </Text>
+                      )}
+                    </Box>
+                  ))}
+                </Box>
+              </Card>
+            </Box>
           )}
         </>
       }
     >
       {professor.bio && (
-        <Card className='p-6 ui-stack gap-3'>
-          <SectionHeader title='Biography' />
-          <PortableTextContent>{professor.bio}</PortableTextContent>
-        </Card>
+        <Box className='ui-stack gap-3 ui-above rounded-xl border p-3'>
+          <Card className='ui-stack gap-4 ui-above-inside rounded-lg border p-4 md:p-6'>
+            <SectionHeader title={UI_STRINGS.academics.professor.biography} />
+            <PortableTextContent>{professor.bio}</PortableTextContent>
+          </Card>
+        </Box>
       )}
 
-      {/* Subjects Taught */}
-      <Card className='p-6 ui-stack gap-4'>
-        <SectionHeader
-          title='Courses Taught'
-          count={`${professor.subjects?.length ?? 0} Courses`}
-        />
+      <Box className='ui-stack gap-3 ui-above rounded-xl border p-3'>
+        <Card className='ui-stack gap-4 ui-above-inside rounded-lg border p-4 md:p-6'>
+          <SectionHeader
+            title={UI_STRINGS.academics.professor.coursesTaught}
+            count={UI_STRINGS.academics.professor.courseCount(
+              professor.subjects?.length ?? 0
+            )}
+          />
+          {professor.subjects && professor.subjects.length > 0 ? (
+            <Box className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+              {professor.subjects.map((subject) => {
+                const universitySlug =
+                  subject.study?.faculty?.university?.slug ??
+                  subject.study?.faculty?.university?._id
+                const facultySlug =
+                  subject.study?.faculty?.slug ?? subject.study?.faculty?._id
+                const studySlug = subject.study?.slug ?? subject.study?._id
+                const href =
+                  universitySlug && facultySlug && studySlug
+                    ? getAcademicPath({
+                        type: 'subject',
+                        universitySlug,
+                        facultySlug,
+                        studySlug,
+                        subjectSlug: subject.slug ?? subject._id,
+                      })
+                    : '#'
 
-        {professor.subjects && professor.subjects.length > 0 ? (
-          <Box className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-            {professor.subjects.map((subject) => {
-              const universitySlug =
-                subject.study?.faculty?.university?.slug ??
-                subject.study?.faculty?.university?._id
-              const facultySlug =
-                subject.study?.faculty?.slug ?? subject.study?.faculty?._id
-              const studySlug = subject.study?.slug ?? subject.study?._id
-
-              const href =
-                universitySlug && facultySlug && studySlug
-                  ? getAcademicPath({
-                      type: 'subject',
-                      universitySlug,
-                      facultySlug,
-                      studySlug,
-                      subjectSlug: subject.slug ?? subject._id,
-                    })
-                  : '#'
-
-              return (
-                <NextLink key={subject._id} href={href} className='group'>
-                  <Card className='p-4 h-full ui-stack gap-2 transition hover:border-brand-500 hover:shadow-sm'>
-                    <Box className='ui-cluster justify-between items-start gap-2'>
-                      <Title
-                        as='h3'
-                        className='ui-body-strong group-hover:text-brand'
-                      >
-                        {subject.name}
-                      </Title>
-                      {subject.code && (
-                        <Badge className='cp-unstyled border border-grey-200'>
-                          {subject.code}
-                        </Badge>
-                      )}
-                    </Box>
-                    <Box className='ui-cluster gap-2 mt-auto text-grey-500'>
-                      <Text className='ui-caption'>Year {subject.year}</Text>
-                      {subject.credits !== undefined && (
+                return (
+                  <NextLink key={subject._id} href={href} className='group'>
+                    <Card className='ui-stack h-full gap-2 rounded-lg border p-4 transition hover:border-brand-500 hover:shadow-sm'>
+                      <Box className='ui-cluster items-start justify-between gap-2'>
+                        <Title
+                          as='h3'
+                          className='ui-body-strong group-hover:text-brand'
+                        >
+                          {subject.name}
+                        </Title>
+                        {subject.code && (
+                          <Badge className='cp-unstyled border border-grey-200'>
+                            {subject.code}
+                          </Badge>
+                        )}
+                      </Box>
+                      <Box className='ui-cluster mt-auto gap-2 text-grey-500'>
                         <Text className='ui-caption'>
-                          • {subject.credits} ECTS
+                          {UI_STRINGS.academics.professor.year(subject.year)}
                         </Text>
-                      )}
-                      {subject.study?.faculty && (
-                        <Text className='ui-caption'>
-                          • {subject.study.faculty.name}
-                        </Text>
-                      )}
-                    </Box>
-                  </Card>
-                </NextLink>
-              )
-            })}
-          </Box>
-        ) : (
-          <Text className='ui-caption'>
-            No courses listed for this professor.
-          </Text>
-        )}
-      </Card>
+                        {subject.credits !== undefined && (
+                          <Text className='ui-caption'>
+                            •{' '}
+                            {UI_STRINGS.academics.professor.ects(
+                              subject.credits
+                            )}
+                          </Text>
+                        )}
+                        {subject.study?.faculty && (
+                          <Text className='ui-caption'>
+                            • {subject.study.faculty.name}
+                          </Text>
+                        )}
+                      </Box>
+                    </Card>
+                  </NextLink>
+                )
+              })}
+            </Box>
+          ) : (
+            <Text className='ui-caption'>
+              {UI_STRINGS.academics.noProfessorCourses}
+            </Text>
+          )}
+        </Card>
+      </Box>
     </PageLayout>
   )
 }

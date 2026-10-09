@@ -44,7 +44,7 @@ export const ImageLink = ({
         {...imageProps}
         className={cn('h-12 w-36', imageProps?.className)}
         quality={IMAGE_QUALITY.MAXIMUM}
-        sizes={IMAGE_SIZES.NEXTJS_IMAGE_DEFAULT_SIZE_PROPERTY}
+        sizes={IMAGE_SIZES.LINK_LOGO}
       />
     </NextLink>
   )

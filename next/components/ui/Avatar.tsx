@@ -1,5 +1,6 @@
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
+import { IMAGE_SIZES } from '@/styles/style'
 import type { ComponentColorPalettes } from '@/types/components/ColorPalettes.types'
 import type { NextImageProps } from '../common/NextImage'
 import { NextImage } from '../common/NextImage'
@@ -29,7 +30,7 @@ export const Avatar = ({
             )}
             objectFitProp='cover'
             fillProp
-            sizes='4rem'
+            sizes={IMAGE_SIZES.AVATAR}
           />
         ) : (
           <InitialsIcon

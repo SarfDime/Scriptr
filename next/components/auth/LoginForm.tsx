@@ -4,7 +4,6 @@ import { UI_STRINGS } from '@shared/config/strings'
 import { Button } from '@/components/common/Button'
 import { FormContainer } from '@/components/typography/FormContainer'
 import { InputWrapper } from '@/components/typography/InputWrapper'
-import { Text } from '@/components/typography/Text'
 import { Card } from '@/components/ui/Card'
 import { useLoginForm } from '@/hooks/auth/useLoginForm'
 
@@ -20,7 +19,6 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
     setPassword,
     isBusy,
     canSubmit,
-    state,
     handleSubmit,
   } = useLoginForm()
 
@@ -56,25 +54,18 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
           inputOnChange={(event) => setPassword(event.target.value)}
           disabled={isBusy}
         />
-
-        {isBusy && (
-          <Text className='ui-caption'>
-            {UI_STRINGS.auth.login.statuses.submitting}
-          </Text>
-        )}
-
-        {state.status === 'error' && (
-          <Text className='ui-caption text-danger-600'>{state.message}</Text>
-        )}
       </Card.Body>
 
       <Card.Footer className='ui-stack gap-3'>
         <Button
           type='submit'
+          isLoading={isBusy}
           disabled={!canSubmit}
           className='button solid w-full justify-center'
         >
-          {UI_STRINGS.auth.login.submitButtonLabel}
+          {isBusy
+            ? UI_STRINGS.auth.login.statuses.submitting
+            : UI_STRINGS.auth.login.submitButtonLabel}
         </Button>
         <Button
           onClick={onSwitchToRegister}

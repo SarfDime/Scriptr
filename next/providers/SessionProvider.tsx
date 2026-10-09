@@ -1,5 +1,6 @@
 'use client'
 
+import { UI_STRINGS } from '@shared/config/strings'
 import type {
   CallbackRequest,
   LoginRequest,
@@ -45,9 +46,12 @@ type SessionContextValue = {
 const SessionContext = createContext<SessionContextValue | null>(null)
 
 function extractErrorMessage(error: unknown): string {
+  if (error instanceof ApiError && error.status === 503) {
+    return UI_STRINGS.general.apiUnavailable
+  }
   return error instanceof ApiError || error instanceof Error
     ? error.message
-    : 'Something went wrong'
+    : UI_STRINGS.general.unexpectedError
 }
 
 /**

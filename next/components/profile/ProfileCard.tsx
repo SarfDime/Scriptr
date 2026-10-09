@@ -1,9 +1,11 @@
 import Book from '@sanity/icons/Book'
 import Confetti from '@sanity/icons/Confetti'
+import { getAcademicPath } from '@/lib/academic-routes'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
 import { Box, type BoxProps } from '../common/Box'
 import type { NextImageProps } from '../common/NextImage'
+import { NextLink } from '../common/NextLink'
 import { Text } from '../typography/Text'
 import { Avatar } from '../ui/Avatar'
 import { Badge } from '../ui/Badge'
@@ -15,6 +17,7 @@ type ProfileCardProps = {
   bio: string
   university: string
   faculty: string
+  universitySlug?: string
   location: string
   picture?: NextImageProps
 } & BoxProps
@@ -25,6 +28,7 @@ export const ProfileCard = ({
   bio,
   university,
   faculty,
+  universitySlug,
   location,
   picture,
   className,
@@ -50,8 +54,19 @@ export const ProfileCard = ({
         <Box className='ui-cluster'>
           <Book />
           <Box className='ui-stack gap-0'>
-            {/* Deferred: link this label to the university page. */}
-            <Text className='ui-label'>University</Text>
+            {universitySlug ? (
+              <NextLink
+                href={getAcademicPath({
+                  type: 'university',
+                  universitySlug,
+                })}
+                className='ui-label'
+              >
+                University
+              </NextLink>
+            ) : (
+              <Text className='ui-label'>University</Text>
+            )}
             <Text className='ui-body'>{university}</Text>
           </Box>
         </Box>

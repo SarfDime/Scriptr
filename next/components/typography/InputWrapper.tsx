@@ -6,7 +6,7 @@ import type {
   InputHTMLAttributes,
 } from 'react'
 import { cn } from '../../lib/common-utils'
-import { Box, type BoxProps } from '../common/Box'
+import { Box, type BoxPropsWithoutChildren } from '../common/Box'
 import { Button } from '../common/Button'
 import type { FieldProps } from '../ui/field/Field'
 import { Field } from '../ui/field/Field'
@@ -16,7 +16,7 @@ export type InputWrapperProps = {
     InputHTMLAttributes<HTMLInputElement>,
     HTMLInputElement
   >
-  wrapperProps?: Omit<BoxProps, 'children'>
+  wrapperProps?: BoxPropsWithoutChildren
   inputVal?: string
   inputClearButton?: boolean
   inputOnClear?: () => void
