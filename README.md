@@ -97,6 +97,7 @@ The Studio is deployed at https://scriptr.sanity.studio.
 
 - [Architecture & requirements](ARCHITECTURE.md)
 - [Progress & todos](PROGRESS.md)
+- [Vercel deployment](VERCEL_DEPLOYMENT.md)
 - [Ideas & open questions](TODO.md)
 - [API setup](hono/README.md)
 - [API reference](hono/src/routes/API_DOCUMENTATION.md)
