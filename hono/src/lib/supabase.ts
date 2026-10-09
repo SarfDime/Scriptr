@@ -40,6 +40,7 @@ export function createInternalSupabaseClient(c: Context<HonoEnv>) {
 /** Proper cookie storage with full read/write support */
 function createCookieStorage(c: Context<HonoEnv>) {
   const secure = c.env.NODE_ENV === 'production'
+  const sameSite = secure ? 'None' : 'Lax'
 
   return {
     getItem: (key: string) => getCookie(c, key) || null,
@@ -57,7 +58,7 @@ function createCookieStorage(c: Context<HonoEnv>) {
           path: '/',
           httpOnly: true,
           secure,
-          sameSite: 'Lax',
+          sameSite,
           maxAge,
         })
       } catch {
@@ -65,7 +66,7 @@ function createCookieStorage(c: Context<HonoEnv>) {
           path: '/',
           httpOnly: true,
           secure,
-          sameSite: 'Lax',
+          sameSite,
           maxAge: 3600,
         })
       }
