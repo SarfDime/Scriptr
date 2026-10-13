@@ -21,7 +21,7 @@ export const NavUserSlot = () => {
     return (
       <NextLink
         href='/auth'
-        className='button subtle w-full justify-center gap-2 p-2'
+        className='button subtle w-full justify-center gap-2'
       >
         <Text className='ui-label'>Sign in</Text>
       </NextLink>
@@ -41,7 +41,6 @@ export const NavUserSlot = () => {
                 session.user.email ??
                 UI_STRINGS.navigation.account)
           }
-          userRole={profile?.role ?? session.user.role}
           avatarUrl={profile?.avatar_url ?? undefined}
         />
         <Divider orientation='vertical' className='h-[90%] my-auto' />

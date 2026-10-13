@@ -3,10 +3,10 @@ import { UI_STRINGS } from '@shared/config/strings'
 import { cn } from '@/lib/common-utils'
 import type { NavMenuType } from '@/types/components/Nav.types'
 import { Box } from '../common/Box'
-import { NextLink } from '../common/NextLink'
 import { Divider } from '../ui/Divider'
 import { ThemeToggle } from '../ui/ThemeToggle'
 import { NavigationLinks } from './NavigationLinks'
+import { NavLogo } from './NavLogo'
 import { NavToggle } from './NavToggle'
 import { NavUserSlot } from './NavUserSlot'
 
@@ -24,8 +24,8 @@ export const NavBar = ({ navItems }: NavMenuType) => (
       tabIndex={-1}
       aria-label={UI_STRINGS.navigation.closeNavigation}
       className={cn(
-        'fixed inset-0 z-15 hidden',
-        'max-lg:group-data-[nav-open=true]/nav:block'
+        'fixed inset-0 z-15 bg-background-200/70 backdrop-blur-sm',
+        'hidden max-lg:group-data-[nav-open=true]/nav:block'
       )}
     />
     <nav
@@ -33,7 +33,7 @@ export const NavBar = ({ navItems }: NavMenuType) => (
       aria-label={UI_STRINGS.navigation.mainNavigation}
       className={cn(
         'fixed inset-y-0 left-0 z-20 w-(--nav-width)',
-        'ui-stack gap-5 p-2.5 pt-0',
+        'ui-stack gap-5 p-2.5 pt-0 shadow-2xl',
         'ui-above border-l-0 border-t-0 border-b-0 rounded-none',
         'transition-[translate,visibility] duration-300',
         'max-lg:invisible max-lg:-translate-x-full',
@@ -44,12 +44,7 @@ export const NavBar = ({ navItems }: NavMenuType) => (
       )}
     >
       <Box className='ui-cluster items-center justify-between h-16 px-3 border-b border-grey-300'>
-        <NextLink
-          href='/'
-          className='ui-title font-black font-olive tracking-tighter leading-3'
-        >
-          Scriptr<span className='text-brand'>.</span>
-        </NextLink>
+        <NavLogo />
         <NavToggle
           action='close'
           aria-label={UI_STRINGS.navigation.closeNavigation}

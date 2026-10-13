@@ -36,6 +36,19 @@ const GALAXY_DOTS_MAX = 20000 // upper limit, so extreme settings can't freeze t
 // differs by under 0.5 of 255 brightness levels on average, and the layer needs a quarter
 // of the memory.
 const NEBULA_RESOLUTION = 0.4
+// The galaxy is a still picture: its layers are painted separately, then flattened once at
+// the average brightness they used to twinkle around (the nebula between 0.9 and 1, each
+// group of stars between 0.75 and 1). Stacked like this the bright core saturates softly;
+// painting every dot into one buffer instead clips it to flat white.
+const NEBULA_BRIGHTNESS = 0.95
+const STAR_BRIGHTNESS = 0.875
+// Fewer, brighter stars and grain: half the dots to build and paint, for a galaxy that is
+// somewhat sparser but keeps its structure (overall brightness within ~6%). Clouds are cheap
+// and do not get brighter with a higher alpha (see MIN_DOT_LEVEL), so they all stay.
+const STAR_KEEP = 0.5
+const STAR_BOOST = 1.25
+const GRAIN_KEEP = 0.35
+const GRAIN_BOOST = 2
 // Dots that add less than one of the 255 brightness levels are dropped. Below half a level
 // that changes no pixel; between half and one it slightly thins the faintest nebula
 // wisps, which is the trade for painting fewer dots.
@@ -736,7 +749,7 @@ const BLEND = 1
 const ACCENT = 2
 const COOL = 3
 const WHITE_TONE = 4
-const STAR_LAYERS = 3 // stars are split into this many groups that twinkle separately
+const STAR_LAYERS = 3 // stars are split into this many groups, painted as separate layers
 
 /**
  * A Milky Way like the night-sky photos: a wavy band of faint colored clouds and
@@ -810,7 +823,7 @@ const milkyWayDots = (
   // Thousands of tiny, crisp, colored stars; some drift well outside the band
   // (fewer than before, each a little brighter to make up for it)
   const stars = Array.from(
-    { length: Math.round(count * 2.5) },
+    { length: Math.round(count * 2.5 * STAR_KEEP) },
     (): GalaxyDot => {
       const x = pickX()
       const spread = Math.random() < 0.3 ? 1.9 : 1
@@ -818,7 +831,10 @@ const milkyWayDots = (
         x,
         y: middle(x) + gauss() * fan(x) * spread,
         size: 0.9 + Math.random() * 1.4,
-        alpha: (0.4 + Math.random() * 0.6) * (1 - 0.55 * away(x)),
+        alpha: Math.min(
+          1,
+          (0.4 + Math.random() * 0.6) * (1 - 0.55 * away(x)) * STAR_BOOST
+        ),
         tone: starTone(),
         layer: starLayer(),
       }
@@ -840,7 +856,7 @@ const milkyWayDots = (
 
   // Fine grain: faint, unresolved stars
   const grain = Array.from(
-    { length: Math.round(count * 0.5) },
+    { length: Math.round(count * 0.5 * GRAIN_KEEP) },
     (): GalaxyDot => {
       const x = pickX()
       const y = middle(x) + gauss() * fan(x)
@@ -848,7 +864,8 @@ const milkyWayDots = (
         x,
         y,
         size: 3 + Math.random() * 4,
-        alpha: (0.025 + Math.random() * 0.05) * (1 - 0.6 * away(x)),
+        alpha:
+          (0.025 + Math.random() * 0.05) * (1 - 0.6 * away(x)) * GRAIN_BOOST,
         tone: cloudTone(x, y),
       }
     }
@@ -955,17 +972,7 @@ export const makeGalaxy = (config: StarCanvasConfig): Galaxy | null => {
       config.galaxyCenterDensity,
       config.galaxyEndDensity
     ),
-    // Layer 0: the glow, breathing very slightly. The rest: groups of stars that
-    // each brighten and dim at their own pace, so the stars twinkle.
-    layers: [
-      { sprite: null, rate: 0.0004, phase: Math.random() * TAU, amount: 0.1 },
-      ...Array.from({ length: STAR_LAYERS }, () => ({
-        sprite: null,
-        rate: 0.0007 + Math.random() * 0.0011, // 3.5 to 9 seconds per cycle
-        phase: Math.random() * TAU,
-        amount: 0.25,
-      })),
-    ],
+    sprite: null,
     width,
     height,
     spriteScale,
@@ -1016,7 +1023,11 @@ const fadeEdges = (
   sctx.fillRect(0, 0, width, height)
 }
 
-/** Paints each layer of the galaxy into its own sprite. Rebuilt on theme change. */
+/**
+ * Paints the galaxy into one still sprite, in layers (the nebula, then the stars in a few
+ * groups) that are flattened at their average brightness (see NEBULA_BRIGHTNESS).
+ * Rebuilt on theme change.
+ */
 export const buildGalaxySprites = (
   galaxy: Galaxy,
   colors: StarCanvasColors
@@ -1031,7 +1042,8 @@ export const buildGalaxySprites = (
   ]
   const dust = buildSoftDot('0, 0, 0')
 
-  galaxy.layers.forEach((layer, index) => {
+  const layers: Array<HTMLCanvasElement> = []
+  for (let index = 0; index <= STAR_LAYERS; index++) {
     // Layer 0 is painted smaller (see NEBULA_RESOLUTION). The galaxy is always drawn at
     // its full on-screen size, so nothing else needs to know.
     const resolution = index === 0 ? NEBULA_RESOLUTION : 1
@@ -1068,6 +1080,16 @@ export const buildGalaxySprites = (
       if (dot.dark) paint(dot, dust)
     }
     fadeEdges(sctx, width, height)
-    layer.sprite = canvas
+    layers.push(canvas)
+  }
+
+  const width = Math.max(1, Math.round(galaxy.width * galaxy.spriteScale))
+  const height = Math.max(1, Math.round(galaxy.height * galaxy.spriteScale))
+  const { canvas, sctx } = createSprite(width, height)
+  if (!sctx) return
+  layers.forEach((layer, index) => {
+    sctx.globalAlpha = index === 0 ? NEBULA_BRIGHTNESS : STAR_BRIGHTNESS
+    sctx.drawImage(layer, 0, 0, width, height)
   })
+  galaxy.sprite = canvas
 }

@@ -60,10 +60,11 @@ const FLARE_ARCS = Array.from({ length: 12 }, (_, i) => {
 })
 
 // The haze never changes, so the backdrop canvas is only painted when something invalidates
-// it (first paint, resize, theme). The galaxy has a canvas of its own, just big enough for
-// itself: its drift and tilt are a CSS transform (done by the compositor, no repainting), and
-// only its twinkle needs a repaint, a few times a second.
-const GALAXY_PAINT_MS = 350
+// it (first paint, resize, theme). The galaxy is a still picture on a canvas of its own, just
+// big enough for itself: it is painted once (and again when the theme changes), and its drift
+// and tilt are a CSS transform, done by the compositor. Even that is only rewritten once the
+// drift adds up to this many px (about once a second at the defaults).
+const GALAXY_MOVE_STEP = 0.25
 
 const subscribeToMobile = (onChange: () => void) => {
   const query = window.matchMedia(MOBILE_QUERY)
@@ -139,8 +140,10 @@ export const CustomStarCanvas = ({
     const galaxyTilt = (-cfg.galaxyTilt * Math.PI) / 180
     const galaxySpeed = cfg.starDriftSpeed * cfg.galaxyDriftFactor * Math.SQRT2
     let backdropStale = true // haze needs painting (first paint, resize, theme)
-    let galaxyStale = true // sprites changed: repaint the galaxy canvas at once
-    let lastGalaxyPaint = 0
+    let galaxyStale = true // sprite rebuilt: repaint the galaxy canvas
+    let galaxyPlaced = false // the CSS transform needs writing (first time, resize)
+    let placedX = 0
+    let placedY = 0
     // The galaxy canvas is the galaxy's sprite size (1 px per sprite px, no device pixel
     // ratio) and is shown at the galaxy's on-screen size
     const galaxyW = galaxy
@@ -154,6 +157,7 @@ export const CustomStarCanvas = ({
       galaxyCanvas.height = galaxyH
       galaxyCanvas.style.width = `${galaxy.width}px`
       galaxyCanvas.style.height = `${galaxy.height}px`
+      galaxyCanvas.style.opacity = String(Math.min(1, cfg.galaxyOpacity))
     } else {
       galaxyCanvas.style.display = 'none'
     }
@@ -295,6 +299,7 @@ export const CustomStarCanvas = ({
       backdrop.height = h * dpr
       backdropCtx.setTransform(dpr, 0, 0, dpr, 0, 0)
       backdropStale = true
+      galaxyPlaced = false // its position depends on the screen size
 
       if (prevW && prevH) {
         const floating: Array<Point> = [...stars, ...drifting]
@@ -399,10 +404,11 @@ export const CustomStarCanvas = ({
     // ── Drawing ─────────────────────────────────────────────────────────────
 
     // Drifts like the stars but more slowly (it is farther away), in the chosen direction.
-    // Only the position is updated here, as a CSS transform on the galaxy's own canvas
-    // (see paintGalaxy for the twinkle). `dt` is in frames; with reduced motion it is 0,
-    // so the galaxy stays still.
-    const drawGalaxy = (now: number, dt: number) => {
+    // The galaxy is a still picture on its own canvas, so drifting it is just a CSS
+    // transform (the compositor moves it, nothing is repainted), and that is only written
+    // once the drift adds up to GALAXY_MOVE_STEP px. `dt` is in frames; with reduced
+    // motion it is 0, so the galaxy stays still.
+    const drawGalaxy = (dt: number) => {
       if (!galaxy) return
       galaxyOffset.x += galaxyDirection.x * galaxySpeed * dt
       galaxyOffset.y += galaxyDirection.y * galaxySpeed * dt
@@ -422,36 +428,31 @@ export const CustomStarCanvas = ({
       if (centerY < -halfY) galaxyOffset.y += h + halfY * 2
       else if (centerY > h + halfY) galaxyOffset.y -= h + halfY * 2
 
-      // Drift and tilt cost nothing: the compositor moves the canvas
-      galaxyCanvas.style.transform = `translate(${
-        w * galaxy.anchor.x + galaxyOffset.x
-      }px, ${
-        h * galaxy.anchor.y + galaxyOffset.y
-      }px) rotate(${galaxyTilt}rad) translate(${-galaxy.width / 2}px, ${
-        -galaxy.height / 2
-      }px)`
-      galaxyCanvas.style.display = 'block'
-
-      if (galaxyStale || now - lastGalaxyPaint >= GALAXY_PAINT_MS) {
-        paintGalaxy(now)
+      const x = w * galaxy.anchor.x + galaxyOffset.x
+      const y = h * galaxy.anchor.y + galaxyOffset.y
+      if (
+        !galaxyPlaced ||
+        Math.hypot(x - placedX, y - placedY) >= GALAXY_MOVE_STEP
+      ) {
+        galaxyPlaced = true
+        placedX = x
+        placedY = y
+        galaxyCanvas.style.transform = `translate(${x}px, ${y}px) rotate(${galaxyTilt}rad) translate(${-galaxy.width / 2}px, ${-galaxy.height / 2}px)`
+        galaxyCanvas.style.display = 'block'
       }
+
+      if (galaxyStale) paintGalaxy()
     }
 
-    // The layers on top of each other, each at its own twinkle brightness. Only runs a few
-    // times a second (and when the sprites change).
-    const paintGalaxy = (now: number) => {
-      if (!galaxy) return
-      lastGalaxyPaint = now
+    // Copies the flattened sprite onto the galaxy canvas, once, and again whenever the
+    // sprite is rebuilt (theme change). The sprite is released afterwards: the canvas
+    // keeps the picture, so only one copy stays in memory.
+    const paintGalaxy = () => {
+      if (!galaxy?.sprite) return
       galaxyStale = false
       galaxyCtx.clearRect(0, 0, galaxyW, galaxyH)
-      for (const layer of galaxy.layers) {
-        if (!layer.sprite) continue
-        const swing = 0.5 + 0.5 * Math.sin(now * layer.rate + layer.phase)
-        galaxyCtx.globalAlpha =
-          Math.min(1, cfg.galaxyOpacity) * (1 - layer.amount * (1 - swing))
-        galaxyCtx.drawImage(layer.sprite, 0, 0, galaxyW, galaxyH)
-      }
-      galaxyCtx.globalAlpha = 1
+      galaxyCtx.drawImage(galaxy.sprite, 0, 0, galaxyW, galaxyH)
+      galaxy.sprite = null
     }
 
     // The haze, on the backdrop canvas. It never moves, so it is only painted when it
@@ -746,7 +747,7 @@ export const CustomStarCanvas = ({
     // behind it, some in front).
     const draw = (now: number, dt: number) => {
       drawBackdrop()
-      drawGalaxy(now, dt)
+      drawGalaxy(dt)
       ctx.clearRect(0, 0, w, h)
       updateAgitation(dt)
       updateOrbits(dt)

@@ -6,8 +6,8 @@ export const LogoutButton = () => {
   const { logout } = useSession()
 
   return (
-    <Button onClick={logout} className='button subtle px-2 grow h-full'>
-      <Leave className='w-8 h-8 overwrite' />
+    <Button onClick={logout} className='button subtle button-sm grow h-full'>
+      <Leave className='w-7 h-7 overwrite' />
     </Button>
   )
 }

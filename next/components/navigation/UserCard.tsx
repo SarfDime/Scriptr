@@ -5,7 +5,7 @@ import { Avatar } from '../ui/Avatar'
 
 type UserCardProps = {
   name: string
-  userRole: string
+  userRole?: string
   avatarUrl?: string
   /** Defaults to the viewer's own profile; a caller rendering this for
    * someone else (not currently done anywhere, but the prop exists so
@@ -21,7 +21,7 @@ export const UserCard = ({
 }: UserCardProps) => (
   <NextLink
     href={href}
-    className='button justify-start subtle w-full gap-2 p-2'
+    className='button justify-start subtle w-full gap-2 p-2 grow h-full'
   >
     <Avatar
       name={name}
@@ -29,17 +29,17 @@ export const UserCard = ({
         avatarUrl
           ? {
               src: avatarUrl,
-              className: 'h-10 w-10 rounded-full shadow-sm',
+              className: 'h-6 w-6 rounded-full shadow-sm',
             }
           : undefined
       }
       initialsIconProps={{
-        className: 'h-10 w-10 rounded-full shadow-sm p-0',
+        className: 'h-6 w-6 rounded-full shadow-sm p-1 text-xs',
       }}
     />
     <Box className='text-left'>
       <Text className='ui-label text-fg-700'>{name}</Text>
-      <Text className='ui-caption'>{userRole}</Text>
+      {userRole && <Text className='ui-caption'>{userRole}</Text>}
     </Box>
   </NextLink>
 )
