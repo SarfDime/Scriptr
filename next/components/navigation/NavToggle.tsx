@@ -17,7 +17,7 @@ export const NavToggle = ({ action, className, ...rest }: NavToggleProps) => {
 
   return (
     <Button
-      className={cn('button subtle p-1.5', className)}
+      className={cn('button ghost p-1.5', className)}
       {...rest}
       onClick={action === 'open' ? openNav : closeNav}
     />

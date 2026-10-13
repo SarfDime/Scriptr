@@ -64,7 +64,7 @@ export const Field = (props: FieldProps) => {
     </FieldContent>
   )
 
-  const className = cn('group/field gap-1 grid px-[0.1px]', rest.className)
+  const className = cn('group/field gap-1 grid', rest.className)
 
   if (showSkeleton) {
     return (

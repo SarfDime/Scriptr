@@ -11,11 +11,13 @@ export const Avatar = ({
   name,
   color,
   initialsIconProps,
+  className,
 }: {
   picture?: NextImageProps
   name: string
   color?: ComponentColorPalettes
   initialsIconProps?: Omit<InitialsIconProps, 'name' | 'color'>
+  className?: string
 }) => {
   const accent = color ?? getColorPalette({ value: name })
   return (
@@ -23,14 +25,15 @@ export const Avatar = ({
       {(picture || name) &&
         (picture ? (
           <NextImage
-            {...picture}
-            className={cn(
-              'rounded-md h-full aspect-square ui-center p-6',
-              picture?.className
-            )}
             objectFitProp='cover'
             fillProp
             sizes={IMAGE_SIZES.AVATAR}
+            {...picture}
+            className={cn(
+              'rounded-md h-full aspect-square ui-center p-6',
+              picture?.className,
+              className
+            )}
           />
         ) : (
           <InitialsIcon
@@ -39,7 +42,8 @@ export const Avatar = ({
             color={accent}
             className={cn(
               'h-full aspect-square ui-center p-6',
-              initialsIconProps?.className
+              initialsIconProps?.className,
+              className
             )}
           />
         ))}

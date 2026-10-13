@@ -1617,7 +1617,7 @@ export type MinimalProfessorTypedQueryResult = {
 
 // Source: ../next/sanity/queries/academics/professor.queries.ts
 // Variable: professorDetailQuery
-// Query: fn linkSelector::full($link) = $link{    defined(linkType) => {linkType},    defined(page) => {    "pageSlug": select(            page->._type == "page" => page->.pageSlug,            page->.slug        )    },    defined(section) => {"sectionSlug": section->.slug},    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},  _type,  bio,  office,  telephone,  email,  website,  faculties[]->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    }  },  "subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {    _id,    "slug": slug.current,    name,    year,    code,    credits,    study->{      _id,      "slug": slug.current,      faculty->{        _id,        "slug": slug.current,        name,        university->{          _id,          "slug": slug.current,          name,        }      }    }  }}
+// Query: fn linkSelector::full($link) = $link{    defined(linkType) => {linkType},    defined(page) => {    "pageSlug": select(            page->._type == "page" => page->.pageSlug,            page->.slug        )    },    defined(section) => {"sectionSlug": section->.slug},    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},  _type,  bio,  office,  telephone,  email,  website,  faculties[]->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    }  },  "subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {    _id,dbId,"slug": slug.current,name,code,credits,year,semester,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  dbId,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  name,  dbId,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},  }}
 export type ProfessorDetailQueryResult = {
   _id: string
   slug: string | null
@@ -1647,14 +1647,31 @@ export type ProfessorDetailQueryResult = {
   }>
   subjects: Array<{
     _id: string
+    dbId: string | null
     slug: string | null
     name: string
-    year: number
     code: string
     credits: number
+    year: number
+    semester: number
+    description: RichTextLite | null
+    syllabus: string | null
+    faculty: {
+      _id: string
+      slug: string | null
+      name: string
+      dbId: string | null
+      university: {
+        _id: string
+        slug: string | null
+        name: string
+      }
+    }
     study: {
       _id: string
       slug: string | null
+      name: string
+      dbId: string | null
       faculty: {
         _id: string
         slug: string | null
@@ -1666,6 +1683,13 @@ export type ProfessorDetailQueryResult = {
         }
       }
     }
+    professors: Array<{
+      _id: string
+      dbId: string | null
+      slug: string | null
+      name: string
+      title: string | null
+    }>
   }>
   _type: 'professor'
   bio: RichTextLite | null
@@ -2409,7 +2433,7 @@ export type UniversityStaticParamsQueryResult = Array<{
 
 // Source: ../next/sanity/queries/nav.queries.ts
 // Variable: navMenuQuery
-// Query: fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn linkSelector::full($link) = $link{    defined(linkType) => {linkType},    defined(page) => {    "pageSlug": select(            page->._type == "page" => page->.pageSlug,            page->.slug        )    },    defined(section) => {"sectionSlug": section->.slug},    defined(customLink) => {customLink},};*[_id == $WEBSITE][0]{  "navMenu": navMenu->{    defined(title) => {title},    defined(websiteLogo)=>{ "websiteLogo": sanityImage::full(websiteLogo) },    navItems[]->{      stringTitle,      stringSubtitle,      ...linkSelector::full(@),      defined(new) => {new},      defined(comingSoon) => {comingSoon},      defined(disabled) => {disabled},    },  }}.navMenu
+// Query: fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn linkSelector::full($link) = $link{    defined(linkType) => {linkType},    defined(page) => {    "pageSlug": select(            page->._type == "page" => page->.pageSlug,            page->.slug        )    },    defined(section) => {"sectionSlug": section->.slug},    defined(customLink) => {customLink},};*[_id == $WEBSITE][0]{  "navMenu": navMenu->{    defined(title) => {title},    defined(websiteLogo)=>{ "websiteLogo": sanityImage::full(websiteLogo) },    navItems[]->{      stringTitle,      stringSubtitle,      ...linkSelector::full(@),      defined(new) => {new},      defined(comingSoon) => {comingSoon},      defined(disabled) => {disabled},      defined(icon) => { "icon": sanityImage::full(icon) },    },  }}.navMenu
 export type NavMenuQueryResult =
   | null
   | {
@@ -2427,6 +2451,92 @@ export type NavMenuQueryResult =
             linkType: 'custom' | 'internal' | null
             pageSlug: Slug | null
             customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            sectionSlug: Slug | null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            pageSlug: Slug | null
+            sectionSlug: Slug | null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            pageSlug: Slug | null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            sectionSlug: Slug | null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            pageSlug: Slug | null
+            customLink: string | null
           }
         | {
             stringTitle: string | null
@@ -2464,6 +2574,98 @@ export type NavMenuQueryResult =
             stringTitle: string | null
             stringSubtitle: null
             customLink: string | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            pageSlug: Slug | null
+            sectionSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            pageSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            sectionSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            pageSlug: Slug | null
+            sectionSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            pageSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            sectionSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
           }
         | {
             stringTitle: string | null
@@ -2520,6 +2722,92 @@ export type NavMenuQueryResult =
             linkType: 'custom' | 'internal' | null
             pageSlug: Slug | null
             customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            sectionSlug: Slug | null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            pageSlug: Slug | null
+            sectionSlug: Slug | null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            pageSlug: Slug | null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            sectionSlug: Slug | null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            pageSlug: Slug | null
+            customLink: string | null
           }
         | {
             stringTitle: string | null
@@ -2557,6 +2845,98 @@ export type NavMenuQueryResult =
             stringTitle: string | null
             stringSubtitle: null
             customLink: string | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            pageSlug: Slug | null
+            sectionSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            pageSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            sectionSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            pageSlug: Slug | null
+            sectionSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            pageSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            sectionSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
           }
         | {
             stringTitle: string | null
@@ -2618,6 +2998,92 @@ export type NavMenuQueryResult =
             linkType: 'custom' | 'internal' | null
             pageSlug: Slug | null
             customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            sectionSlug: Slug | null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            pageSlug: Slug | null
+            sectionSlug: Slug | null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            pageSlug: Slug | null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            sectionSlug: Slug | null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            pageSlug: Slug | null
+            customLink: string | null
           }
         | {
             stringTitle: string | null
@@ -2655,6 +3121,98 @@ export type NavMenuQueryResult =
             stringTitle: string | null
             stringSubtitle: null
             customLink: string | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            pageSlug: Slug | null
+            sectionSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            pageSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            sectionSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            pageSlug: Slug | null
+            sectionSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            pageSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            sectionSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
           }
         | {
             stringTitle: string | null
@@ -2710,6 +3268,92 @@ export type NavMenuQueryResult =
             linkType: 'custom' | 'internal' | null
             pageSlug: Slug | null
             customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            sectionSlug: Slug | null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            pageSlug: Slug | null
+            sectionSlug: Slug | null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            pageSlug: Slug | null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            sectionSlug: Slug | null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            customLink: string | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            pageSlug: Slug | null
+            customLink: string | null
           }
         | {
             stringTitle: string | null
@@ -2747,6 +3391,98 @@ export type NavMenuQueryResult =
             stringTitle: string | null
             stringSubtitle: null
             customLink: string | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            pageSlug: Slug | null
+            sectionSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            pageSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            sectionSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            linkType: 'custom' | 'internal' | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            pageSlug: Slug | null
+            sectionSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            pageSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            sectionSlug: Slug | null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
+          }
+        | {
+            stringTitle: string | null
+            stringSubtitle: null
+            icon: {
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
           }
         | {
             stringTitle: string | null
@@ -3197,7 +3933,7 @@ declare global {
     '\n*[_type == "faculty" && !(_id in path("drafts.**")) && dbId != null] {\n  "facultySlug": coalesce(slug.current, _id),\n  "universitySlug": coalesce(university->slug.current, university->_id)\n}\n': FacultyStaticParamsQueryResult
     '\n*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  bio\n}\n': ProfessorSeoQueryResult
     '\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {\n\n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n}\n': MinimalProfessorTypedQueryResult
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n  _type,\n  bio,\n  office,\n  telephone,\n  email,\n  website,\n  faculties[]->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    }\n  },\n  "subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n    _id,\n    "slug": slug.current,\n    name,\n    year,\n    code,\n    credits,\n    study->{\n      _id,\n      "slug": slug.current,\n      faculty->{\n        _id,\n        "slug": slug.current,\n        name,\n        university->{\n          _id,\n          "slug": slug.current,\n          name,\n        }\n      }\n    }\n  }\n}\n': ProfessorDetailQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n  _type,\n  bio,\n  office,\n  telephone,\n  email,\n  website,\n  faculties[]->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    }\n  },\n  "subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n    \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  dbId,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  name,\n  dbId,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n  }\n}\n': ProfessorDetailQueryResult
     '\n*[_type == "professor" && !(_id in path("drafts.**")) && dbId != null] {\n  "professorSlug": coalesce(slug.current, _id)\n}\n': ProfessorStaticParamsQueryResult
     '\n*[_type == "study"\n  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)\n  && faculty->slug.current == $facultySlug\n  && faculty->university->slug.current == $universitySlug\n][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  description,\n}\n': StudySeoQueryResult
     '\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "study"\n  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)\n  && faculty->slug.current == $facultySlug\n  && faculty->university->slug.current == $universitySlug\n][0] {\n\n_id,\ndbId,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  dbId,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  name,\n  dbId,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n}\n': MinimalStudyTypedQueryResult
@@ -3213,7 +3949,7 @@ declare global {
     '\n*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  description,\n}\n': UniversitySeoQueryResult
     '\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {\n  _id,\n  "slug": slug.current,\n  dbId,\n  _type,\n  name,\n  description,\n  streetAddress,\n  telephone,\n  email,\n  website,\n  rector->{\n    _id,\n    name,\n    title,\n    image\n  },\n  viceRectors[]->{\n    _id,\n    name,\n    title,\n    image\n  },\n  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {\n    \n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\ndean->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nsecretary->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nviceDeans[]->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nuniversity->{\n  _id,\n  "slug": slug.current,\n  name,\n  dbId\n},\n"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  dbId,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  name,\n  dbId,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n},\n\n  }\n}\n': UniversityDetailQueryResult
     '\n*[_type == "university" && !(_id in path("drafts.**")) && dbId != null] {\n  "universitySlug": coalesce(slug.current, _id)\n}\n': UniversityStaticParamsQueryResult
-    '\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\n*[_id == $WEBSITE][0]{\n  "navMenu": navMenu->{\n    defined(title) => {title},\n    defined(websiteLogo)=>{ "websiteLogo": sanityImage::full(websiteLogo) },\n    navItems[]->{\n      stringTitle,\n      stringSubtitle,\n      ...linkSelector::full(@),\n      defined(new) => {new},\n      defined(comingSoon) => {comingSoon},\n      defined(disabled) => {disabled},\n    },\n  }\n}.navMenu': NavMenuQueryResult
+    '\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\n*[_id == $WEBSITE][0]{\n  "navMenu": navMenu->{\n    defined(title) => {title},\n    defined(websiteLogo)=>{ "websiteLogo": sanityImage::full(websiteLogo) },\n    navItems[]->{\n      stringTitle,\n      stringSubtitle,\n      ...linkSelector::full(@),\n      defined(new) => {new},\n      defined(comingSoon) => {comingSoon},\n      defined(disabled) => {disabled},\n      defined(icon) => { "icon": sanityImage::full(icon) },\n    },\n  }\n}.navMenu': NavMenuQueryResult
     '\n{\n  "universities": *[_type == "university" && dbId != null]{ _id, dbId, name },\n  "faculties": *[_type == "faculty" && university._ref != null && dbId != null]{ _id, dbId, name, "universityId": university._ref },\n  "studies": *[_type == "study" && faculty._ref != null && dbId != null]{\n    _id,\n    dbId,\n    name,\n    "facultyId": faculty._ref,\n    "subjectsByYear": *[_type == "subject" && study._ref == ^._id && dbId != null\n        && _id == (*[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(_id asc)[0]._id)\n      ] | order(year asc){\n      year,\n      "subjects": *[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(name asc){\n        _id, dbId, name, year, "studyId": study._ref\n      }\n    },\n  },\n  "subjects": *[_type == "subject" && study._ref != null && dbId != null] | order(year asc){\n    \n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  code,\n  credits,\n  year,\n  semester,\n  "faculty": study->faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    dbId,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n  study->{\n    _id,\n    "slug": slug.current,\n    name,\n    dbId,\n    faculty->{\n      _id,\n      "slug": slug.current,\n      name,\n      university->{\n        _id,\n        "slug": slug.current,\n        name,\n      },\n    },\n  },\n  professors[]->{\n    _id,\n    dbId,\n    "slug": slug.current,\n    name,\n    title,\n  },\n\n  }\n}': OnboardingCatalogQueryResult
     '\n*[_id == $WEBSITE][0]{\n  "siteName": coalesce(siteName, websiteTitle, "Scriptr"),\n  "siteUrl": coalesce(siteUrl, ""),\n  "defaultSeoTitle": coalesce(defaultSeoTitle, websiteTitle, "Scriptr"),\n  "defaultSeoDescription": coalesce(defaultSeoDescription, ""),\n  "defaultKeywords": defaultKeywords[]\n}\n': WebsiteSeoQueryResult
     '\n*[_id == $WEBSITE][0]{\n  dtBackground->{...}\n}.dtBackground\n': StarCanvasQueryResult

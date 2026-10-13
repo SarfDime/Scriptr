@@ -2,7 +2,6 @@ import { Fragment } from 'react'
 import { Box } from '@/components/common/Box'
 import { DetailLink } from '@/components/ui/DetailLink'
 import { Person } from '@/components/ui/Person'
-import { getAcademicPath } from '@/lib/academic-routes'
 import { cn } from '@/lib/common-utils'
 import type { AdministratorListProps } from '@/types/components/OverviewCard.types'
 
@@ -20,16 +19,13 @@ export const AdministratorList = ({
     <Box className={cn('ui-cluster px-2 py-0', className)} {...rest}>
       {administrators.map((admin, index) => (
         <Fragment key={admin._id ?? `${admin.name}-${index}`}>
-          {layout === 'detailLink' && (
+          {layout === 'detailLink' && admin.href && (
             <DetailLink
               {...detailLinkProps}
               key={admin._id}
-              href={getAcademicPath({
-                type: 'professor',
-                professorSlug: admin._id,
-              })}
+              href={admin.href}
               label={admin.title}
-              value={admin.name ?? 'daw'}
+              value={admin.name}
             />
           )}
           {layout === 'person' && (

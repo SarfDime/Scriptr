@@ -39,17 +39,21 @@ export const formatUpdated = (date: Date) => {
   return `${days} days ago`
 }
 
+type SummaryTarget = Summarizable & { slug?: string | null }
+
 /**
  * Normalizes single entities or arrays of entities into PersonSummary objects,
- * safely filtering out nullish or incomplete records.
+ * safely filtering out nullish or incomplete records. `getHref` gives each
+ * summary the link it should open (an entity's own page, not a shared one).
  */
 export function createPersonSummaries(
   ...entries: Array<{
-    target: Summarizable | Array<Summarizable> | null | undefined
+    target: SummaryTarget | Array<SummaryTarget> | null | undefined
     title: string
+    getHref?: (item: SummaryTarget) => string
   }>
 ): Array<PersonSummary> {
-  return entries.flatMap(({ target, title }) => {
+  return entries.flatMap(({ target, title, getHref }) => {
     if (!target) return []
 
     const items = Array.isArray(target) ? target : [target]
@@ -60,6 +64,7 @@ export function createPersonSummaries(
         _id: item._id,
         name: item.name,
         title,
+        ...(getHref && { href: getHref(item) }),
       }
     })
   })

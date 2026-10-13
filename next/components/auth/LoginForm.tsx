@@ -12,15 +12,8 @@ export type LoginFormProps = {
 }
 
 export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
-  const {
-    email,
-    setEmail,
-    password,
-    setPassword,
-    isBusy,
-    canSubmit,
-    handleSubmit,
-  } = useLoginForm()
+  const { values, setField, touch, fields, isBusy, canSubmit, handleSubmit } =
+    useLoginForm()
 
   return (
     <FormContainer onSubmit={handleSubmit}>
@@ -33,11 +26,14 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
             autoComplete: 'email',
             required: true,
             disabled: isBusy,
+            'aria-invalid': fields.email.invalid,
+            onBlur: () => touch('email'),
           }}
           labelProps={{ htmlFor: 'login-email' }}
-          inputVal={email}
-          inputOnChange={(event) => setEmail(event.target.value)}
+          inputVal={values.email}
+          inputOnChange={(event) => setField('email', event.target.value)}
           disabled={isBusy}
+          {...fields.email}
         />
 
         <InputWrapper
@@ -48,11 +44,14 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
             autoComplete: 'current-password',
             required: true,
             disabled: isBusy,
+            'aria-invalid': fields.password.invalid,
+            onBlur: () => touch('password'),
           }}
           labelProps={{ htmlFor: 'login-password' }}
-          inputVal={password}
-          inputOnChange={(event) => setPassword(event.target.value)}
+          inputVal={values.password}
+          inputOnChange={(event) => setField('password', event.target.value)}
           disabled={isBusy}
+          {...fields.password}
         />
       </Card.Body>
 

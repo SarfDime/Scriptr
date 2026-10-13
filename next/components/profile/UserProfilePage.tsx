@@ -11,12 +11,7 @@ import { ProfileCard } from '@/components/profile/ProfileCard'
 import { Text } from '@/components/typography/Text'
 import { Divider } from '@/components/ui/Divider'
 import { useProfileStats } from '@/hooks/useProfileStats'
-import {
-  getDisplayName,
-  getFacultyName,
-  getUniversityId,
-  getUniversityName,
-} from '@/lib/profile-display'
+import { getDisplayName } from '@/lib/profile-display'
 import { toScriptDetails } from '@/lib/script-display'
 import { useMyProfile, useMyProfileActions } from '@/providers/ProfileProvider'
 import type { SubjectById } from '@/types/academics/subject.types'
@@ -78,18 +73,15 @@ export function UserProfilePage({ subjects }: UserProfilePageProps) {
             }
           />
           <Divider />
-          <SubjectsSidebar subjects={subjects} className='grow' />
+          <SubjectsSidebar subjects={subjects} />
         </>
       }
     >
       <ProfileCard
         name={displayName}
         role={profile.role}
-        location=''
-        bio=''
-        university={getUniversityName(profile)}
-        universitySlug={getUniversityId(profile)}
-        faculty={getFacultyName(profile)}
+        selectedFaculties={profile.selected_faculties}
+        selectedStudies={profile.selected_studies}
         picture={profile.avatar_url ? { src: profile.avatar_url } : undefined}
         className='grow'
       />

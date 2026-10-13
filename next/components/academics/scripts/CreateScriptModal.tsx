@@ -16,6 +16,7 @@ import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { FormContainer } from '@/components/typography/FormContainer'
 import { InputWrapper } from '@/components/typography/InputWrapper'
+import { RESTRICTED_EDITOR_OPTIONS } from '@/components/typography/portable-text/toolbar/editor-options'
 import { Text, type TextProps } from '@/components/typography/Text'
 import { Card } from '@/components/ui/Card'
 import { Dialog } from '@/components/ui/Dialog'
@@ -212,7 +213,7 @@ export function CreateScriptModal({
         onClick={() => {
           if (requireSignIn()) setIsOpen(true)
         }}
-        className='button solid gap-1 p-2'
+        className='button solid gap-1 p-2 md:grow-0 grow'
       >
         <AddCircle />
         {triggerLabel}
@@ -257,20 +258,7 @@ export function CreateScriptModal({
                   onChange={handleTitleChange}
                   showActions={false}
                   ariaLabel={UI_STRINGS.scripts.uploadModal.formTitle}
-                  editorOptions={{
-                    excludedStyles: [
-                      'h1',
-                      'h2',
-                      'h3',
-                      'h4',
-                      'h5',
-                      'base',
-                      'h6',
-                    ],
-                    showStyles: false,
-                    showLists: false,
-                    showAlignment: false,
-                  }}
+                  editorOptions={RESTRICTED_EDITOR_OPTIONS}
                   editorClassName='h-10 min-h-0 overflow-hidden whitespace-nowrap p-2'
                   singleLine
                 />
@@ -292,7 +280,10 @@ export function CreateScriptModal({
                   onChange={handleDescriptionChange}
                   showActions={false}
                   ariaLabel={UI_STRINGS.scripts.uploadModal.formDescription}
-                  editorOptions={{ excludedStyles: ['h1', 'h2', 'h3'] }}
+                  editorOptions={{
+                    excludedStyles: ['h1', 'h2', 'h3'],
+                    excludedColors: RESTRICTED_EDITOR_OPTIONS.excludedColors,
+                  }}
                   editorClassName='min-h-28'
                 />
               </Field>

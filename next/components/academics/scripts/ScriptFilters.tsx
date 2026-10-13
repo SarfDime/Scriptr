@@ -67,7 +67,7 @@ export const ScriptFilters = ({
   return (
     <Box className='ui-cluster gap-2 grow xxl:grow-0'>
       <Select
-        className='w-auto grow bg-background-200'
+        className='flex-1 bg-background-200 xxl:w-40 lg:flex-none border border-grey-300'
         defaultOption={
           subjectOptions.find((option) => option.value === subject) ??
           subjectOptions[0]
@@ -90,11 +90,11 @@ export const ScriptFilters = ({
         triggerProps={{
           'aria-label': UI_STRINGS.scripts.filters.subjectLabel,
           className:
-            'button button-sm ghost min-w-36 rounded-lg border border-grey-300 px-3 py-2',
+            'button button-sm ghost w-full grow h-full min-w-0 rounded-lg px-3 py-2 [&>span]:truncate',
         }}
       />
       <Select<ScriptSortOption>
-        className='w-auto grow bg-background-200'
+        className='flex-1 bg-background-200 xxl:w-40 lg:flex-none'
         defaultOption={
           sortOptions.find((option) => option.value === sort) ?? sortOptions[0]
         }
@@ -103,7 +103,7 @@ export const ScriptFilters = ({
         triggerProps={{
           'aria-label': UI_STRINGS.scripts.filters.sortLabel,
           className:
-            'button button-sm ghost min-w-36 rounded-lg border border-grey-300 px-3 py-2',
+            'button button-sm ghost w-full grow h-full min-w-0 rounded-lg px-3 py-2 [&>span]:truncate border border-grey-300',
         }}
         icon={
           sort === 'Title A-Z' ? (

@@ -4,6 +4,7 @@ import { UI_STRINGS } from '@shared/config/strings'
 import type {
   CallbackRequest,
   LoginRequest,
+  RegisterConflictField,
   RegisterRequest,
   SessionUser,
 } from '@shared/types/auth.types'
@@ -32,7 +33,7 @@ type AuthActionResult = { ok: true } | { ok: false; message: string }
 
 type RegisterResult =
   | { ok: true; message: string; requiresEmailConfirmation: boolean }
-  | { ok: false; message: string }
+  | { ok: false; message: string; field?: RegisterConflictField }
 
 type SessionContextValue = {
   session: SessionState
@@ -52,6 +53,14 @@ function extractErrorMessage(error: unknown): string {
   return error instanceof ApiError || error instanceof Error
     ? error.message
     : UI_STRINGS.general.unexpectedError
+}
+
+/** The unique field a register `409` names, if the error is one. */
+function getConflictField(error: unknown): RegisterConflictField | undefined {
+  if (!(error instanceof ApiError)) return undefined
+  return error.field === 'username' || error.field === 'email'
+    ? error.field
+    : undefined
 }
 
 /**
@@ -129,7 +138,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       }
       return { ok: true, message: result.message, requiresEmailConfirmation }
     } catch (error) {
-      return { ok: false, message: extractErrorMessage(error) }
+      return {
+        ok: false,
+        message: extractErrorMessage(error),
+        field: getConflictField(error),
+      }
     }
   }
 

@@ -17,11 +17,14 @@ const API_REQUEST_TIMEOUT_MS = 10_000
  */
 export class ApiError extends Error {
   status: number
+  /** The `field` an error body names (e.g. a register `409`), when present. */
+  field: string | undefined
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, field?: string) {
     super(message)
     this.name = 'ApiError'
     this.status = status
+    this.field = field
   }
 }
 
@@ -61,13 +64,16 @@ export async function apiFetch<T>(
 
     if (!response.ok) {
       let errorMessage = `Request failed with status ${response.status}`
+      let errorField: string | undefined
       try {
         const errorData = await response.json()
         errorMessage = errorData?.error ?? errorData?.message ?? errorMessage
+        errorField =
+          typeof errorData?.field === 'string' ? errorData.field : undefined
       } catch {
         // Preserve the status when an upstream proxy returns HTML.
       }
-      throw new ApiError(errorMessage, response.status)
+      throw new ApiError(errorMessage, response.status, errorField)
     }
 
     if (response.status === 204) {

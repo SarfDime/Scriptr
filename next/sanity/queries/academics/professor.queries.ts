@@ -1,5 +1,6 @@
 import { groq } from 'next-sanity'
 import { sanityFunctionQueries } from '../functions.queries'
+import { minimalSubjectQuery } from './subject.queries'
 
 /** Minimal query for SEO metadata on a professor. */
 export const professorSeoQuery = groq`
@@ -73,26 +74,7 @@ ${sanityFunctionQueries}
     }
   },
   "subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {
-    _id,
-    "slug": slug.current,
-    name,
-    year,
-    code,
-    credits,
-    study->{
-      _id,
-      "slug": slug.current,
-      faculty->{
-        _id,
-        "slug": slug.current,
-        name,
-        university->{
-          _id,
-          "slug": slug.current,
-          name,
-        }
-      }
-    }
+    ${minimalSubjectQuery}
   }
 }
 `

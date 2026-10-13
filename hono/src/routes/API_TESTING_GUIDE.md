@@ -129,9 +129,12 @@ curl -s -c cookies-admin.txt -X POST $BASE/auth/register -H "Content-Type: appli
 curl -s -X POST $BASE/auth/register -H "Content-Type: application/json" \
   -d '{"email":"incomplete@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD"}' | jq .
 
-# Duplicate username and disposable-email rejection — expect 409 / 400
+# Duplicate username (409, field: username), duplicate email (409, field: email)
+# and disposable-email rejection (400)
 curl -s -X POST $BASE/auth/register -H "Content-Type: application/json" \
   -d '{"email":"student@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"localstudent","full_name":"Duplicate User"}' | jq .
+curl -s -X POST $BASE/auth/register -H "Content-Type: application/json" \
+  -d '{"email":"student@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"otherstudent","full_name":"Other Student"}' | jq .
 curl -s -X POST $BASE/auth/register -H "Content-Type: application/json" \
   -d '{"email":"test@mailinator.com","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"disposableuser","full_name":"Disposable User"}' | jq .
 

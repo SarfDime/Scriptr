@@ -6,7 +6,6 @@ import { getAcademicPath } from '@/lib/academic-routes'
 import type { SubjectSidebarItem } from '@/types/academics/subject.types'
 
 export const SubjectCard = ({
-  _id,
   slug,
   name,
   code,
@@ -18,10 +17,9 @@ export const SubjectCard = ({
 }: SubjectSidebarItem) => {
   const [firstProfessor, ...restProfessors] = professors ?? []
 
-  const universitySlug =
-    study?.faculty?.university?.slug ?? study?.faculty?.university?._id ?? ''
-  const facultySlug = study?.faculty?.slug ?? study?.faculty?._id ?? ''
-  const studySlug = study?.slug ?? study?._id ?? ''
+  const universitySlug = study?.faculty?.university?.slug ?? ''
+  const facultySlug = study?.faculty?.slug ?? ''
+  const studySlug = study?.slug ?? ''
 
   const universityName = study?.faculty?.university?.name
   const facultyName = study?.faculty?.name
@@ -33,7 +31,7 @@ export const SubjectCard = ({
         universitySlug,
         facultySlug,
         studySlug,
-        subjectSlug: slug ?? _id,
+        subjectSlug: slug ?? '',
       })}
       title={name}
       subtitle={

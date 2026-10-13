@@ -18,6 +18,8 @@ export const ProfessorCard = ({
   picture,
   universities,
 }: MinimalProfessor) => {
+  if (!slug) return null
+
   const color = getColorPalette({ type: 'seed', value: _id })
 
   const facultyNames = faculties?.map((faculty) => faculty.name).join(', ')
@@ -26,7 +28,7 @@ export const ProfessorCard = ({
     <ClickableCard
       href={getAcademicPath({
         type: 'professor',
-        professorSlug: slug ?? _id,
+        professorSlug: slug,
       })}
       className='group p-4 h-full flex flex-col justify-between gap-3 transition hover:border-brand-500 hover:shadow-sm ui-above-inside'
     >

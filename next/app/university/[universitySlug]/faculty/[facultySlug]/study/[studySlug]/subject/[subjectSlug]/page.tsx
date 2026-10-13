@@ -71,14 +71,9 @@ export default async function SubjectDetailPage({
               href={getAcademicPath({
                 type: 'study',
                 universitySlug:
-                  study.faculty.university?.slug ??
-                  study.faculty.university?._id ??
-                  routeParams.universitySlug,
-                facultySlug:
-                  study.faculty.slug ??
-                  study.faculty._id ??
-                  routeParams.facultySlug,
-                studySlug: study.slug ?? study._id ?? routeParams.studySlug,
+                  study.faculty.university?.slug ?? routeParams.universitySlug,
+                facultySlug: study.faculty.slug ?? routeParams.facultySlug,
+                studySlug: study.slug ?? routeParams.studySlug,
               })}
               label={study.name}
             />
@@ -86,13 +81,8 @@ export default async function SubjectDetailPage({
               href={getAcademicPath({
                 type: 'faculty',
                 universitySlug:
-                  study.faculty.university?.slug ??
-                  study.faculty.university?._id ??
-                  routeParams.universitySlug,
-                facultySlug:
-                  study.faculty.slug ??
-                  study.faculty._id ??
-                  routeParams.facultySlug,
+                  study.faculty.university?.slug ?? routeParams.universitySlug,
+                facultySlug: study.faculty.slug ?? routeParams.facultySlug,
               })}
               label={study.faculty.name}
               backLevel='twoBack'

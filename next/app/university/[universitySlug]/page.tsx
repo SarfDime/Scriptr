@@ -1,25 +1,18 @@
 import { UI_STRINGS } from '@shared/config/strings'
-import { Box } from '@/components/common/Box'
-import { EntityCard } from '@/components/common/EntityCard'
-import { NextImage } from '@/components/common/NextImage'
-import { NextLink } from '@/components/common/NextLink'
-import { SectionHeader } from '@/components/common/SectionHeader'
+import { UniversityAdministrationCard } from '@/components/academics/university/UniversityAdministrationCard'
+import { UniversityContactCard } from '@/components/academics/university/UniversityContactCard'
+import { UniversityFacultyExplorer } from '@/components/academics/university/UniversityFacultyExplorer'
+import { UniversityOverviewCard } from '@/components/academics/university/UniversityOverviewCard'
 import { PageLayout } from '@/components/layout/PageLayout'
-import { PortableTextContent } from '@/components/typography/PortableTextContent'
-import { Text } from '@/components/typography/Text'
-import { Card } from '@/components/ui/Card'
 import {
   createAcademicMetadata,
   createAcademicStaticParams,
   fetchAcademicDetailOrNotFound,
 } from '@/lib/academic-detail-page'
-import { getAcademicPath } from '@/lib/academic-routes'
-import { compactStats } from '@/lib/common-utils'
 import {
   universityDetailQuery,
   universityStaticParamsQuery,
 } from '@/sanity/queries/academics/university.queries'
-import { IMAGE_SIZES } from '@/styles/style'
 import type {
   AcademicDetailPageProps,
   UniversityRouteParams,
@@ -66,137 +59,28 @@ export default async function UniversityDetailPage({
       }}
       sidebar={
         <>
-          {(university.streetAddress ||
-            university.telephone ||
-            university.email ||
-            university.website) && (
-            <Card className='ui-stack ui-above'>
-              <SectionHeader as='h3' title='Contact & Location' />
-              {university.streetAddress && (
-                <Box className='ui-stack gap-0.5 ui-above-inside'>
-                  <Text className='ui-label'>Address</Text>
-                  <Text className='ui-body'>{university.streetAddress}</Text>
-                </Box>
-              )}
-              {university.telephone && (
-                <Box className='ui-stack gap-0.5 ui-above-inside'>
-                  <Text className='ui-label'>Phone</Text>
-                  <Text className='ui-body'>{university.telephone}</Text>
-                </Box>
-              )}
-              {university.email && (
-                <Box className='ui-stack gap-0.5 ui-above-inside'>
-                  <Text className='ui-label'>Email</Text>
-                  <NextLink
-                    href={`mailto:${university.email}`}
-                    className='ui-body w-fit'
-                  >
-                    {university.email}
-                  </NextLink>
-                </Box>
-              )}
-              {university.website && (
-                <Box className='ui-stack gap-0.5 ui-above-inside '>
-                  <Text className='ui-label'>Website</Text>
-                  <a
-                    href={university.website}
-                    target='_blank'
-                    rel='noreferrer'
-                    className='ui-body text-brand hover:underline break-all'
-                  >
-                    {university.website}
-                  </a>
-                </Box>
-              )}
-            </Card>
-          )}
-
-          {(university.rector ||
-            (university.viceRectors && university.viceRectors.length > 0)) && (
-            <Card className='ui-stack ui-above'>
-              <SectionHeader as='h3' title='Administration' />
-              {university.rector && (
-                <Box className='ui-stack gap-0.5 ui-above-inside'>
-                  <Text className='ui-label'>Rector</Text>
-                  <Text className='ui-body-strong'>
-                    {university.rector.name}
-                  </Text>
-                  {university.rector.title && (
-                    <Text className='ui-caption'>
-                      {university.rector.title}
-                    </Text>
-                  )}
-                </Box>
-              )}
-              {university.viceRectors && university.viceRectors.length > 0 && (
-                <Box className='ui-stack ui-above-inside'>
-                  <Text className='ui-label'>Vice Rectors</Text>
-                  {university.viceRectors.map((vr) => (
-                    <Box key={vr._id} className='ui-stack gap-0.5'>
-                      <Text className='ui-body-strong'>{vr.name}</Text>
-                      {vr.title && (
-                        <Text className='ui-caption'>{vr.title}</Text>
-                      )}
-                    </Box>
-                  ))}
-                </Box>
-              )}
-            </Card>
-          )}
+          <UniversityContactCard
+            streetAddress={university.streetAddress}
+            telephone={university.telephone}
+            email={university.email}
+            website={university.website}
+          />
+          <UniversityAdministrationCard
+            rector={university.rector}
+            viceRectors={university.viceRectors}
+          />
         </>
       }
     >
       {university.description && (
-        <Card className='ui-stack ui-above'>
-          <SectionHeader title={`About ${university.name}`} />
-          <PortableTextContent className='ui-above-inside'>
-            {university.description}
-          </PortableTextContent>
-        </Card>
+        <UniversityOverviewCard university={university} />
       )}
-
-      <Card className='ui-stack ui-above'>
-        <SectionHeader
-          title='Faculties'
-          count={`${university.faculties?.length ?? 0} Faculties`}
-        />
-
-        {university.faculties && university.faculties.length > 0 ? (
-          <Box className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-            {university.faculties.map((faculty) => (
-              <EntityCard
-                key={faculty._id}
-                href={getAcademicPath({
-                  type: 'faculty',
-                  universitySlug: routeParams.universitySlug,
-                  facultySlug: faculty.slug ?? faculty._id,
-                })}
-                className='ui-above-inside'
-                title={faculty.name}
-                stats={compactStats({
-                  Studies: faculty.studyCount,
-                  Professors: faculty.professorCount,
-                })}
-                subtitle={faculty.studies.map((study) => study.name).join(', ')}
-                media={
-                  faculty.picture ? (
-                    <NextImage
-                      {...faculty.picture}
-                      alt={`${faculty.name} Logo`}
-                      fillProp
-                      sizes={IMAGE_SIZES.UNIVERSITY_HERO}
-                      className='h-10 w-10 rounded-full'
-                      objectFitProp='cover'
-                    />
-                  ) : undefined
-                }
-              />
-            ))}
-          </Box>
-        ) : (
-          <Text className='ui-caption'>{UI_STRINGS.academics.noFaculties}</Text>
-        )}
-      </Card>
+      <UniversityFacultyExplorer
+        faculties={university.faculties ?? []}
+        universitySlug={routeParams.universitySlug}
+        title='Faculties'
+        emptyMessage={UI_STRINGS.academics.noFaculties}
+      />
     </PageLayout>
   )
 }

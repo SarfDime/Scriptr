@@ -1,6 +1,7 @@
+import { UI_STRINGS } from '@shared/config/strings'
 import { FacultyOverviewCard } from '@/components/academics/faculty/FacultyOverviewCard'
-import { FacultyStudyExplorer } from '@/components/academics/faculty/FacultyStudyExplorer'
 import { ProfessorsSection } from '@/components/academics/professor/ProfessorsSection'
+import { StudyExplorer } from '@/components/academics/StudyExplorer'
 import { BackLink } from '@/components/common/BackLink'
 import { PageLayout } from '@/components/layout/PageLayout'
 import {
@@ -70,8 +71,11 @@ export default async function FacultyDetailPage({
       sidebar={<ProfessorsSection professors={faculty.professors} />}
     >
       <FacultyOverviewCard faculty={faculty} />
-
-      <FacultyStudyExplorer studies={faculty.studies} />
+      <StudyExplorer
+        studies={faculty.studies}
+        title={UI_STRINGS.academics.studiesTitle}
+        emptyMessage={UI_STRINGS.academics.noStudies}
+      />
     </PageLayout>
   )
 }

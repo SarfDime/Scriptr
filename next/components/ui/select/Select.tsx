@@ -74,7 +74,9 @@ export const Select = <T = string>({
         )}
       >
         {icon && icon}
-        {selectedOption ? selectedOption.label : placeholder}
+        <span className='min-w-0 flex-1 truncate'>
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
         {!hideChevron && (
           <ChevronDownIcon
             className={cn(

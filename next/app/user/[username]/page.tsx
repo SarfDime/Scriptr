@@ -10,12 +10,7 @@ import {
   getProfileStats,
   getPublicProfileByUsername,
 } from '@/lib/api/profile-api'
-import {
-  getDisplayName,
-  getFacultyName,
-  getUniversityId,
-  getUniversityName,
-} from '@/lib/profile-display'
+import { getDisplayName } from '@/lib/profile-display'
 import { toScriptDetails } from '@/lib/script-display'
 
 /**
@@ -67,38 +62,29 @@ export default async function PublicUserProfilePage({
         />
       }
     >
-      <Box className='ui-cluster items-stretch'>
-        <ProfileCard
-          name={displayName}
-          role={profile.role}
-          location=''
-          bio=''
-          university={getUniversityName(profile)}
-          universitySlug={getUniversityId(profile)}
-          faculty={getFacultyName(profile)}
-          picture={profile.avatar_url ? { src: profile.avatar_url } : undefined}
+      <ProfileCard
+        name={displayName}
+        role={profile.role}
+        selectedFaculties={profile.selected_faculties}
+        selectedStudies={profile.selected_studies}
+        picture={profile.avatar_url ? { src: profile.avatar_url } : undefined}
+        className='grow'
+      />
+      <Box className='ui-cluster items-start'>
+        <ScriptsSection
+          scripts={toScriptDetails(profile.scripts)}
+          title={UI_STRINGS.scripts.authoredSectionTitle}
+          subtitle={UI_STRINGS.scripts.authoredSectionSubtitle}
           className='grow'
         />
       </Box>
-      <Box className='ui-stack'>
-        <Box className='ui-cluster items-start'>
-          <ScriptsSection
-            scripts={toScriptDetails(profile.scripts)}
-            title={UI_STRINGS.scripts.authoredSectionTitle}
-            subtitle={UI_STRINGS.scripts.authoredSectionSubtitle}
-            className='grow'
-          />
-        </Box>
-      </Box>
-      <Box className='ui-stack'>
-        <Box className='ui-cluster items-start'>
-          <ScriptsSection
-            scripts={toScriptDetails(profile.favorite_scripts)}
-            title={UI_STRINGS.scripts.favoritesSectionTitle}
-            subtitle={UI_STRINGS.scripts.favoritesSectionSubtitle}
-            className='grow'
-          />
-        </Box>
+      <Box className='ui-cluster items-start'>
+        <ScriptsSection
+          scripts={toScriptDetails(profile.favorite_scripts)}
+          title={UI_STRINGS.scripts.favoritesSectionTitle}
+          subtitle={UI_STRINGS.scripts.favoritesSectionSubtitle}
+          className='grow'
+        />
       </Box>
     </PageLayout>
   )

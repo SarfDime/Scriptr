@@ -63,13 +63,8 @@ export default async function StudyDetailPage({
               href={getAcademicPath({
                 type: 'faculty',
                 universitySlug:
-                  study.faculty.university?.slug ??
-                  study.faculty.university?._id ??
-                  routeParams.universitySlug,
-                facultySlug:
-                  study.faculty?.slug ??
-                  study.faculty?._id ??
-                  routeParams.facultySlug,
+                  study.faculty.university?.slug ?? routeParams.universitySlug,
+                facultySlug: study.faculty?.slug ?? routeParams.facultySlug,
               })}
               label={study.faculty.name}
             />
@@ -77,9 +72,7 @@ export default async function StudyDetailPage({
               href={getAcademicPath({
                 type: 'university',
                 universitySlug:
-                  study.faculty.university?.slug ??
-                  study.faculty.university?._id ??
-                  routeParams.universitySlug,
+                  study.faculty.university?.slug ?? routeParams.universitySlug,
               })}
               label={study.faculty.university.name}
               backLevel='twoBack'

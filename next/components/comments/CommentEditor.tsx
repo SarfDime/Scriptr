@@ -3,6 +3,7 @@
 import { COMMENT_STRINGS } from '@shared/strings/comments-strings'
 import dynamic from 'next/dynamic'
 import { Box } from '@/components/common/Box'
+import { RESTRICTED_EDITOR_OPTIONS } from '@/components/typography/portable-text/toolbar/editor-options'
 import { cn } from '@/lib/common-utils'
 import type { CommentEditorProps } from '@/types/components/comments/CommentThread.types'
 
@@ -25,13 +26,6 @@ const PortableTextEditorSection = dynamic(
   }
 )
 
-const COMMENT_EDITOR_OPTIONS = {
-  excludedStyles: ['h1', 'h2', 'h3', 'h4', 'h5', 'base', 'h6'],
-  showStyles: false,
-  showLists: false,
-  showAlignment: false,
-} as const
-
 /** The restricted rich-text editor used for both comments and replies. Remount
  * it (via `key`) to clear it. */
 export function CommentEditor({
@@ -48,7 +42,7 @@ export function CommentEditor({
       showActions={false}
       ariaLabel={ariaLabel}
       autoFocus={autoFocus}
-      editorOptions={COMMENT_EDITOR_OPTIONS}
+      editorOptions={RESTRICTED_EDITOR_OPTIONS}
       editorClassName={cn('min-h-40', className)}
     />
   )

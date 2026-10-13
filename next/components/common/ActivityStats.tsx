@@ -2,17 +2,13 @@ import Comment from '@sanity/icons/Comment'
 import DocumentText from '@sanity/icons/DocumentText'
 import Heart from '@sanity/icons/Heart'
 import { UI_STRINGS } from '@shared/config/strings'
-import { cn } from '@/lib/common-utils'
 import { Text } from '../typography/Text'
-import { Card } from '../ui/Card'
 import { Box } from './Box'
 import { Button } from './Button'
 import { SectionHeader } from './SectionHeader'
 
 interface ActivityStatsProps {
-  /** Omit for contexts where favorite data was not requested. Public profile
-   * responses intentionally include favorites through their dedicated
-   * server-side projection. */
+  /** Omit when favorite data was not requested. */
   savedCount?: number
   authoredCount: number
   commentCount: number
@@ -27,9 +23,37 @@ export const ActivityStats = ({
   title = UI_STRINGS.activity.title,
   subtitle = UI_STRINGS.activity.subtitle,
 }: ActivityStatsProps) => {
+  const stats = [
+    ...(savedCount === undefined
+      ? []
+      : [
+          {
+            key: 'saved',
+            icon: Heart,
+            count: savedCount,
+            label: UI_STRINGS.activity.savedScripts,
+            color: 'cp-danger',
+          },
+        ]),
+    {
+      key: 'authored',
+      icon: DocumentText,
+      count: authoredCount,
+      label: UI_STRINGS.activity.scriptsAuthored,
+      color: 'cp-brand',
+    },
+    {
+      key: 'comments',
+      icon: Comment,
+      count: commentCount,
+      label: UI_STRINGS.activity.helpfulComments,
+      color: 'cp-warning',
+    },
+  ]
+
   return (
     <Box as='section' className='p-4 ui-above-light'>
-      <Box className='ui-stack gap-5 p-4 ui-above-inside'>
+      <Box className='ui-stack gap-4 p-4 ui-above-inside'>
         <SectionHeader
           title={title}
           subtitle={subtitle}
@@ -39,36 +63,19 @@ export const ActivityStats = ({
             </Button>
           }
         />
-
-        <Box
-          className={cn(
-            'grid gap-3',
-            savedCount !== undefined ? 'md:grid-cols-3' : 'md:grid-cols-2'
-          )}
-        >
-          {savedCount !== undefined && (
-            <Card className='cp-danger p-5'>
-              <Heart />
-              <Text className='ui-stat'>{savedCount}</Text>
-              <Text className='ui-subtitle'>
-                {UI_STRINGS.activity.savedScripts}
-              </Text>
-            </Card>
-          )}
-          <Card className='cp-brand p-5'>
-            <DocumentText />
-            <Text className='ui-stat'>{authoredCount}</Text>
-            <Text className='ui-subtitle'>
-              {UI_STRINGS.activity.scriptsAuthored}
-            </Text>
-          </Card>
-          <Card className='cp-warning p-5'>
-            <Comment />
-            <Text className='ui-stat'>{commentCount}</Text>
-            <Text className='ui-subtitle'>
-              {UI_STRINGS.activity.helpfulComments}
-            </Text>
-          </Card>
+        <Box className='flex flex-wrap gap-2'>
+          {stats.map(({ key, icon: Icon, count, label, color }) => (
+            <Box
+              key={key}
+              className='ui-stack flex-[1_1_8rem] gap-1 rounded-md p-2'
+            >
+              <Box className='ui-cluster items-center gap-2'>
+                <Icon className={`${color} h-7 w-7 rounded-md p-1`} />
+                <Text className='ui-stat'>{count}</Text>
+              </Box>
+              <Text className='ui-subtitle'>{label}</Text>
+            </Box>
+          ))}
         </Box>
       </Box>
     </Box>

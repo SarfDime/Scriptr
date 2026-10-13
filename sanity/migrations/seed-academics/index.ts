@@ -1,4 +1,4 @@
-import { create, createIfNotExists, defineMigration } from 'sanity/migrate'
+import { create, defineMigration } from 'sanity/migrate'
 import type {
   SeedFaculty,
   SeedPerson,
@@ -22,19 +22,19 @@ export default defineMigration({
     const client = context.client.withConfig({ apiVersion: '2026-08-08' })
 
     for (const person of persons) {
-      yield createIfNotExists(await personToDoc(person, client))
+      yield create(await personToDoc(person, client))
     }
 
     for (const university of universities) {
-      yield createIfNotExists(universityToDoc(university))
+      yield create(universityToDoc(university))
     }
 
     for (const faculty of faculties) {
-      yield createIfNotExists(facultyToDoc(faculty))
+      yield create(facultyToDoc(faculty))
     }
 
     for (const professor of professors) {
-      yield createIfNotExists(await professorToDoc(professor, client))
+      yield create(professorToDoc(professor))
     }
 
     for (const subject of subjects) {
@@ -77,7 +77,7 @@ function facultyToDoc(seed: SeedFaculty) {
   }
 }
 
-async function professorToDoc(seed: SeedProfessor, client: AssetUploadClient) {
+function professorToDoc(seed: SeedProfessor) {
   return {
     _type: 'professor' as const,
     name: seed.name,
@@ -87,7 +87,6 @@ async function professorToDoc(seed: SeedProfessor, client: AssetUploadClient) {
     telephone: seed.telephone,
     email: seed.email,
     website: seed.website,
-    picture: await uploadImage(client, seed.imageUrl),
   }
 }
 

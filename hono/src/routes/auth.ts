@@ -4,6 +4,7 @@ import type {
   CallbackResponse,
   LoginResponse,
   LogoutResponse,
+  RegisterConflictResponse,
   RegisterResponse,
   RegistrationAcademicProfile,
   SessionResponse,
@@ -331,7 +332,10 @@ auth.post('/register', async (c) => {
   }
 
   if (existingUsername) {
-    return c.json({ error: 'Username already taken' }, 409)
+    return c.json<RegisterConflictResponse>(
+      { error: 'Username already taken', field: 'username' },
+      409
+    )
   }
 
   const origin = c.req.header('origin')
@@ -348,13 +352,26 @@ auth.post('/register', async (c) => {
     },
   })
 
+  const emailTaken: RegisterConflictResponse = {
+    error: 'An account with this email already exists',
+    field: 'email',
+  }
+
+  if (error?.code === 'user_already_exists') {
+    return c.json<RegisterConflictResponse>(emailTaken, 409)
+  }
+
   if (error) {
     return c.json({ error: error.message }, 400)
   }
 
-  const isNewUser = data.user?.identities?.length !== 0
+  // With email confirmation enabled Supabase hides duplicates: instead of an
+  // error it returns an obfuscated user with no identities.
+  if (data.user?.identities?.length === 0) {
+    return c.json<RegisterConflictResponse>(emailTaken, 409)
+  }
 
-  if (data.user?.id && isNewUser && academicProfile) {
+  if (data.user?.id && academicProfile) {
     try {
       await ensureProfile(
         c,
@@ -380,7 +397,7 @@ auth.post('/register', async (c) => {
     }
   }
 
-  if (data.user?.id && isNewUser && !academicProfile) {
+  if (data.user?.id && !academicProfile) {
     try {
       await ensureProfile(
         c,
@@ -405,10 +422,7 @@ auth.post('/register', async (c) => {
   // The profile will be created automatically by our database trigger
   return c.json<RegisterResponse>({
     success: true,
-    message:
-      data.user?.identities?.length === 0
-        ? 'User already exists'
-        : 'Registration successful. Please check your email.',
+    message: 'Registration successful. Please check your email.',
     user: {
       id: data.user?.id,
       email: data.user?.email,

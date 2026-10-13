@@ -3,6 +3,7 @@
 import { filterByWeight } from '@shared/utils/array-utils/filter'
 import { fuzzySearch } from '@shared/utils/array-utils/search'
 import { type SortRule, sortArray } from '@shared/utils/array-utils/sort'
+import { portableTextToPlainText } from '@shared/utils/portable-text.utils'
 import { useState } from 'react'
 import type {
   ScriptDetail,
@@ -37,11 +38,23 @@ export const useScriptExplorer = (scripts: Array<ScriptDetail>) => {
       )
     : scripts
 
-  const matched = fuzzySearch(bySubject, query, [
-    { key: 'title', weight: 3 },
-    { key: 'author', weight: 1.5 },
-    { key: 'tag', weight: 1 },
-  ])
+  // Script titles are Portable Text arrays, not strings. Flatten them before
+  // fuzzy matching so title searches compare against the visible title text.
+  const matchedIds = new Set(
+    fuzzySearch(
+      bySubject.map((script) => ({
+        ...script,
+        searchableTitle: portableTextToPlainText(script.title),
+      })),
+      query,
+      [
+        { key: 'searchableTitle', weight: 3 },
+        { key: 'author', weight: 1.5 },
+        { key: 'tag', weight: 1 },
+      ]
+    ).map((script) => script.id)
+  )
+  const matched = bySubject.filter((script) => matchedIds.has(script.id))
 
   const visibleScripts = sortArray(matched, SORT_RULES[sort])
 

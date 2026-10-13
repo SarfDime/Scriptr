@@ -10,6 +10,21 @@ import type { ProfileSubjectStatus, UserRole } from '../types/profile.types'
 import { generatePath } from './common-utils'
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_-]+$/
+const MIN_PASSWORD_LENGTH = 8
+// Mirrors Supabase Auth's "lowercase, uppercase, digits and symbols" password
+// requirement (including its exact symbol set). Order = order errors surface.
+const PASSWORD_RULES = [
+  { pattern: /[a-z]/, message: 'Password must include a lowercase letter' },
+  { pattern: /[A-Z]/, message: 'Password must include an uppercase letter' },
+  { pattern: /[0-9]/, message: 'Password must include a digit' },
+  {
+    pattern: /[!@#$%^&*()_+\-=[\]{};':"\\|<>?,./`~]/,
+    message: 'Password must include a symbol, e.g. ! @ # $ %',
+  },
+] as const
+const FULL_NAME_CHARACTERS = /^[\p{L} ]+$/u
+const FULL_NAME_CAPITAL_START = /^\p{Lu}/u
+const MIN_FULL_NAME_LETTERS = 4
 const DISPOSABLE_EMAIL_DOMAINS = new Set([
   '10minutemail.com',
   'mailinator.com',
@@ -44,6 +59,46 @@ function validateUsername(username: unknown): string | null {
     return 'Username can only contain letters, numbers, hyphens, and underscores'
   }
   return null
+}
+
+function validateFullName(fullName: unknown): string | null {
+  if (typeof fullName !== 'string' || fullName.trim() === '') {
+    return 'Full name is required'
+  }
+
+  const normalizedFullName = fullName.trim()
+  if (!FULL_NAME_CHARACTERS.test(normalizedFullName)) {
+    return 'Full name can only contain letters and spaces'
+  }
+  if (!FULL_NAME_CAPITAL_START.test(normalizedFullName)) {
+    return 'Full name must start with a capital letter'
+  }
+  // Every remaining character is a letter or a space at this point.
+  if (normalizedFullName.replace(/ /g, '').length < MIN_FULL_NAME_LETTERS) {
+    return `Full name must contain at least ${MIN_FULL_NAME_LETTERS} letters`
+  }
+  return null
+}
+
+/** Presence check only — used by login, which must never judge strength. */
+function validatePassword(password: unknown): string | null {
+  if (typeof password !== 'string' || password.length === 0) {
+    return 'Password is required'
+  }
+  return null
+}
+
+/** Rules for choosing a password at registration. */
+function validateNewPassword(password: unknown): string | null {
+  if (typeof password !== 'string' || password.length === 0) {
+    return 'Password is required'
+  }
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return `Password must be at least ${MIN_PASSWORD_LENGTH} characters`
+  }
+  return (
+    PASSWORD_RULES.find((rule) => !rule.pattern.test(password))?.message ?? null
+  )
 }
 
 function validateEmailAddress(email: unknown): string | null {
@@ -164,5 +219,8 @@ export {
   isScriptFileInput,
   isUserRole,
   validateEmailAddress,
+  validateFullName,
+  validateNewPassword,
+  validatePassword,
   validateUsername,
 }

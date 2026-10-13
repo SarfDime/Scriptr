@@ -20,6 +20,7 @@ import type { PortableTextEditorOptions } from './schema'
  */
 export const Toolbar = ({
   excludedStyles = [],
+  excludedColors = [],
   showStyles = true,
   showLists = true,
   showAlignment = true,
@@ -39,7 +40,9 @@ export const Toolbar = ({
     <DecoratorDropdown
       label={PT_STRINGS.toolbar.color.label}
       title={PT_STRINGS.toolbar.color.title}
-      names={COLOR_DECORATORS.map((d) => d.name)}
+      names={COLOR_DECORATORS.filter(
+        (color) => !excludedColors.includes(color.name)
+      ).map((color) => color.name)}
       fallbackIcon={COLOR_ICON}
     />
     <DecoratorDropdown

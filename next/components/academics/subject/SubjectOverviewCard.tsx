@@ -5,6 +5,7 @@ import { Text } from '@/components/typography/Text'
 import { AdministratorList } from '@/components/ui/AdministratorList'
 import { Card } from '@/components/ui/Card'
 import { Divider } from '@/components/ui/Divider'
+import { getAcademicPath } from '@/lib/academic-routes'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn, createPersonSummaries } from '@/lib/common-utils'
 import type { SubjectDetail } from '@/types/academics/subject.types'
@@ -18,12 +19,44 @@ export const SubjectOverviewCard = ({
   const color = getColorPalette({ type: 'seed', value: _id, variant: 'nb' })
   const colorBorder = getColorPalette({ type: 'seed', value: _id })
 
-  const administrators = createPersonSummaries(
-    { target: professors, title: 'Professor' },
+  const faculty = study?.faculty
+  const university = faculty?.university
+  const universitySlug = university?.slug ?? university?._id ?? ''
+  const facultySlug = faculty?.slug ?? faculty?._id ?? ''
+  const studySlug = study?.slug ?? study?._id ?? ''
 
-    { target: study, title: 'Study' },
-    { target: study?.faculty, title: 'Faculty' },
-    { target: study?.faculty?.university, title: 'University' }
+  const administrators = createPersonSummaries(
+    {
+      target: professors,
+      title: 'Professor',
+      getHref: (professor) =>
+        getAcademicPath({
+          type: 'professor',
+          professorSlug: professor.slug ?? professor._id,
+        }),
+    },
+    {
+      target: study,
+      title: 'Study',
+      getHref: () =>
+        getAcademicPath({
+          type: 'study',
+          universitySlug,
+          facultySlug,
+          studySlug,
+        }),
+    },
+    {
+      target: faculty,
+      title: 'Faculty',
+      getHref: () =>
+        getAcademicPath({ type: 'faculty', universitySlug, facultySlug }),
+    },
+    {
+      target: university,
+      title: 'University',
+      getHref: () => getAcademicPath({ type: 'university', universitySlug }),
+    }
   )
 
   return (

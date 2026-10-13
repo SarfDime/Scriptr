@@ -14,14 +14,10 @@ export type RegisterFormProps = {
 
 export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
   const {
-    fullName,
-    setFullName,
-    username,
-    setUsername,
-    email,
-    setEmail,
-    password,
-    setPassword,
+    values,
+    setField,
+    touch,
+    fields,
     isBusy,
     canSubmit,
     state,
@@ -52,11 +48,14 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
             autoComplete: 'name',
             required: true,
             disabled: isBusy,
+            'aria-invalid': fields.fullName.invalid,
+            onBlur: () => touch('fullName'),
           }}
           labelProps={{ htmlFor: 'register-full-name' }}
-          inputVal={fullName}
-          inputOnChange={(event) => setFullName(event.target.value)}
+          inputVal={values.fullName}
+          inputOnChange={(event) => setField('fullName', event.target.value)}
           disabled={isBusy}
+          {...fields.fullName}
         />
 
         <InputWrapper
@@ -67,11 +66,14 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
             autoComplete: 'username',
             required: true,
             disabled: isBusy,
+            'aria-invalid': fields.username.invalid,
+            onBlur: () => touch('username'),
           }}
           labelProps={{ htmlFor: 'register-username' }}
-          inputVal={username}
-          inputOnChange={(event) => setUsername(event.target.value)}
+          inputVal={values.username}
+          inputOnChange={(event) => setField('username', event.target.value)}
           disabled={isBusy}
+          {...fields.username}
         />
 
         <InputWrapper
@@ -82,11 +84,14 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
             autoComplete: 'email',
             required: true,
             disabled: isBusy,
+            'aria-invalid': fields.email.invalid,
+            onBlur: () => touch('email'),
           }}
           labelProps={{ htmlFor: 'register-email' }}
-          inputVal={email}
-          inputOnChange={(event) => setEmail(event.target.value)}
+          inputVal={values.email}
+          inputOnChange={(event) => setField('email', event.target.value)}
           disabled={isBusy}
+          {...fields.email}
         />
 
         <InputWrapper
@@ -97,11 +102,14 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
             autoComplete: 'new-password',
             required: true,
             disabled: isBusy,
+            'aria-invalid': fields.password.invalid,
+            onBlur: () => touch('password'),
           }}
           labelProps={{ htmlFor: 'register-password' }}
-          inputVal={password}
-          inputOnChange={(event) => setPassword(event.target.value)}
+          inputVal={values.password}
+          inputOnChange={(event) => setField('password', event.target.value)}
           disabled={isBusy}
+          {...fields.password}
         />
 
         {isBusy && (

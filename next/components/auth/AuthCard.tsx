@@ -8,16 +8,17 @@ import { NextLink } from '@/components/common/NextLink'
 import { Text } from '@/components/typography/Text'
 import { Title } from '@/components/typography/Title'
 import { Card } from '@/components/ui/Card'
+import { cn } from '@/lib/common-utils'
 import { useSession } from '@/providers/SessionProvider'
 import { LoginForm } from './LoginForm'
 import { RegisterForm } from './RegisterForm'
 
 // Below `md` the card fills the screen under the header: no frame, rounding
 // or shadow. From `md` up it is the usual framed card.
-const AUTH_CARD_CLASS = [
+const AUTH_CARD_CLASS = cn(
   'w-full max-w-md p-6 ui-stack gap-4 ui-above',
-  'max-md:max-w-none max-md:flex-1 max-md:rounded-none max-md:border-0 max-md:shadow-none',
-].join(' ')
+  'max-md:max-w-none max-md:flex-1 max-md:rounded-none max-md:border-0 max-md:shadow-none'
+)
 
 /**
  * The whole card is a Client Component rather than just the forms: its

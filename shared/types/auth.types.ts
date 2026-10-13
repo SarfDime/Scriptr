@@ -43,6 +43,15 @@ export type RegisterResponse = {
   session: unknown
 }
 
+/** Which unique field a register `409` is about. */
+export type RegisterConflictField = 'username' | 'email'
+
+/** Body of `POST /api/auth/register`'s `409`, so the client can flag the right field. */
+export type RegisterConflictResponse = {
+  error: string
+  field: RegisterConflictField
+}
+
 // ── POST /api/auth/login ───────────────────────────────────────────────
 
 export type LoginResponse = {

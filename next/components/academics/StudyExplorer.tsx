@@ -1,6 +1,3 @@
-'use client'
-
-import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { EntityCard } from '@/components/common/EntityCard'
 import { SectionHeader } from '@/components/common/SectionHeader'
@@ -10,28 +7,28 @@ import { getAcademicPath } from '@/lib/academic-routes'
 import { compactStats } from '@/lib/common-utils'
 import type { MinimalStudy } from '@/types/academics/study.types'
 
-type FacultySubjectsExplorerProps = {
+type StudyExplorerProps = {
   studies: Array<MinimalStudy>
+  title: string
+  emptyMessage: string
 }
 
-export const FacultyStudyExplorer = ({
+export const StudyExplorer = ({
   studies,
-}: FacultySubjectsExplorerProps) => {
+  title,
+  emptyMessage,
+}: StudyExplorerProps) => {
   return (
     <Card className='ui-stack ui-above'>
-      <SectionHeader
-        title={UI_STRINGS.academics.studiesTitle}
-        count={studies.length}
-      />
+      <SectionHeader title={title} count={studies.length} />
 
       {studies.length > 0 ? (
         <Box className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
           {studies.map((study) => {
-            const universitySlug =
-              study.faculty?.university?.slug ?? study.faculty?.university?._id
-            const facultySlug = study.faculty?.slug ?? study.faculty?._id
+            const universitySlug = study.faculty?.university?.slug
+            const facultySlug = study.faculty?.slug
 
-            if (!universitySlug || !facultySlug) return null
+            if (!universitySlug || !facultySlug || !study.slug) return null
 
             return (
               <EntityCard
@@ -40,7 +37,7 @@ export const FacultyStudyExplorer = ({
                   type: 'study',
                   universitySlug,
                   facultySlug,
-                  studySlug: study.slug ?? study._id,
+                  studySlug: study.slug,
                 })}
                 title={study.name}
                 stats={compactStats({
@@ -53,9 +50,7 @@ export const FacultyStudyExplorer = ({
           })}
         </Box>
       ) : (
-        <Text className='ui-caption ui-above-inside'>
-          {UI_STRINGS.academics.noStudies}
-        </Text>
+        <Text className='ui-caption ui-above-inside'>{emptyMessage}</Text>
       )}
     </Card>
   )

@@ -15,6 +15,7 @@ const IMAGE_SIZES = {
   FILE_PREVIEW: '(min-width: 768px) 70vw, 100vw',
   SCRIPT_THUMBNAIL: '320px',
   OVERVIEW_CARD: '(min-width: 1024px) 50vw, 100vw',
+  LARGE_AVATAR: '(min-width: 1024px) 50vw, 100vw',
   AVATAR: '4rem',
   PORTABLE_TEXT_IMAGE:
     '(max-width: 480px) 300px, (max-width: 768px) 420px, (max-width: 1350px) 550px, 700px',

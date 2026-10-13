@@ -45,6 +45,19 @@ const academicSections: Array<SectionConfig> = [
     schemaType: 'professor',
     category: 'people',
     icon: Users,
+    filters: [
+      { type: 'divider', title: 'DB' },
+      {
+        title: 'Connected',
+        filter: '_type == "professor" && dbId != null',
+        icon: createColoredIcon(Documents, 'info'),
+      },
+      {
+        title: 'Not Connected',
+        filter: '_type == "professor" && dbId == null',
+        icon: createColoredIcon(Controls, 'interactive'),
+      },
+    ],
   },
   {
     title: 'Faculty',

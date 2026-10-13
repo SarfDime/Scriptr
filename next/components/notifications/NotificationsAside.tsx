@@ -90,7 +90,7 @@ export const NotificationsAside = () => {
       hideBackdrop={true}
       dialogProps={{
         className: cn(
-          'fixed top-16 z-50 ui-stack h-full w-full max-w-sm overflow-y-auto md:min-w-[unset] md:w-full',
+          'fixed top-16 z-50 ui-stack h-full w-full max-w-full md:max-w-sm overflow-y-auto md:min-w-[unset] md:w-full',
           trayOpen && 'transition-transform transform translate-x-0',
           !trayOpen && 'transition-transform transform translate-x-full',
           'ui-above rounded-none border-r-0 border-b-0 border-t-0'

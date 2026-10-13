@@ -6,6 +6,7 @@ import {
 import {
   ALIGNMENT_DECORATORS,
   COLOR_DECORATORS,
+  type ColorsType,
   DEFAULT_DECORATOR_NAMES,
   FONT_SIZE_STYLE_CLASSES,
   FONT_SIZE_STYLES,
@@ -16,6 +17,7 @@ import {
 
 export type PortableTextEditorOptions = {
   excludedStyles?: ReadonlyArray<FontSizeType>
+  excludedColors?: ReadonlyArray<ColorsType>
   showStyles?: boolean
   showLists?: boolean
   showAlignment?: boolean
@@ -102,54 +104,61 @@ const createTextBlock = ({
 //   },
 // })
 
-const decoratorRenderers = {
-  ...Object.fromEntries(
-    DEFAULT_DECORATOR_NAMES.map((name) => [
-      name,
-      defineDecorator({
-        type: name,
-        render: ({ children }) => {
-          if (name === 'em') return <em>{children}</em>
-          if (name === 'underline') return <u>{children}</u>
-          return <s>{children}</s>
-        },
-      }),
-    ])
-  ),
-  ...Object.fromEntries(
-    COLOR_DECORATORS.map(({ name }) => [
-      name,
-      defineDecorator({
-        type: name,
-        render: ({ children }) => {
-          const className = {
-            brand: 'text-brand',
-            'brand-light': 'text-brand-400',
-            muted: 'text-grey',
-            white: 'text-background',
-            dark: 'text-fg',
-          }[name]
-          return <span className={className}>{children}</span>
-        },
-      }),
-    ])
-  ),
-  ...Object.fromEntries(
-    WEIGHT_DECORATORS.map(({ name }) => [
-      name,
-      defineDecorator({
-        type: name,
-        render: ({ children }) => {
-          const className = {
-            semibold: 'font-semibold',
-            strong: 'font-bold',
-            black: 'font-black',
-          }[name]
-          return <strong className={className}>{children}</strong>
-        },
-      }),
-    ])
-  ),
+const decoratorRenderers = ({
+  excludedColors,
+}: Pick<PortableTextEditorOptions, 'excludedColors'>) => {
+  const colors = COLOR_DECORATORS.filter(
+    (color) => !excludedColors?.includes(color.name)
+  )
+  return {
+    ...Object.fromEntries(
+      DEFAULT_DECORATOR_NAMES.map((name) => [
+        name,
+        defineDecorator({
+          type: name,
+          render: ({ children }) => {
+            if (name === 'em') return <em>{children}</em>
+            if (name === 'underline') return <u>{children}</u>
+            return <s>{children}</s>
+          },
+        }),
+      ])
+    ),
+    ...Object.fromEntries(
+      colors.map(({ name }) => [
+        name,
+        defineDecorator({
+          type: name,
+          render: ({ children }) => {
+            const className = {
+              brand: 'text-brand',
+              'brand-light': 'text-brand-400',
+              muted: 'text-grey',
+              white: 'text-background',
+              dark: 'text-fg',
+            }[name]
+            return <span className={className}>{children}</span>
+          },
+        }),
+      ])
+    ),
+    ...Object.fromEntries(
+      WEIGHT_DECORATORS.map(({ name }) => [
+        name,
+        defineDecorator({
+          type: name,
+          render: ({ children }) => {
+            const className = {
+              semibold: 'font-semibold',
+              strong: 'font-bold',
+              black: 'font-black',
+            }[name]
+            return <strong className={className}>{children}</strong>
+          },
+        }),
+      ])
+    ),
+  }
 }
 
 export const createPortableTextEditorConfig = (
@@ -163,6 +172,10 @@ export const createPortableTextEditorConfig = (
       (style.name === 'normal' || !excludedStyles.includes(style.name))
   )
 
+  const excludedColors = options.excludedColors ?? []
+  const colors = COLOR_DECORATORS.filter(
+    (color) => !excludedColors.includes(color.name)
+  )
   return {
     schemaDefinition: defineSchema({
       block: {
@@ -170,7 +183,7 @@ export const createPortableTextEditorConfig = (
       },
       decorators: [
         ...DEFAULT_DECORATOR_NAMES.map((name) => ({ name })),
-        ...COLOR_DECORATORS.map((d) => ({ name: d.name })),
+        ...colors.map((d) => ({ name: d.name })),
         ...WEIGHT_DECORATORS.map((d) => ({ name: d.name })),
         { name: 'highlight-newline' },
       ],
@@ -182,7 +195,7 @@ export const createPortableTextEditorConfig = (
     }),
     editorNodes: [
       createTextBlock({ showAlignment }),
-      ...Object.values(decoratorRenderers),
+      ...Object.values(decoratorRenderers({ excludedColors })),
     ],
   }
 }

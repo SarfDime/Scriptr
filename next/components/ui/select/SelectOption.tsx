@@ -23,12 +23,12 @@ export const SelectOption = <T,>({
         isActive={id === selectedId}
         onClick={() => handleSelect?.(option)}
         className={cn(
-          'button text text-fg relative w-full justify-start cursor-pointer select-none gap-2 rounded-sm px-2.5 py-2.5 text-left',
+          'button text text-fg relative w-full min-w-0 justify-start cursor-pointer select-none gap-2 rounded-sm px-2.5 py-2.5 text-left',
           buttonProps?.className
         )}
       >
         {icon}
-        <Text className='truncate'>{label}</Text>
+        <Text className='min-w-0 flex-1 truncate'>{label}</Text>
       </Button>
     </Box>
   )

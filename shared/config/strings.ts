@@ -148,6 +148,10 @@ export const UI_STRINGS = {
     },
   },
   profile: {
+    universities: 'Universities',
+    faculties: 'Faculties',
+    studies: 'Studies',
+    noAcademicAffiliations: 'No academic affiliations added.',
     loadingLabel: 'Loading your profile…',
     loadError: `We couldn't load your profile. Please try again.`,
     editProfileLabel: 'Edit profile',
@@ -208,6 +212,10 @@ export const UI_STRINGS = {
       passwordLabel: 'Password',
       submitButtonLabel: 'Create account',
       switchToLogin: 'Already have an account? Sign in',
+      fieldErrors: {
+        usernameTaken: 'This username is already taken',
+        emailTaken: 'An account with this email already exists',
+      },
       statuses: {
         submitting: 'Creating your account…',
         errorTitle: 'Could not create account',

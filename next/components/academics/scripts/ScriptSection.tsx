@@ -42,7 +42,7 @@ export const ScriptsSection = ({
   return (
     <Box
       as='section'
-      className={cn('ui-stack gap-4 ui-above p-4', className)}
+      className={cn('ui-stack ui-above h-fit', className)}
       {...rest}
     >
       <SectionHeader
@@ -51,7 +51,7 @@ export const ScriptsSection = ({
         count={visibleScripts.length}
       />
 
-      <Box className='ui-cluster items-start justify-between gap-3 p-[0.1px]'>
+      <Box className='ui-cluster items-stretch justify-between gap-3'>
         <SearchBar
           inputVal={query}
           inputOnChange={(event) => setQuery(event.target.value)}

@@ -1,12 +1,9 @@
 'use client'
 
-import AddCircle from '@sanity/icons/AddCircle'
 import Bell from '@sanity/icons/Bell'
-import { UI_STRINGS } from '@shared/config/strings'
 import { useNotifications } from '@/providers/notification/NotificationProvider'
 import { Box } from '../common/Box'
 import { Button } from '../common/Button'
-import { Text } from '../typography/Text'
 import { Badge } from '../ui/Badge'
 
 export const HeaderActions = () => {
@@ -28,10 +25,11 @@ export const HeaderActions = () => {
           </Badge>
         )}
       </Button>
-      <Button className='button button-sm basic gap-2 border border-grey-300 px-3 py-2'>
+      {/* TODO: Decide if want to keep this */}
+      {/* <Button className='button button-sm basic gap-2 border border-grey-300 px-3 py-2'>
         <AddCircle />
         <Text>{UI_STRINGS.navigation.newScript}</Text>
-      </Button>
+      </Button> */}
     </Box>
   )
 }
