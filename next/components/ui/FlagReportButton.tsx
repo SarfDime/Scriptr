@@ -37,7 +37,7 @@ export function FlagReportButton({
   targetId,
   canReport = true,
   triggerLabel = UI_STRINGS.flags.report,
-  triggerClassName = 'button warning gap-1.5',
+  triggerClassName = 'button button-sm cp-warning-int',
 }: FlagReportButtonProps) {
   const [reason, setReason] = useState('')
   const [isOpen, setIsOpen] = useState(false)

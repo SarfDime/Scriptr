@@ -35,7 +35,9 @@ export const loadScriptDetailPage = async (
     await Promise.all([
       getScriptVoteStats(scriptId),
       getScriptComments(scriptId, cookieHeader),
-      cookieHeader ? getMyScriptVote(scriptId, cookieHeader) : null,
+      cookieHeader
+        ? getMyScriptVote(scriptId, cookieHeader).catch(() => null)
+        : null,
       // Non-critical: a failed lookup must not take the page down, it just
       // renders the button as unsaved.
       cookieHeader

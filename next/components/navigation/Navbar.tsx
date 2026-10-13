@@ -58,9 +58,7 @@ export const NavBar = ({ navItems }: NavMenuType) => (
         </NavToggle>
       </Box>
 
-      <Box className='ui-stack gap-3'>
-        <NavigationLinks navItems={navItems} />
-      </Box>
+      <NavigationLinks navItems={navItems} />
 
       <Divider />
 

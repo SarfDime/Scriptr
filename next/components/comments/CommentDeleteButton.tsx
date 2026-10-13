@@ -21,7 +21,7 @@ export function CommentDeleteButton({ commentId }: { commentId: string }) {
         <Button
           onClick={open}
           disabled={isDeleting}
-          className='button subtle gap-1.5 p-2 text-danger-600'
+          className='button button-sm cp-danger-int'
         >
           <TrashIcon />
           <Text className='text-xs'>{COMMENT_STRINGS.actions.delete}</Text>

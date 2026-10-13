@@ -59,7 +59,7 @@ export function CommentActions({
 
       <Box className='ui-cluster items-center gap-3'>
         {canManage && (
-          <Button onClick={onEdit} className='button subtle button-sm gap-1.5'>
+          <Button onClick={onEdit} className='button subtle button-sm'>
             <EditIcon />
             <Text className='text-xs'>{COMMENT_STRINGS.actions.edit}</Text>
           </Button>
@@ -68,21 +68,22 @@ export function CommentActions({
           onClick={onToggleReply}
           aria-expanded={isReplyOpen}
           className={cn(
-            'button subtle button-sm gap-1.5',
-            isReplyOpen && 'text-brand'
+            'button button-sm',
+            isReplyOpen ? 'cp-brand-int' : 'subtle'
           )}
         >
           <ReplyIcon />
           <Text className='text-xs'>{COMMENT_STRINGS.reply.action}</Text>
         </Button>
 
-        <FlagReportButton
-          targetType='comment'
-          targetId={comment.id}
-          canReport={!isAuthor}
-          triggerLabel={COMMENT_STRINGS.actions.report}
-          triggerClassName='button button-sm subtle gap-1.5'
-        />
+        {!isAuthor && (
+          <FlagReportButton
+            targetType='comment'
+            targetId={comment.id}
+            canReport={!isAuthor}
+            triggerLabel={COMMENT_STRINGS.actions.report}
+          />
+        )}
 
         {canManage && <CommentDeleteButton commentId={comment.id} />}
       </Box>

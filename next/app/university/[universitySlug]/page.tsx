@@ -2,6 +2,7 @@ import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { EntityCard } from '@/components/common/EntityCard'
 import { NextImage } from '@/components/common/NextImage'
+import { NextLink } from '@/components/common/NextLink'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { PageLayout } from '@/components/layout/PageLayout'
 import { PortableTextContent } from '@/components/typography/PortableTextContent'
@@ -69,28 +70,33 @@ export default async function UniversityDetailPage({
             university.telephone ||
             university.email ||
             university.website) && (
-            <Card className='p-6 ui-stack gap-3'>
+            <Card className='ui-stack ui-above'>
               <SectionHeader as='h3' title='Contact & Location' />
               {university.streetAddress && (
-                <Box className='ui-stack gap-0.5'>
+                <Box className='ui-stack gap-0.5 ui-above-inside'>
                   <Text className='ui-label'>Address</Text>
                   <Text className='ui-body'>{university.streetAddress}</Text>
                 </Box>
               )}
               {university.telephone && (
-                <Box className='ui-stack gap-0.5'>
+                <Box className='ui-stack gap-0.5 ui-above-inside'>
                   <Text className='ui-label'>Phone</Text>
                   <Text className='ui-body'>{university.telephone}</Text>
                 </Box>
               )}
               {university.email && (
-                <Box className='ui-stack gap-0.5'>
+                <Box className='ui-stack gap-0.5 ui-above-inside'>
                   <Text className='ui-label'>Email</Text>
-                  <Text className='ui-body'>{university.email}</Text>
+                  <NextLink
+                    href={`mailto:${university.email}`}
+                    className='ui-body w-fit'
+                  >
+                    {university.email}
+                  </NextLink>
                 </Box>
               )}
               {university.website && (
-                <Box className='ui-stack gap-0.5'>
+                <Box className='ui-stack gap-0.5 ui-above-inside '>
                   <Text className='ui-label'>Website</Text>
                   <a
                     href={university.website}
@@ -107,10 +113,10 @@ export default async function UniversityDetailPage({
 
           {(university.rector ||
             (university.viceRectors && university.viceRectors.length > 0)) && (
-            <Card className='p-6 ui-stack gap-4'>
+            <Card className='ui-stack ui-above'>
               <SectionHeader as='h3' title='Administration' />
               {university.rector && (
-                <Box className='ui-stack gap-0.5'>
+                <Box className='ui-stack gap-0.5 ui-above-inside'>
                   <Text className='ui-label'>Rector</Text>
                   <Text className='ui-body-strong'>
                     {university.rector.name}
@@ -123,7 +129,7 @@ export default async function UniversityDetailPage({
                 </Box>
               )}
               {university.viceRectors && university.viceRectors.length > 0 && (
-                <Box className='ui-stack gap-2'>
+                <Box className='ui-stack ui-above-inside'>
                   <Text className='ui-label'>Vice Rectors</Text>
                   {university.viceRectors.map((vr) => (
                     <Box key={vr._id} className='ui-stack gap-0.5'>
@@ -141,13 +147,15 @@ export default async function UniversityDetailPage({
       }
     >
       {university.description && (
-        <Card className='p-6 ui-stack gap-3'>
+        <Card className='ui-stack ui-above'>
           <SectionHeader title={`About ${university.name}`} />
-          <PortableTextContent>{university.description}</PortableTextContent>
+          <PortableTextContent className='ui-above-inside'>
+            {university.description}
+          </PortableTextContent>
         </Card>
       )}
 
-      <Card className='p-0 border-0 ui-stack gap-4'>
+      <Card className='ui-stack ui-above'>
         <SectionHeader
           title='Faculties'
           count={`${university.faculties?.length ?? 0} Faculties`}
@@ -163,6 +171,7 @@ export default async function UniversityDetailPage({
                   universitySlug: routeParams.universitySlug,
                   facultySlug: faculty.slug ?? faculty._id,
                 })}
+                className='ui-above-inside'
                 title={faculty.name}
                 stats={compactStats({
                   Studies: faculty.studyCount,
