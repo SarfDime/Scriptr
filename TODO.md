@@ -18,3 +18,8 @@ Concrete work (bugs, features, cleanups with a clear outcome) is tracked in
 - [ ] Christmas background and effects for the Christmas season.
 - [ ] Aurora background and effects for the aurora season.
 - [ ] "Simple mode" button next to the theme toggle that disables complex effects (blur, transparency, animations, background).
+
+## Next
+- [ ] Add sitemap
+- [ ] Add robots
+- [ ] Add other useful seo routes if needed
