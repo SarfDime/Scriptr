@@ -202,24 +202,12 @@ export type GalaxyDot = {
   alpha: number
   tone: number // 0 = warm, 1 = warm/accent mix, 2 = accent, 3 = cool, 4 = pure white
   dark?: boolean // dust: erases light instead of adding it
-  layer?: number // index into Galaxy.layers (default 0)
-}
-
-/**
- * The galaxy is drawn as a few stacked sprites. Layer 0 is the static glow; each
- * other layer holds a share of the stars and brightens and dims on its own, which
- * makes the stars twinkle without animating each one.
- */
-export type GalaxyLayer = {
-  sprite: HTMLCanvasElement | null
-  rate: number // rad/ms
-  phase: number
-  amount: number // brightness swings between 1 - amount and 1
+  layer?: number // which group it is painted in while building (0 = nebula, the default)
 }
 
 export type Galaxy = {
   dots: Array<GalaxyDot>
-  layers: Array<GalaxyLayer>
+  sprite: HTMLCanvasElement | null // painted in layers, then flattened into this one
   width: number // on-screen length in px
   height: number // on-screen height in px
   spriteScale: number // sprite px per screen px (below 1 for very large galaxies)

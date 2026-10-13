@@ -18,7 +18,7 @@ export const FacultyStudyExplorer = ({
   studies,
 }: FacultySubjectsExplorerProps) => {
   return (
-    <Card className='p-0 border-0 ui-stack gap-4'>
+    <Card className='ui-stack ui-above'>
       <SectionHeader
         title={UI_STRINGS.academics.studiesTitle}
         count={studies.length}
@@ -47,12 +47,15 @@ export const FacultyStudyExplorer = ({
                   Subjects: study.subjectCount,
                   Professors: study.professorCount,
                 })}
+                className='ui-above-inside'
               />
             )
           })}
         </Box>
       ) : (
-        <Text className='ui-caption'>{UI_STRINGS.academics.noStudies}</Text>
+        <Text className='ui-caption ui-above-inside'>
+          {UI_STRINGS.academics.noStudies}
+        </Text>
       )}
     </Card>
   )

@@ -72,7 +72,11 @@ export default defineConfig({
   document: {
     actions: (prev, context) => {
       if (!ACADEMIC_TYPES.includes(context.schemaType as AcademicEntityType)) {
-        return prev
+        return prev.map((action) =>
+          action.action === 'publish'
+            ? ({ ...action, tone: 'positive' } as unknown as typeof action)
+            : action
+        )
       }
 
       const entityType = context.schemaType as AcademicEntityType

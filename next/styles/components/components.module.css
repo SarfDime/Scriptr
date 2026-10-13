@@ -154,17 +154,12 @@
 }
 
 @utility ui-above {
-  @apply bg-background-300/50 backdrop-blur-xl;
+  @apply bg-background-300/50 backdrop-blur-md md:backdrop-blur-xl;
   @apply ui-above-defaults;
 }
 
 @utility ui-above-light {
-  @apply bg-background-300/65 backdrop-blur-2xl;
-  @apply ui-above-defaults;
-}
-
-@utility ui-above-dark {
-  @apply border-grey-300 bg-background-200/95 backdrop-blur-3xl;
+  @apply bg-background-300/65 backdrop-blur-lg md:backdrop-blur-2xl;
   @apply ui-above-defaults;
 }
 

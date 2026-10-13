@@ -27,6 +27,7 @@ export const linkSelector = [
   }),
   defineField({
     name: 'page',
+    // TODO: Select a valid academic page that is connected to db and added to the website. With proper slug hierarchy
     title: 'Select a page',
     description:
       'Select a reference to an existing page or create a new page on the website. The item link will direct users to this page.',

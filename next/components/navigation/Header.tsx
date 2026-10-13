@@ -4,6 +4,7 @@ import { cn } from '@/lib/common-utils'
 import { Box } from '../common/Box'
 import { Text } from '../typography/Text'
 import { HeaderActions } from './HeaderActions'
+import { NavLogo } from './NavLogo'
 import { NavToggle } from './NavToggle'
 
 export const Header = () => (
@@ -42,6 +43,7 @@ export const Header = () => (
     <Text className='ui-caption hidden lg:block'>
       Thursday, September 4 <span className='mx-2 text-grey-400'>/</span> Week 5
     </Text>
+    <NavLogo className='lg:hidden' />
     <HeaderActions />
   </header>
 )

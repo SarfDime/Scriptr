@@ -28,7 +28,7 @@ export const ProfessorCard = ({
         type: 'professor',
         professorSlug: slug ?? _id,
       })}
-      className='group p-4 h-full flex flex-col justify-between gap-3 transition hover:border-brand-500 hover:shadow-sm ui-above'
+      className='group p-4 h-full flex flex-col justify-between gap-3 transition hover:border-brand-500 hover:shadow-sm ui-above-inside'
     >
       <ClickableCard.Body className='ui-cluster'>
         <Avatar picture={picture} name={name} color={color} />

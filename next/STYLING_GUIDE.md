@@ -119,7 +119,6 @@ The preferred component APIs are `Box`, `Card`, `Button`, `Badge`, and
 | `ui-badge`       | Shared radius and sizing behavior for badges.                                             |
 | `ui-above`       | Semi transparent blurred background, blur and shadow. Sets no border width; add `border`. |
 | `ui-above-light` | Lighter variant of `ui-above`.                                                            |
-| `ui-above-dark`  | More opaque variant of `ui-above`.                                                        |
 
 ```tsx
 <Card>

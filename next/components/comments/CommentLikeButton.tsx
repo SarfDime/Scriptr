@@ -26,9 +26,6 @@ export function CommentLikeButton({
       noun={COMMENT_STRINGS.general.commentNoun}
       variant='compact'
       disabled={disabled}
-      className={
-        disabled ? 'disabled:opacity-100 disabled:filter-none' : undefined
-      }
     />
   )
 }

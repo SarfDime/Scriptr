@@ -3,7 +3,11 @@ import { profileMutationTags } from '../../../shared/config/cache-tags'
 import type { FavoriteScriptRecord } from '../../../shared/types/profile.types'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
 import { databaseErrorResponse, requiredParam } from '../lib/request'
-import { authMiddleware, createSupabaseClient } from '../lib/supabase'
+import {
+  authMiddleware,
+  createInternalSupabaseClient,
+  createSupabaseClient,
+} from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
 // Mirrors scripts.ts PUBLIC_SCRIPT_COLUMNS — excludes is_flagged (internal moderation state).
@@ -48,7 +52,7 @@ favorites.get('/:scriptId', async (c) => {
 favorites.post('/:scriptId', async (c) => {
   const user = c.get('user')
   const scriptId = requiredParam(c, 'scriptId')
-  const supabase = createSupabaseClient(c)
+  const supabase = createInternalSupabaseClient(c)
   const { data, error } = await supabase
     .from('script_favorites')
     .upsert(

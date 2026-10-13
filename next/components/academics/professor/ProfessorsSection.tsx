@@ -9,7 +9,7 @@ export const ProfessorsSection = ({ professors }: ProfessorsSectionProps) => {
   const professorList = professors ?? []
 
   return (
-    <Card className='ui-stack gap-4 border-0 p-0 bg-transparent'>
+    <Card className='ui-stack ui-above'>
       <SectionHeader title='Professors' count={professorList.length} />
 
       {professorList.length > 0 ? (
@@ -19,7 +19,7 @@ export const ProfessorsSection = ({ professors }: ProfessorsSectionProps) => {
           ))}
         </Box>
       ) : (
-        <Text className='ui-caption'>
+        <Text className='ui-caption ui-above-inside'>
           No professors assigned to this faculty.
         </Text>
       )}

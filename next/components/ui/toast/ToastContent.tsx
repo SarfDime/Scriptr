@@ -15,14 +15,14 @@ export const ToastContent = ({
   <>
     <Box className='flex w-full items-center gap-1'>
       <ToastIcon type={toast.type} />
-      <Title as='h3' className='font-semibold text-md'>
+      <Title as='h3' className='font-semibold text-sm md:text-md'>
         {toast.title}
       </Title>
       {children}
     </Box>
 
     {toast?.description && (
-      <Text className='max-w-[95%] px-1 text-left opacity-90'>
+      <Text className='max-w-[95%] px-1 text-left opacity-90 text-xs md:text-base'>
         {toast?.description}
       </Text>
     )}

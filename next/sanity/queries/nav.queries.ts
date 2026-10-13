@@ -16,6 +16,7 @@ ${linkSelectorFunction}
       defined(new) => {new},
       defined(comingSoon) => {comingSoon},
       defined(disabled) => {disabled},
+      defined(icon) => { "icon": sanityImage::full(icon) },
     },
   }
 }.navMenu`
