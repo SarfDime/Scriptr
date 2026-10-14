@@ -107,8 +107,11 @@ redirect URLs.
 Cloudflare Bot Fight Mode challenged Vercel's server-side requests to
 `api.scriptr.uk` on 2026-10-14. The API hostname is now DNS-only, so those
 requests go directly to Vercel while Bot Fight Mode remains enabled for the web
-host. The API no longer receives Cloudflare proxy/WAF protection; rely on
-Vercel and application-level controls for that hostname.
+host. The API no longer receives Cloudflare proxy/WAF protection. On the API
+Vercel project, Managed Bot Protection is set to `log` so server-side Node
+requests are recorded without a browser challenge; automatic Vercel DDoS
+mitigation remains enabled. The web project's protection settings are
+unchanged.
 
 After changing production environment variables, redeploy both Vercel projects;
 `NEXT_PUBLIC_API_URL` is inlined at build time. Users need to sign in once again

@@ -142,11 +142,13 @@ call before anyone builds it).
   set for `.scriptr.uk`, custom-domain CORS/revalidation, and the web API/site
   origins. The API is deployed with the shared cookie domain, and its DNS record
   is DNS-only so Cloudflare Bot Fight Mode can remain enabled for the web host
-  without challenging Vercel server requests. The web deployment is live again;
-  `/`, `/auth`, a script detail, and the API return successfully, while signed-
-  out `/user` redirects as expected. Confirm the Supabase Auth Site URL is
-  `https://scriptr.uk` and that `https://scriptr.uk/auth/callback` is allowed,
-  then verify a signed-in hard refresh, vote/favorite state, and Studio sync.
+  without challenging Vercel server requests. Vercel Managed Bot Protection is
+  set to log on the API project, while automatic DDoS mitigation remains on.
+  The web deployment is live again; `/`, `/auth`, a script detail, and the API
+  return successfully, while signed-out `/user` redirects as expected. Confirm
+  the Supabase Auth Site URL is `https://scriptr.uk` and that
+  `https://scriptr.uk/auth/callback` is allowed, then verify a signed-in hard
+  refresh, vote/favorite state, and Studio sync.
   The production Sanity workflows set `SANITY_STUDIO_API_URL` to
   `https://api.scriptr.uk`. Users sign in once because existing cookies were
   scoped to the Vercel API host.
