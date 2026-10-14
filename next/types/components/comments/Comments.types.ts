@@ -25,4 +25,5 @@ export type CommentEntity = CommentEngagement & {
 export type CommentSectionProps = {
   target: CommentTarget
   initialComments: CommentPage<CommentEntity>
+  initialLoadFailed?: boolean
 }

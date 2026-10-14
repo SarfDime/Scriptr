@@ -14,6 +14,16 @@ import type { ScriptDetailViewModel } from '@/types/components/ScriptDetail.type
 export type ScriptDetailPageData = {
   detail: ScriptDetailViewModel
   comments: Awaited<ReturnType<typeof getScriptComments>>
+  commentsUnavailable: boolean
+}
+
+type ScriptComments = Awaited<ReturnType<typeof getScriptComments>>
+
+const EMPTY_COMMENTS: ScriptComments = {
+  items: [],
+  hasMore: false,
+  totalCount: 0,
+  totalCommentCount: 0,
 }
 
 type ViewerRead<T> = { value: T; failed: boolean }
@@ -57,10 +67,12 @@ export const loadScriptDetailPage = async (
     throw error
   }
 
-  const [voteStats, comments, myVote, myFavorite, session, subjectHref] =
+  const [voteStats, commentsResult, myVote, myFavorite, session, subjectHref] =
     await Promise.all([
       getScriptVoteStats(scriptId),
-      getScriptComments(scriptId, cookieHeader),
+      getScriptComments(scriptId, cookieHeader)
+        .then((comments) => ({ comments, unavailable: false }))
+        .catch(() => ({ comments: EMPTY_COMMENTS, unavailable: true })),
       readForViewer(
         cookieHeader,
         (cookie) => getMyScriptVote(scriptId, cookie),
@@ -94,6 +106,7 @@ export const loadScriptDetailPage = async (
       viewerDataFailed,
       subjectHref,
     },
-    comments,
+    comments: commentsResult.comments,
+    commentsUnavailable: commentsResult.unavailable,
   }
 }

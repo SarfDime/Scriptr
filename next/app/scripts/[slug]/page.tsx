@@ -12,7 +12,8 @@ export default async function ScriptDetailPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug: scriptId } = await params
-  const { detail, comments } = await loadScriptDetailPage(scriptId)
+  const { detail, comments, commentsUnavailable } =
+    await loadScriptDetailPage(scriptId)
 
   return (
     <PageLayout>
@@ -20,7 +21,11 @@ export default async function ScriptDetailPage({
       <ScriptDetailOverview detail={detail} />
       <ScriptDescription description={detail.script.description} />
       <Divider />
-      <CommentSection target={{ scriptId }} initialComments={comments} />
+      <CommentSection
+        target={{ scriptId }}
+        initialComments={comments}
+        initialLoadFailed={commentsUnavailable}
+      />
     </PageLayout>
   )
 }

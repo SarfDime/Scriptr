@@ -28,10 +28,12 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiFetch<T>(
+type ApiFetchResult<T> = { success: true; data: T } | { success: false }
+
+const performApiFetch = async <T>(
   path: QueryApiEndpointType,
   options: ApiFetchOptions = {}
-): Promise<T | null> {
+): Promise<ApiFetchResult<T>> => {
   try {
     const { body, headers: customHeaders, ...restOptions } = options
     const headers = new Headers(customHeaders)
@@ -77,10 +79,10 @@ export async function apiFetch<T>(
     }
 
     if (response.status === 204) {
-      return {} as T
+      return { success: true, data: {} as T }
     }
 
-    return (await response.json()) as T
+    return { success: true, data: (await response.json()) as T }
   } catch (error) {
     nextLogs({
       message: `API request failed or is unavailable for ${path}.`,
@@ -90,20 +92,28 @@ export async function apiFetch<T>(
     if (error instanceof ApiError) {
       throw error
     }
-    return null
+    return { success: false }
   }
+}
+
+export async function apiFetch<T>(
+  path: QueryApiEndpointType,
+  options: ApiFetchOptions = {}
+): Promise<T | null> {
+  const result = await performApiFetch<T>(path, options)
+  return result.success ? result.data : null
 }
 
 export async function apiFetchRequired<T>(
   path: QueryApiEndpointType,
   options: ApiFetchOptions = {}
 ): Promise<T> {
-  const result = await apiFetch<T>(path, options)
-  if (result === null) {
+  const result = await performApiFetch<T>(path, options)
+  if (!result.success) {
     throw new ApiError(`API request unavailable for ${path}`, 503)
   }
 
-  return result
+  return result.data
 }
 
 /**
