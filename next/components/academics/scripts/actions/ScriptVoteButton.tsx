@@ -9,6 +9,7 @@ export type ScriptVoteButtonProps = {
   initialVoted: boolean
   /** Server-fetched via GET apiRoutes.votes.scriptStatsByScriptId. */
   initialScore: number
+  disabled?: boolean
   className?: string
 }
 
@@ -25,6 +26,7 @@ export function ScriptVoteButton({
   scriptId,
   initialVoted,
   initialScore,
+  disabled,
   className,
 }: ScriptVoteButtonProps) {
   return (
@@ -37,6 +39,7 @@ export function ScriptVoteButton({
       }}
       label='Upvote'
       noun='script'
+      disabled={disabled}
       className={className}
     />
   )

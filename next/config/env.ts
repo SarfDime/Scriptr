@@ -19,6 +19,10 @@ const isDev =
   !process.env.NEXT_PUBLIC_ENVIRONMENT_TYPE
 
 // API
+//
+// The API origin (e.g. https://api.scriptr.uk). The API sets the session cookie
+// with `Domain=.scriptr.uk`, so the web app and Server Components see it too.
+// Inlined at build time: redeploy after changing it.
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? ''
 
 export {

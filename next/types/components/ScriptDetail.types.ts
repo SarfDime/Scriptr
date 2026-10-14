@@ -11,6 +11,9 @@ export type ScriptDetailViewModel = {
   hasVoted: boolean
   isAuthor: boolean
   isSaved: boolean
+  /** A viewer-specific lookup (vote, favorite, session) failed: vote and save
+   * are disabled and a toast is shown. */
+  viewerDataFailed: boolean
   /** `null` renders the subject as plain text. */
   subjectHref: string | null
 }

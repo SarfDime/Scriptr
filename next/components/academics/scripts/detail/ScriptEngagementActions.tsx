@@ -1,6 +1,7 @@
 import { ScriptSaveButton } from '@/components/academics/scripts/actions/ScriptSaveButton'
 import { ScriptVoteButton } from '@/components/academics/scripts/actions/ScriptVoteButton'
 import { Box } from '@/components/common/Box'
+import { ViewerDataNotice } from './ViewerDataNotice'
 
 export type ScriptEngagementActionsProps = {
   scriptId: string
@@ -8,6 +9,8 @@ export type ScriptEngagementActionsProps = {
   voteScore: number
   isSaved: boolean
   isAuthor: boolean
+  /** Viewer data couldn't be loaded: actions are disabled and a toast shown. */
+  viewerDataFailed: boolean
 }
 
 /** Upvote and save, side by side and sharing the row. */
@@ -17,6 +20,7 @@ export function ScriptEngagementActions({
   voteScore,
   isSaved,
   isAuthor,
+  viewerDataFailed,
 }: ScriptEngagementActionsProps) {
   return (
     <Box className='ui-cluster items-center gap-2'>
@@ -25,14 +29,17 @@ export function ScriptEngagementActions({
           scriptId={scriptId}
           initialVoted={hasVoted}
           initialScore={voteScore}
+          disabled={viewerDataFailed}
           className='grow'
         />
       )}
       <ScriptSaveButton
         scriptId={scriptId}
         initialSaved={isSaved}
+        disabled={viewerDataFailed}
         className='grow'
       />
+      {viewerDataFailed && <ViewerDataNotice />}
     </Box>
   )
 }

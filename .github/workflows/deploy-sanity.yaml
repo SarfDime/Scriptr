@@ -33,6 +33,7 @@ jobs:
       - name: Deploy Sanity Studio
         env:
           SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
+          SANITY_STUDIO_API_URL: https://api.scriptr.uk
           SANITY_STUDIO_INTERNAL_SECRET: ${{ secrets.SANITY_STUDIO_INTERNAL_SECRET }}
         run: npm -w sanity run deploy
 

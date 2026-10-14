@@ -1,4 +1,9 @@
-import type { User } from '@supabase/supabase-js'
+import {
+  type AuthError,
+  isAuthRetryableFetchError,
+  type Session,
+  type User,
+} from '@supabase/supabase-js'
 import { Hono } from 'hono'
 import type {
   CallbackResponse,
@@ -25,6 +30,12 @@ import {
 import type { HonoEnv } from '../types/env.types'
 
 const auth = new Hono<HonoEnv>()
+
+/** A failure of the auth service itself (network error, 5xx), as opposed to a
+ * bad or expired token. These must neither sign the user out nor be reported
+ * as "signed out". */
+const isTransientAuthError = (error: AuthError) =>
+  isAuthRetryableFetchError(error) || (error.status ?? 0) >= 500
 
 const AUTH_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000
 const AUTH_RATE_LIMIT_MAX_REQUESTS = 10
@@ -526,9 +537,14 @@ auth.post('/callback', async (c) => {
   })
 })
 
-// Get current session from cookies
+// Get current session from cookies. A signed-out visitor is a normal `200` with
+// `user: null`. If the auth service or database can't be reached the answer is
+// unknown, so it is a `503`/`500` and never `user: null`, and the cookie is left
+// alone: clients must not treat an outage as being signed out.
 auth.get('/session', async (c) => {
   const supabase = createSupabaseClient(c)
+  const unavailable = () =>
+    c.json({ error: 'Authentication service unavailable' }, 503)
 
   try {
     const {
@@ -536,49 +552,60 @@ auth.get('/session', async (c) => {
       error: sessionError,
     } = await supabase.auth.getSession()
 
+    if (sessionError && isTransientAuthError(sessionError)) {
+      return unavailable()
+    }
+
     if (sessionError || !session) {
       return c.json<SessionResponse>({ user: null, session: null })
     }
 
-    const refreshSession = async () => {
+    const refreshSession = async (): Promise<
+      | { status: 'ok'; session: Session }
+      | { status: 'signed-out' }
+      | { status: 'unavailable' }
+    > => {
       const { data, error } = await supabase.auth.refreshSession()
-      if (error || !data.session) {
-        await supabase.auth.signOut({ scope: 'local' })
-        return null
-      }
-      return data.session
+      if (data.session && !error) return { status: 'ok', session: data.session }
+      if (error && isTransientAuthError(error)) return { status: 'unavailable' }
+
+      await supabase.auth.signOut({ scope: 'local' })
+      return { status: 'signed-out' }
     }
 
-    let activeSession = session
-    const expiresSoon =
+    let needsRefresh =
       !session.expires_at ||
       session.expires_at <= Math.floor(Date.now() / 1000) + 60
 
-    if (expiresSoon) {
-      const refreshedSession = await refreshSession()
-      if (!refreshedSession) {
-        return c.json<SessionResponse>({ user: null, session: null })
-      }
-      activeSession = refreshedSession
-    } else {
+    if (!needsRefresh) {
       const {
         data: { user },
         error: userError,
       } = await supabase.auth.getUser()
-      if (userError || !user) {
-        const refreshedSession = await refreshSession()
-        if (!refreshedSession) {
-          return c.json<SessionResponse>({ user: null, session: null })
-        }
-        activeSession = refreshedSession
+      if (userError && isTransientAuthError(userError)) return unavailable()
+      needsRefresh = Boolean(userError) || !user
+    }
+
+    let activeSession = session
+    if (needsRefresh) {
+      const refreshed = await refreshSession()
+      if (refreshed.status === 'unavailable') return unavailable()
+      if (refreshed.status === 'signed-out') {
+        return c.json<SessionResponse>({ user: null, session: null })
       }
+      activeSession = refreshed.session
     }
 
     return c.json<SessionResponse>({
       user: await buildSessionUser(supabase, activeSession.user),
     })
-  } catch (_error) {
-    return c.json<SessionResponse>({ user: null, session: null })
+  } catch (error) {
+    honoLog({
+      logLevel: 'error',
+      message: 'Failed to resolve the current session',
+      error,
+    })
+    return c.json({ error: 'Internal server error' }, 500)
   }
 })
 

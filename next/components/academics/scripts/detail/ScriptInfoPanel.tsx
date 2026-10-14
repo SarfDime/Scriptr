@@ -18,6 +18,7 @@ export function ScriptInfoPanel({ detail }: { detail: ScriptDetailViewModel }) {
     hasVoted,
     isSaved,
     isAuthor,
+    viewerDataFailed,
     subjectHref,
   } = detail
 
@@ -33,6 +34,7 @@ export function ScriptInfoPanel({ detail }: { detail: ScriptDetailViewModel }) {
         voteScore={voteScore}
         isSaved={isSaved}
         isAuthor={isAuthor}
+        viewerDataFailed={viewerDataFailed}
       />
       <Divider />
       <ScriptMetaList script={script} subjectHref={subjectHref} />

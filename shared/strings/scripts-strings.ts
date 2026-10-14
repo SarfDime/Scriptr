@@ -52,6 +52,10 @@ export const SCRIPT_STRINGS = {
     downvote: 'Downvote',
     score: (score: number) => `Score: ${score}`,
   },
+  viewerDataFailed: {
+    title: "Couldn't load your vote and saved state",
+    description: 'Voting and saving are unavailable. Refresh to try again.',
+  },
   favorite: {
     favorite: 'Favorite',
     add: 'Add to favorites',

@@ -44,7 +44,8 @@ function createCookieStorage(c: Context<HonoEnv>) {
     c.env.NODE_ENV === 'production' ||
     c.req.url.startsWith('https://') ||
     forwardedProto?.split(',')[0]?.trim() === 'https'
-  const sameSite = secure ? 'None' : 'Lax'
+  // Same-site via a shared parent domain (e.g. .scriptr.uk) lets Lax work; unset locally.
+  const domain = process.env.COOKIE_DOMAIN || undefined
 
   return {
     getItem: (key: string) => getCookie(c, key) || null,
@@ -60,23 +61,25 @@ function createCookieStorage(c: Context<HonoEnv>) {
 
         setCookie(c, key, value, {
           path: '/',
+          domain,
           httpOnly: true,
           secure,
-          sameSite,
+          sameSite: 'Lax',
           maxAge,
         })
       } catch {
         setCookie(c, key, value, {
           path: '/',
+          domain,
           httpOnly: true,
           secure,
-          sameSite,
+          sameSite: 'Lax',
           maxAge: 3600,
         })
       }
     },
     removeItem: (key: string) => {
-      deleteCookie(c, key, { path: '/' })
+      deleteCookie(c, key, { path: '/', domain })
     },
   }
 }

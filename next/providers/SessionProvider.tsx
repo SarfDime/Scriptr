@@ -68,9 +68,12 @@ function getConflictField(error: unknown): RegisterConflictField | undefined {
  * below can call it without pulling `refresh` into its dependency array
  * — it only ever receives `setSession`, whose identity React guarantees
  * is stable.
+ *
+ * `previous` is the state to fall back on when the request itself fails.
  */
 async function fetchSession(
-  setSession: (state: SessionState) => void
+  setSession: (state: SessionState) => void,
+  previous: SessionState
 ): Promise<SessionState> {
   try {
     const result = await getSession()
@@ -80,10 +83,15 @@ async function fetchSession(
     setSession(state)
     return state
   } catch {
-    // GET /session never throws on the backend — it catches internally
-    // and returns `{ user: null }` — so this only fires on a genuine
-    // network failure. Treated as logged-out either way.
-    const state: SessionState = { status: 'unauthenticated' }
+    // GET /session answers `{ user: null }` for a signed-out visitor, so a
+    // throw means the request failed (network, or the API/auth service is
+    // down) and says nothing about whether the user is signed in. Keep an
+    // already-authenticated session; only an unknown one falls back to
+    // signed out.
+    const state: SessionState =
+      previous.status === 'authenticated'
+        ? previous
+        : { status: 'unauthenticated' }
     setSession(state)
     return state
   }
@@ -109,10 +117,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<SessionState>({ status: 'loading' })
 
   useEffect(() => {
-    fetchSession(setSession)
+    fetchSession(setSession, { status: 'loading' })
   }, [])
 
-  const refresh = () => fetchSession(setSession)
+  const refresh = () => fetchSession(setSession, session)
 
   const login = async (
     credentials: LoginRequest

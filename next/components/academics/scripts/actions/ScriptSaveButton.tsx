@@ -14,6 +14,7 @@ export type ScriptSaveButtonProps = {
   scriptId: string
   /** Server-fetched via GET apiRoutes.favorites.byScriptId (`!== null`) — pass down rather than re-fetching client-side on mount. */
   initialSaved: boolean
+  disabled?: boolean
   className?: string
 }
 
@@ -27,6 +28,7 @@ export type ScriptSaveButtonProps = {
 export function ScriptSaveButton({
   scriptId,
   initialSaved,
+  disabled = false,
   className,
 }: ScriptSaveButtonProps) {
   const [saved, setSaved] = useState(initialSaved)
@@ -62,7 +64,7 @@ export function ScriptSaveButton({
   return (
     <Button
       onClick={handleClick}
-      disabled={isPending}
+      disabled={disabled || isPending}
       aria-pressed={saved}
       aria-label={
         saved ? SCRIPT_STRINGS.favorite.remove : SCRIPT_STRINGS.favorite.add

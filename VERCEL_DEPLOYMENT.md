@@ -3,10 +3,10 @@
 Scriptr is deployed as two Git-connected Vercel projects in the
 `Vercel team` team (`team-slug`):
 
-| Project | Vercel project ID | Repository root | Framework |
-| --- | --- | --- | --- |
-| `scriptr-web` | `REDACTED_VERCEL_PROJECT` | `next` | Next.js |
-| `scriptr-api` | `REDACTED_VERCEL_PROJECT` | `hono` | Node.js |
+| Project       | Vercel project ID                  | Repository root | Framework |
+| ------------- | ---------------------------------- | --------------- | --------- |
+| `scriptr-web` | `REDACTED_VERCEL_PROJECT` | `next`          | Next.js   |
+| `scriptr-api` | `REDACTED_VERCEL_PROJECT` | `hono`          | Node.js   |
 
 Both projects are connected to `this repository` and must allow source files
 outside of their Root Directory because they import the root workspace and
@@ -14,12 +14,14 @@ outside of their Root Directory because they import the root workspace and
 
 ## Production URLs
 
-- Web: `https://scriptr-web-ivory.vercel.app`
-- API: `https://scriptr-api.vercel.app`
-- API health check: `https://scriptr-api.vercel.app/api`
+- Web: `https://scriptr.uk`
+- API: `https://api.scriptr.uk`
+- API health check: `https://api.scriptr.uk/api`
 
-`scriptr-web.vercel.app` is not available to this team. The `ivory` alias is
-the stable production web alias and must be used as the canonical web origin.
+The Vercel aliases remain useful for deployment inspection and preview traffic,
+but they are not the production origins. Cookies cannot be shared between
+`*.vercel.app` projects because `vercel.app` is a public suffix. Preview
+deployments therefore do not have the production shared-cookie auth behavior.
 
 Deployment Protection is disabled for both public projects. Enabling it on the
 API causes server-side and browser API calls to receive a Vercel HTML
@@ -75,8 +77,8 @@ Store values in Vercel Environment Variables; never add them to Git.
 Use the variables from [`next/.env.example`](next/.env.example). In
 Production:
 
-- `NEXT_PUBLIC_API_URL` must be `https://scriptr-api.vercel.app`.
-- `NEXT_PUBLIC_SITE_URL` must be `https://scriptr-web-ivory.vercel.app`.
+- `NEXT_PUBLIC_API_URL` must be `https://api.scriptr.uk`.
+- `NEXT_PUBLIC_SITE_URL` must be `https://scriptr.uk`.
 - `NEXT_TELEMETRY_DISABLED=1` disables Next.js telemetry during builds.
 - `REVALIDATE_SECRET` must equal the API's `REVALIDATE_SECRET`.
 
@@ -85,36 +87,51 @@ Production:
 Use the variables from [`hono/.env.example`](hono/.env.example). In
 Production:
 
-- `CORS_ORIGINS` must include all stable web aliases:
+- `COOKIE_DOMAIN` must be `.scriptr.uk` so the API cookie reaches the web host.
+- `CORS_ORIGINS` must include the production origins and stable web aliases:
+  - `https://scriptr.uk`
+  - `*.scriptr.uk`
   - `https://scriptr-web-ivory.vercel.app`
   - `https://scriptr-web-team-slug.vercel.app`
   - `https://scriptr-web-git-main-team-slug.vercel.app`
 - `NEXT_REVALIDATE_URL` must be
-  `https://scriptr-web-ivory.vercel.app/api/revalidate`.
+  `https://scriptr.uk/api/revalidate`.
 - `REVALIDATE_SECRET` must equal the web project's value.
 - Supabase, R2, and internal API credentials are required production secrets.
 
-Whenever a production URL changes, update the web API URL, API CORS origins,
-and API revalidation URL together, then redeploy both projects.
+The hosted Sanity Studio must build with `SANITY_STUDIO_API_URL` set to
+`https://api.scriptr.uk`. In Supabase Auth, set the Site URL to
+`https://scriptr.uk` and add `https://scriptr.uk/auth/callback` to the allowed
+redirect URLs.
+
+Cloudflare Bot Fight Mode challenged Vercel's server-side requests to
+`api.scriptr.uk` on 2026-10-14. The API hostname is now DNS-only, so those
+requests go directly to Vercel while Bot Fight Mode remains enabled for the web
+host. The API no longer receives Cloudflare proxy/WAF protection; rely on
+Vercel and application-level controls for that hostname.
+
+After changing production environment variables, redeploy both Vercel projects;
+`NEXT_PUBLIC_API_URL` is inlined at build time. Users need to sign in once again
+because their old session cookie is scoped to the Vercel API host.
 
 ## Verification
 
 Before declaring a production deployment healthy:
 
 ```bash
-curl -i https://scriptr-api.vercel.app/api
-curl -i https://scriptr-api.vercel.app/api/auth/session
+curl -i https://api.scriptr.uk/api
+curl -i https://api.scriptr.uk/api/auth/session
 curl -i \
-  -H 'Origin: https://scriptr-web-ivory.vercel.app' \
-  https://scriptr-api.vercel.app/api/auth/session
-curl -i https://scriptr-web-ivory.vercel.app/
+  -H 'Origin: https://scriptr.uk' \
+  https://api.scriptr.uk/api/auth/session
+curl -i https://scriptr.uk/
 ```
 
 The API health and session requests must return JSON with HTTP `200`. The
 CORS response must include:
 
 ```text
-Access-Control-Allow-Origin: https://scriptr-web-ivory.vercel.app
+Access-Control-Allow-Origin: https://scriptr.uk
 Access-Control-Allow-Credentials: true
 ```
 

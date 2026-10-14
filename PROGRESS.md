@@ -127,6 +127,29 @@ call before anyone builds it).
 - Realtime field validation on login and register (shared validators in
   `shared/utils/api.utils.ts`), including the Supabase password policy and
   taken username/email shown as field errors from the `409` response.
+- Custom domain: the API sets the session cookie with `Domain=.scriptr.uk`
+  (`COOKIE_DOMAIN`) and `SameSite=Lax`, so Server Components receive it (see
+  `ARCHITECTURE.md` §4).
+- Session-seeded server reads no longer hide failures: on the script detail
+  page the vote, favorite and session lookups treat only a missing cookie or a
+  `401` as signed out; any other failure keeps the page, disables vote/save and
+  shows a toast (`viewerDataFailed`). `/user` uses `getSessionRequired` so an
+  API outage shows an error instead of redirecting to `/auth`.
+
+### Todo
+
+- **Finish production auth verification:** the Vercel production variables are
+  set for `.scriptr.uk`, custom-domain CORS/revalidation, and the web API/site
+  origins. The API is deployed with the shared cookie domain, and its DNS record
+  is DNS-only so Cloudflare Bot Fight Mode can remain enabled for the web host
+  without challenging Vercel server requests. The web deployment is live again;
+  `/`, `/auth`, a script detail, and the API return successfully, while signed-
+  out `/user` redirects as expected. Confirm the Supabase Auth Site URL is
+  `https://scriptr.uk` and that `https://scriptr.uk/auth/callback` is allowed,
+  then verify a signed-in hard refresh, vote/favorite state, and Studio sync.
+  The production Sanity workflows set `SANITY_STUDIO_API_URL` to
+  `https://api.scriptr.uk`. Users sign in once because existing cookies were
+  scoped to the Vercel API host.
 
 ## API Client & Shared Types
 

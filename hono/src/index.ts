@@ -58,7 +58,20 @@ app.use(
         ...(process.env.CORS_ORIGINS?.split(',') ?? []),
       ].map((value) => value.trim())
 
-      return allowedOrigins.includes(origin) ? origin : ''
+      // Entries like `*.scriptr.uk` match any https subdomain.
+      const isAllowed = allowedOrigins.some((entry) => {
+        if (!entry.startsWith('*.')) return entry === origin
+        try {
+          const url = new URL(origin)
+          return (
+            url.protocol === 'https:' && url.hostname.endsWith(entry.slice(1))
+          )
+        } catch {
+          return false
+        }
+      })
+
+      return isAllowed ? origin : ''
     },
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowHeaders: [

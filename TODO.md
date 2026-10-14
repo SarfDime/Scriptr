@@ -23,3 +23,5 @@ Concrete work (bugs, features, cleanups with a clear outcome) is tracked in
 - [ ] Add sitemap
 - [ ] Add robots
 - [ ] Add other useful seo routes if needed
+- [ ] Add loading eager in largest images
+- [ ] Add preload to fonts if needed and remove it from non needed ones
