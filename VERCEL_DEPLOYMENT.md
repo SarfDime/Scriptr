@@ -113,6 +113,10 @@ requests are recorded without a browser challenge; automatic Vercel DDoS
 mitigation remains enabled. The web project's protection settings are
 unchanged.
 
+The `scriptr-web` project has Vercel's **Auto-assign Custom Production Domains**
+setting enabled. Vercel assigns `scriptr.uk` to each new production deployment;
+no separate alias workflow or GitHub token is required.
+
 After changing production environment variables, redeploy both Vercel projects;
 `NEXT_PUBLIC_API_URL` is inlined at build time. Users need to sign in once again
 because their old session cookie is scoped to the Vercel API host.
