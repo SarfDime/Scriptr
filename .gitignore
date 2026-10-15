@@ -10,6 +10,7 @@ node_modules/
 
 # Framework and deployment output
 .next/
+next/next-env.d.ts
 out/
 dist/
 build/
