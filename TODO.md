@@ -10,7 +10,6 @@ Concrete work (bugs, features, cleanups with a clear outcome) is tracked in
 - [ ] Make the header show real content, possibly sourced from Sanity.
 - [ ] Add a "source inline" option for the color palettes as well (clarify what this should cover).
 - [ ] Draft mode / live editing: not used for now. If it comes back, add the `/api/disable-draft` endpoint that `next/components/ui/DisableDraft.tsx` links to (and check that component isn't rendered while draft mode is unused).
-- [ ] Add salts and encryption for secrets like `INTERNAL_API_SECRET` and `SANITY_STUDIO_INTERNAL_SECRET`, since they are sent in headers and are not encrypted. So this way all projects can have their salts set by env and it would match across projects so they can easily verify each other's requests.
 
 ## Visual ideas
 
@@ -18,10 +17,3 @@ Concrete work (bugs, features, cleanups with a clear outcome) is tracked in
 - [ ] Christmas background and effects for the Christmas season.
 - [ ] Aurora background and effects for the aurora season.
 - [ ] "Simple mode" button next to the theme toggle that disables complex effects (blur, transparency, animations, background).
-
-## Next
-- [ ] Add sitemap
-- [ ] Add robots
-- [ ] Add other useful seo routes if needed
-- [ ] Add loading eager in largest images
-- [ ] Add preload to fonts if needed and remove it from non needed ones

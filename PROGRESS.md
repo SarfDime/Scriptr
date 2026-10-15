@@ -3,7 +3,7 @@
 What's built and what's outstanding. See `ARCHITECTURE.md` for the current
 system design and `TODO.md` for ideas that are not yet concrete work.
 
-Last reconciled: 2026-10-13.
+Last reconciled: 2026-10-15.
 
 In-code `TODO` and `Deferred:` comments have been removed from the source; the
 work they described is tracked below with a link to the code it belonged to.
@@ -39,13 +39,15 @@ call before anyone builds it).
 - Request logging is skipped when `NODE_ENV` is `production`
   ([`hono/src/index.ts`](hono/src/index.ts)).
 - Decided 2026-10-13: `faculties_university_id_fkey` stays `ON DELETE CASCADE`.
+- Decided 2026-10-15: only `admin` moderates (delete scripts/comments, resolve
+  flags, rating types). `moderator` gets no moderation tools in
+  the API, RLS or UI; any future moderator role is limited to notifications
+  (see **Deferred (Do Last)**). Routes already gate on `isAdmin`.
 
 ### Todo
 
-- **Achievement definitions CRUD:** admin management for
-  `achievement_definitions`; public reading already exists.
-- **Moderator notifications:** escalate repeated flags to moderators and route
-  moderator-generated flags to admins.
+Nothing open that blocks the frontend. Achievement-definition CRUD and
+moderator notifications are deferred to the end (see **Deferred (Do Last)**).
 
 ## R2 / File Storage
 
@@ -61,9 +63,16 @@ call before anyone builds it).
 
 ### Todo
 
-- **User avatars:** optimize and store them in R2.
+Priority work, scheduled right after the frontend gaps:
+
 - **File optimization:** optimize images and other supported files before R2
-  storage.
+  storage (compression/resizing on upload in
+  [`file-ops.ts`](hono/src/routes/file-ops.ts)), keeping deterministic keys and
+  the immutable `Cache-Control` behavior intact.
+- **User avatars:** optimize and store them in R2, reusing the same
+  optimization pipeline rather than building a second one.
+- **Serving cost:** review preview/download paths for avoidable egress and
+  repeated signing once optimization lands.
 
 ## Sanity CMS
 
@@ -109,8 +118,6 @@ call before anyone builds it).
 - **Structure tool [decision]:** decide how page data is represented, and sort
   people by academic field in
   [`misc-structure.ts`](sanity/structure-tool/misc-structure.ts).
-- **Internal secret [decision]:** encrypt it or protect it with a shared
-  environment-specific mechanism.
 - **Semester model:** change semesters to numbers and update Sanity, the
   database, the API and consumers.
 - **Elective subjects:** define a data shape and UI behavior for electives,
@@ -152,6 +159,8 @@ call before anyone builds it).
   The production Sanity workflows set `SANITY_STUDIO_API_URL` to
   `https://api.scriptr.uk`. Users sign in once because existing cookies were
   scoped to the Vercel API host.
+- **Post-login refresh:** after signing in through the auth modal, refresh the
+  current page; after signing in from the `/auth` page, go to the homepage.
 
 ## API Client & Shared Types
 
@@ -203,13 +212,11 @@ Product features:
   search experience.
 - **Script management UI:** edit/delete permissions and the remaining guest
   preview/download behavior.
-- **Restriction UX:** the dedicated restricted-user state for protected
-  actions.
 - **Ratings UI:** professor and subject rating interfaces.
 - **Profile experience:** academic data, achievements, activity, and the
   revised subject layout.
-- **Notification settings:** preferences and the remaining notification
-  kinds/UX.
+- **Notification settings:** preferences and the remaining user-facing
+  notification kinds/UX (moderator notifications are deferred).
 - **Admin UI:** academic sync and dependency tools, `professor_studies`, user
   restrictions, flag resolution/moderation, suspicious-download review.
 - **Study tips:** for guests and users without onboarding data, sourced from
@@ -244,6 +251,16 @@ Correctness and quality:
   dialogs, confirm modal), image sizing, mobile and accessibility passes,
   production CSS obfuscation.
 
+SEO and performance:
+
+- **Sitemap:** add one.
+- **Robots [decision]:** add `robots` only if needed (Cloudflare may already
+  serve one; check first).
+- **Other SEO routes:** add any other useful ones if needed.
+- **Image loading:** use eager loading on the largest images.
+- **Font preloading:** add preload where it helps and remove it from fonts
+  that don't need it.
+
 ## Tooling & Quality
 
 ### Done
@@ -261,21 +278,41 @@ Correctness and quality:
   signal-to-noise ratio.
 - **Error hygiene:** project-wide review that stack traces, database details
   and other internals are never shown to users.
+- **Internal secrets [decision, project-wide]:** `INTERNAL_API_SECRET`
+  (server) and `SANITY_STUDIO_INTERNAL_SECRET` (Studio) are sent in request
+  headers unencrypted, and the same question applies to any other
+  service-to-service secret across `hono/`, `next/`, `sanity/` and `shared/`.
+  Decide one mechanism for all of them: encryption, or salts set per
+  environment via env vars that match across projects so each side can verify
+  the other's requests. Covers config, docs and deploy workflows in every
+  workspace, not just Studio.
 - **Production registration incident (watch):** investigate the original
   academic-profile registration failure if it recurs with valid production
   catalog selections. The deployed path was verified with a fresh test account
   on 2026-10-09.
 
+## Deferred (Do Last)
+
+Deliberately postponed until everything else is done:
+
+- **Achievement definitions CRUD:** admin management for
+  `achievement_definitions`; public reading and awarding already exist.
+- **Moderator notifications:** escalate repeated flags to moderators and route
+  moderator-generated flags to admins. The moderator role stays
+  notification-only; it never gets moderation tools.
+
 ## Suggested Order
 
-1. Add achievement-definition CRUD and moderator notifications.
-2. Finish the main frontend gaps: search UI, script management, restriction UX,
-   ratings, profile, notification settings, then the admin/moderation UI.
-3. Close frontend quality work: state coverage, inline strings, accessibility,
-   toolbar behavior, root layout, toasts, polish.
-4. R2 improvements: avatars and file optimization.
-5. Sanity cleanup, the structure/secret/semester/elective decisions.
-6. Tooling pass: Biome rules and error hygiene.
+1. Finish the main frontend gaps: search UI, script
+   management, ratings, profile, notification settings, then the
+   admin/moderation UI (admin-only).
+2. Close frontend quality work: state coverage, inline strings, accessibility,
+   toolbar behavior, root layout, toasts, polish, SEO/performance.
+3. R2 improvements: file optimization, then avatars on the same pipeline.
+4. Sanity cleanup, the structure/semester/elective decisions.
+5. Tooling pass: Biome rules, error hygiene, and the project-wide internal
+   secrets decision.
+6. Deferred: achievement-definition CRUD and moderator notifications.
 
 Loose ideas and open questions that are not concrete enough for this list live
 in `TODO.md`.

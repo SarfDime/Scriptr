@@ -117,6 +117,13 @@ The `scriptr-web` project has Vercel's **Auto-assign Custom Production Domains**
 setting enabled. Vercel assigns `scriptr.uk` to each new production deployment;
 no separate alias workflow or GitHub token is required.
 
+Both projects use `git.deploymentEnabled` in their project-root `vercel.json`:
+Git deployments from `main` and `staging` are enabled, while other branches are
+disabled. The `staging` deployment remains a Vercel Preview deployment. The
+project-level Ignored Build Step further limits builds on allowed branches to
+`feat:` and `fix:` commit subjects. This branch allowlist applies to automatic
+Git deployments; manually initiated Vercel CLI deployments are separate.
+
 After changing production environment variables, redeploy both Vercel projects;
 `NEXT_PUBLIC_API_URL` is inlined at build time. Users need to sign in once again
 because their old session cookie is scoped to the Vercel API host.
