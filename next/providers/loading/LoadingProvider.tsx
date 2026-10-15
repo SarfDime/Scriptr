@@ -100,7 +100,7 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
         <Box
           aria-hidden={phase === 'exiting'}
           className={cn(
-            'fixed inset-0 z-50 flex items-center justify-center bg-background-100/70 backdrop-blur-xl transition-all duration-500 ease-in-out',
+            'ui-loading-overlay fixed inset-0 z-50 flex items-center justify-center bg-background-100/70 backdrop-blur-xl transition-all duration-500 ease-in-out',
             phase === 'exiting'
               ? 'pointer-events-none scale-105 opacity-0'
               : 'scale-100 opacity-100'

@@ -134,9 +134,11 @@
   background-color: transparent;
   color: var(--color-fg-600);
 
+  /* A translucent brand tint instead of a solid grey, so the hover reads the
+   * same on any surface (page, ui-above panels, dark mode). */
   @media (hover: hover) and (pointer: fine) {
     &:hover {
-      background-color: var(--color-grey-200);
+      background-color: color-mix(in srgb, var(--color-brand) 10%, transparent);
       color: var(--color-brand);
     }
   }
@@ -145,10 +147,17 @@
 @utility basic {
   color: var(--color-fg-700);
 
+  /* A faint neutral wash and an inset hairline: no outer shadow, which looked
+   * like a stray line under a button with no surface. */
   @media (hover: hover) and (pointer: fine) {
     &:hover {
       color: var(--color-brand);
-      box-shadow: var(--shadow-sm);
+      background-color: color-mix(
+        in srgb,
+        var(--color-fg-1000) 5%,
+        transparent
+      );
+      box-shadow: inset 0 0 0 1px var(--outline-light);
     }
   }
 }

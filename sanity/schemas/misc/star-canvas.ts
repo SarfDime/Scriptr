@@ -7,6 +7,7 @@ import { MoonIcon } from '@sanity/icons/Moon'
 import { RocketIcon } from '@sanity/icons/Rocket'
 import { SparklesIcon } from '@sanity/icons/Sparkles'
 import { StarIcon } from '@sanity/icons/Star'
+import { SunIcon } from '@sanity/icons/Sun'
 import { defineField, defineType } from 'sanity'
 
 // Values must match CSS theme variables (--color-<value> or --<value>)
@@ -41,6 +42,10 @@ const hideIfNoGalaxy = ({ parent }: Context) => !parent?.enableGalaxy
 
 const hideIfNoFlare = ({ parent }: Context) => !parent?.enableBlackHoleFlare
 
+// Unset counts as on, so documents saved before the switch existed keep their haze
+const hideIfNoHaze = ({ parent }: Context) =>
+  parent?.enableBackgroundHaze === false
+
 // Orbiting planets need the black hole to orbit
 const hideIfNoBlackHole = ({ parent }: Context) => !parent?.enableBlackHole
 
@@ -58,6 +63,17 @@ const hideUnlessCustomMobilePosition = ({ parent }: Context) =>
 
 const hideUnlessCustomMobileGalaxyPosition = ({ parent }: Context) =>
   hideIfNoMobileGalaxy({ parent }) || parent?.mobileGalaxyPosition !== 'custom'
+
+const hideIfNoAurora = ({ parent }: Context) => !parent?.enableAurora
+
+const hideUnlessCustomAuroraPosition = ({ parent }: Context) =>
+  !parent?.enableAurora || parent?.auroraPosition !== 'custom'
+
+const hideIfNoMobileAurora = ({ parent }: Context) =>
+  !parent?.enableAurora || parent?.mobileEnableAurora === false
+
+const hideUnlessCustomMobileAuroraPosition = ({ parent }: Context) =>
+  hideIfNoMobileAurora({ parent }) || parent?.mobileAuroraPosition !== 'custom'
 
 // The black hole tabs disappear entirely while the black hole is switched off
 const blackHoleDisabled = ({ value }: { value?: unknown }) =>
@@ -115,7 +131,8 @@ const colorField = (
   description: string,
   initialValue: string,
   group: string,
-  fieldset?: string
+  fieldset?: string,
+  hidden?: (context: Context) => boolean
 ) =>
   defineField({
     name,
@@ -124,6 +141,7 @@ const colorField = (
     type: 'string',
     group,
     fieldset,
+    hidden,
     options: { list: THEME_COLORS },
     initialValue,
   })
@@ -153,6 +171,7 @@ export const StarCanvas = defineType({
     },
     { name: 'planets', title: 'Planets', icon: EarthGlobeIcon },
     { name: 'galaxy', title: 'Galaxy', icon: MoonIcon },
+    { name: 'aurora', title: 'Aurora', icon: SunIcon },
     {
       name: 'colors',
       title: 'Black Hole Colors',
@@ -240,6 +259,14 @@ export const StarCanvas = defineType({
     },
     { name: 'galaxyColors', title: 'Colors', options: { columns: 2 } },
     {
+      name: 'auroraPlacement',
+      title: 'Where',
+      description:
+        'The aurora always spans the whole width of the screen. This sets how high up it hangs and how tall it is.',
+      options: { columns: 2 },
+    },
+    { name: 'auroraLook', title: 'Look', options: { columns: 2 } },
+    {
       name: 'backgroundHaze',
       title: 'Background haze',
       description:
@@ -266,6 +293,13 @@ export const StarCanvas = defineType({
       title: 'Milky Way placement',
       description:
         'Where the Milky Way sits on phones and touch tablets. Same as desktop uses the placement from the Galaxy tab.',
+      options: { columns: 2 },
+    },
+    {
+      name: 'mobileAuroraPlacement',
+      title: 'Aurora placement',
+      description:
+        'How high the aurora hangs on phones and touch tablets. Same as desktop uses the placement from the Aurora tab.',
       options: { columns: 2 },
     },
   ],
@@ -350,13 +384,24 @@ export const StarCanvas = defineType({
       precision: 4,
     }),
 
+    defineField({
+      name: 'enableBackgroundHaze',
+      title: 'Show background haze',
+      description:
+        'When off, the haze is not drawn at all (and its settings below are hidden). On by default.',
+      type: 'boolean',
+      group: 'stars',
+      fieldset: 'backgroundHaze',
+      initialValue: true,
+    }),
     colorField(
       'backgroundHazeColor',
       'Haze color',
       'A grayish space color. Default: Grey Dark',
       'grey-800',
       'stars',
-      'backgroundHaze'
+      'backgroundHaze',
+      hideIfNoHaze
     ),
     numberField({
       name: 'backgroundHazeOpacity',
@@ -366,6 +411,7 @@ export const StarCanvas = defineType({
       initialValue: 0.5,
       group: 'stars',
       fieldset: 'backgroundHaze',
+      hidden: hideIfNoHaze,
       min: 0,
       max: 1,
       precision: 2,
@@ -378,6 +424,7 @@ export const StarCanvas = defineType({
       initialValue: 0.9,
       group: 'stars',
       fieldset: 'backgroundHaze',
+      hidden: hideIfNoHaze,
       min: 0.2,
       max: 2,
       precision: 2,
@@ -1080,6 +1127,126 @@ export const StarCanvas = defineType({
       initialValue: 'lavender',
     }),
 
+    // ── Aurora ───────────────────────────────────────────────────────────
+    defineField({
+      name: 'enableAurora',
+      title: 'Show aurora',
+      description:
+        'Soft, glowing curtains of light that sway slowly across the sky, blending between the colors you pick. Each curtain is painted once and then moved by the browser, so it costs almost nothing while it animates. Off by default.',
+      type: 'boolean',
+      group: 'aurora',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'auroraColors',
+      title: 'Colors',
+      description:
+        'The curtains blend smoothly from one of these colors to the next along their length. Two to four look best. Default: Jade, Sky, Lavender',
+      type: 'array',
+      group: 'aurora',
+      hidden: hideIfNoAurora,
+      of: [{ type: 'string', options: { list: THEME_COLORS } }],
+      initialValue: ['jade', 'sky', 'lavender'],
+      validation: (rule) => rule.min(1).max(8),
+    }),
+    defineField({
+      name: 'auroraPosition',
+      title: 'Placement',
+      description:
+        'How high up the aurora hangs. Pick a preset, or Custom to set the exact height below.',
+      type: 'string',
+      group: 'aurora',
+      fieldset: 'auroraPlacement',
+      hidden: hideIfNoAurora,
+      options: {
+        list: [
+          { title: 'Top', value: 'top' },
+          { title: 'Middle', value: 'middle' },
+          { title: 'Bottom', value: 'bottom' },
+          { title: 'Custom', value: 'custom' },
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'top',
+    }),
+    numberField({
+      name: 'auroraYRatio',
+      title: 'Vertical position',
+      description:
+        'The middle of the aurora: 0 = top edge, 0.5 = center, 1 = bottom edge. Default 0.22',
+      initialValue: 0.22,
+      group: 'aurora',
+      fieldset: 'auroraPlacement',
+      min: 0,
+      max: 1,
+      precision: 3,
+      hidden: hideUnlessCustomAuroraPosition,
+    }),
+    numberField({
+      name: 'auroraHeight',
+      title: 'Height',
+      description:
+        'How tall the aurora is, as a share of the screen height. Taller ones also cost a little more. Range 0.2–0.9. Default 0.5',
+      initialValue: 0.5,
+      group: 'aurora',
+      fieldset: 'auroraPlacement',
+      min: 0.2,
+      max: 0.9,
+      precision: 2,
+      hidden: hideIfNoAurora,
+    }),
+    numberField({
+      name: 'auroraIntensity',
+      title: 'Brightness',
+      description: '0 = invisible, 1 = full. Range 0–1. Default 0.7',
+      initialValue: 0.7,
+      group: 'aurora',
+      fieldset: 'auroraLook',
+      min: 0,
+      max: 1,
+      precision: 2,
+      hidden: hideIfNoAurora,
+    }),
+    numberField({
+      name: 'auroraCurtains',
+      title: 'Curtains',
+      description:
+        'How many overlapping curtains, each with its own shape, colors and pace. More looks richer; each one adds a layer for the browser to blend, so keep it low on busy pages. Range 1–6. Default 2',
+      initialValue: 2,
+      group: 'aurora',
+      fieldset: 'auroraLook',
+      min: 1,
+      max: 6,
+      integer: true,
+      hidden: hideIfNoAurora,
+    }),
+    numberField({
+      name: 'auroraSpeed',
+      title: 'Speed',
+      description:
+        'How fast the curtains sway and fade. 1 = a slow, calm drift, 2 = twice as fast, 0 = still. Range 0–3. Default 1',
+      initialValue: 1,
+      group: 'aurora',
+      fieldset: 'auroraLook',
+      min: 0,
+      max: 3,
+      precision: 2,
+      hidden: hideIfNoAurora,
+    }),
+    numberField({
+      name: 'auroraWaviness',
+      title: 'Waviness',
+      description:
+        'How much the bright lower edge of each curtain waves. 0 = straight, 1 = very wavy. Range 0–1. Default 0.5',
+      initialValue: 0.5,
+      group: 'aurora',
+      fieldset: 'auroraLook',
+      min: 0,
+      max: 1,
+      precision: 2,
+      hidden: hideIfNoAurora,
+    }),
+
     // ── Colors ───────────────────────────────────────────────────────────
     colorField(
       'blackHoleCoreColor',
@@ -1119,7 +1286,7 @@ export const StarCanvas = defineType({
       name: 'mobileScale',
       title: 'Mobile scale',
       description:
-        'Phones and touch tablets get a smaller, calmer version: star, planet and shooting-star counts, sizes and speeds, the black hole (size, glow, gravity, smoke, ripple) and the Milky Way (size, opacity, density) are all multiplied by this. 1 = same as desktop, 0.5 = half. Range 0.1–1. Default 0.5',
+        'Phones and touch tablets get a smaller, calmer version: star, planet and shooting-star counts, sizes and speeds, the black hole (size, glow, gravity, smoke, ripple), the Milky Way (size, opacity, density) and the number of aurora curtains are all multiplied by this. 1 = same as desktop, 0.5 = half. Range 0.1–1. Default 0.5',
       initialValue: 0.5,
       group: 'mobile',
       min: 0.1,
@@ -1241,6 +1408,51 @@ export const StarCanvas = defineType({
       max: 1,
       precision: 3,
       hidden: hideUnlessCustomMobileGalaxyPosition,
+    }),
+
+    defineField({
+      name: 'mobileEnableAurora',
+      title: 'Show aurora on mobile',
+      description:
+        'Turn off to leave the aurora out on phones and touch tablets. Only applies while the aurora is enabled on desktop. On phones the number of curtains is also multiplied by the mobile scale (never below 1).',
+      type: 'boolean',
+      group: 'mobile',
+      hidden: hideIfNoAurora,
+      initialValue: true,
+    }),
+    defineField({
+      name: 'mobileAuroraPosition',
+      title: 'Placement',
+      description:
+        'Pick a preset, Custom to set the exact height below, or Same as desktop.',
+      type: 'string',
+      group: 'mobile',
+      fieldset: 'mobileAuroraPlacement',
+      hidden: hideIfNoMobileAurora,
+      options: {
+        list: [
+          { title: 'Same as desktop', value: 'desktop' },
+          { title: 'Top', value: 'top' },
+          { title: 'Middle', value: 'middle' },
+          { title: 'Bottom', value: 'bottom' },
+          { title: 'Custom', value: 'custom' },
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'desktop',
+    }),
+    numberField({
+      name: 'mobileAuroraYRatio',
+      title: 'Vertical position',
+      description:
+        'The middle of the aurora: 0 = top edge, 0.5 = center, 1 = bottom edge. Default 0.22',
+      initialValue: 0.22,
+      group: 'mobile',
+      fieldset: 'mobileAuroraPlacement',
+      min: 0,
+      max: 1,
+      precision: 3,
+      hidden: hideUnlessCustomMobileAuroraPosition,
     }),
   ],
 })

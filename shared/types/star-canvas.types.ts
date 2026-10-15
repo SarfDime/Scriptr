@@ -35,6 +35,9 @@ export type GalaxyDriftDirection =
 export type MobileBlackHolePosition = BlackHolePosition | 'desktop'
 export type MobileGalaxyPosition = GalaxyPosition | 'desktop'
 
+export type AuroraPosition = 'top' | 'middle' | 'bottom' | 'custom'
+export type MobileAuroraPosition = AuroraPosition | 'desktop'
+
 export interface StarCanvasSanityData {
   starCount?: number | null
   starColors?: Array<string> | null
@@ -43,6 +46,8 @@ export interface StarCanvasSanityData {
   starDriftSpeed?: number | null
 
   backgroundHazeColor?: string | null
+  /** Unset counts as on. When false the haze is not drawn at all. */
+  enableBackgroundHaze?: boolean | null
   backgroundHazeOpacity?: number | null
   backgroundHazeRadius?: number | null
 
@@ -114,6 +119,17 @@ export interface StarCanvasSanityData {
   galaxyDriftDirection?: GalaxyDriftDirection | null
   galaxyTilt?: number | null
 
+  // Aurora
+  enableAurora?: boolean | null
+  auroraColors?: Array<string> | null
+  auroraPosition?: AuroraPosition | null
+  auroraYRatio?: number | null
+  auroraHeight?: number | null
+  auroraIntensity?: number | null
+  auroraCurtains?: number | null
+  auroraSpeed?: number | null
+  auroraWaviness?: number | null
+
   // Mobile (phones and touch tablets)
   mobileScale?: number | null
   mobileEnableBlackHole?: boolean | null
@@ -124,6 +140,9 @@ export interface StarCanvasSanityData {
   mobileGalaxyPosition?: MobileGalaxyPosition | null
   mobileGalaxyXRatio?: number | null
   mobileGalaxyYRatio?: number | null
+  mobileEnableAurora?: boolean | null
+  mobileAuroraPosition?: MobileAuroraPosition | null
+  mobileAuroraYRatio?: number | null
 }
 
 /** StarCanvasSanityData with every field present (defaults applied, nulls removed). */
@@ -145,6 +164,7 @@ export type StarCanvasColors = {
   galaxyCore: string
   galaxyArm: string
   galaxyAccent: string
+  aurora: Array<string>
 }
 
 export type Star = Point & {
@@ -212,4 +232,33 @@ export type Galaxy = {
   height: number // on-screen height in px
   spriteScale: number // sprite px per screen px (below 1 for very large galaxies)
   anchor: Point // screen position as ratios (0-1)
+}
+
+/**
+ * One curtain of the aurora. Its shape is generated once and painted into a canvas of its
+ * own; after that it is only moved by CSS animations (sway, breathing, fading).
+ */
+export type AuroraCurtain = {
+  weight: number // 0.7-1: how bright this curtain is next to the others
+  baseline: number // 0.24-0.34: where the bright edge sits in the canvas (top to bottom)
+  rise: number // 0.8-1: how much of the space above the edge its tallest rays use
+  drop: number // 0.75-1: how far its glow reaches down from the edge
+  hueShift: number // moves the colors along the curtain, so curtains differ
+  waveFreqA: number // the bright edge is two sine waves added together
+  wavePhaseA: number
+  waveFreqB: number
+  wavePhaseB: number
+  veilFreq: number // a broad glow that is brighter in some places than others
+  veilPhase: number
+  rayFreqA: number // soft rays: three sine waves added together
+  rayPhaseA: number
+  rayFreqB: number
+  rayPhaseB: number
+  rayFreqC: number
+  rayPhaseC: number
+  sway: number // sideways travel, as a share of its own width (each way)
+  swayMs: number // one trip from one side to the other, at speed 1
+  breathe: number // how much it grows and shrinks vertically (0.04 = 4%)
+  fadeMs: number // one fade from dim to bright, at speed 1
+  phase: number // 0-1: where in its cycles it starts
 }

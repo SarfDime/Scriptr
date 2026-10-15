@@ -11,6 +11,8 @@ import type {
 } from '@shared/types/star-canvas.types'
 import { useEffect, useRef, useSyncExternalStore } from 'react'
 import {
+  AURORA_PRESETS,
+  AURORA_WIDTH,
   addFalloff,
   BLACK_HOLE_PRESETS,
   BODY_RADIUS,
@@ -21,8 +23,10 @@ import {
   buildSoftDot,
   GALAXY_DRIFT_DIRECTIONS,
   MOBILE_QUERY,
+  makeAuroraCurtains,
   makeGalaxy,
   makePlanets,
+  paintAurora,
   resolveColors,
   SPRITE_SIZE,
   scaleForMobile,
@@ -82,6 +86,7 @@ export const CustomStarCanvas = ({
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const backdropRef = useRef<HTMLCanvasElement>(null)
   const galaxyRef = useRef<HTMLCanvasElement>(null)
+  const auroraRef = useRef<HTMLDivElement>(null)
   const isMobile = useSyncExternalStore(
     subscribeToMobile,
     getIsMobile,
@@ -92,6 +97,7 @@ export const CustomStarCanvas = ({
     const canvas = canvasRef.current
     const backdrop = backdropRef.current
     const galaxyCanvas = galaxyRef.current
+    const auroraEl = auroraRef.current
     const ctx = canvas?.getContext('2d')
     const backdropCtx = backdrop?.getContext('2d')
     const galaxyCtx = galaxyCanvas?.getContext('2d')
@@ -101,7 +107,8 @@ export const CustomStarCanvas = ({
       !backdrop ||
       !backdropCtx ||
       !galaxyCanvas ||
-      !galaxyCtx
+      !galaxyCtx ||
+      !auroraEl
     ) {
       return
     }
@@ -161,6 +168,89 @@ export const CustomStarCanvas = ({
     } else {
       galaxyCanvas.style.display = 'none'
     }
+
+    // ── Aurora ──────────────────────────────────────────────────────────────
+    // Each curtain is a canvas of its own, painted once (and again when the theme or the
+    // window width changes a lot). After that it only moves through CSS animations on its
+    // transform and opacity, which the compositor runs: no script and no repainting.
+    const auroraCurtains = makeAuroraCurtains(cfg)
+    const auroraY = AURORA_PRESETS[cfg.auroraPosition] ?? cfg.auroraYRatio
+    const auroraAnimations: Array<Animation> = []
+    const auroraCanvases = auroraCurtains.map((curtain) => {
+      const el = document.createElement('canvas')
+      Object.assign(el.style, {
+        position: 'absolute',
+        left: `${((1 - AURORA_WIDTH) / 2) * 100}%`,
+        top: `${(auroraY - cfg.auroraHeight / 2) * 100}%`,
+        width: `${AURORA_WIDTH * 100}%`,
+        height: `${cfg.auroraHeight * 100}%`,
+        transformOrigin: `50% ${curtain.baseline * 100}%`,
+        willChange: 'transform, opacity',
+        opacity: String(Math.min(1, curtain.weight * cfg.auroraIntensity)),
+      })
+      auroraEl.appendChild(el)
+      return el
+    })
+    let auroraBuiltWidth = 0 // screen width the curtains were painted for
+    let auroraTimer = 0
+
+    const paintAuroraNow = () => {
+      window.clearTimeout(auroraTimer)
+      if (!auroraCurtains.length || w <= 0 || h <= 0) return
+      auroraBuiltWidth = w
+      paintAurora(auroraCanvases, auroraCurtains, cfg, colors, w, h)
+    }
+
+    // Waits until a resize pauses, and ignores small changes: the curtains are soft, so
+    // stretching them a little can't be seen (the URL bar showing on a phone, say)
+    const scheduleAurora = () => {
+      if (
+        !auroraBuiltWidth ||
+        Math.abs(w - auroraBuiltWidth) < auroraBuiltWidth * 0.25
+      ) {
+        return
+      }
+      window.clearTimeout(auroraTimer)
+      auroraTimer = window.setTimeout(paintAuroraNow, 300)
+    }
+
+    // Every curtain sways from side to side while growing and shrinking a little, and
+    // separately fades between dim and bright, each at its own pace
+    const startAurora = () => {
+      if (reducedMotion || cfg.auroraSpeed <= 0) return
+      const loop = (duration: number, offset: number) => ({
+        duration,
+        delay: -duration * offset, // starts each curtain somewhere else in its cycle
+        direction: 'alternate' as const,
+        iterations: Number.POSITIVE_INFINITY,
+        easing: 'ease-in-out',
+        fill: 'both' as const,
+      })
+      auroraCurtains.forEach((curtain, i) => {
+        const el = auroraCanvases[i]
+        if (!el) return
+        const sway = curtain.sway * 100
+        const peak = Math.min(1, curtain.weight * cfg.auroraIntensity)
+        auroraAnimations.push(
+          el.animate(
+            [
+              {
+                transform: `translateX(${-sway}%) scaleY(${1 - curtain.breathe})`,
+              },
+              {
+                transform: `translateX(${sway}%) scaleY(${1 + curtain.breathe})`,
+              },
+            ],
+            loop(curtain.swayMs / cfg.auroraSpeed, curtain.phase)
+          ),
+          el.animate(
+            [{ opacity: peak * 0.5 }, { opacity: peak }],
+            loop(curtain.fadeMs / cfg.auroraSpeed, (curtain.phase * 7) % 1)
+          )
+        )
+      })
+    }
+
     let shade: HTMLCanvasElement | null = null // shared day/night overlay for planets
 
     let puff: HTMLCanvasElement | null = null // soft blob sprite for the smoke
@@ -246,7 +336,10 @@ export const CustomStarCanvas = ({
     const buildHaze = () => {
       window.clearTimeout(hazeTimer)
       haze =
-        cfg.backgroundHazeOpacity > 0 && w > 0 && h > 0
+        cfg.enableBackgroundHaze &&
+        cfg.backgroundHazeOpacity > 0 &&
+        w > 0 &&
+        h > 0
           ? buildHazeSprite(
               w,
               h,
@@ -779,6 +872,8 @@ export const CustomStarCanvas = ({
     }
     stars.sort((a, b) => a.colorIndex - b.colorIndex)
     buildSprites()
+    paintAuroraNow()
+    startAurora()
 
     const redrawIfStatic = () => {
       if (reducedMotion) draw(performance.now(), 0)
@@ -786,6 +881,7 @@ export const CustomStarCanvas = ({
 
     const onResize = () => {
       layout()
+      scheduleAurora()
       redrawIfStatic()
     }
 
@@ -796,6 +892,7 @@ export const CustomStarCanvas = ({
       buildGlow()
       buildHaze()
       buildSprites()
+      paintAuroraNow()
       redrawIfStatic()
     }
 
@@ -847,6 +944,9 @@ export const CustomStarCanvas = ({
       themeObserver.disconnect()
       cancelAnimationFrame(raf)
       window.clearTimeout(hazeTimer)
+      window.clearTimeout(auroraTimer)
+      for (const animation of auroraAnimations) animation.cancel()
+      for (const el of auroraCanvases) el.remove()
     }
   }, [sanityData, isMobile])
 
@@ -863,6 +963,11 @@ export const CustomStarCanvas = ({
         aria-hidden
         className='pointer-events-none fixed top-0 left-0 z-[-1] origin-top-left will-change-transform'
         style={{ display: 'none' }}
+      />
+      <div
+        ref={auroraRef}
+        aria-hidden
+        className='pointer-events-none fixed inset-0 z-[-1] overflow-hidden'
       />
       <canvas
         ref={canvasRef}

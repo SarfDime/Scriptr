@@ -4,6 +4,7 @@ import { cn } from '@/lib/common-utils'
 import type { NavMenuType } from '@/types/components/Nav.types'
 import { Box } from '../common/Box'
 import { Divider } from '../ui/Divider'
+import { SimpleModeToggle } from '../ui/SimpleModeToggle'
 import { ThemeToggle } from '../ui/ThemeToggle'
 import { NavigationLinks } from './NavigationLinks'
 import { NavLogo } from './NavLogo'
@@ -33,8 +34,8 @@ export const NavBar = ({ navItems }: NavMenuType) => (
       aria-label={UI_STRINGS.navigation.mainNavigation}
       className={cn(
         'fixed inset-y-0 left-0 z-20 w-(--nav-width)',
-        'ui-stack gap-5 p-2.5 pt-0 shadow-2xl',
-        'ui-above border-l-0 border-t-0 border-b-0 rounded-none',
+        'ui-stack gap-5 p-2.5 pt-0',
+        'ui-above-nav',
         'transition-[translate,visibility] duration-300',
         'max-lg:invisible max-lg:-translate-x-full',
         'max-lg:group-data-[nav-open=true]/nav:visible',
@@ -59,6 +60,7 @@ export const NavBar = ({ navItems }: NavMenuType) => (
 
       <Box className='ui-stack mt-auto gap-3'>
         <ThemeToggle className='w-full flex-row' />
+        <SimpleModeToggle />
         <Divider />
         <NavUserSlot />
       </Box>

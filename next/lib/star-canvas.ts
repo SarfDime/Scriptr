@@ -1,4 +1,5 @@
 import type {
+  AuroraCurtain,
   DriftingPlanet,
   Galaxy,
   GalaxyDot,
@@ -53,6 +54,20 @@ const GRAIN_BOOST = 2
 // that changes no pixel; between half and one it slightly thins the faintest nebula
 // wisps, which is the trade for painting fewer dots.
 const MIN_DOT_LEVEL = 1
+// Aurora curtains are painted at this share of the screen's resolution and stretched by the
+// browser. They are soft anyway, and it makes painting and memory about ten times cheaper.
+const AURORA_RESOLUTION = 0.3
+const AURORA_MAX_CURTAINS = 6
+const AURORA_FALL = 0.58 // how far the glow reaches below the bright edge, in canvas heights
+const AURORA_STEPS = 6 // color stops on each side of the edge
+/** Curtains are this many screen widths wide, so they can sway without showing an edge. */
+export const AURORA_WIDTH = 1.2
+/** Where the middle of the aurora sits for each preset, as a share of the screen height. */
+export const AURORA_PRESETS: Record<string, number> = {
+  top: 0.22,
+  middle: 0.5,
+  bottom: 0.78,
+}
 
 export const BLACK_HOLE_PRESETS: Record<string, Point> = {
   center: { x: 0.5, y: 0.48 },
@@ -109,6 +124,7 @@ const MOBILE_SCALED_KEYS = [
   'galaxyMaxSize',
   'galaxyOpacity',
   'galaxyDensity',
+  'auroraCurtains',
 ] as const
 
 const DEFAULTS: StarCanvasConfig = {
@@ -119,6 +135,7 @@ const DEFAULTS: StarCanvasConfig = {
   starDriftSpeed: 0.012,
 
   backgroundHazeColor: 'grey-800',
+  enableBackgroundHaze: true,
   backgroundHazeOpacity: 0.5,
   backgroundHazeRadius: 0.9,
 
@@ -186,6 +203,17 @@ const DEFAULTS: StarCanvasConfig = {
   galaxyDriftDirection: 'up-left',
   galaxyTilt: 0,
 
+  // Off until it is switched on in the Studio
+  enableAurora: false,
+  auroraColors: ['jade', 'sky', 'lavender'],
+  auroraPosition: 'top',
+  auroraYRatio: 0.22,
+  auroraHeight: 0.5,
+  auroraIntensity: 0.7,
+  auroraCurtains: 2,
+  auroraSpeed: 1,
+  auroraWaviness: 0.5,
+
   mobileScale: 0.5,
   mobileEnableBlackHole: true,
   mobileEnableGalaxy: true,
@@ -196,6 +224,9 @@ const DEFAULTS: StarCanvasConfig = {
   mobileGalaxyPosition: 'desktop',
   mobileGalaxyXRatio: 0.2,
   mobileGalaxyYRatio: 0.78,
+  mobileEnableAurora: true,
+  mobileAuroraPosition: 'desktop',
+  mobileAuroraYRatio: 0.22,
 }
 
 /** Sanity returns `null` for unset fields, so `{...DEFAULTS, ...data}` is not enough. */
@@ -210,6 +241,7 @@ export const withDefaults = (
   }
   if (!config.starColors.length) config.starColors = DEFAULTS.starColors
   if (!config.planetColors.length) config.planetColors = DEFAULTS.planetColors
+  if (!config.auroraColors.length) config.auroraColors = DEFAULTS.auroraColors
   return config
 }
 
@@ -221,10 +253,12 @@ export const scaleForMobile = (config: StarCanvasConfig): StarCanvasConfig => {
   scaled.starCount = Math.round(scaled.starCount)
   scaled.planetCount = Math.round(scaled.planetCount)
   scaled.freePlanetCount = Math.round(scaled.freePlanetCount)
+  scaled.auroraCurtains = Math.max(1, Math.round(scaled.auroraCurtains))
 
   // Either can be switched off on phones (no black hole also means no orbiting planets)
   if (!config.mobileEnableBlackHole) scaled.enableBlackHole = false
   if (!config.mobileEnableGalaxy) scaled.enableGalaxy = false
+  if (!config.mobileEnableAurora) scaled.enableAurora = false
 
   // Placement has its own mobile setting; 'desktop' keeps the desktop one
   if (config.mobileBlackHolePresetPosition !== 'desktop') {
@@ -236,6 +270,10 @@ export const scaleForMobile = (config: StarCanvasConfig): StarCanvasConfig => {
     scaled.galaxyPosition = config.mobileGalaxyPosition
     scaled.galaxyXRatio = config.mobileGalaxyXRatio
     scaled.galaxyYRatio = config.mobileGalaxyYRatio
+  }
+  if (config.mobileAuroraPosition !== 'desktop') {
+    scaled.auroraPosition = config.mobileAuroraPosition
+    scaled.auroraYRatio = config.mobileAuroraYRatio
   }
   return scaled
 }
@@ -301,6 +339,7 @@ export const resolveColors = (config: StarCanvasConfig): StarCanvasColors => {
     galaxyCore: toRGB(config.galaxyCoreColor),
     galaxyArm: toRGB(config.galaxyArmColor),
     galaxyAccent: toRGB(config.galaxyAccentColor),
+    aurora: config.auroraColors.map((key) => toRGB(key)),
   }
 }
 
@@ -1092,4 +1131,152 @@ export const buildGalaxySprites = (
     sctx.drawImage(layer, 0, 0, width, height)
   })
   galaxy.sprite = canvas
+}
+
+// ── Aurora ──────────────────────────────────────────────────────────────────
+
+/**
+ * Random shapes for the aurora's curtains (none while it is switched off). Each curtain
+ * has its own wavy edge, its own pattern of rays, and its own pace of swaying and fading.
+ */
+export const makeAuroraCurtains = (
+  config: StarCanvasConfig
+): Array<AuroraCurtain> => {
+  if (!config.enableAurora) return []
+  const count = clamp(Math.round(config.auroraCurtains), 1, AURORA_MAX_CURTAINS)
+  return Array.from(
+    { length: count },
+    (_, i): AuroraCurtain => ({
+      weight: 0.7 + Math.random() * 0.3,
+      baseline: 0.24 + Math.random() * 0.1,
+      rise: 0.8 + Math.random() * 0.2,
+      drop: 0.75 + Math.random() * 0.25,
+      hueShift: i / count + (Math.random() - 0.5) * 0.15,
+      waveFreqA: 0.6 + Math.random() * 0.9,
+      wavePhaseA: Math.random() * TAU,
+      waveFreqB: 1.5 + Math.random() * 1.5,
+      wavePhaseB: Math.random() * TAU,
+      veilFreq: 1 + Math.random() * 1.5,
+      veilPhase: Math.random() * TAU,
+      rayFreqA: 0.11 + Math.random() * 0.09,
+      rayPhaseA: Math.random() * TAU,
+      rayFreqB: 0.04 + Math.random() * 0.03,
+      rayPhaseB: Math.random() * TAU,
+      rayFreqC: 0.22 + Math.random() * 0.12,
+      rayPhaseC: Math.random() * TAU,
+      sway: 0.04 + Math.random() * 0.05,
+      swayMs: 45000 + Math.random() * 45000,
+      breathe: 0.04 + Math.random() * 0.06,
+      fadeMs: 8000 + Math.random() * 9000,
+      phase: Math.random(),
+    })
+  )
+}
+
+/** A color along the palette (which wraps around), blended smoothly between neighbors. */
+const paletteAt = (palette: ReadonlyArray<string>, t: number) => {
+  const n = palette.length
+  const u = (((t % 1) + 1) % 1) * n
+  const index = Math.floor(u)
+  const f = u - index
+  const smooth = f * f * (3 - 2 * f)
+  return mixRGB(
+    palette[index % n] ?? WHITE,
+    palette[(index + 1) % n] ?? WHITE,
+    smooth
+  )
+}
+
+/**
+ * Paints every curtain into its canvas. A curtain is a row of thin vertical streaks
+ * around a wavy bright edge: each streak is as tall and as bright as the curtain's glow
+ * and rays say, fades out smoothly above the edge and a long way below it, and takes its
+ * color from the palette according to where it is along the curtain.
+ *
+ * Painted small (see AURORA_RESOLUTION) and stretched by the browser, which also blends
+ * neighboring streaks into soft rays. Setting a canvas's size clears it, so this can be
+ * called again to repaint (new colors after a theme change, a much wider window).
+ */
+export const paintAurora = (
+  canvases: ReadonlyArray<HTMLCanvasElement>,
+  curtains: ReadonlyArray<AuroraCurtain>,
+  config: StarCanvasConfig,
+  colors: StarCanvasColors,
+  screenWidth: number,
+  screenHeight: number
+) => {
+  const palette = colors.aurora.length ? colors.aurora : [WHITE]
+  const w = Math.max(
+    8,
+    Math.round(screenWidth * AURORA_WIDTH * AURORA_RESOLUTION)
+  )
+  const h = Math.max(
+    8,
+    Math.round(screenHeight * config.auroraHeight * AURORA_RESOLUTION)
+  )
+
+  curtains.forEach((curtain, index) => {
+    const canvas = canvases[index]
+    if (!canvas) return
+    canvas.width = w
+    canvas.height = h
+    const sctx = canvas.getContext('2d')
+    if (!sctx) return
+
+    for (let x = 0; x < w; x++) {
+      const t = x / w
+      const wave =
+        (Math.sin(t * TAU * curtain.waveFreqA + curtain.wavePhaseA) * 0.6 +
+          Math.sin(t * TAU * curtain.waveFreqB + curtain.wavePhaseB) * 0.4) *
+        config.auroraWaviness *
+        h *
+        0.18
+      const edge = h * curtain.baseline + wave
+
+      // A broad glow that is brighter in some places, with soft rays on top. The rays
+      // never fall to zero, so the curtain is one continuous glow and not a row of stripes.
+      const veil =
+        0.65 + 0.35 * Math.sin(t * TAU * curtain.veilFreq + curtain.veilPhase)
+      const rays =
+        (Math.sin(x * curtain.rayFreqA + curtain.rayPhaseA) +
+          Math.sin(x * curtain.rayFreqB + curtain.rayPhaseB) +
+          Math.sin(x * curtain.rayFreqC + curtain.rayPhaseC)) /
+        3
+      const ray = clamp(0.5 + 0.9 * rays, 0, 1)
+      const peak = veil * (0.45 + 0.55 * ray)
+
+      const space = Math.max(edge, h * 0.05) // room above the edge
+      const top = Math.max(0, edge - space * curtain.rise * (0.6 + 0.4 * ray))
+      const bottom = Math.min(h, edge + h * AURORA_FALL * curtain.drop)
+      if (bottom <= top) continue
+      const edgeAt = clamp((edge - top) / (bottom - top), 0, 1)
+
+      // Eased ramps up to the bright edge and a long fade below it: no hard line anywhere
+      const rgb = paletteAt(palette, t + curtain.hueShift)
+      const streak = sctx.createLinearGradient(0, top, 0, bottom)
+      for (let step = 0; step <= AURORA_STEPS; step++) {
+        const u = step / AURORA_STEPS
+        streak.addColorStop(edgeAt * u, `rgba(${rgb}, ${peak * u ** 1.3})`)
+      }
+      for (let step = 1; step <= AURORA_STEPS; step++) {
+        const v = step / AURORA_STEPS
+        streak.addColorStop(
+          edgeAt + (1 - edgeAt) * v,
+          `rgba(${rgb}, ${peak * (1 - v) ** 1.5})`
+        )
+      }
+      sctx.fillStyle = streak
+      sctx.fillRect(x, top, 1, bottom - top)
+    }
+
+    // Fade out toward both ends, so the curtain has no visible side edge
+    sctx.globalCompositeOperation = 'destination-in'
+    const ends = sctx.createLinearGradient(0, 0, w, 0)
+    ends.addColorStop(0, 'rgba(0, 0, 0, 0)')
+    ends.addColorStop(0.1, 'rgba(0, 0, 0, 1)')
+    ends.addColorStop(0.9, 'rgba(0, 0, 0, 1)')
+    ends.addColorStop(1, 'rgba(0, 0, 0, 0)')
+    sctx.fillStyle = ends
+    sctx.fillRect(0, 0, w, h)
+  })
 }

@@ -482,6 +482,7 @@ export type StarCanvas = {
   starMinSize?: number
   starMaxSize?: number
   starDriftSpeed?: number
+  enableBackgroundHaze?: boolean
   backgroundHazeColor?:
     | 'brand'
     | 'brand-300'
@@ -653,6 +654,32 @@ export type StarCanvas = {
     | 'grey-300'
     | 'grey-800'
     | 'background-1000'
+  enableAurora?: boolean
+  auroraColors?: Array<
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  >
+  auroraPosition?: 'top' | 'middle' | 'bottom' | 'custom'
+  auroraYRatio?: number
+  auroraHeight?: number
+  auroraIntensity?: number
+  auroraCurtains?: number
+  auroraSpeed?: number
+  auroraWaviness?: number
   blackHoleCoreColor?:
     | 'brand'
     | 'brand-300'
@@ -745,6 +772,9 @@ export type StarCanvas = {
     | 'custom'
   mobileGalaxyXRatio?: number
   mobileGalaxyYRatio?: number
+  mobileEnableAurora?: boolean
+  mobileAuroraPosition?: 'desktop' | 'top' | 'middle' | 'bottom' | 'custom'
+  mobileAuroraYRatio?: number
 }
 
 export type Person = {
@@ -3659,6 +3689,7 @@ export type StarCanvasQueryResult = null | {
   starMinSize?: number
   starMaxSize?: number
   starDriftSpeed?: number
+  enableBackgroundHaze?: boolean
   backgroundHazeColor?:
     | 'amber'
     | 'background-1000'
@@ -3830,6 +3861,32 @@ export type StarCanvasQueryResult = null | {
     | 'rose-pink'
     | 'sky'
     | 'yellow'
+  enableAurora?: boolean
+  auroraColors?: Array<
+    | 'amber'
+    | 'background-1000'
+    | 'background-50'
+    | 'brand-300'
+    | 'brand-850'
+    | 'brand'
+    | 'error-red'
+    | 'golden-yellow'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'sky'
+    | 'yellow'
+  >
+  auroraPosition?: 'bottom' | 'custom' | 'middle' | 'top'
+  auroraYRatio?: number
+  auroraHeight?: number
+  auroraIntensity?: number
+  auroraCurtains?: number
+  auroraSpeed?: number
+  auroraWaviness?: number
   blackHoleCoreColor?:
     | 'amber'
     | 'background-1000'
@@ -3922,6 +3979,9 @@ export type StarCanvasQueryResult = null | {
     | 'top-right'
   mobileGalaxyXRatio?: number
   mobileGalaxyYRatio?: number
+  mobileEnableAurora?: boolean
+  mobileAuroraPosition?: 'bottom' | 'custom' | 'desktop' | 'middle' | 'top'
+  mobileAuroraYRatio?: number
 }
 
 // Query TypeMap

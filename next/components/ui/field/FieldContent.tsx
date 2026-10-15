@@ -40,32 +40,38 @@ export const FieldContent = ({
 }: Omit<FieldProps, 'showSkeleton' | 'loading' | 'rest'>) => {
   return (
     <>
-      <Box className='ui-cluster gap-1'>
-        {label && (
-          <Text as='label' {...labelProps}>
-            <Badge
-              {...badgeProps}
-              variant='outline'
+      {(label || helperText) && (
+        <Box className='ui-cluster gap-1'>
+          {label && (
+            <Text as='label' {...labelProps}>
+              <Badge
+                {...badgeProps}
+                variant='outline'
+                className={cn(
+                  'rounded-md px-1.5 ui-center',
+                  badgeProps?.className
+                )}
+                colorPalette={getLabelPalette({ invalid, valid })}
+              >
+                {label}
+                {required && <Asterisk className='h-3 w-3 overwrite mb-1' />}
+              </Badge>
+            </Text>
+          )}
+          {helperText && (
+            <Text
+              {...helperProps}
               className={cn(
-                'rounded-md px-1.5 ui-center',
-                badgeProps?.className
+                'text-fg-400 text-xs pl-0.5',
+                helperProps?.className
               )}
-              colorPalette={getLabelPalette({ invalid, valid })}
             >
-              {label}
-              {required && <Asterisk className='h-3 w-3 overwrite mb-1' />}
-            </Badge>
-          </Text>
-        )}
-        {helperText && (
-          <Text
-            {...helperProps}
-            className={cn('text-fg-400 text-xs pl-0.5', helperProps?.className)}
-          >
-            {helperText}
-          </Text>
-        )}
-      </Box>
+              {helperText}
+            </Text>
+          )}
+        </Box>
+      )}
+
       {children}
       {invalid && errorText && (
         <Text

@@ -1,18 +1,21 @@
 'use client'
 
 import ChevronDownIcon from '@sanity/icons/ChevronDown'
+import SearchIcon from '@sanity/icons/Search'
 import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
+import { NextLink } from '@/components/common/NextLink'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
 import { useScriptExplorer } from '@/hooks/useScriptExplorer'
 import { cn } from '@/lib/common-utils'
+import { buildSearchHref } from '@/lib/script-search'
 import type { ScriptsSectionProps } from '@/types/components/Scripts.types'
 import { SearchBar } from '../../typography/SearchBar'
 import { CreateScriptModal } from './CreateScriptModal'
-import { ScriptCard } from './ScriptCard'
 import { ScriptFilters } from './ScriptFilters'
+import { ScriptList } from './ScriptList'
 
 const VISIBLE_LIMIT = 5
 
@@ -23,6 +26,7 @@ export const ScriptsSection = ({
   subtitle = UI_STRINGS.scripts.sectionSubtitle,
   className,
   parentSubject,
+  showGlobalSearch = false,
   ...rest
 }: ScriptsSectionProps) => {
   const {
@@ -37,6 +41,7 @@ export const ScriptsSection = ({
   } = useScriptExplorer(scripts)
 
   const shownScripts = visibleScripts.slice(0, VISIBLE_LIMIT)
+  const trimmedQuery = query.trim()
   const hasMore = visibleScripts.length > VISIBLE_LIMIT
 
   return (
@@ -68,20 +73,19 @@ export const ScriptsSection = ({
         {parentSubject && <CreateScriptModal subject={parentSubject} />}
       </Box>
 
-      {shownScripts.length > 0 ? (
-        <Box className='grid-auto-fit gap-3 [--grid-min:22rem]'>
-          {shownScripts.map((script) => (
-            <ScriptCard
-              key={script.id}
-              script={script}
-              className='ui-above-inside'
-            />
-          ))}
-        </Box>
-      ) : (
-        <Text className='ui-above-inside ui-subtitle rounded-xl border border-dashed border-grey-300 px-6 py-14 text-center'>
-          {UI_STRINGS.scripts.emptyState}
-        </Text>
+      <ScriptList
+        scripts={shownScripts}
+        emptyMessage={UI_STRINGS.scripts.emptyState}
+      />
+
+      {showGlobalSearch && trimmedQuery && (
+        <NextLink
+          href={buildSearchHref(trimmedQuery)}
+          className='button subtle w-full gap-2 py-3 ui-body'
+        >
+          <SearchIcon />
+          <Text>{UI_STRINGS.scripts.search.searchAll(trimmedQuery)}</Text>
+        </NextLink>
       )}
 
       {hasMore && (

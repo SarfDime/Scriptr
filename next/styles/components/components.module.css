@@ -156,14 +156,148 @@
 @utility ui-above {
   @apply bg-background-300/50 backdrop-blur-md md:backdrop-blur-xl;
   @apply ui-above-defaults;
+  box-shadow:
+    var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--ui-above-shadow, var(--shadow-above));
+}
+
+/* Same surface as ui-above for the docked navbar (right edge) and the header
+ * (bottom edge): square, one border, and a shadow on that side only. */
+@utility ui-above-nav {
+  @apply ui-above;
+  border-radius: 0;
+  border-width: 0 1px 0 0;
+  --ui-above-shadow: var(--shadow-edge-right);
+}
+
+@utility ui-above-header {
+  @apply ui-above;
+  border-radius: 0;
+  border-width: 0 0 1px;
+  --ui-above-shadow: var(--shadow-edge-bottom);
 }
 
 @utility ui-above-light {
   @apply bg-background-300/65 backdrop-blur-lg md:backdrop-blur-2xl;
   @apply ui-above-defaults;
+  box-shadow:
+    var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--shadow-above);
 }
 
 @utility ui-above-inside {
   @apply bg-background-150/60;
   @apply ui-above-defaults border-background-300/70 rounded-lg;
+  /* Composed with Tailwind's ring variables so `ring-*` (inputs) still shows. */
+  box-shadow:
+    var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--shadow-above-inside);
+}
+
+/* Static brand gradient with a faint dot grid. Used instead of the StarCanvas
+ * in simple mode and when no StarCanvas is configured in Sanity. */
+@utility ui-simple-backdrop {
+  background-color: var(--color-background-100);
+  background-image:
+    radial-gradient(
+      circle at 1px 1px,
+      color-mix(in oklab, var(--color-brand) 16%, transparent) 1px,
+      transparent 0
+    ),
+    radial-gradient(
+      circle at 100% 100%,
+      color-mix(in oklab, var(--color-brand) 60%, transparent) 0%,
+      color-mix(in oklab, var(--color-brand-450) 28%, transparent)
+        var(--simple-glow-mid, 9%),
+      transparent var(--simple-glow-end, 24%)
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      color-mix(in oklab, var(--color-brand-300) 12%, transparent) 0%,
+      transparent 40%
+    ),
+    linear-gradient(
+      var(--simple-tint-angle, 160deg),
+      color-mix(in oklab, var(--color-brand-300) 30%, transparent) 0%,
+      transparent 40%
+    );
+  background-size:
+    28px 28px,
+    auto,
+    auto,
+    auto;
+}
+
+/* Where CSS random() exists, every page load nudges the glow height and the
+ * tint angle a little. Elsewhere the variables fall back to the fixed values
+ * used in `ui-simple-backdrop`. */
+/* biome-ignore lint/correctness/noUnknownFunction: CSS random() is not in Biome's function list yet */
+@supports (width: random(1px, 2px)) {
+  .ui-simple-backdrop {
+    /* biome-ignore lint/correctness/noUnknownFunction: CSS random() */
+    --simple-glow-mid: random(7%, 11%);
+    /* biome-ignore lint/correctness/noUnknownFunction: CSS random() */
+    --simple-glow-end: random(20%, 28%);
+    /* biome-ignore lint/correctness/noUnknownFunction: CSS random() */
+    --simple-tint-angle: random(150deg, 170deg);
+  }
+}
+
+/* Simple mode (<html data-simple>, set by ThemeProvider): no blur, no
+ * animation/transition time, opaque surfaces. */
+:root[data-simple] *,
+:root[data-simple] *::before,
+:root[data-simple] *::after {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* The loading screen keeps its animation (it is the loading indicator), so it
+ * is excluded from the motion clamp. */
+:root[data-simple] :not(.ui-loading-overlay, .ui-loading-overlay *),
+:root[data-simple] :not(.ui-loading-overlay, .ui-loading-overlay *)::before,
+:root[data-simple] :not(.ui-loading-overlay, .ui-loading-overlay *)::after {
+  animation-duration: 0.01ms;
+  animation-delay: 0s;
+  animation-iteration-count: 1;
+  transition-duration: 200ms;
+  transition-delay: 0s;
+  scroll-behavior: auto;
+}
+
+/* The loading overlay always starts fully opaque and eases down to its
+ * regular translucency (`from` only: the end state is the element's own
+ * background), so late-applied settings (simple mode, theme) never show as a
+ * visible shift. */
+@keyframes ui-loading-overlay-in {
+  from {
+    background-color: var(--color-background-100);
+  }
+}
+
+.ui-loading-overlay {
+  animation: ui-loading-overlay-in 1.5s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-loading-overlay {
+    animation: none;
+  }
+}
+
+/* Without blur the 70% overlay would reveal the page behind it. */
+:root[data-simple] .ui-loading-overlay {
+  background-color: var(--color-background-100);
+}
+
+:root[data-simple]
+  :is(.ui-above, .ui-above-light, .ui-above-nav, .ui-above-header) {
+  background-color: var(--color-background-250);
+}
+
+:root[data-simple] .ui-above-inside {
+  background-color: var(--color-background-200);
 }

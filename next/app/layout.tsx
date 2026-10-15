@@ -9,11 +9,9 @@ import { VisualEditing } from 'next-sanity/visual-editing'
 import { MainLayout } from '@/components/layout/PageLayout'
 import { NotificationsAside } from '@/components/notifications/NotificationsAside'
 import { OnboardingModal } from '@/components/onboarding/OnboardingModal'
+import { AppBackground } from '@/components/ui/AppBackground'
 import { DisableDraft } from '@/components/ui/DisableDraft'
-import {
-  CustomStarCanvas,
-  type StarCanvasSanityData,
-} from '@/components/ui/StarCanvas'
+import type { StarCanvasSanityData } from '@/components/ui/StarCanvas'
 import { ToastContainer } from '@/components/ui/toast/ToastContainer'
 import { isStaging } from '@/config/env'
 import { getDraftMode } from '@/lib/common-utils'
@@ -172,7 +170,7 @@ export default async function RootLayout({
       <body>
         <Providers catalog={catalog}>
           <ToastContainer />
-          <CustomStarCanvas sanityData={starCanvasConfig} />
+          <AppBackground sanityData={starCanvasConfig} />
           <NavProvider>
             <NavBar {...navMenu} />
             <MainLayout>{children}</MainLayout>

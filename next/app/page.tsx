@@ -47,7 +47,7 @@ const Page = async () => {
 
       <Divider />
       <Box className='grid gap-10 xl:grid-cols-[minmax(0,1fr)_340px]'>
-        <ScriptsSection scripts={scripts} />
+        <ScriptsSection scripts={scripts} showGlobalSearch />
         {user ? (
           <SubjectsSidebar subjects={subjects.slice(0, 3)} />
         ) : (

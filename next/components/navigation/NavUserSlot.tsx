@@ -1,5 +1,6 @@
 'use client'
 
+import User from '@sanity/icons/User'
 import { UI_STRINGS } from '@shared/config/strings'
 import { getDisplayName } from '@/lib/profile-display'
 import { useMyProfile } from '@/providers/ProfileProvider'
@@ -19,10 +20,8 @@ export const NavUserSlot = () => {
 
   if (session.status === 'unauthenticated') {
     return (
-      <NextLink
-        href='/auth'
-        className='button subtle w-full justify-center gap-2'
-      >
+      <NextLink href='/auth' className='button subtle w-full rounded-lg'>
+        <User />
         <Text className='ui-label'>Sign in</Text>
       </NextLink>
     )

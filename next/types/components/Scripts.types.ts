@@ -121,6 +121,9 @@ export type ScriptsSectionProps = {
   title?: string
   subtitle?: string
   parentSubject?: SubjectDetail
+  /** Shows a link to the site-wide `/search` once a query is typed, since the
+   * local filter only covers the scripts already loaded. */
+  showGlobalSearch?: boolean
 } & BoxPropsWithoutChildren
 
 export type PageDataProps = {

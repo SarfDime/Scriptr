@@ -1,9 +1,11 @@
-import type { SubmitEvent } from 'react'
-import type { AdditionalComponentAttributes } from '../../types/component.types'
+import type { DetailedHTMLProps, FormHTMLAttributes, SubmitEvent } from 'react'
 
 type FormContainerProps = {
-  onSubmit: (e: SubmitEvent<HTMLFormElement>) => void
-} & Omit<AdditionalComponentAttributes, 'onSubmit'>
+  onSubmit?: (e: SubmitEvent<HTMLFormElement>) => void
+} & Omit<
+  DetailedHTMLProps<FormHTMLAttributes<HTMLFormElement>, HTMLFormElement>,
+  'onSubmit'
+>
 
 /** A form container component which wraps a `form` element. It forwards any
  * additional props to the underlying `form` element.

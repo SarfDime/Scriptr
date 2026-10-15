@@ -33,7 +33,7 @@ export const Header = () => {
     <header
       className={cn(
         'sticky top-0 z-10 flex h-16 items-center justify-between',
-        'ui-above border-l-0 border-r-0 border-t-0 rounded-none',
+        'ui-above-header',
         'px-5'
       )}
     >

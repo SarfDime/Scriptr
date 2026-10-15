@@ -36,6 +36,7 @@ export const SubjectsExplorer = ({ subjects }: SubjectsExplorerProps) => {
 
       <Box className='ui-cluster items-start justify-between gap-3'>
         <SearchBar
+          label={UI_STRINGS.subjects.searchLabel}
           inputVal={query}
           inputOnChange={(event) => setQuery(event.target.value)}
           inputProps={{

@@ -8,13 +8,28 @@ export type ThemeMode = 'auto' | 'light' | 'dark'
 type ThemeContextType = {
   mode: ThemeMode
   setMode: (mode: ThemeMode) => void
+  /** Disables blur, transparency, animations and the animated background. */
+  simpleMode: boolean
+  setSimpleMode: (enabled: boolean) => void
 }
 
 const ThemeContext = createContext<ThemeContextType | null>(null)
 const storageKey = 'scriptr-theme'
+const simpleModeStorageKey = 'scriptr-simple-mode'
+
+/** Mirrors simple mode onto <html data-simple> so CSS can react to it. */
+const applySimpleMode = (enabled: boolean) => {
+  const root = document.documentElement
+  if (enabled) {
+    root.dataset.simple = 'true'
+  } else {
+    root.removeAttribute('data-simple')
+  }
+}
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>('auto')
+  const [simpleMode, setSimpleModeState] = useState(false)
   const { startTask, finishTask } = useLoading()
 
   const setMode = (newMode: ThemeMode) => {
@@ -26,6 +41,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       root.dataset.theme = newMode
     }
     window.localStorage.setItem(storageKey, newMode)
+  }
+
+  const setSimpleMode = (enabled: boolean) => {
+    setSimpleModeState(enabled)
+    applySimpleMode(enabled)
+    window.localStorage.setItem(simpleModeStorageKey, String(enabled))
   }
 
   useEffect(() => {
@@ -41,10 +62,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
+    if (window.localStorage.getItem(simpleModeStorageKey) === 'true') {
+      setSimpleModeState(true)
+      applySimpleMode(true)
+    }
+
     finishTask('theme')
   }, [startTask, finishTask])
 
-  return <ThemeContext value={{ mode, setMode }}>{children}</ThemeContext>
+  return (
+    <ThemeContext value={{ mode, setMode, simpleMode, setSimpleMode }}>
+      {children}
+    </ThemeContext>
+  )
 }
 
 export function useTheme() {

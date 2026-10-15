@@ -2658,6 +2658,13 @@
         },
         "optional": true
       },
+      "enableBackgroundHaze": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "boolean"
+        },
+        "optional": true
+      },
       "backgroundHazeColor": {
         "type": "objectAttribute",
         "value": {
@@ -3546,6 +3553,156 @@
         },
         "optional": true
       },
+      "enableAurora": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "boolean"
+        },
+        "optional": true
+      },
+      "auroraColors": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "array",
+          "of": {
+            "type": "union",
+            "of": [
+              {
+                "type": "string",
+                "value": "brand"
+              },
+              {
+                "type": "string",
+                "value": "brand-300"
+              },
+              {
+                "type": "string",
+                "value": "brand-850"
+              },
+              {
+                "type": "string",
+                "value": "sky"
+              },
+              {
+                "type": "string",
+                "value": "jade"
+              },
+              {
+                "type": "string",
+                "value": "lavender"
+              },
+              {
+                "type": "string",
+                "value": "rose-pink"
+              },
+              {
+                "type": "string",
+                "value": "amber"
+              },
+              {
+                "type": "string",
+                "value": "golden-yellow"
+              },
+              {
+                "type": "string",
+                "value": "yellow"
+              },
+              {
+                "type": "string",
+                "value": "error-red"
+              },
+              {
+                "type": "string",
+                "value": "background-50"
+              },
+              {
+                "type": "string",
+                "value": "grey-200"
+              },
+              {
+                "type": "string",
+                "value": "grey-300"
+              },
+              {
+                "type": "string",
+                "value": "grey-800"
+              },
+              {
+                "type": "string",
+                "value": "background-1000"
+              }
+            ]
+          }
+        },
+        "optional": true
+      },
+      "auroraPosition": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "top"
+            },
+            {
+              "type": "string",
+              "value": "middle"
+            },
+            {
+              "type": "string",
+              "value": "bottom"
+            },
+            {
+              "type": "string",
+              "value": "custom"
+            }
+          ]
+        },
+        "optional": true
+      },
+      "auroraYRatio": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "auroraHeight": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "auroraIntensity": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "auroraCurtains": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "auroraSpeed": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "auroraWaviness": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
       "blackHoleCoreColor": {
         "type": "objectAttribute",
         "value": {
@@ -3959,6 +4116,49 @@
         "optional": true
       },
       "mobileGalaxyYRatio": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "mobileEnableAurora": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "boolean"
+        },
+        "optional": true
+      },
+      "mobileAuroraPosition": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "desktop"
+            },
+            {
+              "type": "string",
+              "value": "top"
+            },
+            {
+              "type": "string",
+              "value": "middle"
+            },
+            {
+              "type": "string",
+              "value": "bottom"
+            },
+            {
+              "type": "string",
+              "value": "custom"
+            }
+          ]
+        },
+        "optional": true
+      },
+      "mobileAuroraYRatio": {
         "type": "objectAttribute",
         "value": {
           "type": "number"

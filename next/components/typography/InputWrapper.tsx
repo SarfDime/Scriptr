@@ -44,8 +44,8 @@ export function InputWrapper({
         {...wrapperProps}
         className={cn(
           'relative flex w-full overflow-hidden',
-          'bg-background-200 placeholder:text-fg-50 ring-grey-400 group-data-valid/field:ring-brand-200',
-          'rounded-lg h-10 grow w-full ring-1 px-2 focus-within:ring-brand',
+          'ui-above-inside border-0 py-0 placeholder:text-fg-50 ring-grey-400 group-data-valid/field:ring-brand-200',
+          'rounded-lg h-10 grow w-full ring-1 ring-inset px-2 focus-within:ring-brand',
           'group-data-invalid/field:ring-error-red group-data-invalid/field:focus-within:ring-error-red',
           wrapperProps?.className
         )}

@@ -203,13 +203,17 @@ Priority work, scheduled right after the frontend gaps:
   (professor, study, faculty, university); previously every link went to a
   professor page.
 - `NextImage` requires `sizes` whenever `fillProp` is set.
+- Script search: `/search?q=` (Server Component, `noindex`, cookie forwarded so
+  results are faculty-scoped) backed by `GET /scripts/search`; header search
+  icon links to it, and the homepage `ScriptsSection` links to it from the
+  local filter (`showGlobalSearch`).
 
 ### Todo
 
 Product features:
 
-- **Script search UI:** connect the existing local/API search to the frontend
-  search experience.
+- **Header search bar:** the header icon currently links to `/search`; expand
+  it into an inline search bar that appears on press.
 - **Script management UI:** edit/delete permissions and the remaining guest
   preview/download behavior.
 - **Ratings UI:** professor and subject rating interfaces.
@@ -228,7 +232,8 @@ Product features:
 Correctness and quality:
 
 - **State coverage:** loading, empty and error states on the remaining pages
-  and flows.
+  and flows. Includes `/search`: `searchScripts` goes through
+  `apiFetchPublicRead`, so an API failure currently renders as "no results".
 - **Button accessibility:** require ARIA attributes on
   [`Button.tsx`](next/components/common/Button.tsx) (type level).
 - **Operation-error UX:** standardize operation failures as toasts where
@@ -303,7 +308,7 @@ Deliberately postponed until everything else is done:
 
 ## Suggested Order
 
-1. Finish the main frontend gaps: search UI, script
+1. Finish the main frontend gaps: script
    management, ratings, profile, notification settings, then the
    admin/moderation UI (admin-only).
 2. Close frontend quality work: state coverage, inline strings, accessibility,

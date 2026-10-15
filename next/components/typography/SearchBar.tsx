@@ -37,9 +37,10 @@ export const SearchBar = ({
     }}
     inputProps={{
       ...inputProps,
-      placeholder: UI_STRINGS.scripts.searchPlaceholder,
+      placeholder:
+        inputProps?.placeholder ?? UI_STRINGS.scripts.searchPlaceholder,
       className: cn(
-        'ui-body flex-1 bg-transparent outline-none placeholder:text-fg-400 w-full truncate',
+        'ui-body flex-1 outline-none placeholder:text-fg-400 w-full truncate',
         inputProps?.className
       ),
     }}

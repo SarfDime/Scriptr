@@ -47,9 +47,22 @@ export const UI_STRINGS = {
     favoritesSectionTitle: 'Favorite scripts',
     favoritesSectionSubtitle: 'Scripts saved for later.',
     searchLabel: 'Search scripts',
-    searchPlaceholder: 'Search scripts by name, authors, tags...',
+    searchPlaceholder: 'Search scripts by title, author, or tag...',
     emptyState: 'No scripts match these filters.',
     browseAll: 'Browse all scripts',
+    search: {
+      pageTitle: 'Search scripts',
+      pageSubtitle: 'Find notes and study material across every subject.',
+      formAriaLabel: 'Search all scripts',
+      placeholder: 'Search all scripts by title or description...',
+      submit: 'Search',
+      resultsTitle: 'Results',
+      resultsSubtitle: (query: string) => `Scripts matching “${query}”.`,
+      prompt: 'Enter a search term to find scripts.',
+      noResults: (query: string) =>
+        `No scripts match “${query}”. Try different keywords or check the spelling.`,
+      searchAll: (query: string) => `Search all scripts for “${query}”`,
+    },
     filters: {
       allSubjects: 'All subjects',
       recentlyUpdated: 'Recently updated',
@@ -112,6 +125,7 @@ export const UI_STRINGS = {
   subjects: {
     manage: 'Manage',
     title: 'Subjects',
+    searchLabel: 'Search subjects',
     searchPlaceholder: 'Search subjects, codes, or professors',
     noSubjects: 'No subjects are available for this study yet.',
     noMatchingSubjects: 'No subjects match those filters.',
@@ -171,6 +185,9 @@ export const UI_STRINGS = {
     newScript: 'New script',
     notifications: 'Notifications',
     closeNavigation: 'Close navigation',
+    simpleMode: 'Simple mode',
+    simpleModeDescription:
+      'Turns off blur, transparency, animations and the animated background.',
     openNavigation: 'Open navigation',
     mainNavigation: 'Main navigation',
   },
