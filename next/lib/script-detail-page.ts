@@ -7,6 +7,7 @@ import { getFavorite } from '@/lib/api/favorites-api'
 import { ApiError } from '@/lib/api/next-api'
 import { getScript } from '@/lib/api/scripts-api'
 import { getMyScriptVote, getScriptVoteStats } from '@/lib/api/votes-api'
+import { nextLogs } from '@/lib/logger'
 import { sortFilesByPosition } from '@/lib/script-detail'
 import { getSubjectPath } from '@/lib/subject-path'
 import type { ScriptDetailViewModel } from '@/types/components/ScriptDetail.types'
@@ -27,6 +28,34 @@ const EMPTY_COMMENTS: ScriptComments = {
 }
 
 type ViewerRead<T> = { value: T; failed: boolean }
+
+const getSessionExpiresAt = (sessionCookie: string | undefined) => {
+  if (!sessionCookie) return null
+
+  try {
+    const session: unknown = JSON.parse(sessionCookie)
+    if (
+      typeof session !== 'object' ||
+      session === null ||
+      !('expires_at' in session)
+    ) {
+      return null
+    }
+
+    const expiresAt = session.expires_at
+    if (typeof expiresAt === 'number' && Number.isFinite(expiresAt)) {
+      return expiresAt
+    }
+    if (typeof expiresAt === 'string' && expiresAt.trim()) {
+      const parsedExpiresAt = Number(expiresAt)
+      return Number.isFinite(parsedExpiresAt) ? parsedExpiresAt : null
+    }
+  } catch {
+    return null
+  }
+
+  return null
+}
 
 /** Reads something that depends on who is signed in. No cookie, or a `401`,
  * means the viewer is signed out and `signedOut` is used. Any other failure is
@@ -57,7 +86,18 @@ const readForViewer = async <T>(
 export const loadScriptDetailPage = async (
   scriptId: string
 ): Promise<ScriptDetailPageData> => {
-  const cookieHeader = (await cookies()).toString()
+  const cookieStore = await cookies()
+  const cookieHeader = cookieStore.toString()
+  const authCookie = cookieStore.get('sb-auth-token')?.value
+  const sessionExpiresAt = getSessionExpiresAt(authCookie)
+  const secondsUntilExpiry =
+    sessionExpiresAt === null
+      ? null
+      : sessionExpiresAt - Math.floor(Date.now() / 1000)
+  nextLogs({
+    logLevel: 'info',
+    message: `Script detail auth diagnostic: script=${scriptId} incomingAuthCookie=${authCookie !== undefined} sessionExpiresAt=${sessionExpiresAt ?? 'unknown'} secondsUntilExpiry=${secondsUntilExpiry ?? 'unknown'}`,
+  })
 
   let script: ScriptSummary
   try {

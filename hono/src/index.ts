@@ -37,14 +37,12 @@ app.use('*', async (c, next) => {
   const startedAt = Date.now()
   await next()
 
-  if (c.env.NODE_ENV !== 'production') {
-    honoLogRequest({
-      method: c.req.method,
-      path: c.req.path,
-      status: c.res.status,
-      durationMs: Date.now() - startedAt,
-    })
-  }
+  honoLogRequest({
+    method: c.req.method,
+    path: c.req.path,
+    status: c.res.status,
+    durationMs: Date.now() - startedAt,
+  })
 })
 
 app.use(

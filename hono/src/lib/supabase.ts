@@ -93,6 +93,45 @@ export const authMiddleware = async (
   next: () => Promise<void>
 ) => {
   try {
+    const isScriptViewerRead =
+      c.req.method === 'GET' &&
+      (c.req.path.startsWith('/api/favorites/') ||
+        c.req.path.endsWith('/my-vote'))
+    if (isScriptViewerRead) {
+      const sessionCookie = getCookie(c, 'sb-auth-token')
+      let sessionExpiresAt: number | null = null
+      if (sessionCookie) {
+        try {
+          const session: unknown = JSON.parse(sessionCookie)
+          if (
+            typeof session === 'object' &&
+            session !== null &&
+            'expires_at' in session
+          ) {
+            const expiresAt = session.expires_at
+            if (typeof expiresAt === 'number' && Number.isFinite(expiresAt)) {
+              sessionExpiresAt = expiresAt
+            } else if (typeof expiresAt === 'string' && expiresAt.trim()) {
+              const parsedExpiresAt = Number(expiresAt)
+              if (Number.isFinite(parsedExpiresAt)) {
+                sessionExpiresAt = parsedExpiresAt
+              }
+            }
+          }
+        } catch {
+          // Keep malformed cookie details out of logs.
+        }
+      }
+      const secondsUntilExpiry =
+        sessionExpiresAt === null
+          ? null
+          : sessionExpiresAt - Math.floor(Date.now() / 1000)
+      honoLog({
+        logLevel: 'info',
+        message: `Script viewer auth diagnostic: ${c.req.method} ${c.req.path} authCookiePresent=${sessionCookie !== undefined} sessionExpiresAt=${sessionExpiresAt ?? 'unknown'} secondsUntilExpiry=${secondsUntilExpiry ?? 'unknown'}`,
+      })
+    }
+
     const supabase = createSupabaseClient(c)
 
     const {
