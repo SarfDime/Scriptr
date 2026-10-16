@@ -10,8 +10,8 @@ a `dbId`; see `ARCHITECTURE.md` §2 for the sync model.
 From the repository root:
 
 ```bash
-npm install
-npm run dev:sanity
+corepack pnpm install
+corepack pnpm dev:sanity
 ```
 
 Copy `sanity/.env.example` to `sanity/.env`:
@@ -30,20 +30,20 @@ SANITY_STUDIO_INTERNAL_SECRET=development_secret_key
 
 ## Commands
 
-Run from the repository root (`--workspace sanity` where a script is local):
+Run from the repository root:
 
 ```bash
-npm run dev:sanity        # Start the Studio
-npm run build:sanity      # Build the Studio
-npm run check-types:sanity # Type-check this workspace
-npm run sanity:typegen    # Extract schema.json and generate types
-npm run sanity:schema     # Extract schema.json only
-npm run sanity:types      # Generate TypeScript types only
+corepack pnpm dev:sanity        # Start the Studio
+corepack pnpm build:sanity      # Build the Studio
+corepack pnpm check-types:sanity # Type-check this workspace
+corepack pnpm sanity:typegen    # Extract schema.json and generate types
+corepack pnpm sanity:schema     # Extract schema.json only
+corepack pnpm sanity:types      # Generate TypeScript types only
 ```
 
 TypeGen writes to `shared/types/sanity.types.ts` from the queries under
-`next/sanity/queries/`. Run `npm run sanity:typegen` after any schema change,
-then `npm run check-types`. Never hand-edit `sanity/schema.json` or
+`next/sanity/queries/`. Run `corepack pnpm sanity:typegen` after any schema change,
+then `corepack pnpm check-types`. Never hand-edit `sanity/schema.json` or
 `shared/types/sanity.types.ts`.
 
 ## Academic entity actions

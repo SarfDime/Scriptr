@@ -1,5 +1,5 @@
-import type { AcademicEntityType } from '@shared/config/api'
-import { type ApiEndpoint, apiRoutes } from '@shared/config/api-routes'
+import type { AcademicEntityType } from '../config/api'
+import { type ApiEndpoint, apiRoutes } from '../config/api-routes'
 import type {
   FileType,
   FlagTargetType,

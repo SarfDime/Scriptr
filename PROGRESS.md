@@ -12,8 +12,8 @@ the detail) and then what is left. Tags: **[bug]**, **[decision]** (needs a
 call before anyone builds it).
 
 > **Standing rule:** any Postgres or Sanity schema change is followed by
-> `npm run gen:api-types` / `npm run sanity:typegen` and a clean
-> `npm run check-types` before it counts as done.
+> `corepack pnpm gen:api-types` / `corepack pnpm sanity:typegen` and a clean
+> `corepack pnpm check-types` before it counts as done.
 
 ## Backend API
 
@@ -167,7 +167,7 @@ Priority work, scheduled right after the frontend gaps:
 ### Done
 
 - `apiRoutes` generated from the route configuration, `apiFetch` as the shared
-  request layer with per-domain wrappers (`npm run gen:api-endpoints`).
+  request layer with per-domain wrappers (`corepack pnpm gen:api-endpoints`).
 - Shared contracts in `shared/`: API response types, Sanity TypeGen output,
   academic entity transforms, config. `UserRole`, `ProfileSubjectStatus` and
   `FlagStatus` live in `shared/types/`.

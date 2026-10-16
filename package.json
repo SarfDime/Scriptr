@@ -1,43 +1,36 @@
 {
-  "allowScripts": {
-    "esbuild@0.28.2": true
-  },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
-    "@types/node": "^24.19.1",
+    "@types/node": "^24.19.2",
     "typescript": "^7.0.2"
   },
   "engines": {
     "node": ">=24"
   },
   "name": "scriptr",
+  "packageManager": "pnpm@12.14.0",
   "private": true,
   "scripts": {
-    "build": "npm run build:next",
-    "build:next": "npm run build --workspace next",
-    "build:sanity": "npm run build --workspace sanity",
-    "check-types": "npm run check-types --workspace hono && npm run check-types --workspace next && npm run check-types --workspace sanity",
-    "check-types:sanity": "npm run check-types --workspace sanity",
-    "clean": "rm -rf package-lock.json next/node_modules hono/node_modules sanity/node_modules node_modules next/.next sanity/.sanity sanity/tsconfig.tsbuildinfo sanity/dist next/tsconfig.tsbuildinfo hono/tsconfig.tsbuildinfo tsconfig.tsbuildinfo",
-    "dev": "npm run dev:next & npm run dev:hono & npm run dev:sanity",
-    "dev:hono": "npm run dev --workspace hono",
-    "dev:next": "npm run dev --workspace next",
-    "dev:sanity": "npm run dev --workspace sanity",
-    "dev:sanity:ninja": "npm run dev:ninja --workspace sanity",
-    "format": "biome check --write --unsafe .",
-    "gen:api-endpoints": "tsx hono/scripts/generate-endpoints.ts && npm run format",
-    "gen:api-types": "npm run gen:types --workspace hono && npm run format",
-    "lint": "biome check .",
-    "next": "npm run start:next",
-    "sanity:schema": "npm run schema:extract --workspace sanity",
-    "sanity:typegen": "npm run typegen --workspace sanity",
-    "sanity:types": "npm run types:generate --workspace sanity",
-    "setup": "rm -rf next/node_modules hono/node_modules sanity/node_modules node_modules next/.next sanity/.sanity sanity/tsconfig.tsbuildinfo next/tsconfig.tsbuildinfo hono/tsconfig.tsbuildinfo tsconfig.tsbuildinfo package-lock.json && npm i",
-    "start:next": "npm run start --workspace next"
-  },
-  "workspaces": [
-    "next",
-    "hono",
-    "sanity"
-  ]
+    "build": "corepack pnpm build:next",
+    "build:next": "corepack pnpm --filter scriptr-next build",
+    "build:sanity": "corepack pnpm --filter scriptr-sanity build",
+    "check-types": "corepack pnpm --filter @scriptr/api check-types && corepack pnpm --filter scriptr-next check-types && corepack pnpm --filter scriptr-sanity check-types",
+    "check-types:sanity": "corepack pnpm --filter scriptr-sanity check-types",
+    "clean": "rm -rf next/node_modules hono/node_modules sanity/node_modules shared/node_modules node_modules next/.next sanity/.sanity next/tsconfig.tsbuildinfo hono/tsconfig.tsbuildinfo tsconfig.tsbuildinfo",
+    "dev": "corepack pnpm dev:next & corepack pnpm dev:hono & corepack pnpm dev:sanity",
+    "dev:hono": "corepack pnpm --filter @scriptr/api dev",
+    "dev:next": "corepack pnpm --filter scriptr-next dev",
+    "dev:sanity": "corepack pnpm --filter scriptr-sanity dev",
+    "dev:sanity:ninja": "corepack pnpm --filter scriptr-sanity dev:ninja",
+    "format": "corepack pnpm exec biome check --write --unsafe .",
+    "gen:api-endpoints": "corepack pnpm --filter @scriptr/api exec tsx scripts/generate-endpoints.ts && corepack pnpm format",
+    "gen:api-types": "corepack pnpm --filter @scriptr/api gen:types && corepack pnpm format",
+    "lint": "corepack pnpm exec biome check .",
+    "next": "corepack pnpm start:next",
+    "sanity:schema": "corepack pnpm --filter scriptr-sanity schema:extract",
+    "sanity:typegen": "corepack pnpm --filter scriptr-sanity typegen",
+    "sanity:types": "corepack pnpm --filter scriptr-sanity types:generate",
+    "setup": "corepack pnpm install --frozen-lockfile",
+    "start:next": "corepack pnpm --filter scriptr-next start"
+  }
 }

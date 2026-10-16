@@ -29,22 +29,27 @@ protection response instead of JSON.
 
 ## Project Commands
 
-Both projects install from the repository root:
+The projects remain rooted at `next/` and `hono/`. Their `vercel.json` files
+set filtered install and build commands, overriding the corresponding project
+dashboard commands. The commands run from the repository root so pnpm can read
+`pnpm-workspace.yaml` and link `shared/`; each selects the app, its workspace
+dependencies, and the lightweight root toolchain:
 
 ```text
-npm install --prefix .. --include=dev
+cd .. && corepack pnpm install --frozen-lockfile --filter scriptr... --filter scriptr-next...
+cd .. && corepack pnpm install --frozen-lockfile --filter scriptr... --filter @scriptr/api...
 ```
 
-`scriptr-web` builds with:
+The `scriptr-web` build command is:
 
 ```text
-npm run --prefix .. build:next
+cd .. && corepack pnpm --filter scriptr-next build
 ```
 
-`scriptr-api` validates its deployment with:
+The `scriptr-api` build command is:
 
 ```text
-npx tsc --noEmit -p tsconfig.json
+cd .. && corepack pnpm --filter @scriptr/api check-types
 ```
 
 ## API Runtime Contract
@@ -118,11 +123,12 @@ setting enabled. Vercel assigns `scriptr.uk` to each new production deployment;
 no separate alias workflow or GitHub token is required.
 
 Both projects use `git.deploymentEnabled` in their project-root `vercel.json`:
-Git deployments from `main` and `staging` are enabled, while other branches are
-disabled. The `staging` deployment remains a Vercel Preview deployment. The
-project-level Ignored Build Step further limits builds on allowed branches to
-`feat:` and `fix:` commit subjects. This branch allowlist applies to automatic
-Git deployments; manually initiated Vercel CLI deployments are separate.
+Git deployments from `main`, `staging`, and branches matching `feat-*`,
+`feat/**`, `fix-*`, or `fix/**` are enabled; other branches are disabled. The
+`staging` deployment remains a Vercel Preview deployment. The project-level
+Ignored Build Step further limits automatic builds to commits whose subjects
+start with `feat:` or `fix:`. This branch allowlist applies to automatic Git
+deployments; manually initiated Vercel CLI deployments are separate.
 
 After changing production environment variables, redeploy both Vercel projects;
 `NEXT_PUBLIC_API_URL` is inlined at build time. Users need to sign in once again
@@ -152,8 +158,8 @@ Access-Control-Allow-Credentials: true
 Run these repository checks before deployment-related commits:
 
 ```bash
-npm run check-types --workspace hono
-npm run check-types --workspace next
-npm run check-types --workspace sanity
-npm run build --workspace next
+corepack pnpm --filter @scriptr/api check-types
+corepack pnpm --filter scriptr-next check-types
+corepack pnpm --filter scriptr-sanity check-types
+corepack pnpm --filter scriptr-next build
 ```

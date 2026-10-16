@@ -17,9 +17,9 @@
 
 ## Validation
 
-- [ ] `npm run check-types`
-- [ ] `npm run format`
-- [ ] Generated files regenerated when needed (`npm run gen:api-types`, `npm run sanity:typegen`, `npm run gen:api-endpoints`)
+- [ ] `corepack pnpm check-types`
+- [ ] `corepack pnpm format`
+- [ ] Generated files regenerated when needed (`corepack pnpm gen:api-types`, `corepack pnpm sanity:typegen`, `corepack pnpm gen:api-endpoints`)
 - [ ] Docs updated (`PROGRESS.md`; `API_DOCUMENTATION.md` and `API_TESTING_GUIDE.md` for route changes; `ARCHITECTURE.md` if the design changed)
 - [ ] Relevant manual testing completed
 

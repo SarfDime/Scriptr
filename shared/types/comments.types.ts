@@ -1,4 +1,4 @@
-import type { REACTION_TYPES } from '@shared/config/shared-constants'
+import type { REACTION_TYPES } from '../config/shared-constants'
 import type { Tables } from './database.types'
 import type { PortableTextValue } from './portable-text.types'
 

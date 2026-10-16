@@ -1,4 +1,4 @@
-import { PORTABLE_TEXT_LIMITS } from '@shared/config/portable-text-limits'
+import { PORTABLE_TEXT_LIMITS } from '../config/portable-text-limits'
 import {
   ALIGNMENTS,
   COLORS,
@@ -6,8 +6,8 @@ import {
   FONT_SIZE_STYLES,
   FONT_WEIGHTS,
   LIST_ITEMS,
-} from '@shared/config/shared-pt-config'
-import type { PortableTextValue } from '@shared/types/portable-text.types'
+} from '../config/shared-pt-config'
+import type { PortableTextValue } from '../types/portable-text.types'
 
 type PortableTextBlock = Extract<
   NonNullable<PortableTextValue>[number],

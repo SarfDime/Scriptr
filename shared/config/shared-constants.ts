@@ -1,7 +1,7 @@
 // Per ARCHITECTURE.md §3: supported file types and the current per-file cap.
 // The cap is documented as "adjustable" — keep this the single source of
 
-import type { SubjectExamSession } from '@shared/types/academic.types'
+import type { SubjectExamSession } from '../types/academic.types'
 
 // truth here rather than repeating the literal elsewhere if it changes.
 export const ALLOWED_EXTENSIONS = [

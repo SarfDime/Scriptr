@@ -3,11 +3,12 @@ name: Dry-run Sanity validation
 on:
   push:
     branches:
+      - staging
       - "*-s-*"
-      - "*-f-*"
 
 jobs:
   validate:
+    if: github.ref != 'refs/heads/staging' || contains(github.event.head_commit.message, '-s-')
     runs-on: ubuntu-latest
 
     strategy:
@@ -19,23 +20,29 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.14.0
+          run_install: false
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: npm
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
-        run: npm ci
+        run: corepack pnpm install --frozen-lockfile --filter scriptr... --filter scriptr-sanity...
 
       - name: Lint project and check Sanity types
-        run: npm run lint && npm run check-types:sanity
+        run: corepack pnpm lint && corepack pnpm check-types:sanity
 
       - name: Build Sanity Studio
-        run: npm run build:sanity
+        run: corepack pnpm build:sanity
 
       - name: Validate GraphQL schema without deploying
         env:
           SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
           SANITY_STUDIO_INTERNAL_SECRET: ${{ secrets.SANITY_STUDIO_INTERNAL_SECRET }}
-        run: npm -w sanity run deploy-graphql -- --dataset production --dry-run
+        run: corepack pnpm --filter scriptr-sanity run deploy-graphql:dry

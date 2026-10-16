@@ -1,7 +1,7 @@
 /** Every user-facing string in the comments UI. Entries that depend on a value
  * (counts, names, labels) are small functions so wording and pluralisation
  * stay here instead of leaking into components. */
-import { PORTABLE_TEXT_LIMITS } from '@shared/config/portable-text-limits'
+import { PORTABLE_TEXT_LIMITS } from '../config/portable-text-limits'
 
 export const COMMENT_STRINGS = {
   general: {

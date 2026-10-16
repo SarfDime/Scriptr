@@ -1,5 +1,5 @@
-import type { BREAKPOINTS } from '@shared/config/next-constants'
-import type { ButtonVariantType } from '@shared/config/shared-pt-config'
+import type { BREAKPOINTS } from '../config/next-constants'
+import type { ButtonVariantType } from '../config/shared-pt-config'
 import type { PortableTextValue } from './portable-text.types'
 import type { SanityImageType } from './sanity-transform.types'
 

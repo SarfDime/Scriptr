@@ -18,8 +18,8 @@ award-checking, user restrictions, and Cloudflare R2 file operations.
 From the repository root:
 
 ```bash
-npm install
-npm run dev:hono
+corepack pnpm install
+corepack pnpm dev:hono
 ```
 
 The API starts on port `8787` by default. Set `PORT` to override it.
@@ -59,11 +59,11 @@ Never commit `.env` files or storage credentials.
 ## Commands
 
 ```bash
-npm run dev:hono
-npm run check-types --workspace hono
-npm run format
-npm run gen:api-types
-npm run gen:api-endpoints
+corepack pnpm dev:hono
+corepack pnpm --filter @scriptr/api check-types
+corepack pnpm format
+corepack pnpm gen:api-types
+corepack pnpm gen:api-endpoints
 ```
 
 Formatting is run from the repository root and applies Biome fixes
@@ -134,5 +134,5 @@ Every route file (`src/routes/*.ts`) needs an explicit
 fully built and documented but never mounted type-checks clean, passes review,
 and silently 404s in production (this already happened once with `ratings.ts`).
 Before calling route work done, grep `src/index.ts` for the new route file,
-run `npm run gen:api-endpoints`, and update `API_DOCUMENTATION.md`,
+run `corepack pnpm gen:api-endpoints`, and update `API_DOCUMENTATION.md`,
 `API_TESTING_GUIDE.md`, and `PROGRESS.md`.

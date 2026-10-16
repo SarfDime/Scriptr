@@ -1,6 +1,6 @@
 /** biome-ignore-all lint/suspicious/noTemplateCurlyInString: <Needed since the code uses template literals for dynamic paths with dynamic segments like :id> */
 
-import { QUERY_CONFIG } from '@shared/config/api'
+import { QUERY_CONFIG } from '@scriptr/shared/config/api'
 import { camelCase, capitalize } from '@shared/utils/common-utils'
 import fs from 'fs'
 import path from 'path'

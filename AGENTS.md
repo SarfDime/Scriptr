@@ -20,13 +20,13 @@
 * **User-facing strings** live in `shared/strings/<area>-strings.ts` (`comments-strings.ts`, `scripts-strings.ts`) or `UI_STRINGS` (`shared/config/strings.ts`) — never inline in components. Copy that depends on a value is a small function in the strings object. Check both before adding a string and reuse rather than duplicate.
 * Academic entity types (faculty/study/subject/etc.) are derived from the Sanity TypeGen query-result type via `WithResolvedSanityData<...>` (`shared/types/sanity-transform.types.ts`), e.g. `NonNullable<WithResolvedSanityData<StudyDetailQueryResult>>`, not hand-written. Hand-write a type only where no query-result type exists.
 * NEVER hand-edit generated files: `shared/types/database.types.ts`, `shared/types/sanity.types.ts`, `sanity/schema.json`, `hono/src/types/supabase.ts`, `shared/config/api-routes.ts`.
-  * Postgres schema change: `npm run gen:api-types`.
-  * Sanity schema change: `npm run sanity:typegen`.
-  * `shared/config/api-routes.ts`: run `npm run gen:api-endpoints` after adding, removing, or renaming a route (it does not regenerate on dev); edit its source, `shared/config/api.ts`, never the output.
-  * After any schema change, grep/remove dead references across `hono/`, `next/`, and `sanity/`, then run a full `npm run check-types`. A schema change isn't done until types are regenerated and everything typechecks.
+  * Postgres schema change: `corepack pnpm gen:api-types`.
+  * Sanity schema change: `corepack pnpm sanity:typegen`.
+  * `shared/config/api-routes.ts`: run `corepack pnpm gen:api-endpoints` after adding, removing, or renaming a route (it does not regenerate on dev); edit its source, `shared/config/api.ts`, never the output.
+  * After any schema change, grep/remove dead references across `hono/`, `next/`, and `sanity/`, then run a full `corepack pnpm check-types`. A schema change isn't done until types are regenerated and everything typechecks.
 * Secrets only in `.env`, never in docs/fixtures/commits.
 * Validate the smallest affected workspace first; implement and verify locally, don't stop at a plan. Keep changes scoped — no unrelated refactors riding along.
-* Commands (from root): `npm run dev:{hono|next|sanity}`, `npm run check-types` (`--workspace {name}` to scope), `npm run format` (Biome; this replaces manual lint, don't run a separate linter).
+* Commands (from root): `corepack pnpm dev:{hono|next|sanity}`, `corepack pnpm check-types` (`--filter <package>` to scope), `corepack pnpm format` (Biome; this replaces manual lint, don't run a separate linter).
 * Docs hygiene: when a feature or route changes, update `PROGRESS.md` (status), and `ARCHITECTURE.md` if the design changed. Doc filenames are uppercase (`ARCHITECTURE.md`, `PROGRESS.md`).
 
 **Database & Supabase**
@@ -41,7 +41,7 @@
 * Arrow functions, RESTful conventions, consistent status codes.
 * **Typed responses:** define each route's response type in `shared/types/` and apply it at the route (`c.json<LoginResponse>(...)`). New or changed routes must add/update the shared type rather than returning an untyped object.
 * Always update `API_DOCUMENTATION.md` and `API_TESTING_GUIDE.md` when a route changes, and reflect the change in `PROGRESS.md`.
-* **Mount new route files:** a built, documented route file with no `.route()` call in `hono/src/index.ts` type-checks clean and silently 404s in production. Grep `index.ts` for it before calling the work done, then run `npm run gen:api-endpoints` so `apiRoutes` picks it up.
+* **Mount new route files:** a built, documented route file with no `.route()` call in `hono/src/index.ts` type-checks clean and silently 404s in production. Grep `index.ts` for it before calling the work done, then run `corepack pnpm gen:api-endpoints` so `apiRoutes` picks it up.
 * Restriction checks (`profile_restrictions`/`is_restricted()`) block create/update only, never delete/remove — confirm against `ARCHITECTURE.md §4` before adding or removing a check, don't infer it from a similar-looking endpoint.
 * New route files should mirror an existing sibling with the same access shape (e.g. a new own-resource table → copy `profile-subjects.ts`'s shape, not `flags.ts`'s) rather than inventing a new pattern.
 * **Type-only Sanity imports:** `hono/src/sanity-stub.d.ts` stubs `@sanity/client`'s module augmentation target so `hono/` can import Sanity TypeGen types without the package. Don't remove it, and don't install `@sanity/client` just to silence a missing-module error.

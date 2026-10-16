@@ -1,0 +1,24 @@
+{
+  "name": "@scriptr/shared",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "dependencies": {
+    "@sanity/icons": "^5.2.3"
+  },
+  "peerDependencies": {
+    "@sanity/client": "^8.9.0"
+  },
+  "peerDependenciesMeta": {
+    "@sanity/client": {
+      "optional": true
+    }
+  },
+  "exports": {
+    "./*": {
+      "types": "./*.ts",
+      "import": "./*.ts",
+      "default": "./*.ts"
+    }
+  }
+}

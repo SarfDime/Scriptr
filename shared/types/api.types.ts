@@ -1,4 +1,4 @@
-import type { ApiEndpoint } from '@shared/config/api-routes'
+import type { ApiEndpoint } from '../config/api-routes'
 import type { Tables } from './database.types'
 
 type FlagTargetType = 'user' | 'script' | 'comment'

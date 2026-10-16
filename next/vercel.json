@@ -1,9 +1,15 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "cd .. && corepack pnpm install --frozen-lockfile --filter scriptr... --filter scriptr-next...",
+  "buildCommand": "cd .. && corepack pnpm --filter scriptr-next build",
   "git": {
     "deploymentEnabled": {
       "main": true,
       "staging": true,
+      "feat-*": true,
+      "feat/**": true,
+      "fix-*": true,
+      "fix/**": true,
       "**": false
     }
   }

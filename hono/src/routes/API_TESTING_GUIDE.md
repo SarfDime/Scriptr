@@ -8,7 +8,7 @@ Run each block in order from a shell with `curl` and `jq`. Start the API
 first:
 
 ```bash
-npm run dev:hono
+corepack pnpm dev:hono
 BASE=http://localhost:8787/api
 ```
 
@@ -590,7 +590,7 @@ rm -f cookies-student.txt cookies-admin.txt /tmp/test-script.md /tmp/test-script
 
 | Symptom                                               | Cause                                                                                                              |
 | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `{"error":"Not authenticated"}`                       | Missing `-b cookies-*.txt`, or the session expired or was cleared (access tokens last one week) — log in again                                              |
+| `{"error":"Not authenticated"}`                       | Missing `-b cookies-*.txt`, or the session expired or was cleared (access tokens last one week) — log in again     |
 | `{"error":"Forbidden"}` on any catalog/internal route | `x-internal-secret` header missing/wrong, or `INTERNAL_API_SECRET` unset in `hono/.env` (restart after setting it) |
 | `403` on a create/update that should work             | The account is still restricted from Phase 10b — lift it with `DELETE /restrictions/:profileId`                    |
 | `404 Route not found` on a documented endpoint        | The route file isn't mounted in `hono/src/index.ts`                                                                |

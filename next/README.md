@@ -7,8 +7,8 @@ This directory contains the Next.js frontend, reusable components, and styling. 
 From the repository root:
 
 ```bash
-npm install
-npm run dev:next
+corepack pnpm install
+corepack pnpm dev:next
 ```
 
 The app runs with Next.js and connects to `http://localhost:8787` by default.
@@ -34,9 +34,9 @@ Do not expose private tokens through variables prefixed with `NEXT_PUBLIC_`.
 ## Commands
 
 ```bash
-npm run dev:next
-npm run check-types --workspace next
-npm run build:next
+corepack pnpm dev:next
+corepack pnpm --filter scriptr-next check-types
+corepack pnpm build:next
 ```
 
 ## Calling the API

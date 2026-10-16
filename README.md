@@ -1,6 +1,6 @@
 # Scriptr
 
-Scriptr is a university script-sharing platform. The repository is a single npm
+Scriptr is a university script-sharing platform. The repository is a single pnpm
 workspace containing a Hono API, a Next.js frontend, and a Sanity Studio.
 
 ## Packages
@@ -15,7 +15,7 @@ workspace containing a Hono API, a Next.js frontend, and a Sanity Studio.
 ## Requirements
 
 - Node.js 24+ (LTS)
-- npm
+- Corepack with pnpm 12 (pinned in `package.json`)
 - Supabase credentials for the API
 - Cloudflare R2 credentials for uploads
 - Sanity project credentials for the Studio and frontend
@@ -23,8 +23,13 @@ workspace containing a Hono API, a Next.js frontend, and a Sanity Studio.
 ## Install
 
 ```bash
-npm install
+corepack pnpm install
 ```
+
+The root `pnpm-lock.yaml` covers the workspaces. pnpm's isolated linker keeps
+each workspace limited to its declared dependencies. `shared/` is a lightweight
+workspace package; its TypeScript source remains available through the existing
+`@shared/*` path aliases.
 
 ## Environment
 
@@ -47,32 +52,38 @@ Keep secrets out of source control.
 ## Commands
 
 ```bash
-npm run dev                # Start Next.js, the Hono API, and Sanity Studio together
-npm run dev:hono           # Start the Hono API
-npm run dev:next           # Start the Next.js frontend
-npm run dev:sanity         # Start Sanity Studio
-npm run build:next         # Build the frontend
-npm run start:next         # Serve the built frontend
-npm run build:sanity       # Build Sanity Studio
-npm run gen:api-types      # Generate Supabase API types
-npm run gen:api-endpoints  # Regenerate shared/config/api-routes.ts from the live route tree
-npm run check-types        # Type-check all workspaces
-npm run check-types:sanity # Type-check Sanity only
-npm run format             # Apply Biome formatting and safe fixes (replaces a separate lint step)
-npm run sanity:typegen     # Extract the Sanity schema and generate types
-npm run sanity:schema      # Extract schema.json only
-npm run sanity:types       # Generate TypeScript types only
+corepack pnpm dev                # Start Next.js, the Hono API, and Sanity Studio together
+corepack pnpm dev:hono           # Start the Hono API
+corepack pnpm dev:next           # Start the Next.js frontend
+corepack pnpm dev:sanity         # Start Sanity Studio
+corepack pnpm build:next         # Build the frontend
+corepack pnpm start:next         # Serve the built frontend
+corepack pnpm build:sanity       # Build Sanity Studio
+corepack pnpm gen:api-types      # Generate Supabase API types
+corepack pnpm gen:api-endpoints  # Regenerate shared/config/api-routes.ts from the live route tree
+corepack pnpm check-types        # Type-check all workspaces
+corepack pnpm check-types:sanity # Type-check Sanity only
+corepack pnpm format             # Apply Biome formatting and safe fixes (replaces a separate lint step)
+corepack pnpm sanity:typegen     # Extract the Sanity schema and generate types
+corepack pnpm sanity:schema      # Extract schema.json only
+corepack pnpm sanity:types       # Generate TypeScript types only
 ```
 
 ## Deployment and branch behavior
 
-The deploy flow is controlled by the branch name, which keeps schema-only
-changes separate from full production deploys:
-
-- Branch names containing `-s-` run the Sanity-only action path, the dry-run
-  validation flow for schema and Studio changes.
-- Branch names containing `-f-` run the full deploy path, including Sanity and
-  any other release actions such as Vercel or app deploys.
+- Branches matching `*-s-*` run the Sanity validation workflow: lint, Sanity
+  type-check, Studio build, and a GraphQL schema dry-run. These branches do
+  not deploy the production Studio or schema.
+- Pushes to `staging` run the same dry-run only when the commit message
+  contains `-s-`.
+- Vercel Git deployments are enabled for `main`, `staging`, and branches
+  matching `feat-*`, `feat/**`, `fix-*`, or `fix/**`. The Ignored Build Step
+  also requires commit subjects starting with `feat:` or `fix:`. See
+  [Vercel deployment](VERCEL_DEPLOYMENT.md) for details.
+- The production Sanity workflow deploys the Studio and GraphQL schema from
+  `main-sanity` only when the pushed commit message contains `-s-`. The manual
+  force-deploy workflow is restricted to `main-sanity` but does not require
+  `-s-` in the commit message.
 
 ### Production deploy commands
 
@@ -82,14 +93,22 @@ Deploy the production website:
 git push origin staging:main
 ```
 
+Vercel may skip the build if the pushed commit subject does not start with
+`feat:` or `fix:`.
+
 Deploy the Sanity production studio and schema:
 
 ```bash
 git push origin staging:main-sanity
 ```
 
-If a Sanity deploy fails for non-critical type changes or related schema drift,
-use the force deploy action so the GraphQL/schema update can be pushed again.
+Ensure the pushed commit message contains `-s-` to trigger the regular Sanity
+deploy workflow. The manual force-deploy workflow is independent of that marker.
+
+Use the manual force-deploy workflow on `main-sanity` only when an intentional
+breaking GraphQL schema change is blocked. It redeploys the Studio and deploys
+the schema with breaking-change protection disabled; it does not bypass lint,
+type-check, or build failures.
 
 The Studio is deployed at https://scriptr.sanity.studio.
 

@@ -345,6 +345,6 @@ picking a step.
 - Keep layout responsive with flex, grid, container, and gap utilities.
 - Keep focus states and accessible labels on interactive controls.
 - Keep repeated framed content in `Card`; use unframed layout for page sections.
-- Validate frontend changes with `npm run check-types --workspace next` and
-  `npm run format` from the repository root. Formatting applies Biome fixes
+- Validate frontend changes with `corepack pnpm --filter scriptr-next check-types`
+  and `corepack pnpm format` from the repository root. Formatting applies Biome fixes
   automatically; do not run lint as a separate validation step.
