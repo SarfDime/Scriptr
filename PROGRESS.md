@@ -1,9 +1,9 @@
 # Scriptr: Progress & Todos
 
 What's built and what's outstanding. See `ARCHITECTURE.md` for the current
-system design and `TODO.md` for ideas that are not yet concrete work.
+system design. This is the single source of truth for planned work and ideas.
 
-Last reconciled: 2026-10-15.
+Last reconciled: 2026-10-16.
 
 In-code `TODO` and `Deferred:` comments have been removed from the source; the
 work they described is tracked below with a link to the code it belonged to.
@@ -228,6 +228,13 @@ Product features:
 - **Study overview metadata:** more administrator/study metadata on the card in
   [`StudyOverviewCard.tsx`](next/components/academics/study/StudyOverviewCard.tsx)
   when it becomes available.
+- **Professor comments:** add the comment section to professor pages, using the
+  comment support already available in the backend.
+- **Branding:** create the app logo and apply the branding across the app;
+  update the README and use the logo as the favicon.
+- **Footer:** add a simple footer to the page layout.
+- **Localization:** allow project strings, script titles and descriptions to be
+  localized; comments remain unchanged.
 
 Correctness and quality:
 
@@ -236,8 +243,15 @@ Correctness and quality:
   `apiFetchPublicRead`, so an API failure currently renders as "no results".
 - **Button accessibility:** require ARIA attributes on
   [`Button.tsx`](next/components/common/Button.tsx) (type level).
-- **Operation-error UX:** standardize operation failures as toasts where
-  appropriate and document the convention in `ARCHITECTURE.md`.
+- **Error UX:** never show raw implementation details to users; present
+  formatted, user-facing errors and improve error pages to use the available
+  space, with an optional theme-matched illustration. Standardize operation
+  failures as toasts where appropriate and document the convention in
+  `ARCHITECTURE.md`.
+- **Draft mode / live editing [decision]:** draft mode is currently unused. If
+  it returns, add the `/api/disable-draft` endpoint linked by
+  [`DisableDraft.tsx`](next/components/ui/DisableDraft.tsx) and ensure the
+  component is not rendered while draft mode is unused.
 - **Inline strings:** many components still hold user-facing text inline.
   Move it into `shared/strings/<area>-strings.ts` / `UI_STRINGS` (script
   detail and comments are already done), one feature area per pass. Cover JSX
@@ -251,13 +265,15 @@ Correctness and quality:
 - **Root layout:** in [`next/app/layout.tsx`](next/app/layout.tsx), factor the
   font setup out and build `metadata` with `generateMetadata` from Sanity data.
 - **Type cleanup:** derive the `AcademicPathInput` types in
-  [`academic-routes.ts`](next/lib/academic-routes.ts) from Sanity.
-- **UI polish:** z-index variables, modal lifecycle (don't render closed
+  [`academic-routes.ts`](next/lib/academic-routes.ts) from Sanity types.
+- **UI polish:** z-index variables need to come from STYLE and not be written inline so they can be properly tracked, modal lifecycle (don't render closed
   dialogs, confirm modal), image sizing, mobile and accessibility passes,
-  production CSS obfuscation.
+  production CSS obfuscation, toasts should be more mobile friendly.
 
 SEO and performance:
 
+- **Cache Components:** investigate the `use cache` directive and partial
+  prerendering.
 - **Sitemap:** add one.
 - **Robots [decision]:** add `robots` only if needed (Cloudflare may already
   serve one; check first).
@@ -319,5 +335,8 @@ Deliberately postponed until everything else is done:
    secrets decision.
 6. Deferred: achievement-definition CRUD and moderator notifications.
 
-Loose ideas and open questions that are not concrete enough for this list live
-in `TODO.md`.
+## Exploratory Ideas
+
+- **Background-mode easter egg:** clicking the black hole repeatedly switches
+  the view background.
+- **Christmas effects:** add a seasonal Christmas background and effects.

@@ -49,6 +49,9 @@ const hideIfNoHaze = ({ parent }: Context) =>
 // Orbiting planets need the black hole to orbit
 const hideIfNoBlackHole = ({ parent }: Context) => !parent?.enableBlackHole
 
+const hideIfNoAscension = ({ parent }: Context) =>
+  !parent?.enableBlackHole || parent?.enableBlackHoleAscension === false
+
 // The Mobile tab is always shown, so its fields also check the feature is on
 // (on desktop, and on mobile once its own switch exists)
 const hideIfNoMobileBlackHole = ({ parent }: Context) =>
@@ -281,6 +284,13 @@ export const StarCanvas = defineType({
       options: { columns: 2 },
     },
     { name: 'glowColors', title: 'Colors' },
+    {
+      name: 'ascension',
+      title: 'Easter egg',
+      description:
+        'Click the black hole over and over and the whole scene takes over the screen.',
+      options: { columns: 2 },
+    },
     {
       name: 'mobileBlackHolePlacement',
       title: 'Black hole placement',
@@ -521,6 +531,95 @@ export const StarCanvas = defineType({
       group: 'blackHole',
       fieldset: 'sizes',
       min: 1,
+    }),
+    defineField({
+      name: 'enableBlackHoleAscension',
+      title: 'Enable easter egg',
+      description:
+        'Click the black hole several times within 10 seconds and the scene takes over: the browser goes fullscreen, the canvas moves above the page, and everything gets busier and brighter (more stars, faster motion, more shooting stars, a brighter galaxy and an extra aurora). Press Esc to go back (on devices where fullscreen is not available, click the hole again instead). Clicks on links and buttons never count, and it is not used with reduced motion.',
+      type: 'boolean',
+      group: 'blackHole',
+      fieldset: 'ascension',
+      hidden: hideIfNoBlackHole,
+      initialValue: true,
+    }),
+    numberField({
+      name: 'blackHoleAscensionClicks',
+      title: 'Clicks needed',
+      description:
+        'Clicks on the hole within 10 seconds (the oldest ones stop counting after that). Range 3–30. Default 10',
+      initialValue: 10,
+      group: 'blackHole',
+      fieldset: 'ascension',
+      min: 3,
+      max: 30,
+      integer: true,
+      hidden: hideIfNoAscension,
+    }),
+    numberField({
+      name: 'blackHoleAscensionIntensity',
+      title: 'Easter egg intensity',
+      description:
+        'Scales how wild the easter egg gets: extra stars, faster motion, shooting stars, the brighter galaxy, the extra aurora, and the ring and flare glow while clicking. 0 turns all of that off (the click effects, fullscreen and the covered page remain), 1 is the default look, higher goes further. Range 0–3. Default 1',
+      initialValue: 1,
+      group: 'blackHole',
+      fieldset: 'ascension',
+      min: 0,
+      max: 3,
+      precision: 2,
+      hidden: hideIfNoAscension,
+    }),
+    numberField({
+      name: 'blackHoleClickSwell',
+      title: 'Growth per click',
+      description:
+        "How much the hole's radius grows with every click, as a share of its radius (0.12 = 12%). Only the hole grows: the ring, corona and smoke keep their width and move out with its edge. Range 0–0.5. Default 0.12",
+      initialValue: 0.12,
+      group: 'blackHole',
+      fieldset: 'ascension',
+      min: 0,
+      max: 0.5,
+      precision: 3,
+      hidden: hideIfNoAscension,
+    }),
+    numberField({
+      name: 'blackHoleClickSwellMax',
+      title: 'Largest growth',
+      description:
+        'The most the hole can grow from fast clicking, as a share of its radius (0.5 = 50% bigger). Range 0–2. Default 0.5',
+      initialValue: 0.5,
+      group: 'blackHole',
+      fieldset: 'ascension',
+      min: 0,
+      max: 2,
+      precision: 2,
+      hidden: hideIfNoAscension,
+    }),
+    numberField({
+      name: 'blackHoleClickSettleSeconds',
+      title: 'Time to settle',
+      description:
+        'Seconds for the grown hole to shrink almost all the way back to normal. It always returns by itself. Range 0.3–10. Default 2.5',
+      initialValue: 2.5,
+      group: 'blackHole',
+      fieldset: 'ascension',
+      min: 0.3,
+      max: 10,
+      precision: 1,
+      hidden: hideIfNoAscension,
+    }),
+    numberField({
+      name: 'blackHoleClickBlob',
+      title: 'Blob wobble',
+      description:
+        'How far a click squashes and stretches the hole before it settles. 0 = no wobble. Range 0–0.5. Default 0.16',
+      initialValue: 0.16,
+      group: 'blackHole',
+      fieldset: 'ascension',
+      min: 0,
+      max: 0.5,
+      precision: 2,
+      hidden: hideIfNoAscension,
     }),
 
     // ── Gravity & hover ──────────────────────────────────────────────────

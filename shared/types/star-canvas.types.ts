@@ -64,6 +64,13 @@ export interface StarCanvasSanityData {
   blackHoleGravityForce?: number | null
   blackHoleHoverReachMultiplier?: number | null
   blackHoleHoverGravityMultiplier?: number | null
+  enableBlackHoleAscension?: boolean | null
+  blackHoleAscensionClicks?: number | null
+  blackHoleAscensionIntensity?: number | null
+  blackHoleClickSwell?: number | null
+  blackHoleClickSwellMax?: number | null
+  blackHoleClickSettleSeconds?: number | null
+  blackHoleClickBlob?: number | null
 
   blackHoleSmokeWisps?: number | null
   blackHoleSmokeIntensity?: number | null

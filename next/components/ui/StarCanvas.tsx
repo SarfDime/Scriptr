@@ -7,6 +7,7 @@ import type {
   PlanetLook,
   Point,
   Star,
+  StarCanvasConfig,
   StarCanvasSanityData,
 } from '@shared/types/star-canvas.types'
 import { useEffect, useRef, useSyncExternalStore } from 'react'
@@ -70,6 +71,29 @@ const FLARE_ARCS = Array.from({ length: 12 }, (_, i) => {
 // drift adds up to this many px (about once a second at the defaults).
 const GALAXY_MOVE_STEP = 0.25
 
+// The easter egg: quick clicks on the black hole "ascend" the scene (see ascend() below)
+const ASCEND_WINDOW_MS = 10000 // all the clicks must fall within this period (the oldest stop counting)
+const ASCEND_HIT = 1.6 // clicks within this many hole radii of the center count
+const ASCEND_VEIL = 1 // how much the page is covered behind the canvas (1 = hidden entirely)
+const ASCEND_STARS = 140 // extra stars (fewer on phones)
+const ASCEND_AURORA = 0.7 // the extra aurora's opacity at full ascension (kept dim)
+const ASCEND_GALAXY_DRIFT = 0.02 // px per frame added to the galaxy's drift, so it moves even at 0
+const ASCEND_GRAVITY_REACH = 0.6 // gravity reach at full ascension, as a share of the normal reach
+
+// Only some stars twinkle, and slowly (radians per ms: roughly 7-21 s per cycle); the
+// others keep a steady brightness (twinkle 0 leaves them at their random phase)
+const TWINKLE_SHARE = 0.3
+const TWINKLE_MIN = 0.0003
+const TWINKLE_RANGE = 0.0009
+const randomTwinkle = () =>
+  Math.random() < TWINKLE_SHARE
+    ? TWINKLE_MIN + Math.random() * TWINKLE_RANGE
+    : 0
+const ASCEND_Z = '2147483000' // on top of everything
+// Clicks on these are meant for the page, so they never count
+const INTERACTIVE =
+  'a, button, input, textarea, select, label, summary, [role="button"], [role="link"], [contenteditable]'
+
 const subscribeToMobile = (onChange: () => void) => {
   const query = window.matchMedia(MOBILE_QUERY)
   query.addEventListener('change', onChange)
@@ -87,6 +111,7 @@ export const CustomStarCanvas = ({
   const backdropRef = useRef<HTMLCanvasElement>(null)
   const galaxyRef = useRef<HTMLCanvasElement>(null)
   const auroraRef = useRef<HTMLDivElement>(null)
+  const veilRef = useRef<HTMLDivElement>(null)
   const isMobile = useSyncExternalStore(
     subscribeToMobile,
     getIsMobile,
@@ -98,6 +123,7 @@ export const CustomStarCanvas = ({
     const backdrop = backdropRef.current
     const galaxyCanvas = galaxyRef.current
     const auroraEl = auroraRef.current
+    const veil = veilRef.current
     const ctx = canvas?.getContext('2d')
     const backdropCtx = backdrop?.getContext('2d')
     const galaxyCtx = galaxyCanvas?.getContext('2d')
@@ -108,7 +134,8 @@ export const CustomStarCanvas = ({
       !backdropCtx ||
       !galaxyCanvas ||
       !galaxyCtx ||
-      !auroraEl
+      !auroraEl ||
+      !veil
     ) {
       return
     }
@@ -173,88 +200,342 @@ export const CustomStarCanvas = ({
     // Each curtain is a canvas of its own, painted once (and again when the theme or the
     // window width changes a lot). After that it only moves through CSS animations on its
     // transform and opacity, which the compositor runs: no script and no repainting.
-    const auroraCurtains = makeAuroraCurtains(cfg)
-    const auroraY = AURORA_PRESETS[cfg.auroraPosition] ?? cfg.auroraYRatio
-    const auroraAnimations: Array<Animation> = []
-    const auroraCanvases = auroraCurtains.map((curtain) => {
-      const el = document.createElement('canvas')
-      Object.assign(el.style, {
-        position: 'absolute',
-        left: `${((1 - AURORA_WIDTH) / 2) * 100}%`,
-        top: `${(auroraY - cfg.auroraHeight / 2) * 100}%`,
-        width: `${AURORA_WIDTH * 100}%`,
-        height: `${cfg.auroraHeight * 100}%`,
-        transformOrigin: `50% ${curtain.baseline * 100}%`,
-        willChange: 'transform, opacity',
-        opacity: String(Math.min(1, curtain.weight * cfg.auroraIntensity)),
+    // A set of curtains is made by a function, so the easter egg can add a second one
+    // (its `cfg` is the config for that set)
+    const makeAuroraSet = (parent: HTMLElement, cfg: StarCanvasConfig) => {
+      const auroraCurtains = makeAuroraCurtains(cfg)
+      const auroraY = AURORA_PRESETS[cfg.auroraPosition] ?? cfg.auroraYRatio
+      const auroraAnimations: Array<Animation> = []
+      const auroraCanvases = auroraCurtains.map((curtain) => {
+        const el = document.createElement('canvas')
+        Object.assign(el.style, {
+          position: 'absolute',
+          left: `${((1 - AURORA_WIDTH) / 2) * 100}%`,
+          top: `${(auroraY - cfg.auroraHeight / 2) * 100}%`,
+          width: `${AURORA_WIDTH * 100}%`,
+          height: `${cfg.auroraHeight * 100}%`,
+          transformOrigin: `50% ${curtain.baseline * 100}%`,
+          willChange: 'transform, opacity',
+          opacity: String(Math.min(1, curtain.weight * cfg.auroraIntensity)),
+        })
+        parent.appendChild(el)
+        return el
       })
-      auroraEl.appendChild(el)
-      return el
-    })
-    let auroraBuiltWidth = 0 // screen width the curtains were painted for
-    let auroraTimer = 0
+      let auroraBuiltWidth = 0 // screen width the curtains were painted for
+      let auroraTimer = 0
 
-    const paintAuroraNow = () => {
-      window.clearTimeout(auroraTimer)
-      if (!auroraCurtains.length || w <= 0 || h <= 0) return
-      auroraBuiltWidth = w
-      paintAurora(auroraCanvases, auroraCurtains, cfg, colors, w, h)
+      const paintAuroraNow = () => {
+        window.clearTimeout(auroraTimer)
+        if (!auroraCurtains.length || w <= 0 || h <= 0) return
+        auroraBuiltWidth = w
+        paintAurora(auroraCanvases, auroraCurtains, cfg, colors, w, h)
+      }
+
+      // Waits until a resize pauses, and ignores small changes: the curtains are soft, so
+      // stretching them a little can't be seen (the URL bar showing on a phone, say)
+      const scheduleAurora = () => {
+        if (
+          !auroraBuiltWidth ||
+          Math.abs(w - auroraBuiltWidth) < auroraBuiltWidth * 0.25
+        ) {
+          return
+        }
+        window.clearTimeout(auroraTimer)
+        auroraTimer = window.setTimeout(paintAuroraNow, 300)
+      }
+
+      // Every curtain sways from side to side while growing and shrinking a little, and
+      // separately fades between dim and bright, each at its own pace
+      const startAurora = () => {
+        if (reducedMotion || cfg.auroraSpeed <= 0) return
+        const loop = (duration: number, offset: number) => ({
+          duration,
+          delay: -duration * offset, // starts each curtain somewhere else in its cycle
+          direction: 'alternate' as const,
+          iterations: Number.POSITIVE_INFINITY,
+          easing: 'ease-in-out',
+          fill: 'both' as const,
+        })
+        auroraCurtains.forEach((curtain, i) => {
+          const el = auroraCanvases[i]
+          if (!el) return
+          const sway = curtain.sway * 100
+          const peak = Math.min(1, curtain.weight * cfg.auroraIntensity)
+          auroraAnimations.push(
+            el.animate(
+              [
+                {
+                  transform: `translateX(${-sway}%) scaleY(${1 - curtain.breathe})`,
+                },
+                {
+                  transform: `translateX(${sway}%) scaleY(${1 + curtain.breathe})`,
+                },
+              ],
+              loop(curtain.swayMs / cfg.auroraSpeed, curtain.phase)
+            ),
+            el.animate(
+              [{ opacity: peak * 0.5 }, { opacity: peak }],
+              loop(curtain.fadeMs / cfg.auroraSpeed, (curtain.phase * 7) % 1)
+            )
+          )
+        })
+      }
+
+      const setRate = (rate: number) => {
+        for (const animation of auroraAnimations)
+          animation.updatePlaybackRate(rate)
+      }
+      const dispose = () => {
+        window.clearTimeout(auroraTimer)
+        for (const animation of auroraAnimations) animation.cancel()
+        for (const el of auroraCanvases) el.remove()
+      }
+      return {
+        paint: paintAuroraNow,
+        schedule: scheduleAurora,
+        start: startAurora,
+        setRate,
+        dispose,
+      }
+    }
+    const aurora = makeAuroraSet(auroraEl, cfg)
+
+    // ── Black hole ascension (easter egg) ───────────────────────────────────
+    // Quick clicks on the hole charge it up: the ring glows brighter, the flare spins
+    // and the smoke churns more. At the last click the scene ascends: it moves above the
+    // whole page (with the page hidden behind it), the browser goes fullscreen, and
+    // everything eases into a busier, brighter version of itself. Pressing Esc (or
+    // otherwise leaving fullscreen) eases it all back; clicking the hole does not, so
+    // clicking on after the last click cannot throw you straight out. Only when the
+    // browser refuses fullscreen (no Esc on touch screens) does a click on the hole leave.
+    const ascensionEnabled =
+      cfg.enableBlackHole && cfg.enableBlackHoleAscension && !reducedMotion
+    let clicks = 0
+    const clickTimes: Array<number> = [] // when the recent clicks on the hole happened
+    let charge = 0 // 0 -> 1 as the clicks add up (stays 1 while ascended)
+    let clickPulse = 0 // a flash on every click
+    let blobAngle = 0 // axis of the squash, random on every click
+    let holeSwell = 0 // extra radius of the hole: grows with each click, decays back to 0
+    let holeGrow = 1 // radius of the hole relative to normal (1 + holeSwell)
+    // Per frame at 60fps, so the swell is down to 10% after the configured seconds
+    const swellDecay =
+      0.1 ** (1 / (Math.max(0.1, cfg.blackHoleClickSettleSeconds) * 60))
+    let ascended = false
+    let ascension = 0 // eased 0 -> 1 while ascended, and back to 0 after
+    // ascension and the charge-up scaled by the intensity setting: every boost in the
+    // scene uses these, so the intensity dials the whole easter egg up or down
+    let boost = 0
+    let buildup = 0
+    let inFullscreen = false
+    let fullscreenFailed = false // refused or unavailable: Esc cannot be relied on
+    let ascendedAt = 0
+    let twinkleTime = 0 // ms, runs a little faster while ascended
+    const extraStars = new Set<Star>()
+    let bonusAurora: ReturnType<typeof makeAuroraSet> | null = null
+    let bonusAuroraEl: HTMLDivElement | null = null
+    const topLayers = [veil, backdrop, galaxyCanvas, auroraEl, canvas]
+
+    // Fullscreen can be refused or unavailable (some browsers, some situations); the rest
+    // of the ascension works without it, so that is not an error worth reporting
+    const ignoreFullscreenError = () => {
+      // nothing to do
     }
 
-    // Waits until a resize pauses, and ignores small changes: the curtains are soft, so
-    // stretching them a little can't be seen (the URL bar showing on a phone, say)
-    const scheduleAurora = () => {
-      if (
-        !auroraBuiltWidth ||
-        Math.abs(w - auroraBuiltWidth) < auroraBuiltWidth * 0.25
-      ) {
+    const paintVeil = () => {
+      veil.style.background = colors.core
+    }
+
+    // Back under the page right away; the extra effects keep easing out unseen
+    const dropLayers = () => {
+      for (const el of topLayers) el.style.zIndex = ''
+    }
+
+    const spawnExtraStars = () => {
+      if (extraStars.size) return
+      const range = Math.max(0, cfg.starMaxSize - cfg.starMinSize)
+      const count = Math.round(
+        ASCEND_STARS * motionScale * cfg.blackHoleAscensionIntensity
+      )
+      for (let i = 0; i < count; i++) {
+        const star: Star = {
+          x: Math.random() * w,
+          y: Math.random() * h,
+          size: cfg.starMinSize + Math.random() * range,
+          colorIndex: Math.floor(Math.random() * cfg.starColors.length),
+          twinkle: randomTwinkle(),
+          phase: Math.random() * TAU,
+          fade: 0, // fades in with the ascension
+        }
+        stars.push(star)
+        extraStars.add(star)
+      }
+      stars.sort((a, b) => a.colorIndex - b.colorIndex)
+    }
+
+    // The extra aurora shows up even when the page has none switched on
+    const spawnBonusAurora = () => {
+      if (bonusAurora) return
+      bonusAuroraEl = document.createElement('div')
+      Object.assign(bonusAuroraEl.style, {
+        position: 'absolute',
+        inset: '0',
+        opacity: '0',
+      })
+      auroraEl.appendChild(bonusAuroraEl)
+      bonusAurora = makeAuroraSet(bonusAuroraEl, {
+        ...cfg,
+        enableAurora: true,
+        auroraCurtains: Math.max(3, cfg.auroraCurtains),
+        auroraIntensity: 0.5,
+        auroraSpeed: cfg.auroraSpeed > 0 ? cfg.auroraSpeed : 1,
+      })
+      bonusAurora.paint()
+      bonusAurora.start()
+    }
+
+    const ascend = () => {
+      ascended = true
+      ascendedAt = performance.now()
+      clicks = 0
+      clickTimes.length = 0
+      for (const el of topLayers) el.style.zIndex = ASCEND_Z
+      paintVeil()
+      veil.style.visibility = ''
+      veil.style.opacity = String(ASCEND_VEIL)
+      veil.style.pointerEvents = 'auto' // the page underneath is out of reach
+      if (cfg.blackHoleAscensionIntensity > 0) {
+        spawnExtraStars()
+        spawnBonusAurora()
+      }
+      fullscreenFailed = !document.fullscreenEnabled
+      if (document.fullscreenEnabled) {
+        document.documentElement
+          .requestFullscreen()
+          .then(() => {
+            inFullscreen = !!document.fullscreenElement
+          })
+          .catch(() => {
+            fullscreenFailed = true
+          })
+      }
+    }
+
+    const descend = () => {
+      if (!ascended) return
+      ascended = false
+      clicks = 0
+      clickTimes.length = 0
+      dropLayers()
+      // The veil has a slow fade; hide it at once so it cannot tint the page
+      veil.style.visibility = 'hidden'
+      veil.style.opacity = '0'
+      veil.style.pointerEvents = 'none'
+      if (inFullscreen && document.fullscreenElement) {
+        document.exitFullscreen().catch(ignoreFullscreenError)
+      }
+      inFullscreen = false
+    }
+
+    // Once everything has eased back, the extra stars are removed
+    const leaveTop = () => {
+      dropLayers()
+      for (const star of extraStars) {
+        const index = stars.indexOf(star)
+        if (index >= 0) stars.splice(index, 1)
+      }
+      extraStars.clear()
+      // The extra aurora is invisible by now: stop its animation and drop it
+      bonusAurora?.dispose()
+      bonusAuroraEl?.remove()
+      bonusAurora = null
+      bonusAuroraEl = null
+    }
+
+    // The parts of the ascension that are not redrawn every frame anyway
+    const applyAscension = () => {
+      const a = ascension
+      const k = cfg.blackHoleAscensionIntensity
+      if (galaxy) {
+        galaxyCanvas.style.opacity = String(
+          Math.min(1, cfg.galaxyOpacity * (1 + 0.5 * a * k))
+        )
+      }
+      if (bonusAuroraEl)
+        bonusAuroraEl.style.opacity = String(Math.min(1, a * ASCEND_AURORA * k))
+      aurora.setRate(1 + 0.8 * a * k)
+      bonusAurora?.setRate(1 + 0.8 * a * k)
+      if (a === 0) leaveTop()
+    }
+
+    // Clicks older than the window stop counting, so slow starters are not punished
+    const pruneClicks = (now: number) => {
+      const cutoff = now - ASCEND_WINDOW_MS
+      while (clickTimes.length && (clickTimes[0] ?? 0) < cutoff)
+        clickTimes.shift()
+      clicks = clickTimes.length
+    }
+
+    const updateAscension = (now: number, dt: number) => {
+      if (!ascended && clickTimes.length) pruneClicks(now)
+      const chargeTarget = ascended ? 1 : clicks / cfg.blackHoleAscensionClicks
+      charge += (chargeTarget - charge) * 0.08 * dt
+      // The swell from clicks always settles back to normal
+      holeSwell *= swellDecay ** dt
+      if (holeSwell < 0.001) holeSwell = 0
+      holeGrow = 1 + holeSwell
+      clickPulse = Math.max(0, clickPulse - 0.04 * dt)
+
+      const target = ascended ? 1 : 0
+      if (ascension !== target) {
+        const next = ascension + (target - ascension) * 0.02 * dt
+        ascension = Math.abs(target - next) < 0.002 ? target : next
+        applyAscension()
+      }
+      boost = ascension * cfg.blackHoleAscensionIntensity
+      // The charge-up glow builds with the clicks and hands over to the ascension
+      buildup = charge * (1 - ascension) * cfg.blackHoleAscensionIntensity
+    }
+
+    const onClick = (e: MouseEvent) => {
+      if (!bh) return
+      if (e.target instanceof Element && e.target.closest(INTERACTIVE)) return
+      const distance = Math.hypot(e.clientX - bh.x, e.clientY - bh.y)
+      if (distance > cfg.blackHoleRadius * holeGrow * ASCEND_HIT) return
+
+      clickPulse = 1
+      blobAngle = Math.random() * TAU
+      holeSwell = Math.min(
+        cfg.blackHoleClickSwellMax,
+        holeSwell + cfg.blackHoleClickSwell
+      )
+
+      if (ascended) {
+        // Leaving is Esc's job. A click shortly after the last one must not undo
+        // the ascension, and only without fullscreen (touch screens) is a click
+        // the way out.
+        if (fullscreenFailed && performance.now() - ascendedAt > 800) descend()
         return
       }
-      window.clearTimeout(auroraTimer)
-      auroraTimer = window.setTimeout(paintAuroraNow, 300)
+      const now = performance.now()
+      clickTimes.push(now)
+      pruneClicks(now)
+      if (clicks >= cfg.blackHoleAscensionClicks) ascend()
     }
-
-    // Every curtain sways from side to side while growing and shrinking a little, and
-    // separately fades between dim and bright, each at its own pace
-    const startAurora = () => {
-      if (reducedMotion || cfg.auroraSpeed <= 0) return
-      const loop = (duration: number, offset: number) => ({
-        duration,
-        delay: -duration * offset, // starts each curtain somewhere else in its cycle
-        direction: 'alternate' as const,
-        iterations: Number.POSITIVE_INFINITY,
-        easing: 'ease-in-out',
-        fill: 'both' as const,
-      })
-      auroraCurtains.forEach((curtain, i) => {
-        const el = auroraCanvases[i]
-        if (!el) return
-        const sway = curtain.sway * 100
-        const peak = Math.min(1, curtain.weight * cfg.auroraIntensity)
-        auroraAnimations.push(
-          el.animate(
-            [
-              {
-                transform: `translateX(${-sway}%) scaleY(${1 - curtain.breathe})`,
-              },
-              {
-                transform: `translateX(${sway}%) scaleY(${1 + curtain.breathe})`,
-              },
-            ],
-            loop(curtain.swayMs / cfg.auroraSpeed, curtain.phase)
-          ),
-          el.animate(
-            [{ opacity: peak * 0.5 }, { opacity: peak }],
-            loop(curtain.fadeMs / cfg.auroraSpeed, (curtain.phase * 7) % 1)
-          )
-        )
-      })
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') descend()
+    }
+    const onFullscreenChange = () => {
+      if (inFullscreen && !document.fullscreenElement) {
+        inFullscreen = false
+        descend()
+      }
     }
 
     let shade: HTMLCanvasElement | null = null // shared day/night overlay for planets
 
     let puff: HTMLCanvasElement | null = null // soft blob sprite for the smoke
     let corona: CanvasGradient | null = null // second glow layer, just outside the ring
+    let gradientRadius = 0 // hole radius the glow and corona gradients were built for
     let flare: HTMLCanvasElement | null = null // soft sprite for the bright spot on the rim
     let flareAngle = Math.random() * TAU // where on the rim the flare sits (spins on hover)
     let haze: HTMLCanvasElement | null = null // grayish circle behind everything
@@ -276,6 +557,29 @@ export const CustomStarCanvas = ({
 
     // ── Sprites (rebuilt on theme change) ───────────────────────────────────
 
+    // The glow and corona start at the edge of the hole, so when the hole swells they
+    // move out with it and keep their width (only their start moves)
+    const buildHoleGradients = (inner: number) => {
+      gradientRadius = inner
+      const outer = Math.max(cfg.blackHoleGlowRadius, inner + 1)
+      // Centered on (0, 0): drawBlackHole translates to the hole before filling
+      const gradient = ctx.createRadialGradient(0, 0, inner, 0, 0, outer)
+      addFalloff(gradient, colors.glow, 0.6, 2.2) // eased, so it ends without an edge
+      glow = gradient
+
+      // Corona: warm layer hugging the ring that melts into the base glow, like the
+      // light around an eclipse. Brightest at the ring, gone at its outer edge.
+      corona = null
+      if (cfg.blackHoleCoronaWidth > 0) {
+        const edge = inner + cfg.blackHoleRadius * cfg.blackHoleCoronaWidth
+        const layer = ctx.createRadialGradient(0, 0, inner, 0, 0, edge)
+        // Fades out slowly while its color turns into the glow color, so it
+        // melts into the glow instead of ending as a separate ring
+        addFalloff(layer, colors.corona, 1, 1.8, colors.glow)
+        corona = layer
+      }
+    }
+
     const buildGlow = () => {
       if (!bh) {
         glow = null
@@ -296,37 +600,7 @@ export const CustomStarCanvas = ({
       }
       puff = sprite
 
-      const outer = Math.max(cfg.blackHoleGlowRadius, cfg.blackHoleRadius + 1)
-      // Centered on (0, 0): drawBlackHole translates to the hole before filling
-      const gradient = ctx.createRadialGradient(
-        0,
-        0,
-        cfg.blackHoleRadius,
-        0,
-        0,
-        outer
-      )
-      addFalloff(gradient, colors.glow, 0.6, 2.2) // eased, so it ends without an edge
-      glow = gradient
-
-      // Corona: warm layer hugging the ring that melts into the base glow, like the
-      // light around an eclipse. Brightest at the ring, gone at its outer edge.
-      corona = null
-      if (cfg.blackHoleCoronaWidth > 0) {
-        const edge = cfg.blackHoleRadius * (1 + cfg.blackHoleCoronaWidth)
-        const layer = ctx.createRadialGradient(
-          0,
-          0,
-          cfg.blackHoleRadius,
-          0,
-          0,
-          edge
-        )
-        // Fades out slowly while its color turns into the glow color, so it
-        // melts into the glow instead of ending as a separate ring
-        addFalloff(layer, colors.corona, 1, 1.8, colors.glow)
-        corona = layer
-      }
+      buildHoleGradients(cfg.blackHoleRadius * holeGrow)
       flare = cfg.enableBlackHoleFlare ? buildSoftDot(colors.flare) : null
     }
 
@@ -417,7 +691,7 @@ export const CustomStarCanvas = ({
       const dx = bh.x - p.x
       const dy = bh.y - p.y
       const dist = Math.hypot(dx, dy)
-      if (dist < cfg.blackHoleRadius) return true
+      if (dist < cfg.blackHoleRadius * holeGrow) return true
       if (dist < gravityRadius) {
         const pull = (1 - dist / gravityRadius) * gravityForce * strength * dt
         p.x += (dx / dist) * pull
@@ -451,13 +725,24 @@ export const CustomStarCanvas = ({
           target = t * t * (3 - 2 * t) // smoothstep
         }
       }
-      agitation += (target - agitation) * 0.04 * dt
+      // Clicks agitate the hole just like the pointer does (briefly: the charge-up
+      // itself must not keep the smoke and ripples widened while ascended)
+      const lift = Math.max(target, clickPulse)
+      agitation += (lift - agitation) * 0.04 * dt
       // The flare spins around the rim while hovered (about a turn per 10 seconds)
       flareAngle += dt * 16.667 * 0.0006 * cfg.blackHoleFlareSpin * agitation
-      smokeTime += dt * 16.667 * (1 + 1.5 * agitation) * cfg.blackHoleSmokeSpeed
+      smokeTime +=
+        dt *
+        16.667 *
+        (1 + 1.5 * agitation) *
+        (1 + boost) *
+        cfg.blackHoleSmokeSpeed
+      // While ascended the reach shrinks to ASCEND_GRAVITY_REACH of normal, whatever
+      // hover and clicks are doing
+      const hoverReach = 1 + (cfg.blackHoleHoverReachMultiplier - 1) * agitation
       gravityRadius =
         cfg.blackHoleGravityRadius *
-        (1 + (cfg.blackHoleHoverReachMultiplier - 1) * agitation)
+        (hoverReach + (ASCEND_GRAVITY_REACH - hoverReach) * Math.min(1, boost))
       gravityForce =
         cfg.blackHoleGravityForce *
         (1 + (cfg.blackHoleHoverGravityMultiplier - 1) * agitation)
@@ -473,7 +758,7 @@ export const CustomStarCanvas = ({
     // planet speed up and slow down at its own rhythm, wobble in and out, and spin
     // faster. With no hover (or a chaos multiplier of 0) nothing changes.
     const updateOrbits = (dt: number) => {
-      const elapsed = dt * 16.667
+      const elapsed = dt * 16.667 * (1 + boost)
       chaosTime += elapsed
       const chaos = cfg.planetHoverChaos * agitation
 
@@ -503,8 +788,9 @@ export const CustomStarCanvas = ({
     // motion it is 0, so the galaxy stays still.
     const drawGalaxy = (dt: number) => {
       if (!galaxy) return
-      galaxyOffset.x += galaxyDirection.x * galaxySpeed * dt
-      galaxyOffset.y += galaxyDirection.y * galaxySpeed * dt
+      const speed = galaxySpeed * (1 + 5 * boost) + ASCEND_GALAXY_DRIFT * boost
+      galaxyOffset.x += galaxyDirection.x * speed * dt
+      galaxyOffset.y += galaxyDirection.y * speed * dt
 
       // Half the size of the box around the tilted band, to know when it has left
       const cos = Math.abs(Math.cos(galaxyTilt))
@@ -620,8 +906,9 @@ export const CustomStarCanvas = ({
       for (const p of drifting) {
         if (attract(p, 0.6, dt)) respawn(p)
         p.fade = Math.min(1, p.fade + dt * 0.02)
-        p.x -= cfg.freePlanetDriftSpeed * dt
-        p.y -= cfg.freePlanetDriftSpeed * dt
+        const speed = cfg.freePlanetDriftSpeed * (1 + 1.5 * boost)
+        p.x -= speed * dt
+        p.y -= speed * dt
         const margin = p.radius * 2
         if (p.x < -margin) p.x += w + margin * 2
         if (p.y < -margin) p.y += h + margin * 2
@@ -636,14 +923,17 @@ export const CustomStarCanvas = ({
       ctx.globalAlpha = 1
     }
 
-    const drawStars = (now: number, dt: number) => {
+    const drawStars = (dt: number) => {
       // Stars are sorted by palette index, so fillStyle only changes a handful of times
       let fillIndex = -1
+      const speed = cfg.starDriftSpeed * (1 + 1.5 * boost)
+      twinkleTime += dt * 16.667 * (1 + 0.3 * boost)
       for (const s of stars) {
         if (attract(s, 1, dt)) respawn(s)
-        s.fade = Math.min(1, s.fade + dt * 0.02)
-        s.x -= cfg.starDriftSpeed * dt
-        s.y -= cfg.starDriftSpeed * dt
+        // The extra stars can only be as visible as the ascension is
+        s.fade = Math.min(extraStars.has(s) ? ascension : 1, s.fade + dt * 0.02)
+        s.x -= speed * dt
+        s.y -= speed * dt
         if (s.x < 0) s.x += w
         if (s.y < 0) s.y += h
 
@@ -653,7 +943,8 @@ export const CustomStarCanvas = ({
         }
         ctx.globalAlpha =
           s.fade *
-          (0.15 + 0.7 * (0.5 + 0.5 * Math.sin(now * s.twinkle + s.phase)))
+          (0.15 +
+            0.7 * (0.5 + 0.5 * Math.sin(twinkleTime * s.twinkle + s.phase)))
         ctx.beginPath()
         ctx.arc(s.x, s.y, s.size, 0, TAU)
         ctx.fill()
@@ -662,7 +953,7 @@ export const CustomStarCanvas = ({
     }
 
     const drawMeteors = (dt: number) => {
-      if (Math.random() < cfg.shootingStarChance * dt) {
+      if (Math.random() < cfg.shootingStarChance * (1 + 5 * boost) * dt) {
         meteors.push({
           x: Math.random() * w,
           y: Math.random() * h * 0.6,
@@ -726,14 +1017,33 @@ export const CustomStarCanvas = ({
       const r = cfg.blackHoleRadius
       const reach = Math.max(cfg.blackHoleGlowRadius, r + 1)
 
+      // A click makes the hole grow (its radius, see holeGrow). The ring and flare sit
+      // on its edge and the glow and corona start there, but all their widths, and
+      // the smoke, stay the same.
+      const hr = r * holeGrow
+      if (Math.abs(hr - gradientRadius) > 0.25) buildHoleGradients(hr)
+
+      // A click makes the hole blob (squash one way, stretch the other, then settle).
+      // Orbiting planets keep their own size.
+      const wobble = clickPulse * Math.sin((1 - clickPulse) * TAU * 2)
+      const sx = 1 + cfg.blackHoleClickBlob * wobble
+      const sy = 1 - cfg.blackHoleClickBlob * wobble
+      const shape = () => {
+        ctx.rotate(blobAngle)
+        ctx.scale(sx, sy)
+        ctx.rotate(-blobAngle)
+      }
+
       ctx.save()
       ctx.translate(bh.x, bh.y)
 
+      ctx.save()
+      shape()
       ctx.fillStyle = glow
       ctx.fillRect(-reach, -reach, reach * 2, reach * 2)
 
       if (corona) {
-        const edge = r * (1 + cfg.blackHoleCoronaWidth)
+        const edge = hr + r * cfg.blackHoleCoronaWidth
         ctx.fillStyle = corona
         ctx.fillRect(-edge, -edge, edge * 2, edge * 2)
       }
@@ -750,7 +1060,10 @@ export const CustomStarCanvas = ({
             (1 + 0.12 * Math.sin(smokeTime * 0.0007 + wisp.phase * 2))
           ctx.globalAlpha = Math.min(
             1,
-            wisp.alpha * (0.3 + 0.5 * agitation) * cfg.blackHoleSmokeIntensity
+            wisp.alpha *
+              (0.3 + 0.5 * agitation) *
+              cfg.blackHoleSmokeIntensity *
+              (1 + 0.8 * boost)
           )
           ctx.drawImage(
             puff,
@@ -763,24 +1076,33 @@ export const CustomStarCanvas = ({
         ctx.globalAlpha = 1
       }
 
+      ctx.restore() // end of the shaped part (glow, corona, smoke)
+
       drawOrbiting(false)
 
+      ctx.save()
+      shape()
       const edgeAmp =
-        cfg.blackHoleEdgeRipple + cfg.blackHoleHoverRipple * agitation
-      traceEdge(r, edgeAmp)
+        cfg.blackHoleEdgeRipple +
+        cfg.blackHoleHoverRipple * agitation +
+        4 * clickPulse
+      traceEdge(hr, edgeAmp)
       ctx.fillStyle = colors.core
       ctx.fill()
 
       // Photon ring: a thin bright line wrapped in a soft glow. The glow is a stack
       // of strokes, each wider and fainter than the last, added to the light under
       // them (so it also blooms a little into the edge of the hole).
-      traceEdge(r + 1, edgeAmp)
+      traceEdge(hr + 1, edgeAmp)
       if (cfg.blackHoleRingGlow > 0) {
         ctx.save()
         ctx.globalCompositeOperation = 'lighter'
         ctx.strokeStyle = `rgb(${colors.ring})`
         for (const halo of RING_GLOW) {
-          ctx.globalAlpha = Math.min(1, halo.alpha * cfg.blackHoleRingGlow)
+          ctx.globalAlpha = Math.min(
+            1,
+            halo.alpha * cfg.blackHoleRingGlow * (1 + buildup)
+          )
           ctx.lineWidth = r * halo.width
           ctx.stroke()
         }
@@ -805,20 +1127,26 @@ export const CustomStarCanvas = ({
       // part of the hole itself. It pulses very slightly.
       if (flare && cfg.enableBlackHoleFlare && cfg.blackHoleFlare > 0) {
         const pulse = 0.85 + 0.15 * Math.sin(smokeTime * 0.0013)
-        const rimRadius = r + 1 + edgeAmp * ripple(flareAngle) // follow the rippling rim
+        const rimRadius = hr + 1 + edgeAmp * ripple(flareAngle) // follow the rippling rim
         ctx.save()
         ctx.globalCompositeOperation = 'lighter'
         ctx.lineCap = 'round'
         ctx.strokeStyle = `rgb(${colors.flare})`
         for (const arc of FLARE_ARCS) {
-          ctx.globalAlpha = Math.min(1, cfg.blackHoleFlare * pulse * arc.alpha)
+          ctx.globalAlpha = Math.min(
+            1,
+            cfg.blackHoleFlare * (1 + 0.8 * buildup) * pulse * arc.alpha
+          )
           ctx.lineWidth = r * arc.width
           ctx.beginPath()
           ctx.arc(0, 0, rimRadius, flareAngle - arc.span, flareAngle + arc.span)
           ctx.stroke()
         }
         // Hot spot where the flare is brightest
-        ctx.globalAlpha = Math.min(1, cfg.blackHoleFlare * pulse * 0.7)
+        ctx.globalAlpha = Math.min(
+          1,
+          cfg.blackHoleFlare * (1 + 0.8 * buildup) * pulse * 0.7
+        )
         const hot = r * 0.5
         ctx.drawImage(
           flare,
@@ -830,6 +1158,8 @@ export const CustomStarCanvas = ({
         ctx.restore()
       }
 
+      ctx.restore() // end of the shaped part (rim, ring, flare)
+
       drawOrbiting(true)
 
       ctx.restore()
@@ -839,13 +1169,14 @@ export const CustomStarCanvas = ({
     // stars, free planets, shooting stars, and the hole with its orbiting planets (some
     // behind it, some in front).
     const draw = (now: number, dt: number) => {
+      updateAscension(now, dt)
       drawBackdrop()
       drawGalaxy(dt)
       ctx.clearRect(0, 0, w, h)
       updateAgitation(dt)
       updateOrbits(dt)
 
-      drawStars(now, dt)
+      drawStars(dt)
       drawDrifting(dt)
       drawMeteors(dt)
       drawBlackHole()
@@ -865,15 +1196,16 @@ export const CustomStarCanvas = ({
         y: Math.random() * h,
         size: cfg.starMinSize + Math.random() * sizeRange,
         colorIndex: Math.floor(Math.random() * cfg.starColors.length),
-        twinkle: 0.0008 + Math.random() * 0.0022, // radians per ms, ~2-8s per cycle
+        twinkle: randomTwinkle(),
         phase: Math.random() * TAU,
         fade: 1,
       })
     }
     stars.sort((a, b) => a.colorIndex - b.colorIndex)
     buildSprites()
-    paintAuroraNow()
-    startAurora()
+    aurora.paint()
+    aurora.start()
+    paintVeil()
 
     const redrawIfStatic = () => {
       if (reducedMotion) draw(performance.now(), 0)
@@ -881,7 +1213,8 @@ export const CustomStarCanvas = ({
 
     const onResize = () => {
       layout()
-      scheduleAurora()
+      aurora.schedule()
+      bonusAurora?.schedule()
       redrawIfStatic()
     }
 
@@ -892,7 +1225,9 @@ export const CustomStarCanvas = ({
       buildGlow()
       buildHaze()
       buildSprites()
-      paintAuroraNow()
+      aurora.paint()
+      bonusAurora?.paint()
+      paintVeil()
       redrawIfStatic()
     }
 
@@ -904,6 +1239,11 @@ export const CustomStarCanvas = ({
     const colorScheme = window.matchMedia('(prefers-color-scheme: dark)')
     colorScheme.addEventListener('change', onThemeChange)
     window.addEventListener('resize', onResize)
+    if (ascensionEnabled) {
+      window.addEventListener('click', onClick)
+      window.addEventListener('keydown', onKeyDown)
+      document.addEventListener('fullscreenchange', onFullscreenChange)
+    }
 
     // Window-level listeners: the canvas is pointer-events-none and sits behind the page
     const onPointerMove = (e: PointerEvent) => {
@@ -925,7 +1265,10 @@ export const CustomStarCanvas = ({
       let last = performance.now()
       const frame = (now: number) => {
         // dt is "frames at 60fps" so speed is the same on 60/120/144Hz screens
-        const dt = Math.min((now - last) / 16.667, 3)
+        const elapsed = (now - last) / 16.667
+        const dt = Number.isFinite(elapsed)
+          ? Math.min(Math.max(elapsed, 0), 3)
+          : 0
         last = now
         draw(now, dt)
         raf = requestAnimationFrame(frame)
@@ -935,6 +1278,9 @@ export const CustomStarCanvas = ({
 
     return () => {
       window.removeEventListener('resize', onResize)
+      window.removeEventListener('click', onClick)
+      window.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('fullscreenchange', onFullscreenChange)
       window.removeEventListener('pointermove', onPointerMove)
       document.documentElement.removeEventListener(
         'pointerleave',
@@ -944,15 +1290,27 @@ export const CustomStarCanvas = ({
       themeObserver.disconnect()
       cancelAnimationFrame(raf)
       window.clearTimeout(hazeTimer)
-      window.clearTimeout(auroraTimer)
-      for (const animation of auroraAnimations) animation.cancel()
-      for (const el of auroraCanvases) el.remove()
+      aurora.dispose()
+      bonusAurora?.dispose()
+      bonusAuroraEl?.remove()
+      // Leave the page as it was, even if this runs while the scene is ascended
+      for (const el of topLayers) el.style.zIndex = ''
+      veil.style.opacity = '0'
+      veil.style.pointerEvents = 'none'
+      if (inFullscreen && document.fullscreenElement) {
+        document.exitFullscreen().catch(ignoreFullscreenError)
+      }
     }
   }, [sanityData, isMobile])
 
   // Same z-index: the later one in the DOM paints on top
   return (
     <>
+      <div
+        ref={veilRef}
+        aria-hidden
+        className='pointer-events-none fixed inset-0 z-[-1] opacity-0 transition-opacity duration-[1500ms]'
+      />
       <canvas
         ref={backdropRef}
         aria-hidden

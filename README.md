@@ -5,12 +5,12 @@ workspace containing a Hono API, a Next.js frontend, and a Sanity Studio.
 
 ## Packages
 
-| Directory | Responsibility                                            |
-| --------- | --------------------------------------------------------- |
-| `hono/`   | API, Supabase, authentication, and R2 file operations     |
-| `next/`   | Frontend and shared UI components                         |
-| `sanity/` | Sanity Studio and schema tooling                          |
-| `shared/` | Shared types, configuration, strings, and utilities       |
+| Directory | Responsibility                                        |
+| --------- | ----------------------------------------------------- |
+| `hono/`   | API, Supabase, authentication, and R2 file operations |
+| `next/`   | Frontend and shared UI components                     |
+| `sanity/` | Sanity Studio and schema tooling                      |
+| `shared/` | Shared types, configuration, strings, and utilities   |
 
 ## Requirements
 
@@ -30,11 +30,11 @@ npm install
 
 Each workspace has an `.env.example`. Copy it and fill in the values:
 
-| Workspace | Example file          | Copy to           | Covers                                                    |
-| --------- | --------------------- | ----------------- | --------------------------------------------------------- |
-| `hono/`   | `hono/.env.example`   | `hono/.env`       | Supabase, R2, internal secret, cache revalidation         |
-| `next/`   | `next/.env.example`   | `next/.env.local` | API URL, Sanity project, revalidation secret              |
-| `sanity/` | `sanity/.env.example` | `sanity/.env`     | Studio API URL, internal secret, preview origin           |
+| Workspace | Example file          | Copy to           | Covers                                            |
+| --------- | --------------------- | ----------------- | ------------------------------------------------- |
+| `hono/`   | `hono/.env.example`   | `hono/.env`       | Supabase, R2, internal secret, cache revalidation |
+| `next/`   | `next/.env.example`   | `next/.env.local` | API URL, Sanity project, revalidation secret      |
+| `sanity/` | `sanity/.env.example` | `sanity/.env`     | Studio API URL, internal secret, preview origin   |
 
 Some values must match across workspaces:
 
@@ -98,7 +98,6 @@ The Studio is deployed at https://scriptr.sanity.studio.
 - [Architecture & requirements](ARCHITECTURE.md)
 - [Progress & todos](PROGRESS.md)
 - [Vercel deployment](VERCEL_DEPLOYMENT.md)
-- [Ideas & open questions](TODO.md)
 - [API setup](hono/README.md)
 - [API reference](hono/src/routes/API_DOCUMENTATION.md)
 - [API testing guide](hono/src/routes/API_TESTING_GUIDE.md)

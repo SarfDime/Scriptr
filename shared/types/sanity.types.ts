@@ -526,6 +526,12 @@ export type StarCanvas = {
   blackHoleYRatio?: number
   blackHoleRadius?: number
   blackHoleGlowRadius?: number
+  enableBlackHoleAscension?: boolean
+  blackHoleAscensionClicks?: number
+  blackHoleClickSwell?: number
+  blackHoleClickSwellMax?: number
+  blackHoleClickSettleSeconds?: number
+  blackHoleClickBlob?: number
   blackHoleGravityRadius?: number
   blackHoleGravityForce?: number
   blackHoleHoverReachMultiplier?: number
@@ -3733,6 +3739,12 @@ export type StarCanvasQueryResult = null | {
   blackHoleYRatio?: number
   blackHoleRadius?: number
   blackHoleGlowRadius?: number
+  enableBlackHoleAscension?: boolean
+  blackHoleAscensionClicks?: number
+  blackHoleClickSwell?: number
+  blackHoleClickSwellMax?: number
+  blackHoleClickSettleSeconds?: number
+  blackHoleClickBlob?: number
   blackHoleGravityRadius?: number
   blackHoleGravityForce?: number
   blackHoleHoverReachMultiplier?: number

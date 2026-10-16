@@ -152,6 +152,13 @@ const DEFAULTS: StarCanvasConfig = {
   blackHoleGravityForce: 0.35,
   blackHoleHoverReachMultiplier: 1.5,
   blackHoleHoverGravityMultiplier: 2,
+  enableBlackHoleAscension: true,
+  blackHoleAscensionClicks: 10,
+  blackHoleAscensionIntensity: 1,
+  blackHoleClickSwell: 0.12,
+  blackHoleClickSwellMax: 0.5,
+  blackHoleClickSettleSeconds: 2.5,
+  blackHoleClickBlob: 0.16,
 
   blackHoleSmokeWisps: 7,
   blackHoleSmokeIntensity: 1,
