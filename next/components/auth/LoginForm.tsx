@@ -55,7 +55,7 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
         />
       </Card.Body>
 
-      <Card.Footer className='ui-stack gap-3'>
+      <Card.Footer className='ui-stack gap-3 border-0'>
         <Button
           type='submit'
           isLoading={isBusy}

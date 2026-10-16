@@ -25,7 +25,9 @@ export const PageHeader = ({
             {title}
           </Title>
         )}
-        {subtitle && <Text className='ui-body text-fg-muted'>{subtitle}</Text>}
+        {subtitle && (
+          <Text className='ui-body-strong text-fg-muted'>{subtitle}</Text>
+        )}
       </Box>
       {children}
     </Box>

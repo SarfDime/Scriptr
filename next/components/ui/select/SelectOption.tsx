@@ -23,7 +23,7 @@ export const SelectOption = <T,>({
         isActive={id === selectedId}
         onClick={() => handleSelect?.(option)}
         className={cn(
-          'button text text-fg relative w-full min-w-0 justify-start cursor-pointer select-none gap-2 rounded-sm px-2.5 py-2.5 text-left',
+          'button ghost text-fg relative w-full min-w-0 justify-start cursor-pointer select-none gap-2 rounded-none px-2.5 py-2.5 text-left shadow-none!',
           buttonProps?.className
         )}
       >

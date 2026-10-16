@@ -119,7 +119,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         )}
       </Card.Body>
 
-      <Card.Footer className='ui-stack gap-3'>
+      <Card.Footer className='ui-stack gap-3 border-0'>
         <Button
           type='submit'
           disabled={!canSubmit}

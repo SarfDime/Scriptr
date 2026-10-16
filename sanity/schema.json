@@ -2906,6 +2906,13 @@
         },
         "optional": true
       },
+      "blackHoleAscensionIntensity": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
       "blackHoleClickSwell": {
         "type": "objectAttribute",
         "value": {

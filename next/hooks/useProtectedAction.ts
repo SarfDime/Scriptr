@@ -69,11 +69,6 @@ export function useProtectedAction<Args extends Array<unknown>, T>(
         message: UI_STRINGS.general.signInRequired,
       })
       openAuthModal()
-      addToast({
-        type: 'error',
-        title: errorTitle ?? UI_STRINGS.general.actionUnavailable,
-        description: UI_STRINGS.general.signInRequired,
-      })
       return { ok: false }
     }
 

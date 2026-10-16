@@ -58,7 +58,8 @@ export const Select = <T = string>({
         }
       }}
       className={cn(
-        'group/select relative flex w-full cursor-pointer items-center rounded-md bg-background-100 text-gray-700',
+        'group/select relative flex w-full items-center text-fg',
+        'button button-sm basic rounded-lg ui-above-inside p-0',
         rest.className
       )}
       data-open={listOpen}
@@ -69,7 +70,8 @@ export const Select = <T = string>({
         aria-expanded={listOpen}
         {...triggerProps}
         className={cn(
-          'group/trigger grow justify-start items-center rounded-sm p-2 gap-2 text-left text-base leading-4 md:leading-[inherit]',
+          'group/trigger grow flex justify-start items-center text-left text-base leading-4 md:leading-[inherit] ',
+          'cursor-pointer p-2 gap-2 [&>span]:truncate',
           triggerProps?.className
         )}
       >

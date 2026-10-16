@@ -150,9 +150,9 @@ export function CommentItem({
                   <Button
                     type='button'
                     className='button button-sm subtle self-start rounded-full px-3'
-                    onClick={async () => {
+                    onClick={() => {
                       setAreRepliesExpanded(true)
-                      await loadMoreThreadReplies(comment.id)
+                      loadMoreThreadReplies(comment.id)
                     }}
                     disabled={isLoadingInThread(comment)}
                   >
@@ -167,9 +167,7 @@ export function CommentItem({
                       <Button
                         type='button'
                         className='button button-sm subtle rounded-full px-3'
-                        onClick={async () =>
-                          await loadMoreThreadReplies(comment.id)
-                        }
+                        onClick={() => loadMoreThreadReplies(comment.id)}
                         disabled={isLoadingInThread(comment)}
                       >
                         {isLoadingInThread(comment)

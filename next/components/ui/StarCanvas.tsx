@@ -157,6 +157,7 @@ export const CustomStarCanvas = ({
 
     let w = 0
     let h = 0
+    let dpr = 1 // device pixel ratio the canvases were sized for (set by layout)
     let bh: Point | null = null
     let glow: CanvasGradient | null = null
     let pointer: Point | null = null
@@ -329,7 +330,6 @@ export const CustomStarCanvas = ({
     let inFullscreen = false
     let fullscreenFailed = false // refused or unavailable: Esc cannot be relied on
     let ascendedAt = 0
-    let twinkleTime = 0 // ms, runs a little faster while ascended
     const extraStars = new Set<Star>()
     let bonusAurora: ReturnType<typeof makeAuroraSet> | null = null
     let bonusAuroraEl: HTMLDivElement | null = null
@@ -374,7 +374,7 @@ export const CustomStarCanvas = ({
 
     // The extra aurora shows up even when the page has none switched on
     const spawnBonusAurora = () => {
-      if (bonusAurora) return
+      if (bonusAurora || !cfg.enableAurora) return
       bonusAuroraEl = document.createElement('div')
       Object.assign(bonusAuroraEl.style, {
         position: 'absolute',
@@ -654,7 +654,7 @@ export const CustomStarCanvas = ({
     // Sizes the canvas, keeps existing stars in place on resize, and rebuilds the
     // pieces that depend on screen size (hole position + glow gradient).
     const layout = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      dpr = Math.min(window.devicePixelRatio || 1, 2)
       const prevW = w
       const prevH = h
       w = window.innerWidth
@@ -703,7 +703,14 @@ export const CustomStarCanvas = ({
     // Swallowed stars and planets come back somewhere random outside the gravity
     // reach. (Respawning on the screen edge made stars pile up there: edge stars
     // barely drift and gravity never reaches them.)
+    // Counters for `starDebug()` (development only, see below)
+    let respawns = 0
+    let debugFrames = 0
+    let debugMaxDt = 0
+    let debugSince = performance.now()
+
     const respawn = (s: Point & { fade: number }) => {
+      respawns++
       for (let i = 0; i < 10; i++) {
         s.x = Math.random() * w
         s.y = Math.random() * h
@@ -923,11 +930,12 @@ export const CustomStarCanvas = ({
       ctx.globalAlpha = 1
     }
 
-    const drawStars = (dt: number) => {
+    const drawStars = (now: number, dt: number) => {
       // Stars are sorted by palette index, so fillStyle only changes a handful of times
       let fillIndex = -1
       const speed = cfg.starDriftSpeed * (1 + 1.5 * boost)
-      twinkleTime += dt * 16.667 * (1 + 0.3 * boost)
+      // Twinkling follows the clock (`now`) instead of a counter that each frame adds
+      // to, so nothing can make it run away: it is the same however often this runs
       for (const s of stars) {
         if (attract(s, 1, dt)) respawn(s)
         // The extra stars can only be as visible as the ascension is
@@ -943,8 +951,7 @@ export const CustomStarCanvas = ({
         }
         ctx.globalAlpha =
           s.fade *
-          (0.15 +
-            0.7 * (0.5 + 0.5 * Math.sin(twinkleTime * s.twinkle + s.phase)))
+          (0.15 + 0.7 * (0.5 + 0.5 * Math.sin(now * s.twinkle + s.phase)))
         ctx.beginPath()
         ctx.arc(s.x, s.y, s.size, 0, TAU)
         ctx.fill()
@@ -1172,11 +1179,18 @@ export const CustomStarCanvas = ({
       updateAscension(now, dt)
       drawBackdrop()
       drawGalaxy(dt)
+      // Firefox can leave the 2D context in a bad state after a fullscreen switch
+      // (fast flickering that only a later resize cleared), so nothing is assumed to
+      // have survived from the last frame: the transform and the blend settings are
+      // set again every frame
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      ctx.globalAlpha = 1
+      ctx.globalCompositeOperation = 'source-over'
       ctx.clearRect(0, 0, w, h)
       updateAgitation(dt)
       updateOrbits(dt)
 
-      drawStars(dt)
+      drawStars(now, dt)
       drawDrifting(dt)
       drawMeteors(dt)
       drawBlackHole()
@@ -1211,11 +1225,25 @@ export const CustomStarCanvas = ({
       if (reducedMotion) draw(performance.now(), 0)
     }
 
+    // A fullscreen switch changes the window size in several steps, and Firefox can
+    // leave the canvas flickering afterwards until the next resize. So once the window
+    // has settled, everything is rebuilt again, which is what that later resize did.
+    const settleTimers: Array<number> = []
     const onResize = () => {
       layout()
       aurora.schedule()
       bonusAurora?.schedule()
       redrawIfStatic()
+      for (const timer of settleTimers) window.clearTimeout(timer)
+      settleTimers.length = 0
+      for (const delay of [300, 1200]) {
+        settleTimers.push(
+          window.setTimeout(() => {
+            layout()
+            redrawIfStatic()
+          }, delay)
+        )
+      }
     }
 
     // Re-resolve colors when the theme changes (data-theme/class on <html>,
@@ -1258,18 +1286,66 @@ export const CustomStarCanvas = ({
       document.documentElement.addEventListener('pointerleave', onPointerLeave)
     }
 
+    // Only the newest loop may draw: if an older one is ever left running (hot reload,
+    // a remount), it stops itself instead of drawing on top of this one
+    const loopId = Math.random().toString(36)
+    canvas.dataset.loop = loopId
+
+    // Development only: `starDebug()` in the console reports what the loop has done
+    // since the last call (frame rate, time step, respawns) and the current state
+    const debugWindow = window as Window & {
+      starDebug?: () => Record<string, unknown>
+    }
+    if (process.env.NODE_ENV !== 'production') {
+      debugWindow.starDebug = () => {
+        const seconds = (performance.now() - debugSince) / 1000
+        const report = {
+          seconds: Number(seconds.toFixed(1)),
+          fps: Math.round(debugFrames / seconds),
+          avgDt: Number(((seconds * 60) / Math.max(1, debugFrames)).toFixed(2)),
+          maxDt: Number(debugMaxDt.toFixed(2)),
+          respawnsPerSecond: Number((respawns / seconds).toFixed(1)),
+          stars: stars.length,
+          extraStars: extraStars.size,
+          ascended,
+          ascension: Number(ascension.toFixed(3)),
+          boost: Number(boost.toFixed(3)),
+          holeGrow: Number(holeGrow.toFixed(3)),
+          agitation: Number(agitation.toFixed(3)),
+          gravityRadius: Math.round(gravityRadius),
+          gravityForce: Number(gravityForce.toFixed(3)),
+          layoutSize: `${w}x${h}`,
+          windowSize: `${window.innerWidth}x${window.innerHeight}`,
+          dpr: window.devicePixelRatio,
+          starCanvas: `${canvas.width}x${canvas.height} px, shown at ${canvas.clientWidth}x${canvas.clientHeight}`,
+          hazeCanvas: `${backdrop.width}x${backdrop.height} px, shown at ${backdrop.clientWidth}x${backdrop.clientHeight}`,
+          canvasesInPage: document.querySelectorAll('canvas').length,
+          reducedMotion,
+          isMobile,
+        }
+        debugFrames = 0
+        debugMaxDt = 0
+        respawns = 0
+        debugSince = performance.now()
+        return report
+      }
+    }
+
     let raf = 0
     if (reducedMotion) {
       draw(performance.now(), 0)
     } else {
       let last = performance.now()
       const frame = (now: number) => {
+        if (canvas.dataset.loop !== loopId) return
         // dt is "frames at 60fps" so speed is the same on 60/120/144Hz screens
         const elapsed = (now - last) / 16.667
         const dt = Number.isFinite(elapsed)
           ? Math.min(Math.max(elapsed, 0), 3)
           : 0
         last = now
+        debugFrames++
+        debugMaxDt = Math.max(debugMaxDt, dt)
         draw(now, dt)
         raf = requestAnimationFrame(frame)
       }
@@ -1289,6 +1365,9 @@ export const CustomStarCanvas = ({
       colorScheme.removeEventListener('change', onThemeChange)
       themeObserver.disconnect()
       cancelAnimationFrame(raf)
+      debugWindow.starDebug = undefined
+      if (canvas.dataset.loop === loopId) canvas.dataset.loop = ''
+      for (const timer of settleTimers) window.clearTimeout(timer)
       window.clearTimeout(hazeTimer)
       aurora.dispose()
       bonusAurora?.dispose()
@@ -1309,7 +1388,7 @@ export const CustomStarCanvas = ({
       <div
         ref={veilRef}
         aria-hidden
-        className='pointer-events-none fixed inset-0 z-[-1] opacity-0 transition-opacity duration-[1500ms]'
+        className='pointer-events-none fixed inset-0 z-[-1] opacity-0 transition-opacity duration-1500'
       />
       <canvas
         ref={backdropRef}

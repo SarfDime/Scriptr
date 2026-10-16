@@ -93,7 +93,7 @@ export function AuthCard() {
         <RegisterForm onSwitchToLogin={() => setMode('login')} />
       )}
 
-      <Card.Footer className='ui-stack gap-2'>
+      <Card.Footer className='ui-stack gap-2 border-0'>
         <NextLink href='/' className='button basic w-full justify-center'>
           {UI_STRINGS.auth.continueAsGuestLabel}
         </NextLink>
