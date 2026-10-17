@@ -130,18 +130,18 @@
   } */
 
   &.brand {
-    color: var(--cerulean-blue);
+    color: var(--color-brand);
 
     /* &::after {
-      background-color: var(--cerulean-blue);
+      background-color: var(--color-brand);
     } */
   }
 
   &.brand-light {
-    color: var(--light-cerulean-blue);
+    color: var(--color-brand-300);
 
     /* &::after {
-      background-color: var(--light-cerulean-blue);
+      background-color: var(--color-brand-300);
     } */
   }
 

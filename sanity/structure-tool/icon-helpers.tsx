@@ -1,4 +1,4 @@
-import type { ComponentType, CSSProperties } from 'react'
+import type { ComponentType, CSSProperties } from 'react';
 
 export const structureToolIconColors = {
   hero: 'var(--info-blue)',
@@ -9,7 +9,7 @@ export const structureToolIconColors = {
   social: 'var(--rose-pink)',
   utility: 'var(--warn-orange)',
   faq: 'var(--info-blue-light)',
-  pages: 'var(--cerulean-blue)',
+  pages: 'var(--color-brand)',
   website: 'var(--jade-green)',
   ai: 'var(--magenta-pink)',
   content: 'var(--info-blue-light)',
@@ -18,9 +18,9 @@ export const structureToolIconColors = {
   interactive: 'var(--cyan-blue)',
   webschemas: 'var(--rose-pink)',
   sections: 'var(--jade-green)',
-  footer: 'var(--light-cerulean-blue)',
+  footer: 'var(--color-brand-300)',
   misc: 'var(--info-blue)',
-  contentPosts: 'var(--light-cerulean-blue)',
+  contentPosts: 'var(--color-brand-300)',
   navigationMenu: 'var(--lavender-purple)',
   deprecated: 'var(--error-red)',
 } as const

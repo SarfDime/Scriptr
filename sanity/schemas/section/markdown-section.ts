@@ -37,8 +37,8 @@ export const MarkdownSection = defineType({
       options: {
         list: [
           { title: 'White', value: 'white' },
-          { title: 'Baby blue', value: `brand-light` },
-          { title: 'Cerulean blue', value: 'brand' },
+          { title: 'Brand Light', value: `brand-light` },
+          { title: 'Brand', value: 'brand' },
           { title: 'Light gray', value: 'muted' },
         ],
         layout: 'radio',

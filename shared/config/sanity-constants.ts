@@ -9,8 +9,8 @@ export const COLOR_CODES = {
 } as const
 export const COLOR_OPTIONS = [
   {
-    title: 'Cerulean 🔵',
-    value: '#2975bf',
+    title: 'Brand 🔵',
+    value: '#0099ff',
   },
   { title: 'Red 🔴', value: 'red' },
   { title: 'Gold 🟡', value: 'gold' },

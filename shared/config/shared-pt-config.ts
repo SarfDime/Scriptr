@@ -57,11 +57,11 @@ export const COLOR_DECORATORS: Array<{
   label: string
   color: string
 }> = [
-  { name: 'brand', label: 'Brand', color: 'var(--cerulean-blue)' },
+  { name: 'brand', label: 'Brand', color: 'var(--color-brand)' },
   {
     name: 'brand-light',
     label: 'Brand Light',
-    color: 'var(--light-cerulean-blue)',
+    color: 'var(--color-brand-300)',
   },
   { name: 'muted', label: 'Muted', color: 'var(--text-muted)' },
   { name: 'white', label: 'White', color: 'var(--text-light)' },
