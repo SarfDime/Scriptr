@@ -273,25 +273,25 @@ Priority work, scheduled right after the frontend gaps:
 
 Product features:
 
+- **Profile experience:** allow profile editing along with academic data, achievements (defer to achievements todo), and the
+  revised subject layout.
 - **Header search bar:** the header icon currently links to `/search`; expand
   it into an inline search bar that appears on press which on enter would take you to the search page with your search query.
 - **Ratings UI:** professor and subject rating interfaces.
-- **Profile experience:** academic data, achievements, activity, and the
-  revised subject layout.
-- **Notification settings:** preferences and the remaining user-facing
-  notification kinds/UX (moderator notifications are deferred).
-- **Admin UI:** academic sync and dependency tools, `professor_studies`, user
-  restrictions, flag resolution/moderation, suspicious-download review.
 - **Study tips:** for guests and users without onboarding data, sourced from
   Sanity.
+- **Professor comments:** add the comment section to professor pages, using the
+  comment support already available in the backend.
+- **Notification settings:** preferences and the remaining user-facing
+  notification kinds/UX (moderator notifications are deferred).
+- **Footer:** add a simple footer to the page layout.
+- **Admin UI:** academic sync and dependency tools, `professor_studies`, user
+  restrictions, flag resolution/moderation, suspicious-download review.
 - **Study overview metadata:** more administrator/study metadata on the card in
   [`StudyOverviewCard.tsx`](next/components/academics/study/StudyOverviewCard.tsx)
   when it becomes available.
-- **Professor comments:** add the comment section to professor pages, using the
-  comment support already available in the backend.
 - **Branding:** create the app logo and apply the branding across the app;
   update the README and use the logo as the favicon.
-- **Footer:** add a simple footer to the page layout.
 - **Localization:** allow project strings, script titles and descriptions to be
   localized; comments remain unchanged.
 
@@ -383,7 +383,7 @@ Deliberately postponed until everything else is done:
 
 ## Suggested Order
 
-1. Finish the main frontend gaps: ratings, profile, notification settings,
+1. Finish the main frontend gaps: profile, professor comments, header search, study tips, footer, ratings, notification settings,
    then the admin/moderation UI (admin-only).
 2. Close frontend quality work: state coverage, inline strings, accessibility,
    toolbar behavior, root layout, toasts, polish, SEO/performance.
@@ -395,6 +395,4 @@ Deliberately postponed until everything else is done:
 
 ## Exploratory Ideas
 
-- **Background-mode easter egg:** clicking the black hole repeatedly switches
-  the view background.
 - **Christmas effects:** add a seasonal Christmas background and effects.
