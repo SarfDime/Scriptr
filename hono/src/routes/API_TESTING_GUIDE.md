@@ -229,9 +229,10 @@ echo "# Second file" > /tmp/test-script-2.md
 # Multi-file upload in one call. subjectId scopes the R2 bucket and key prefix.
 UPLOAD=$(curl -s -b cookies-student.txt -X POST $BASE/file-ops/upload \
   -F "files=@/tmp/test-script.md" -F "files=@/tmp/test-script-2.md" -F "subjectId=$SUBJ")
-echo $UPLOAD | jq .                                  # { success, files: [{ fileKey, fileType, fileSizeBytes, bucket }, ...] }
+echo $UPLOAD | jq .                                  # { success, files: [{ fileKey, fileType, fileSizeBytes, bucket, fileName }, ...] }
 echo $UPLOAD | jq '.files | length'                  # 2
 echo $UPLOAD | jq -r '.files[0].fileKey'             # {facultyId}/{studyId}/{subjectId}/{userId}/{uuid}.md
+echo $UPLOAD | jq -r '.files[].fileName'             # test-script, test-script-2 (kebab-case, no extension)
 
 # A single file is still accepted and normalized to an array
 curl -s -b cookies-student.txt -X POST $BASE/file-ops/upload -F "files=@/tmp/test-script.md" | jq '.files | length'   # 1
@@ -278,6 +279,10 @@ curl -s -b cookies-student.txt $BASE/scripts/my-scripts | jq '.scripts | length'
 # Pre-signed download URL (valid for 1 hour); the bucket is resolved server-side from script_files
 KEY=$(curl -s $BASE/scripts/$SCRIPT | jq -r '.files[0].file_url')
 curl -s "$BASE/file-ops/get-file/$KEY" | jq .
+# Download variant: the signed URL carries response-content-disposition, so a
+# HEAD/GET shows "attachment; filename=\"<file_name>.<ext>\"" instead of the UUID.
+DL=$(curl -s "$BASE/file-ops/get-file/$KEY?download=1" | jq -r .url)
+curl -sI "$DL" | grep -i content-disposition
 ```
 
 ```bash
@@ -298,7 +303,19 @@ curl -s -b cookies-student.txt -X PATCH $BASE/scripts/$SCRIPT -H "Content-Type: 
 FILE_ID=$(curl -s -b cookies-student.txt $BASE/scripts/$SCRIPT | jq -r '.files[1].id // empty')
 if [ -n "$FILE_ID" ]; then
   curl -s -b cookies-student.txt -X DELETE "$BASE/scripts/$SCRIPT/files/$FILE_ID" | jq .
+  # Remaining files are renumbered: expect positions 0..n-1 with no gap.
+  curl -s -b cookies-student.txt $BASE/scripts/$SCRIPT | jq '[.files[].position]'
 fi
+
+# Add more files to the existing script: upload first, then attach what came back.
+echo "# Third file" > /tmp/Test\ Script\ 3.md
+MORE=$(curl -s -b cookies-student.txt -X POST $BASE/file-ops/upload \
+  -F "files=@/tmp/Test Script 3.md" -F "subjectId=$SUBJ")
+echo $MORE | jq -r '.files[0].fileName'                # test-script-3
+curl -s -b cookies-student.txt -X POST $BASE/scripts/$SCRIPT/files -H "Content-Type: application/json" \
+  -d "{\"files\": $(echo $MORE | jq -c '.files')}" | jq .      # { success, files: [{ ..., position: last + 1, file_name }] }
+# A non-author (and non-admin) gets 403, and the uploaded objects are removed again.
+# A restricted author gets 403 "restricted from adding files" (see Phase 10b).
 ```
 
 ---
@@ -520,6 +537,10 @@ curl -s -b cookies-student.txt -X POST $BASE/comments -H "Content-Type: applicat
   \"script_id\": \"$SCRIPT\"
 }" | jq .
 curl -s -b cookies-student.txt -X POST $BASE/votes/$SCRIPT | jq .
+# Editing their own script is blocked too: expect 403 "restricted from editing
+# scripts", not a generic 500.
+curl -s -b cookies-student.txt -X PATCH $BASE/scripts/$SCRIPT -H "Content-Type: application/json" \
+  -d '{"additional_reading":["https://example.com/blocked"]}' | jq .
 
 # Still allowed while restricted: favoriting, and removing own content
 curl -s -b cookies-student.txt -X POST $BASE/favorites/$SCRIPT | jq .

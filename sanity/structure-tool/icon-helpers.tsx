@@ -1,4 +1,4 @@
-import type { ComponentType, CSSProperties } from 'react';
+import type { ComponentType, CSSProperties } from 'react'
 
 export const structureToolIconColors = {
   hero: 'var(--info-blue)',

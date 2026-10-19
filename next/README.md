@@ -27,7 +27,10 @@ REVALIDATE_SECRET=development_secret_key
 ```
 
 `REVALIDATE_SECRET` protects `POST /api/revalidate`, which the Hono API calls to
-invalidate cache tags; it must match `REVALIDATE_SECRET` in `hono/.env`.
+invalidate cache tags; it must match `REVALIDATE_SECRET` in `hono/.env`. Tags are
+expired immediately (`revalidateTag(tag, { expire: 0 })`), not
+stale-while-revalidate, so the first request after a mutation never serves old
+data.
 
 Do not expose private tokens through variables prefixed with `NEXT_PUBLIC_`.
 

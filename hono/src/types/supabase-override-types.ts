@@ -109,7 +109,7 @@ export type Database = Override<
                 >
                 Update: Override<
                   GenDatabase['public']['Tables']['script_files']['Update'],
-                  FileOverrides
+                  Partial<FileOverrides>
                 >
               }
             >

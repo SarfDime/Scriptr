@@ -16,6 +16,7 @@ import { Card } from '@/components/ui/Card'
 import { Dialog } from '@/components/ui/Dialog'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { formatFileSize, getPreviewableKind } from '@/lib/file-preview'
+import { getScriptFileLabel, getScriptFileName } from '@/lib/script-file-name'
 import { ScriptDownloadButton } from './actions/ScriptDownloadButton'
 import { StoredFilePreviewContent } from './FilePreviewContent'
 import { ScriptPanel } from './ScriptPanel'
@@ -90,13 +91,13 @@ export function PreviewScriptModal({
                 <>
                   <Text className='ui-label' aria-live='polite'>
                     {SCRIPT_STRINGS.preview.previewing(
-                      getFileName(selectedFile)
+                      getScriptFileName(selectedFile)
                     )}
                   </Text>
                   <StoredFilePreviewContent
                     fileKey={selectedFile.file_url}
                     kind={selectedFileKind}
-                    fileName={getFileName(selectedFile)}
+                    fileName={getScriptFileName(selectedFile)}
                   />
                 </>
               ) : (
@@ -133,10 +134,6 @@ export function PreviewScriptModal({
   )
 }
 
-function getFileName(file: ScriptFile) {
-  return SCRIPT_STRINGS.file.name(file.position + 1, file.file_type)
-}
-
 function PreviewFileRow({
   file,
   scriptId,
@@ -148,7 +145,7 @@ function PreviewFileRow({
   isSelected: boolean
   onPreview: () => void
 }) {
-  const fileName = getFileName(file)
+  const fileName = getScriptFileName(file)
   const kind = getPreviewableKind(file.file_type)
   const color = getColorPalette({ type: 'seed', value: file.file_type })
 
@@ -159,8 +156,8 @@ function PreviewFileRow({
       aria-current={isSelected || undefined}
     >
       <Box className='ui-cluster min-w-0 items-center gap-2'>
-        <Text className='ui-label'>
-          {SCRIPT_STRINGS.file.label(file.position + 1)}
+        <Text className='ui-label min-w-0 max-w-full truncate'>
+          {getScriptFileLabel(file)}
         </Text>
         <Badge colorPalette={color}>{file.file_type.toUpperCase()}</Badge>
         <Text className='ui-caption'>

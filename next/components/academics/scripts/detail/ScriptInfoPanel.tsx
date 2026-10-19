@@ -1,4 +1,5 @@
 import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
+import { ScriptManageActions } from '@/components/academics/scripts/manage/ScriptManageActions'
 import { ScriptPanel } from '@/components/academics/scripts/ScriptPanel'
 import { Divider } from '@/components/ui/Divider'
 import type { ScriptDetailViewModel } from '@/types/components/ScriptDetail.types'
@@ -18,6 +19,7 @@ export function ScriptInfoPanel({ detail }: { detail: ScriptDetailViewModel }) {
     hasVoted,
     isSaved,
     isAuthor,
+    canManage,
     viewerDataFailed,
     subjectHref,
   } = detail
@@ -38,6 +40,18 @@ export function ScriptInfoPanel({ detail }: { detail: ScriptDetailViewModel }) {
       />
       <Divider />
       <ScriptMetaList script={script} subjectHref={subjectHref} />
+      {canManage && (
+        <ScriptManageActions
+          scriptId={scriptId}
+          subjectId={script.subject_id}
+          script={{
+            title: script.title,
+            description: script.description,
+            additional_reading: script.additional_reading,
+          }}
+          subjectHref={subjectHref}
+        />
+      )}
       <ScriptInfoFooter
         scriptId={scriptId}
         isAuthor={isAuthor}

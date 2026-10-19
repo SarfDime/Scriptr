@@ -19,7 +19,7 @@ export function ScriptDetailOverview({
 }: {
   detail: ScriptDetailViewModel
 }) {
-  const { scriptId, script, files } = detail
+  const { scriptId, script, files, canManage } = detail
 
   return (
     <Box className='flex flex-wrap gap-4'>
@@ -27,7 +27,11 @@ export function ScriptDetailOverview({
         <ScriptInfoPanel detail={detail} />
         <ScriptAdditionalReading links={script.additional_reading} />
       </ScriptSurface>
-      <ScriptFilesSection scriptId={scriptId} files={files} />
+      <ScriptFilesSection
+        scriptId={scriptId}
+        files={files}
+        canManage={canManage}
+      />
     </Box>
   )
 }

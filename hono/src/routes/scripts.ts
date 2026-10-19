@@ -6,8 +6,10 @@ import type { ScriptFileInput } from '../../../shared/types/api.types'
 import type { PortableTextValue } from '../../../shared/types/portable-text.types'
 import type {
   MyScriptSummary,
+  ScriptAttachFilesResponse,
+  ScriptDeleteResponse,
   ScriptFlaggedSummary,
-  ScriptPatchResult,
+  ScriptPatchResponse,
   ScriptSummary,
 } from '../../../shared/types/scripts.types'
 import { isAdmin, isScriptFileInput } from '../../../shared/utils/api.utils'
@@ -39,7 +41,7 @@ import type { HonoEnv } from '../types/env.types'
 // Excludes is_flagged and the comments aggregate, which uses the separately
 // permissioned get_script_comment_counts RPC.
 const PUBLIC_SCRIPT_COLUMNS =
-  'id, title, description, subject_id, professor_id, author_id, exam_session, additional_reading, vote_score, download_count, created_at, updated_at, files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, created_at)'
+  'id, title, description, subject_id, professor_id, author_id, exam_session, additional_reading, vote_score, download_count, created_at, updated_at, files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, file_name, created_at)'
 
 /**
  * Reused by every list/detail endpoint below (`/`, `/subject/:subjectId`,
@@ -403,6 +405,57 @@ scripts.get('/my-scripts', authMiddleware, async (c) => {
   return c.json<{ scripts: Array<MyScriptSummary> }>({ scripts: data })
 })
 
+/**
+ * Closes the gap a removed file leaves in `position`, so a script's files stay
+ * numbered 0..n-1 and their "File N" labels never skip. `script_files` has no
+ * UPDATE policy, so no caller can do this through RLS and the service-role
+ * client is the only path. It only runs after the session client's DELETE
+ * (RLS: author or admin) has succeeded, so the caller is already authorized.
+ * Best effort: the file is already gone, so a failure only leaves a cosmetic
+ * gap, never an error for the caller.
+ */
+const compactScriptFilePositions = async (
+  c: Context<HonoEnv>,
+  scriptId: string
+) => {
+  const internal = createInternalSupabaseClient(c)
+
+  const { data: remaining, error } = await internal
+    .from('script_files')
+    .select('id, position')
+    .eq('script_id', scriptId)
+    .order('position', { ascending: true })
+    .order('created_at', { ascending: true })
+
+  if (error || !remaining) {
+    honoLog({
+      logLevel: 'error',
+      message: 'Failed to read script files for renumbering',
+      error,
+    })
+    return
+  }
+
+  const outOfPlace = remaining.flatMap((file, index) =>
+    file.position === index ? [] : [{ id: file.id, position: index }]
+  )
+
+  const results = await Promise.all(
+    outOfPlace.map(({ id, position }) =>
+      internal.from('script_files').update({ position }).eq('id', id)
+    )
+  )
+
+  const failed = results.find((result) => result.error)
+  if (failed?.error) {
+    honoLog({
+      logLevel: 'error',
+      message: 'Failed to renumber script files after removal',
+      error: failed.error,
+    })
+  }
+}
+
 /** Remove a single file from a script (author or admin only) */
 scripts.delete('/:scriptId/files/:fileId', authMiddleware, async (c) => {
   const user = c.get('user')
@@ -460,6 +513,8 @@ scripts.delete('/:scriptId/files/:fileId', authMiddleware, async (c) => {
     })
   }
 
+  await compactScriptFilePositions(c, scriptId)
+
   if (script?.subject_id) {
     await revalidateCacheTags(
       c.env,
@@ -471,7 +526,10 @@ scripts.delete('/:scriptId/files/:fileId', authMiddleware, async (c) => {
     )
   }
 
-  return c.json({ success: true, message: 'Script file deleted successfully' })
+  return c.json<ScriptDeleteResponse>({
+    success: true,
+    message: 'Script file deleted successfully',
+  })
 })
 
 /** Get a single script by ID */
@@ -613,6 +671,7 @@ scripts.post(
         file_type: file.fileType,
         file_size_bytes: file.fileSizeBytes,
         bucket: file.bucket,
+        file_name: file.fileName ?? null,
         position,
       }))
     )
@@ -660,6 +719,140 @@ scripts.post(
       success: true,
       script: { id: data.id },
       message: 'Script uploaded successfully',
+    })
+  }
+)
+
+/** POST /scripts/:id/files body: files already uploaded through
+ * POST /file-ops/upload. */
+const attachScriptFilesSchema = z.object({
+  files: z
+    .array(
+      z.custom<ScriptFileInput>(isScriptFileInput, {
+        message: 'Invalid file input',
+      })
+    )
+    .min(1, 'At least one file is required'),
+})
+
+/** Attach already-uploaded files to an existing script (author or admin) */
+scripts.post(
+  '/:id/files',
+  authMiddleware,
+  zValidator('json', attachScriptFilesSchema, (result, c) => {
+    if (!result.success) {
+      return c.json(
+        { error: result.error.issues[0]?.message ?? 'Invalid files' },
+        400
+      )
+    }
+    return
+  }),
+  async (c) => {
+    const user = c.get('user')
+    const scriptId = requiredParam(c, 'id')
+    const { files } = c.req.valid('json')
+    const supabase = createSupabaseClient(c)
+
+    // The files are already in R2 by now, so every failure below has to take
+    // them back out again.
+    const discardUploads = async () => {
+      try {
+        await deleteR2Files(
+          c,
+          files.map(({ bucket, fileKey }) => ({ bucket, fileKey }))
+        )
+      } catch (cleanupError) {
+        honoLog({
+          logLevel: 'error',
+          message: 'Failed to clean up uploaded R2 files after attach failure',
+          error: cleanupError,
+        })
+      }
+    }
+
+    const [{ data: script }, { data: profile }] = await Promise.all([
+      supabase
+        .from('scripts')
+        .select('author_id, subject_id')
+        .eq('id', scriptId)
+        .single(),
+      supabase.from('profiles').select('role').eq('id', user.id).single(),
+    ])
+
+    if (!script) {
+      await discardUploads()
+      return c.json({ error: 'Script not found' }, 404)
+    }
+
+    if (script.author_id !== user.id && !isAdmin(profile?.role)) {
+      await discardUploads()
+      return c.json(
+        { error: 'Unauthorized: You can only add files to your own scripts' },
+        403
+      )
+    }
+
+    const { data: lastFile } = await supabase
+      .from('script_files')
+      .select('position')
+      .eq('script_id', scriptId)
+      .order('position', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    const firstPosition = lastFile ? lastFile.position + 1 : 0
+
+    // RLS is the real gate: the author must not be restricted (admins are
+    // exempt), otherwise the insert fails with 42501.
+    const { data: inserted, error } = await supabase
+      .from('script_files')
+      .insert(
+        files.map((file, index) => ({
+          script_id: scriptId,
+          file_url: file.fileKey,
+          file_type: file.fileType,
+          file_size_bytes: file.fileSizeBytes,
+          bucket: file.bucket,
+          file_name: file.fileName ?? null,
+          position: firstPosition + index,
+        }))
+      )
+      .select(
+        'id, file_url, file_type, file_size_bytes, bucket, position, file_name, created_at'
+      )
+
+    if (error || !inserted) {
+      honoLog({
+        logLevel: 'error',
+        message: 'Failed to attach script files',
+        error,
+      })
+      await discardUploads()
+
+      if (error?.code === '42501') {
+        return c.json(
+          { error: 'Your account is restricted from adding files' },
+          403
+        )
+      }
+      if (error?.code === '23503' || error?.code === '23514') {
+        return c.json({ error: 'Invalid script file data' }, 400)
+      }
+      return c.json({ error: 'Failed to save script files' }, 500)
+    }
+
+    await revalidateCacheTags(
+      c.env,
+      scriptMutationTags({
+        id: scriptId,
+        subject_id: script.subject_id,
+        author_id: script.author_id,
+      })
+    )
+
+    return c.json<ScriptAttachFilesResponse>({
+      success: true,
+      files: inserted,
     })
   }
 )
@@ -718,11 +911,23 @@ scripts.patch('/:id', authMiddleware, async (c) => {
       `)
     .single()
 
-  if (error) return databaseErrorResponse(c, error)
+  if (error) {
+    // A restricted author's UPDATE matches no rows (`is_restricted()` is in the
+    // policy's USING clause), which `.single()` reports as PGRST116 rather than
+    // 42501. The script lookup and author/admin check above already passed and
+    // admins always satisfy the policy, so this can only be a restriction.
+    if (error.code === 'PGRST116') {
+      return c.json(
+        { error: 'Your account is restricted from editing scripts' },
+        403
+      )
+    }
+    return databaseErrorResponse(c, error)
+  }
 
   await revalidateCacheTags(c.env, scriptMutationTags(data))
 
-  return c.json<{ success: boolean; script: ScriptPatchResult }>({
+  return c.json<ScriptPatchResponse>({
     success: true,
     script: data,
   })
@@ -788,7 +993,10 @@ scripts.delete('/:id', authMiddleware, async (c) => {
     )
   }
 
-  return c.json({ success: true, message: 'Script deleted successfully' })
+  return c.json<ScriptDeleteResponse>({
+    success: true,
+    message: 'Script deleted successfully',
+  })
 })
 
 /** Record a download, deduplicated per identity (account, then IP, then device) */

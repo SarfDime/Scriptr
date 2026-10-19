@@ -28,6 +28,7 @@ export type ApiEndpoint =
   | '/api/scripts/my-scripts'
   | `/api/scripts/${string}/files/${string}`
   | `/api/scripts/${string}`
+  | `/api/scripts/${string}/files`
   | `/api/scripts/${string}/download`
   | '/api/scripts/flagged/all'
   | '/api/votes'
@@ -167,6 +168,7 @@ export const apiRoutes = {
       fileId: string | number
     ) => `/api/scripts/${scriptId}/files/${fileId}` as const,
     byId: (id: string | number) => `/api/scripts/${id}` as const,
+    filesById: (id: string | number) => `/api/scripts/${id}/files` as const,
     downloadById: (id: string | number) =>
       `/api/scripts/${id}/download` as const,
     flaggedAll: '/api/scripts/flagged/all',

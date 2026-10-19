@@ -1,5 +1,6 @@
 import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
 import { Box } from '@/components/common/Box'
+import { Badge } from '@/components/ui/Badge'
 import { Divider } from '@/components/ui/Divider'
 import { FlagReportButton } from '@/components/ui/FlagReportButton'
 import { ScriptDetailItem } from './ScriptDetailItem'
@@ -34,6 +35,11 @@ export function ScriptInfoFooter({
             triggerLabel={SCRIPT_STRINGS.info.reportTrigger}
             triggerClassName='button button-sm cp-warning-int shrink-0 gap-1.5 px-3 py-1.5 font-medium'
           />
+        )}
+        {isAuthor && (
+          <Badge colorPalette='cp-brand' className='ui-label h-full'>
+            {SCRIPT_STRINGS.info.yourScript}
+          </Badge>
         )}
       </Box>
     </Box>

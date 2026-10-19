@@ -134,7 +134,7 @@ function generateApiRoutes() {
   output += `} as const;\n\n`
   output += `export type ApiRoutes = typeof apiRoutes;\n`
 
-  const outputPath = path.join('shared/config/api-routes.ts')
+  const outputPath = path.join('../shared/config/api-routes.ts')
   fs.writeFileSync(outputPath, output)
   // biome-ignore lint/suspicious/noConsole: console log for successful generation
   console.log(`✅ Generated API routes successfully to ${outputPath}`)

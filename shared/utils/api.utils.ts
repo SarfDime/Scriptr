@@ -8,6 +8,7 @@ import type {
 import type { FlagStatus } from '../types/flags.types'
 import type { ProfileSubjectStatus, UserRole } from '../types/profile.types'
 import { generatePath } from './common-utils'
+import { isStoredFileName } from './file-name.utils'
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_-]+$/
 const MIN_PASSWORD_LENGTH = 8
@@ -157,7 +158,10 @@ const isScriptFileInput = (value: unknown): value is ScriptFileInput => {
     Number.isInteger((value as ScriptFileInput).fileSizeBytes) &&
     (value as ScriptFileInput).fileSizeBytes > 0 &&
     typeof (value as ScriptFileInput).bucket === 'string' &&
-    (value as ScriptFileInput).bucket.length > 0
+    (value as ScriptFileInput).bucket.length > 0 &&
+    ((value as ScriptFileInput).fileName === undefined ||
+      (value as ScriptFileInput).fileName === null ||
+      isStoredFileName((value as ScriptFileInput).fileName))
   )
 }
 

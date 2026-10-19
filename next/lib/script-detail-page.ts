@@ -142,6 +142,9 @@ export const loadScriptDetailPage = async (
       // `myVote !== null`.
       hasVoted: myVote.value !== null,
       isAuthor: session.value?.user?.id === script.author_id,
+      canManage:
+        session.value?.user?.id === script.author_id ||
+        session.value?.user?.role === 'admin',
       isSaved: myFavorite.value !== null,
       viewerDataFailed,
       subjectHref,

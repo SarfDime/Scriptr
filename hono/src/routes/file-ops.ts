@@ -4,6 +4,10 @@ import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { isFileType } from '../../../shared/utils/api.utils'
+import {
+  isStoredFileName,
+  toStoredFileName,
+} from '../../../shared/utils/file-name.utils'
 import { honoLog } from '../lib/logger'
 import { createS3Client, deleteR2Files } from '../lib/r2'
 import { authMiddleware, createInternalSupabaseClient } from '../lib/supabase'
@@ -137,6 +141,7 @@ fileOps.post(
       fileType: string
       fileSizeBytes: number
       bucket: string
+      fileName: string | null
     }> = []
 
     try {
@@ -155,7 +160,13 @@ fileOps.post(
             })
           )
 
-          uploaded.push({ fileKey, fileType, fileSizeBytes: file.size, bucket })
+          uploaded.push({
+            fileKey,
+            fileType,
+            fileSizeBytes: file.size,
+            bucket,
+            fileName: toStoredFileName(file.name),
+          })
         })
       )
 
@@ -179,6 +190,20 @@ fileOps.post(
 )
 
 /**
+ * `Content-Disposition` for a download: the stored name plus its extension,
+ * so the saved file isn't named after its R2 key (a UUID). The name is
+ * re-checked against the stored shape (kebab-case ASCII) before it goes into a
+ * header; a row without a valid name just gets a plain `attachment`.
+ */
+const toAttachmentDisposition = (file: {
+  file_name: string | null
+  file_type: string
+}) =>
+  isStoredFileName(file.file_name)
+    ? `attachment; filename="${file.file_name}.${file.file_type}"`
+    : 'attachment'
+
+/**
  * Get a pre-signed URL for downloading a file from R2. Deliberately public
  * (no authMiddleware) — every file in the app is downloadable by design,
  * guests included. "Protected" here doesn't mean identity-gated; it means
@@ -190,6 +215,11 @@ fileOps.post(
  * generator rather than a script-download endpoint. Deriving `bucket` from
  * the matched row instead closes that off without requiring anyone to be
  * logged in.
+ *
+ * `?download=1` makes the signed URL answer with `Content-Disposition:
+ * attachment`, so the browser saves the file (named after its stored
+ * `file_name`) instead of showing it. Previews use the plain URL and keep
+ * rendering inline.
  */
 fileOps.get('/get-file/*', async (c) => {
   const key = c.req.path.replace('/api/file-ops/get-file/', '')
@@ -198,10 +228,12 @@ fileOps.get('/get-file/*', async (c) => {
     return c.json({ error: 'Key is required' }, 400)
   }
 
+  const download = c.req.query('download') === '1'
+
   const supabase = createInternalSupabaseClient(c)
   const { data: file } = await supabase
     .from('script_files')
-    .select('bucket')
+    .select('bucket, file_name, file_type')
     .eq('file_url', key)
     .single()
 
@@ -221,6 +253,9 @@ fileOps.get('/get-file/*', async (c) => {
       new GetObjectCommand({
         Bucket: bucket,
         Key: key,
+        ...(download && {
+          ResponseContentDisposition: toAttachmentDisposition(file),
+        }),
       }),
       { expiresIn: 3600 }
     )

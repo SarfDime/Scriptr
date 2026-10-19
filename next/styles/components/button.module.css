@@ -103,7 +103,7 @@
 
 @utility danger {
   --button-bg: var(--color-error-red);
-  --button-fg: var(--color-background-100);
+  --button-fg: var(--color-background);
 }
 
 /* Ink is derived from the fill so it stays dark in both themes. */
@@ -115,7 +115,7 @@
 /* --- Quiet variants --- */
 
 @utility hollow {
-  outline: 2px solid var(--color-brand);
+  outline: 1px solid var(--color-brand-150);
   background-color: transparent;
   color: var(--color-brand);
   font-weight: 600;
@@ -123,7 +123,7 @@
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
-      outline-color: var(--color-brand-300);
+      outline-color: var(--color-brand-250);
       background-color: var(--color-brand-50);
       box-shadow: var(--shadow-button-hover);
     }

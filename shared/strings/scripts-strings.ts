@@ -21,6 +21,7 @@ const FILE_TYPE_LABELS: Record<FileType, string> = {
 export const SCRIPT_STRINGS = {
   info: {
     ariaLabel: 'Script information',
+    yourScript: 'Your script',
     uploadedBy: 'Uploaded by',
     deletedUser: 'Deleted user',
     subject: 'Subject',
@@ -46,6 +47,9 @@ export const SCRIPT_STRINGS = {
       `${FILE_TYPE_LABELS[fileType]} · ${
         canPreview ? 'preview available' : 'download to view'
       }`,
+    unsupportedFileType: (fileType: string) =>
+      `Unsupported file type: ${fileType}`,
+    fileTooLarge: (maxSizeMB: number) => `File exceeds ${maxSizeMB}MB`,
   },
   vote: {
     upvote: 'Upvote',
@@ -81,5 +85,33 @@ export const SCRIPT_STRINGS = {
   description: {
     title: 'Description',
     empty: 'No description provided.',
+  },
+  manage: {
+    ariaLabel: 'Manage script',
+    tryAgain: 'Please try again.',
+    edit: 'Edit',
+    editDialogTitle: 'Edit script',
+    save: 'Save changes',
+    cancel: 'Cancel',
+    saved: 'Script updated',
+    saveFailed: "Couldn't save your changes",
+    addFilesFailed: "Couldn't add the files",
+    addFilesNote:
+      'New files are added to the script. Remove existing files from the script page.',
+    delete: 'Delete',
+    deleteTitle: 'Delete this script?',
+    deleteDescription:
+      'This permanently removes the script and its files. This cannot be undone.',
+    deleteConfirm: 'Delete script',
+    deleted: 'Script deleted',
+    deleteFailed: "Couldn't delete the script",
+    removeFile: 'Remove',
+    removeFileAriaLabel: (fileName: string) => `Remove ${fileName}`,
+    removeFileTitle: (fileName: string) => `Remove ${fileName}?`,
+    removeFileDescription:
+      'This permanently removes the file from the script. This cannot be undone.',
+    removeFileConfirm: 'Remove file',
+    fileRemoved: 'File removed',
+    removeFileFailed: "Couldn't remove the file",
   },
 } as const

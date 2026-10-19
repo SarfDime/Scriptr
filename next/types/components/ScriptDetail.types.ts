@@ -10,6 +10,9 @@ export type ScriptDetailViewModel = {
   voteScore: number
   hasVoted: boolean
   isAuthor: boolean
+  /** The viewer may edit/delete the script and remove its files: its author
+   * or an admin. Mirrors the API's check; the API stays the real boundary. */
+  canManage: boolean
   isSaved: boolean
   /** A viewer-specific lookup (vote, favorite, session) failed: vote and save
    * are disabled and a toast is shown. */

@@ -3,7 +3,7 @@
 What's built and what's outstanding. See `ARCHITECTURE.md` for the current
 system design. This is the single source of truth for planned work and ideas.
 
-Last reconciled: 2026-10-16.
+Last reconciled: 2026-10-17.
 
 In-code `TODO` and `Deferred:` comments have been removed from the source; the
 work they described is tracked below with a link to the code it belonged to.
@@ -39,6 +39,40 @@ call before anyone builds it).
 - Request logging is skipped when `NODE_ENV` is `production`
   ([`hono/src/index.ts`](hono/src/index.ts)).
 - Decided 2026-10-13: `faculties_university_id_fkey` stays `ON DELETE CASCADE`.
+- `PATCH /scripts/:id` maps a restricted author's zero-row update (RLS
+  `USING` includes `NOT is_restricted()`, so no `42501` is raised) to a `403`
+  instead of a generic `500`. Update/delete/file-removal responses are typed in
+  `shared/types/scripts.types.ts`.
+- `authenticated` has **column-level** `UPDATE` on `scripts` (not table-wide, so
+  `vote_score`, `download_count`, `is_flagged`, `author_id`, `subject_id` and
+  `professor_id` stay locked): exactly `title`, `description`,
+  `additional_reading` and `updated_at`, matching what `PATCH /scripts/:id`
+  writes. Migrations
+  `20261017211328_grant_authenticated_update_script_content_columns.sql` and
+  `20261017212518_revoke_authenticated_update_script_subject_professor.sql`;
+  any new column the route writes needs its own grant, otherwise it fails with
+  `42501` (a `500`, deliberately not mapped to `403`).
+- Removing a script file renumbers the remaining files' `position` (service-role
+  client, since `script_files` has no UPDATE policy), so "File N" labels never
+  skip.
+- `POST /api/revalidate` expires tags with `revalidateTag(tag, { expire: 0 })`.
+  The previous `'max'` profile is stale-while-revalidate, which served the old
+  data (e.g. a deleted script) on the first request after a mutation.
+- `script_files.file_name` (nullable, 1 to 255 chars; migration
+  `20261018131652_add_script_files_file_name.sql`) keeps the uploaded name.
+  `POST /file-ops/upload` returns it lowercased, accent-stripped, kebab-cased
+  and without its extension (`toStoredFileName` in
+  `shared/utils/file-name.utils.ts`), or `null` when nothing usable is left;
+  `isScriptFileInput` rejects any other shape. Files from before this have no
+  recoverable name and show the positional label.
+- Downloads save to disk under the stored name: `GET /file-ops/get-file/*`
+  with `?download=1` signs a URL with `Content-Disposition: attachment;
+  filename="<file_name>.<ext>"` (plain `attachment` when there is no valid
+  name); previews use the plain URL and stay inline. The download button
+  navigates the current tab to that URL instead of opening a new one.
+- `POST /scripts/:id/files` (author or admin, restriction-checked in RLS)
+  appends already-uploaded files to an existing script and removes the R2
+  objects again on any failure.
 - Decided 2026-10-15: only `admin` moderates (delete scripts/comments, resolve
   flags, rating types). `moderator` gets no moderation tools in
   the API, RLS or UI; any future moderator role is limited to notifications
@@ -48,6 +82,17 @@ call before anyone builds it).
 
 Nothing open that blocks the frontend. Achievement-definition CRUD and
 moderator notifications are deferred to the end (see **Deferred (Do Last)**).
+
+- **Review `anon` table privileges (found 2026-10-17).** `anon` holds
+  table-wide `INSERT`/`UPDATE`/`DELETE`/`TRUNCATE` on the `public` tables
+  checked so far (`scripts`, `script_files`, `comments`, `profile_subjects`).
+  That is Supabase's default grant, and RLS blocks the row-level writes
+  (`auth.uid()` is null for `anon`). `TRUNCATE` is not subject to RLS but is not
+  reachable through PostgREST. It is still more privilege than the API ever
+  needs, so review and revoke what `anon` doesn't use. The same review should
+  cover `authenticated`'s table-wide `UPDATE` on `script_files`, which has no
+  UPDATE policy and is blocked only by RLS (the service-role client does the
+  position renumbering).
 
 ## R2 / File Storage
 
@@ -207,15 +252,29 @@ Priority work, scheduled right after the frontend gaps:
   results are faculty-scoped) backed by `GET /scripts/search`; header search
   icon links to it, and the homepage `ScriptsSection` links to it from the
   local filter (`showGlobalSearch`).
+- Script management: the script detail page shows Edit and Delete (title,
+  description and additional reading; delete confirms and returns to the
+  subject) plus a per-file Remove action to the author or an admin
+  (`canManage` in the detail view model; the API stays the real boundary).
+  Edit goes through `useProtectedAction` (restriction-checked, `403` is
+  toasted); delete and file removal are never restriction-checked, so they are
+  not wrapped. Guests already preview and download through the public
+  `get-file` route. Components live in
+  `next/components/academics/scripts/manage/`.
+- Editing a script can also add files (upload, then attach; if the text save
+  succeeds but the upload fails, a retry only re-sends the files). The create
+  and edit forms share `ScriptFilesInput` / `useScriptFilePicker` and
+  `ReadingLinksField` / `useReadingLinkTouched`.
+- File cards and the preview modal show the stored file name (the type is
+  already its own badge) and fall back to "File N" for older files.
+- The script detail page shows a "Your script" badge to its author.
 
 ### Todo
 
 Product features:
 
 - **Header search bar:** the header icon currently links to `/search`; expand
-  it into an inline search bar that appears on press.
-- **Script management UI:** edit/delete permissions and the remaining guest
-  preview/download behavior.
+  it into an inline search bar that appears on press which on enter would take you to the search page with your search query.
 - **Ratings UI:** professor and subject rating interfaces.
 - **Profile experience:** academic data, achievements, activity, and the
   revised subject layout.
@@ -324,9 +383,8 @@ Deliberately postponed until everything else is done:
 
 ## Suggested Order
 
-1. Finish the main frontend gaps: script
-   management, ratings, profile, notification settings, then the
-   admin/moderation UI (admin-only).
+1. Finish the main frontend gaps: ratings, profile, notification settings,
+   then the admin/moderation UI (admin-only).
 2. Close frontend quality work: state coverage, inline strings, accessibility,
    toolbar behavior, root layout, toasts, polish, SEO/performance.
 3. R2 improvements: file optimization, then avatars on the same pipeline.

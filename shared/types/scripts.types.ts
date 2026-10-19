@@ -2,7 +2,7 @@ import type { FileType, ScriptFileInput } from './api.types'
 import type { Tables } from './database.types'
 import type { PortableTextValue } from './portable-text.types'
 
-/** Matches `script_files(id, file_url, file_type, file_size_bytes, bucket, position, created_at)`. */
+/** Matches `script_files(id, file_url, file_type, file_size_bytes, bucket, position, file_name, created_at)`. */
 export type ScriptFile = {
   id: string
   file_url: string
@@ -10,6 +10,9 @@ export type ScriptFile = {
   file_size_bytes: number
   bucket: string
   position: number
+  /** Kebab-case, no extension. `null` for files uploaded before names were
+   * kept; the UI falls back to a positional label. */
+  file_name: string | null
   created_at: string
 }
 
@@ -141,6 +144,28 @@ export type ScriptFlaggedSummary = ScriptRowWithPortableText & {
   flags: Array<
     Tables<'flags'> & { reporter: { username: string | null } | null }
   >
+}
+
+/** `PATCH /:id`'s response: `{ success, script }`. */
+export type ScriptPatchResponse = {
+  success: true
+  script: ScriptPatchResult
+}
+
+/** `PATCH /:id` body. `description: null` clears it. */
+export type ScriptUpdateInput = {
+  title: PortableTextValue
+  description: PortableTextValue | null
+  additional_reading: Array<string>
+}
+
+/** `DELETE /:id` and `DELETE /:scriptId/files/:fileId`. */
+export type ScriptDeleteResponse = { success: true; message: string }
+
+/** `POST /:id/files`: the rows that were attached. */
+export type ScriptAttachFilesResponse = {
+  success: true
+  files: Array<ScriptFile>
 }
 
 export type DownloadResponse = { success: true; counted: boolean }

@@ -2,10 +2,7 @@
 
 import type { PortableTextBlock } from '@portabletext/editor'
 import { PORTABLE_TEXT_LIMITS } from '@shared/config/portable-text-limits'
-import {
-  ALLOWED_EXTENSIONS,
-  SUBJECT_EXAM_SESSIONS,
-} from '@shared/config/shared-constants'
+import { SUBJECT_EXAM_SESSIONS } from '@shared/config/shared-constants'
 import type { SubjectExamSession } from '@shared/types/academic.types'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
 import {
@@ -14,14 +11,10 @@ import {
   portableTextJsonByteLength,
 } from '@shared/utils/portable-text.utils'
 import { type SubmitEvent, useEffect, useEffectEvent, useState } from 'react'
+import { useScriptFilePicker } from '@/hooks/useScriptFilePicker'
 import { useScriptUpload } from '@/hooks/useScriptsUpload'
-import { getExtension } from '@/lib/file-preview'
 import type { MinimalSubject } from '@/types/academics/subject.types'
 import type { SelectOptionType } from '@/types/components/Select.types'
-
-const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // ~1MB
-
-export type FileWithError = { file: File; error: string | null }
 
 function hasText(blocks: Array<PortableTextBlock>) {
   return blocks.some((block) => {
@@ -38,27 +31,6 @@ function hasText(blocks: Array<PortableTextBlock>) {
         child.text.trim().length > 0
     )
   })
-}
-
-function validateFile(file: File): string | null {
-  const extension = getExtension(file.name)
-  if (
-    !ALLOWED_EXTENSIONS.includes(
-      extension as (typeof ALLOWED_EXTENSIONS)[number]
-    )
-  ) {
-    return `Unsupported file type (.${extension})`
-  }
-  if (file.size > MAX_FILE_SIZE_BYTES) {
-    return `File exceeds ${MAX_FILE_SIZE_BYTES / (1024 * 1024)}MB`
-  }
-  return null
-}
-
-export function formatFileSize(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 export type UseCreateScriptFormArgs = {
@@ -97,10 +69,10 @@ export function useCreateScriptForm({
     SUBJECT_EXAM_SESSIONS[0] ?? 'january'
   )
   const [readingLinks, setReadingLinks] = useState<Array<string>>([])
-  const [files, setFiles] = useState<Array<FileWithError>>([])
+  const { files, validFiles, addFiles, removeFile, clearFiles } =
+    useScriptFilePicker()
 
   const isBusy = state.status === 'uploading' || state.status === 'creating'
-  const validFiles = files.filter((entry) => entry.error === null)
   const titleTooLong =
     portableTextJsonByteLength(title) > PORTABLE_TEXT_LIMITS.scriptTitleBytes
   const descriptionTooLong =
@@ -112,21 +84,6 @@ export function useCreateScriptForm({
     isScriptDescriptionPortableTextValue(description) &&
     subjectId.length > 0 &&
     professorId.length > 0
-
-  const addFiles = (incoming: FileList | null) => {
-    if (!incoming) return
-    const next = Array.from(incoming).map((file) => ({
-      file,
-      error: validateFile(file),
-    }))
-    setFiles((prev) => [...prev, ...next])
-  }
-
-  const removeFile = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index))
-  }
-
-  const clearFiles = () => setFiles([])
 
   const addReadingLink = () => setReadingLinks((prev) => [...prev, ''])
   const updateReadingLink = (index: number, value: string) =>
@@ -142,7 +99,7 @@ export function useCreateScriptForm({
     setProfessorId(subject.professors[0]?.dbId ?? '')
     setExamSession(SUBJECT_EXAM_SESSIONS[0] ?? 'january')
     setReadingLinks([])
-    setFiles([])
+    clearFiles()
     reset()
   }
 

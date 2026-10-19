@@ -3,7 +3,6 @@
 import AddCircle from '@sanity/icons/AddCircle'
 import DocumentPdf from '@sanity/icons/DocumentPdf'
 import User from '@sanity/icons/User'
-import { ALLOWED_EXTENSIONS } from '@shared/config/shared-constants'
 import { UI_STRINGS } from '@shared/config/strings'
 import type { SubjectExamSession } from '@shared/types/academic.types'
 import { getReadingLinkErrors } from '@shared/utils/link-utils'
@@ -15,24 +14,19 @@ import { SubjectCard } from '@/components/academics/subject/SubjectCard'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { FormContainer } from '@/components/typography/FormContainer'
-import { InputWrapper } from '@/components/typography/InputWrapper'
 import { RESTRICTED_EDITOR_OPTIONS } from '@/components/typography/portable-text/toolbar/editor-options'
-import { Text, type TextProps } from '@/components/typography/Text'
+import type { TextProps } from '@/components/typography/Text'
 import { Card } from '@/components/ui/Card'
 import { Dialog } from '@/components/ui/Dialog'
 import { Field } from '@/components/ui/field/Field'
 import { Select } from '@/components/ui/select/Select'
-import {
-  type FileWithError,
-  formatFileSize,
-  useCreateScriptForm,
-} from '@/hooks/useCreateScriptForm'
+import { useCreateScriptForm } from '@/hooks/useCreateScriptForm'
 import { useDeviceType } from '@/hooks/useDeviceType'
+import { useReadingLinkTouched } from '@/hooks/useReadingLinkTouched'
 import { useRequireSignIn } from '@/hooks/useRequireSignIn'
-import { cn } from '@/lib/common-utils'
-import { getFileTypeFromFilename, getPreviewableKind } from '@/lib/file-preview'
 import type { MinimalSubject } from '@/types/academics/subject.types'
-import { FilePreviewModal } from './FilePreviewModal'
+import { ReadingLinksField } from './ReadingLinksField'
+import { ScriptFilesInput } from './ScriptFilesInput'
 
 const PortableTextEditorSection = dynamic(
   () =>
@@ -78,11 +72,9 @@ export function CreateScriptModal({
   // fresh content. Keying on content length remounted them on every
   // keystroke, which dropped focus and the cursor.
   const [formKey, setFormKey] = useState(0)
-  // Indices of reading links the user has left; errors only show for these so
-  // a half-typed URL isn't flagged while typing.
-  const [touchedLinks, setTouchedLinks] = useState<ReadonlySet<number>>(
-    new Set()
-  )
+  // Which reading rows the user has left; errors only show for these so a
+  // half-typed URL isn't flagged while typing.
+  const linkTouched = useReadingLinkTouched()
   const [titleTouched, setTitleTouched] = useState(false)
   const [descriptionTouched, setDescriptionTouched] = useState(false)
 
@@ -121,7 +113,7 @@ export function CreateScriptModal({
   })
 
   function resetTouched() {
-    setTouchedLinks(new Set())
+    linkTouched.reset()
     setTitleTouched(false)
     setDescriptionTouched(false)
   }
@@ -146,40 +138,14 @@ export function CreateScriptModal({
   const hasProfessors = (professors?.length ?? 0) > 0
 
   // --- Additional reading (optional) --------------------------------------
-  const linkErrors = getReadingLinkErrors(readingLinks)
-  const hasLinkErrors = linkErrors.some((error) => error !== null)
-  const hasVisibleLinkErrors = linkErrors.some(
-    (error, index) => error !== null && touchedLinks.has(index)
+  const hasLinkErrors = getReadingLinkErrors(readingLinks).some(
+    (error) => error !== null
   )
-  const hasLinks = readingLinks.some((link) => link.trim() !== '')
-
-  const markLinkTouched = (index: number) =>
-    setTouchedLinks((current) => new Set(current).add(index))
 
   // Removing a row shifts every later index down by one.
   const handleRemoveLink = (index: number) => {
     removeReadingLink(index)
-    setTouchedLinks(
-      (current) =>
-        new Set(
-          [...current]
-            .filter((touched) => touched !== index)
-            .map((touched) => (touched > index ? touched - 1 : touched))
-        )
-    )
-  }
-
-  // --- Files (optional, each must pass validation) -------------------------
-  const hasFileErrors = files.some((entry) => entry.error !== null)
-  const filesInvalid = hasFileErrors
-  const filesValid = !hasFileErrors
-
-  const handleAddFiles = (list: FileList | null) => {
-    addFiles(list)
-  }
-
-  const handleRemoveFile = (index: number) => {
-    removeFile(index)
+    linkTouched.forgetRemoved(index)
   }
 
   // --- Cancel / submit ----------------------------------------------------
@@ -199,7 +165,7 @@ export function CreateScriptModal({
       descriptionTooLong
     ) {
       event.preventDefault()
-      setTouchedLinks(new Set(readingLinks.map((_, index) => index)))
+      linkTouched.touchAll(readingLinks.length)
       setTitleTouched(true)
       setDescriptionTouched(true)
       return
@@ -353,108 +319,24 @@ export function CreateScriptModal({
             {/* Materials */}
             <Box className='grid gap-5 p-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-0'>
               <Box className='min-w-0 md:pr-5'>
-                <Field
-                  className='min-w-0'
-                  label={UI_STRINGS.scripts.uploadModal.additionalReadingLabel}
-                  labelProps={FIELD_LABEL_PROPS}
-                  helperText={
-                    UI_STRINGS.scripts.uploadModal.additionalReadingHelp
-                  }
-                  valid={hasLinks && !hasLinkErrors}
-                  invalid={hasVisibleLinkErrors}
-                >
-                  <Box className='ui-stack gap-2'>
-                    {readingLinks.map((link, index) => {
-                      const touched = touchedLinks.has(index)
-                      const errorCode = touched ? linkErrors[index] : null
-
-                      return (
-                        <InputWrapper
-                          key={index}
-                          valid={touched && link.trim() !== '' && !errorCode}
-                          invalid={Boolean(errorCode)}
-                          inputProps={{
-                            type: 'url',
-                            placeholder: 'https://...',
-                            'aria-label':
-                              UI_STRINGS.scripts.uploadModal
-                                .additionalReadingLabel,
-                            onBlur: () => markLinkTouched(index),
-                          }}
-                          errorText={
-                            errorCode
-                              ? UI_STRINGS.scripts.uploadModal
-                                  .readingLinkErrors[errorCode]
-                              : undefined
-                          }
-                          inputVal={link}
-                          inputOnChange={(event) =>
-                            updateReadingLink(index, event.target.value)
-                          }
-                          wrapperProps={{
-                            className: cn('h-7 pl-0'),
-                          }}
-                          inputClearButton={true}
-                          inputOnClear={() => updateReadingLink(index, '')}
-                          disabled={isBusy}
-                        >
-                          <Button
-                            onClick={() => handleRemoveLink(index)}
-                            disabled={isBusy}
-                            className='button button-sm danger mr-1 rounded-none'
-                            aria-label='Remove link'
-                          >
-                            {UI_STRINGS.scripts.uploadModal.removeButtonLabel}
-                          </Button>
-                        </InputWrapper>
-                      )
-                    })}
-                    <Button
-                      onClick={addReadingLink}
-                      disabled={isBusy}
-                      className='button button-sm success self-start rounded-md'
-                    >
-                      {UI_STRINGS.scripts.uploadModal.addLinkButtonLabel}
-                    </Button>
-                  </Box>
-                </Field>
+                <ReadingLinksField
+                  links={readingLinks}
+                  touched={linkTouched.touched}
+                  disabled={isBusy}
+                  onAdd={addReadingLink}
+                  onChange={updateReadingLink}
+                  onRemove={handleRemoveLink}
+                  onTouch={linkTouched.touch}
+                />
               </Box>
 
               <Box className='min-w-0 md:border-grey-200 md:border-l md:pl-5'>
-                {/* No label here: the dropzone carries its own title and help. */}
-                <Field
-                  className='min-w-0'
-                  errorText={
-                    hasFileErrors
-                      ? UI_STRINGS.scripts.uploadModal.fieldErrors.filesInvalid
-                      : undefined
-                  }
-                  valid={filesValid}
-                  invalid={filesInvalid}
-                >
-                  <Box className='ui-stack gap-2'>
-                    <FileDropzone
-                      label={UI_STRINGS.scripts.uploadModal.filesLabel}
-                      help={UI_STRINGS.scripts.uploadModal.filesHelp}
-                      onFiles={handleAddFiles}
-                      disabled={isBusy}
-                      valid={filesValid}
-                      invalid={filesInvalid}
-                    />
-                    {files.length > 0 && (
-                      <Box className='ui-stack min-w-0 w-full gap-2'>
-                        {files.map((entry, index) => (
-                          <FileRow
-                            key={`${entry.file.name}-${index}`}
-                            entry={entry}
-                            onRemove={() => handleRemoveFile(index)}
-                            disabled={isBusy}
-                          />
-                        ))}
-                      </Box>
-                    )}
-                  </Box>
-                </Field>
+                <ScriptFilesInput
+                  files={files}
+                  disabled={isBusy}
+                  onAdd={addFiles}
+                  onRemove={removeFile}
+                />
               </Box>
             </Box>
           </Card.Body>
@@ -478,125 +360,5 @@ export function CreateScriptModal({
         </FormContainer>
       </Dialog>
     </>
-  )
-}
-
-/** Drop target that doubles as the field's label: the title and help text
- * live inside the box, so the section needs no separate heading. The border
- * reflects validation state. */
-function FileDropzone({
-  label,
-  help,
-  onFiles,
-  disabled,
-  valid,
-  invalid,
-}: {
-  label: string
-  help: string
-  onFiles: (files: FileList | null) => void
-  disabled: boolean
-  valid: boolean
-  invalid: boolean
-}) {
-  const [isDragging, setIsDragging] = useState(false)
-
-  const borderClass = (() => {
-    if (isDragging) return 'border-brand border-solid'
-    if (invalid) return 'border-danger-600'
-    if (valid) return 'border-success-600'
-    return 'border-grey-300'
-  })()
-
-  return (
-    <Box className='relative'>
-      <input
-        id='script-files'
-        type='file'
-        multiple
-        accept={ALLOWED_EXTENSIONS.map((ext) => `.${ext}`).join(',')}
-        disabled={disabled}
-        aria-invalid={invalid}
-        className='peer sr-only'
-        onChange={(event) => {
-          onFiles(event.target.files)
-          // Reset so re-selecting a just-removed file fires onChange again.
-          event.target.value = ''
-        }}
-      />
-      <label
-        htmlFor='script-files'
-        onDragOver={(event) => {
-          event.preventDefault()
-          if (!disabled) setIsDragging(true)
-        }}
-        onDragLeave={() => setIsDragging(false)}
-        onDrop={(event) => {
-          event.preventDefault()
-          setIsDragging(false)
-          if (!disabled) onFiles(event.dataTransfer.files)
-        }}
-        className={cn(
-          'ui-stack cursor-pointer items-center justify-center gap-1 rounded-lg border border-dashed bg-background-200 px-2 py-3 text-center',
-          'hover:border-brand-300 hover:bg-background-150 transition-colors',
-          'peer-focus-visible:outline-2 peer-disabled:pointer-events-none peer-disabled:opacity-50',
-          borderClass
-        )}
-      >
-        <span className='text-base font-semibold'>{label}</span>
-        <span className='ui-caption'>{help}</span>
-      </label>
-    </Box>
-  )
-}
-
-/** One row in the not-yet-uploaded files list: name, size, any validation
- * error, a Preview trigger when the extension is a previewable type, and
- * Remove. Split out since it now owns real branching logic (the preview
- * gate) rather than being a one-line map body. */
-function FileRow({
-  entry,
-  onRemove,
-  disabled,
-}: {
-  entry: FileWithError
-  onRemove: () => void
-  disabled: boolean
-}) {
-  const fileType = getFileTypeFromFilename(entry.file.name)
-  const isPreviewable =
-    entry.error === null && fileType !== null && getPreviewableKind(fileType)
-
-  return (
-    <Box className='grid w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-grey-200 bg-background-200 p-1'>
-      <Box className='ui-stack min-w-0 flex-1 gap-0.5 overflow-hidden'>
-        <Text className='ui-caption block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap'>
-          {entry.file.name}
-        </Text>
-        <Text className='ui-caption'>{formatFileSize(entry.file.size)}</Text>
-        {entry.error && (
-          <Text className='ui-caption text-danger-600'>{entry.error}</Text>
-        )}
-      </Box>
-      <Box className='flex shrink-0 items-center gap-2'>
-        {isPreviewable && fileType && (
-          <FilePreviewModal
-            file={{
-              localFile: entry.file,
-              fileName: entry.file.name,
-              fileType,
-            }}
-          />
-        )}
-        <Button
-          onClick={onRemove}
-          disabled={disabled}
-          className='button button-sm danger rounded-md'
-          aria-label={`Remove ${entry.file.name}`}
-        >
-          {UI_STRINGS.scripts.uploadModal.removeButtonLabel}
-        </Button>
-      </Box>
-    </Box>
   )
 }

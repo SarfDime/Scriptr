@@ -100,6 +100,8 @@ export const UI_STRINGS = {
       filesHelp:
         'Optionally add supported files by dragging them here or browsing your device.',
       removeButtonLabel: 'Remove',
+      removeLinkAriaLabel: 'Remove link',
+      readingLinkPlaceholder: 'https://...',
       addLinkButtonLabel: 'Add link',
       statuses: {
         uploading: 'Uploading files…',

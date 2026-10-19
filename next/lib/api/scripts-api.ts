@@ -5,8 +5,12 @@ import type {
   CreateScriptResponse,
   DownloadResponse,
   MyScriptSummary,
+  ScriptAttachFilesResponse,
+  ScriptDeleteResponse,
   ScriptFile,
+  ScriptPatchResponse,
   ScriptSummary,
+  ScriptUpdateInput,
   UploadResponse,
 } from '@shared/types/scripts.types'
 import type { ScriptUploadInput } from '@/types/components/Scripts.types'
@@ -124,6 +128,27 @@ export const getMyScripts = (cookie: string) =>
     }
   )
 
+/** Author or admin only. Restriction-checked (RLS), so a restricted author
+ * gets a `403`; run it through `useProtectedAction`. */
+export const updateScript = (scriptId: string, input: ScriptUpdateInput) =>
+  apiFetchRequired<ScriptPatchResponse>(apiRoutes.scripts.byId(scriptId), {
+    method: 'PATCH',
+    body: input,
+  })
+
+/** Author or admin only. Never restriction-checked, so not wrapped. */
+export const deleteScript = (scriptId: string) =>
+  apiFetchRequired<ScriptDeleteResponse>(apiRoutes.scripts.byId(scriptId), {
+    method: 'DELETE',
+  })
+
+/** Author or admin only. Never restriction-checked, so not wrapped. */
+export const removeScriptFile = (scriptId: string, fileId: string) =>
+  apiFetchRequired<ScriptDeleteResponse>(
+    apiRoutes.scripts.filesByScriptIdAndFileId(scriptId, fileId),
+    { method: 'DELETE' }
+  )
+
 export const downloadScript = async (scriptId: string, file: ScriptFile) => {
   const [, { url }] = await Promise.all([
     apiFetchRequired<DownloadResponse>(
@@ -132,14 +157,21 @@ export const downloadScript = async (scriptId: string, file: ScriptFile) => {
         method: 'POST',
       }
     ),
-    getScriptFileUrl(file.file_url),
+    getScriptFileUrl(file.file_url, { download: true }),
   ])
   return url
 }
 
-export const getScriptFileUrl = (fileKey: string) =>
+/** `download: true` asks for a save-to-disk URL named after the stored file
+ * name; without it the URL renders inline, which is what previews want. */
+export const getScriptFileUrl = (
+  fileKey: string,
+  options?: { download?: boolean }
+) =>
   apiFetchRequired<{ url: string; key: string }>(
-    apiRoutes.fileOps.getFileByKey(fileKey),
+    withQuery(apiRoutes.fileOps.getFileByKey(fileKey), {
+      download: options?.download ? 1 : undefined,
+    }),
     { cache: 'no-store' }
   )
 
@@ -153,6 +185,28 @@ export const uploadFiles = async (body: FormData) => {
   )
 
   return files
+}
+
+/** Adds files to an existing script: uploads them to R2, then attaches them.
+ * If the attach fails, the API removes the uploaded objects again. Author or
+ * admin only, and restriction-checked, so run it through
+ * `useProtectedAction`. */
+export const addScriptFiles = async (
+  scriptId: string,
+  subjectId: string,
+  files: Array<File>
+) => {
+  const formData = new FormData()
+  formData.append('subjectId', subjectId)
+  for (const file of files) {
+    formData.append('files', file)
+  }
+  const uploaded = await uploadFiles(formData)
+
+  return apiFetchRequired<ScriptAttachFilesResponse>(
+    apiRoutes.scripts.filesById(scriptId),
+    { method: 'POST', body: { files: uploaded } }
+  )
 }
 
 export const createScript = async (

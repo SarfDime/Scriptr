@@ -33,6 +33,9 @@ type ScriptFileInput = {
   fileType: FileType
   fileSizeBytes: number
   bucket: string
+  /** Kebab-case, no extension (see `toStoredFileName`); `null` when nothing
+   * usable survived sanitizing. Optional so older clients keep working. */
+  fileName?: string | null
 }
 
 type QueryApiEndpointType = `${ApiEndpoint}${string}` | ApiEndpoint

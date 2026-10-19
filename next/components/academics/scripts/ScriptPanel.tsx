@@ -7,10 +7,7 @@ import { cn } from '@/lib/common-utils'
 export const ScriptPanel = ({ className, children, ...rest }: BoxProps) => (
   <Box
     as='aside'
-    className={cn(
-      'flex flex-col gap-4 rounded-lg border border-grey-200 ui-above-inside p-4',
-      className
-    )}
+    className={cn('flex flex-col ui-above-inside', className)}
     {...rest}
   >
     {children}

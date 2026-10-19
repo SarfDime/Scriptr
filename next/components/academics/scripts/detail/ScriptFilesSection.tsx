@@ -12,6 +12,8 @@ export type ScriptFilesSectionProps = {
   scriptId: string
   /** Already ordered by `position`. */
   files: Array<ScriptFile>
+  /** Shows each file's remove action (author or admin). */
+  canManage?: boolean
 }
 
 /** The script's files on their own frosted surface. Takes nearly all the free
@@ -20,6 +22,7 @@ export type ScriptFilesSectionProps = {
 export function ScriptFilesSection({
   scriptId,
   files,
+  canManage = false,
 }: ScriptFilesSectionProps) {
   return (
     <ScriptSurface className='ui-stack min-w-0 grow-100 basis-[24rem] gap-3'>
@@ -51,6 +54,7 @@ export function ScriptFilesSection({
               scriptId={scriptId}
               file={file}
               layout='wide'
+              canRemove={canManage}
             />
           ))}
         </Box>

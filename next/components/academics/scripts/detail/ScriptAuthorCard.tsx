@@ -4,6 +4,7 @@ import { Box } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
 import { Text } from '@/components/typography/Text'
 import { Avatar } from '@/components/ui/Avatar'
+import { cn } from '@/lib/common-utils'
 import { getAuthorDisplay } from '@/lib/script-detail'
 
 /** The script's uploader, given more weight than the other details: avatar,
@@ -14,7 +15,7 @@ export function ScriptAuthorCard({
   author: ScriptSummary['author']
 }) {
   const { name, username, avatarUrl, profileHref } = getAuthorDisplay(author)
-  const className = 'ui-above flex items-center gap-3 rounded-lg p-3'
+  const className = 'flex items-center gap-3 rounded-lg p-3'
   const content = (
     <>
       <Box className='relative h-12 w-12 shrink-0 overflow-hidden rounded-full'>
@@ -34,9 +35,17 @@ export function ScriptAuthorCard({
         />
       </Box>
       <Box className='ui-stack min-w-0 gap-0.5'>
-        <Text className='ui-caption'>{SCRIPT_STRINGS.info.uploadedBy}</Text>
-        <Text className='ui-label truncate'>{name}</Text>
-        {username && <Text className='ui-caption truncate'>@{username}</Text>}
+        <Text className='ui-caption group-hover:text-brand'>
+          {SCRIPT_STRINGS.info.uploadedBy}
+        </Text>
+        <Text className='ui-label truncate group-hover:text-brand-350'>
+          {name}
+        </Text>
+        {username && (
+          <Text className='ui-caption truncate group-hover:text-brand-300'>
+            @{username}
+          </Text>
+        )}
       </Box>
     </>
   )
@@ -44,7 +53,7 @@ export function ScriptAuthorCard({
   return profileHref ? (
     <NextLink
       href={profileHref}
-      className={`${className} transition-colors hover:text-brand`}
+      className={cn(className, `group transition-colors hover:text-brand`)}
     >
       {content}
     </NextLink>

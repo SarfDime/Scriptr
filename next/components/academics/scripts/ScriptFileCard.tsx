@@ -12,8 +12,10 @@ import { Badge } from '@/components/ui/Badge'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
 import { formatFileSize, getPreviewableKind } from '@/lib/file-preview'
+import { getScriptFileLabel, getScriptFileName } from '@/lib/script-file-name'
 import { ScriptDownloadButton } from './actions/ScriptDownloadButton'
 import { FilePreviewModal } from './FilePreviewModal'
+import { ScriptFileRemoveButton } from './manage/ScriptFileRemoveButton'
 import { ScriptFileThumbnail } from './ScriptFileThumbnail'
 import { ScriptPanel } from './ScriptPanel'
 
@@ -22,6 +24,8 @@ export type ScriptFileCardProps = {
   file: ScriptFile
   /** `tile`: always a compact stacked card. `wide`: stacked while the card is narrow, switching to a thumbnail-beside-details row once the card itself is wide enough (container query on the card, not the viewport) — so it adapts to however much room the grid gives it. */
   layout?: 'tile' | 'wide'
+  /** Shows the remove action (author or admin). */
+  canRemove?: boolean
 }
 
 /**
@@ -34,13 +38,14 @@ export function ScriptFileCard({
   scriptId,
   file,
   layout = 'tile',
+  canRemove = false,
 }: ScriptFileCardProps) {
   const isWide = layout === 'wide'
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const kind = getPreviewableKind(file.file_type)
   const color = getColorPalette({ type: 'seed', value: file.file_type })
-  const displayPosition = file.position + 1
-  const fileName = SCRIPT_STRINGS.file.name(displayPosition, file.file_type)
+  const fileName = getScriptFileName(file)
+  const fileLabel = getScriptFileLabel(file)
   const openPreview = () => setIsPreviewOpen(true)
 
   const buttonClass = cn('grow button-md', isWide && '@md:min-w-28 @md:grow-0')
@@ -80,8 +85,8 @@ export function ScriptFileCard({
             {/* Label, type and size read as one line; they used to be pushed
                 to opposite edges, which left a gap across a wide card. */}
             <Box className='ui-cluster items-center gap-2'>
-              <Text className='ui-label'>
-                {SCRIPT_STRINGS.file.label(displayPosition)}
+              <Text className='ui-label min-w-0 max-w-full truncate'>
+                {fileLabel}
               </Text>
               <Badge colorPalette={color}>{file.file_type.toUpperCase()}</Badge>
               <Text className='ui-caption'>
@@ -98,9 +103,9 @@ export function ScriptFileCard({
             {Boolean(kind) && (
               <Button
                 onClick={openPreview}
-                className={cn('button hollow', buttonClass)}
+                className={cn('button hollow px-2 w-min', buttonClass)}
               >
-                <EyeOpen className={'overwrite size-5 shrink-0'} />
+                <EyeOpen className={'overwrite size-5'} />
                 {UI_STRINGS.scripts.actions.preview}
               </Button>
             )}
@@ -111,6 +116,14 @@ export function ScriptFileCard({
             >
               {UI_STRINGS.scripts.actions.download}
             </ScriptDownloadButton>
+            {canRemove && (
+              <ScriptFileRemoveButton
+                scriptId={scriptId}
+                fileId={file.id}
+                fileName={fileName}
+                className={cn('button danger', buttonClass)}
+              />
+            )}
           </Box>
         </Box>
       </Box>
