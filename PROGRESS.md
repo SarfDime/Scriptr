@@ -274,7 +274,7 @@ Priority work, scheduled right after the frontend gaps:
 Product features:
 
 - **Profile experience:** allow profile editing along with academic data, achievements (defer to achievements todo), and the
-  revised subject layout.
+  revised subject layout, logged in user avatar shown in header at end which would take you to profile page when nav bar collapsed.
 - **Header search bar:** the header icon currently links to `/search`; expand
   it into an inline search bar that appears on press which on enter would take you to the search page with your search query.
 - **Ratings UI:** professor and subject rating interfaces.
