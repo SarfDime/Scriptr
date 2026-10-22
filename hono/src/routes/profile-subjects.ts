@@ -22,7 +22,6 @@ profileSubjects.get('/', async (c) => {
     .order('updated_at', { ascending: false })
 
   if (error) return databaseErrorResponse(c, error)
-  await revalidateCacheTags(c.env, profileMutationTags(user.id))
   return c.json<Array<ProfileSubjectSelection>>(data ?? [])
 })
 
@@ -66,6 +65,7 @@ profileSubjects.put('/:subjectId', async (c) => {
     .single()
 
   if (error) return databaseErrorResponse(c, error)
+  await revalidateCacheTags(c.env, profileMutationTags(user.id))
   return c.json<ProfileSubjectSelection>(data)
 })
 

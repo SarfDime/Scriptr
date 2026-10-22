@@ -28,6 +28,7 @@ export const Avatar = ({
             objectFitProp='cover'
             fillProp
             sizes={IMAGE_SIZES.AVATAR}
+            alt={name}
             {...picture}
             className={cn(
               'rounded-md h-full aspect-square ui-center p-6',

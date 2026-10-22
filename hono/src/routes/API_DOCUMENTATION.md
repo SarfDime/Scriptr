@@ -350,8 +350,11 @@ just the admin CRUD surface.
 `/profiles/:id/stats` — no auth required. The Next frontend caches public
 profile and stats responses; profile, selection, favorite, script, vote, and
 download mutations revalidate those tags. A public profile response includes
-both authored scripts and favorite scripts; direct `/favorites` endpoints
-remain authenticated and owner-scoped.
+both authored scripts and favorite scripts. The `script_favorites` SELECT
+policy is `true`, so favorites are public and read on the session client; the
+direct `/favorites` endpoints remain authenticated and owner-scoped (INSERT /
+DELETE policies are owner-only). A failed favorites read returns `500` rather
+than an empty list.
 Each script's `comments` field is an array containing one `{ count }` item;
 the count includes root comments and replies and is read through the
 `get_script_comment_counts` RPC rather than a direct comments-table embed.
@@ -359,13 +362,37 @@ Missing profiles return `404`; profile database failures return a generic
 `500` response rather than exposing database details.
 
 ### Authenticated
-`GET /profiles/me`, `PATCH /profiles/me` (`{ username?, full_name?,
-selected_faculty_ids?, selected_study_ids? }`), `DELETE /profiles/me`.
+`GET /profiles/me`, `PATCH /profiles/me`, `DELETE /profiles/me`.
+
+`PATCH /profiles/me` body is `ProfileUpdateRequest`: `{ username (required),
+full_name?, selected_faculty_ids?, selected_study_ids? }`. `username` and
+`full_name` are validated with the same rules as registration and stored
+trimmed. The selection arrays, when present, replace that user's selections
+(rows are diffed, inserts before deletes, errors are checked); they are not
+restriction-checked and neither is the profile update. Username uniqueness is
+checked the same way as `POST /auth/register` (a shared `isUsernameTaken`
+lookup, excluding the profile being edited so keeping your own name is fine);
+the `profiles_username_key` unique index (`23505`) is the backstop for a race
+past it. Success returns `ProfileUpdateResponse` (`{ success: true, profile }`).
+
+| Status | When |
+|---|---|
+| `400` | Invalid JSON body, invalid `username`/`full_name`, or a non-array id list |
+| `403` | RLS violation (`42501`) |
+| `404` | Profile not found |
+| `409` | Username taken (`ProfileUpdateConflictResponse`: `{ error, field: 'username' }`), or a selected faculty/study id does not exist (FK `23503`) |
+
+The profile row is written before the selections, so a selection failure
+returns its error with the profile fields already saved. The sync is not
+atomic across the two tables.
 
 ### Admin
 `PATCH /profiles/:id`, `DELETE /profiles/:id` — same shape as the `/me`
-equivalents, session-client-eligible (`is_admin()` is baked into the
-`profiles` RLS policy directly).
+equivalents. The profiles row goes through the session client (`is_admin()`
+is baked into its RLS policy), but `profile_faculties`/`profile_studies`
+policies are `profile_id = auth.uid()` with no admin override, so
+`PATCH /profiles/:id` writes selections with the service-role client after
+the admin check.
 
 ### Internal
 `PATCH /internal/profiles/:id/role` — `{ role: 'student'|'moderator'|'admin' }`,

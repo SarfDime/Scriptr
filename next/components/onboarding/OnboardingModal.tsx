@@ -1,5 +1,6 @@
 'use client'
 
+import { UI_STRINGS } from '@shared/config/strings'
 import { useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
@@ -41,9 +42,12 @@ export const OnboardingModal = ({ catalog }: OnboardingModalProps) => {
     wizard.update({ onboardingDismissedAt: new Date().toISOString() })
     push({
       id: RESUME_ONBOARDING_NOTIFICATION_ID,
-      title: 'Finish setting up your studies',
-      body: 'Pick up where you left off any time.',
-      action: { label: 'Resume setup', kind: 'open-onboarding' },
+      title: UI_STRINGS.onboarding.resumeReminder.title,
+      body: UI_STRINGS.onboarding.resumeReminder.body,
+      action: {
+        label: UI_STRINGS.onboarding.resumeReminder.action,
+        kind: 'open-onboarding',
+      },
       type: 'info',
     })
   }
@@ -63,7 +67,7 @@ export const OnboardingModal = ({ catalog }: OnboardingModalProps) => {
       setSaveError(
         error instanceof Error
           ? error.message
-          : 'We could not save your academic profile. Please try again.'
+          : UI_STRINGS.onboarding.saveFailed
       )
     } finally {
       setIsSaving(false)
@@ -94,7 +98,7 @@ export const OnboardingModal = ({ catalog }: OnboardingModalProps) => {
   return (
     <Dialog
       isOpen={isOpen}
-      title='Set up your studies'
+      title={UI_STRINGS.onboarding.title}
       hideTrigger
       onClose={() => handleClose(false)}
       dialogProps={{ className: 'md:min-w-xl' }}
@@ -104,8 +108,8 @@ export const OnboardingModal = ({ catalog }: OnboardingModalProps) => {
           <>
             <Box className='ui-stack gap-6'>
               <OnboardingSelectStep
-                title='Which university do you attend?'
-                description="We'll use this to tailor everything else to your program."
+                title={UI_STRINGS.onboarding.universityTitle}
+                description={UI_STRINGS.onboarding.universityDescription}
                 options={catalog.universities.map((u) => ({
                   id: u._id,
                   name: u.name,
@@ -114,8 +118,8 @@ export const OnboardingModal = ({ catalog }: OnboardingModalProps) => {
                 onSelect={wizard.selectUniversity}
               />
               <OnboardingSelectStep
-                title='Which faculty?'
-                description='Pick the faculty your study program belongs to.'
+                title={UI_STRINGS.onboarding.facultyTitle}
+                description={UI_STRINGS.onboarding.facultyDescription}
                 options={wizard.catalog.faculties.map((f) => ({
                   id: f._id,
                   name: f.name,
@@ -125,12 +129,12 @@ export const OnboardingModal = ({ catalog }: OnboardingModalProps) => {
                 disabledReason={
                   wizard.data.universityId
                     ? undefined
-                    : 'Select a university first.'
+                    : UI_STRINGS.onboarding.selectUniversityFirst
                 }
               />
               <OnboardingSelectStep
-                title='Which study program?'
-                description='This determines which subjects show up below.'
+                title={UI_STRINGS.onboarding.studyTitle}
+                description={UI_STRINGS.onboarding.studyDescription}
                 options={wizard.catalog.studies.map((s) => ({
                   id: s._id,
                   name: s.name,
@@ -138,7 +142,9 @@ export const OnboardingModal = ({ catalog }: OnboardingModalProps) => {
                 selectedId={wizard.data.studyId}
                 onSelect={wizard.selectStudy}
                 disabledReason={
-                  wizard.data.facultyId ? undefined : 'Select a faculty first.'
+                  wizard.data.facultyId
+                    ? undefined
+                    : UI_STRINGS.onboarding.selectFacultyFirst
                 }
               />
             </Box>
@@ -155,7 +161,7 @@ export const OnboardingModal = ({ catalog }: OnboardingModalProps) => {
                 disabledReason={
                   wizard.data.studyId
                     ? undefined
-                    : 'Select a study to see subjects.'
+                    : UI_STRINGS.onboarding.selectStudyFirst
                 }
               />
             </Box>
@@ -180,7 +186,9 @@ export const OnboardingModal = ({ catalog }: OnboardingModalProps) => {
                 disabled={!canContinue || isSaving}
                 className='button button-sm solid'
               >
-                {isSaving ? 'Saving…' : 'Continue'}
+                {isSaving
+                  ? UI_STRINGS.onboarding.saving
+                  : UI_STRINGS.onboarding.continue}
               </Button>
             </Box>
           </Box>

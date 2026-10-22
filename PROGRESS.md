@@ -115,7 +115,9 @@ Priority work, scheduled right after the frontend gaps:
   [`file-ops.ts`](hono/src/routes/file-ops.ts)), keeping deterministic keys and
   the immutable `Cache-Control` behavior intact.
 - **User avatars:** optimize and store them in R2, reusing the same
-  optimization pipeline rather than building a second one.
+  optimization pipeline rather than building a second one. The profile
+  frontend is ready (disabled picker, `uploadMyAvatar` stub); this adds the
+  route and flips `AVATAR_UPLOAD_ENABLED`.
 - **Serving cost:** review preview/download paths for avoidable egress and
   repeated signing once optimization lands.
 
@@ -268,13 +270,71 @@ Priority work, scheduled right after the frontend gaps:
 - File cards and the preview modal show the stored file name (the type is
   already its own badge) and fall back to "File N" for older files.
 - The script detail page shows a "Your script" badge to its author.
+- Profile editing: the "Edit profile" dialog (`EditProfileDialog`,
+  `useEditProfileForm`) edits username and full name through
+  `PATCH /profiles/me` with the register form's validators; a taken username
+  (`409`, `field: 'username'`) is shown on the field. Not restriction-checked,
+  so it doesn't use `useProtectedAction`. The profile page updates in place
+  (`reload()` on `ProfileProvider`, no loading flash) and the session is
+  re-read. The signed-in avatar sits at the end of the header and links to
+  `/user` while the navbar is collapsed (`HeaderProfileLink`).
+- Profile API hardening: favorites are public by design (`script_favorites`
+  SELECT is `true`) and are read on the session client; a failed favorites
+  read is a `500`, not an empty list. `PATCH /profiles/me` and
+  `/profiles/:id` validate the body, store trimmed values, return a typed
+  response, map `23505`/`23503`/`42501` to `409`/`409`/`403`, and check every
+  selection write (diffed, inserts before deletes). Username uniqueness runs
+  the same pre-check as register (`hono/src/lib/username.ts`, shared by both).
+  `PUT /profile-subjects/:subjectId` now revalidates the public-profile tags
+  (it was the `GET` list that did, by mistake).
+- Academics editor: a separate "Edit academics" dialog on the profile
+  (`EditAcademicsDialog`, `useEditAcademicsForm`) edits university → faculty →
+  study and completed subjects. It reuses the onboarding wizard's selection
+  cascade and subject logic (extracted to `useAcademicSelections`, now shared
+  by both) and its select/subjects blocks, over local state seeded from the
+  account (`lib/profile-academics.ts`). Saving diffs against the profile:
+  faculty/study replacement through `PATCH /profiles/me`, then per-subject
+  `PUT`/`DELETE`. Only `completed` subjects are edited; `currently_taking`
+  and subjects of other studies are left alone.
+- Profile subjects section (`ProfileSubjectsSidebar`): a toggle between
+  Completed and Currently taking (in the section header, replacing the old
+  no-op "Manage" button), plus separate study and year filters over the
+  showing list (options come from that list; switching resets them; a filter
+  with a single option is preselected and disabled). Both lists are limited
+  to the subjects of the selected studies: completed ones, and everything
+  else, which counts as currently taking. That is derived from the study, not
+  read from stored `currently_taking` rows, which registration writes but the
+  onboarding sync and academics editor don't. `SubjectsSidebar` gained an
+  optional `toolbar` slot.
+- One profile layout: `ProfilePage` (presentational) serves both `/user`
+  (through the client `MyProfilePage`, which reads the shared profile state)
+  and `/user/[username]` (server-fetched), replacing the duplicated page
+  code. The public view now also shows subjects (the public profile endpoint
+  already returned them). Visiting `/user/[username]` for your own username
+  redirects to `/user`.
+- Profile academic links use Sanity slugs: the onboarding catalog query now
+  returns `slug` for universities, faculties and studies, and
+  `buildProfileAcademics` maps profile rows to catalog entries by `dbId` to
+  build `/university/...` paths (plain text when a slug is missing).
+  `ProfileCard` takes that view model instead of raw rows. Resolves the old
+  "use slugs, not ids" TODO.
+- Onboarding copy lives in `UI_STRINGS.onboarding` (the modal and its select,
+  subjects and account steps have no inline strings); the academics editor
+  reuses the same strings.
 
 ### Todo
 
 Product features:
 
-- **Profile experience:** allow profile editing along with academic data, achievements (defer to achievements todo), and the
-  revised subject layout, logged in user avatar shown in header at end which would take you to profile page when nav bar collapsed.
+- **Profile experience:** the remaining pieces are achievements (defer to
+  achievements todo), the revised subject layout, and the avatar upload
+  itself. The avatar picker,
+  `uploadMyAvatar` stub and `AVATAR_UPLOAD_ENABLED` flag exist but the
+  picker is disabled (`TODO(r2-optimization)` in `lib/profile-avatar.ts`,
+  `lib/api/profile-api.ts`, `AvatarField.tsx`); it lands with the R2
+  optimization pipeline. Optional later: make selection sync atomic with an
+  RPC.
+- **Search bar validations**: Require input to be non-empty and properly formatted before triggering a search.
 - **Header search bar:** the header icon currently links to `/search`; expand
   it into an inline search bar that appears on press which on enter would take you to the search page with your search query.
 - **Ratings UI:** professor and subject rating interfaces.

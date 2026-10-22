@@ -1,5 +1,6 @@
 'use client'
 
+import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { NextLink } from '@/components/common/NextLink'
@@ -18,22 +19,22 @@ export const OnboardingAccountPrompt = ({
 }: OnboardingAccountPromptProps) => (
   <Box className='ui-stack gap-4'>
     <SectionHeader
-      title='Save your progress'
-      subtitle='Without an account, this only lives in this browser. Create an account to keep it synced across your devices.'
+      title={UI_STRINGS.onboarding.account.title}
+      subtitle={UI_STRINGS.onboarding.account.subtitle}
     />
     <Box className='ui-cluster gap-2 justify-center flex-1'>
       <Button
         onClick={onContinueAsGuest}
         className='button ghost px-4 py-2 grow'
       >
-        Continue as guest
+        {UI_STRINGS.onboarding.account.continueAsGuest}
       </Button>
       <NextLink
         href='/auth?mode=register'
         onClick={onCreateAccount}
         className='button solid px-4 py-2 grow'
       >
-        Create an account
+        {UI_STRINGS.onboarding.account.createAccount}
       </NextLink>
     </Box>
   </Box>

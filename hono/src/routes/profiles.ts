@@ -1,7 +1,15 @@
 import type { Context } from 'hono'
 import { Hono } from 'hono'
 import { profileMutationTags } from '../../../shared/config/cache-tags'
-import { isAdmin, validateUsername } from '../../../shared/utils/api.utils'
+import type {
+  ProfileUpdateConflictResponse,
+  ProfileUpdateResponse,
+} from '../../../shared/types/profile.types'
+import {
+  isAdmin,
+  validateFullName,
+  validateUsername,
+} from '../../../shared/utils/api.utils'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
 import { honoLog } from '../lib/logger'
 import { databaseErrorResponse, requiredParam } from '../lib/request'
@@ -10,6 +18,7 @@ import {
   createInternalSupabaseClient,
   createSupabaseClient,
 } from '../lib/supabase'
+import { isUsernameTaken } from '../lib/username'
 import type { HonoEnv } from '../types/env.types'
 
 // profile_achievements replaced the old profiles.achievements jsonb column.
@@ -31,7 +40,7 @@ const PROFILE_ACADEMIC_SELECT =
  * The projection used for both "scripts this profile authored" and
  * "scripts this profile favorited" — same shape either way, just reached
  * through a different relationship (see PROFILE_SCRIPTS_SELECT and
- * fetchFavoriteScripts below).
+ * loadFavoriteScripts below).
  *
  * Deliberately doesn't join professors or a subject year:
  * `scripts.professor_id` has no direct FK to `professors.id` (only a
@@ -74,24 +83,9 @@ const PROFILE_SCRIPT_FIELDS =
  */
 const PROFILE_SCRIPTS_SELECT = `scripts:scripts!author_id(${PROFILE_SCRIPT_FIELDS})`
 
-/**
- * /me only, as a direct embed — script_favorites' SELECT RLS policy
- * scopes reads to `profile_id = auth.uid()`, which already covers "the
- * owner reading their own favorites" without needing the internal
- * client. Public reads (/:id, /username/:username) go through
- * fetchFavoriteScripts below instead, using the service-role client,
- * since the viewer there has no RLS path of their own to another user's
- * script_favorites rows — this is a deliberate product choice (favorited
- * scripts are shown on public profiles), not a general RLS relaxation:
- * the table itself stays owner-only for any other direct query.
- */
-const PROFILE_FAVORITE_SCRIPTS_SELECT = `favorite_scripts:script_favorites(script:scripts!script_id(${PROFILE_SCRIPT_FIELDS}))`
-
 /** Flattens `script_favorites`' `{ script: {...} }` embed rows into a
- * plain `Array<ProfileScriptSummary>`, used both for /me (post-processing
- * the direct embed above) and for the two public routes (post-processing
- * the separate internal-client query below) — same output shape either
- * way, matching PROFILE_SCRIPTS_SELECT's authored-scripts shape. */
+ * plain `Array<ProfileScriptSummary>`, matching PROFILE_SCRIPTS_SELECT's
+ * authored-scripts shape. */
 function flattenFavoriteScripts<T extends { id: string }>(
   rows: Array<{ script: T | null }> | null | undefined
 ): Array<T> {
@@ -146,18 +140,21 @@ function profileQueryErrorResponse(
 }
 
 /**
- * Public routes only (/:id, /username/:username) — service-role client,
- * since the caller (anonymous, or a different logged-in user) has no RLS
- * path to another user's script_favorites rows. `scripts!script_id`, not
- * a bare `scripts`: script_favorites has FKs to both profiles.id and
- * scripts.id, but there's only one path from script_favorites
- * specifically to scripts (script_id), so this particular embed isn't
- * actually ambiguous — qualified anyway, for the same "pin it explicitly"
- * habit PROFILE_SCRIPTS_SELECT's comment explains, rather than relying on
- * there never being a second FK added later.
+ * Favorited scripts (with comment counts) for any profile, on the plain
+ * session client: `script_favorites`' SELECT policy ("Favorites are
+ * publicly readable") is `true`, confirmed against pg_policies, so no
+ * service-role client is needed even for an anonymous viewer. Writes stay
+ * owner-only through the table's own INSERT/DELETE policies. Returns null
+ * on failure so callers answer 500 instead of rendering a failed load as
+ * "no favorites".
+ *
+ * `scripts!script_id`, not a bare `scripts`: there is only one path from
+ * script_favorites to scripts (script_id), so the embed isn't ambiguous
+ * today — qualified anyway, for the same "pin it explicitly" habit
+ * PROFILE_SCRIPTS_SELECT's comment explains.
  */
-async function fetchFavoriteScripts(c: Context<HonoEnv>, userId: string) {
-  const supabase = createInternalSupabaseClient(c)
+async function loadFavoriteScripts(c: Context<HonoEnv>, userId: string) {
+  const supabase = createSupabaseClient(c)
 
   const { data, error } = await supabase
     .from('script_favorites')
@@ -165,44 +162,284 @@ async function fetchFavoriteScripts(c: Context<HonoEnv>, userId: string) {
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
-  if (error) return []
-  return flattenFavoriteScripts(data)
+  if (error) {
+    honoLog({
+      logLevel: 'error',
+      message: 'Failed to fetch profile favorite scripts',
+      error,
+    })
+    return null
+  }
+
+  return attachScriptCommentCounts(c, flattenFavoriteScripts(data))
 }
 
-async function syncFacultyAndStudySelections(
+type DatabaseError = { code?: string; message: string }
+
+type ProfileUpdateInput = {
+  username: string
+  fullName: string | undefined
+  facultyIds: Array<string> | undefined
+  studyIds: Array<string> | undefined
+}
+
+type ProfileUpdateParseResult =
+  | { ok: true; input: ProfileUpdateInput }
+  | { ok: false; error: string }
+
+const isStringArray = (value: unknown): value is Array<string> =>
+  Array.isArray(value) && value.every((item) => typeof item === 'string')
+
+/** `undefined` when absent, `null` when present but not an array of strings. */
+function parseIdList(value: unknown): Array<string> | undefined | null {
+  if (value === undefined) return undefined
+  return isStringArray(value) ? value : null
+}
+
+/**
+ * Validates a PATCH /profiles/me or /profiles/:id body. The username and
+ * full name are stored trimmed — validation already ran against the trimmed
+ * value, so storing the raw one let padded names through.
+ */
+async function parseProfileUpdate(
+  c: Context<HonoEnv>
+): Promise<ProfileUpdateParseResult> {
+  const body: unknown = await c.req.json().catch(() => null)
+  if (typeof body !== 'object' || body === null) {
+    return { ok: false, error: 'Invalid request body' }
+  }
+
+  const { username, full_name, selected_faculty_ids, selected_study_ids } =
+    body as Record<string, unknown>
+
+  const usernameError = validateUsername(username)
+  if (usernameError || typeof username !== 'string') {
+    return { ok: false, error: usernameError ?? 'Username is required' }
+  }
+
+  if (full_name !== undefined) {
+    const fullNameError = validateFullName(full_name)
+    if (fullNameError || typeof full_name !== 'string') {
+      return { ok: false, error: fullNameError ?? 'Full name must be a string' }
+    }
+  }
+
+  const facultyIds = parseIdList(selected_faculty_ids)
+  if (facultyIds === null) {
+    return { ok: false, error: 'selected_faculty_ids must be an array of ids' }
+  }
+
+  const studyIds = parseIdList(selected_study_ids)
+  if (studyIds === null) {
+    return { ok: false, error: 'selected_study_ids must be an array of ids' }
+  }
+
+  return {
+    ok: true,
+    input: {
+      username: username.trim(),
+      fullName: typeof full_name === 'string' ? full_name.trim() : undefined,
+      facultyIds,
+      studyIds,
+    },
+  }
+}
+
+/** Which ids to insert and which to delete to turn `current` into `next`. */
+function diffSelections(
+  current: ReadonlyArray<string>,
+  next: ReadonlyArray<string>
+) {
+  const currentIds = new Set(current)
+  const nextIds = new Set(next)
+  return {
+    toAdd: [...nextIds].filter((id) => !currentIds.has(id)),
+    toRemove: [...currentIds].filter((id) => !nextIds.has(id)),
+  }
+}
+
+async function syncFacultySelections(
   supabase: ReturnType<typeof createSupabaseClient>,
   profileId: string,
-  selectedFacultyIds: unknown,
-  selectedStudyIds: unknown
-) {
-  if (Array.isArray(selectedFacultyIds)) {
-    await supabase
-      .from('profile_faculties')
-      .delete()
-      .eq('profile_id', profileId)
+  facultyIds: Array<string>
+): Promise<DatabaseError | null> {
+  const { data, error } = await supabase
+    .from('profile_faculties')
+    .select('faculty_id')
+    .eq('profile_id', profileId)
+  if (error) return error
 
-    if (selectedFacultyIds.length > 0) {
-      await supabase.from('profile_faculties').insert(
-        selectedFacultyIds.map((facultyId: string) => ({
+  const { toAdd, toRemove } = diffSelections(
+    data.map((row) => row.faculty_id),
+    facultyIds
+  )
+
+  if (toAdd.length > 0) {
+    const { error: insertError } = await supabase
+      .from('profile_faculties')
+      .insert(
+        toAdd.map((facultyId) => ({
           profile_id: profileId,
           faculty_id: facultyId,
         }))
       )
-    }
+    if (insertError) return insertError
   }
 
-  if (Array.isArray(selectedStudyIds)) {
-    await supabase.from('profile_studies').delete().eq('profile_id', profileId)
+  if (toRemove.length > 0) {
+    const { error: deleteError } = await supabase
+      .from('profile_faculties')
+      .delete()
+      .eq('profile_id', profileId)
+      .in('faculty_id', toRemove)
+    if (deleteError) return deleteError
+  }
 
-    if (selectedStudyIds.length > 0) {
-      await supabase.from('profile_studies').insert(
-        selectedStudyIds.map((studyId: string) => ({
-          profile_id: profileId,
-          study_id: studyId,
-        }))
+  return null
+}
+
+async function syncStudySelections(
+  supabase: ReturnType<typeof createSupabaseClient>,
+  profileId: string,
+  studyIds: Array<string>
+): Promise<DatabaseError | null> {
+  const { data, error } = await supabase
+    .from('profile_studies')
+    .select('study_id')
+    .eq('profile_id', profileId)
+  if (error) return error
+
+  const { toAdd, toRemove } = diffSelections(
+    data.map((row) => row.study_id),
+    studyIds
+  )
+
+  if (toAdd.length > 0) {
+    const { error: insertError } = await supabase
+      .from('profile_studies')
+      .insert(
+        toAdd.map((studyId) => ({ profile_id: profileId, study_id: studyId }))
       )
-    }
+    if (insertError) return insertError
   }
+
+  if (toRemove.length > 0) {
+    const { error: deleteError } = await supabase
+      .from('profile_studies')
+      .delete()
+      .eq('profile_id', profileId)
+      .in('study_id', toRemove)
+    if (deleteError) return deleteError
+  }
+
+  return null
+}
+
+/**
+ * Replaces the selections a PATCH body included. Rows are diffed, with
+ * inserts before deletes, so a failure part-way leaves a profile with extra
+ * selections rather than none. Not atomic across the two tables — that
+ * would need an RPC.
+ */
+async function syncSelections(
+  supabase: ReturnType<typeof createSupabaseClient>,
+  profileId: string,
+  input: ProfileUpdateInput
+): Promise<DatabaseError | null> {
+  if (input.facultyIds) {
+    const error = await syncFacultySelections(
+      supabase,
+      profileId,
+      input.facultyIds
+    )
+    if (error) return error
+  }
+
+  if (input.studyIds) {
+    const error = await syncStudySelections(supabase, profileId, input.studyIds)
+    if (error) return error
+  }
+
+  return null
+}
+
+const usernameTakenResponse = (c: Context<HonoEnv>) =>
+  c.json<ProfileUpdateConflictResponse>(
+    { error: 'Username already taken', field: 'username' },
+    409
+  )
+
+/** Postgres errors → clean HTTP codes for the profile + selection writes. */
+function profileWriteErrorResponse(c: Context<HonoEnv>, error: DatabaseError) {
+  switch (error.code) {
+    case 'PGRST116':
+      return c.json({ error: 'User not found' }, 404)
+    case '23503':
+      return c.json(
+        { error: 'A selected faculty or study does not exist' },
+        409
+      )
+    case '42501':
+      return c.json({ error: 'Not allowed to update this profile' }, 403)
+    default:
+      return databaseErrorResponse(c, error)
+  }
+}
+
+/**
+ * Shared body of PATCH /me and PATCH /:id. The profiles row goes through
+ * the session client either way (its UPDATE policy is `id = auth.uid()` or
+ * `is_admin()`). The selection tables' policies are `profile_id =
+ * auth.uid()` with no admin override, so an admin editing someone else's
+ * selections has no RLS path and needs the service-role client — the
+ * caller's admin check happens before this runs.
+ *
+ * The profile row is written first; if the selection sync then fails the
+ * profile fields are already saved, so cache tags are revalidated either
+ * way before the error is returned.
+ */
+async function updateProfile(
+  c: Context<HonoEnv>,
+  targetId: string,
+  selectionAccess: 'owner' | 'admin'
+) {
+  const parsed = await parseProfileUpdate(c)
+  if (!parsed.ok) return c.json({ error: parsed.error }, 400)
+  const { input } = parsed
+
+  const supabase = createSupabaseClient(c)
+
+  // Same pre-check register runs (excluding this profile, so keeping the
+  // current username isn't a conflict). The unique index below stays as the
+  // backstop for a race past it.
+  const usernameLookup = await isUsernameTaken(
+    supabase,
+    input.username,
+    targetId
+  )
+  if (!usernameLookup.ok) return databaseErrorResponse(c, usernameLookup.error)
+  if (usernameLookup.taken) return usernameTakenResponse(c)
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ username: input.username, full_name: input.fullName })
+    .eq('id', targetId)
+    .select()
+    .single()
+
+  if (error) {
+    if (error.code === '23505') return usernameTakenResponse(c)
+    return profileWriteErrorResponse(c, error)
+  }
+
+  const selectionClient =
+    selectionAccess === 'admin' ? createInternalSupabaseClient(c) : supabase
+  const selectionError = await syncSelections(selectionClient, targetId, input)
+
+  await revalidateCacheTags(c.env, profileMutationTags(targetId))
+  if (selectionError) return profileWriteErrorResponse(c, selectionError)
+
+  return c.json<ProfileUpdateResponse>({ success: true, profile: data })
 }
 
 const profiles = new Hono<HonoEnv>()
@@ -229,9 +466,7 @@ profiles.get('/me', authMiddleware, async (c) => {
 
   const { data, error } = await supabase
     .from('profiles')
-    .select(
-      `*, ${PROFILE_ACADEMIC_SELECT}, ${PROFILE_SCRIPTS_SELECT}, ${PROFILE_FAVORITE_SCRIPTS_SELECT}`
-    )
+    .select(`*, ${PROFILE_ACADEMIC_SELECT}, ${PROFILE_SCRIPTS_SELECT}`)
     .eq('id', user.id)
     .single()
 
@@ -239,7 +474,7 @@ profiles.get('/me', authMiddleware, async (c) => {
 
   const [scripts, favoriteScripts] = await Promise.all([
     attachScriptCommentCounts(c, data.scripts),
-    attachScriptCommentCounts(c, flattenFavoriteScripts(data.favorite_scripts)),
+    loadFavoriteScripts(c, user.id),
   ])
   if (!scripts || !favoriteScripts) {
     return c.json({ error: 'Unable to load this profile' }, 500)
@@ -290,9 +525,7 @@ profiles.get('/username/:username', async (c) => {
 
   const [scripts, favoriteScripts] = await Promise.all([
     attachScriptCommentCounts(c, data.scripts),
-    fetchFavoriteScripts(c, data.id).then((rows) =>
-      attachScriptCommentCounts(c, rows)
-    ),
+    loadFavoriteScripts(c, data.id),
   ])
   if (!scripts || !favoriteScripts) {
     return c.json({ error: 'Unable to load this profile' }, 500)
@@ -326,9 +559,7 @@ profiles.get('/:id', async (c) => {
 
   const [scripts, favoriteScripts] = await Promise.all([
     attachScriptCommentCounts(c, data.scripts),
-    fetchFavoriteScripts(c, data.id).then((rows) =>
-      attachScriptCommentCounts(c, rows)
-    ),
+    loadFavoriteScripts(c, data.id),
   ])
   if (!scripts || !favoriteScripts) {
     return c.json({ error: 'Unable to load this profile' }, 500)
@@ -337,40 +568,9 @@ profiles.get('/:id', async (c) => {
 })
 
 /** Update current user's profile */
-profiles.patch('/me', authMiddleware, async (c) => {
-  const user = c.get('user')
-  const supabase = createSupabaseClient(c)
-
-  const { username, full_name, selected_faculty_ids, selected_study_ids } =
-    await c.req.json()
-
-  const usernameError = validateUsername(username)
-  if (usernameError) return c.json({ error: usernameError }, 400)
-
-  const { data, error } = await supabase
-    .from('profiles')
-    .update({ username, full_name })
-    .eq('id', user.id)
-    .select()
-    .single()
-
-  if (error) {
-    if (error.code === '23505') {
-      return c.json({ error: 'Username already taken' }, 400)
-    }
-    return databaseErrorResponse(c, error)
-  }
-
-  await syncFacultyAndStudySelections(
-    supabase,
-    user.id,
-    selected_faculty_ids,
-    selected_study_ids
-  )
-  await revalidateCacheTags(c.env, profileMutationTags(user.id))
-
-  return c.json({ success: true, profile: data })
-})
+profiles.patch('/me', authMiddleware, (c) =>
+  updateProfile(c, c.get('user').id, 'owner')
+)
 
 /** Update any user's profile (admin only) */
 profiles.patch('/:id', authMiddleware, async (c) => {
@@ -388,35 +588,7 @@ profiles.patch('/:id', authMiddleware, async (c) => {
     return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 
-  const { username, full_name, selected_faculty_ids, selected_study_ids } =
-    await c.req.json()
-
-  const usernameError = validateUsername(username)
-  if (usernameError) return c.json({ error: usernameError }, 400)
-
-  const { data, error } = await supabase
-    .from('profiles')
-    .update({ username, full_name })
-    .eq('id', targetId)
-    .select()
-    .single()
-
-  if (error) {
-    if (error.code === '23505') {
-      return c.json({ error: 'Username already taken' }, 400)
-    }
-    return databaseErrorResponse(c, error)
-  }
-
-  await syncFacultyAndStudySelections(
-    supabase,
-    targetId,
-    selected_faculty_ids,
-    selected_study_ids
-  )
-  await revalidateCacheTags(c.env, profileMutationTags(targetId))
-
-  return c.json({ success: true, profile: data })
+  return updateProfile(c, targetId, 'admin')
 })
 
 /** Delete any user's profile (admin only) */

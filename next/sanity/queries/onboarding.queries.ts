@@ -47,12 +47,13 @@ const onboardingSidebarSubjectQuery = /* groq */ `
 
 export const onboardingCatalogQuery = groq`
 {
-  "universities": *[_type == "university" && dbId != null]{ _id, dbId, name },
-  "faculties": *[_type == "faculty" && university._ref != null && dbId != null]{ _id, dbId, name, "universityId": university._ref },
+  "universities": *[_type == "university" && dbId != null]{ _id, dbId, name, "slug": slug.current },
+  "faculties": *[_type == "faculty" && university._ref != null && dbId != null]{ _id, dbId, name, "slug": slug.current, "universityId": university._ref },
   "studies": *[_type == "study" && faculty._ref != null && dbId != null]{
     _id,
     dbId,
     name,
+    "slug": slug.current,
     "facultyId": faculty._ref,
     "subjectsByYear": *[_type == "subject" && study._ref == ^._id && dbId != null
         && _id == (*[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(_id asc)[0]._id)

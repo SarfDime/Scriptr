@@ -20,7 +20,7 @@ type ResolvedSelections = {
   subjectIds: Array<string>
 }
 
-const dbIdOf = (
+export const dbIdOf = (
   items: Array<{ _id: string; dbId?: string }>,
   id: string | null
 ) => items.find((item) => item._id === id)?.dbId ?? null

@@ -23,7 +23,7 @@ import { CloseButton } from './CloseButton'
  * of it through `dialogProps.className` (later classes win).
  */
 const CENTERED_DIALOG_CLASS = cn(
-  'dialog fixed top-0 m-0 w-full max-w-full overflow-y-auto p-0 text-fg ui-above-light',
+  'dialog fixed top-0 m-0 w-full max-w-full overflow-y-auto p-0 text-fg ui-above',
   'max-md:h-dvh max-md:max-h-dvh max-md:rounded-none max-md:border-0',
   'md:top-[10%] md:max-h-[85dvh] md:w-fit md:min-w-2xl md:max-w-[calc(100vw-2rem)] md:shadow-lg'
 )

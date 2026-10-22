@@ -93,9 +93,9 @@ export type ProfileScriptSummary = {
 /** The fields GET /profiles/me, GET /profiles/:id, and GET
  * /profiles/username/:username all return identically — a viewer can
  * render any profile (their own or someone else's) through this one
- * shape, favorited scripts included (favorite_scripts is a deliberate
- * product choice to make favorites public, not an RLS default — see
- * PROFILE_FAVORITE_SCRIPTS_SELECT's comment in profiles.ts). `bio` and
+ * shape, favorited scripts included (favorites are public: the
+ * `script_favorites` SELECT policy is `true`, confirmed against
+ * pg_policies). `bio` and
  * `location` have no backing columns on `profiles` (confirmed against
  * database.types.ts) — ProfileCard currently gets empty strings for
  * those two fields until the schema has somewhere to put them. */
@@ -118,6 +118,31 @@ export type MyProfileResponse = ProfileCore
  * shape — an arbitrary user's profile, viewable by anyone. Same
  * rationale as `MyProfileResponse` above for keeping a distinct name. */
 export type PublicProfileResponse = ProfileCore
+
+/** Body of `PATCH /api/profiles/me` (and the admin `PATCH /api/profiles/:id`).
+ * `username` is required on every call; the other fields are only written
+ * when present. The selection id arrays are a full replacement of that
+ * user's faculty/study selections, not an add-only list. */
+export type ProfileUpdateRequest = {
+  username: string
+  full_name?: string
+  selected_faculty_ids?: Array<string>
+  selected_study_ids?: Array<string>
+}
+
+/** Success body of `PATCH /api/profiles/me` and `PATCH /api/profiles/:id`. */
+export type ProfileUpdateResponse = {
+  success: true
+  profile: Tables<'profiles'>
+}
+
+/** `409` body of `PATCH /api/profiles/me` and `PATCH /api/profiles/:id`
+ * when the requested username is already taken. `field` lets a form pin
+ * the error to the username input, same as the register conflict body. */
+export type ProfileUpdateConflictResponse = {
+  error: string
+  field: 'username'
+}
 
 /** `GET /api/profiles/:id/stats`'s shape — public, no auth required. */
 export type ProfileStats = {

@@ -9,6 +9,7 @@ import { Box } from '../common/Box'
 import { Button } from '../common/Button'
 import { NextLink } from '../common/NextLink'
 import { Badge } from '../ui/Badge'
+import { HeaderProfileLink } from './HeaderProfileLink'
 
 export const HeaderActions = () => {
   const { unreadCount, setTrayOpen } = useNotifications()
@@ -36,6 +37,7 @@ export const HeaderActions = () => {
           </Badge>
         )}
       </Button>
+      <HeaderProfileLink />
       {/* TODO: Decide if want to keep this */}
       {/* <Button className='button button-sm basic gap-2 border border-grey-300 px-3 py-2'>
         <AddCircle />

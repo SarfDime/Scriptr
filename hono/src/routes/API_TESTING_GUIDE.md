@@ -196,6 +196,35 @@ fails because of a database error, the API returns a generic `500` rather
 than exposing the underlying database message; a missing profile returns
 `404`.
 
+Public profiles include `favorite_scripts` for anonymous viewers too:
+
+```bash
+curl -s $BASE/profiles/username/localstudent | jq '.favorite_scripts | length'
+```
+
+Editing the signed-in profile (`username` is always required; the response is
+`{ success, profile }`):
+
+```bash
+curl -s -b cookies-student.txt -X PATCH $BASE/profiles/me \
+  -H "Content-Type: application/json" \
+  -d '{"username":"localstudent","full_name":" Test Student "}' \
+  | jq '.profile | {username, full_name}'   # full_name comes back trimmed
+
+# 409 + field: username when another account already has the username
+curl -s -o /dev/null -w '%{http_code}\n' -b cookies-student.txt -X PATCH $BASE/profiles/me \
+  -H "Content-Type: application/json" -d '{"username":"localadmin"}'
+
+# 400 for a missing username, a bad body, or a non-array selection list
+curl -s -b cookies-student.txt -X PATCH $BASE/profiles/me \
+  -H "Content-Type: application/json" -d '{"selected_faculty_ids":"x"}' | jq .
+
+# 409 when a selected faculty id does not exist; an empty array clears them
+curl -s -b cookies-student.txt -X PATCH $BASE/profiles/me \
+  -H "Content-Type: application/json" \
+  -d '{"username":"localstudent","selected_faculty_ids":["00000000-0000-0000-0000-000000000000"]}' | jq .
+```
+
 ---
 
 ## Phase 3 — Academic profile (student)

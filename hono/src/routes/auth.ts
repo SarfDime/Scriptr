@@ -27,6 +27,7 @@ import {
   createInternalSupabaseClient,
   createSupabaseClient,
 } from '../lib/supabase'
+import { isUsernameTaken } from '../lib/username'
 import type { HonoEnv } from '../types/env.types'
 
 const auth = new Hono<HonoEnv>()
@@ -332,17 +333,13 @@ auth.post('/register', async (c) => {
 
   const supabase = createSupabaseClient(c)
 
-  const { data: existingUsername, error: usernameErrorLookup } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('username', normalizedUsername)
-    .maybeSingle()
+  const usernameLookup = await isUsernameTaken(supabase, normalizedUsername)
 
-  if (usernameErrorLookup) {
+  if (!usernameLookup.ok) {
     return c.json({ error: 'Unable to check username availability' }, 500)
   }
 
-  if (existingUsername) {
+  if (usernameLookup.taken) {
     return c.json<RegisterConflictResponse>(
       { error: 'Username already taken', field: 'username' },
       409

@@ -1,4 +1,5 @@
 import CheckmarkIcon from '@sanity/icons/Checkmark'
+import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { SectionHeader } from '@/components/common/SectionHeader'
@@ -32,13 +33,13 @@ export const OnboardingSubjectsStep = ({
 }: OnboardingSubjectsStepProps) => {
   const placeholder =
     disabledReason ??
-    (subjectsByYear.size === 0 ? 'No subjects found for this study yet.' : null)
+    (subjectsByYear.size === 0 ? UI_STRINGS.onboarding.noSubjects : null)
 
   return (
     <Box className='ui-stack gap-4'>
       <SectionHeader
-        title='Which years have you finished?'
-        subtitle='Mark a whole year done at once, or check off individual subjects below — fine-tune this later from your profile too.'
+        title={UI_STRINGS.onboarding.subjectsTitle}
+        subtitle={UI_STRINGS.onboarding.subjectsSubtitle}
       />
 
       {placeholder ? (
@@ -58,9 +59,14 @@ export const OnboardingSubjectsStep = ({
               >
                 <Box className='ui-cluster items-center justify-between'>
                   <Box className='ui-cluster items-center gap-2'>
-                    <Text className='ui-body-strong'>Year {year}</Text>
+                    <Text className='ui-body-strong'>
+                      {UI_STRINGS.general.year(year)}
+                    </Text>
                     <Badge className='cp-unstyled border border-grey-200'>
-                      {completedCount}/{subjects.length} subjects
+                      {UI_STRINGS.onboarding.subjectCount(
+                        completedCount,
+                        subjects.length
+                      )}
                     </Badge>
                   </Box>
                   <Button
@@ -75,7 +81,9 @@ export const OnboardingSubjectsStep = ({
                     )}
                   >
                     {isYearComplete && <CheckmarkIcon />}
-                    {isYearComplete ? 'Year completed' : 'Mark year complete'}
+                    {isYearComplete
+                      ? UI_STRINGS.onboarding.yearCompleted
+                      : UI_STRINGS.onboarding.markYearComplete}
                   </Button>
                 </Box>
                 <Box className='ui-cluster gap-1.5'>

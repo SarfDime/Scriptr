@@ -5,6 +5,7 @@ import type {
   SubjectPathQueryResult,
 } from '@shared/types/sanity.types'
 import type { WithResolvedSanityData } from '@shared/types/sanity-transform.types'
+import type { ReactNode } from 'react'
 import type { BoxProps } from '@/components/common/Box'
 import type { SectionHeaderProps } from '@/types/components/SectionHeader.types'
 
@@ -48,5 +49,8 @@ export type SubjectsSidebarProps = Omit<
   subtitle?: string
   /** Shown under the title instead of the list when `subjects` is empty. */
   emptyMessage?: string
+  /** Rendered between the header and the list, whether or not there are
+   * subjects — for controls such as view toggles and filters. */
+  toolbar?: ReactNode
   headerProps?: Partial<SectionHeaderProps>
 }

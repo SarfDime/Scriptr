@@ -3,10 +3,8 @@ import { Divider } from '@/components/ui/Divider'
 import { cn } from '@/lib/common-utils'
 import type { SubjectsSidebarProps } from '@/types/academics/subject.types'
 import { Box } from '../../common/Box'
-import { Button } from '../../common/Button'
 import { SectionHeader } from '../../common/SectionHeader'
 import { StudyTipCard } from '../../common/StudyTipCard'
-import { Text } from '../../typography/Text'
 import { SubjectCard } from './SubjectCard'
 
 /** The "Your subjects" sidebar: a header, the subject list (or `emptyMessage`
@@ -16,6 +14,7 @@ export const SubjectsSidebar = ({
   title = UI_STRINGS.subjects.sidebarTitle,
   subtitle = UI_STRINGS.subjects.sidebarSubtitle,
   emptyMessage = UI_STRINGS.subjects.emptyState,
+  toolbar,
   headerProps,
   className,
   ...props
@@ -31,15 +30,10 @@ export const SubjectsSidebar = ({
       <SectionHeader
         title={title}
         subtitle={hasSubjects ? subtitle : emptyMessage}
-        actions={
-          hasSubjects && (
-            <Button className='button button-sm subtle'>
-              <Text>{UI_STRINGS.subjects.manage}</Text>
-            </Button>
-          )
-        }
         {...headerProps}
       />
+
+      {toolbar}
 
       {hasSubjects && (
         <Box className='ui-stack gap-3'>

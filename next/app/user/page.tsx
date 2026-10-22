@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation'
-import { UserProfilePage } from '@/components/profile/UserProfilePage'
+import { MyProfilePage } from '@/components/profile/MyProfilePage'
 import { getSessionRequired } from '@/lib/api/auth-api'
 import { getRequestCookieHeader } from '@/lib/api/next-api'
-import { getUserSubjectsForStudies } from '@/lib/profile-subjects'
+import { getProfileSubjectSections } from '@/lib/profile-subjects'
 
 export default async function Page() {
   const session = await getSessionRequired(await getRequestCookieHeader())
@@ -11,10 +11,10 @@ export default async function Page() {
     redirect('/auth')
   }
 
-  const subjects = await getUserSubjectsForStudies(
+  const subjects = await getProfileSubjectSections(
     session.user.selected_study_ids,
     session.user.subjects
   )
 
-  return <UserProfilePage subjects={subjects} />
+  return <MyProfilePage subjects={subjects} />
 }

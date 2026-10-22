@@ -22,6 +22,7 @@ type MyProfileState = { status: 'idle' } | ProfileFetchState
 type ProfileContextValue = {
   profile: MyProfileState
   refresh: () => Promise<void>
+  reload: () => Promise<void>
 }
 
 const ProfileContext = createContext<ProfileContextValue | null>(null)
@@ -39,6 +40,20 @@ async function fetchProfile(setFetchState: (state: ProfileFetchState) => void) {
       status: 'error',
       message: UI_STRINGS.profile.loadError,
     })
+  }
+}
+
+/** Re-fetches without the 'loading' transition, so a screen showing the
+ * profile (e.g. after an edit) updates in place instead of flashing its
+ * loading state. A failed re-fetch keeps whatever is already showing. */
+async function reloadProfile(
+  setFetchState: (state: ProfileFetchState) => void
+) {
+  try {
+    const profile = await getMyProfile()
+    setFetchState({ status: 'loaded', profile })
+  } catch {
+    // Keep the profile that is already on screen.
   }
 }
 
@@ -88,9 +103,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     session.status === 'authenticated' ? fetchState : { status: 'idle' }
 
   const refresh = () => fetchProfile(setFetchState)
+  const reload = () => reloadProfile(setFetchState)
 
   return (
-    <ProfileContext.Provider value={{ profile, refresh }}>
+    <ProfileContext.Provider value={{ profile, refresh, reload }}>
       {children}
     </ProfileContext.Provider>
   )
@@ -109,5 +125,5 @@ export function useMyProfileActions() {
   if (!context) {
     throw new Error('useMyProfileActions must be used within a ProfileProvider')
   }
-  return { refresh: context.refresh }
+  return { refresh: context.refresh, reload: context.reload }
 }

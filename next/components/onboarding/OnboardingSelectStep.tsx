@@ -1,3 +1,4 @@
+import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
@@ -23,7 +24,7 @@ export const OnboardingSelectStep = ({
 }: OnboardingSelectStepProps) => {
   const placeholder =
     disabledReason ??
-    (options?.length === 0 ? 'No options available yet.' : null)
+    (options?.length === 0 ? UI_STRINGS.onboarding.noOptions : null)
 
   return (
     <Box className='ui-stack gap-4'>

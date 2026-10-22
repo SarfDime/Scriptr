@@ -7,12 +7,18 @@ type ResolvedOnboardingCatalog = NonNullable<
 
 export type OnboardingOption = { id: string; name: string }
 
-export type OnboardingUniversity = { _id: string; dbId?: string; name: string }
+export type OnboardingUniversity = {
+  _id: string
+  dbId?: string
+  name: string
+  slug: string | null
+}
 
 export type OnboardingFaculty = {
   _id: string
   dbId?: string
   name: string
+  slug: string | null
   universityId: string
 }
 
@@ -32,6 +38,7 @@ export type OnboardingStudy = {
   _id: string
   dbId?: string
   name: string
+  slug: string | null
   facultyId: string
   subjectsByYear: Array<OnboardingSubjectGroup>
 }
@@ -52,6 +59,18 @@ export type GuestAcademicData = {
   onboardingCompletedAt: string | null
   onboardingDismissedAt: string | null
 }
+
+/** The part of `GuestAcademicData` that describes what someone studies —
+ * what the onboarding wizard (guest storage) and the profile academics
+ * editor (seeded from the account) both edit. */
+export type AcademicSelections = Pick<
+  GuestAcademicData,
+  | 'universityId'
+  | 'facultyId'
+  | 'studyId'
+  | 'completedSubjectIds'
+  | 'completedYears'
+>
 
 export const EMPTY_GUEST_ACADEMIC_DATA: GuestAcademicData = {
   universityId: null,
