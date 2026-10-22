@@ -77,6 +77,17 @@ call before anyone builds it).
   flags, rating types). `moderator` gets no moderation tools in
   the API, RLS or UI; any future moderator role is limited to notifications
   (see **Deferred (Do Last)**). Routes already gate on `isAdmin`.
+- Profile API: `PATCH /profiles/me` and `/profiles/:id` validate the body,
+  store trimmed values, return a typed response (`ProfileUpdateResponse`), map
+  `23505`/`23503`/`42501` to `409`/`409`/`403` (and a missing profile to
+  `404`), and check every faculty/study write (diffed, inserts before
+  deletes; admin edits of another user use the service-role client, since the
+  selection tables have no admin RLS path). Username uniqueness runs the same
+  pre-check as register (`hono/src/lib/username.ts`, shared by both). Favorites
+  are public by design (`script_favorites` SELECT is `true`) and are read on
+  the session client; a failed favorites read is a `500`, not an empty list.
+  `PUT /profile-subjects/:subjectId` now revalidates the public-profile tags
+  (it was the `GET` list that did, by mistake).
 
 ### Todo
 
@@ -278,15 +289,6 @@ Priority work, scheduled right after the frontend gaps:
   (`reload()` on `ProfileProvider`, no loading flash) and the session is
   re-read. The signed-in avatar sits at the end of the header and links to
   `/user` while the navbar is collapsed (`HeaderProfileLink`).
-- Profile API hardening: favorites are public by design (`script_favorites`
-  SELECT is `true`) and are read on the session client; a failed favorites
-  read is a `500`, not an empty list. `PATCH /profiles/me` and
-  `/profiles/:id` validate the body, store trimmed values, return a typed
-  response, map `23505`/`23503`/`42501` to `409`/`409`/`403`, and check every
-  selection write (diffed, inserts before deletes). Username uniqueness runs
-  the same pre-check as register (`hono/src/lib/username.ts`, shared by both).
-  `PUT /profile-subjects/:subjectId` now revalidates the public-profile tags
-  (it was the `GET` list that did, by mistake).
 - Academics editor: a separate "Edit academics" dialog on the profile
   (`EditAcademicsDialog`, `useEditAcademicsForm`) edits university → faculty →
   study and completed subjects. It reuses the onboarding wizard's selection
@@ -326,27 +328,32 @@ Priority work, scheduled right after the frontend gaps:
 
 Product features:
 
-- **Profile experience:** the remaining pieces are achievements (defer to
-  achievements todo), the revised subject layout, and the avatar upload
-  itself. The avatar picker,
-  `uploadMyAvatar` stub and `AVATAR_UPLOAD_ENABLED` flag exist but the
-  picker is disabled (`TODO(r2-optimization)` in `lib/profile-avatar.ts`,
-  `lib/api/profile-api.ts`, `AvatarField.tsx`); it lands with the R2
-  optimization pipeline. Optional later: make selection sync atomic with an
-  RPC.
-- **Search bar validations**: Require input to be non-empty and properly formatted before triggering a search.
+- **Professor comments:** add the comment section to professor pages, using the
+  comment support already available in the backend (the comment UI is
+  target-agnostic). Open decision: professor pages are statically generated,
+  and comment reads are personalized, so either load the comments on the
+  client or let the page go dynamic.
 - **Header search bar:** the header icon currently links to `/search`; expand
   it into an inline search bar that appears on press which on enter would take you to the search page with your search query.
-- **Ratings UI:** professor and subject rating interfaces.
+- **Search bar validations**: Require input to be non-empty and properly formatted before triggering a search.
 - **Study tips:** for guests and users without onboarding data, sourced from
   Sanity.
-- **Professor comments:** add the comment section to professor pages, using the
-  comment support already available in the backend.
+- **Footer:** add a simple footer to the page layout.
+- **Ratings UI:** professor and subject rating interfaces.
 - **Notification settings:** preferences and the remaining user-facing
   notification kinds/UX (moderator notifications are deferred).
-- **Footer:** add a simple footer to the page layout.
 - **Admin UI:** academic sync and dependency tools, `professor_studies`, user
   restrictions, flag resolution/moderation, suspicious-download review.
+- **Profile experience (leftovers):** achievements (defer to the achievements
+  todo) and the avatar upload itself. The avatar picker, `uploadMyAvatar` stub
+  and `AVATAR_UPLOAD_ENABLED` flag exist but the picker is disabled
+  (`TODO(r2-optimization)` in `lib/profile-avatar.ts`,
+  `lib/api/profile-api.ts`, `AvatarField.tsx`); it lands with the R2
+  optimization pipeline. Optional later: make the faculty/study + profile row
+  save atomic with an RPC (the profile row is written first, so a selection
+  failure leaves the profile fields saved). Registration still writes
+  `currently_taking` rows that nothing reads for display now (profiles derive
+  it from the selected studies); either stop writing them or keep them in sync.
 - **Study overview metadata:** more administrator/study metadata on the card in
   [`StudyOverviewCard.tsx`](next/components/academics/study/StudyOverviewCard.tsx)
   when it becomes available.
@@ -443,8 +450,10 @@ Deliberately postponed until everything else is done:
 
 ## Suggested Order
 
-1. Finish the main frontend gaps: profile, professor comments, header search, study tips, footer, ratings, notification settings,
-   then the admin/moderation UI (admin-only).
+1. Finish the main frontend gaps: professor comments, header search, study
+   tips, footer, ratings, notification settings, then the admin/moderation UI
+   (admin-only). Profile editing is done; its leftovers are listed under the
+   frontend todo.
 2. Close frontend quality work: state coverage, inline strings, accessibility,
    toolbar behavior, root layout, toasts, polish, SEO/performance.
 3. R2 improvements: file optimization, then avatars on the same pipeline.
