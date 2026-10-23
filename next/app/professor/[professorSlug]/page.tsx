@@ -1,9 +1,11 @@
 import { ProfessorAffiliationsCard } from '@/components/academics/professor/ProfessorAffiliationsCard'
 import { ProfessorBiographyCard } from '@/components/academics/professor/ProfessorBiographyCard'
+import { ProfessorComments } from '@/components/academics/professor/ProfessorComments'
 import { ProfessorContactCard } from '@/components/academics/professor/ProfessorContactCard'
 import { SubjectsExplorer } from '@/components/academics/subject/SubjectsExplorer'
 import { BackLink } from '@/components/common/BackLink'
 import { PageLayout } from '@/components/layout/PageLayout'
+import { Divider } from '@/components/ui/Divider'
 import {
   createAcademicMetadata,
   createAcademicStaticParams,
@@ -95,6 +97,15 @@ export default async function ProfessorDetailPage({
           ) as Array<MinimalSubject> // TODO: Fix this in a better way, since theres no need to display professors in the subjects on professor page
         }
       />
+      {professor.dbId && (
+        <>
+          <Divider />
+          <ProfessorComments
+            key={professor.dbId}
+            professorId={professor.dbId}
+          />
+        </>
+      )}
     </PageLayout>
   )
 }

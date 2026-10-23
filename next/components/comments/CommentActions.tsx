@@ -35,7 +35,7 @@ export function CommentActions({
   )
 
   return (
-    <Box className='ui-cluster items-center gap-x-3 gap-y-3'>
+    <Box className='ui-cluster items-center gap-3'>
       <Box className='ui-cluster items-center gap-3'>
         <CommentLikeButton
           commentId={comment.id}
@@ -43,16 +43,19 @@ export function CommentActions({
           initialCount={comment.likes_count}
           disabled={isAuthor}
         />
-        {hasReactions && (
-          <Divider orientation='vertical' className='h-4 self-center' />
+
+        <Divider orientation='vertical' className='h-4 self-center' />
+
+        {(!isAuthor || hasReactions) && (
+          <CommentReactions
+            commentId={comment.id}
+            initialMine={comment.my_reactions}
+            initialCounts={comment.reactions_by_type}
+            disabled={isAuthor}
+          />
         )}
-        <CommentReactions
-          commentId={comment.id}
-          initialMine={comment.my_reactions}
-          initialCounts={comment.reactions_by_type}
-          disabled={isAuthor}
-        />
-        {hasReactions && (
+
+        {(!isAuthor || hasReactions) && (
           <Divider orientation='vertical' className='h-4 self-center' />
         )}
       </Box>

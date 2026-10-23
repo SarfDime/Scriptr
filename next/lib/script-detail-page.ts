@@ -7,6 +7,7 @@ import { getFavorite } from '@/lib/api/favorites-api'
 import { ApiError } from '@/lib/api/next-api'
 import { getScript } from '@/lib/api/scripts-api'
 import { getMyScriptVote, getScriptVoteStats } from '@/lib/api/votes-api'
+import { EMPTY_COMMENT_PAGE } from '@/lib/comments/empty-comment-page'
 import { nextLogs } from '@/lib/logger'
 import { sortFilesByPosition } from '@/lib/script-detail'
 import { getSubjectPath } from '@/lib/subject-path'
@@ -16,15 +17,6 @@ export type ScriptDetailPageData = {
   detail: ScriptDetailViewModel
   comments: Awaited<ReturnType<typeof getScriptComments>>
   commentsUnavailable: boolean
-}
-
-type ScriptComments = Awaited<ReturnType<typeof getScriptComments>>
-
-const EMPTY_COMMENTS: ScriptComments = {
-  items: [],
-  hasMore: false,
-  totalCount: 0,
-  totalCommentCount: 0,
 }
 
 type ViewerRead<T> = { value: T; failed: boolean }
@@ -112,7 +104,7 @@ export const loadScriptDetailPage = async (
       getScriptVoteStats(scriptId),
       getScriptComments(scriptId, cookieHeader)
         .then((comments) => ({ comments, unavailable: false }))
-        .catch(() => ({ comments: EMPTY_COMMENTS, unavailable: true })),
+        .catch(() => ({ comments: EMPTY_COMMENT_PAGE, unavailable: true })),
       readForViewer(
         cookieHeader,
         (cookie) => getMyScriptVote(scriptId, cookie),

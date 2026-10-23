@@ -323,16 +323,22 @@ Priority work, scheduled right after the frontend gaps:
 - Onboarding copy lives in `UI_STRINGS.onboarding` (the modal and its select,
   subjects and account steps have no inline strings); the academics editor
   reuses the same strings.
+- Professor comments: the professor page shows the shared comment section
+  (`ProfessorComments`, rendered after the subjects explorer only when the
+  professor has a `dbId`). The page stays statically generated: the first page
+  of comments is fetched in the browser after mount (`useProfessorComments`),
+  with a loading placeholder, the existing retry UI on a failed read
+  (`CommentSection`'s `initialLoadFailed`) and the empty state. The browser
+  sends its own session cookie and the client read is `no-store`, so
+  `liked_by_me` / `my_reactions` are personalised and a posted comment shows up
+  on reload. `EMPTY_COMMENT_PAGE` (`lib/comments/empty-comment-page.ts`) is
+  shared with the script detail loader. Resolves the old static-vs-dynamic
+  open decision.
 
 ### Todo
 
 Product features:
 
-- **Professor comments:** add the comment section to professor pages, using the
-  comment support already available in the backend (the comment UI is
-  target-agnostic). Open decision: professor pages are statically generated,
-  and comment reads are personalized, so either load the comments on the
-  client or let the page go dynamic.
 - **Header search bar:** the header icon currently links to `/search`; expand
   it into an inline search bar that appears on press which on enter would take you to the search page with your search query.
 - **Search bar validations**: Require input to be non-empty and properly formatted before triggering a search.
@@ -450,7 +456,7 @@ Deliberately postponed until everything else is done:
 
 ## Suggested Order
 
-1. Finish the main frontend gaps: professor comments, header search, study
+1. Finish the main frontend gaps: header search, study
    tips, footer, ratings, notification settings, then the admin/moderation UI
    (admin-only). Profile editing is done; its leftovers are listed under the
    frontend todo.
