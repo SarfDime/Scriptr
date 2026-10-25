@@ -1,6 +1,5 @@
 export const UI_STRINGS = {
   general: {
-    studyTip: 'Study tip',
     restrictedAction:
       "This action isn't available right now — your account is currently restricted.",
     actionUnavailable: 'Action unavailable',
@@ -63,6 +62,10 @@ export const UI_STRINGS = {
       noResults: (query: string) =>
         `No scripts match “${query}”. Try different keywords or check the spelling.`,
       searchAll: (query: string) => `Search all scripts for “${query}”`,
+      quickSearchLabel: 'Quick search',
+      closeSearch: 'Close search',
+      invalidQuery: (maxLength: number) =>
+        `Enter a search term (up to ${maxLength} characters).`,
     },
     filters: {
       allSubjects: 'All subjects',
@@ -248,6 +251,9 @@ export const UI_STRINGS = {
         `Choose an image under ${maxMegabytes} MB.`,
       avatarUploadUnavailable: 'Photo upload is not available yet.',
     },
+  },
+  footer: {
+    copyright: (year: number) => `© ${year} All rights reserved.`,
   },
   navigation: {
     account: 'Account',

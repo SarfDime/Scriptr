@@ -29,6 +29,7 @@ export const ProfilePage = ({
   authoredCount,
   commentCount,
   isOwner = false,
+  studyTip,
 }: ProfilePageProps) => {
   const displayName = getDisplayName(profile)
 
@@ -51,6 +52,7 @@ export const ProfilePage = ({
             completed={subjects.completed}
             currentlyTaking={subjects.currentlyTaking}
             title={isOwner ? undefined : UI_STRINGS.subjects.title}
+            studyTip={studyTip}
           />
           <Divider />
 

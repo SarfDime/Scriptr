@@ -8,6 +8,7 @@ import { Button } from './misc/button'
 import { Person } from './misc/person'
 // Misc
 import { StarCanvas } from './misc/star-canvas'
+import { StudyTip } from './misc/study-tip'
 import { NavItem } from './navigation/nav-item'
 import { NavMenu } from './navigation/nav-menu'
 import { SubMenuItem } from './navigation/subMenuItem'
@@ -43,4 +44,5 @@ export const schemaTypes = [
   Subject,
   Study,
   StarCanvas,
+  StudyTip,
 ]

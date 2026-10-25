@@ -14,12 +14,14 @@ import {
   getIncompleteSubjectsForStudies,
 } from '@/lib/profile-subjects'
 import { toScriptSummaryDetails } from '@/lib/script-display'
+import { getDailyStudyTip } from '@/lib/study-tip'
 
 const Page = async () => {
   const cookie = await getRequestCookieHeader()
-  const [session, topScripts] = await Promise.all([
+  const [session, topScripts, studyTip] = await Promise.all([
     getSession(cookie),
     getTopScripts(),
+    getDailyStudyTip(),
   ])
   const user = session?.user
   const [subjects, incompleteSubjectIds] = user
@@ -49,9 +51,12 @@ const Page = async () => {
       <Box className='grid gap-10 xl:grid-cols-[minmax(0,1fr)_340px]'>
         <ScriptsSection scripts={scripts} showGlobalSearch />
         {user ? (
-          <SubjectsSidebar subjects={subjects.slice(0, 3)} />
+          <SubjectsSidebar
+            subjects={subjects.slice(0, 3)}
+            studyTip={studyTip}
+          />
         ) : (
-          <GuestSubjectsSidebar />
+          <GuestSubjectsSidebar studyTip={studyTip} />
         )}
       </Box>
     </PageLayout>

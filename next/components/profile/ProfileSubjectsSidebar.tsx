@@ -48,6 +48,7 @@ export function ProfileSubjectsSidebar({
   completed,
   currentlyTaking,
   title,
+  studyTip,
 }: ProfileSubjectsSidebarProps) {
   const strings = UI_STRINGS.profile.subjects
   const [view, setView] = useState<SubjectView>('completed')
@@ -110,6 +111,7 @@ export function ProfileSubjectsSidebar({
     <SubjectsSidebar
       subjects={visibleSubjects}
       title={title}
+      studyTip={studyTip}
       subtitle={viewCopy.subtitle}
       emptyMessage={
         subjects.length > 0

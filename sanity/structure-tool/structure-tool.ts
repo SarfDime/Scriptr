@@ -1,5 +1,6 @@
 import BlockElementIcon from '@sanity/icons/BlockElement'
 import BookIcon from '@sanity/icons/Book'
+import BulbOutlineIcon from '@sanity/icons/BulbOutline'
 import EarthGlobeIcon from '@sanity/icons/EarthGlobe'
 import MasterDetailIcon from '@sanity/icons/MasterDetail'
 import MenuIcon from '@sanity/icons/Menu'
@@ -22,6 +23,7 @@ import { buildSectionsStructure } from './sections-structure'
  * - Navigation Menu: A list of all navigation menus
  * - Sections: A list of all content sections
  * - Footer: A list of all footers
+ * - Study tips: A list of all study tips (Sanity-only content)
  * - Content Sections: A list of all content sections and separate Lists for all content post types
  * - Miscellaneous: A list of all miscellaneous documents alongside webschemas for website
  */
@@ -61,6 +63,12 @@ export const customStructureTool = (build: StructureToolTypes['Build']) =>
         .icon(createColoredIcon(MenuIcon, 'footer'))
         .title('Footer')
         .child(build.documentTypeList('footer')),
+
+      build
+        .listItem()
+        .icon(createColoredIcon(BulbOutlineIcon, 'content'))
+        .title('Study tips')
+        .child(build.documentTypeList('studyTip')),
 
       build.divider().title('Misc Content'),
 

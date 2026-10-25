@@ -27,7 +27,8 @@ export default async function SearchPage({
         title={UI_STRINGS.scripts.search.pageTitle}
         subtitle={UI_STRINGS.scripts.search.pageSubtitle}
       />
-      <SearchForm query={query} />
+      {/* Keyed so a header search while already on /search resets the input. */}
+      <SearchForm key={query} query={query} />
       <Divider />
       <SearchResults query={query} scripts={scripts} />
     </PageLayout>

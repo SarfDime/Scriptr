@@ -8,7 +8,7 @@ import { StudyTipCard } from '../../common/StudyTipCard'
 import { SubjectCard } from './SubjectCard'
 
 /** The "Your subjects" sidebar: a header, the subject list (or `emptyMessage`
- * when there are none) and the study tip. */
+ * when there are none) and, when one is given, the study tip. */
 export const SubjectsSidebar = ({
   subjects,
   title = UI_STRINGS.subjects.sidebarTitle,
@@ -16,6 +16,7 @@ export const SubjectsSidebar = ({
   emptyMessage = UI_STRINGS.subjects.emptyState,
   toolbar,
   headerProps,
+  studyTip,
   className,
   ...props
 }: SubjectsSidebarProps) => {
@@ -42,8 +43,12 @@ export const SubjectsSidebar = ({
           ))}
         </Box>
       )}
-      <Divider />
-      <StudyTipCard />
+      {studyTip && (
+        <>
+          <Divider />
+          <StudyTipCard {...studyTip} />
+        </>
+      )}
     </Box>
   )
 }

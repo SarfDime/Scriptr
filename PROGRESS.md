@@ -262,9 +262,24 @@ Priority work, scheduled right after the frontend gaps:
   professor page.
 - `NextImage` requires `sizes` whenever `fillProp` is set.
 - Script search: `/search?q=` (Server Component, `noindex`, cookie forwarded so
-  results are faculty-scoped) backed by `GET /scripts/search`; header search
-  icon links to it, and the homepage `ScriptsSection` links to it from the
-  local filter (`showGlobalSearch`).
+  results are faculty-scoped) backed by `GET /scripts/search`; the homepage
+  `ScriptsSection` links to it from the local filter (`showGlobalSearch`).
+- Header search bar: the header search icon expands an inline bar (an overlay
+  of the whole header below `sm`, inline from `sm` up). Enter goes to
+  `/search?q=`; Escape and an outside press close it. It does not prefill the
+  current query (`useSearchParams` in the root layout would make every static
+  route client-rendered).
+- Search validation: `isValidSearchQuery` (`lib/script-search.ts`) is shared by
+  the header bar and the `/search` form (trim, non-empty, at most
+  `INPUT_MAX_LENGTH`; no stricter format rule exists). Invalid submits are
+  stopped with an inline message; the `/search` form is still a plain GET
+  form without JS.
+- Study tips: Sanity-only `studyTip` documents (not DB-synced). The tip card
+  shows one tip per UTC day, picked on the server, on the homepage (signed in
+  and guest) and both profile pages, and is omitted when there are no tips.
+  The Studio schema must be deployed and tips authored before it appears.
+- Footer: a one-line static footer in `MainLayout` (wordmark and copyright).
+  `/auth` on mobile subtracts `--footer-height` so it still fits the screen.
 - Script management: the script detail page shows Edit and Delete (title,
   description and additional reading; delete confirms and returns to the
   subject) plus a per-file Remove action to the author or an admin
@@ -339,12 +354,6 @@ Priority work, scheduled right after the frontend gaps:
 
 Product features:
 
-- **Header search bar:** the header icon currently links to `/search`; expand
-  it into an inline search bar that appears on press which on enter would take you to the search page with your search query.
-- **Search bar validations**: Require input to be non-empty and properly formatted before triggering a search.
-- **Study tips:** for guests and users without onboarding data, sourced from
-  Sanity.
-- **Footer:** add a simple footer to the page layout.
 - **Ratings UI:** professor and subject rating interfaces.
 - **Notification settings:** preferences and the remaining user-facing
   notification kinds/UX (moderator notifications are deferred).
@@ -456,8 +465,8 @@ Deliberately postponed until everything else is done:
 
 ## Suggested Order
 
-1. Finish the main frontend gaps: header search, study
-   tips, footer, ratings, notification settings, then the admin/moderation UI
+1. Finish the main frontend gaps: ratings, notification settings, then the
+   admin/moderation UI
    (admin-only). Profile editing is done; its leftovers are listed under the
    frontend todo.
 2. Close frontend quality work: state coverage, inline strings, accessibility,

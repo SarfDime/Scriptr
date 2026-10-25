@@ -8,8 +8,9 @@ export default function AuthPage() {
     <PageLayout
       className={cn(
         'flex items-center justify-center min-h-[60dvh]',
-        // Mobile: the card fills the viewport below the 4rem sticky header.
-        'max-md:min-h-[calc(100dvh-4rem)] max-md:items-stretch max-md:p-0'
+        // Mobile: the card fills the viewport below the 4rem sticky header and
+        // above the footer.
+        'max-md:min-h-[calc(100dvh-4rem-var(--footer-height))] max-md:items-stretch max-md:p-0'
       )}
     >
       <Suspense>

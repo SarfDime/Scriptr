@@ -8,6 +8,7 @@ import type { WithResolvedSanityData } from '@shared/types/sanity-transform.type
 import type { ReactNode } from 'react'
 import type { BoxProps } from '@/components/common/Box'
 import type { SectionHeaderProps } from '@/types/components/SectionHeader.types'
+import type { StudyTipData } from '@/types/components/StudyTipCard.types'
 
 export type MinimalSubject = NonNullable<
   WithResolvedSanityData<MinimalSubjectQueryTypedResult>
@@ -53,4 +54,7 @@ export type SubjectsSidebarProps = Omit<
    * subjects — for controls such as view toggles and filters. */
   toolbar?: ReactNode
   headerProps?: Partial<SectionHeaderProps>
+  /** Today's study tip. The tip card (and the divider above it) only render
+   * when this is given. */
+  studyTip?: StudyTipData
 }

@@ -11,6 +11,7 @@ import { buildProfileAcademics } from '@/lib/profile-academic-links'
 import { useOnboarding } from '@/providers/onboarding/OnboardingProvider'
 import { useMyProfile, useMyProfileActions } from '@/providers/ProfileProvider'
 import type { ProfileSubjectSections } from '@/types/components/ProfilePage.types'
+import type { StudyTipData } from '@/types/components/StudyTipCard.types'
 
 /**
  * `/user`: the signed-in user's profile. Reads the shared profile state (so
@@ -20,8 +21,10 @@ import type { ProfileSubjectSections } from '@/types/components/ProfilePage.type
  */
 export function MyProfilePage({
   subjects,
+  studyTip,
 }: {
   subjects: ProfileSubjectSections
+  studyTip?: StudyTipData
 }) {
   const profileState = useMyProfile()
   const { refresh } = useMyProfileActions()
@@ -60,6 +63,7 @@ export function MyProfilePage({
         profile.selected_studies
       )}
       subjects={subjects}
+      studyTip={studyTip}
       authoredCount={profile.scripts.length}
       commentCount={
         statsState.status === 'loaded' ? statsState.stats.comments_made : 0

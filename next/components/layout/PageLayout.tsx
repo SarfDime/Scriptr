@@ -3,6 +3,7 @@ import { cn } from '@/lib/common-utils'
 import { Box, type BoxProps } from '../common/Box'
 import { Header } from '../navigation/Header'
 import { Divider, type DividerProps } from '../ui/Divider'
+import { Footer } from './Footer'
 import { PageHeader } from './PageHeader'
 
 export type PageHeaderConfig = {
@@ -36,14 +37,19 @@ const isHeaderConfig = (
 
 export const MainLayout = ({ children, className, ...rest }: BoxProps) => {
   return (
-    <Box as='main' className={cn('ui-container', className)} {...rest}>
+    <Box
+      as='main'
+      className={cn('ui-container flex flex-col', className)}
+      {...rest}
+    >
       <Header />
       {/* The container grows to full width while the navbar is collapsed (so the
           header spans the screen); page content keeps its docked-navbar width
-          and is centered. */}
-      <Box className='mx-auto w-full lg:max-w-(--nav-width-offset)'>
+          and is centered. `grow` pushes the footer to the bottom of short pages. */}
+      <Box className='mx-auto w-full grow lg:max-w-(--nav-width-offset)'>
         {children}
       </Box>
+      <Footer />
     </Box>
   )
 }

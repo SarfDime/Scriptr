@@ -3,9 +3,14 @@
 import { UI_STRINGS } from '@shared/config/strings'
 import { useGuestAcademicData } from '@/hooks/onboarding/useGuestAcademicData'
 import { useOnboarding } from '@/providers/onboarding/OnboardingProvider'
+import type { StudyTipData } from '@/types/components/StudyTipCard.types'
 import { SubjectsSidebar } from './SubjectsSidebar'
 
-export const GuestSubjectsSidebar = () => {
+export const GuestSubjectsSidebar = ({
+  studyTip,
+}: {
+  studyTip?: StudyTipData
+}) => {
   const { catalog } = useOnboarding()
   const { data } = useGuestAcademicData()
   const selectedStudy = catalog.studies.find(
@@ -24,6 +29,7 @@ export const GuestSubjectsSidebar = () => {
   return (
     <SubjectsSidebar
       subjects={subjects.slice(0, 3)}
+      studyTip={studyTip}
       emptyMessage={
         selectedStudy
           ? UI_STRINGS.subjects.guestNoIncompleteSubjects

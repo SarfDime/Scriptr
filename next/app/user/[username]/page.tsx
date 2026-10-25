@@ -11,6 +11,7 @@ import {
   getOnboardingCatalog,
   getProfileSubjectSections,
 } from '@/lib/profile-subjects'
+import { getDailyStudyTip } from '@/lib/study-tip'
 
 /**
  * Profile view for any user by username. Server Component: the profile,
@@ -48,10 +49,11 @@ export default async function PublicUserProfilePage({
   const studyIds = profile.selected_studies.flatMap(({ study }) =>
     study ? [study.id] : []
   )
-  const [stats, catalog, subjects] = await Promise.all([
+  const [stats, catalog, subjects, studyTip] = await Promise.all([
     getProfileStats(profile.id),
     getOnboardingCatalog(),
     getProfileSubjectSections(studyIds, profile.subjects),
+    getDailyStudyTip(),
   ])
 
   return (
@@ -63,6 +65,7 @@ export default async function PublicUserProfilePage({
         profile.selected_studies
       )}
       subjects={subjects}
+      studyTip={studyTip}
       authoredCount={stats.scripts_uploaded}
       commentCount={stats.comments_made}
     />

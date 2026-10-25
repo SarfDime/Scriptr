@@ -1,27 +1,18 @@
 'use client'
 
 import Bell from '@sanity/icons/Bell'
-import SearchIcon from '@sanity/icons/Search'
-import { UI_STRINGS } from '@shared/config/strings'
-import { SEARCH_PAGE_PATH } from '@/lib/script-search'
 import { useNotifications } from '@/providers/notification/NotificationProvider'
 import { Box } from '../common/Box'
 import { Button } from '../common/Button'
-import { NextLink } from '../common/NextLink'
 import { Badge } from '../ui/Badge'
 import { HeaderProfileLink } from './HeaderProfileLink'
+import { HeaderSearch } from './HeaderSearch'
 
 export const HeaderActions = () => {
   const { unreadCount, setTrayOpen } = useNotifications()
   return (
     <Box className='ml-auto flex items-center gap-2'>
-      <NextLink
-        href={SEARCH_PAGE_PATH}
-        aria-label={UI_STRINGS.scripts.search.formAriaLabel}
-        className='button ghost p-2'
-      >
-        <SearchIcon />
-      </NextLink>
+      <HeaderSearch />
       <Button
         onClick={() => setTrayOpen(true)}
         aria-label='Open notifications'

@@ -21,44 +21,14 @@ type ArrayOf<T> = Array<
 >
 
 // Source: schema.json
-export type ProfessorReference = {
-  _ref: string
-  _type: 'reference'
-  _weak?: boolean
-  [internalGroqTypeReferenceTo]?: 'professor'
-}
-
-export type StudyReference = {
-  _ref: string
-  _type: 'reference'
-  _weak?: boolean
-  [internalGroqTypeReferenceTo]?: 'study'
-}
-
-export type Subject = {
+export type StudyTip = {
   _id: string
-  _type: 'subject'
+  _type: 'studyTip'
   _createdAt: string
   _updatedAt: string
   _rev: string
-  name: string
-  slug?: Slug
-  code: string
-  description?: RichTextLite
-  keywords?: Array<string>
-  credits: number
-  year: number
-  elective?: boolean
-  classes?: string
-  semester: number
-  professors: Array<
-    {
-      _key: string
-    } & ProfessorReference
-  >
-  syllabus?: string
-  study: StudyReference
-  dbId?: string
+  title: RichTextLite
+  content?: RichTextLite
 }
 
 export type SanityImageAssetReference = {
@@ -66,42 +36,6 @@ export type SanityImageAssetReference = {
   _type: 'reference'
   _weak?: boolean
   [internalGroqTypeReferenceTo]?: 'sanity.imageAsset'
-}
-
-export type PersonReference = {
-  _ref: string
-  _type: 'reference'
-  _weak?: boolean
-  [internalGroqTypeReferenceTo]?: 'person'
-}
-
-export type FacultyReference = {
-  _ref: string
-  _type: 'reference'
-  _weak?: boolean
-  [internalGroqTypeReferenceTo]?: 'faculty'
-}
-
-export type Study = {
-  _id: string
-  _type: 'study'
-  _createdAt: string
-  _updatedAt: string
-  _rev: string
-  name: string
-  slug?: Slug
-  picture?: {
-    asset?: SanityImageAssetReference
-    media?: unknown
-    hotspot?: SanityImageHotspot
-    crop?: SanityImageCrop
-    _type: 'image'
-  }
-  description?: RichTextLite
-  studentCount?: number
-  assistant?: PersonReference
-  faculty: FacultyReference
-  dbId?: string
 }
 
 export type ButtonReference = {
@@ -147,6 +81,82 @@ export type RichTextLite = Array<{
   _type: 'block'
   _key: string
 }>
+
+export type ProfessorReference = {
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'professor'
+}
+
+export type StudyReference = {
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'study'
+}
+
+export type Subject = {
+  _id: string
+  _type: 'subject'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  name: string
+  slug?: Slug
+  code: string
+  description?: RichTextLite
+  keywords?: Array<string>
+  credits: number
+  year: number
+  elective?: boolean
+  classes?: string
+  semester: number
+  professors: Array<
+    {
+      _key: string
+    } & ProfessorReference
+  >
+  syllabus?: string
+  study: StudyReference
+  dbId?: string
+}
+
+export type PersonReference = {
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'person'
+}
+
+export type FacultyReference = {
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'faculty'
+}
+
+export type Study = {
+  _id: string
+  _type: 'study'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  name: string
+  slug?: Slug
+  picture?: {
+    asset?: SanityImageAssetReference
+    media?: unknown
+    hotspot?: SanityImageHotspot
+    crop?: SanityImageCrop
+    _type: 'image'
+  }
+  description?: RichTextLite
+  studentCount?: number
+  assistant?: PersonReference
+  faculty: FacultyReference
+  dbId?: string
+}
 
 export type SanityImageCrop = {
   _type: 'sanity.imageCrop'
@@ -1114,15 +1124,16 @@ export type Geopoint = {
 }
 
 export type AllSanitySchemaTypes =
+  | StudyTip
+  | SanityImageAssetReference
+  | ButtonReference
+  | RichTextLite
   | ProfessorReference
   | StudyReference
   | Subject
-  | SanityImageAssetReference
   | PersonReference
   | FacultyReference
   | Study
-  | ButtonReference
-  | RichTextLite
   | SanityImageCrop
   | SanityImageHotspot
   | Slug
@@ -3648,6 +3659,15 @@ export type OnboardingCatalogQueryResult = {
   }>
 }
 
+// Source: ../next/sanity/queries/study-tip.queries.ts
+// Variable: studyTipsQuery
+// Query: *[_type == "studyTip" && length(title) > 0 && length(content) > 0] | order(_createdAt asc, _id asc) {  _id,  title,  content}
+export type StudyTipsQueryResult = Array<{
+  _id: string
+  title: RichTextLite
+  content: RichTextLite | null
+}>
+
 // Source: ../next/sanity/queries/website.queries.ts
 // Variable: websiteSeoQuery
 // Query: *[_id == $WEBSITE][0]{  "siteName": coalesce(siteName, websiteTitle, "Scriptr"),  "siteUrl": coalesce(siteUrl, ""),  "defaultSeoTitle": coalesce(defaultSeoTitle, websiteTitle, "Scriptr"),  "defaultSeoDescription": coalesce(defaultSeoDescription, ""),  "defaultKeywords": defaultKeywords[]}
@@ -4028,6 +4048,7 @@ declare global {
     '\n*[_type == "university" && !(_id in path("drafts.**")) && dbId != null] {\n  "universitySlug": coalesce(slug.current, _id)\n}\n': UniversityStaticParamsQueryResult
     '\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\n*[_id == $WEBSITE][0]{\n  "navMenu": navMenu->{\n    defined(title) => {title},\n    defined(websiteLogo)=>{ "websiteLogo": sanityImage::full(websiteLogo) },\n    navItems[]->{\n      stringTitle,\n      stringSubtitle,\n      ...linkSelector::full(@),\n      defined(new) => {new},\n      defined(comingSoon) => {comingSoon},\n      defined(disabled) => {disabled},\n      defined(icon) => { "icon": sanityImage::full(icon) },\n    },\n  }\n}.navMenu': NavMenuQueryResult
     '\n{\n  "universities": *[_type == "university" && dbId != null]{ _id, dbId, name, "slug": slug.current },\n  "faculties": *[_type == "faculty" && university._ref != null && dbId != null]{ _id, dbId, name, "slug": slug.current, "universityId": university._ref },\n  "studies": *[_type == "study" && faculty._ref != null && dbId != null]{\n    _id,\n    dbId,\n    name,\n    "slug": slug.current,\n    "facultyId": faculty._ref,\n    "subjectsByYear": *[_type == "subject" && study._ref == ^._id && dbId != null\n        && _id == (*[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(_id asc)[0]._id)\n      ] | order(year asc){\n      year,\n      "subjects": *[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(name asc){\n        _id, dbId, name, year, "studyId": study._ref\n      }\n    },\n  },\n  "subjects": *[_type == "subject" && study._ref != null && dbId != null] | order(year asc){\n    \n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  code,\n  credits,\n  year,\n  semester,\n  "faculty": study->faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    dbId,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n  study->{\n    _id,\n    "slug": slug.current,\n    name,\n    dbId,\n    faculty->{\n      _id,\n      "slug": slug.current,\n      name,\n      university->{\n        _id,\n        "slug": slug.current,\n        name,\n      },\n    },\n  },\n  professors[]->{\n    _id,\n    dbId,\n    "slug": slug.current,\n    name,\n    title,\n  },\n\n  }\n}': OnboardingCatalogQueryResult
+    '\n*[_type == "studyTip" && length(title) > 0 && length(content) > 0] | order(_createdAt asc, _id asc) {\n  _id,\n  title,\n  content\n}\n': StudyTipsQueryResult
     '\n*[_id == $WEBSITE][0]{\n  "siteName": coalesce(siteName, websiteTitle, "Scriptr"),\n  "siteUrl": coalesce(siteUrl, ""),\n  "defaultSeoTitle": coalesce(defaultSeoTitle, websiteTitle, "Scriptr"),\n  "defaultSeoDescription": coalesce(defaultSeoDescription, ""),\n  "defaultKeywords": defaultKeywords[]\n}\n': WebsiteSeoQueryResult
     '\n*[_id == $WEBSITE][0]{\n  dtBackground->{...}\n}.dtBackground\n': StarCanvasQueryResult
   }
