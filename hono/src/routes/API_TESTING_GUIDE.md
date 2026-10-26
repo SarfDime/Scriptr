@@ -462,6 +462,18 @@ curl -s $BASE/ratings/subject/$SUBJ/stats | jq .
 # Rating type / target mismatch — expect 400
 curl -s -b cookies-student.txt -X POST $BASE/ratings/subject/$SUBJ -H "Content-Type: application/json" \
   -d '{"rating_type_id":"test_teaching","score":3}' | jq .
+
+# Unknown rating type — expect 400 (the type-check trigger runs before the FK)
+curl -s -b cookies-student.txt -X POST $BASE/ratings/professor/$PROF1 -H "Content-Type: application/json" \
+  -d '{"rating_type_id":"does_not_exist","score":3}' | jq .
+
+# Unknown professor — expect 409 (foreign key)
+curl -s -b cookies-student.txt -X POST $BASE/ratings/professor/00000000-0000-0000-0000-000000000000 -H "Content-Type: application/json" \
+  -d '{"rating_type_id":"test_teaching","score":3}' | jq .
+
+# Malformed / non-JSON body — expect 400, not 500
+curl -s -b cookies-student.txt -X POST $BASE/ratings/professor/$PROF1 -H "Content-Type: application/json" \
+  -d 'not json' | jq .
 ```
 
 ## Phase 8b — Achievements & notifications

@@ -1,4 +1,5 @@
 import { UI_STRINGS } from '@shared/config/strings'
+import type { ReactNode } from 'react'
 import { Box } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
 import { SectionHeader } from '@/components/common/SectionHeader'
@@ -11,7 +12,10 @@ import type { ProfessorDetail } from '@/types/academics/professor.types'
 type ProfessorContactCardProps = Pick<
   ProfessorDetail,
   'office' | 'telephone' | 'email' | 'website' | 'picture' | 'name'
->
+> & {
+  /** Extra content shown under the details, e.g. the ratings block. */
+  children?: ReactNode
+}
 
 export const ProfessorContactCard = ({
   office,
@@ -20,8 +24,9 @@ export const ProfessorContactCard = ({
   website,
   picture,
   name,
+  children,
 }: ProfessorContactCardProps) => {
-  if (!office && !telephone && !email && !website) return null
+  if (!office && !telephone && !email && !website && !children) return null
 
   return (
     <Card className='ui-stack ui-above'>
@@ -82,6 +87,8 @@ export const ProfessorContactCard = ({
           )}
         </Box>
       </Box>
+
+      {children}
     </Card>
   )
 }

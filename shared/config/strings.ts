@@ -152,7 +152,7 @@ export const UI_STRINGS = {
     visitWebsite: 'Visit website',
     location: 'Location',
     professor: {
-      contactDetails: 'Contact details',
+      contactDetails: 'About',
       office: 'Office',
       phone: 'Phone',
       email: 'Email',

@@ -17,7 +17,7 @@
 * Strict TypeScript, no `any`. SOLID, composition over inheritance.
 * DRY only at 2+ real usages — don't add abstractions speculatively.
 * Types live in `shared/types/` (preferred), `next/types/`, or `hono/src/types/`. In-file types only if <3 fields and strictly local. **Anything a `hono/` route imports must live under `shared/`, never `next/types/`.**
-* **User-facing strings** live in `shared/strings/<area>-strings.ts` (`comments-strings.ts`, `scripts-strings.ts`) or `UI_STRINGS` (`shared/config/strings.ts`) — never inline in components. Copy that depends on a value is a small function in the strings object. Check both before adding a string and reuse rather than duplicate.
+* **User-facing strings** live in `shared/strings/<area>-strings.ts` (`comments-strings.ts`, `scripts-strings.ts`, `ratings-strings.ts`) or `UI_STRINGS` (`shared/config/strings.ts`) — never inline in components. Copy that depends on a value is a small function in the strings object. Check both before adding a string and reuse rather than duplicate.
 * Academic entity types (faculty/study/subject/etc.) are derived from the Sanity TypeGen query-result type via `WithResolvedSanityData<...>` (`shared/types/sanity-transform.types.ts`), e.g. `NonNullable<WithResolvedSanityData<StudyDetailQueryResult>>`, not hand-written. Hand-write a type only where no query-result type exists.
 * NEVER hand-edit generated files: `shared/types/database.types.ts`, `shared/types/sanity.types.ts`, `sanity/schema.json`, `hono/src/types/supabase.ts`, `shared/config/api-routes.ts`.
   * Postgres schema change: `corepack pnpm gen:api-types`.

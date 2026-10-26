@@ -349,16 +349,29 @@ Priority work, scheduled right after the frontend gaps:
   on reload. `EMPTY_COMMENT_PAGE` (`lib/comments/empty-comment-page.ts`) is
   shared with the script detail loader. Resolves the old static-vs-dynamic
   open decision.
+- Ratings UI: a compact `RatingsSection` sits inside the professor page's
+  About card (renamed from "Contact details") and the subject page's
+  curriculum details card (`next/components/ratings/`, only when the entity has
+  a `dbId`). The ratings routes also gained typed responses, a `23503` → `409`
+  mapping, and non-JSON bodies now answer `400` instead of `500`. Criteria come
+  from `GET /ratings/types?target_type=` and aggregates from `.../stats`, both
+  read in the browser so the pages stay static (`useRatings`,
+  `lib/api/ratings-api.ts`). Signed-in viewers load `.../my-ratings` and
+  `GET /restrictions/me`; they can set, change and remove a score per
+  criterion (five-point radiogroup, arrow keys move focus, Enter/Space/click
+  selects). Guests see aggregates and a sign-in prompt. Restricted viewers
+  (known up front, or via a 403 on save) can remove but not create or change.
+  Strings live in `shared/strings/ratings-strings.ts`. No automated tests: the
+  repo has no test runner.
 
 ### Todo
 
 Product features:
 
-- **Ratings UI:** professor and subject rating interfaces.
-- **Notification settings:** preferences and the remaining user-facing
-  notification kinds/UX (moderator notifications are deferred).
 - **Admin UI:** academic sync and dependency tools, `professor_studies`, user
   restrictions, flag resolution/moderation, suspicious-download review.
+- **Notification settings:** preferences and the remaining user-facing
+  notification kinds/UX (moderator notifications are deferred).
 - **Profile experience (leftovers):** achievements (defer to the achievements
   todo) and the avatar upload itself. The avatar picker, `uploadMyAvatar` stub
   and `AVATAR_UPLOAD_ENABLED` flag exist but the picker is disabled
@@ -465,9 +478,7 @@ Deliberately postponed until everything else is done:
 
 ## Suggested Order
 
-1. Finish the main frontend gaps: ratings, notification settings, then the
-   admin/moderation UI
-   (admin-only). Profile editing is done; its leftovers are listed under the
+1. Finish the main frontend gaps: admin/moderation UI (admin-only), then the notification settings. Profile editing is done; its leftovers are listed under the
    frontend todo.
 2. Close frontend quality work: state coverage, inline strings, accessibility,
    toolbar behavior, root layout, toasts, polish, SEO/performance.

@@ -5,6 +5,7 @@ import { ProfessorContactCard } from '@/components/academics/professor/Professor
 import { SubjectsExplorer } from '@/components/academics/subject/SubjectsExplorer'
 import { BackLink } from '@/components/common/BackLink'
 import { PageLayout } from '@/components/layout/PageLayout'
+import { RatingsSection } from '@/components/ratings/RatingsSection'
 import { Divider } from '@/components/ui/Divider'
 import {
   createAcademicMetadata,
@@ -84,7 +85,15 @@ export default async function ProfessorDetailPage({
             website={professor.website}
             picture={professor.picture}
             name={professor.name}
-          />
+          >
+            {professor.dbId ? (
+              <RatingsSection
+                key={`ratings-${professor.dbId}`}
+                targetType='professor'
+                targetId={professor.dbId}
+              />
+            ) : null}
+          </ProfessorContactCard>
           <ProfessorAffiliationsCard faculties={professor.faculties} />
         </>
       }

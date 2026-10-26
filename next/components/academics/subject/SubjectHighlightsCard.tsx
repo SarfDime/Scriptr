@@ -1,4 +1,5 @@
 import Launch from '@sanity/icons/Launch'
+import type { ReactNode } from 'react'
 import { Box } from '@/components/common/Box'
 import { Text } from '@/components/typography/Text'
 import { Card } from '@/components/ui/Card'
@@ -15,7 +16,8 @@ export const SubjectHighlightsCard = ({
   credits,
   semester,
   syllabus,
-}: SubjectDetail) => {
+  children,
+}: SubjectDetail & { children?: ReactNode }) => {
   const color = getColorPalette({ type: 'seed', value: _id, variant: 'nb' })
   const colorBorder = getColorPalette({ type: 'seed', value: _id })
   return (
@@ -31,27 +33,32 @@ export const SubjectHighlightsCard = ({
         {semester && <AcademicBadge type='semester' value={semester} />}
       </Box>
 
+      {children}
+
+      <Divider className={colorBorder} />
+
       <Text className='ui-body text-fg-muted'>
         Use this course's shared scripts and syllabus to revisit key material in
         your own time.
       </Text>
 
-      <Divider className={colorBorder} />
-
       {syllabus && (
-        <DetailLink
-          href={syllabus}
-          label='Syllabus'
-          hideExternalIcon
-          className={color}
-          value={
-            <>
-              View Syllabus Document
-              <Launch />
-            </>
-          }
-          valueProps={{ className: 'flex gap-1 items-center' }}
-        />
+        <>
+          <Divider className={colorBorder} />
+          <DetailLink
+            href={syllabus}
+            label='Syllabus'
+            hideExternalIcon
+            className={color}
+            value={
+              <>
+                View Syllabus Document
+                <Launch />
+              </>
+            }
+            valueProps={{ className: 'flex gap-1 items-center' }}
+          />
+        </>
       )}
     </Card>
   )

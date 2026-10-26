@@ -1,4 +1,10 @@
-import { Hono } from 'hono'
+import { type Context, Hono } from 'hono'
+import type {
+  MyRating,
+  RatingStat,
+  RatingType,
+  RatingUpsertResponse,
+} from '../../../shared/types/ratings.types'
 import { isAdmin } from '../../../shared/utils/api.utils'
 import { databaseErrorResponse, requiredParam } from '../lib/request'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
@@ -39,25 +45,55 @@ function ratingErrorResponse(error: { code?: string; message: string }) {
   if (error.code === 'P0001') {
     return { body: { error: error.message }, status: 400 as const }
   }
+  if (error.code === '23503') {
+    return {
+      body: { error: 'The item being rated does not exist' },
+      status: 409 as const,
+    }
+  }
   return {
     body: { error: 'Unable to complete the rating request' },
     status: 500 as const,
   }
 }
 
+/** Parse a JSON object body. A missing, malformed or non-object body yields
+ * `{}`, so the caller's field validation answers 400 instead of a 500. */
+async function readJsonBody(c: Context<HonoEnv>) {
+  try {
+    const body: unknown = await c.req.json()
+    return body && typeof body === 'object' && !Array.isArray(body)
+      ? (body as Record<string, unknown>)
+      : {}
+  } catch {
+    return {}
+  }
+}
+
+/** Average and count per rating type. Only types with a rating appear. */
+function aggregateStats(
+  rows: Array<{ rating_type_id: string; score: number }>
+): Array<RatingStat> {
+  const byType: Record<string, { total: number; count: number }> = {}
+  for (const row of rows) {
+    const bucket = byType[row.rating_type_id] ?? { total: 0, count: 0 }
+    bucket.total += row.score
+    bucket.count += 1
+    byType[row.rating_type_id] = bucket
+  }
+
+  return Object.entries(byType).map(([ratingTypeId, { total, count }]) => ({
+    rating_type_id: ratingTypeId,
+    average: Math.round((total / count) * 100) / 100,
+    count,
+  }))
+}
+
+const ratings = new Hono<HonoEnv>()
+
 /* ---------------------------------------------------------------------- */
 /* Rating types — public read, admin-managed (is_admin() RLS)             */
 /* ---------------------------------------------------------------------- */
-
-/* ---------------------------------------------------------------------- */
-/* Professor ratings                                                      */
-/* ---------------------------------------------------------------------- */
-
-/* ---------------------------------------------------------------------- */
-/* Subject ratings                                                        */
-/* ---------------------------------------------------------------------- */
-
-const ratings = new Hono<HonoEnv>()
 
 /** List rating types, optionally filtered by target_type */
 ratings.get('/types', async (c) => {
@@ -81,7 +117,7 @@ ratings.get('/types', async (c) => {
 
   const { data, error } = await query
   if (error) return databaseErrorResponse(c, error)
-  return c.json(data)
+  return c.json<Array<RatingType>>(data)
 })
 
 /** Get a single rating type */
@@ -108,7 +144,7 @@ ratings.post('/types', authMiddleware, async (c) => {
     return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 
-  const { id, target_type, label } = await c.req.json()
+  const { id, target_type, label } = await readJsonBody(c)
 
   if (
     typeof id !== 'string' ||
@@ -153,7 +189,7 @@ ratings.patch('/types/:id', authMiddleware, async (c) => {
     return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 
-  const { label } = await c.req.json()
+  const { label } = await readJsonBody(c)
 
   if (typeof label !== 'string' || label.length < 2 || label.length > 60) {
     return c.json({ error: 'label must be between 2 and 60 characters' }, 400)
@@ -198,6 +234,10 @@ ratings.delete('/types/:id', authMiddleware, async (c) => {
   })
 })
 
+/* ---------------------------------------------------------------------- */
+/* Professor ratings                                                      */
+/* ---------------------------------------------------------------------- */
+
 /** List all ratings for a professor */
 ratings.get('/professor/:professorId', async (c) => {
   const professorId = requiredParam(c, 'professorId')
@@ -224,24 +264,7 @@ ratings.get('/professor/:professorId/stats', async (c) => {
     .eq('professor_id', professorId)
 
   if (error) return databaseErrorResponse(c, error)
-
-  const byType: Record<string, { total: number; count: number }> = {}
-  for (const row of data ?? []) {
-    const bucket = byType[row.rating_type_id] ?? { total: 0, count: 0 }
-    bucket.total += row.score
-    bucket.count += 1
-    byType[row.rating_type_id] = bucket
-  }
-
-  const stats = Object.entries(byType).map(
-    ([ratingTypeId, { total, count }]) => ({
-      rating_type_id: ratingTypeId,
-      average: Math.round((total / count) * 100) / 100,
-      count,
-    })
-  )
-
-  return c.json(stats)
+  return c.json<Array<RatingStat>>(aggregateStats(data ?? []))
 })
 
 /** Get the current user's ratings for a professor */
@@ -257,7 +280,7 @@ ratings.get('/professor/:professorId/my-ratings', authMiddleware, async (c) => {
     .eq('user_id', user.id)
 
   if (error) return databaseErrorResponse(c, error)
-  return c.json(data)
+  return c.json<Array<MyRating>>(data)
 })
 
 /** Add or change the current user's rating of a professor for a given rating type */
@@ -266,7 +289,7 @@ ratings.post('/professor/:professorId', authMiddleware, async (c) => {
   const professorId = requiredParam(c, 'professorId')
   const supabase = createSupabaseClient(c)
 
-  const { rating_type_id, score } = await c.req.json()
+  const { rating_type_id, score } = await readJsonBody(c)
 
   if (typeof rating_type_id !== 'string' || !isRatingScore(score)) {
     return c.json(
@@ -289,7 +312,7 @@ ratings.post('/professor/:professorId', authMiddleware, async (c) => {
     return c.json(body, status)
   }
 
-  return c.json({ success: true, rating: data })
+  return c.json<RatingUpsertResponse>({ success: true, rating: data })
 })
 
 /** Remove the current user's rating of a professor for a given rating type */
@@ -313,6 +336,10 @@ ratings.delete(
     return c.json({ success: true })
   }
 )
+
+/* ---------------------------------------------------------------------- */
+/* Subject ratings                                                        */
+/* ---------------------------------------------------------------------- */
 
 /** List all ratings for a subject */
 ratings.get('/subject/:subjectId', async (c) => {
@@ -340,24 +367,7 @@ ratings.get('/subject/:subjectId/stats', async (c) => {
     .eq('subject_id', subjectId)
 
   if (error) return databaseErrorResponse(c, error)
-
-  const byType: Record<string, { total: number; count: number }> = {}
-  for (const row of data ?? []) {
-    const bucket = byType[row.rating_type_id] ?? { total: 0, count: 0 }
-    bucket.total += row.score
-    bucket.count += 1
-    byType[row.rating_type_id] = bucket
-  }
-
-  const stats = Object.entries(byType).map(
-    ([ratingTypeId, { total, count }]) => ({
-      rating_type_id: ratingTypeId,
-      average: Math.round((total / count) * 100) / 100,
-      count,
-    })
-  )
-
-  return c.json(stats)
+  return c.json<Array<RatingStat>>(aggregateStats(data ?? []))
 })
 
 /** Get the current user's ratings for a subject */
@@ -373,7 +383,7 @@ ratings.get('/subject/:subjectId/my-ratings', authMiddleware, async (c) => {
     .eq('user_id', user.id)
 
   if (error) return databaseErrorResponse(c, error)
-  return c.json(data)
+  return c.json<Array<MyRating>>(data)
 })
 
 /** Add or change the current user's rating of a subject for a given rating type */
@@ -382,7 +392,7 @@ ratings.post('/subject/:subjectId', authMiddleware, async (c) => {
   const subjectId = requiredParam(c, 'subjectId')
   const supabase = createSupabaseClient(c)
 
-  const { rating_type_id, score } = await c.req.json()
+  const { rating_type_id, score } = await readJsonBody(c)
 
   if (typeof rating_type_id !== 'string' || !isRatingScore(score)) {
     return c.json(
@@ -405,7 +415,7 @@ ratings.post('/subject/:subjectId', authMiddleware, async (c) => {
     return c.json(body, status)
   }
 
-  return c.json({ success: true, rating: data })
+  return c.json<RatingUpsertResponse>({ success: true, rating: data })
 })
 
 /** Remove the current user's rating of a subject for a given rating type */

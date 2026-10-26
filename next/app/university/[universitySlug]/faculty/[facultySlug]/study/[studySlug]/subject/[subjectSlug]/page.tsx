@@ -4,6 +4,7 @@ import { SubjectOverviewCard } from '@/components/academics/subject/SubjectOverv
 import { BackLink } from '@/components/common/BackLink'
 import { Box } from '@/components/common/Box'
 import { PageLayout } from '@/components/layout/PageLayout'
+import { RatingsSection } from '@/components/ratings/RatingsSection'
 import {
   createAcademicMetadata,
   createAcademicStaticParams,
@@ -94,7 +95,15 @@ export default async function SubjectDetailPage({
       {/* Hero: overview + highlights */}
       <Box className='grid gap-4 lg:grid-cols-[1.35fr_0.65fr]'>
         <SubjectOverviewCard {...subject} />
-        <SubjectHighlightsCard {...subject} />
+        <SubjectHighlightsCard {...subject}>
+          {subject.dbId ? (
+            <RatingsSection
+              key={`ratings-${subject.dbId}`}
+              targetType='subject'
+              targetId={subject.dbId}
+            />
+          ) : null}
+        </SubjectHighlightsCard>
       </Box>
 
       <ScriptsSection scripts={scripts} parentSubject={subject} />

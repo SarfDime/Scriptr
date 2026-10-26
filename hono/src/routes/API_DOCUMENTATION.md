@@ -464,6 +464,14 @@ internal secret involved):
 | `POST /ratings/{professor,subject}/:id`                 | Required — `{ rating_type_id, score (1–5) }`. Rejected if restricted, or if the type doesn't match the target. |
 | `DELETE /ratings/{professor,subject}/:id/:ratingTypeId` | Required — not restriction-checked                                                                             |
 
+Responses for the types, stats, my-ratings and upsert endpoints are typed in
+`shared/types/ratings.types.ts`. Error mapping on `POST`: `403` (restricted),
+`409` (`23503`: the professor or subject being rated doesn't exist), `400`
+(missing/invalid/non-JSON body, or a rating type that doesn't exist or doesn't
+match the target — the DB trigger raises `P0001` before the foreign key is checked).
+Stats are aggregated in the route from the raw rows, so only types with at
+least one rating appear.
+
 ---
 
 ## Notifications
