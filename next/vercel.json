@@ -4,13 +4,9 @@
   "buildCommand": "cd .. && corepack pnpm --filter scriptr-next build",
   "git": {
     "deploymentEnabled": {
+      "**": false,
       "main": true,
-      "staging": true,
-      "feat-*": true,
-      "feat/**": true,
-      "fix-*": true,
-      "fix/**": true,
-      "**": false
+      "staging": true
     }
   }
 }

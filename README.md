@@ -11,6 +11,7 @@ workspace containing a Hono API, a Next.js frontend, and a Sanity Studio.
 | `next/`   | Frontend and shared UI components                     |
 | `sanity/` | Sanity Studio and schema tooling                      |
 | `shared/` | Shared types, configuration, strings, and utilities   |
+| `optimizer/` | File optimizer service (see its README)             |
 
 ## Requirements
 
@@ -63,6 +64,7 @@ corepack pnpm gen:api-types      # Generate Supabase API types
 corepack pnpm gen:api-endpoints  # Regenerate shared/config/api-routes.ts from the live route tree
 corepack pnpm check-types        # Type-check all workspaces
 corepack pnpm check-types:sanity # Type-check Sanity only
+corepack pnpm test              # Run the API's unit tests (node:test)
 corepack pnpm format             # Apply Biome formatting and safe fixes (replaces a separate lint step)
 corepack pnpm sanity:typegen     # Extract the Sanity schema and generate types
 corepack pnpm sanity:schema      # Extract schema.json only

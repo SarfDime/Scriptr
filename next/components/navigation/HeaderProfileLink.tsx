@@ -44,12 +44,12 @@ export const HeaderProfileLink = () => {
           profile?.avatar_url
             ? {
                 src: profile.avatar_url,
-                className: 'h-8 w-8 rounded-full shadow-sm',
+                className: 'h-6 w-6 rounded-full shadow-sm',
               }
             : undefined
         }
         initialsIconProps={{
-          className: 'h-8 w-8 rounded-full shadow-sm p-1 text-sm',
+          className: 'h-6 w-6 rounded-full shadow-sm p-1 text-sm',
         }}
       />
     </NextLink>

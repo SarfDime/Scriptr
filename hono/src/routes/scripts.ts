@@ -31,6 +31,8 @@ import {
 import { honoLog } from '../lib/logger'
 import { deleteR2Files } from '../lib/r2'
 import { databaseErrorResponse, requiredParam } from '../lib/request'
+import { verifyReportedFiles } from '../lib/script-files'
+import { isOwnUploadKey } from '../lib/storage-scope'
 import {
   authMiddleware,
   createInternalSupabaseClient,
@@ -606,8 +608,21 @@ scripts.post(
       professorId,
       examSession,
       additionalReading,
-      files,
+      files: reportedFiles,
     } = c.req.valid('json')
+
+    // The client's file list is verified, not trusted: in the caller's own
+    // scope, really in R2, and stored with the size R2 reports.
+    const verified = await verifyReportedFiles(
+      c,
+      user.id,
+      subjectId,
+      reportedFiles
+    )
+    if (!verified.ok) {
+      return c.json({ error: verified.error }, verified.status)
+    }
+    const files = verified.files
 
     const { data, error } = await supabase
       .from('scripts')
@@ -723,8 +738,8 @@ scripts.post(
   }
 )
 
-/** POST /scripts/:id/files body: files already uploaded through
- * POST /file-ops/upload. */
+/** POST /scripts/:id/files body: files already stored through
+ * POST /file-ops/finalize. */
 const attachScriptFilesSchema = z.object({
   files: z
     .array(
@@ -751,16 +766,20 @@ scripts.post(
   async (c) => {
     const user = c.get('user')
     const scriptId = requiredParam(c, 'id')
-    const { files } = c.req.valid('json')
+    const { files: reportedFiles } = c.req.valid('json')
     const supabase = createSupabaseClient(c)
 
     // The files are already in R2 by now, so every failure below has to take
-    // them back out again.
+    // them back out again. Only objects under the caller's own user id are ever
+    // deleted: the keys come from the client, and this runs on failure paths
+    // (script missing, not the author) before they have been checked at all.
     const discardUploads = async () => {
       try {
         await deleteR2Files(
           c,
-          files.map(({ bucket, fileKey }) => ({ bucket, fileKey }))
+          reportedFiles
+            .filter(({ fileKey }) => isOwnUploadKey(fileKey, user.id))
+            .map(({ bucket, fileKey }) => ({ bucket, fileKey }))
         )
       } catch (cleanupError) {
         honoLog({
@@ -792,6 +811,21 @@ scripts.post(
         403
       )
     }
+
+    // Same checks as creating a script: in the caller's own scope for this
+    // script's subject, really in R2, and stored with the size R2 reports. An
+    // admin attaching to someone else's script uploaded under their own id, so
+    // the caller's id is the right one here too.
+    const verified = await verifyReportedFiles(
+      c,
+      user.id,
+      script.subject_id,
+      reportedFiles
+    )
+    if (!verified.ok) {
+      return c.json({ error: verified.error }, verified.status)
+    }
+    const files = verified.files
 
     const { data: lastFile } = await supabase
       .from('script_files')

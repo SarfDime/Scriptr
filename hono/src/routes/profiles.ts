@@ -1,5 +1,18 @@
+import { zValidator } from '@hono/zod-validator'
+import {
+  AVATAR_FILE_TYPES,
+  AVATAR_MAX_STORED_BYTES,
+  AVATAR_MAX_UPLOAD_BYTES,
+} from '@shared/config/avatar'
+import { UI_STRINGS } from '@shared/config/strings'
+import type {
+  AvatarUploadResponse,
+  AvatarUploadUrlResponse,
+} from '@shared/types/avatar.types'
+import { getFileExtension, isFileType } from '@shared/utils/api.utils'
 import type { Context } from 'hono'
 import { Hono } from 'hono'
+import { z } from 'zod'
 import { profileMutationTags } from '../../../shared/config/cache-tags'
 import type {
   ProfileUpdateConflictResponse,
@@ -10,9 +23,22 @@ import {
   validateFullName,
   validateUsername,
 } from '../../../shared/utils/api.utils'
+import {
+  avatarKeyBase,
+  buildAvatarUrl,
+  removeAvatarObject,
+} from '../lib/avatar'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
+import { optimizeStagedFile } from '../lib/file-optimizer'
 import { honoLog } from '../lib/logger'
+import { deleteR2Files } from '../lib/r2'
+import { createRateLimiter } from '../lib/rate-limit'
 import { databaseErrorResponse, requiredParam } from '../lib/request'
+import {
+  createStagedUpload,
+  failureResponse,
+  parseStagingKey,
+} from '../lib/staging'
 import {
   authMiddleware,
   createInternalSupabaseClient,
@@ -495,9 +521,181 @@ profiles.delete('/me', authMiddleware, async (c) => {
   const { error } = await supabase.from('profiles').delete().eq('id', user.id)
 
   if (error) return databaseErrorResponse(c, error)
+  await removeAvatarObject(c, user.id)
   await revalidateCacheTags(c.env, profileMutationTags(user.id))
   return c.json({ success: true })
 })
+
+const { fileErrors } = UI_STRINGS.scripts.uploadModal
+const avatarStrings = UI_STRINGS.profile.edit
+
+// One avatar change is two calls (`upload-url` and the upload itself).
+const isAvatarUploadLimited = createRateLimiter({
+  limit: 20,
+  windowMs: 10 * 60 * 1000,
+})
+
+const avatarUploadUrlSchema = z
+  .object({
+    name: z.string().min(1).max(255),
+    size: z.number().int().positive(),
+  })
+  .transform((file, ctx) => {
+    const extension = getFileExtension(file.name)
+    if (!isFileType(extension) || !AVATAR_FILE_TYPES.includes(extension)) {
+      ctx.addIssue({ code: 'custom', message: avatarStrings.avatarInvalidType })
+      return z.NEVER
+    }
+    if (file.size > AVATAR_MAX_UPLOAD_BYTES) {
+      ctx.addIssue({
+        code: 'custom',
+        message: avatarStrings.avatarTooLarge(
+          AVATAR_MAX_UPLOAD_BYTES / (1024 * 1024)
+        ),
+      })
+      return z.NEVER
+    }
+    return { fileType: extension, size: file.size }
+  })
+
+const avatarUploadSchema = z.object({ stagingKey: z.string().min(1) })
+
+/**
+ * Change the avatar, step 1 of 2: a presigned PUT into staging, so the photo
+ * goes from the browser straight to R2 (a phone photo is over Vercel's 4.5 MB
+ * request limit). Then call `POST /profiles/me/avatar`.
+ */
+profiles.post(
+  '/me/avatar/upload-url',
+  authMiddleware,
+  zValidator('json', avatarUploadUrlSchema, (result, c) => {
+    if (!result.success) {
+      return c.json(
+        {
+          error: result.error.issues[0]?.message ?? fileErrors.invalidRequest,
+        },
+        400
+      )
+    }
+    return
+  }),
+  async (c) => {
+    const user = c.get('user')
+    if (isAvatarUploadLimited(user.id)) {
+      return c.json({ error: fileErrors.rateLimited }, 429)
+    }
+
+    try {
+      const upload = await createStagedUpload(c, user.id, c.req.valid('json'))
+      return c.json<AvatarUploadUrlResponse>({ success: true, upload })
+    } catch (error) {
+      honoLog({
+        logLevel: 'error',
+        message: 'Failed to create an avatar upload URL',
+        error,
+      })
+      return c.json({ error: fileErrors.stagingFailed }, 500)
+    }
+  }
+)
+
+/**
+ * Change the avatar, step 2 of 2: crops, shrinks and converts the uploaded photo
+ * (the optimizer's avatar profile) and stores it as `avatars/{userId}.webp` in
+ * the script bucket, overwriting the previous picture, then points
+ * `profiles.avatar_url` at its public URL.
+ *
+ * `avatar_url` is written with the internal client on purpose: the URL is shown
+ * to everyone on cached pages, so users must not be able to set it to any value
+ * themselves, and the column's direct UPDATE grant is revoked for that reason.
+ * The caller's own row is the only one written, picked from the session.
+ */
+profiles.post(
+  '/me/avatar',
+  authMiddleware,
+  zValidator('json', avatarUploadSchema, (result, c) => {
+    if (!result.success) {
+      return c.json({ error: fileErrors.invalidRequest }, 400)
+    }
+    return
+  }),
+  async (c) => {
+    const user = c.get('user')
+    if (isAvatarUploadLimited(user.id)) {
+      return c.json({ error: fileErrors.rateLimited }, 429)
+    }
+
+    // `R2_PUBLIC_URL` is the bucket's public domain (`R2_BUCKET` itself is what
+    // avatars are stored in), so without it there is no URL to point a profile at.
+    const { R2_PUBLIC_URL: publicUrl } = c.env
+    if (!publicUrl) {
+      honoLog({
+        logLevel: 'error',
+        message: 'Avatar uploads are not configured',
+        error: new Error('R2_PUBLIC_URL must be set'),
+      })
+      return c.json({ error: avatarStrings.avatarUploadUnavailable }, 503)
+    }
+
+    const { stagingKey } = c.req.valid('json')
+    const declaredType = parseStagingKey(stagingKey, user.id)
+    if (!(declaredType && AVATAR_FILE_TYPES.includes(declaredType))) {
+      return c.json({ error: fileErrors.unknownUpload }, 400)
+    }
+
+    let result: Awaited<ReturnType<typeof optimizeStagedFile>>
+    try {
+      result = await optimizeStagedFile(c, {
+        stagingBucket: c.env.R2_BUCKET,
+        stagingKey,
+        destinationBucket: c.env.R2_BUCKET,
+        destinationKeyBase: avatarKeyBase(user.id),
+        declaredType,
+        purpose: 'avatar',
+      })
+    } catch (error) {
+      honoLog({
+        logLevel: 'error',
+        message: 'Failed to optimize an avatar',
+        error,
+      })
+      result = { ok: false, reason: 'failed' }
+    }
+
+    if (!result.ok) {
+      // Nothing was written over the old avatar, so only the staged copy is
+      // left to remove.
+      await deleteR2Files(c, [
+        { bucket: c.env.R2_BUCKET, fileKey: stagingKey },
+      ]).catch(() => undefined)
+      const { status, message } = failureResponse(
+        result,
+        AVATAR_MAX_STORED_BYTES
+      )
+      return c.json({ error: message }, status)
+    }
+
+    // A new version, because the object key is the same one on every upload.
+    const avatarUrl = buildAvatarUrl(
+      publicUrl,
+      user.id,
+      Date.now().toString(36)
+    )
+    const { error } = await createInternalSupabaseClient(c)
+      .from('profiles')
+      .update({ avatar_url: avatarUrl })
+      .eq('id', user.id)
+    if (error) {
+      // The stored object is not removed: it has already replaced the previous
+      // picture, and deleting it would break the old URL the profile still
+      // holds. The next successful upload rewrites it.
+      return databaseErrorResponse(c, error)
+    }
+
+    await revalidateCacheTags(c.env, profileMutationTags(user.id))
+    return c.json<AvatarUploadResponse>({ success: true, avatarUrl })
+  }
+)
 
 /** Get a specific user profile by username (public — same shape as /:id) */
 profiles.get('/username/:username', async (c) => {
@@ -610,6 +808,7 @@ profiles.delete('/:id', authMiddleware, async (c) => {
   const { error } = await supabase.from('profiles').delete().eq('id', targetId)
 
   if (error) return databaseErrorResponse(c, error)
+  await removeAvatarObject(c, targetId)
   await revalidateCacheTags(c.env, profileMutationTags(targetId))
   return c.json({ success: true })
 })

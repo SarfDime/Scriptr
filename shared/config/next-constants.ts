@@ -6,6 +6,11 @@ import { WarningOutlineIcon } from '@sanity/icons/WarningOutline'
 export const DEBOUNCE_TIME = 500
 export const INPUT_DEBOUNCE_TIME = 1_350
 export const INPUT_MAX_LENGTH = 40
+
+/** Finalizing an upload runs the optimizer, which can take far longer than an
+ * ordinary API call. Keep it above the API's own optimizer timeout and below
+ * the server's function limit (300 s on Vercel with Fluid compute). */
+export const UPLOAD_FINALIZE_TIMEOUT_MS = 120_000
 export const BOT_ACTIVITY_THRESHOLD = 0.5
 export const IMAGE_QUALITY = {
   MINIMUM: 65,

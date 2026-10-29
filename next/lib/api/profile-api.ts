@@ -1,6 +1,12 @@
 import { apiRoutes } from '@shared/config/api-routes'
 import { PROFILE_CACHE_TAGS } from '@shared/config/cache-tags'
-import { UI_STRINGS } from '@shared/config/strings'
+import { UPLOAD_FINALIZE_TIMEOUT_MS } from '@shared/config/next-constants'
+import type {
+  AvatarUploadRequest,
+  AvatarUploadResponse,
+  AvatarUploadUrlRequest,
+  AvatarUploadUrlResponse,
+} from '@shared/types/avatar.types'
 import type {
   MyProfileResponse,
   ProfileStats,
@@ -9,7 +15,8 @@ import type {
   ProfileUpdateResponse,
   PublicProfileResponse,
 } from '@shared/types/profile.types'
-import { ApiError, apiFetchPublicRead, apiFetchRequired } from './next-api'
+import { apiFetchPublicRead, apiFetchRequired } from './next-api'
+import { putToStaging, toUserFacingUploadError } from './upload'
 
 /**
  * Session-scoped, like getSession/getMyScriptVote: never cached. Two call
@@ -78,15 +85,43 @@ export const updateMyProfile = (input: ProfileUpdateRequest) =>
   })
 
 /**
- * TODO(r2-optimization): avatar upload is intentionally not implemented.
- * It lands with the R2 optimization pipeline (PROGRESS.md, "R2
- * improvements"): a Hono route that optimizes and stores the image in R2
- * and writes `profiles.avatar_url`, called from here with the file as
- * FormData. Until then this always rejects, and the edit dialog keeps the
- * picker disabled behind AVATAR_UPLOAD_ENABLED (lib/profile-avatar.ts).
+ * Changes the signed-in user's avatar with the same direct-to-R2 flow as a
+ * script file: a presigned PUT straight to R2 (so a phone photo never passes
+ * through Vercel's request limit), then one call that crops, shrinks and
+ * stores it as WebP and points `profiles.avatar_url` at the new object.
+ * Resolves to the new stable public URL. Rejections carry messages written for
+ * the user, so callers show them as they are.
  */
-export const uploadMyAvatar = async (_file: File): Promise<never> => {
-  throw new ApiError(UI_STRINGS.profile.edit.avatarUploadUnavailable, 501)
+export const uploadMyAvatar = async (file: File): Promise<string> => {
+  const urlsRequest: AvatarUploadUrlRequest = {
+    name: file.name,
+    size: file.size,
+  }
+  const { upload } = await apiFetchRequired<AvatarUploadUrlResponse>(
+    apiRoutes.profiles.meAvatarUploadUrl,
+    { method: 'POST', body: urlsRequest }
+  ).catch((error: unknown) => {
+    throw toUserFacingUploadError(error)
+  })
+
+  await putToStaging(upload, file)
+
+  // Cropping and converting can take a moment, like finalizing a script file.
+  const uploadRequest: AvatarUploadRequest = {
+    stagingKey: upload.stagingKey,
+  }
+  const { avatarUrl } = await apiFetchRequired<AvatarUploadResponse>(
+    apiRoutes.profiles.meAvatar,
+    {
+      method: 'POST',
+      body: uploadRequest,
+      timeoutMs: UPLOAD_FINALIZE_TIMEOUT_MS,
+    }
+  ).catch((error: unknown) => {
+    throw toUserFacingUploadError(error)
+  })
+
+  return avatarUrl
 }
 
 /** Idempotent add — session client, profile_id = auth.uid() RLS. */

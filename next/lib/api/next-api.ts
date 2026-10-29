@@ -6,6 +6,9 @@ import { nextLogs } from '@/lib/logger'
 export type ApiFetchOptions = Omit<RequestInit, 'body'> & {
   /** Accepts a raw object for JSON, FormData for files, or standard BodyInit */
   body?: Record<string, unknown> | FormData | BodyInit | null
+  /** Overrides the default timeout, for requests that legitimately take longer
+   * (e.g. finalizing an upload). */
+  timeoutMs?: number
 }
 
 const API_REQUEST_TIMEOUT_MS = 10_000
@@ -19,12 +22,21 @@ export class ApiError extends Error {
   status: number
   /** The `field` an error body names (e.g. a register `409`), when present. */
   field: string | undefined
+  /** The whole JSON error body, for details beyond the message (for example
+   * which file an upload rejection is about). */
+  data: Record<string, unknown> | undefined
 
-  constructor(message: string, status: number, field?: string) {
+  constructor(
+    message: string,
+    status: number,
+    field?: string,
+    data?: Record<string, unknown>
+  ) {
     super(message)
     this.name = 'ApiError'
     this.status = status
     this.field = field
+    this.data = data
   }
 }
 
@@ -35,7 +47,12 @@ const performApiFetch = async <T>(
   options: ApiFetchOptions = {}
 ): Promise<ApiFetchResult<T>> => {
   try {
-    const { body, headers: customHeaders, ...restOptions } = options
+    const {
+      body,
+      headers: customHeaders,
+      timeoutMs = API_REQUEST_TIMEOUT_MS,
+      ...restOptions
+    } = options
     const headers = new Headers(customHeaders)
     let fetchBody: BodyInit | null | undefined
 
@@ -51,7 +68,7 @@ const performApiFetch = async <T>(
     }
 
     const url = generatePath({ segments: [API_URL, path] })
-    const timeoutSignal = AbortSignal.timeout(API_REQUEST_TIMEOUT_MS)
+    const timeoutSignal = AbortSignal.timeout(timeoutMs)
     const signal = restOptions.signal
       ? AbortSignal.any([restOptions.signal, timeoutSignal])
       : timeoutSignal
@@ -67,15 +84,20 @@ const performApiFetch = async <T>(
     if (!response.ok) {
       let errorMessage = `Request failed with status ${response.status}`
       let errorField: string | undefined
+      let errorBody: Record<string, unknown> | undefined
       try {
         const errorData = await response.json()
         errorMessage = errorData?.error ?? errorData?.message ?? errorMessage
         errorField =
           typeof errorData?.field === 'string' ? errorData.field : undefined
+        errorBody =
+          typeof errorData === 'object' && errorData !== null
+            ? (errorData as Record<string, unknown>)
+            : undefined
       } catch {
         // Preserve the status when an upstream proxy returns HTML.
       }
-      throw new ApiError(errorMessage, response.status, errorField)
+      throw new ApiError(errorMessage, response.status, errorField, errorBody)
     }
 
     if (response.status === 204) {

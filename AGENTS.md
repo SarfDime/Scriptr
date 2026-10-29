@@ -3,6 +3,7 @@
 * `hono/`: Hono API, Supabase, R2 file operations, API docs.
 * `next/`: Next.js frontend, shared UI components.
 * `sanity/`: Sanity Studio, schema tooling.
+* `optimizer/`: File optimizer service (sharp, Ghostscript) called by the API from `/file-ops/finalize`.
 * `shared/`: Shared types and config.
 
 **Read First**
@@ -26,7 +27,7 @@
   * After any schema change, grep/remove dead references across `hono/`, `next/`, and `sanity/`, then run a full `corepack pnpm check-types`. A schema change isn't done until types are regenerated and everything typechecks.
 * Secrets only in `.env`, never in docs/fixtures/commits.
 * Validate the smallest affected workspace first; implement and verify locally, don't stop at a plan. Keep changes scoped — no unrelated refactors riding along.
-* Commands (from root): `corepack pnpm dev:{hono|next|sanity}`, `corepack pnpm check-types` (`--filter <package>` to scope), `corepack pnpm format` (Biome; this replaces manual lint, don't run a separate linter).
+* Commands (from root): `corepack pnpm dev:{hono|next|sanity}`, `corepack pnpm check-types` (`--filter <package>` to scope), `corepack pnpm test` (API unit tests via `node:test`, written as `*.test.ts` beside the code), `corepack pnpm format` (Biome; this replaces manual lint, don't run a separate linter).
 * Docs hygiene: when a feature or route changes, update `PROGRESS.md` (status), and `ARCHITECTURE.md` if the design changed. Doc filenames are uppercase (`ARCHITECTURE.md`, `PROGRESS.md`).
 
 **Database & Supabase**

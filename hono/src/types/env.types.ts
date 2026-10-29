@@ -21,6 +21,10 @@ export type Env = {
   R2_PUBLIC_URL: string
   NEXT_REVALIDATE_URL?: string
   REVALIDATE_SECRET?: string
+  /** Base URL and shared secret of the file optimizer service. Both or neither:
+   * with neither set, the in-process stand-in runs. */
+  OPTIMIZER_URL?: string
+  OPTIMIZER_SECRET?: string
 }
 
 // Extend User type with additional custom properties

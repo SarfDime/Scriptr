@@ -134,7 +134,12 @@ function generateApiRoutes() {
   output += `} as const;\n\n`
   output += `export type ApiRoutes = typeof apiRoutes;\n`
 
-  const outputPath = path.join('../shared/config/api-routes.ts')
+  // Resolved from this file, not the cwd: `pnpm --filter @scriptr/api exec`
+  // runs scripts from `hono/`, not the repo root.
+  const outputPath = path.resolve(
+    import.meta.dirname,
+    '../../shared/config/api-routes.ts'
+  )
   fs.writeFileSync(outputPath, output)
   // biome-ignore lint/suspicious/noConsole: console log for successful generation
   console.log(`✅ Generated API routes successfully to ${outputPath}`)

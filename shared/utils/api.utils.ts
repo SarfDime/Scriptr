@@ -1,5 +1,10 @@
 import type { AcademicEntityType } from '../config/api'
 import { type ApiEndpoint, apiRoutes } from '../config/api-routes'
+import {
+  MAX_STORED_FILE_BYTES,
+  MAX_UPLOAD_FILE_BYTES,
+  OPTIMIZABLE_FILE_TYPES,
+} from '../config/shared-constants'
 import type {
   FileType,
   FlagTargetType,
@@ -144,10 +149,20 @@ const isFileType = (value: unknown): value is FileType =>
   value === 'png' ||
   value === 'webp' ||
   value === 'md' ||
-  value === 'doc' ||
   value === 'docx' ||
-  value === 'xls' ||
   value === 'xlsx'
+
+/** Lowercased text after the last dot, or the whole name when there is none
+ * (which `isFileType` then rejects). */
+const getFileExtension = (filename: string): string =>
+  filename.split('.').pop()?.toLowerCase() ?? ''
+
+/** Largest file a user may upload. Types the optimizer can shrink may exceed
+ * the stored cap; every other type has to fit it as uploaded. */
+const getMaxUploadBytes = (fileType: FileType): number =>
+  OPTIMIZABLE_FILE_TYPES.includes(fileType)
+    ? MAX_UPLOAD_FILE_BYTES
+    : MAX_STORED_FILE_BYTES
 
 const isScriptFileInput = (value: unknown): value is ScriptFileInput => {
   return (
@@ -214,6 +229,8 @@ const apiUrl = (path: ApiEndpoint, base: string = 'http://localhost:8787') => {
 export {
   apiUrl,
   getDatabaseAcademicEndpoints,
+  getFileExtension,
+  getMaxUploadBytes,
   isAdmin,
   isDisposableEmail,
   isFileType,

@@ -3,6 +3,7 @@ packages:
   - hono
   - sanity
   - shared
+  - optimizer
 nodeLinker: isolated
 allowBuilds:
   esbuild: true

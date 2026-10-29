@@ -60,7 +60,8 @@ call before anyone builds it).
   data (e.g. a deleted script) on the first request after a mutation.
 - `script_files.file_name` (nullable, 1 to 255 chars; migration
   `20261018131652_add_script_files_file_name.sql`) keeps the uploaded name.
-  `POST /file-ops/upload` returns it lowercased, accent-stripped, kebab-cased
+  `POST /file-ops/finalize` returns it (derived from the original file name the
+  client sends with each staging key) lowercased, accent-stripped, kebab-cased
   and without its extension (`toStoredFileName` in
   `shared/utils/file-name.utils.ts`), or `null` when nothing usable is left;
   `isScriptFileInput` rejects any other shape. Files from before this have no
@@ -116,19 +117,163 @@ moderator notifications are deferred to the end (see **Deferred (Do Last)**).
 - Objects are stored with `Cache-Control: public, max-age=31536000, immutable`
   (safe: every key contains a random UUID and is never overwritten;
   [`hono/src/routes/file-ops.ts`](hono/src/routes/file-ops.ts)).
+- `R2_ENDPOINT` had the bucket appended (`…/scriptr`), which made the SDK store
+  every object under a `scriptr/` prefix while `script_files.file_url` kept the
+  unprefixed key — so public URLs and the `staging/` lifecycle rule never
+  matched. Fixed in `hono/.env` (bare host) and the 7 existing objects were
+  re-keyed: copied to their unprefixed keys with size and content type
+  verified, old keys deleted, then read back through a signed URL. The Vercel
+  project needs the same check — if it holds objects written under the prefix,
+  re-key them before changing that env, or they become unreachable.
+- Direct-to-R2 upload flow: `POST /file-ops/upload-urls` → browser PUT to a
+  `staging/` prefix → `POST /file-ops/finalize`, so file bytes bypass Vercel's
+  4.5 MB body limit. Stored files are capped at 3.5 MB (aiming for 3 MB), content is checked
+  against the real file signature, and finalize is all-or-nothing. The
+  optimizer is a separate service (an in-process stand-in that only validates
+  runs when none is configured) behind
+  the contract in
+  [`file-upload.types.ts`](shared/types/file-upload.types.ts).
+- Legacy `.doc`/`.xls` uploads dropped (code and migration
+  `20261016120000_drop_legacy_office_file_types.sql`).
+- `POST /scripts` only accepts files whose bucket and key lie inside the
+  caller's own storage scope (previously it trusted client-supplied keys and
+  deleted them on failure).
+- Shared in-memory rate limiter
+  ([`rate-limit.ts`](hono/src/lib/rate-limit.ts)) now used by comments, auth, and
+  uploads (`upload-urls` 30 and `finalize` 15 per 10 minutes per user).
+- API side of the optimizer service is built: an HMAC-signed HTTP client that
+  fails closed with `503`, selected by `OPTIMIZER_URL`/`OPTIMIZER_SECRET`, with
+  the in-process stand-in used when neither is set. Shrinkable types may be
+  uploaded up to 20 MB (the stand-in rejects anything over 3.5 MB at finalize).
+  The web client waits up to 120 s for finalize.
+- `POST /scripts` verifies its file list instead of trusting it: scope,
+  existence in R2, and the size R2 reports (an oversize file is rejected with
+  `413` and removed).
+- Stored-size limits: a hard cap of 3.5 MB and a 3 MB target
+  (`TARGET_STORED_FILE_BYTES`, for the optimizer once it's built).
+- Default bucket has a CORS rule for browser `PUT`s and a one-day lifecycle
+  rule on `staging/`, and R2 was verified to
+  enforce the signed `Content-Length` on presigned PUTs (a body that doesn't
+  match the declared size gets `403 SignatureDoesNotMatch`).
+- Unit tests run with `corepack pnpm test` (rate limiter, file signatures,
+  storage scope, R2 sizing, optimizer client and signing, and the optimizer
+  service: auth, pipeline, image and PDF logic, concurrency limiter). Ghostscript
+  and R2 are faked in the tests.
+- The optimizer service's `/optimize` is implemented
+  ([`optimizer/`](optimizer/README.md)): it reads the staged object, checks its
+  real file signature, shrinks it, enforces the 3.5 MB hard cap, writes the
+  final object (immutable `Cache-Control`) and removes the staged copy. Images
+  become WebP via sharp (EXIF-oriented, metadata stripped, at most 2400 px, an
+  adaptive quality and size ladder aiming for 3 MB). PDFs over 3 MB go through
+  Ghostscript (`/ebook`, then `/screen`); smaller ones are stored as uploaded.
+  Office files and Markdown only have to fit the cap. Concurrency is limited
+  and each file has an 80 s deadline, under the API's 90 s timeout. The
+  file-signature and R2 "not found" checks now live in `shared/` for both the
+  API and the service.
+- The optimizer builds into one bundled file (`corepack pnpm --filter
+  @scriptr/optimizer build`, esbuild; only `sharp` stays external) and ships as a
+  Docker image ([`optimizer/Dockerfile`](optimizer/Dockerfile): `node:24-trixie-slim`,
+  Ghostscript 10.05, non-root). Built and run locally: sharp's native binary
+  loads in the image, `GET /health` answers 200, an unsigned `/optimize` is
+  `401`, a signed one with R2 unreachable is `500`, and a bad body is `400`.
+  Ghostscript was only checked for presence (`gs --version`), not on PDFs.
+- The optimizer logs one line per request, like the API, and one per file saying
+  what was done and the result: sizes before and after, the step used, and every
+  size tried with its timing, or why the file was rejected (see
+  [`optimizer/README.md`](optimizer/README.md#logs)).
+- Creating a script shows a progress dialog that can't be closed (no close
+  button, Escape, or outside click, and it reopens itself if a second Escape
+  closes it) with the current stage: uploading, optimizing, creating.
+- A file still too large after optimizing is named in the toast with its size
+  (`scan.pdf is still 4.2MB after optimizing (the limit is 3.5MB)`). Upload
+  rejections now carry a message for the user (`UserFacingError`); every other
+  failure still shows the generic "please try again".
+- User avatars, on the same pipeline and in the same bucket as script files:
+  `POST /profiles/me/avatar/upload-url` presigns a PUT into the `staging/`
+  prefix, then `POST /profiles/me/avatar` crops the photo square at 320 px and
+  converts it to WebP (≤200 KB, aiming for 100 KB; limits in
+  [`avatar.ts`](shared/config/avatar.ts)) over `avatars/{userId}.webp`. One key
+  per user, so a re-upload overwrites the picture; the stored URL is
+  `${R2_PUBLIC_URL}/avatars/{userId}.webp?v={version}`, the version being what
+  keeps caches from showing the old one. Account deletion removes that key.
+  The URL is written with the service-role client because it is served to
+  everyone (see below). The edit-profile dialog uploads through
+  `uploadMyAvatar` ([`profile-api.ts`](next/lib/api/profile-api.ts)) and
+  avatars render `unoptimized`, so the image optimizer's quota isn't spent on
+  them.
+- Both avatar migrations are **applied**: `20261016120000_drop_legacy_office_file_types`
+  (live constraint is down to `pdf, jpg, jpeg, png, webp, md, docx, xlsx`) and
+  `20261029120000_revoke_profile_avatar_url_write` (`authenticated` now has
+  `UPDATE` only on `username`/`full_name`, no `INSERT`, no `avatar_url`;
+  `service_role` keeps everything). Six older migrations that had already been
+  applied out-of-band were marked applied with `supabase migration repair`, and
+  the two were pushed through the Management API's SQL endpoint — `supabase db
+  push` refuses until the 33 dashboard-applied migrations from June–October are
+  added to the repo or pulled as a baseline (see Todo).
+- The bucket's public read path is live: Cloudflare custom domain
+  `files.scriptr.uk` with `r2.dev` off, a WAF rule allowing only `/avatars/*`,
+  minimum TLS 1.2, and a Cache Rule on that path. Verified against real
+  objects: `GET` is `MISS` → `HIT`, a different `?v=` is its own entry, and
+  non-avatar paths return `403`. (`HEAD` always reports `DYNAMIC` — that is
+  Cloudflare not reporting cache for HEAD, not a misconfiguration; probe with
+  `GET`.)
+- The profile card's avatar was 0×0: `Avatar` renders with `h-full
+  aspect-square`, which needs a sized box, and `ProfileCard` was the one call
+  site that didn't wrap it (the other four do). Now wrapped in an `h-20 w-20`
+  box.
+- The optimizer Docker image was rebuilt
+  (`docker build -f optimizer/Dockerfile -t scriptr-optimizer .`) and run: an
+  894 KB PNG became an 11 KB 320 px WebP through the container, the logs show
+  the request and file lines, and Ghostscript 10.05.1 is present.
+- The optimizer is **deployed to Cloud Run**: `optimizer` in `REDACTED_GCP_PROJECT`,
+  `europe-west2`, at `https://optimizer-REDACTED_GCP_PROJECT_NUMBER.europe-west2.run.app`,
+  1 vCPU / 2 GiB / concurrency 2 / 100 s timeout / 0–3 instances / startup CPU
+  boost, running as a dedicated `optimizer-run` service account that can read
+  only its three secrets, with an Artifact Registry cleanup policy (keep last
+  2) and a $10/month budget alert at 50%/90%. Verified through the deployed
+  service: `/health` 200, an unsigned `/optimize` 401, a signed avatar job
+  (1.19 MB PNG → 16 KB WebP, 928 ms) and a 10 MB image-only PDF through
+  Ghostscript (`gs /ebook`, 833 ms, 2.5 KB), with the result served from
+  `files.scriptr.uk`. Both Vercel projects run in `fra1`, which pairs with the
+  London region.
+- `scriptr-api` now has `OPTIMIZER_URL`, `OPTIMIZER_SECRET` (the Secret Manager
+  value) and corrected `R2_ENDPOINT`/`R2_PUBLIC_URL`, all Production and all
+  `sensitive`, so Vercel makes them write-only (neither `env pull` nor the API
+  can read them back — verification is functional, not by inspection). **A
+  redeploy is still pending**; until then production runs the old env.
 
 ### Todo
 
 Priority work, scheduled right after the frontend gaps:
 
-- **File optimization:** optimize images and other supported files before R2
-  storage (compression/resizing on upload in
-  [`file-ops.ts`](hono/src/routes/file-ops.ts)), keeping deterministic keys and
-  the immutable `Cache-Control` behavior intact.
-- **User avatars:** optimize and store them in R2, reusing the same
-  optimization pipeline rather than building a second one. The profile
-  frontend is ready (disabled picker, `uploadMyAvatar` stub); this adds the
-  route and flips `AVATAR_UPLOAD_ENABLED`.
+- **Migration drift:** 33 migrations applied through the dashboard have no file
+  in `hono/supabase/migrations` (the project's schema predates the repo's
+  migration history). `supabase db push` refuses to run until they are
+  reconciled, either by `supabase migration repair --status reverted <versions>`
+  or by `supabase db pull` writing a baseline. Everything in the repo is
+  applied; adding the next migration means deciding which way to reconcile
+  first.
+- **Production env:** set `R2_ENDPOINT` (no bucket path) and
+  `R2_PUBLIC_URL=https://files.scriptr.uk` on the Vercel `scriptr-api` project,
+  plus `OPTIMIZER_URL=https://optimizer-REDACTED_GCP_PROJECT_NUMBER.europe-west2.run.app` and
+  `OPTIMIZER_SECRET` (the value in Secret Manager's `optimizer-secret`). If
+  production already holds objects under the old `scriptr/` prefix, re-key them
+  first. **Bot Fight Mode** is enabled on the zone and the free plan only allows
+  zone-wide on/off, so it cannot be scoped to `files.scriptr.uk`; avatar and
+  other requests to that host returned `200 image/webp` from `curl` and Node,
+  so it is not challenging them today — if avatars break while the object is
+  fine, that is the suspect (see `API_DOCUMENTATION.md`).
+- **Optimizer, what's left:** the service is deployed (see Done), so this is
+  tuning and production signing. Point the local `hono/.env` at the deployed
+  `OPTIMIZER_URL` with the Secret Manager secret once, then run real PDFs
+  (scans and text-heavy) and 20 MB phone photos through it to see how often the
+  3.5 MB cap is hit and whether the `/ebook` and `/screen` presets and the image
+  ladder keep text legible. Tune the presets and ladder from what you see.
+  Also consider running `corepack pnpm test` in the API build command so failing
+  tests block deploys.
+- **User avatars:** the API, the optimizer avatar profile, the client, the
+  bucket's public path and both migrations are done (see Done); what's left is
+  the production end-to-end once Vercel has the optimizer env.
 - **Serving cost:** review preview/download paths for avoidable egress and
   repeated signing once optimization lands.
 
@@ -373,15 +518,13 @@ Product features:
 - **Notification settings:** preferences and the remaining user-facing
   notification kinds/UX (moderator notifications are deferred).
 - **Profile experience (leftovers):** achievements (defer to the achievements
-  todo) and the avatar upload itself. The avatar picker, `uploadMyAvatar` stub
-  and `AVATAR_UPLOAD_ENABLED` flag exist but the picker is disabled
-  (`TODO(r2-optimization)` in `lib/profile-avatar.ts`,
-  `lib/api/profile-api.ts`, `AvatarField.tsx`); it lands with the R2
-  optimization pipeline. Optional later: make the faculty/study + profile row
+  todo). Avatar upload is built (see "R2 / File Storage"); it needs the bucket
+  setup listed there. Optional later: make the faculty/study + profile row
   save atomic with an RPC (the profile row is written first, so a selection
   failure leaves the profile fields saved). Registration still writes
   `currently_taking` rows that nothing reads for display now (profiles derive
-  it from the selected studies); either stop writing them or keep them in sync.
+  it from the selected studies); either stop writing them or keep them in
+  sync.
 - **Study overview metadata:** more administrator/study metadata on the card in
   [`StudyOverviewCard.tsx`](next/components/academics/study/StudyOverviewCard.tsx)
   when it becomes available.
@@ -482,7 +625,9 @@ Deliberately postponed until everything else is done:
    frontend todo.
 2. Close frontend quality work: state coverage, inline strings, accessibility,
    toolbar behavior, root layout, toasts, polish, SEO/performance.
-3. R2 improvements: file optimization, then avatars on the same pipeline.
+3. R2 improvements: file optimization and avatars are built; what's left is
+   the migrations, public access on the bucket, tuning against real files, the
+   Cloud Run deploy, and the serving-cost review.
 4. Sanity cleanup, the structure/semester/elective decisions.
 5. Tooling pass: Biome rules, error hygiene, and the project-wide internal
    secrets decision.

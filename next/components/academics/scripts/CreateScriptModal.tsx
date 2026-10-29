@@ -19,6 +19,7 @@ import type { TextProps } from '@/components/typography/Text'
 import { Card } from '@/components/ui/Card'
 import { Dialog } from '@/components/ui/Dialog'
 import { Field } from '@/components/ui/field/Field'
+import { ProgressDialog } from '@/components/ui/ProgressDialog'
 import { Select } from '@/components/ui/select/Select'
 import { useCreateScriptForm } from '@/hooks/useCreateScriptForm'
 import { useDeviceType } from '@/hooks/useDeviceType'
@@ -93,6 +94,7 @@ export function CreateScriptModal({
     addFiles,
     removeFile,
     isBusy,
+    busyStage,
     canSubmit,
     titleTooLong,
     descriptionTooLong,
@@ -359,6 +361,16 @@ export function CreateScriptModal({
           </Card.Footer>
         </FormContainer>
       </Dialog>
+
+      {/* Waiting on the upload, optimizing and saving: nothing else is clickable until it finishes. */}
+      <ProgressDialog
+        isOpen={busyStage !== null}
+        title={UI_STRINGS.scripts.uploadModal.progress.title}
+        message={
+          busyStage ? UI_STRINGS.scripts.uploadModal.statuses[busyStage] : ''
+        }
+        hint={UI_STRINGS.scripts.uploadModal.progress.hint}
+      />
     </>
   )
 }

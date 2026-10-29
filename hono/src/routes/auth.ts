@@ -22,6 +22,7 @@ import {
   validateUsername,
 } from '../../../shared/utils/api.utils'
 import { honoLog } from '../lib/logger'
+import { createRateLimiter } from '../lib/rate-limit'
 import {
   authMiddleware,
   createInternalSupabaseClient,
@@ -38,9 +39,12 @@ const auth = new Hono<HonoEnv>()
 const isTransientAuthError = (error: AuthError) =>
   isAuthRetryableFetchError(error) || (error.status ?? 0) >= 500
 
-const AUTH_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000
-const AUTH_RATE_LIMIT_MAX_REQUESTS = 10
-const authRateLimitBuckets = new Map<string, Array<number>>()
+const authRateLimiter = createRateLimiter({
+  limit: 10,
+  windowMs: 15 * 60 * 1000,
+  // Attempts over the limit still count, so hammering keeps the block in place.
+  countBlocked: true,
+})
 
 function applyAuthRateLimit(
   c: Parameters<typeof createSupabaseClient>[0],
@@ -51,16 +55,7 @@ function applyAuthRateLimit(
     forwardedFor?.split(',')[0]?.trim() ||
     c.req.header('x-real-ip') ||
     'unknown-ip'
-  const bucketKey = `${route}:${clientIp}`
-  const now = Date.now()
-  const requests = authRateLimitBuckets.get(bucketKey) ?? []
-  const recentRequests = requests.filter(
-    (timestamp) => now - timestamp < AUTH_RATE_LIMIT_WINDOW_MS
-  )
-  recentRequests.push(now)
-  authRateLimitBuckets.set(bucketKey, recentRequests)
-
-  return recentRequests.length > AUTH_RATE_LIMIT_MAX_REQUESTS
+  return authRateLimiter(`${route}:${clientIp}`)
 }
 
 const isRegistrationAcademicProfile = (

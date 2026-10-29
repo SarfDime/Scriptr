@@ -1,3 +1,7 @@
+/** `3.5MB`, `20MB`, `4.21MB`: sizes as the user reads them. */
+const toMegabytes = (bytes: number) =>
+  `${Number((bytes / (1024 * 1024)).toFixed(2))}MB`
+
 export const UI_STRINGS = {
   general: {
     restrictedAction:
@@ -107,8 +111,14 @@ export const UI_STRINGS = {
       removeLinkAriaLabel: 'Remove link',
       readingLinkPlaceholder: 'https://...',
       addLinkButtonLabel: 'Add link',
+      progress: {
+        title: 'Creating your script',
+        addingFilesTitle: 'Adding files',
+        hint: 'This can take a minute for large files. Please keep this window open.',
+      },
       statuses: {
         uploading: 'Uploading files…',
+        optimizing: 'Optimizing files…',
         creating: 'Creating script…',
         error: 'An error occurred while creating the script.',
         success: 'Script created successfully.',
@@ -125,6 +135,32 @@ export const UI_STRINGS = {
         descriptionTooLong: 'Script description must be 50 KB or less',
         noProfessors: 'No professors are available for this subject',
         filesInvalid: 'Remove or replace the files with errors',
+      },
+      fileErrors: {
+        noFiles: 'At least one file is required',
+        tooMany: (max: number) => `You can upload at most ${max} files at once`,
+        unsupportedType: (extension: string) =>
+          `Unsupported file type (.${extension})`,
+        tooLarge: (maxBytes: number) => `File exceeds ${toMegabytes(maxBytes)}`,
+        unknownUpload: 'This upload is unknown or has expired',
+        invalidContent: 'A file’s contents don’t match its file type',
+        tooLargeAfterOptimizing: (maxBytes: number, sizeBytes?: number) =>
+          sizeBytes === undefined
+            ? `A file is still over ${toMegabytes(maxBytes)} after optimizing`
+            : `A file is still ${toMegabytes(sizeBytes)} after optimizing (the limit is ${toMegabytes(maxBytes)})`,
+        tooLargeAfterOptimizingNamed: (
+          name: string,
+          maxBytes: number,
+          sizeBytes: number
+        ) =>
+          `${name} is still ${toMegabytes(sizeBytes)} after optimizing (the limit is ${toMegabytes(maxBytes)})`,
+        processingFailed: 'Failed to process the uploaded file(s)',
+        stagingFailed: 'Failed to upload file(s)',
+        rateLimited:
+          'Too many uploads. Please wait a few minutes and try again.',
+        processingUnavailable:
+          'File processing is temporarily unavailable. Please try again in a few minutes.',
+        invalidRequest: 'Invalid upload request',
       },
     },
   },
@@ -245,7 +281,6 @@ export const UI_STRINGS = {
       saveFailed: `We couldn't update your profile`,
       avatarLabel: 'Profile photo',
       avatarChange: 'Change photo',
-      avatarUnavailable: 'Photo upload is coming soon.',
       avatarInvalidType: 'Choose a JPEG, PNG, or WebP image.',
       avatarTooLarge: (maxMegabytes: number) =>
         `Choose an image under ${maxMegabytes} MB.`,

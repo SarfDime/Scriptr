@@ -1,0 +1,24 @@
+{
+  "dependencies": {
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-s3": "^3.1152.0",
+    "@hono/node-server": "^2.1.5",
+    "@scriptr/shared": "workspace:*",
+    "@types/node": "^24.19.2",
+    "esbuild": "^0.28.2",
+    "hono": "^4.13.13",
+    "tsx": "^4.23.15"
+  },
+  "name": "@scriptr/optimizer",
+  "private": true,
+  "scripts": {
+    "build": "esbuild src/server.ts --bundle --platform=node --target=node24 --format=cjs --external:sharp --sourcemap --outfile=dist/server.cjs",
+    "check-types": "tsc --noEmit",
+    "dev": "tsx watch --env-file=.env src/server.ts",
+    "start": "node --env-file=.env --enable-source-maps dist/server.cjs",
+    "test": "tsx --test \"src/**/*.test.ts\""
+  },
+  "type": "module"
+}

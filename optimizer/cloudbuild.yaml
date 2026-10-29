@@ -1,0 +1,30 @@
+# Builds the optimizer image in Cloud Build and pushes it to Artifact Registry.
+# Run from the repository root (see optimizer/README.md):
+#
+#   gcloud builds submit --config optimizer/cloudbuild.yaml \
+#     --substitutions _IMAGE=europe-west2-docker.pkg.dev/PROJECT/REPO/optimizer:latest .
+#
+# The region matches the Cloud Run service, which is in europe-west2 (London):
+# the Supabase project is eu-west-2 and the users are in Europe. Keep the
+# repository in the same region as the service, or every cold start pulls the
+# image across the Atlantic.
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --platform=linux/amd64
+      - -f
+      - optimizer/Dockerfile
+      - -t
+      - ${_IMAGE}
+      - .
+
+images:
+  - ${_IMAGE}
+
+substitutions:
+  _IMAGE: europe-west2-docker.pkg.dev/PROJECT/REPO/optimizer:latest
+
+options:
+  logging: CLOUD_LOGGING_ONLY

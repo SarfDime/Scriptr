@@ -200,8 +200,52 @@ Read-only helpers under `/api/internal` (`x-internal-secret`, service-role clien
 
 | Route                      | Notes                                                                                                                                                                                                                                                                                                     |
 | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /file-ops/upload`    | Authenticated. Multipart form: one or more `files` entries (a single file is accepted too — normalized to an array server-side) plus optional `subjectId`. Returns `{ success: true, files: [{ fileKey, fileType, fileSizeBytes, bucket, fileName }] }` — one entry per uploaded file, in the same order submitted. `fileName` is the uploaded name lowercased, stripped of accents, kebab-cased and without its extension (`Predavanje 3.PDF` → `predavanje-3`), or `null` when nothing usable is left (e.g. a name in Cyrillic only); the R2 key itself is still `<prefix>/<uuid>.<ext>`. |
+| `POST /file-ops/upload-urls` | Authenticated. Step 1 of 3. Body: `{ subjectId?, files: [{ name, size }] }` (1–10 files). Validates each extension and size, then returns `{ success: true, uploads: [{ stagingKey, url, contentType }] }` in request order: presigned PUT URLs (valid 10 minutes) into `staging/{userId}/` in the default bucket. `400` for an unsupported extension, an oversized file, or too many files; `429` when rate limited (30 requests per 10 minutes per user). |
+| `POST /file-ops/finalize` | Authenticated. Step 3 of 3. Body: `{ subjectId?, files: [{ stagingKey, name }] }`, where `name` is the file's original name. Runs each staged file through the optimizer and returns `{ success: true, files: [{ fileKey, fileType, fileSizeBytes, bucket, fileName }] }` (`UploadResponse`), which is what `POST /scripts` and `POST /scripts/:id/files` take as `files`. `fileName` is derived from the original `name`: lowercased, stripped of accents, kebab-cased and without its extension (`Predavanje 3.PDF` → `predavanje-3`), or `null` when nothing usable is left (e.g. a name in Cyrillic only). It stays that whatever the optimizer does to the stored object, so a download is named after what was uploaded with the stored extension (an image uploaded as `.png` is stored, and downloaded, as `.webp`); the R2 key itself is `<prefix>/<uuid>.<ext>`. All-or-nothing: `400` for a key that isn't the caller's, doesn't exist (never uploaded, or expired), or whose contents don't match its extension; `413` if a file is still over the stored cap after optimizing (the body also has `stagingKey`, naming the file, and `sizeBytes`, its size after optimizing); `429` when rate limited (15 requests per 10 minutes per user); `503` if the optimizer service is configured but unavailable (nothing is stored unoptimized); `500` otherwise. A rejected request leaves nothing behind. |
 | `GET /file-ops/get-file/*` | Public. Returns `{ url, key }`: a pre-signed download URL (valid for 1 hour) for a key recorded in `script_files`; the endpoint resolves its bucket from that row and ignores any `?bucket=` query param. With `?download=1` the URL answers with `Content-Disposition: attachment; filename="<file_name>.<file_type>"` so the browser saves the file under its stored name (a row without a valid stored name gets a plain `attachment`); without it the URL renders inline, which previews rely on. |
+
+**Upload flow**: file bytes never pass through the API (Vercel caps request
+bodies at 4.5 MB). The browser (1) calls `/upload-urls`, (2) `PUT`s each file
+straight to its presigned URL, sending the returned `contentType` as
+`Content-Type` and the declared size as the body length (both are signed),
+then (3) calls `/finalize`. The content type is derived from the extension
+server-side, never taken from the client. Limits live in
+`shared/config/shared-constants.ts`: a file stored in R2 is at most 3.5 MB
+(`MAX_STORED_FILE_BYTES`; the optimizer aims for 3 MB,
+`TARGET_STORED_FILE_BYTES`), and `MAX_UPLOAD_FILE_BYTES` is the largest
+*uploaded* file for types the optimizer can shrink (PDF, images): 20 MB. Anything
+above the stored cap relies on the optimizer; without the optimizer service it
+is rejected at finalize. Accepted extensions: `pdf`, `jpg`, `jpeg`, `png`,
+`webp`, `md`, `docx`, `xlsx`. Legacy `.doc` and `.xls` are rejected.
+
+**Optimizer**: `finalize` calls `optimizeStagedFile`
+(`hono/src/lib/file-optimizer.ts`). When both `OPTIMIZER_URL` and
+`OPTIMIZER_SECRET` are set it calls the optimizer service (`POST /optimize`,
+90 s timeout); the request is signed with an HMAC over a timestamp and the body
+(`shared/utils/optimizer-signature.ts`), so the secret never travels and a
+captured request expires after 5 minutes. With neither set it uses an
+in-process stand-in that enforces the stored cap, checks the real file signature
+(so a renamed file is rejected), and stores the file as uploaded, with no
+compression or WebP conversion. It fails closed: if the service is configured
+but unreachable or errors (or only one variable is set), `finalize` returns
+`503` and stores nothing unoptimized. The contract
+(`OptimizeFileRequest` / `OptimizeFileResult` in
+`shared/types/file-upload.types.ts`): the service answers `200` with an
+`OptimizeFileResult` for everything it decides about a file, rejections included.
+
+**Bucket setup (required)**: the default bucket needs a CORS rule allowing
+`PUT` from the site origin with the `Content-Type` header, and a lifecycle
+rule expiring the `staging/` prefix after one day (for abandoned uploads). R2
+enforces the signed `Content-Length`: a PUT whose body doesn't match the
+declared size is rejected with `403`.
+
+The CORS rule's `AllowedOrigins` must list every origin that uploads, and R2
+takes exact strings plus a single `*` — no `https://*.vercel.app` wildcard. The
+current list covers `https://scriptr.uk`, `http://localhost:3000`, and one
+preview alias; other `scriptr-web-git-*` previews will fail the browser `PUT`
+(CORS), though they fail earlier anyway because the auth cookie isn't sent
+cross-site. Only `PUT` is needed: the browser never reads script files through
+`fetch`, and avatars are fetched from a public URL, not from this rule.
 
 **Storage scoping**: if `subjectId` is provided and resolves to a real
 subject → study → faculty → university chain, the file is stored in that
@@ -209,9 +253,9 @@ university's `r2_bucket_id` bucket (falling back to the default `R2_BUCKET`
 if the university has none set), under a key prefixed
 `{facultyId}/{studyId}/{subjectId}/{userId}/` — all Postgres dbIds, not
 slugs. If `subjectId` is omitted or doesn't resolve, the file falls back to
-the default bucket under a plain `{userId}/` prefix. Per-file size limit
-(~1MB) and the allowed-extension list are enforced via a `zValidator` form
-schema, not a Postgres constraint.
+the default bucket under a plain `{userId}/` prefix. The file type is also
+constrained in Postgres (`script_files_file_type_check`), so adding or
+removing a type needs a migration as well as a code change.
 
 `script_files.bucket` persists which bucket each file actually landed in —
 required at download time, since a bare file key no longer implies a single
@@ -249,12 +293,12 @@ comments, including replies.
 
 | Route                      | Notes                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /scripts`            | Body: `{ title, description?, subjectId, professorId, examSession?, additionalReading?, files?: [{ fileKey, fileType, fileSizeBytes, bucket, fileName? }] }` — `files`, when present, is exactly what `POST /file-ops/upload` returns, passed straight through (a `fileName`, if sent, must already be in the kebab-case form the upload returns, or the request is rejected with `400`); omit it or send an empty array to create a script without files. `title`/`description` are Portable Text, restricted to supported text blocks, spans, styles, decorators, lists, and alignments; title must contain text and fit within 2 KiB, description within 50 KiB. Validated via a `zValidator` JSON schema (accepts both `subjectId`/`subject_id` etc. key styles). Rejected if restricted. Returns `403` for RLS authorization failures, `409` for missing subject/professor references, and `400` for invalid Portable Text or database constraint violations. |
+| `POST /scripts`            | Body: `{ title, description?, subjectId, professorId, examSession?, additionalReading?, files?: [{ fileKey, fileType, fileSizeBytes, bucket, fileName? }] }` — `files`, when present, is exactly what `POST /file-ops/finalize` returns, passed straight through (a `fileName`, if sent, must already be in the kebab-case form finalize returns, or the request is rejected with `400`), and checked against the caller's own storage scope for the script's subject (a bucket or key outside it is rejected with `400` `Invalid upload request`, a file that doesn't exist in R2 with `400`, and one over the stored cap with `413`, all before anything is written; the stored size is the one R2 reports, not the client's); omit it or send an empty array to create a script without files. `title`/`description` are Portable Text, restricted to supported text blocks, spans, styles, decorators, lists, and alignments; title must contain text and fit within 2 KiB, description within 50 KiB. Validated via a `zValidator` JSON schema (accepts both `subjectId`/`subject_id` etc. key styles). Rejected if restricted. Returns `403` for RLS authorization failures, `409` for missing subject/professor references, and `400` for invalid Portable Text or database constraint violations. |
 | `GET /scripts/my-scripts`  | Current user's scripts                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `PATCH /scripts/:id`       | Author or admin. Body: `{ title?, description?, additional_reading? }`. Updated Portable Text uses the same allow-list and byte limits as `POST /scripts`; files are immutable — not part of this body. `description: null` clears the description. Invalid Portable Text returns `400`. Restriction-checked in RLS (`is_restricted()` is in the UPDATE policy's `USING` clause): a restricted author's update matches no rows, which the route maps to `403` (`Your account is restricted from editing scripts`) instead of a generic `500`. Admins are never restricted. `authenticated` holds column-level `UPDATE` on exactly `title`, `description`, `additional_reading` and `updated_at`; anything else this route might write needs its own grant or it fails with `42501` (a `500`).                                                                                                                                                                                                |
 | `DELETE /scripts/:id`      | Author or admin. Not restriction-checked (restricted users can still delete their own scripts). Removes the script's database records and attempts to delete all associated R2 objects.                                                                                                                                                                                                                                                                                                                            |
 | `DELETE /scripts/:scriptId/files/:fileId` | Author or admin. Removes a single `script_files` row and attempts to delete that R2 object while leaving the script intact. `404` if the file doesn't belong to that script. Not restriction-checked. After the delete, the remaining files are renumbered so `position` stays `0..n-1` (labels never skip); `script_files` has no UPDATE policy, so this step uses the service-role client and only runs once the session client's RLS-checked delete has succeeded. Renumbering is best effort and never fails the request. |
-| `POST /scripts/:id/files`  | Author or admin. Body: `{ files: [{ fileKey, fileType, fileSizeBytes, bucket, fileName? }] }` — at least one entry, exactly what `POST /file-ops/upload` returns. Appends the files to an existing script after its current last `position`. Restriction-checked in RLS (the `script_files` INSERT policy requires a non-restricted author; admins are exempt): a restricted author gets `403` (`Your account is restricted from adding files`). `404` if the script doesn't exist, `403` if the caller is neither author nor admin, `400` for invalid file data or a failed constraint. Because the files are already in R2 when this is called, every failure path deletes the uploaded objects again. Returns `{ success: true, files: [...] }` with the inserted rows. |
+| `POST /scripts/:id/files`  | Author or admin. Body: `{ files: [{ fileKey, fileType, fileSizeBytes, bucket, fileName? }] }` — at least one entry, exactly what `POST /file-ops/finalize` returns. Appends the files to an existing script after its current last `position`. The files get the same checks as in `POST /scripts` (in the caller's own scope for this script's subject, present in R2, size taken from R2; otherwise `400`/`413`). Restriction-checked in RLS (the `script_files` INSERT policy requires a non-restricted author; admins are exempt): a restricted author gets `403` (`Your account is restricted from adding files`). `404` if the script doesn't exist, `403` if the caller is neither author nor admin, `400` for invalid file data or a failed constraint. Because the files are already in R2 when this is called, every failure path deletes the uploaded objects again, but only objects under the caller's own user id: the keys come from the client, and the `404` and `403` paths run before they have been checked. Returns `{ success: true, files: [...] }` with the inserted rows. |
 | `GET /scripts/flagged/all` | Admin only                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 ---
@@ -385,6 +429,49 @@ past it. Success returns `ProfileUpdateResponse` (`{ success: true, profile }`).
 The profile row is written before the selections, so a selection failure
 returns its error with the profile fields already saved. The sync is not
 atomic across the two tables.
+
+**Avatar uploads** are the same two-call shape as a script file upload, and
+the only way `profiles.avatar_url` is written:
+
+| Route | Notes |
+|---|---|
+| `POST /profiles/me/avatar/upload-url` | Authenticated. Step 1 of 2. Body: `{ name, size }`. Validates the extension against `AVATAR_FILE_TYPES` (`jpg`, `jpeg`, `png`, `webp`) and the size against `AVATAR_MAX_UPLOAD_BYTES` (10 MB), then returns `{ success: true, upload: { stagingKey, url, contentType } }`: a presigned PUT into `R2_BUCKET`'s `staging/{userId}/` prefix, exactly like a script upload. `400` for an unsupported extension or an oversized file; `429` when rate limited (20 requests per 10 minutes per user, counted across both avatar calls). |
+| `POST /profiles/me/avatar` | Authenticated. Step 2 of 2. Body: `{ stagingKey }`. Runs the staged image through the optimizer's avatar profile — oriented by EXIF, cropped square around the most interesting region, scaled to `AVATAR_SIZE_PX` (320 px), metadata stripped (GPS included), stored as WebP — into `R2_BUCKET` at `avatars/{userId}.webp` (the same key every time, so a re-upload overwrites the old picture), and points `profiles.avatar_url` at `${R2_PUBLIC_URL}/avatars/{userId}.webp?v={version}`. Returns `AvatarUploadResponse` (`{ success: true, avatarUrl }`). `400` for a key that isn't the caller's or whose extension isn't an avatar type; `413` if the stored image is still over `AVATAR_MAX_STORED_BYTES` (200 KB; the optimizer aims for 100 KB); `429` when rate limited; `503` when `R2_PUBLIC_URL` isn't set, or when the optimizer service is configured but unavailable — an avatar is never stored uncropped; `500` otherwise. A rejected upload leaves the previous avatar untouched and removes only the staged copy. |
+
+Avatars differ from script files in four ways that matter:
+
+- They live in the **same bucket** as script files, under the `avatars/`
+  prefix. That bucket needs a public domain (`R2_PUBLIC_URL`, a custom domain or
+  its `r2.dev` URL): it exposes every object by key, so script files are no
+  longer only reachable through expiring signed URLs — their keys stay
+  unguessable random UUIDs and are only handed out with a script.
+- `profiles.avatar_url` holds a **full public URL**, not a key. It is rendered
+  directly as an image source on cached pages (comments, script cards, the
+  header, the profile page), so it has to stay valid without signing.
+- The **key is fixed per user** (`avatars/{userId}.webp`), so the stored URL
+  carries a `?v=` that changes on every upload. R2 ignores the query when
+  resolving the object, and browser/CDN caches key on it, so each upload is a
+  new cache entry and the object keeps the bucket's immutable `Cache-Control`.
+  There is no previous object to delete; account deletion removes the one key.
+- The row is written with the **service-role client**, because the URL is
+  served to every visitor. `authenticated` therefore has no `UPDATE`/
+  `INSERT` grant on `avatar_url` (migration
+  `20261029120000_revoke_profile_avatar_url_write.sql`); do not move this
+  write onto the session client. The client renders avatars with
+  `unoptimized`, which also takes away the `next/image` host allow-list as a
+  backstop — the grant is the boundary.
+
+**Bot Fight Mode**: `files.scriptr.uk` is a proxied host in the same Cloudflare
+zone, so the zone-wide Bot Fight Mode applies to it. On the free plan that
+setting is on or off for the whole zone, not per hostname (the API host is
+DNS-only for exactly that reason). Avatar loads were tested from non-browser
+clients — `curl` and Node both got `200 image/webp` — so it is not challenging
+this host today. If avatars ever render as broken images while the object is
+correct in the bucket, this is the first suspect, and the only lever available
+is turning Bot Fight Mode off for the zone.
+
+Limits and types live in `shared/config/avatar.ts`; the routes check them
+again, so the client-side check only saves a round trip.
 
 ### Admin
 `PATCH /profiles/:id`, `DELETE /profiles/:id` — same shape as the `/me`
@@ -532,6 +619,10 @@ notifications, restrictions.
   to clients).
 - `PATCH /internal/profiles/:id/role` — deliberately hardened past what RLS
   alone would require, given how sensitive the column is.
+- `POST /profiles/me/avatar` writing `profiles.avatar_url` — the value is a
+  public URL shown to everyone, so it must not be settable by the user, and
+  `authenticated` has no grant on that column (see
+  [Profiles](#profiles)).
 
 ---
 
@@ -603,14 +694,17 @@ clamped at zero. No downvotes exist anywhere in the schema or API.
 once no pending flags remain. Flagged content stays publicly visible —
 flagging surfaces content for review, it never hides it.
 
-**File types**: `pdf`, `jpg`, `jpeg`, `png`, `webp`, `md`, `doc`, `docx`,
-`xls`, `xlsx`. A script has one or more immutable `script_files` rows
+**File types**: `pdf`, `jpg`, `jpeg`, `png`, `webp`, `md`, `docx`, `xlsx`
+(legacy `doc`/`xls` are rejected). A script has one or more immutable
+`script_files` rows
 (`file_url`, `file_type`, `file_size_bytes`, `bucket`, `file_name`, ordered by
 `position`). `file_name` is the uploaded name in kebab-case without its
 extension, and is `null` for files uploaded before names were kept (the UI
-falls back to a positional label). Per-file size limit (~1MB) and type/extension checks are
-enforced at the API via `zValidator`, not Postgres — the database never sees
-raw bytes.
+falls back to a positional label). Type/extension checks run at the API via
+`zValidator` and the real file signature at finalize, not in Postgres — the
+database never sees raw bytes. A stored file is at most 3.5 MB; PDFs and images
+may be uploaded up to 20 MB and are shrunk to fit (see
+[File Uploads](#file-uploads)).
 
 **Portable Text**: `scripts.title`, `scripts.description`, and `comments.content`
 are Portable Text (`jsonb` block arrays). The API enforces the editor allow-list:

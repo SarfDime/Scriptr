@@ -40,7 +40,7 @@ export type UseCreateScriptFormArgs = {
 
 /**
  * Owns all create-script form state and file validation. The actual
- * two-step upload (files → R2, then the script record) stays delegated to
+ * upload (files → R2 → optimizer, then the script record) stays delegated to
  * `useScriptUpload`; this hook never talks to the API directly — it just
  * shapes the form's state into that hook's input.
  *
@@ -72,7 +72,13 @@ export function useCreateScriptForm({
   const { files, validFiles, addFiles, removeFile, clearFiles } =
     useScriptFilePicker()
 
-  const isBusy = state.status === 'uploading' || state.status === 'creating'
+  const busyStage =
+    state.status === 'uploading' ||
+    state.status === 'optimizing' ||
+    state.status === 'creating'
+      ? state.status
+      : null
+  const isBusy = busyStage !== null
   const titleTooLong =
     portableTextJsonByteLength(title) > PORTABLE_TEXT_LIMITS.scriptTitleBytes
   const descriptionTooLong =
@@ -161,6 +167,7 @@ export function useCreateScriptForm({
 
     // Derived
     isBusy,
+    busyStage,
     canSubmit,
     titleTooLong,
     descriptionTooLong,

@@ -152,6 +152,7 @@ export type ScriptUploadInput = {
 export type ScriptUploadState =
   | { status: 'idle' }
   | { status: 'uploading' }
+  | { status: 'optimizing' }
   | { status: 'creating' }
   | { status: 'success'; scriptId: string }
   | { status: 'error'; message: string }

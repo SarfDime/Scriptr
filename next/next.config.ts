@@ -22,6 +22,11 @@ const nextConfig = {
         hostname: '**.cloudflarestorage.com',
         port: '',
       },
+      {
+        protocol: 'https',
+        hostname: 'files.scriptr.uk',
+        port: '',
+      },
     ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [480, 768, 810, 960, 1024, 1200, 1680],

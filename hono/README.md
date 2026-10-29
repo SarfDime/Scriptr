@@ -50,6 +50,24 @@ Universities can override `R2_BUCKET` per-university via
 `INTERNAL_API_SECRET` must match `SANITY_STUDIO_INTERNAL_SECRET` in the Sanity
 Studio environment, or every Studio sync/delete action fails.
 
+`R2_ENDPOINT` must be the bucket's S3 endpoint and nothing more — a path on the
+end (e.g. `.../scriptr`) makes the SDK store every object under an extra prefix,
+which shows up as broken public avatar URLs.
+
+`R2_PUBLIC_URL` is the bucket's public domain (a custom domain, or its `r2.dev`
+URL). Avatars are written to `R2_BUCKET` at `avatars/{userId}.webp` and served
+from there, so avatar uploads (`POST /profiles/me/avatar*`) answer `503`
+without it. This is the one thing in the bucket that is publicly readable:
+keep `r2.dev` access off and front the custom domain with a WAF rule that
+blocks every path outside `/avatars/*`, so script files stay private (they are
+still served through expiring signed URLs from `GET /file-ops/get-file/*`).
+
+`OPTIMIZER_URL` and `OPTIMIZER_SECRET` are optional and must be set together.
+They point the API at the file optimizer service; with neither set,
+`/file-ops/finalize` uses an in-process stand-in that validates files but
+doesn't shrink them. If only one is set, or the service is unreachable,
+finalize fails with `503` instead of storing a file unoptimized.
+
 `NEXT_REVALIDATE_URL` and `REVALIDATE_SECRET` configure the cache-revalidation
 webhook the API calls after mutations; `REVALIDATE_SECRET` must match the
 value in the frontend's environment (`next/.env.example`).
@@ -61,6 +79,7 @@ Never commit `.env` files or storage credentials.
 ```bash
 corepack pnpm dev:hono
 corepack pnpm --filter @scriptr/api check-types
+corepack pnpm test
 corepack pnpm format
 corepack pnpm gen:api-types
 corepack pnpm gen:api-endpoints

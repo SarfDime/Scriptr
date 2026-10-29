@@ -1,34 +1,26 @@
+import {
+  AVATAR_FILE_TYPES,
+  AVATAR_MAX_UPLOAD_BYTES,
+} from '@shared/config/avatar'
 import { UI_STRINGS } from '@shared/config/strings'
+import { getFileExtension, isFileType } from '@shared/utils/api.utils'
 
-/**
- * TODO(r2-optimization): flip to true once the avatar upload route exists
- * (see `uploadMyAvatar` in lib/api/profile-api.ts). While false the edit
- * dialog shows the picker disabled, so no file can be chosen and the upload
- * step never runs.
- */
-export const AVATAR_UPLOAD_ENABLED = false
+/** The `accept` value for the picker. Extensions rather than MIME types: the
+ * upload is validated, and typed by the server, by extension, because browsers
+ * report a MIME type inconsistently (a `.jpg` can arrive with an empty type). */
+export const AVATAR_ACCEPT_ATTRIBUTE: ReadonlyArray<string> =
+  AVATAR_FILE_TYPES.map((fileType) => `.${fileType}`)
 
-export const AVATAR_ACCEPTED_TYPES: ReadonlyArray<string> = [
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-]
-
-/**
- * Placeholder limit. TODO(r2-optimization): the real limit comes with the
- * optimization pipeline and should move to `shared/config/` so the upload
- * route and this check read the same value.
- */
-export const AVATAR_MAX_BYTES = 5 * 1024 * 1024
-
-/** Returns an error message, or null when the file can be uploaded. */
+/** Returns an error message, or null when the file can be uploaded. The API
+ * applies the same type and size limits again; this only saves a round trip. */
 export const validateAvatarFile = (file: File): string | null => {
-  if (!AVATAR_ACCEPTED_TYPES.includes(file.type)) {
+  const extension = getFileExtension(file.name)
+  if (!isFileType(extension) || !AVATAR_FILE_TYPES.includes(extension)) {
     return UI_STRINGS.profile.edit.avatarInvalidType
   }
-  if (file.size > AVATAR_MAX_BYTES) {
+  if (file.size > AVATAR_MAX_UPLOAD_BYTES) {
     return UI_STRINGS.profile.edit.avatarTooLarge(
-      AVATAR_MAX_BYTES / (1024 * 1024)
+      AVATAR_MAX_UPLOAD_BYTES / (1024 * 1024)
     )
   }
   return null

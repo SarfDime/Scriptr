@@ -1,9 +1,12 @@
-// Per ARCHITECTURE.md §3: supported file types and the current per-file cap.
-// The cap is documented as "adjustable" — keep this the single source of
-
 import type { SubjectExamSession } from '../types/academic.types'
+import type { FileType } from '../types/api.types'
 
-// truth here rather than repeating the literal elsewhere if it changes.
+// Per ARCHITECTURE.md §3: supported file types and upload size limits. Keep
+// this the single source of truth rather than repeating literals elsewhere.
+
+/** Extensions accepted for upload. Legacy `.doc`/`.xls` are intentionally not
+ * accepted: they can't be optimized, and every current editor exports
+ * `.docx`/`.xlsx`. */
 export const ALLOWED_EXTENSIONS = [
   'pdf',
   'jpg',
@@ -11,11 +14,53 @@ export const ALLOWED_EXTENSIONS = [
   'png',
   'webp',
   'md',
-  'doc',
   'docx',
-  'xls',
   'xlsx',
-] as const
+] as const satisfies ReadonlyArray<FileType>
+
+/** Canonical Content-Type per stored file type. The server derives it from the
+ * extension because browsers report it inconsistently (notably for `.md`).
+ * Exhaustive on purpose: adding a `FileType` without one fails to compile. */
+export const FILE_CONTENT_TYPES: Record<FileType, string> = {
+  pdf: 'application/pdf',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  md: 'text/markdown',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+}
+
+/** Hard limit on a file R2 will hold, measured after optimization. */
+export const MAX_STORED_FILE_BYTES = 3.5 * 1024 * 1024
+
+/** What the optimizer aims for. It may settle anywhere up to
+ * `MAX_STORED_FILE_BYTES` when going lower would cost too much quality, but
+ * never above it. */
+export const TARGET_STORED_FILE_BYTES = 3 * 1024 * 1024
+
+/** Largest *uploaded* file for types the optimizer can shrink. Anything above
+ * `MAX_STORED_FILE_BYTES` relies on the optimizer to shrink it; without the
+ * optimizer service the in-process stand-in rejects such files at finalize. */
+export const MAX_UPLOAD_FILE_BYTES = 20 * 1024 * 1024
+
+/** Types the optimizer can shrink, so they may be uploaded above the stored cap. */
+export const OPTIMIZABLE_FILE_TYPES: ReadonlyArray<FileType> = [
+  'pdf',
+  'jpg',
+  'jpeg',
+  'png',
+  'webp',
+]
+
+/** Most files accepted in a single upload. */
+export const MAX_UPLOAD_FILES = 10
+
+/** Stored files get a fresh key on every upload and are never overwritten, so
+ * they can be cached forever. */
+export const IMMUTABLE_FILE_CACHE_CONTROL =
+  'public, max-age=31536000, immutable'
 
 export const SUBJECT_EXAM_SESSIONS: Array<SubjectExamSession> = [
   'january',

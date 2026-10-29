@@ -22,7 +22,8 @@
   "scripts": {
     "check-types": "tsc --noEmit",
     "dev": "tsx watch --env-file=.env --import=tsx src/server.ts",
-    "gen:types": "supabase gen types typescript --project-id \"$PROJECT_REF\" --schema public > ../shared/types/database.types.ts"
+    "gen:types": "supabase gen types typescript --project-id \"$PROJECT_REF\" --schema public > ../shared/types/database.types.ts",
+    "test": "tsx --test \"src/**/*.test.ts\""
   },
   "type": "module"
 }

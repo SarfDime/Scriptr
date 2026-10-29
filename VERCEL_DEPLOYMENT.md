@@ -103,6 +103,20 @@ Production:
   `https://scriptr.uk/api/revalidate`.
 - `REVALIDATE_SECRET` must equal the web project's value.
 - Supabase, R2, and internal API credentials are required production secrets.
+- `OPTIMIZER_URL` and `OPTIMIZER_SECRET` are optional and set together, once
+  the file optimizer service is deployed. The secret signs API-to-service
+  requests and must equal the service's own value.
+- `R2_PUBLIC_URL` must be the bucket's public domain (a custom domain, or its
+  `r2.dev` URL), with public access enabled on the bucket. Avatars live in
+  `R2_BUCKET` under `avatars/{userId}.webp` and are served from there; without
+  it avatar uploads answer `503`. Note this makes every object in the bucket
+  readable by key: script keys stay unguessable (random UUIDs) but a leaked key
+  no longer expires, unlike the signed URLs `GET /file-ops/get-file/*` hands out.
+- Finalizing an upload runs the optimizer and can take tens of seconds, and the
+  web client waits up to 120 s for it. The API project should run with Fluid
+  compute (the default for projects created after 2025-04-23), whose default
+  function duration is 300 s on every plan. Check this in the project settings:
+  without it the function limit can be far lower than the client's timeout.
 
 The hosted Sanity Studio must build with `SANITY_STUDIO_API_URL` set to
 `https://api.scriptr.uk`. In Supabase Auth, set the Site URL to
@@ -123,12 +137,13 @@ setting enabled. Vercel assigns `scriptr.uk` to each new production deployment;
 no separate alias workflow or GitHub token is required.
 
 Both projects use `git.deploymentEnabled` in their project-root `vercel.json`:
-Git deployments from `main`, `staging`, and branches matching `feat-*`,
-`feat/**`, `fix-*`, or `fix/**` are enabled; other branches are disabled. The
-`staging` deployment remains a Vercel Preview deployment. The project-level
-Ignored Build Step further limits automatic builds to commits whose subjects
-start with `feat:` or `fix:`. This branch allowlist applies to automatic Git
-deployments; manually initiated Vercel CLI deployments are separate.
+Git deployments are enabled only from `main` (production) and `staging` (a
+Vercel Preview deployment); every other branch is disabled, so a feature branch
+builds nothing. A branch can still be previewed on demand with the Vercel CLI
+(`vercel` from `hono/` or `next/`), which bypasses the allowlist. The
+project-level Ignored Build Step further limits automatic builds to commits
+whose subjects start with `feat:` or `fix:` — `docs:`, `chore:` and merge
+commits are skipped, so a docs-only push deploys nothing by design.
 
 After changing production environment variables, redeploy both Vercel projects;
 `NEXT_PUBLIC_API_URL` is inlined at build time. Users need to sign in once again

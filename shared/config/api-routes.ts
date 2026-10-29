@@ -18,7 +18,8 @@ export type ApiEndpoint =
   | `/api/professors/${string}`
   | '/api/subjects'
   | `/api/subjects/${string}`
-  | '/api/file-ops/upload'
+  | '/api/file-ops/upload-urls'
+  | '/api/file-ops/finalize'
   | `/api/file-ops/get-file/${string}`
   | '/api/scripts'
   | `/api/scripts/subject/${string}`
@@ -56,6 +57,8 @@ export type ApiEndpoint =
   | `/api/favorites/${string}`
   | '/api/profiles'
   | '/api/profiles/me'
+  | '/api/profiles/me/avatar/upload-url'
+  | '/api/profiles/me/avatar'
   | `/api/profiles/username/${string}`
   | `/api/profiles/${string}`
   | `/api/profiles/${string}/stats`
@@ -151,7 +154,8 @@ export const apiRoutes = {
     byId: (id: string | number) => `/api/subjects/${id}` as const,
   },
   fileOps: {
-    upload: '/api/file-ops/upload',
+    uploadUrls: '/api/file-ops/upload-urls',
+    finalize: '/api/file-ops/finalize',
     getFileByKey: (key: string | number) =>
       `/api/file-ops/get-file/${key}` as const,
   },
@@ -220,6 +224,8 @@ export const apiRoutes = {
   profiles: {
     index: '/api/profiles',
     me: '/api/profiles/me',
+    meAvatarUploadUrl: '/api/profiles/me/avatar/upload-url',
+    meAvatar: '/api/profiles/me/avatar',
     usernameByUsername: (username: string | number) =>
       `/api/profiles/username/${username}` as const,
     byId: (id: string | number) => `/api/profiles/${id}` as const,

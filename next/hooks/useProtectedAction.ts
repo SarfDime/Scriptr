@@ -3,6 +3,7 @@
 import { UI_STRINGS } from '@shared/config/strings'
 import { useState } from 'react'
 import { ApiError } from '@/lib/api/next-api'
+import { UserFacingError } from '@/lib/user-facing-error'
 import { useAuthModal } from '@/providers/AuthModalProvider'
 import { useSession } from '@/providers/SessionProvider'
 import { useToast } from '@/providers/toaster/ToasterProvider'
@@ -148,7 +149,12 @@ export function useProtectedAction<Args extends Array<unknown>, T>(
       addToast({
         type: 'error',
         title: errorTitle,
-        description: UI_STRINGS.general.tryAgain,
+        // A message written for the user (such as which file is too large) is
+        // shown as it is; anything else gets the generic prompt.
+        description:
+          actionError instanceof UserFacingError
+            ? actionError.message
+            : UI_STRINGS.general.tryAgain,
       })
     }
     return { ok: false }

@@ -1,126 +1,116 @@
-import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'
+import { GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { zValidator } from '@hono/zod-validator'
-import { Hono } from 'hono'
-import { z } from 'zod'
-import { isFileType } from '../../../shared/utils/api.utils'
+import { MAX_UPLOAD_FILES } from '@shared/config/shared-constants'
+import { UI_STRINGS } from '@shared/config/strings'
+import type { FileType } from '@shared/types/api.types'
+import type {
+  OptimizeFileResult,
+  UploadUrlsResponse,
+} from '@shared/types/file-upload.types'
+import type { UploadResponse } from '@shared/types/scripts.types'
+import {
+  getFileExtension,
+  getMaxUploadBytes,
+  isFileType,
+} from '@shared/utils/api.utils'
 import {
   isStoredFileName,
   toStoredFileName,
-} from '../../../shared/utils/file-name.utils'
+} from '@shared/utils/file-name.utils'
+import { Hono } from 'hono'
+import { z } from 'zod'
+import { optimizeStagedFile } from '../lib/file-optimizer'
 import { honoLog } from '../lib/logger'
 import { createS3Client, deleteR2Files } from '../lib/r2'
+import { createRateLimiter } from '../lib/rate-limit'
+import {
+  createStagedUpload,
+  failureResponse,
+  parseStagingKey,
+} from '../lib/staging'
+import { resolveStorageScope } from '../lib/storage-scope'
 import { authMiddleware, createInternalSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
-const ALLOWED_MIME_TYPES = [
-  'application/pdf',
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'text/markdown',
-  'text/plain',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-] as const
+const { fileErrors } = UI_STRINGS.scripts.uploadModal
 
-const MAX_FILE_SIZE_BYTES = 1024 * 1024
-
-const uploadedFileSchema = z
-  .instanceof(File)
-  .refine(
-    (file) => (ALLOWED_MIME_TYPES as ReadonlyArray<string>).includes(file.type),
-    {
-      message: 'Unsupported file type',
-    }
-  )
-  .refine((file) => file.size <= MAX_FILE_SIZE_BYTES, {
-    message: 'File exceeds the 1MB size limit',
-  })
-  .refine(
-    (file) => isFileType(file.name.split('.').pop()?.toLowerCase() ?? ''),
-    { message: 'Unsupported file extension' }
-  )
-
-const uploadFormSchema = z.object({
-  subjectId: z.string().min(1).optional(),
-  // A single-file form submission arrives as one File, not an array —
-  // normalize to an array before validating each entry.
-  files: z.preprocess(
-    (value) => (Array.isArray(value) ? value : [value]),
-    z.array(uploadedFileSchema).min(1, 'At least one file is required')
-  ),
+// A normal upload is one `upload-urls` and one `finalize` call; these only
+// stop a single account from running up storage and optimizer work.
+const UPLOAD_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000
+const isUploadUrlsLimited = createRateLimiter({
+  limit: 30,
+  windowMs: UPLOAD_RATE_LIMIT_WINDOW_MS,
+})
+const isFinalizeLimited = createRateLimiter({
+  limit: 15,
+  windowMs: UPLOAD_RATE_LIMIT_WINDOW_MS,
 })
 
-type StorageScope = {
-  bucket: string
-  keyPrefix: string
-}
+/** Validates a descriptor and resolves its extension to a `FileType` (which
+ * is why this is a transform: the type can't be narrowed from a string). */
+const uploadFileSchema = z
+  .object({
+    name: z.string().min(1).max(255),
+    size: z.number().int().positive(),
+  })
+  .transform((file, ctx) => {
+    const extension = getFileExtension(file.name)
+    if (!isFileType(extension)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: fileErrors.unsupportedType(extension),
+      })
+      return z.NEVER
+    }
+    const maxBytes = getMaxUploadBytes(extension)
+    if (file.size > maxBytes) {
+      ctx.addIssue({ code: 'custom', message: fileErrors.tooLarge(maxBytes) })
+      return z.NEVER
+    }
+    return { fileType: extension, size: file.size }
+  })
 
-/**
- * Resolve where a subject's files should live: which R2 bucket (from the
- * subject's university) and which dbId-based key prefix (faculty/study/subject).
- * Falls back to the default bucket and a user-scoped prefix if the subject
- * can't be resolved (e.g. not provided yet, or catalog lookup fails).
- */
-async function resolveStorageScope(
-  c: Parameters<typeof createInternalSupabaseClient>[0] & {
-    // biome-ignore lint/style/useNamingConvention: <Ignore naming convention for env>
-    env: { R2_BUCKET: string }
-  },
-  userId: string,
-  subjectId: string | undefined
-): Promise<StorageScope> {
-  const fallback: StorageScope = {
-    bucket: c.env.R2_BUCKET,
-    keyPrefix: userId,
-  }
+const uploadUrlsSchema = z.object({
+  subjectId: z.string().min(1).optional(),
+  files: z
+    .array(uploadFileSchema)
+    .min(1, fileErrors.noFiles)
+    .max(MAX_UPLOAD_FILES, fileErrors.tooMany(MAX_UPLOAD_FILES)),
+})
 
-  if (!subjectId) return fallback
-
-  const supabase = createInternalSupabaseClient(c)
-
-  const { data, error } = await supabase
-    .from('subjects')
-    .select(
-      `id,
-       study:studies(
-         id,
-         faculty:faculties(
-           id,
-           university:universities(r2_bucket_id)
-         )
-       )`
+const finalizeSchema = z.object({
+  subjectId: z.string().min(1).optional(),
+  files: z
+    .array(
+      z.object({
+        stagingKey: z.string().min(1),
+        // The name the file had on the user's device. The stored display name is
+        // derived from it, whatever the optimizer later does to the object.
+        name: z.string().min(1).max(255),
+      })
     )
-    .eq('id', subjectId)
-    .single()
-
-  const study = data?.study
-  const faculty = study?.faculty
-  const bucket = faculty?.university?.r2_bucket_id
-
-  if (error || !study || !faculty) {
-    return fallback
-  }
-
-  return {
-    bucket: bucket || c.env.R2_BUCKET,
-    keyPrefix: `${faculty.id}/${study.id}/${subjectId}/${userId}`,
-  }
-}
+    .min(1, fileErrors.noFiles)
+    .max(MAX_UPLOAD_FILES, fileErrors.tooMany(MAX_UPLOAD_FILES)),
+})
 
 const fileOps = new Hono<HonoEnv>()
 
-/** Upload one or more script files to R2 in a single call; create the script record through POST /scripts. */
+/**
+ * Upload step 1 of 3. Returns one presigned PUT per file, into the staging
+ * prefix, so the file bytes go from the browser straight to R2 and never
+ * through this function (Vercel caps request bodies at 4.5 MB). Then call
+ * POST /file-ops/finalize, then POST /scripts with the files it returns.
+ */
 fileOps.post(
-  '/upload',
+  '/upload-urls',
   authMiddleware,
-  zValidator('form', uploadFormSchema, (result, c) => {
+  zValidator('json', uploadUrlsSchema, (result, c) => {
     if (!result.success) {
       return c.json(
-        { error: result.error.issues[0]?.message ?? 'Invalid upload' },
+        {
+          error: result.error.issues[0]?.message ?? fileErrors.invalidRequest,
+        },
         400
       )
     }
@@ -128,64 +118,143 @@ fileOps.post(
   }),
   async (c) => {
     const user = c.get('user')
-    const { files, subjectId } = c.req.valid('form')
+    if (isUploadUrlsLimited(user.id)) {
+      return c.json({ error: fileErrors.rateLimited }, 429)
+    }
+
+    const { files } = c.req.valid('json')
+    const r2 = createS3Client(c)
+
+    try {
+      const uploads = await Promise.all(
+        files.map((file) => createStagedUpload(c, user.id, file, r2))
+      )
+
+      return c.json<UploadUrlsResponse>({ success: true, uploads })
+    } catch (error) {
+      honoLog({
+        logLevel: 'error',
+        message: 'Failed to create upload URL(s)',
+        error,
+      })
+      return c.json({ error: fileErrors.stagingFailed }, 500)
+    }
+  }
+)
+
+/**
+ * Upload step 3 of 3 (step 2 is the browser's PUT). Runs each staged file
+ * through the optimizer and stores the result under its final key, in the
+ * subject's bucket. All-or-nothing: if any file is rejected, nothing is kept.
+ * Create the script record through POST /scripts with the returned files.
+ */
+fileOps.post(
+  '/finalize',
+  authMiddleware,
+  zValidator('json', finalizeSchema, (result, c) => {
+    if (!result.success) {
+      return c.json(
+        {
+          error: result.error.issues[0]?.message ?? fileErrors.invalidRequest,
+        },
+        400
+      )
+    }
+    return
+  }),
+  async (c) => {
+    const user = c.get('user')
+    if (isFinalizeLimited(user.id)) {
+      return c.json({ error: fileErrors.rateLimited }, 429)
+    }
+
+    const { files, subjectId } = c.req.valid('json')
+
+    const staged: Array<{
+      stagingKey: string
+      declaredType: FileType
+      fileName: string | null
+    }> = []
+    for (const { stagingKey, name } of files) {
+      if (staged.some((entry) => entry.stagingKey === stagingKey)) continue
+      const declaredType = parseStagingKey(stagingKey, user.id)
+      if (!declaredType) {
+        return c.json({ error: fileErrors.unknownUpload }, 400)
+      }
+      staged.push({
+        stagingKey,
+        declaredType,
+        fileName: toStoredFileName(name),
+      })
+    }
 
     const { bucket, keyPrefix } = await resolveStorageScope(
       c,
       user.id,
       subjectId
     )
-    const r2 = createS3Client(c)
-    const uploaded: Array<{
-      fileKey: string
-      fileType: string
-      fileSizeBytes: number
-      bucket: string
-      fileName: string | null
-    }> = []
 
-    try {
-      await Promise.all(
-        files.map(async (file) => {
-          const fileType = file.name.split('.').pop()?.toLowerCase() || 'bin'
-          const fileKey = `${keyPrefix}/${crypto.randomUUID()}.${fileType}`
-
-          await r2.send(
-            new PutObjectCommand({
-              Bucket: bucket,
-              Key: fileKey,
-              Body: Buffer.from(await file.arrayBuffer()),
-              ContentType: file.type,
-              CacheControl: 'public, max-age=31536000, immutable',
+    const results = await Promise.all(
+      staged.map(
+        async ({ stagingKey, declaredType }): Promise<OptimizeFileResult> => {
+          try {
+            return await optimizeStagedFile(c, {
+              stagingBucket: c.env.R2_BUCKET,
+              stagingKey,
+              destinationBucket: bucket,
+              destinationKeyBase: `${keyPrefix}/${crypto.randomUUID()}`,
+              declaredType,
             })
-          )
-
-          uploaded.push({
-            fileKey,
-            fileType,
-            fileSizeBytes: file.size,
-            bucket,
-            fileName: toStoredFileName(file.name),
-          })
-        })
+          } catch (error) {
+            honoLog({
+              logLevel: 'error',
+              message: 'Failed to optimize uploaded file',
+              error,
+            })
+            return { ok: false, reason: 'failed' }
+          }
+        }
       )
+    )
 
-      return c.json({ success: true, files: uploaded })
-    } catch (error) {
-      honoLog({
-        logLevel: 'error',
-        message: 'Failed to upload file(s)',
-        error,
-      })
-      // Promise.all can leave earlier files behind when a later upload fails.
-      // Remove those partial uploads before returning the failed request.
-      try {
-        await deleteR2Files(c, uploaded)
-      } catch {
-        // Keep the original upload error as the client-facing failure.
-      }
-      return c.json({ error: 'Failed to upload file(s)' }, 500)
+    // `fileType` and the key's extension are those of what was stored (an image
+    // becomes `.webp`), while `fileName` comes from the original name, so a
+    // download is named after what the user uploaded with the stored extension.
+    const stored = results.flatMap((result, index) =>
+      result.ok
+        ? [{ ...result.file, fileName: staged[index]?.fileName ?? null }]
+        : []
+    )
+    const failedIndex = results.findIndex((result) => !result.ok)
+    const failure = results[failedIndex]
+
+    if (failure && !failure.ok) {
+      // Drop what did succeed, and every staged object, so a rejected request
+      // leaves nothing behind. Cleanup problems must not mask the real error.
+      await Promise.allSettled([
+        deleteR2Files(c, stored),
+        deleteR2Files(
+          c,
+          staged.map(({ stagingKey }) => ({
+            bucket: c.env.R2_BUCKET,
+            fileKey: stagingKey,
+          }))
+        ),
+      ])
+      const { status, message } = failureResponse(failure)
+      // `stagingKey` says which file, so the client can name it; `sizeBytes` is
+      // how big it was after optimizing, when that is what went wrong.
+      return c.json(
+        {
+          error: message,
+          stagingKey: staged[failedIndex]?.stagingKey,
+          sizeBytes: failure.sizeBytes,
+        },
+        status
+      )
     }
+
+    return c.json<UploadResponse>({ success: true, files: stored })
   }
 )
 

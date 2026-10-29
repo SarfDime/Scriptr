@@ -2,23 +2,13 @@ import type { ApiEndpoint } from '../config/api-routes'
 import type { Tables } from './database.types'
 
 type FlagTargetType = 'user' | 'script' | 'comment'
-type FileType =
-  | 'pdf'
-  | 'jpg'
-  | 'jpeg'
-  | 'png'
-  | 'webp'
-  | 'md'
-  | 'doc'
-  | 'docx'
-  | 'xls'
-  | 'xlsx'
+type FileType = 'pdf' | 'jpg' | 'jpeg' | 'png' | 'webp' | 'md' | 'docx' | 'xlsx'
 
 type Favorite = Pick<Tables<'script_favorites'>, 'created_at' | 'script_id'>
 type FlagRow = Tables<'flags'>
 type NotificationRecord = Tables<'notifications'>
 
-/** Shape returned by POST /file-ops/upload for each uploaded file, and
+/** Shape returned by POST /file-ops/finalize for each stored file, and
  * accepted by POST /scripts. Stays here (rather than in
  * next/types/components/Scripts.types.ts) because hono/src/routes/scripts.ts
  * imports it directly — anything a hono/ route needs must live under

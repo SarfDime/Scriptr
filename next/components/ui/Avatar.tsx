@@ -30,8 +30,11 @@ export const Avatar = ({
             sizes={IMAGE_SIZES.AVATAR}
             alt={name}
             {...picture}
+            imageProps={{
+              ...picture.imageProps,
+            }}
             className={cn(
-              'rounded-md h-full aspect-square ui-center p-6',
+              'rounded-md h-full aspect-square ui-center',
               picture?.className,
               className
             )}

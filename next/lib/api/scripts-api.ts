@@ -1,6 +1,15 @@
 import { apiRoutes, withQuery } from '@shared/config/api-routes'
 import { SCRIPT_CACHE_TAGS } from '@shared/config/cache-tags'
+import { UPLOAD_FINALIZE_TIMEOUT_MS } from '@shared/config/next-constants'
+import { MAX_STORED_FILE_BYTES } from '@shared/config/shared-constants'
+import { UI_STRINGS } from '@shared/config/strings'
 import type { ScriptFileInput } from '@shared/types/api.types'
+import type {
+  FinalizeUploadRequest,
+  StagedUpload,
+  UploadUrlsRequest,
+  UploadUrlsResponse,
+} from '@shared/types/file-upload.types'
 import type {
   CreateScriptResponse,
   DownloadResponse,
@@ -13,12 +22,18 @@ import type {
   ScriptUpdateInput,
   UploadResponse,
 } from '@shared/types/scripts.types'
+import { UserFacingError } from '@/lib/user-facing-error'
 import type { ScriptUploadInput } from '@/types/components/Scripts.types'
 import {
   apiFetchPublicRead,
   apiFetchRequired,
   cachedUnlessPersonalized,
 } from './next-api'
+import {
+  isUserFacingUploadRejection,
+  putToStaging,
+  toUserFacingUploadError,
+} from './upload'
 
 const SCRIPT_COMMENT_COUNT_CACHE_VERSION = 2
 
@@ -175,16 +190,84 @@ export const getScriptFileUrl = (
     { cache: 'no-store' }
   )
 
-export const uploadFiles = async (body: FormData) => {
-  const { files } = await apiFetchRequired<UploadResponse>(
-    apiRoutes.fileOps.upload,
-    {
-      method: 'POST',
-      body,
+export type UploadStage = 'uploading' | 'optimizing'
+
+/**
+ * A file that is still too large after optimizing is named, since the API only
+ * knows it by its staging key. Everything else follows the shared mapping.
+ */
+const toUploadError = (
+  error: unknown,
+  uploads: ReadonlyArray<StagedUpload>,
+  files: ReadonlyArray<File>
+): unknown => {
+  if (isUserFacingUploadRejection(error) && error.status === 413) {
+    const { stagingKey, sizeBytes } = error.data ?? {}
+    const fileIndex = uploads.findIndex(
+      (upload) => upload.stagingKey === stagingKey
+    )
+    const name = files[fileIndex]?.name
+    if (name && typeof sizeBytes === 'number') {
+      return new UserFacingError(
+        UI_STRINGS.scripts.uploadModal.fileErrors.tooLargeAfterOptimizingNamed(
+          name,
+          MAX_STORED_FILE_BYTES,
+          sizeBytes
+        )
+      )
     }
+  }
+  return toUserFacingUploadError(error)
+}
+
+/** Uploads script files in three steps: get presigned URLs, PUT each file
+ * straight to R2 (so large files never pass through the API), then have the
+ * API finalize them. Returns the stored files to pass to `createScript`.
+ * `onStage` fires as each phase starts, since finalizing can take a while. */
+export const uploadScriptFiles = async (
+  subjectId: string,
+  files: ReadonlyArray<File>,
+  onStage?: (stage: UploadStage) => void
+): Promise<Array<ScriptFileInput>> => {
+  onStage?.('uploading')
+  const urlsRequest: UploadUrlsRequest = {
+    subjectId,
+    files: files.map(({ name, size }) => ({ name, size })),
+  }
+  const { uploads } = await apiFetchRequired<UploadUrlsResponse>(
+    apiRoutes.fileOps.uploadUrls,
+    { method: 'POST', body: urlsRequest }
+  ).catch((error: unknown) => {
+    throw toUploadError(error, [], files)
+  })
+
+  const staged = await Promise.all(
+    uploads.map(async (upload, index) => {
+      const file = files[index]
+      if (!file) {
+        throw new UserFacingError(
+          UI_STRINGS.scripts.uploadModal.fileErrors.stagingFailed
+        )
+      }
+      await putToStaging(upload, file)
+      return { stagingKey: upload.stagingKey, name: file.name }
+    })
   )
 
-  return files
+  onStage?.('optimizing')
+  const finalizeRequest: FinalizeUploadRequest = { subjectId, files: staged }
+  const { files: stored } = await apiFetchRequired<UploadResponse>(
+    apiRoutes.fileOps.finalize,
+    {
+      method: 'POST',
+      body: finalizeRequest,
+      timeoutMs: UPLOAD_FINALIZE_TIMEOUT_MS,
+    }
+  ).catch((error: unknown) => {
+    throw toUploadError(error, uploads, files)
+  })
+
+  return stored
 }
 
 /** Adds files to an existing script: uploads them to R2, then attaches them.
@@ -194,14 +277,10 @@ export const uploadFiles = async (body: FormData) => {
 export const addScriptFiles = async (
   scriptId: string,
   subjectId: string,
-  files: Array<File>
+  files: ReadonlyArray<File>,
+  onStage?: (stage: UploadStage) => void
 ) => {
-  const formData = new FormData()
-  formData.append('subjectId', subjectId)
-  for (const file of files) {
-    formData.append('files', file)
-  }
-  const uploaded = await uploadFiles(formData)
+  const uploaded = await uploadScriptFiles(subjectId, files, onStage)
 
   return apiFetchRequired<ScriptAttachFilesResponse>(
     apiRoutes.scripts.filesById(scriptId),

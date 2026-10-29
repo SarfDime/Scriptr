@@ -121,7 +121,7 @@ Phase 3.
 
 ```bash
 curl -s -c cookies-student.txt -X POST $BASE/auth/register -H "Content-Type: application/json" \
-  -d '{"email":"student@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"localstudent","full_name":"Test Student"}'
+  -d '{"email":"redacted@example.test","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"localstudent","full_name":"Test Student"}'
 curl -s -c cookies-admin.txt -X POST $BASE/auth/register -H "Content-Type: application/json" \
   -d '{"email":"admin@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"localadmin","full_name":"Test Admin"}'
 
@@ -225,6 +225,44 @@ curl -s -b cookies-student.txt -X PATCH $BASE/profiles/me \
   -d '{"username":"localstudent","selected_faculty_ids":["00000000-0000-0000-0000-000000000000"]}' | jq .
 ```
 
+Changing the avatar is two calls, like a script file upload. It needs
+`R2_PUBLIC_URL` set on the API (otherwise both calls answer `503`) and the
+optimizer reachable (`OPTIMIZER_URL`/`OPTIMIZER_SECRET`); the in-process
+stand-in can't crop, so it doesn't serve avatars.
+
+```bash
+# Any image works; the API crops it square at 320 px and stores WebP whatever was sent.
+# A 1x1 PNG, base64-encoded, keeps this dependency-free.
+printf '%s' 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==' \
+  | base64 -d > /tmp/avatar.png
+SIZE=$(wc -c < /tmp/avatar.png | tr -d ' ')
+
+# Step 1: presigned PUT into the bucket's staging/ prefix
+AV=$(curl -s -b cookies-student.txt -X POST $BASE/profiles/me/avatar/upload-url \
+  -H "Content-Type: application/json" -d "{\"name\": \"avatar.png\", \"size\": $SIZE}")
+echo $AV | jq .            # { success, upload: { stagingKey, url, contentType } }
+
+# Step 2: PUT the bytes, then upload. The response names the public URL.
+curl -s -X PUT "$(echo $AV | jq -r '.upload.url')" \
+  -H "Content-Type: $(echo $AV | jq -r '.upload.contentType')" --data-binary @/tmp/avatar.png
+curl -s -b cookies-student.txt -X POST $BASE/profiles/me/avatar \
+  -H "Content-Type: application/json" \
+  -d "{\"stagingKey\": \"$(echo $AV | jq -r '.upload.stagingKey')\"}" | jq .   # { success, avatarUrl }
+curl -s -b cookies-student.txt $BASE/profiles/me | jq -r '.avatar_url'          # same URL, stored on the profile
+
+# Rejections: an unsupported extension or a file over 10 MB fails at step 1 with a 400;
+# a key that isn't yours or wasn't uploaded fails at step 2 with a 400 and keeps the old avatar.
+curl -s -b cookies-student.txt -X POST $BASE/profiles/me/avatar/upload-url \
+  -H "Content-Type: application/json" -d '{"name": "avatar.gif", "size": 100}' | jq .
+# Both calls share a limit of 20 per 10 minutes per user (429 beyond that).
+```
+
+The object is always `avatars/{userId}.webp`, in the same bucket as script
+files, so uploading again overwrites the picture and only the `?v=` on
+`avatar_url` changes — fetch the old URL and you get the new image, fetch the
+new one and you bypass any cached copy. The URL is public and unsigned, so
+`curl` on it works without a cookie.
+
 ---
 
 ## Phase 3 — Academic profile (student)
@@ -250,21 +288,47 @@ curl -s -b cookies-student.txt $BASE/auth/session | jq '{selected_faculty_ids, s
 ## Phase 4 — Scripts
 
 ```bash
-# Files whose extension (md) actually passes isFileType — text/plain isn't accepted despite
-# being in the upload MIME allowlist, so don't reach for a .txt file here.
+# Accepted extensions are pdf, jpg, jpeg, png, webp, md, docx, xlsx. .txt, .doc and .xls are
+# rejected, so use a .md file here.
 echo "# Test script content" > /tmp/test-script.md
 echo "# Second file" > /tmp/test-script-2.md
+SIZE1=$(wc -c < /tmp/test-script.md | tr -d ' ')
+SIZE2=$(wc -c < /tmp/test-script-2.md | tr -d ' ')
 
-# Multi-file upload in one call. subjectId scopes the R2 bucket and key prefix.
-UPLOAD=$(curl -s -b cookies-student.txt -X POST $BASE/file-ops/upload \
-  -F "files=@/tmp/test-script.md" -F "files=@/tmp/test-script-2.md" -F "subjectId=$SUBJ")
+# Upload step 1: presigned PUT URLs. Send name + size only; subjectId scopes the R2 bucket and key prefix.
+URLS=$(curl -s -b cookies-student.txt -X POST $BASE/file-ops/upload-urls -H "Content-Type: application/json" -d "{
+  \"subjectId\": \"$SUBJ\",
+  \"files\": [{\"name\": \"test-script.md\", \"size\": $SIZE1}, {\"name\": \"test-script-2.md\", \"size\": $SIZE2}]
+}")
+echo $URLS | jq .                                    # { success, uploads: [{ stagingKey, url, contentType }, ...] }
+
+# Upload step 2: PUT each file straight to R2. The returned contentType is part of the signature.
+curl -s -X PUT "$(echo $URLS | jq -r '.uploads[0].url')" -H "Content-Type: $(echo $URLS | jq -r '.uploads[0].contentType')" --data-binary @/tmp/test-script.md
+curl -s -X PUT "$(echo $URLS | jq -r '.uploads[1].url')" -H "Content-Type: $(echo $URLS | jq -r '.uploads[1].contentType')" --data-binary @/tmp/test-script-2.md
+
+# Upload step 3: finalize. Send each staging key with the file's original name (the stored display
+# name is derived from it); runs the optimizer and returns the stored files.
+UPLOAD=$(curl -s -b cookies-student.txt -X POST $BASE/file-ops/finalize -H "Content-Type: application/json" -d "{
+  \"subjectId\": \"$SUBJ\",
+  \"files\": [
+    {\"stagingKey\": \"$(echo $URLS | jq -r '.uploads[0].stagingKey')\", \"name\": \"test-script.md\"},
+    {\"stagingKey\": \"$(echo $URLS | jq -r '.uploads[1].stagingKey')\", \"name\": \"test-script-2.md\"}
+  ]
+}")
 echo $UPLOAD | jq .                                  # { success, files: [{ fileKey, fileType, fileSizeBytes, bucket, fileName }, ...] }
 echo $UPLOAD | jq '.files | length'                  # 2
 echo $UPLOAD | jq -r '.files[0].fileKey'             # {facultyId}/{studyId}/{subjectId}/{userId}/{uuid}.md
 echo $UPLOAD | jq -r '.files[].fileName'             # test-script, test-script-2 (kebab-case, no extension)
 
-# A single file is still accepted and normalized to an array
-curl -s -b cookies-student.txt -X POST $BASE/file-ops/upload -F "files=@/tmp/test-script.md" | jq '.files | length'   # 1
+# Rejections: .doc/.xls (or any unsupported extension) and files over their limit (3.5 MB, or 20 MB for
+# PDFs and images) fail at step 1 with a 400
+curl -s -b cookies-student.txt -X POST $BASE/file-ops/upload-urls -H "Content-Type: application/json" -d '{"files": [{"name": "old.doc", "size": 100}]}' | jq .   # { error: "Unsupported file type (.doc)" }
+# A key that isn't yours, never uploaded, or expired fails at step 3 with a 400; a file whose bytes
+# don't match its extension (e.g. a PNG renamed to .pdf) fails with a 400 and nothing is kept.
+# upload-urls is limited to 30 calls and finalize to 15 per 10 minutes per user (429 beyond that).
+# POST /scripts with a file whose bucket or key is outside your own scope (e.g. another user's key)
+# is rejected with 400 "Invalid upload request"; a file that isn't in R2 gets a 400 too. Nothing is deleted,
+# and the size stored is the one R2 reports.
 
 # files array is passed to POST /scripts exactly as returned (fileKey, fileType, fileSizeBytes, bucket)
 FILES=$(echo $UPLOAD | jq -c '.files')
@@ -336,14 +400,18 @@ if [ -n "$FILE_ID" ]; then
   curl -s -b cookies-student.txt $BASE/scripts/$SCRIPT | jq '[.files[].position]'
 fi
 
-# Add more files to the existing script: upload first, then attach what came back.
-echo "# Third file" > /tmp/Test\ Script\ 3.md
-MORE=$(curl -s -b cookies-student.txt -X POST $BASE/file-ops/upload \
-  -F "files=@/tmp/Test Script 3.md" -F "subjectId=$SUBJ")
+# Add more files to the existing script: upload first (the same three steps), then attach what came back.
+echo "# Third file" > "/tmp/Test Script 3.md"
+SIZE3=$(wc -c < "/tmp/Test Script 3.md" | tr -d ' ')
+URLS3=$(curl -s -b cookies-student.txt -X POST $BASE/file-ops/upload-urls -H "Content-Type: application/json" -d "{\"subjectId\": \"$SUBJ\", \"files\": [{\"name\": \"Test Script 3.md\", \"size\": $SIZE3}]}")
+curl -s -X PUT "$(echo $URLS3 | jq -r '.uploads[0].url')" -H "Content-Type: $(echo $URLS3 | jq -r '.uploads[0].contentType')" --data-binary @"/tmp/Test Script 3.md"
+MORE=$(curl -s -b cookies-student.txt -X POST $BASE/file-ops/finalize -H "Content-Type: application/json" -d "{\"subjectId\": \"$SUBJ\", \"files\": [{\"stagingKey\": \"$(echo $URLS3 | jq -r '.uploads[0].stagingKey')\", \"name\": \"Test Script 3.md\"}]}")
 echo $MORE | jq -r '.files[0].fileName'                # test-script-3
 curl -s -b cookies-student.txt -X POST $BASE/scripts/$SCRIPT/files -H "Content-Type: application/json" \
   -d "{\"files\": $(echo $MORE | jq -c '.files')}" | jq .      # { success, files: [{ ..., position: last + 1, file_name }] }
-# A non-author (and non-admin) gets 403, and the uploaded objects are removed again.
+# A non-author (and non-admin) gets 403, and the caller's own uploaded objects are removed again (a key
+# under anyone else's user id is never deleted). Files outside the script's subject scope, or not in R2,
+# are rejected with 400, as in POST /scripts.
 # A restricted author gets 403 "restricted from adding files" (see Phase 10b).
 ```
 
@@ -650,16 +718,16 @@ rm -f cookies-student.txt cookies-admin.txt /tmp/test-script.md /tmp/test-script
 
 ## Troubleshooting
 
-| Symptom                                               | Cause                                                                                                              |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `{"error":"Not authenticated"}`                       | Missing `-b cookies-*.txt`, or the session expired or was cleared (access tokens last one week) — log in again     |
-| `{"error":"Forbidden"}` on any catalog/internal route | `x-internal-secret` header missing/wrong, or `INTERNAL_API_SECRET` unset in `hono/.env` (restart after setting it) |
-| `403` on a create/update that should work             | The account is still restricted from Phase 10b — lift it with `DELETE /restrictions/:profileId`                    |
-| `404 Route not found` on a documented endpoint        | The route file isn't mounted in `hono/src/index.ts`                                                                |
-| `invalid input syntax for type uuid`                  | A captured `jq -r` variable came back `null` — check the previous step's response shape                            |
-| `Cannot delete: still referenced by ...` / `409`      | Teardown ran out of order — delete the named dependent first                                                       |
-| Upload returns `.file` is `null`                      | The response is now `.files[]`; use `.files[0].fileKey` and send the form field as `files`, not `file`             |
-| Fuzzy search returns nothing                          | Query too far from the title/description text; threshold is intentionally strict                                   |
+| Symptom                                                    | Cause                                                                                                                           |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `{"error":"Not authenticated"}`                            | Missing `-b cookies-*.txt`, or the session expired or was cleared (access tokens last one week) — log in again                  |
+| `{"error":"Forbidden"}` on any catalog/internal route      | `x-internal-secret` header missing/wrong, or `INTERNAL_API_SECRET` unset in `hono/.env` (restart after setting it)              |
+| `403` on a create/update that should work                  | The account is still restricted from Phase 10b — lift it with `DELETE /restrictions/:profileId`                                 |
+| `404 Route not found` on a documented endpoint             | The route file isn't mounted in `hono/src/index.ts`                                                                             |
+| `invalid input syntax for type uuid`                       | A captured `jq -r` variable came back `null` — check the previous step's response shape                                         |
+| `Cannot delete: still referenced by ...` / `409`           | Teardown ran out of order — delete the named dependent first                                                                    |
+| `finalize` returns `This upload is unknown or has expired` | The staging key must come from your own `upload-urls` call, be PUT to R2 within 10 minutes, and not already have been finalized |
+| Fuzzy search returns nothing                               | Query too far from the title/description text; threshold is intentionally strict                                                |
 
 **Server**: `hono/` via `@hono/node-server`, port `8787`, env file
 `hono/.env`. **Auth cookie**: `sb-auth-token` (HttpOnly, `SameSite=Lax`,

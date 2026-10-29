@@ -3,7 +3,7 @@
 import { UI_STRINGS } from '@shared/config/strings'
 import { useState } from 'react'
 import { useProtectedAction } from '@/hooks/useProtectedAction'
-import { createScript, uploadFiles } from '@/lib/api/scripts-api'
+import { createScript, uploadScriptFiles } from '@/lib/api/scripts-api'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 import type {
   ScriptUploadInput,
@@ -17,12 +17,12 @@ export function useScriptUpload() {
     async (input: ScriptUploadInput) => {
       setState({ status: 'uploading' })
 
-      const formData = new FormData()
-      formData.append('subjectId', input.subjectId)
-      for (const file of input.files) {
-        formData.append('files', file)
-      }
-      const files = input.files.length > 0 ? await uploadFiles(formData) : []
+      const files =
+        input.files.length > 0
+          ? await uploadScriptFiles(input.subjectId, input.files, (stage) =>
+              setState({ status: stage })
+            )
+          : []
 
       setState({ status: 'creating' })
       const script = await createScript(input, files)

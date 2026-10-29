@@ -1,25 +1,24 @@
 'use client'
 
-import { ALLOWED_EXTENSIONS } from '@shared/config/shared-constants'
-import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
+import { UI_STRINGS } from '@shared/config/strings'
+import {
+  getFileExtension,
+  getMaxUploadBytes,
+  isFileType,
+} from '@shared/utils/api.utils'
 import { useState } from 'react'
-import { getExtension } from '@/lib/file-preview'
 import type { FileWithError } from '@/types/components/ScriptFilesInput.types'
 
-const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // ~1MB
+const { fileErrors } = UI_STRINGS.scripts.uploadModal
 
+/** The same checks the API makes, from the same shared limits, so a file the
+ * form accepts is one the upload will accept (and vice versa). */
 function validateFile(file: File): string | null {
-  const extension = getExtension(file.name)
-  if (
-    !ALLOWED_EXTENSIONS.includes(
-      extension as (typeof ALLOWED_EXTENSIONS)[number]
-    )
-  ) {
-    return SCRIPT_STRINGS.file.unsupportedFileType(extension)
-  }
-  if (file.size > MAX_FILE_SIZE_BYTES) {
-    return SCRIPT_STRINGS.file.fileTooLarge(MAX_FILE_SIZE_BYTES / (1024 * 1024))
-  }
+  const extension = getFileExtension(file.name)
+  if (!isFileType(extension)) return fileErrors.unsupportedType(extension)
+
+  const maxBytes = getMaxUploadBytes(extension)
+  if (file.size > maxBytes) return fileErrors.tooLarge(maxBytes)
   return null
 }
 

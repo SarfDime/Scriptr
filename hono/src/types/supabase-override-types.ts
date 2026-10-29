@@ -1,18 +1,7 @@
 /** biome-ignore-all lint/style/useNamingConvention: <Ignore> */
+import type { FileType } from '@shared/types/api.types'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
 import type { Database as GenDatabase } from './supabase'
-
-export type FileType =
-  | 'pdf'
-  | 'jpg'
-  | 'jpeg'
-  | 'png'
-  | 'webp'
-  | 'md'
-  | 'doc'
-  | 'docx'
-  | 'xls'
-  | 'xlsx'
 
 type Override<T, U> = Omit<T, keyof U> & U
 

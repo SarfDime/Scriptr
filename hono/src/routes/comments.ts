@@ -32,6 +32,7 @@ import { Hono } from 'hono'
 import { checkCommentsPosted } from '../lib/achievements'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
 import { honoLog } from '../lib/logger'
+import { createRateLimiter } from '../lib/rate-limit'
 import { requiredParam } from '../lib/request'
 import {
   authMiddleware,
@@ -66,42 +67,14 @@ const COMMENT_POST_LIMIT = 10
 const COMMENT_ENGAGEMENT_WINDOW_MS = 60 * 1000
 const COMMENT_ENGAGEMENT_LIMIT = 15
 
-const rateLimitBuckets = new Map<
-  string,
-  { expiresAt: number; timestamps: Array<number> }
->()
-let rateLimitChecks = 0
-
-function isRateLimited(key: string, limit: number, windowMs: number): boolean {
-  const now = Date.now()
-  rateLimitChecks += 1
-  if (rateLimitChecks % 256 === 0) {
-    for (const [bucketKey, bucket] of rateLimitBuckets) {
-      if (bucket.expiresAt <= now) rateLimitBuckets.delete(bucketKey)
-    }
-  }
-
-  const bucket = rateLimitBuckets.get(key)
-  const recentRequests = (bucket?.timestamps ?? []).filter(
-    (timestamp) => now - timestamp < windowMs
-  )
-  if (recentRequests.length >= limit) {
-    const oldestRequest = recentRequests[0] ?? now
-    rateLimitBuckets.set(key, {
-      timestamps: recentRequests,
-      expiresAt: oldestRequest + windowMs,
-    })
-    return true
-  }
-
-  recentRequests.push(now)
-  const oldestRequest = recentRequests[0] ?? now
-  rateLimitBuckets.set(key, {
-    timestamps: recentRequests,
-    expiresAt: oldestRequest + windowMs,
-  })
-  return false
-}
+const isCommentPostLimited = createRateLimiter({
+  limit: COMMENT_POST_LIMIT,
+  windowMs: COMMENT_POST_WINDOW_MS,
+})
+const isEngagementLimited = createRateLimiter({
+  limit: COMMENT_ENGAGEMENT_LIMIT,
+  windowMs: COMMENT_ENGAGEMENT_WINDOW_MS,
+})
 
 function parsePage(
   c: Parameters<typeof createSupabaseClient>[0],
@@ -162,19 +135,11 @@ function databaseErrorResponse(
 }
 
 function isCommentRateLimited(userId: string, action: 'comment' | 'reply') {
-  return isRateLimited(
-    `comment:${action}:${userId}`,
-    COMMENT_POST_LIMIT,
-    COMMENT_POST_WINDOW_MS
-  )
+  return isCommentPostLimited(`${action}:${userId}`)
 }
 
 function isEngagementRateLimited(userId: string) {
-  return isRateLimited(
-    `comment:engagement:${userId}`,
-    COMMENT_ENGAGEMENT_LIMIT,
-    COMMENT_ENGAGEMENT_WINDOW_MS
-  )
+  return isEngagementLimited(userId)
 }
 
 /**

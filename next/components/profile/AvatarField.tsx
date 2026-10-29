@@ -6,20 +6,13 @@ import { Box } from '@/components/common/Box'
 import { Text } from '@/components/typography/Text'
 import { Avatar } from '@/components/ui/Avatar'
 import { cn } from '@/lib/common-utils'
-import {
-  AVATAR_ACCEPTED_TYPES,
-  AVATAR_UPLOAD_ENABLED,
-} from '@/lib/profile-avatar'
+import { AVATAR_ACCEPT_ATTRIBUTE } from '@/lib/profile-avatar'
 import type { AvatarFieldProps } from '@/types/components/EditProfile.types'
 
 /**
  * The photo row of the edit-profile dialog: current avatar (initials when
  * there is no photo) plus a file picker. Presentational — the picked file
- * lives in `useEditProfileForm`.
- *
- * TODO(r2-optimization): the picker stays disabled while
- * AVATAR_UPLOAD_ENABLED is false, because the upload route doesn't exist
- * yet. Once it does, this also wants a preview of the picked file.
+ * lives in `useEditProfileForm`, which also uploads it.
  */
 export function AvatarField({
   name,
@@ -31,12 +24,8 @@ export function AvatarField({
 }: AvatarFieldProps) {
   const inputId = useId()
   const captionId = useId()
-  const isDisabled = disabled || !AVATAR_UPLOAD_ENABLED
 
-  const caption =
-    error ??
-    file?.name ??
-    (AVATAR_UPLOAD_ENABLED ? null : UI_STRINGS.profile.edit.avatarUnavailable)
+  const caption = error ?? file?.name ?? null
 
   return (
     <Box className='ui-cluster items-center gap-4'>
@@ -61,8 +50,8 @@ export function AvatarField({
         <input
           id={inputId}
           type='file'
-          accept={AVATAR_ACCEPTED_TYPES.join(',')}
-          disabled={isDisabled}
+          accept={AVATAR_ACCEPT_ATTRIBUTE.join(',')}
+          disabled={disabled}
           aria-invalid={error !== null}
           aria-describedby={caption ? captionId : undefined}
           className='peer sr-only'

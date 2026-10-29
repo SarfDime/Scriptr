@@ -7,9 +7,7 @@ const FILE_TYPE_LABELS: Record<FileType, string> = {
   png: 'Image',
   webp: 'Image',
   md: 'Markdown document',
-  doc: 'Word document',
   docx: 'Word document',
-  xls: 'Excel spreadsheet',
   xlsx: 'Excel spreadsheet',
 }
 
@@ -47,9 +45,6 @@ export const SCRIPT_STRINGS = {
       `${FILE_TYPE_LABELS[fileType]} · ${
         canPreview ? 'preview available' : 'download to view'
       }`,
-    unsupportedFileType: (fileType: string) =>
-      `Unsupported file type: ${fileType}`,
-    fileTooLarge: (maxSizeMB: number) => `File exceeds ${maxSizeMB}MB`,
   },
   vote: {
     upvote: 'Upvote',

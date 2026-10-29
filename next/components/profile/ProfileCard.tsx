@@ -44,7 +44,11 @@ export const ProfileCard = ({
   return (
     <Card {...props} className={cn('ui-above block', className)}>
       <Card.Body className='ui-cluster items-start gap-4'>
-        <Avatar name={name} picture={picture} color={color} />
+        {/* The avatar fills its box (`h-full aspect-square`), so the box has to
+            be sized — an unsized flex item collapses to 0×0. */}
+        <Box className='relative h-20 w-20 shrink-0 overflow-hidden rounded-lg'>
+          <Avatar name={name} picture={picture} color={color} />
+        </Box>
         <Box className='ui-stack ui-above-inside grow'>
           {!faculties.length && !studies.length && (
             <Text className='ui-caption'>

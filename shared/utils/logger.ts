@@ -13,6 +13,10 @@ interface RequestLogParams {
   path: string
   status: number
   durationMs: number
+  /** Overrides the level that would be derived from the status. */
+  level?: LogLevel
+  /** Extra context shown after the duration, such as why a 200 is a warning. */
+  note?: string
 }
 
 const ANSI = {
@@ -101,17 +105,26 @@ function createLogger({ identifier }: { identifier: string }) {
 
   /**
    * Logs an HTTP request with method, path, status, and duration.
-   * 2xx → success, 4xx → warn, 5xx → error.
+   * 2xx → success, 4xx → warn, 5xx → error, unless `level` says otherwise.
    */
-  function logRequest({ method, path, status, durationMs }: RequestLogParams) {
+  function logRequest({
+    method,
+    path,
+    status,
+    durationMs,
+    level: forcedLevel,
+    note,
+  }: RequestLogParams) {
     const level: LogLevel =
+      forcedLevel ??
       // biome-ignore lint/style/noNestedTernary: <Simplest way>
-      status >= 500 ? 'error' : status >= 400 ? 'warn' : 'success'
+      (status >= 500 ? 'error' : status >= 400 ? 'warn' : 'success')
     const logMethod = logLevelMap[level]
     const color = statusColor(status)
+    const suffix = note ? ` ${ANSI.dim}(${note})${ANSI.reset}` : ''
 
     logMethod.console(
-      `${logMethod.logTag} ${ANSI.bold}${method}${ANSI.reset} ${ANSI.cyan}${path}${ANSI.reset} ${color}${status}${ANSI.reset} ${ANSI.dim}${durationMs}ms${ANSI.reset}`
+      `${logMethod.logTag} ${ANSI.bold}${method}${ANSI.reset} ${ANSI.cyan}${path}${ANSI.reset} ${color}${status}${ANSI.reset} ${ANSI.dim}${durationMs}ms${ANSI.reset}${suffix}`
     )
   }
 

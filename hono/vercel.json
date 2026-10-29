@@ -6,11 +6,7 @@
     "deploymentEnabled": {
       "**": false,
       "main": true,
-      "staging": true,
-      "feat-*": true,
-      "feat/**": true,
-      "fix-*": true,
-      "fix/**": true
+      "staging": true
     }
   }
 }
