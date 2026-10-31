@@ -1,7 +1,10 @@
 import { GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { zValidator } from '@hono/zod-validator'
-import { MAX_UPLOAD_FILES } from '@shared/config/shared-constants'
+import {
+  MAX_STORED_FILE_BYTES,
+  MAX_UPLOAD_FILES,
+} from '@shared/config/shared-constants'
 import { UI_STRINGS } from '@shared/config/strings'
 import type { FileType } from '@shared/types/api.types'
 import type {
@@ -18,11 +21,12 @@ import {
   isStoredFileName,
   toStoredFileName,
 } from '@shared/utils/file-name.utils'
+import { retrySizeCeiling } from '@shared/utils/optimizer-retry'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { optimizeStagedFile } from '../lib/file-optimizer'
 import { honoLog } from '../lib/logger'
-import { createS3Client, deleteR2Files } from '../lib/r2'
+import { createS3Client, deleteR2Files, getR2FileSizes } from '../lib/r2'
 import { createRateLimiter } from '../lib/rate-limit'
 import {
   createStagedUpload,
@@ -88,6 +92,15 @@ const finalizeSchema = z.object({
         // The name the file had on the user's device. The stored display name is
         // derived from it, whatever the optimizer later does to the object.
         name: z.string().min(1).max(255),
+        // What an earlier attempt at this document achieved. Only used to refuse
+        // a retry that cannot fit, so a tampered client cannot make the
+        // optimizer run more than it should.
+        priorRejection: z
+          .object({
+            attemptedBytes: z.number().int().positive(),
+            resultBytes: z.number().int().positive(),
+          })
+          .optional(),
       })
     )
     .min(1, fileErrors.noFiles)
@@ -193,6 +206,38 @@ fileOps.post(
       user.id,
       subjectId
     )
+
+    // A file the client says was already rejected is only worth optimizing again
+    // if its new size could actually land under the cap. Checked against the
+    // real staged object, so the claim cannot be used to skip the work but the
+    // declared size cannot be trusted either.
+    if (files.some((file) => file.priorRejection)) {
+      const sizes = await getR2FileSizes(
+        createS3Client(c),
+        files.map(({ stagingKey }) => ({
+          bucket: c.env.R2_BUCKET,
+          fileKey: stagingKey,
+        }))
+      )
+      for (const [index, file] of files.entries()) {
+        if (!file.priorRejection) continue
+        const stagedSize = sizes[index]
+        if (stagedSize === null || stagedSize === undefined) continue
+        const ceiling = retrySizeCeiling(
+          file.priorRejection,
+          MAX_STORED_FILE_BYTES
+        )
+        if (stagedSize > ceiling) {
+          return c.json(
+            {
+              error: fileErrors.retryTooLarge(file.name, ceiling),
+              stagingKey: file.stagingKey,
+            },
+            400
+          )
+        }
+      }
+    }
 
     const results = await Promise.all(
       staged.map(

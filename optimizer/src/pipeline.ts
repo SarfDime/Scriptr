@@ -111,6 +111,7 @@ export const createOptimizeFile = ({
     summary.attempts = outcome.attempts
     if (!outcome.ok) {
       summary.detail = outcome.detail
+      summary.diagnostics = outcome.diagnostics
       return reject(outcome.reason, outcome.sizeBytes)
     }
     summary.operation = outcome.operation

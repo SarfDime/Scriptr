@@ -12,6 +12,7 @@ import {
   subscribeToGuestAcademicData,
 } from '@/lib/onboarding-storage'
 import { accountHasAcademicData } from '@/lib/profile-sync'
+import { useLoading } from '@/providers/loading/LoadingProvider'
 import { useSession } from '@/providers/SessionProvider'
 import type { OnboardingCatalog } from '@/types/onboarding.types'
 import { useMyProfile } from '../ProfileProvider'
@@ -72,8 +73,19 @@ export const OnboardingProvider = ({
     (session.status === 'authenticated' &&
       (profile.status === 'idle' || profile.status === 'loading'))
 
+  // The setup wizard is a modal dialog, and so is the loading screen. A modal
+  // dialog paints in the browser's top layer, above everything in normal flow
+  // whatever its z-index, and the one shown last wins — so a wizard that opened
+  // while loading would sit on top of the loader. Wait for the loader instead:
+  // there is nothing to set up during a splash or an upload anyway.
+  const { isOverlayVisible } = useLoading()
+
   const autoShouldOpen =
-    !stillDeciding && !accountAlreadySetUp && !completed && !dismissed
+    !isOverlayVisible &&
+    !stillDeciding &&
+    !accountAlreadySetUp &&
+    !completed &&
+    !dismissed
 
   // The person can always override the auto decision by explicitly
   // opening or closing the modal (e.g. the "Resume setup" notification

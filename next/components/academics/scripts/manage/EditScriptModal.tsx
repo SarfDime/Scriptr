@@ -14,7 +14,7 @@ import {
 } from '@shared/utils/portable-text.utils'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
-import { type SubmitEvent, useState } from 'react'
+import { type SubmitEvent, useEffect, useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { FormContainer } from '@/components/typography/FormContainer'
@@ -23,7 +23,6 @@ import type { TextProps } from '@/components/typography/Text'
 import { Card } from '@/components/ui/Card'
 import { Dialog } from '@/components/ui/Dialog'
 import { Field } from '@/components/ui/field/Field'
-import { ProgressDialog } from '@/components/ui/ProgressDialog'
 import { useDeviceType } from '@/hooks/useDeviceType'
 import { useProtectedAction } from '@/hooks/useProtectedAction'
 import { useReadingLinkTouched } from '@/hooks/useReadingLinkTouched'
@@ -33,7 +32,11 @@ import {
   type UploadStage,
   updateScript,
 } from '@/lib/api/scripts-api'
+import { useLoading } from '@/providers/loading/LoadingProvider'
 import { useToast } from '@/providers/toaster/ToasterProvider'
+
+const ADD_FILES_TASK_KEY = 'script-add-files'
+
 import type { EditScriptModalProps } from '@/types/components/ScriptManage.types'
 import { ReadingLinksField } from '../ReadingLinksField'
 import { ScriptFilesInput } from '../ScriptFilesInput'
@@ -121,6 +124,19 @@ function EditScriptDialog({
   const isBusy =
     updateState.status === 'pending' || addFilesState.status === 'pending'
 
+  // The global loader covers the page while files upload and are optimized, so
+  // nothing here needs a spinner of its own.
+  const { startTask, finishTask } = useLoading()
+  const isAddingFiles = addFilesState.status === 'pending'
+  useEffect(() => {
+    if (!isAddingFiles) return undefined
+    startTask(ADD_FILES_TASK_KEY, {
+      message: UI_STRINGS.scripts.uploadModal.statuses[uploadStage],
+      hint: `${UI_STRINGS.scripts.uploadModal.progress.qualityWarning} ${UI_STRINGS.scripts.uploadModal.progress.qualityAdvice}`,
+    })
+    return () => finishTask(ADD_FILES_TASK_KEY)
+  }, [isAddingFiles, uploadStage, startTask, finishTask])
+
   const titleHasContent = portableTextToPlainText(title).trim() !== ''
   const titleTooLong =
     portableTextJsonByteLength(title) > PORTABLE_TEXT_LIMITS.scriptTitleBytes
@@ -200,127 +216,109 @@ function EditScriptDialog({
   }
 
   return (
-    <>
-      <Dialog
-        title={SCRIPT_STRINGS.manage.editDialogTitle}
-        hideTrigger
-        isOpen
-        onClose={onClose}
-        dialogProps={{
-          className:
-            'overflow-hidden md:top-0 md:bottom-0 md:my-auto md:max-h-[90vh] md:max-w-3xl open:flex open:flex-col',
-        }}
-        closeOnOutsideClick={false}
-        closeOnEsc={false}
-        hideBackdrop={isMobile}
+    <Dialog
+      title={SCRIPT_STRINGS.manage.editDialogTitle}
+      hideTrigger
+      isOpen
+      onClose={onClose}
+      dialogProps={{
+        className:
+          'overflow-hidden md:top-0 md:bottom-0 md:my-auto md:max-h-[90vh] md:max-w-3xl open:flex open:flex-col',
+      }}
+      closeOnOutsideClick={false}
+      closeOnEsc={false}
+      hideBackdrop={isMobile}
+    >
+      <FormContainer
+        onSubmit={handleSubmit}
+        className='flex min-h-0 flex-1 flex-col'
       >
-        <FormContainer
-          onSubmit={handleSubmit}
-          className='flex min-h-0 flex-1 flex-col'
-        >
-          <Card.Body className='ui-stack min-h-0 flex-1 divide-y divide-grey-200 overflow-y-auto p-0 gap-0'>
-            <Box className='ui-stack gap-5 p-5'>
-              <Field
-                className='min-w-0'
-                label={UI_STRINGS.scripts.uploadModal.formTitle}
-                labelProps={FIELD_LABEL_PROPS}
-                helperText={UI_STRINGS.scripts.uploadModal.formTitleHelp}
-                errorText={
-                  titleTooLong
-                    ? UI_STRINGS.scripts.uploadModal.fieldErrors.titleTooLong
-                    : UI_STRINGS.scripts.uploadModal.fieldErrors.titleRequired
-                }
-                required
-                valid={titleHasContent && !titleTooLong}
-                invalid={titleTouched && (!titleHasContent || titleTooLong)}
-              >
-                <PortableTextEditorSection
-                  initialContent={title}
-                  onChange={(value) => {
-                    setTitleTouched(true)
-                    setTitle(value)
-                  }}
-                  showActions={false}
-                  ariaLabel={UI_STRINGS.scripts.uploadModal.formTitle}
-                  editorOptions={RESTRICTED_EDITOR_OPTIONS}
-                  editorClassName='h-10 min-h-0 overflow-hidden whitespace-nowrap p-2'
-                  singleLine
-                />
-              </Field>
-
-              <Field
-                className='min-w-0'
-                label={UI_STRINGS.scripts.uploadModal.formDescription}
-                labelProps={FIELD_LABEL_PROPS}
-                helperText={UI_STRINGS.scripts.uploadModal.formDescriptionHelp}
-                errorText={
-                  UI_STRINGS.scripts.uploadModal.fieldErrors.descriptionTooLong
-                }
-                invalid={descriptionTooLong}
-              >
-                <PortableTextEditorSection
-                  initialContent={description}
-                  onChange={setDescription}
-                  showActions={false}
-                  ariaLabel={UI_STRINGS.scripts.uploadModal.formDescription}
-                  editorOptions={{
-                    excludedStyles: ['h1', 'h2', 'h3'],
-                    excludedColors: RESTRICTED_EDITOR_OPTIONS.excludedColors,
-                  }}
-                  editorClassName='min-h-28'
-                />
-              </Field>
-            </Box>
-
-            <Box className='p-5'>
-              <ReadingLinksField
-                links={readingLinks}
-                touched={linkTouched.touched}
-                disabled={isBusy}
-                onAdd={() => setReadingLinks((current) => [...current, ''])}
-                onChange={updateReadingLink}
-                onRemove={removeReadingLink}
-                onTouch={linkTouched.touch}
+        <Card.Body className='ui-stack min-h-0 flex-1 divide-y divide-grey-200 overflow-y-auto p-0 gap-0'>
+          <Box className='ui-stack gap-5 p-5'>
+            <Field
+              className='min-w-0'
+              label={UI_STRINGS.scripts.uploadModal.formTitle}
+              labelProps={FIELD_LABEL_PROPS}
+              helperText={UI_STRINGS.scripts.uploadModal.formTitleHelp}
+              errorText={
+                titleTooLong
+                  ? UI_STRINGS.scripts.uploadModal.fieldErrors.titleTooLong
+                  : UI_STRINGS.scripts.uploadModal.fieldErrors.titleRequired
+              }
+              required
+              valid={titleHasContent && !titleTooLong}
+              invalid={titleTouched && (!titleHasContent || titleTooLong)}
+            >
+              <PortableTextEditorSection
+                initialContent={title}
+                onChange={(value) => {
+                  setTitleTouched(true)
+                  setTitle(value)
+                }}
+                showActions={false}
+                ariaLabel={UI_STRINGS.scripts.uploadModal.formTitle}
+                editorOptions={RESTRICTED_EDITOR_OPTIONS}
+                editorClassName='h-10 min-h-0 overflow-hidden whitespace-nowrap p-2'
+                singleLine
               />
-            </Box>
+            </Field>
 
-            <Box className='p-5'>
-              <ScriptFilesInput
-                files={picker.files}
-                disabled={isBusy}
-                note={SCRIPT_STRINGS.manage.addFilesNote}
-                onAdd={picker.addFiles}
-                onRemove={picker.removeFile}
+            <Field
+              className='min-w-0'
+              label={UI_STRINGS.scripts.uploadModal.formDescription}
+              labelProps={FIELD_LABEL_PROPS}
+              helperText={UI_STRINGS.scripts.uploadModal.formDescriptionHelp}
+              errorText={
+                UI_STRINGS.scripts.uploadModal.fieldErrors.descriptionTooLong
+              }
+              invalid={descriptionTooLong}
+            >
+              <PortableTextEditorSection
+                initialContent={description}
+                onChange={setDescription}
+                showActions={false}
+                ariaLabel={UI_STRINGS.scripts.uploadModal.formDescription}
+                editorOptions={{
+                  excludedStyles: ['h1', 'h2', 'h3'],
+                  excludedColors: RESTRICTED_EDITOR_OPTIONS.excludedColors,
+                }}
+                editorClassName='min-h-28'
               />
-            </Box>
-          </Card.Body>
+            </Field>
+          </Box>
 
-          <Card.Footer className='ui-cluster shrink-0 justify-end gap-2 border-grey-200 border-t px-5 py-4'>
-            <Button
-              onClick={onClose}
+          <Box className='p-5'>
+            <ReadingLinksField
+              links={readingLinks}
+              touched={linkTouched.touched}
               disabled={isBusy}
-              className='button subtle'
-            >
-              {SCRIPT_STRINGS.manage.cancel}
-            </Button>
-            <Button
-              type='submit'
-              disabled={!canSubmit}
-              className='button solid'
-            >
-              {SCRIPT_STRINGS.manage.save}
-            </Button>
-          </Card.Footer>
-        </FormContainer>
-      </Dialog>
+              onAdd={() => setReadingLinks((current) => [...current, ''])}
+              onChange={updateReadingLink}
+              onRemove={removeReadingLink}
+              onTouch={linkTouched.touch}
+            />
+          </Box>
 
-      {/* Nothing else is clickable while files upload and are optimized. */}
-      <ProgressDialog
-        isOpen={addFilesState.status === 'pending'}
-        title={UI_STRINGS.scripts.uploadModal.progress.addingFilesTitle}
-        message={UI_STRINGS.scripts.uploadModal.statuses[uploadStage]}
-        hint={UI_STRINGS.scripts.uploadModal.progress.hint}
-      />
-    </>
+          <Box className='p-5'>
+            <ScriptFilesInput
+              files={picker.files}
+              disabled={isBusy}
+              note={SCRIPT_STRINGS.manage.addFilesNote}
+              onAdd={picker.addFiles}
+              onRemove={picker.removeFile}
+            />
+          </Box>
+        </Card.Body>
+
+        <Card.Footer className='ui-cluster shrink-0 justify-end gap-2 border-grey-200 border-t px-5 py-4'>
+          <Button onClick={onClose} disabled={isBusy} className='button subtle'>
+            {SCRIPT_STRINGS.manage.cancel}
+          </Button>
+          <Button type='submit' disabled={!canSubmit} className='button solid'>
+            {SCRIPT_STRINGS.manage.save}
+          </Button>
+        </Card.Footer>
+      </FormContainer>
+    </Dialog>
   )
 }

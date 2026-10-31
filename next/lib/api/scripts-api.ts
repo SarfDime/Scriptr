@@ -22,6 +22,15 @@ import type {
   ScriptUpdateInput,
   UploadResponse,
 } from '@shared/types/scripts.types'
+import {
+  isRetryPointless,
+  retrySizeCeiling,
+} from '@shared/utils/optimizer-retry'
+import {
+  findOptimizerFailure,
+  forgetOptimizerFailure,
+  rememberOptimizerFailure,
+} from '@/lib/optimizer-attempts'
 import { UserFacingError } from '@/lib/user-facing-error'
 import type { ScriptUploadInput } from '@/types/components/Scripts.types'
 import {
@@ -229,6 +238,23 @@ export const uploadScriptFiles = async (
   files: ReadonlyArray<File>,
   onStage?: (stage: UploadStage) => void
 ): Promise<Array<ScriptFileInput>> => {
+  // Refuse a retry the optimizer cannot rescue before spending a presigned URL,
+  // an R2 upload and a Cloud Run invocation on it. The API repeats this check.
+  for (const file of files) {
+    const previous = findOptimizerFailure(file.name)
+    if (
+      previous &&
+      isRetryPointless(previous, file.size, MAX_STORED_FILE_BYTES)
+    ) {
+      throw new UserFacingError(
+        UI_STRINGS.scripts.uploadModal.fileErrors.retryTooLarge(
+          file.name,
+          retrySizeCeiling(previous, MAX_STORED_FILE_BYTES)
+        )
+      )
+    }
+  }
+
   onStage?.('uploading')
   const urlsRequest: UploadUrlsRequest = {
     subjectId,
@@ -250,7 +276,12 @@ export const uploadScriptFiles = async (
         )
       }
       await putToStaging(upload, file)
-      return { stagingKey: upload.stagingKey, name: file.name }
+      const priorRejection = findOptimizerFailure(file.name)
+      return {
+        stagingKey: upload.stagingKey,
+        name: file.name,
+        ...(priorRejection ? { priorRejection } : {}),
+      }
     })
   )
 
@@ -264,10 +295,31 @@ export const uploadScriptFiles = async (
       timeoutMs: UPLOAD_FINALIZE_TIMEOUT_MS,
     }
   ).catch((error: unknown) => {
+    rememberRejections(error, uploads, files)
     throw toUploadError(error, uploads, files)
   })
 
+  for (const file of files) forgetOptimizerFailure(file.name)
   return stored
+}
+
+/** Remembers how small the optimizer got each file it rejected, so a retry at
+ * the same size can be turned away here instead of on the optimizer. */
+const rememberRejections = (
+  error: unknown,
+  uploads: ReadonlyArray<StagedUpload>,
+  files: ReadonlyArray<File>
+) => {
+  if (!isUserFacingUploadRejection(error) || error.status !== 413) return
+  const { stagingKey, sizeBytes } = error.data ?? {}
+  if (typeof sizeBytes !== 'number') return
+  const index = uploads.findIndex((upload) => upload.stagingKey === stagingKey)
+  const file = files[index]
+  if (!file) return
+  rememberOptimizerFailure(file.name, {
+    attemptedBytes: file.size,
+    resultBytes: sizeBytes,
+  })
 }
 
 /** Adds files to an existing script: uploads them to R2, then attaches them.

@@ -9,6 +9,7 @@
     "@types/node": "^24.19.2",
     "esbuild": "^0.28.2",
     "hono": "^4.13.13",
+    "pdf-lib": "^1.17.1",
     "tsx": "^4.23.15"
   },
   "name": "@scriptr/optimizer",

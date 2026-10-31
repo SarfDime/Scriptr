@@ -119,6 +119,8 @@ The preferred component APIs are `Box`, `Card`, `Button`, `Badge`, and
 | `ui-badge`       | Shared radius and sizing behavior for badges.                                             |
 | `ui-above`       | Semi transparent blurred background, blur and shadow. Sets no border width; add `border`. |
 | `ui-above-light` | Lighter variant of `ui-above`.                                                            |
+| `ui-loading-overlay` | The global loading screen's modal `<dialog>`: fills the viewport, frosted background, fades in and out. Not for other overlays. |
+| `ui-loading-overlay-exiting` | Added alongside `ui-loading-overlay` for the fade-out, just before the dialog is closed. |
 
 ```tsx
 <Card>

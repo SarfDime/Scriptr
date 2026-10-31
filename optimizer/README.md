@@ -21,10 +21,39 @@ For one staged file (`OptimizeFileRequest`), in order:
      WebP. It walks down a quality and size ladder until the result fits the
      3 MB target; PNGs try lossless WebP first so screenshots stay crisp.
    - **PDFs**: stored as uploaded when already within the 3 MB target. Larger
-     ones go through Ghostscript with `/ebook` (images at about 150 dpi), then
-     `/screen` (about 72 dpi), then `/screen` at 50 dpi, until one fits. The last
-     step is for image-heavy files and leaves images noticeably softer; the
-     logs say when it was used.
+     ones have their embedded XMP stripped first (`pdf-metadata.ts`, pdf-lib),
+     then go through Ghostscript at **150, then 120, then 96, then 72 dpi**,
+     stopping at the first result that fits the 3.5 MB cap. A **200 dpi** step
+     leads the ladder, but only when the uploaded file is under 10 MB — a bigger
+     document rarely has the headroom, so the pass would be wasted before the
+     ladder reached a resolution that fits. Measured on the upload, not the
+     stripped copy, so a large upload that strips down small still skips it. Stripping
+     runs
+     *before* Ghostscript on purpose: Ghostscript re-emits XMP attached to
+     embedded artwork instead of dropping it, so stripping first saves both the
+     bytes and the work of copying them through. It costs no pixels, and on a
+     real 15.7 MB InDesign manual (11.4 MB of it XMP) it was the difference
+     between storing the file at 50 dpi and storing it at 200 dpi. When metadata
+     alone brings a file within the target it is stored without Ghostscript
+     re-encoding anything. It does not keep
+     grinding down to the smallest result: `TARGET_STORED_FILE_BYTES` may be
+     missed when going lower costs quality. A resolution ladder is used rather
+     than Ghostscript's named presets because the presets jump straight from
+     about 150 dpi to about 72 and overshoot — on a 24-page 400 dpi scan, 120 dpi
+     already fitted the cap at 2.9 MB where 72 dpi gave 1.4 MB for the same
+     storable result. **72 dpi is the floor**: below it the quality loss stops
+     being small and text scanned as an image stops being comfortable, so a file
+     that cannot fit there is rejected rather than quietly destroyed.
+     Colour and grey are downsampled with `/Bicubic` — sharper than the old
+     `/Average` — and 1-bit mono images (glyph masks) are held at 300 dpi instead
+     of greying out. Every step also drops document XMP, the Info dates and the
+     file ID, and writes the catalogue and cross-reference table as compressed
+     object streams.
+     A PDF still over the cap gets a diagnosis in its rejection log, from
+     `pdf-bloat.ts`: it reports how the bytes split between metadata, images and
+     content streams. Ghostscript re-emits XMP attached to embedded artwork and
+     will not drop it, so a metadata-dominated PDF cannot be helped by
+     downsampling further and the log says so instead of costing more quality.
    - **docx, xlsx, md**: can't be shrunk, so they only have to fit the cap.
    - **Avatars** (`purpose: 'avatar'`): the same image path, but cropped square
      around the most interesting region at 320 px and held to the avatar limits
@@ -59,16 +88,18 @@ One line per request, in the API's format, and one line per file just before
 it saying what was done and what came of it:
 
 ```
-[OPTIMIZER_SUCCESS]: pdf -> pdf: 16.00 MB -> 2.90 MB (-82%) via gs /screen in 41.0s [gs /ebook 8.10 MB in 20.1s, gs /screen 2.90 MB in 19.8s] -> u/k.pdf
+[OPTIMIZER_SUCCESS]: pdf -> pdf: 15.67 MB -> 3.48 MB (-78%) via gs 200dpi in 4.0s [gs 200dpi 3.48 MB in 3.7s] -> u/k.pdf
 [OPTIMIZER_SUCCESS]: jpg -> webp: 4.21 MB -> 310.2 KB (-93%) via webp q80 max 2400px in 480ms [q80 max 2400px 310.2 KB in 480ms] -> u/k.webp
-[OPTIMIZER_WARN]: pdf rejected as too-large (best 4.20 MB, cap 3.50 MB): smallest was gs /screen after 41.0s [gs /ebook 8.10 MB in 20.1s, gs /screen 4.20 MB in 19.8s]
-[OPTIMIZER_WARN]: pdf rejected as failed: deadline passed before gs /screen after 80.1s [gs /ebook 8.10 MB in 80.0s]
+[OPTIMIZER_WARN]: pdf rejected as too-large (best 4.20 MB, cap 3.50 MB): smallest was gs 72dpi (metadata is 11.4 MB of 15.7 MB (73%) and images are only 1.6 MB (10%), so downsampling has almost nothing to remove) after 14.0s [gs 150dpi 4.06 MB in 4.0s, gs 120dpi 3.79 MB in 4.7s, gs 96dpi 3.75 MB in 5.3s, gs 72dpi 3.75 MB in 5.3s]
+[OPTIMIZER_WARN]: pdf rejected as failed: deadline passed before gs 120dpi after 80.1s [gs 150dpi 8.10 MB in 80.0s]
 [OPTIMIZER_SUCCESS]: POST /optimize 200 41.2s
 ```
 
 When a file doesn't fit, the bracketed list shows where it stalled: which steps
 ran, how big each result was, and how long each took. That tells apart a preset
-that doesn't shrink a file from a run that hit the deadline.
+that doesn't shrink a file from a run that hit the deadline. The parenthesis
+before it says what the file is made of, which is what says whether any further
+step could have helped at all.
 
 A rejected file is still answered with a `200` (the service did its job; the
 verdict is in the body), so its request line is logged as a warning that says
@@ -106,7 +137,8 @@ To point the API at it locally, set the same `OPTIMIZER_SECRET`, plus
 
 The service is bundled into one file with esbuild. Only `sharp` (a native
 module) stays external, so it is the only `dependencies` entry; everything else
-in `package.json` is a devDependency because it is bundled. Keep it that way, or
+in `package.json` is a devDependency because it is bundled — including
+`pdf-lib`, which is pure JavaScript and adds about 1 MB to the bundle. Keep it that way, or
 the Docker image will carry modules it never loads.
 
 ### Docker

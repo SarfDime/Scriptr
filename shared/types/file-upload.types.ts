@@ -37,6 +37,13 @@ export type FinalizeUploadRequest = {
     /** The file's original name. The stored display name (`fileName`) is derived
      * from it, even though the stored object may be renamed or converted. */
     name: string
+    /** What an earlier attempt at this document achieved, when it was rejected
+     * as too large. The API re-derives the ceiling from it so a retry that
+     * cannot fit is refused without spending an optimizer run. */
+    priorRejection?: {
+      attemptedBytes: number
+      resultBytes: number
+    }
   }>
 }
 

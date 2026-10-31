@@ -268,22 +268,70 @@
   scroll-behavior: auto;
 }
 
-/* The loading overlay always starts fully opaque and eases down to its
- * regular translucency (`from` only: the end state is the element's own
- * background), so late-applied settings (simple mode, theme) never show as a
- * visible shift. */
-@keyframes ui-loading-overlay-in {
+/* The veil behind the loading screen eases from opaque to its resting
+ * translucency, so a theme or simple-mode applied after paint never shows as a
+ * visible shift.
+ *
+ * It is animated on the document rather than on the overlay element because the
+ * overlay changes element a few hundred milliseconds into the page load: the
+ * server-rendered stand-in is replaced by the modal dialog, and an animation on
+ * either of them restarts at the swap. Inherited from `:root`, one run covers
+ * both. `from` only — the resting value is the variable's own. */
+@property --ui-loading-veil {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.7;
+}
+
+@keyframes ui-loading-veil-in {
   from {
-    background-color: var(--color-background-100);
+    --ui-loading-veil: 1;
   }
 }
 
+:root {
+  --ui-loading-veil: 0.7;
+}
+
+/* Matches for the whole session: the dialog is always mounted. */
+:root:has(.ui-loading-overlay) {
+  animation: ui-loading-veil-in 1.5s ease-out;
+}
+
 .ui-loading-overlay {
-  animation: ui-loading-overlay-in 1.5s ease-out;
+  /* `fixed` matters: before the dialog is promoted to the top layer it is only
+   * an open (non-modal) dialog, which the browser lays out in normal flow.
+   * `z-100` puts it above the navbar (`Z_INDEX.NAV_BAR`, `z-99`) for the frames
+   * before that promotion, since a modal's top layer ignores z-index anyway. */
+  /* Full viewport, spelled out against the user-agent styles for a modal
+   * dialog: it sets `width: fit-content` with `max-width`/`max-height` caps,
+   * which would shrink this to its content, and a border, which showed as a
+   * hairline along the top and left edges (the right and bottom fell outside
+   * the viewport). `w-screen` rather than `w-full` so the box also covers the
+   * scrollbar's strip: 100% resolves against the viewport without it, which
+   * would leave a column of page showing down the right side. A fixed element
+   * does not add scrollable overflow, so the extra width is safe. */
+  @apply fixed inset-0 z-100 m-0 h-dvh w-screen max-w-none max-h-none border-0 border-none p-0 text-fg outline-none backdrop-blur-xl transition-all duration-500 ease-in-out;
+  background-color: color-mix(
+    in oklab,
+    var(--color-background-100) calc(var(--ui-loading-veil) * 100%),
+    transparent
+  );
+}
+
+/* A closed <dialog> is `display: none`, so the centering layout has to hang off
+ * the open state rather than the base class. */
+.ui-loading-overlay[open] {
+  @apply flex items-center justify-center;
+}
+
+/* Fading out on its way to `hidden`, after which the element is closed. */
+.ui-loading-overlay-exiting {
+  @apply scale-105 opacity-0;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ui-loading-overlay {
+  :root:has(.ui-loading-overlay) {
     animation: none;
   }
 }

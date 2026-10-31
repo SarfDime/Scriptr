@@ -115,6 +115,10 @@ export const UI_STRINGS = {
         title: 'Creating your script',
         addingFilesTitle: 'Adding files',
         hint: 'This can take a minute for large files. Please keep this window open.',
+        qualityWarning:
+          'Please be aware that uploaded files may lose some visual quality, because they are compressed to fit the size limit.',
+        qualityAdvice:
+          'If a file is still too big afterwards, shrink it before uploading: export images at a lower resolution, or split the document into smaller files.',
       },
       statuses: {
         uploading: 'Uploading files…',
@@ -154,6 +158,8 @@ export const UI_STRINGS = {
           sizeBytes: number
         ) =>
           `${name} is still ${toMegabytes(sizeBytes)} after optimizing (the limit is ${toMegabytes(maxBytes)})`,
+        retryTooLarge: (name: string, maxBytes: number) =>
+          `${name} was already optimized and stayed too large, so it will not fit at this size. Make it ${toMegabytes(maxBytes)} or smaller first.`,
         processingFailed: 'Failed to process the uploaded file(s)',
         stagingFailed: 'Failed to upload file(s)',
         rateLimited:

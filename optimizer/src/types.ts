@@ -40,6 +40,9 @@ export type OptimizeOutcome =
       reason: 'invalid-content' | 'too-large' | 'failed'
       sizeBytes?: number
       detail?: string
+      /** What the file is made of, when that explains the outcome. Only ever
+       * logged: the API is told the reason and the size, nothing more. */
+      diagnostics?: string
       attempts?: ReadonlyArray<OptimizeAttempt>
     }
 

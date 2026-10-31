@@ -17,7 +17,7 @@
     "check-types": "corepack pnpm --filter @scriptr/api check-types && corepack pnpm --filter scriptr-next check-types && corepack pnpm --filter scriptr-sanity check-types && corepack pnpm --filter @scriptr/optimizer check-types",
     "check-types:sanity": "corepack pnpm --filter scriptr-sanity check-types",
     "clean": "rm -rf next/node_modules hono/node_modules sanity/node_modules shared/node_modules optimizer/node_modules node_modules next/.next sanity/.sanity next/tsconfig.tsbuildinfo hono/tsconfig.tsbuildinfo tsconfig.tsbuildinfo",
-    "dev": "corepack pnpm dev:next & corepack pnpm dev:hono & corepack pnpm dev:sanity",
+    "dev": "corepack pnpm dev:next & corepack pnpm dev:hono & corepack pnpm dev:sanity & corepack pnpm dev:optimizer",
     "dev:hono": "corepack pnpm --filter @scriptr/api dev",
     "dev:optimizer": "corepack pnpm --filter @scriptr/optimizer dev",
     "dev:next": "corepack pnpm --filter scriptr-next dev",

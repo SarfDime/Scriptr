@@ -53,10 +53,11 @@ Keep secrets out of source control.
 ## Commands
 
 ```bash
-corepack pnpm dev                # Start Next.js, the Hono API, and Sanity Studio together
+corepack pnpm dev                # Start Next.js, the Hono API, Sanity Studio and the optimizer together
 corepack pnpm dev:hono           # Start the Hono API
 corepack pnpm dev:next           # Start the Next.js frontend
 corepack pnpm dev:sanity         # Start Sanity Studio
+corepack pnpm dev:optimizer      # Start the file optimizer (needs Ghostscript)
 corepack pnpm build:next         # Build the frontend
 corepack pnpm start:next         # Serve the built frontend
 corepack pnpm build:sanity       # Build Sanity Studio

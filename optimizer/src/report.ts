@@ -7,12 +7,14 @@ import type { OptimizeAttempt, SizeLimits } from './types'
 export type OutcomeSummary = {
   /** Size of the uploaded file, before optimizing. */
   inputBytes?: number
-  /** What was done, e.g. `webp q80 max 2400px` or `gs /ebook`. */
+  /** What was done, e.g. `webp q80 max 2400px` or `gs 120dpi`. */
   operation?: string
   /** Every size an optimizer tried, in order. */
   attempts?: ReadonlyArray<OptimizeAttempt>
   /** Why an optimizer gave up, when it did. */
   detail?: string
+  /** What the file turned out to be made of, when that explains a give-up. */
+  diagnostics?: string
 }
 
 type OutcomeInput = {
@@ -47,7 +49,7 @@ const formatChange = (before: number, after: number): string => {
 /**
  * One log line for one file: what was done and what came of it.
  *
- * `pdf -> pdf: 16.00 MB -> 2.90 MB (-82%) via gs /screen in 41.0s [gs /ebook ...]`
+ * `pdf -> pdf: 16.00 MB -> 2.90 MB (-82%) via gs 120dpi in 6.1s [gs 150dpi ...]`
  * `pdf rejected as too-large (best 4.20 MB, cap 3.50 MB) after 41.0s [...]`
  */
 export const describeOutcome = ({
@@ -76,8 +78,9 @@ export const describeOutcome = ({
       ? ''
       : ` (best ${formatBytes(result.sizeBytes)}, cap ${formatBytes(limits.cap)})`
   const detail = summary.detail ? `: ${summary.detail}` : ''
+  const diagnostics = summary.diagnostics ? ` (${summary.diagnostics})` : ''
   return {
     level: 'warn',
-    message: `${label} rejected as ${result.reason}${best}${detail} after ${took}${attempts}`,
+    message: `${label} rejected as ${result.reason}${best}${detail}${diagnostics} after ${took}${attempts}`,
   }
 }

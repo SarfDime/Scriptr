@@ -9,7 +9,7 @@ import { getReadingLinkErrors } from '@shared/utils/link-utils'
 import { portableTextToPlainText } from '@shared/utils/portable-text.utils'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { SubjectCard } from '@/components/academics/subject/SubjectCard'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
@@ -19,15 +19,18 @@ import type { TextProps } from '@/components/typography/Text'
 import { Card } from '@/components/ui/Card'
 import { Dialog } from '@/components/ui/Dialog'
 import { Field } from '@/components/ui/field/Field'
-import { ProgressDialog } from '@/components/ui/ProgressDialog'
 import { Select } from '@/components/ui/select/Select'
 import { useCreateScriptForm } from '@/hooks/useCreateScriptForm'
 import { useDeviceType } from '@/hooks/useDeviceType'
 import { useReadingLinkTouched } from '@/hooks/useReadingLinkTouched'
 import { useRequireSignIn } from '@/hooks/useRequireSignIn'
+import { useLoading } from '@/providers/loading/LoadingProvider'
 import type { MinimalSubject } from '@/types/academics/subject.types'
 import { ReadingLinksField } from './ReadingLinksField'
 import { ScriptFilesInput } from './ScriptFilesInput'
+
+/** Names the loader task this dialog owns, so it can be released on unmount. */
+const UPLOAD_TASK_KEY = 'script-upload'
 
 const PortableTextEditorSection = dynamic(
   () =>
@@ -113,6 +116,19 @@ export function CreateScriptModal({
       onCreated?.(scriptId)
     },
   })
+
+  // The upload, optimizing and saving all happen behind the global loader:
+  // nothing on the page is reachable while it is up, so the dialog behind it
+  // does not need a spinner of its own.
+  const { startTask, finishTask } = useLoading()
+  useEffect(() => {
+    if (busyStage === null) return undefined
+    startTask(UPLOAD_TASK_KEY, {
+      message: UI_STRINGS.scripts.uploadModal.statuses[busyStage],
+      hint: `${UI_STRINGS.scripts.uploadModal.progress.qualityWarning} ${UI_STRINGS.scripts.uploadModal.progress.qualityAdvice}`,
+    })
+    return () => finishTask(UPLOAD_TASK_KEY)
+  }, [busyStage, startTask, finishTask])
 
   function resetTouched() {
     linkTouched.reset()
@@ -361,16 +377,6 @@ export function CreateScriptModal({
           </Card.Footer>
         </FormContainer>
       </Dialog>
-
-      {/* Waiting on the upload, optimizing and saving: nothing else is clickable until it finishes. */}
-      <ProgressDialog
-        isOpen={busyStage !== null}
-        title={UI_STRINGS.scripts.uploadModal.progress.title}
-        message={
-          busyStage ? UI_STRINGS.scripts.uploadModal.statuses[busyStage] : ''
-        }
-        hint={UI_STRINGS.scripts.uploadModal.progress.hint}
-      />
     </>
   )
 }

@@ -165,25 +165,123 @@ moderator notifications are deferred to the end (see **Deferred (Do Last)**).
   final object (immutable `Cache-Control`) and removes the staged copy. Images
   become WebP via sharp (EXIF-oriented, metadata stripped, at most 2400 px, an
   adaptive quality and size ladder aiming for 3 MB). PDFs over 3 MB go through
-  Ghostscript (`/ebook`, then `/screen`); smaller ones are stored as uploaded.
+  Ghostscript at 150, 120, 96 then 72 dpi and stop at the first result that fits;
+  a 200 dpi step leads the ladder only when the uploaded file is under 10 MB,
+  since a bigger document rarely has the headroom and the pass would be wasted. Files also stop at the 3.5 MB cap rather than grinding down to the
+  smallest one; smaller PDFs are
+  stored as uploaded. 72 dpi is the floor and a file that cannot fit there is
+  rejected rather than quietly destroyed. Embedded XMP is stripped before
+  Ghostscript runs (`optimizer/src/pdf-metadata.ts`, pdf-lib bundled), because
+  Ghostscript re-emits it rather than dropping it. Colour and grey are
+  downsampled with `/Bicubic` (not `/Average`), 1-bit mono images are kept at
+  300 dpi so text stays crisp, and every step strips document XMP, the Info
+  dates and the file ID and writes the object table as compressed streams.
   Office files and Markdown only have to fit the cap. Concurrency is limited
   and each file has an 80 s deadline, under the API's 90 s timeout. The
   file-signature and R2 "not found" checks now live in `shared/` for both the
   API and the service.
+- **PDF compression is understood, and has a ceiling that is not about images**
+  (`optimizer/src/pdf-bloat.ts`). Analysed on a real 15.7 MB, 83-page InDesign
+  manual: 73% of it (11.4 MB) is XMP metadata — 484 packets, one per embedded
+  Illustrator asset — while embedded rasters are only 10% (1.6 MB, 2562 of them,
+  nearly all tiny icons). Ghostscript does collapse that metadata to 0.89 MB,
+  but `/ebook` still bottoms out at 4.06 MB (3.86x) and the 50 dpi step only
+  reaches 3.48 MB (4.50x) — a 3% gain for destroying every image. That is the
+  "3.5x ceiling": after processing, content streams (2.49 MB) and the re-emitted
+  XMP packets (0.89 MB) dominate, and neither is a downsampling target. A
+  rejection now says so instead of implying another step would help. Meeting the
+  3 MB target on such a file would need a PDF rewriter to drop those packets,
+  which the service deliberately does not carry (only `sharp` and `gs`). Quality
+  was measured, not assumed: `/Bicubic` beats `/Average` on mean absolute error
+  against a 200 dpi render of the original on every page tested (2.64 -> 2.53,
+  0.36 -> 0.28, 1.28 -> 1.26) and also came out smaller.
+- **PDF compression is a resolution ladder, not a preset ladder.** The presets
+  jump from about 150 dpi to about 72, which overshoots on image-heavy files: on
+  a 24-page 400 dpi scan built for the test, 150 dpi was 3.70 MB (over the cap),
+  120 dpi 2.74 MB (fits), 72 dpi 1.29 MB. The old ladder therefore stored 1.29 MB
+  at 72 dpi; the new one stores 2.74 MB at 120 dpi, which measured **30% closer to
+  the original** (MAE 5.26 vs 7.56) with edge sharpness fully restored (47.3 vs
+  43.9 against a 47.3 reference). Why 72 is the floor: measured sharpness holds
+  to about 96 dpi (47.0) then falls away — 84 dpi 45.8, 72 dpi 43.9, 50 dpi 38.5.
+  The ladder is also shorter to exhaust and now falls back to the best result
+  that fits when the deadline passes, instead of failing a file it could have
+  stored.
+- **Stripping XMP is worth more than every downsampling step combined.** On the
+  same 15.7 MB InDesign manual, removing the 476 embedded XMP packets first took
+  it to 4.0 MB with no image touched, and the file then fitted the cap at
+  **200 dpi** (3.48 MB) where without stripping it could not fit above 72 dpi at
+  all. That is the same size as the old 50 dpi result but at four times the
+  linear resolution, and 3.5x faster (4.0s vs 14.0s over three Ghostscript runs):
+  MAE against a 200 dpi render drops from 2.64/1.91/1.05 to 1.11/0.78/0.40 on
+  pages 1/22/60, with sharpness essentially unchanged. Without the 200 dpi step
+  the same file landed at 150 dpi / 3.09 MB (MAE 1.35/0.93/0.50), so the top
+  step trades about 12% more bytes for a further ~17% cut in error.
+  Verified visually lossless — renders of the stripped and unstripped files are
+  pixel-identical — and best-effort: an encrypted, damaged or unreadable file
+  comes back untouched and falls back to Ghostscript alone.
+  Rejected on evidence: `exiftool -all=` removes nothing here (it only handles
+  document-level metadata; all 475 packets survived and the file grew 235
+  bytes), and pdf-lib needs the orphaned streams deleted too — dropping only the
+  `/Metadata` keys saves 9 KB instead of 994 KB, since pdf-lib has no garbage
+  collection.
+- **PDF steps stop at the first result that fits the cap** rather than at the
+  smallest. On the same manual, `/ebook` is 4.06 MB and `/screen` 3.61 MB — both
+  over the 3.5 MB cap — and sweeping the downsample resolution shows why the last
+  step is a dead end: 72 dpi is 3.76 MB, 65 dpi 3.72 MB, 60 dpi 3.70 MB, 55 dpi
+  3.67 MB (still 3 KB over) and only 50 dpi fits, at 3.65 MB. Taking images from
+  72 dpi to 50 dpi therefore buys 2.7% on a file whose rasters are a tenth of it.
+  Two earlier ideas were tested and rejected on evidence: `-dJPEGQ` is overridden
+  by the `/screen` preset (byte-identical output at 60/50/40/30), and a second
+  Ghostscript pass does fit the cap at 72 dpi (3.67 MB) but is *worse* than the
+  50 dpi path — re-encoding costs it 3.02 MAE against 2.53 — so it is not used.
 - The optimizer builds into one bundled file (`corepack pnpm --filter
   @scriptr/optimizer build`, esbuild; only `sharp` stays external) and ships as a
   Docker image ([`optimizer/Dockerfile`](optimizer/Dockerfile): `node:24-trixie-slim`,
   Ghostscript 10.05, non-root). Built and run locally: sharp's native binary
   loads in the image, `GET /health` answers 200, an unsigned `/optimize` is
   `401`, a signed one with R2 unreachable is `500`, and a bad body is `400`.
-  Ghostscript was only checked for presence (`gs --version`), not on PDFs.
+  Ghostscript was only checked for presence (`gs --version`), not on PDFs —
+  since exercised on a real 15.7 MB manual, see the PDF compression entry below.
 - The optimizer logs one line per request, like the API, and one per file saying
   what was done and the result: sizes before and after, the step used, and every
   size tried with its timing, or why the file was rejected (see
   [`optimizer/README.md`](optimizer/README.md#logs)).
-- Creating a script shows a progress dialog that can't be closed (no close
-  button, Escape, or outside click, and it reopens itself if a second Escape
-  closes it) with the current stage: uploading, optimizing, creating.
+- Uploading, optimizing and creating a script run behind the app's own loading
+  screen (`next/providers/loading/LoadingProvider.tsx`) rather than a dialog of
+  its own: the jumping "Scriptr." wordmark, with the current stage underneath
+  (uploading, optimizing, creating) and a standing line saying files may lose
+  quality and what to do if one is still too large afterwards. The old
+  `ProgressDialog` is gone. The loader is now a modal `<dialog>`, so it sits in
+  the browser's top layer — it covers any dialog already open instead of
+  painting behind it, and everything underneath is inert: nothing can be
+  clicked, typed into or focused. `startTask(key, { message, hint })` is what
+  puts the words under the logo. A `<dialog>` cannot be shown before hydration
+  (it paints only once `showModal()` has run), so the HTML carries a plain
+  stand-in element with the same classes for the first frame; a layout effect
+  opens the dialog as modal and drops the stand-in in the same pre-paint commit,
+  so the hand-over is invisible. The fade from opaque to translucent is animated
+  on `:root` (`--ui-loading-veil`, registered with `@property`) rather than on
+  the overlay itself, because an animation owned by either element restarts when
+  the two swap; inherited from the document, one run covers both. It exists
+  because the theme and simple mode are applied in an effect after paint. Nothing renders the `open` attribute, because
+  React owning it while an effect toggled the dialog produced a hydration
+  mismatch. The overlay sits at `z-100` (above `Z_INDEX.NAV_BAR` at `z-99`) for
+  the frames before it is promoted, since a top-layer modal ignores z-index but
+  a not-yet-modal dialog does not. The setup wizard waits for
+  `isOverlayVisible` before auto-opening — not `isReady`, which is already true
+  before the splash finishes leaving — because two modal dialogs both live in
+  the top layer, the one shown last wins, and z-index cannot order them.
+- **The optimizer is not run twice for the same file.** A file rejected as too
+  large is remembered for the session (`next/lib/optimizer-attempts.ts`), and a
+  retry is refused before a presigned URL or an R2 upload is even requested,
+  with the reason in a toast. Whether a retry is worth running is calculated
+  rather than guessed (`shared/utils/optimizer-retry.ts`): the ratio the
+  optimizer actually achieved on the failed attempt is extrapolated to the cap
+  with a 10% margin, so a 15 MB file that came out at 4.5 MB only allows a retry
+  under ~10.5 MB. The API repeats the same calculation in `/file-ops/finalize`
+  against the real staged object (`priorRejection` on the request), so a
+  tampered frontend gains nothing — though a client that simply omits that field
+  cannot be caught without storing attempts server-side, which this does not.
 - A file still too large after optimizing is named in the toast with its size
   (`scan.pdf is still 4.2MB after optimizing (the limit is 3.5MB)`). Upload
   rejections now carry a message for the user (`UserFacingError`); every other
@@ -535,6 +633,19 @@ Product features:
 
 Correctness and quality:
 
+- **Scrollbar layout shift (Chromium) [bug, deferred]:** opening the loading
+  overlay (and any dialog) locks body scroll, which removes the classic
+  scrollbar; when it comes back the in-flow page jumps sideways by its width
+  (~15px). Firefox is unaffected because its scrollbars overlay the content.
+  Attempted and rejected: `scrollbar-gutter: stable` on `html` (reserves the
+  space but leaves an empty strip right of the scrollbar and does not hold
+  `fixed`/`sticky` elements still) and compensating with
+  `body { padding-right: var(--scrollbar-compensation) }` measured in
+  [`useBodyScroll.ts`](next/hooks/useBodyScroll.ts) (still shifted in Chromium).
+  Next thing to try: a custom Chromium scrollbar — give `::-webkit-scrollbar`
+  an explicit width and always reserve it (`overflow-y: scroll` scoped to
+  browsers that render classic scrollbars), or ref-count the lock so nested
+  locks cannot release the compensation early.
 - **State coverage:** loading, empty and error states on the remaining pages
   and flows. Includes `/search`: `searchScripts` goes through
   `apiFetchPublicRead`, so an API failure currently renders as "no results".
