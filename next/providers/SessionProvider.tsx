@@ -8,6 +8,7 @@ import type {
   RegisterRequest,
   SessionUser,
 } from '@shared/types/auth.types'
+import { useRouter } from 'next/navigation'
 import {
   createContext,
   type ReactNode,
@@ -114,24 +115,44 @@ async function applySessionResult(
 }
 
 export function SessionProvider({ children }: { children: ReactNode }) {
+  const router = useRouter()
   const [session, setSession] = useState<SessionState>({ status: 'loading' })
 
   useEffect(() => {
     fetchSession(setSession, { status: 'loading' })
   }, [])
 
+  /**
+   * Server Components read the session cookie themselves, so a client-side
+   * sign-in/sign-out leaves them stale until the route is re-rendered (script
+   * lists, the profile header, anything gated on being signed in). Every
+   * transition goes through this, whether it came from the auth modal or the
+   * `/auth` page.
+   */
+  const refreshServerState = () => router.refresh()
+
   const refresh = () => fetchSession(setSession, session)
 
   const login = async (
     credentials: LoginRequest
   ): Promise<AuthActionResult> => {
-    return applySessionResult(() => loginUser(credentials), setSession)
+    const result = await applySessionResult(
+      () => loginUser(credentials),
+      setSession
+    )
+    if (result.ok) refreshServerState()
+    return result
   }
 
   const loginWithTokens = async (
     tokens: CallbackRequest
   ): Promise<AuthActionResult> => {
-    return applySessionResult(() => completeAuthCallback(tokens), setSession)
+    const result = await applySessionResult(
+      () => completeAuthCallback(tokens),
+      setSession
+    )
+    if (result.ok) refreshServerState()
+    return result
   }
 
   const register = async (fields: RegisterRequest): Promise<RegisterResult> => {
@@ -143,6 +164,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       const requiresEmailConfirmation = result.session == null
       if (!requiresEmailConfirmation) {
         await refresh()
+        refreshServerState()
       }
       return { ok: true, message: result.message, requiresEmailConfirmation }
     } catch (error) {
@@ -162,6 +184,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       // in" in the UI after a failed logout is worse than optimistically
       // clearing it (a stale cookie just makes the next request 401).
       setSession({ status: 'unauthenticated' })
+      refreshServerState()
     }
   }
 

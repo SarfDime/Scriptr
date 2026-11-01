@@ -1,4 +1,4 @@
-import type { SubjectExamSession } from '../types/academic.types'
+import type { ExamSession } from '../types/academic.types'
 import type { FileType } from '../types/api.types'
 
 // Per ARCHITECTURE.md §3: supported file types and upload size limits. Keep
@@ -62,11 +62,24 @@ export const MAX_UPLOAD_FILES = 10
 export const IMMUTABLE_FILE_CACHE_CONTROL =
   'public, max-age=31536000, immutable'
 
-export const SUBJECT_EXAM_SESSIONS: Array<SubjectExamSession> = [
+/** Exam sessions a script can be filed under, in calendar order. The month
+ * decides which years are selectable for that session (see
+ * `shared/utils/script-session.utils.ts`). */
+export const EXAM_SESSIONS = [
   'january',
   'june',
   'september',
-] as const
+] as const satisfies ReadonlyArray<ExamSession>
+
+/** Month (1-12) each exam session is held in. */
+export const EXAM_SESSION_MONTHS: Record<ExamSession, number> = {
+  january: 1,
+  june: 6,
+  september: 9,
+}
+
+/** Earliest year a script can be attributed to. */
+export const SCRIPT_START_YEAR = 2023
 
 export const REACTION_TYPES = [
   'like',

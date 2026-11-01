@@ -1,5 +1,7 @@
+import type { ExamSession } from '@shared/types/academic.types'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
 import type { ScriptFile } from '@shared/types/scripts.types'
+import type { ReactNode } from 'react'
 import type { BoxPropsWithoutChildren } from '@/components/common/Box'
 import type { ButtonProps } from '@/components/common/Button'
 import type { NextLinkProps } from '@/components/common/NextLink'
@@ -124,6 +126,8 @@ export type ScriptsSectionProps = {
   /** Shows a link to the site-wide `/search` once a query is typed, since the
    * local filter only covers the scripts already loaded. */
   showGlobalSearch?: boolean
+  /** End-aligned header content, e.g. the homepage's feed switch. */
+  headerActions?: ReactNode
 } & BoxPropsWithoutChildren
 
 export type PageDataProps = {
@@ -144,7 +148,8 @@ export type ScriptUploadInput = {
   description?: PortableTextValue
   subjectId: string
   professorId: string
-  examSession?: string | null
+  examSession?: ExamSession | null
+  examYear?: number | null
   additionalReading?: Array<string>
   files: Array<File>
 }

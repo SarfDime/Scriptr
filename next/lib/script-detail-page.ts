@@ -19,6 +19,25 @@ export type ScriptDetailPageData = {
   commentsUnavailable: boolean
 }
 
+/**
+ * The one read that decides whether the page exists. It runs before anything
+ * renders so `notFound()` can still produce a real 404 status: the route has
+ * no `loading.tsx` on purpose, since a Suspense boundary above the page would
+ * flush the response (and its 200) before this answer arrives.
+ */
+export const loadScriptDetailScript = async (
+  scriptId: string
+): Promise<ScriptSummary> => {
+  const cookieHeader = (await cookies()).toString()
+
+  try {
+    return await getScript(scriptId, cookieHeader)
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) notFound()
+    throw error
+  }
+}
+
 type ViewerRead<T> = { value: T; failed: boolean }
 
 const getSessionExpiresAt = (sessionCookie: string | undefined) => {
@@ -72,11 +91,12 @@ const readForViewer = async <T>(
   }
 }
 
-/** Loads everything the script detail page needs, triggering a 404 when the
- * script doesn't exist. A failed script/comments read propagates to
- * `error.tsx`; a failed viewer-specific read only sets `viewerDataFailed`. */
+/** Loads the rest of the script detail page for an already-resolved script.
+ * A failed comments read is contained; a failed viewer-specific read only sets
+ * `viewerDataFailed`. */
 export const loadScriptDetailPage = async (
-  scriptId: string
+  scriptId: string,
+  script: ScriptSummary
 ): Promise<ScriptDetailPageData> => {
   const cookieStore = await cookies()
   const cookieHeader = cookieStore.toString()
@@ -90,14 +110,6 @@ export const loadScriptDetailPage = async (
     logLevel: 'info',
     message: `Script detail auth diagnostic: script=${scriptId} incomingAuthCookie=${authCookie !== undefined} sessionExpiresAt=${sessionExpiresAt ?? 'unknown'} secondsUntilExpiry=${secondsUntilExpiry ?? 'unknown'}`,
   })
-
-  let script: ScriptSummary
-  try {
-    script = await getScript(scriptId, cookieHeader)
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 404) notFound()
-    throw error
-  }
 
   const [voteStats, commentsResult, myVote, myFavorite, session, subjectHref] =
     await Promise.all([

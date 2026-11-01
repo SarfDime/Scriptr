@@ -15,6 +15,7 @@ export const SubjectHighlightsCard = ({
   code,
   credits,
   semester,
+  elective,
   syllabus,
   children,
 }: SubjectDetail & { children?: ReactNode }) => {
@@ -31,6 +32,7 @@ export const SubjectHighlightsCard = ({
         {code && <AcademicBadge type='code' value={code} />}
         {credits && <AcademicBadge type='credits' value={credits} />}
         {semester && <AcademicBadge type='semester' value={semester} />}
+        {elective && <AcademicBadge type='elective' />}
       </Box>
 
       {children}

@@ -1,8 +1,8 @@
 'use client'
 
 import { UI_STRINGS } from '@shared/config/strings'
-import { useSearchParams } from 'next/navigation'
-import { useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/common/Button'
 import { NextLink } from '@/components/common/NextLink'
 import { Text } from '@/components/typography/Text'
@@ -29,10 +29,23 @@ const AUTH_CARD_CLASS = cn(
  */
 export function AuthCard() {
   const { session, logout } = useSession()
+  const router = useRouter()
   const searchParams = useSearchParams()
   const [mode, setMode] = useState<'login' | 'register'>(
     searchParams.get('mode') === 'register' ? 'register' : 'login'
   )
+
+  // Signing in or out on this page is the end of the flow, so it lands on the
+  // homepage instead of leaving a signed-in/out card behind. The first resolved
+  // status is the page load itself — someone arriving already signed in keeps
+  // the choice of continuing or signing out.
+  const previousStatusRef = useRef(session.status)
+  useEffect(() => {
+    const previous = previousStatusRef.current
+    previousStatusRef.current = session.status
+    if (previous === 'loading' || previous === session.status) return
+    router.replace('/')
+  }, [session.status, router])
 
   if (session.status === 'loading') {
     return (

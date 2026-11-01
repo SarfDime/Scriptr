@@ -31,6 +31,7 @@ export type SubjectSidebarItem = Pick<
   | 'credits'
   | 'year'
   | 'semester'
+  | 'elective'
   | 'professors'
   | 'study'
 >

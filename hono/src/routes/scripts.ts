@@ -2,6 +2,7 @@ import { zValidator } from '@hono/zod-validator'
 import type { Context } from 'hono'
 import { Hono } from 'hono'
 import { z } from 'zod'
+import type { ExamSession } from '../../../shared/types/academic.types'
 import type { ScriptFileInput } from '../../../shared/types/api.types'
 import type { PortableTextValue } from '../../../shared/types/portable-text.types'
 import type {
@@ -13,13 +14,16 @@ import type {
   ScriptSummary,
 } from '../../../shared/types/scripts.types'
 import { isAdmin, isScriptFileInput } from '../../../shared/utils/api.utils'
-import { getAttribute } from '../../../shared/utils/common-utils'
 import {
   isPortableTextValue,
   isScriptDescriptionPortableTextValue,
   isScriptTitlePortableTextValue,
   portableTextToPlainText,
 } from '../../../shared/utils/portable-text.utils'
+import {
+  isExamSession,
+  isValidScriptYear,
+} from '../../../shared/utils/script-session.utils'
 import {
   checkScriptsUploaded,
   checkTotalScriptDownloads,
@@ -43,38 +47,24 @@ import type { HonoEnv } from '../types/env.types'
 // Excludes is_flagged and the comments aggregate, which uses the separately
 // permissioned get_script_comment_counts RPC.
 const PUBLIC_SCRIPT_COLUMNS =
-  'id, title, description, subject_id, professor_id, author_id, exam_session, additional_reading, vote_score, download_count, created_at, updated_at, files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, file_name, created_at)'
+  'id, title, description, subject_id, professor_id, author_id, exam_session, exam_year, additional_reading, vote_score, download_count, created_at, updated_at, files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, file_name, created_at)'
 
 /**
  * Reused by every list/detail endpoint below (`/`, `/subject/:subjectId`,
  * `/top`, `/popular`, `/search`, `/:id`) and by `POST /`'s create + refetch
  * selects — one select string instead of the same literal duplicated per
- * route. `subject` carries its display name plus `sanity_id` (client-side Sanity queries
- * resolve faculty/university/professor metadata from it — see
- * `ARCHITECTURE.md §1`) and `faculty_id` (server-side faculty scoping only,
- * via `applySelectedFacultyScope` below — never returned for display).
- * Matches `ScriptSummary` in `shared/types/scripts.types.ts` exactly; keep
- * the two in sync if this changes.
+ * route. `subject` carries its display name plus `sanity_id`, which client
+ * Sanity queries use to resolve the subject's faculty/university/professor
+ * metadata (see `ARCHITECTURE.md §1`). There is deliberately no faculty join:
+ * scripts are not scoped by faculty (studies are the real academic scope).
+ * Matches `ScriptSummary` in `shared/types/scripts.types.ts` exactly; keep the
+ * two in sync if this changes.
  */
 const SCRIPT_SUMMARY_SELECT = `
     ${PUBLIC_SCRIPT_COLUMNS},
     author:profiles!author_id(username, full_name, avatar_url),
-    subject:subjects(name, sanity_id, study:studies(sanity_id, faculty:faculties(sanity_id, id)))
+    subject:subjects(name, sanity_id, study:studies(sanity_id))
   `
-
-function applySelectedFacultyScope<T extends Pick<ScriptSummary, 'subject'>>(
-  rows: Array<T> | null,
-  selectedFacultyIds: Array<string> | null
-) {
-  if (!rows || !selectedFacultyIds || selectedFacultyIds.length === 0) {
-    return rows ?? []
-  }
-
-  return rows.filter((row) => {
-    const facultyId = row.subject?.study?.faculty?.id
-    return !facultyId || selectedFacultyIds.includes(facultyId)
-  })
-}
 
 async function attachCommentCounts(
   supabase: ReturnType<typeof createSupabaseClient>,
@@ -137,23 +127,6 @@ async function resolveDownloadIdentity(c: Context<HonoEnv>) {
   }
 }
 
-async function getSelectedFacultyScope(
-  supabase: ReturnType<typeof createSupabaseClient>
-) {
-  const { data: sessionData } = await supabase.auth.getUser()
-
-  if (!sessionData.user) {
-    return null
-  }
-
-  const { data } = await supabase
-    .from('profile_faculties')
-    .select('faculty_id')
-    .eq('profile_id', sessionData.user.id)
-
-  return data?.map(({ faculty_id }) => faculty_id) ?? []
-}
-
 function fuzzyScore(query: string, value: string) {
   const normalizedQuery = query.toLowerCase().trim()
   const normalizedValue = value.toLowerCase()
@@ -207,8 +180,12 @@ function levenshteinDistance(left: string, right: string) {
 
 /**
  * POST /scripts body. Accepts both camelCase and snake_case for
- * subject/professor/examSession/additionalReading, matching the API's
+ * subject/professor/examSession/examYear/additionalReading, matching the API's
  * existing dual-key tolerance, normalized before validation.
+ *
+ * `examSession` is one of `EXAM_SESSIONS` or `null` for the general (all
+ * sessions) option; `examYear` is `null` for general (all years) and otherwise
+ * has to be a year that session has already reached.
  */
 const createScriptSchema = z
   .preprocess(
@@ -221,34 +198,51 @@ const createScriptSchema = z
         subjectId: body.subject_id ?? body.subjectId,
         professorId: body.professor_id ?? body.professorId,
         examSession: body.examSession ?? body.exam_session ?? null,
+        examYear: body.examYear ?? body.exam_year ?? null,
         additionalReading:
           body.additionalReading ?? body.additional_reading ?? [],
         files: body.files,
       }
     },
-    z.object({
-      title: z.custom<PortableTextValue>(isScriptTitlePortableTextValue, {
-        message:
-          'title must contain text and use supported Portable Text within 2 KB',
-      }),
-      description: z
-        .custom<PortableTextValue>(isScriptDescriptionPortableTextValue, {
-          message: 'description must use supported Portable Text within 50 KB',
-        })
-        .nullable(),
-      subjectId: z.string().min(1, 'subjectId is required'),
-      professorId: z.string().min(1, 'professorId is required'),
-      examSession: z.string().nullable(),
-      additionalReading: z.array(z.string()),
-      files: z
-        .array(
-          z.custom<ScriptFileInput>(isScriptFileInput, {
-            message: 'Invalid file input',
+    z
+      .object({
+        title: z.custom<PortableTextValue>(isScriptTitlePortableTextValue, {
+          message:
+            'title must contain text and use supported Portable Text within 2 KB',
+        }),
+        description: z
+          .custom<PortableTextValue>(isScriptDescriptionPortableTextValue, {
+            message:
+              'description must use supported Portable Text within 50 KB',
           })
-        )
-        .optional()
-        .default([]),
-    })
+          .nullable(),
+        subjectId: z.string().min(1, 'subjectId is required'),
+        professorId: z.string().min(1, 'professorId is required'),
+        examSession: z
+          .custom<ExamSession>(isExamSession, {
+            message: 'examSession must be january, june or september',
+          })
+          .nullable(),
+        examYear: z.number().int().nullable(),
+        additionalReading: z.array(z.string()),
+        files: z
+          .array(
+            z.custom<ScriptFileInput>(isScriptFileInput, {
+              message: 'Invalid file input',
+            })
+          )
+          .optional()
+          .default([]),
+      })
+      .refine(
+        (body) =>
+          body.examYear === null ||
+          isValidScriptYear(body.examSession, body.examYear),
+        {
+          message: 'examYear is out of range for the selected exam session',
+          path: ['examYear'],
+        }
+      )
   )
   .refine((body) => portableTextToPlainText(body.title).length > 0, {
     message: 'Title cannot be empty',
@@ -260,7 +254,6 @@ const scripts = new Hono<HonoEnv>()
 /** Get all scripts (public) */
 scripts.get('/', async (c) => {
   const supabase = createSupabaseClient(c)
-  const selectedFacultyIds = await getSelectedFacultyScope(supabase)
 
   const { data, error } = await supabase
     .from('scripts')
@@ -268,10 +261,7 @@ scripts.get('/', async (c) => {
     .order('created_at', { ascending: false })
 
   if (error) return databaseErrorResponse(c, error)
-  const scriptsWithCounts = await attachCommentCounts(
-    supabase,
-    applySelectedFacultyScope(data, selectedFacultyIds)
-  )
+  const scriptsWithCounts = await attachCommentCounts(supabase, data)
   if (!scriptsWithCounts) {
     return c.json({ error: 'Failed to fetch scripts' }, 500)
   }
@@ -282,7 +272,6 @@ scripts.get('/', async (c) => {
 scripts.get('/subject/:subjectId', async (c) => {
   const subjectId = requiredParam(c, 'subjectId')
   const supabase = createSupabaseClient(c)
-  const selectedFacultyIds = await getSelectedFacultyScope(supabase)
 
   const { data, error } = await supabase
     .from('scripts')
@@ -291,10 +280,7 @@ scripts.get('/subject/:subjectId', async (c) => {
     .order('vote_score', { ascending: false })
 
   if (error) return databaseErrorResponse(c, error)
-  const scriptsWithCounts = await attachCommentCounts(
-    supabase,
-    applySelectedFacultyScope(data, selectedFacultyIds)
-  )
+  const scriptsWithCounts = await attachCommentCounts(supabase, data)
   if (!scriptsWithCounts) {
     return c.json({ error: 'Failed to fetch scripts' }, 500)
   }
@@ -305,7 +291,6 @@ scripts.get('/subject/:subjectId', async (c) => {
 scripts.get('/top', async (c) => {
   const limit = parseInt(c.req.query('limit') || '10', 10)
   const supabase = createSupabaseClient(c)
-  const selectedFacultyIds = await getSelectedFacultyScope(supabase)
 
   const { data, error } = await supabase
     .from('scripts')
@@ -314,10 +299,7 @@ scripts.get('/top', async (c) => {
     .limit(limit)
 
   if (error) return databaseErrorResponse(c, error)
-  const scriptsWithCounts = await attachCommentCounts(
-    supabase,
-    applySelectedFacultyScope(data, selectedFacultyIds)
-  )
+  const scriptsWithCounts = await attachCommentCounts(supabase, data)
   if (!scriptsWithCounts) {
     return c.json({ error: 'Failed to fetch scripts' }, 500)
   }
@@ -328,7 +310,6 @@ scripts.get('/top', async (c) => {
 scripts.get('/popular', async (c) => {
   const limit = parseInt(c.req.query('limit') || '10', 10)
   const supabase = createSupabaseClient(c)
-  const selectedFacultyIds = await getSelectedFacultyScope(supabase)
 
   const { data, error } = await supabase
     .from('scripts')
@@ -337,10 +318,7 @@ scripts.get('/popular', async (c) => {
     .limit(limit)
 
   if (error) return databaseErrorResponse(c, error)
-  const scriptsWithCounts = await attachCommentCounts(
-    supabase,
-    applySelectedFacultyScope(data, selectedFacultyIds)
-  )
+  const scriptsWithCounts = await attachCommentCounts(supabase, data)
   if (!scriptsWithCounts) {
     return c.json({ error: 'Failed to fetch scripts' }, 500)
   }
@@ -356,7 +334,6 @@ scripts.get('/search', async (c) => {
   }
 
   const supabase = createSupabaseClient(c)
-  const selectedFacultyIds = await getSelectedFacultyScope(supabase)
 
   const { data, error } = await supabase
     .from('scripts')
@@ -364,8 +341,7 @@ scripts.get('/search', async (c) => {
 
   if (error) return databaseErrorResponse(c, error)
 
-  const scopedData = applySelectedFacultyScope(data, selectedFacultyIds)
-  const filteredData = await attachCommentCounts(supabase, scopedData)
+  const filteredData = await attachCommentCounts(supabase, data)
   if (!filteredData) {
     return c.json({ error: 'Failed to fetch scripts' }, 500)
   }
@@ -539,8 +515,6 @@ scripts.get('/:id', async (c) => {
   const scriptId = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)
 
-  const selectedFacultyIds = await getSelectedFacultyScope(supabase)
-
   const { data, error } = await supabase
     .from('scripts')
     .select(SCRIPT_SUMMARY_SELECT)
@@ -569,18 +543,6 @@ scripts.get('/:id', async (c) => {
     return c.json({ error: 'Failed to fetch script' }, 500)
   }
 
-  const facultyId = scriptWithCounts.subject?.study?.faculty?.id
-  if (
-    selectedFacultyIds &&
-    selectedFacultyIds.length > 0 &&
-    (!facultyId || !selectedFacultyIds.includes(facultyId))
-  ) {
-    return c.json(
-      { error: 'Script not available in your selected faculties' },
-      404
-    )
-  }
-
   return c.json<ScriptSummary>(scriptWithCounts)
 })
 
@@ -607,6 +569,7 @@ scripts.post(
       subjectId,
       professorId,
       examSession,
+      examYear,
       additionalReading,
       files: reportedFiles,
     } = c.req.valid('json')
@@ -633,6 +596,7 @@ scripts.post(
         professor_id: professorId,
         author_id: user.id,
         exam_session: examSession,
+        exam_year: examYear,
         additional_reading: additionalReading,
         vote_score: 0,
         download_count: 0,
@@ -897,7 +861,8 @@ scripts.patch('/:id', authMiddleware, async (c) => {
   const scriptId = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)
 
-  const { title, description, additional_reading } = await c.req.json()
+  const { title, description, additional_reading, exam_session, exam_year } =
+    await c.req.json()
 
   if (
     (title !== undefined && !isScriptTitlePortableTextValue(title)) ||
@@ -906,14 +871,24 @@ scripts.patch('/:id', authMiddleware, async (c) => {
       !isScriptDescriptionPortableTextValue(description)) ||
     (additional_reading !== undefined &&
       (!Array.isArray(additional_reading) ||
-        !additional_reading.every((url) => typeof url === 'string')))
+        !additional_reading.every((url) => typeof url === 'string'))) ||
+    (exam_session !== undefined &&
+      exam_session !== null &&
+      !isExamSession(exam_session)) ||
+    (exam_year !== undefined &&
+      exam_year !== null &&
+      (typeof exam_year !== 'number' || !Number.isInteger(exam_year)))
   ) {
     return c.json({ error: 'Invalid script update' }, 400)
   }
 
   // Get the script and user's role
   const [{ data: script }, { data: profile }] = await Promise.all([
-    supabase.from('scripts').select('author_id').eq('id', scriptId).single(),
+    supabase
+      .from('scripts')
+      .select('author_id, exam_session, exam_year')
+      .eq('id', scriptId)
+      .single(),
     supabase.from('profiles').select('role').eq('id', user.id).single(),
   ])
 
@@ -925,16 +900,45 @@ scripts.patch('/:id', authMiddleware, async (c) => {
     )
   }
 
+  // The year is validated against the session it will end up with, not only
+  // against the one sent in this request: a year-only update still has to fit
+  // the stored session, and a session-only update must not leave a year behind
+  // that the new session has not reached yet.
+  const storedSession = isExamSession(script?.exam_session)
+    ? script.exam_session
+    : null
+  const nextSession =
+    exam_session !== undefined
+      ? (exam_session as ExamSession | null)
+      : storedSession
+  const storedYear = script?.exam_year ?? null
+
+  if (
+    exam_year !== undefined &&
+    exam_year !== null &&
+    !isValidScriptYear(nextSession, exam_year)
+  ) {
+    return c.json(
+      { error: 'exam_year is out of range for the selected exam session' },
+      400
+    )
+  }
+
+  const clearStaleYear =
+    exam_session !== undefined &&
+    exam_year === undefined &&
+    storedYear !== null &&
+    !isValidScriptYear(nextSession, storedYear)
+
   const { data, error } = await supabase
     .from('scripts')
     .update({
-      ...getAttribute(title !== undefined, 'title', title),
-      ...getAttribute(description !== undefined, 'description', description),
-      ...getAttribute(
-        Array.isArray(additional_reading),
-        'additional_reading',
-        additional_reading
-      ),
+      ...(title !== undefined ? { title } : {}),
+      ...(description !== undefined ? { description } : {}),
+      ...(Array.isArray(additional_reading) ? { additional_reading } : {}),
+      ...(exam_session !== undefined ? { exam_session: nextSession } : {}),
+      ...(exam_year !== undefined ? { exam_year } : {}),
+      ...(clearStaleYear ? { exam_year: null } : {}),
       updated_at: new Date().toISOString(),
     })
     .eq('id', scriptId)

@@ -30,13 +30,15 @@ export function ScriptFilesInput({
   note,
   onAdd,
   onRemove,
+  fieldProps,
 }: ScriptFilesInputProps) {
   const hasFileErrors = files.some((entry) => entry.error !== null)
 
   return (
     // No label on the Field: the dropzone carries its own title and help.
     <Field
-      className='min-w-0'
+      {...fieldProps}
+      className={cn('min-w-0', fieldProps?.className)}
       errorText={
         hasFileErrors
           ? UI_STRINGS.scripts.uploadModal.fieldErrors.filesInvalid
@@ -49,12 +51,13 @@ export function ScriptFilesInput({
         <FileDropzone
           label={UI_STRINGS.scripts.uploadModal.filesLabel}
           help={UI_STRINGS.scripts.uploadModal.filesHelp}
+          note={note}
           onFiles={onAdd}
           disabled={disabled}
           valid={!hasFileErrors}
           invalid={hasFileErrors}
         />
-        {note && <Text className='ui-caption'>{note}</Text>}
+        {/* {note && <Text className='ui-caption'>{note}</Text>} */}
         {files.length > 0 && (
           <Box className='ui-stack min-w-0 w-full gap-2'>
             {files.map((entry, index) => (
@@ -78,6 +81,7 @@ export function ScriptFilesInput({
 function FileDropzone({
   label,
   help,
+  note,
   onFiles,
   disabled,
   valid,
@@ -85,6 +89,7 @@ function FileDropzone({
 }: {
   label: string
   help: string
+  note?: string
   onFiles: (files: FileList | null) => void
   disabled: boolean
   valid: boolean
@@ -129,7 +134,8 @@ function FileDropzone({
           if (!disabled) onFiles(event.dataTransfer.files)
         }}
         className={cn(
-          'ui-stack cursor-pointer items-center justify-center gap-1 rounded-lg border border-dashed bg-background-200 px-2 py-3 text-center',
+          'ui-stack cursor-pointer items-center justify-center gap-1 rounded-lg  px-2 py-3 text-center',
+          'ui-above-inside border-dashed border-2 shadow-none',
           'hover:border-brand-300 hover:bg-background-150 transition-colors',
           'peer-focus-visible:outline-2 peer-disabled:pointer-events-none peer-disabled:opacity-50',
           borderClass
@@ -137,6 +143,7 @@ function FileDropzone({
       >
         <span className='text-base font-semibold'>{label}</span>
         <span className='ui-caption'>{help}</span>
+        <span className='ui-caption'>{note}</span>
       </label>
     </Box>
   )

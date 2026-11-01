@@ -24,6 +24,12 @@ export const SCRIPT_STRINGS = {
     deletedUser: 'Deleted user',
     subject: 'Subject',
     examSession: 'Exam session',
+    /** `session` is stored lowercase; `null` year means the session's year was
+     * not recorded (a script saved before years existed). */
+    examSessionValue: (session: string, year: number | null) => {
+      const label = session.charAt(0).toUpperCase() + session.slice(1)
+      return year === null ? label : `${label} ${year}`
+    },
     downloads: 'Downloads',
     updated: 'Updated',
     reportTrigger: 'Report script',

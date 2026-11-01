@@ -4,12 +4,15 @@ import { NextLink } from '@/components/common/NextLink'
 import { ScriptDetailItem } from './ScriptDetailItem'
 
 export type ScriptMetaListProps = {
-  script: Pick<ScriptSummary, 'subject' | 'exam_session' | 'download_count'>
+  script: Pick<
+    ScriptSummary,
+    'subject' | 'exam_session' | 'exam_year' | 'download_count'
+  >
   /** `null` renders the subject as plain text. */
   subjectHref: string | null
 }
 
-/** Subject, exam session and download count; absent fields are skipped. */
+/** Subject, exam session/year and download count; absent fields are skipped. */
 export function ScriptMetaList({ script, subjectHref }: ScriptMetaListProps) {
   return (
     <dl className='ui-stack gap-3'>
@@ -26,7 +29,10 @@ export function ScriptMetaList({ script, subjectHref }: ScriptMetaListProps) {
       )}
       {script.exam_session && (
         <ScriptDetailItem label={SCRIPT_STRINGS.info.examSession}>
-          {script.exam_session}
+          {SCRIPT_STRINGS.info.examSessionValue(
+            script.exam_session,
+            script.exam_year
+          )}
         </ScriptDetailItem>
       )}
       <ScriptDetailItem label={SCRIPT_STRINGS.info.downloads}>

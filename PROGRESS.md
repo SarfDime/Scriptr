@@ -3,7 +3,7 @@
 What's built and what's outstanding. See `ARCHITECTURE.md` for the current
 system design. This is the single source of truth for planned work and ideas.
 
-Last reconciled: 2026-10-17.
+Last reconciled: 2026-11-01.
 
 In-code `TODO` and `Deferred:` comments have been removed from the source; the
 work they described is tracked below with a link to the code it belonged to.
@@ -25,7 +25,11 @@ call before anyone builds it).
   are the only university write path.
 - Scripts: Portable Text metadata, multi-file uploads, subject/professor
   validation, hierarchy resolution, author/admin management, fuzzy search,
-  faculty-scoped listing, individual file removal.
+  individual file removal.
+- Script reads are public and unscoped: the selected-faculty filter
+  (`getSelectedFacultyScope`/`applySelectedFacultyScope`) and the detail
+  route's 404 for out-of-scope faculties are gone, because studies are the
+  real academic scope. A signed-in viewer sees the same catalogue as a guest.
 - Comments and moderation: threads, replies, pagination, reactions, likes,
   flags, author/admin moderation, rate limits, Portable Text validation,
   engagement aggregation.
@@ -34,7 +38,18 @@ call before anyone builds it).
 - Auth: registration, login, logout, session refresh, email-confirmation
   callback, cookie sessions, register/login hardening, admin-only access.
 - Tagged Data Cache entries with mutation-driven revalidation for public
-  scripts and profiles.
+  scripts and profiles, plus a 60-second revalidate safety net so a webhook
+  that is unset, rejected or unreachable cannot freeze a feed forever. The
+  revalidation helper now logs missing configuration, the default development
+  secret in production, and any non-2xx response instead of failing silently.
+- Production revalidation works again. `scriptr.uk` is proxied by Cloudflare,
+  which never forwarded the API's server-to-server webhook to Vercel, so every
+  mutation left the cache stale and the homepage kept listing deleted scripts.
+  `NEXT_REVALIDATE_URL` on the API project now points at the web project's
+  Vercel alias (`https://scriptr-web-team-slug.vercel.app/api/revalidate`),
+  which is DNS-only; the revalidation secret was rotated on both projects
+  (it had been the published `.env.example` value). Verified end to end: a
+  create and a delete both expire the homepage feed immediately.
 - Typed route responses in `shared/types/`, consumed by the frontend and Studio.
 - Request logging is skipped when `NODE_ENV` is `production`
   ([`hono/src/index.ts`](hono/src/index.ts)).
@@ -389,6 +404,9 @@ Priority work, scheduled right after the frontend gaps:
   ([`professor.ts`](sanity/schemas/academic/professor.ts)) and a subject's
   professors must belong to the selected study
   ([`subject.ts`](sanity/schemas/academic/subject.ts)).
+- Elective subjects: the subject schema's `elective` boolean is surfaced as an
+  "Elective" badge on subject cards, the subject detail curriculum card and the
+  onboarding academics picker.
 
 ### Todo
 
@@ -420,9 +438,8 @@ Priority work, scheduled right after the frontend gaps:
   people by academic field in
   [`misc-structure.ts`](sanity/structure-tool/misc-structure.ts).
 - **Semester model:** change semesters to numbers and update Sanity, the
-  database, the API and consumers.
-- **Elective subjects:** define a data shape and UI behavior for electives,
-  which have no semester or year.
+  database, the API and consumers. Subjects keep a semester; scripts no longer
+  use one (they have an exam session and year instead).
 
 ## Auth & Onboarding
 
@@ -443,6 +460,11 @@ Priority work, scheduled right after the frontend gaps:
   `401` as signed out; any other failure keeps the page, disables vote/save and
   shows a toast (`viewerDataFailed`). `/user` uses `getSessionRequired` so an
   API outage shows an error instead of redirecting to `/auth`.
+- Signing in or out refreshes the current route: every session transition in
+  `SessionProvider` runs `router.refresh()`, so Server Components (script
+  lists, profile header, anything gated on being signed in) pick up the new
+  cookie immediately. The standalone `/auth` page then redirects to `/` on a
+  successful login or logout; the modal leaves the visitor where they were.
 
 ### Todo
 
@@ -460,8 +482,6 @@ Priority work, scheduled right after the frontend gaps:
   The production Sanity workflows set `SANITY_STUDIO_API_URL` to
   `https://api.scriptr.uk`. Users sign in once because existing cookies were
   scoped to the Vercel API host.
-- **Post-login refresh:** after signing in through the auth modal, refresh the
-  current page; after signing in from the `/auth` page, go to the homepage.
 
 ## API Client & Shared Types
 
@@ -483,9 +503,28 @@ Priority work, scheduled right after the frontend gaps:
   professor pages, ancestor-scoped queries), script listing/sorting/filtering,
   cached homepage and subject feeds. Public feeds and search render empty
   states when the API is down.
-- Script creation (Portable Text editing, professor/exam-session selection,
-  additional reading, validated multi-file upload) and the script detail page
-  (files, previews, downloads, comments, empty states).
+- Script creation (Portable Text editing, professor selection, exam
+  session + year, additional reading, validated multi-file upload) and the
+  script detail page (files, previews, downloads, comments, empty states).
+- Script detail 404s answer a real `404`: the route dropped its segment
+  `loading.tsx`, because a Suspense boundary above the page made `notFound()`
+  stream after the headers and every missing script returned `200`. The same
+  skeleton is now the page's own Suspense fallback, so the existence check runs
+  first and the body streams after it.
+- Script sessions: scripts are filed under an exam session (January, June,
+  September) or "General (All Sessions)", plus a year limited to
+  `SCRIPT_START_YEAR`..current year. The year select stays disabled until a
+  session is chosen, offers only years that session has already reached this
+  calendar year, and adds "General (All Years)" only for the general session.
+  Create and edit share the same rules (`shared/utils/script-session.utils.ts`,
+  enforced again by `POST`/`PATCH /scripts`). Subjects keep their semester.
+- Homepage script feed: the default list stays curated from the viewer's
+  in-progress subjects, and `/?scripts=all` shows the platform-wide top list.
+  The choice is read server-side from the URL and the switch is a pair of plain
+  links (`ScriptFeedToggle`), so the page stays a Server Component, only the
+  selected list is fetched, and guests (who only have one list) see no switch.
+- Elective subjects show an "Elective" badge on subject cards, the subject
+  detail curriculum card and the onboarding academics picker.
 - Comments and engagement UI (threads, replies, reactions, likes, moderation,
   votes, favorites).
 - Auth and onboarding UI, protected actions, responsive navbar with mobile
@@ -504,9 +543,9 @@ Priority work, scheduled right after the frontend gaps:
   (professor, study, faculty, university); previously every link went to a
   professor page.
 - `NextImage` requires `sizes` whenever `fillProp` is set.
-- Script search: `/search?q=` (Server Component, `noindex`, cookie forwarded so
-  results are faculty-scoped) backed by `GET /scripts/search`; the homepage
-  `ScriptsSection` links to it from the local filter (`showGlobalSearch`).
+- Script search: `/search?q=` (Server Component, `noindex`) backed by the
+  public, unscoped `GET /scripts/search`; the homepage `ScriptsSection` links
+  to it from the local filter (`showGlobalSearch`).
 - Header search bar: the header search icon expands an inline bar (an overlay
   of the whole header below `sm`, inline from `sm` up). Enter goes to
   `/search?q=`; Escape and an outside press close it. It does not prefill the
@@ -688,7 +727,7 @@ SEO and performance:
 - **Other SEO routes:** add any other useful ones if needed.
 - **Image loading:** use eager loading on the largest images.
 - **Font preloading:** add preload where it helps and remove it from fonts
-  that don't need it.
+  that don't need it, remove unused fonts once ui is finalized.
 
 ## Tooling & Quality
 

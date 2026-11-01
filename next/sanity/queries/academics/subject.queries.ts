@@ -25,6 +25,7 @@ code,
 credits,
 year,
 semester,
+elective,
 description,
 syllabus,
 "faculty": study->faculty->{

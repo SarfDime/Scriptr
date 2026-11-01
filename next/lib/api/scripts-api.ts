@@ -46,12 +46,10 @@ import {
 
 const SCRIPT_COMMENT_COUNT_CACHE_VERSION = 2
 
-/** Shared/cached by default. Pass `cookie` to reflect the caller's
- * faculty-scoped result — scripts.ts's list endpoints filter by the
- * session's selected faculties when a user is present, via
- * getSelectedFacultyScope(). Forwarding a cookie forces `no-store` (see
- * cachedUnlessPersonalized) so one user's scoped result is never served
- * from another user's cache entry. */
+/** Shared/cached by default; the list endpoints are public and unscoped, so
+ * every viewer sees the same rows. Forwarding a cookie is only relevant for
+ * endpoints that read the viewer (it forces `no-store`, see
+ * cachedUnlessPersonalized), which is why these list calls don't send one. */
 export const getScripts = (cookie?: string) =>
   apiFetchPublicRead<Array<ScriptSummary>>(
     withQuery(apiRoutes.scripts.index, {
@@ -113,9 +111,8 @@ export const getPopularScripts = (limit = 10, cookie?: string) =>
 
 /** Returns the script directly — GET /:id is NOT wrapped in `{ script }`
  * (that wrapper only exists on the POST /scripts create response). Pass
- * `cookie` so a faculty-scoped 404 (the requesting user's selected
- * faculties don't include this script's) resolves correctly instead of
- * serving a cached result computed for a different user or no user. */
+ * `cookie` when the caller needs the request to be uncached (any cookie
+ * forces `no-store`); the route itself is public and unscoped. */
 export const getScript = (scriptId: string, cookie?: string) =>
   apiFetchRequired<ScriptSummary>(
     withQuery(apiRoutes.scripts.byId(scriptId), {
@@ -125,9 +122,8 @@ export const getScript = (scriptId: string, cookie?: string) =>
   )
 
 /** Never cached regardless — search results must always reflect the live
- * dataset. `cookie` is still worth forwarding here for faculty-scoping
- * consistency with the other list endpoints; there's no cache trade-off
- * either way since this is already `no-store`. */
+ * dataset. `cookie` is accepted for consistency with the other reads; there
+ * is no cache trade-off either way since this is already `no-store`. */
 export const searchScripts = (query: string, cookie?: string) =>
   apiFetchPublicRead<Array<ScriptSummary>>(
     apiRoutes.scripts.search(query),
@@ -354,6 +350,7 @@ export const createScript = async (
         subjectId: input.subjectId,
         professorId: input.professorId,
         examSession: input.examSession ?? null,
+        examYear: input.examYear ?? null,
         additionalReading: input.additionalReading ?? [],
         files,
       },

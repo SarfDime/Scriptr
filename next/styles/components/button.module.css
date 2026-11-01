@@ -69,7 +69,12 @@
     opacity: 0.55;
   }
 
-  &:active:not(:disabled) {
+  /* Press feedback belongs to the control itself. A container that reuses
+   * `.button` purely for its look (the `Select` wrapper) must not scale when
+   * something inside it is pressed: its open option list is absolutely
+   * positioned inside that wrapper, so scaling would slide the pressed option
+   * out from under the pointer and the click would land behind the list. */
+  &:is(button, a):active:not(:disabled) {
     transform: scale(0.97);
     opacity: 0.85;
   }

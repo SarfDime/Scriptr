@@ -70,7 +70,11 @@ finalize fails with `503` instead of storing a file unoptimized.
 
 `NEXT_REVALIDATE_URL` and `REVALIDATE_SECRET` configure the cache-revalidation
 webhook the API calls after mutations; `REVALIDATE_SECRET` must match the
-value in the frontend's environment (`next/.env.example`).
+value in the frontend's environment (`next/.env.example`). In production the
+URL must be the web project's Vercel alias
+(`https://scriptr-web-team-slug.vercel.app/api/revalidate`), because the
+public hostname is behind Cloudflare and the proxy drops the API's server-to-
+server request. See [`VERCEL_DEPLOYMENT.md`](../VERCEL_DEPLOYMENT.md).
 
 Never commit `.env` files or storage credentials.
 

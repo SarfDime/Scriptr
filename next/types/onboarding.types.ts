@@ -31,6 +31,9 @@ export type OnboardingSubject = {
   dbId?: string
   name: string
   year: number
+  /** Elective subjects have no fixed semester or year in the curriculum; the
+   * badge is how the picker tells them apart. */
+  elective?: boolean | null
   studyId: string
 }
 

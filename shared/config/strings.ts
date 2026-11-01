@@ -83,6 +83,13 @@ export const UI_STRINGS = {
       preview: 'Preview',
       noFilesAttached: 'No files attached to this script.',
     },
+    feed: {
+      toggleLabel: 'Script feed',
+      forYou: 'For you',
+      all: 'All scripts',
+      allTitle: 'All scripts',
+      allSubtitle: 'Top scripts from every subject.',
+    },
 
     uploadModal: {
       title: 'Upload a script',
@@ -99,7 +106,12 @@ export const UI_STRINGS = {
       professorLabel: 'Professor',
       examSessionLabel: 'Exam session',
       examSessionHelp: 'Select the session this material applies to.',
-      examSessionPlaceholder: 'e.g. Winter 2026',
+      examSessionPlaceholder: 'Select a session',
+      generalSessionOption: 'General (All Sessions)',
+      examYearLabel: 'Exam year',
+      examYearHelp: 'Pick the session first; the years available depend on it.',
+      examYearPlaceholder: 'Select a year',
+      generalYearOption: 'General (All Years)',
       additionalReadingLabel: 'Additional reading',
       additionalReadingHelp:
         'Add URLs for related notes, articles, or resources.',
@@ -183,6 +195,7 @@ export const UI_STRINGS = {
       'Choose a study during onboarding to see your subjects here.',
     guestNoIncompleteSubjects:
       'All subjects in your selected study are marked complete.',
+    electiveLabel: 'Elective',
   },
   academics: {
     studiesTitle: 'Studies',

@@ -13,6 +13,7 @@ export type FieldProps = {
   errorText?: ReactNode
   badgeProps?: BadgeProps
   labelProps?: TextProps
+  labelWrapperProps?: BoxProps
   helperProps?: TextProps
   errorProps?: TextProps
   valid?: boolean
@@ -38,6 +39,7 @@ export const Field = (props: FieldProps) => {
     badgeProps,
     labelProps,
     errorProps,
+    labelWrapperProps,
     helperProps,
     required,
     invalid,
@@ -56,6 +58,7 @@ export const Field = (props: FieldProps) => {
       errorText={errorText}
       badgeProps={badgeProps}
       labelProps={labelProps}
+      labelWrapperProps={labelWrapperProps}
       required={required}
       valid={valid}
       invalid={invalid}

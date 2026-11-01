@@ -1,36 +1,31 @@
 'use client'
 
-import type { PortableTextBlock } from '@portabletext/editor'
-import { PORTABLE_TEXT_LIMITS } from '@shared/config/portable-text-limits'
-import { SUBJECT_EXAM_SESSIONS } from '@shared/config/shared-constants'
-import type { SubjectExamSession } from '@shared/types/academic.types'
-import type { PortableTextValue } from '@shared/types/portable-text.types'
-import {
-  isScriptDescriptionPortableTextValue,
-  isScriptTitlePortableTextValue,
-  portableTextJsonByteLength,
-} from '@shared/utils/portable-text.utils'
-import { type SubmitEvent, useEffect, useEffectEvent, useState } from 'react'
+import type { SubmitEvent } from 'react'
+import { useEffect, useEffectEvent, useState } from 'react'
 import { useScriptFilePicker } from '@/hooks/useScriptFilePicker'
+import { useScriptFormLoader } from '@/hooks/useScriptFormLoader'
+import { useScriptReadingLinks } from '@/hooks/useScriptReadingLinks'
+import {
+  type ScriptSessionValues,
+  useScriptSessionFields,
+} from '@/hooks/useScriptSessionFields'
 import { useScriptUpload } from '@/hooks/useScriptsUpload'
+import {
+  type ScriptTextValues,
+  useScriptTextFields,
+} from '@/hooks/useScriptTextFields'
 import type { MinimalSubject } from '@/types/academics/subject.types'
 import type { SelectOptionType } from '@/types/components/Select.types'
 
-function hasText(blocks: Array<PortableTextBlock>) {
-  return blocks.some((block) => {
-    if (!Array.isArray(block.children)) return false
+/** Names the loader task this dialog owns, so it can be released on unmount. */
+const UPLOAD_TASK_KEY = 'script-upload'
 
-    return block.children.some(
-      (child) =>
-        typeof child === 'object' &&
-        child !== null &&
-        '_type' in child &&
-        child._type === 'span' &&
-        'text' in child &&
-        typeof child.text === 'string' &&
-        child.text.trim().length > 0
-    )
-  })
+/** A pristine create form: nothing picked, nothing typed. */
+const EMPTY_TEXT: ScriptTextValues = { title: [], description: [] }
+const EMPTY_SESSION: ScriptSessionValues = {
+  session: null,
+  isChosen: false,
+  year: null,
 }
 
 export type UseCreateScriptFormArgs = {
@@ -39,38 +34,35 @@ export type UseCreateScriptFormArgs = {
 }
 
 /**
- * Owns all create-script form state and file validation. The actual
- * upload (files → R2 → optimizer, then the script record) stays delegated to
- * `useScriptUpload`; this hook never talks to the API directly — it just
- * shapes the form's state into that hook's input.
+ * The create form's model: the shared field hooks (text, session/year, reading
+ * links, files) plus the create-only parts — the fixed subject's professor
+ * picker and the upload that turns the fields into a script record.
  *
- * BUGFIX: `subjectId` used to be independent `useState('')` with no setter
- * ever wired to anything — the modal is scoped to a single fixed `subject`
- * prop (not a picker), so it's derived here instead. Previously this meant
- * `canSubmit` was always `false` in practice.
+ * The upload itself stays delegated to `useScriptUpload`; this hook only shapes
+ * the form into its input.
  */
 export function useCreateScriptForm({
   subject,
   onCreated,
 }: UseCreateScriptFormArgs) {
-  const { state, upload, reset } = useScriptUpload()
-  const notifyCreated = useEffectEvent((scriptId: string) => {
-    onCreated?.(scriptId)
-  })
+  const { state, upload, reset: resetUpload } = useScriptUpload()
 
   const subjectId = subject.dbId ?? ''
-
-  const [title, setTitle] = useState<PortableTextValue>([])
-  const [description, setDescription] = useState<PortableTextValue>([])
+  const professors: Array<SelectOptionType> = subject.professors.map(
+    (professor) => ({
+      id: String(professor._id),
+      value: String(professor.dbId),
+      label: professor.name,
+    })
+  )
   const [professorId, setProfessorId] = useState(
     () => subject.professors[0]?.dbId ?? ''
   )
-  const [examSession, setExamSession] = useState<SubjectExamSession>(
-    SUBJECT_EXAM_SESSIONS[0] ?? 'january'
-  )
-  const [readingLinks, setReadingLinks] = useState<Array<string>>([])
-  const { files, validFiles, addFiles, removeFile, clearFiles } =
-    useScriptFilePicker()
+
+  const textFields = useScriptTextFields(EMPTY_TEXT)
+  const sessionFields = useScriptSessionFields(EMPTY_SESSION)
+  const readingLinks = useScriptReadingLinks([])
+  const files = useScriptFilePicker()
 
   const busyStage =
     state.status === 'uploading' ||
@@ -79,105 +71,72 @@ export function useCreateScriptForm({
       ? state.status
       : null
   const isBusy = busyStage !== null
-  const titleTooLong =
-    portableTextJsonByteLength(title) > PORTABLE_TEXT_LIMITS.scriptTitleBytes
-  const descriptionTooLong =
-    portableTextJsonByteLength(description) >
-    PORTABLE_TEXT_LIMITS.scriptDescriptionBytes
+  useScriptFormLoader(UPLOAD_TASK_KEY, busyStage)
+
   const canSubmit =
     !isBusy &&
-    isScriptTitlePortableTextValue(title) &&
-    isScriptDescriptionPortableTextValue(description) &&
+    textFields.isValid &&
     subjectId.length > 0 &&
-    professorId.length > 0
+    professorId.length > 0 &&
+    sessionFields.isChosen
 
-  const addReadingLink = () => setReadingLinks((prev) => [...prev, ''])
-  const updateReadingLink = (index: number, value: string) =>
-    setReadingLinks((prev) =>
-      prev.map((link, i) => (i === index ? value : link))
-    )
-  const removeReadingLink = (index: number) =>
-    setReadingLinks((prev) => prev.filter((_, i) => i !== index))
-
-  const resetForm = () => {
-    setTitle([])
-    setDescription([])
+  function resetForm() {
+    textFields.reset(EMPTY_TEXT)
+    sessionFields.reset(EMPTY_SESSION)
+    readingLinks.reset()
+    files.clearFiles()
     setProfessorId(subject.professors[0]?.dbId ?? '')
-    setExamSession(SUBJECT_EXAM_SESSIONS[0] ?? 'january')
-    setReadingLinks([])
-    clearFiles()
-    reset()
+    resetUpload()
   }
+
+  // An effect event keeps the success handler on the latest closures without
+  // making the effect depend on every setter it touches.
+  const handleSuccess = useEffectEvent((scriptId: string) => {
+    resetForm()
+    onCreated?.(scriptId)
+  })
+
+  useEffect(() => {
+    if (state.status === 'success') handleSuccess(state.scriptId)
+  }, [state])
 
   const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!canSubmit) return
+    if (!canSubmit) {
+      // Surface every validation error instead of silently doing nothing.
+      textFields.touchAll()
+      readingLinks.touchAll()
+      return
+    }
 
     await upload({
-      title,
-      description: hasText(description) ? description : undefined,
+      title: textFields.title,
+      description: textFields.descriptionHasContent
+        ? textFields.description
+        : undefined,
       subjectId,
       professorId,
-      examSession: examSession.trim() || undefined,
-      additionalReading: readingLinks
-        .map((link) => link.trim())
-        .filter(Boolean),
-      files: validFiles.map((entry) => entry.file),
+      examSession: sessionFields.session,
+      examYear: sessionFields.year,
+      additionalReading: readingLinks.toPayload(),
+      files: files.validFiles.map((entry) => entry.file),
     })
   }
 
-  const professors: Array<SelectOptionType> = subject.professors.map(
-    (professor) => ({
-      id: String(professor._id),
-      value: String(professor.dbId),
-      label: professor.name,
-    })
-  )
-
-  const examSessions = SUBJECT_EXAM_SESSIONS.map((session) => ({
-    id: session,
-    value: session,
-    label: session.charAt(0).toUpperCase() + session.slice(1),
-  }))
-
-  useEffect(() => {
-    if (state.status === 'success') {
-      notifyCreated(state.scriptId)
-    }
-  }, [state])
-
   return {
-    // Field state + setters
-    title,
-    setTitle,
-    description,
-    setDescription,
+    subjectId,
+    professors,
     professorId,
     setProfessorId,
-    examSession,
-    setExamSession,
+    textFields,
+    sessionFields,
     readingLinks,
-    addReadingLink,
-    updateReadingLink,
-    removeReadingLink,
     files,
-    addFiles,
-    removeFile,
-    clearFiles,
-
-    // Derived
     isBusy,
     busyStage,
     canSubmit,
-    titleTooLong,
-    descriptionTooLong,
-    professors,
-    examSessions,
-
-    // Upload state + actions
-    uploadState: state,
     handleSubmit,
-    resetForm,
+    reset: resetForm,
   }
 }
 

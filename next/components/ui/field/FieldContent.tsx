@@ -34,6 +34,7 @@ export const FieldContent = ({
   labelProps,
   errorProps,
   helperProps,
+  labelWrapperProps,
   valid,
   invalid,
   required,
@@ -41,7 +42,10 @@ export const FieldContent = ({
   return (
     <>
       {(label || helperText) && (
-        <Box className='ui-cluster gap-1'>
+        <Box
+          {...labelWrapperProps}
+          className={cn('ui-cluster gap-1', labelWrapperProps?.className)}
+        >
           {label && (
             <Text as='label' {...labelProps}>
               <Badge

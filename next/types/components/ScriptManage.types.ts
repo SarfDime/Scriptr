@@ -3,7 +3,7 @@ import type { ScriptSummary } from '@shared/types/scripts.types'
 /** The fields `PATCH /scripts/:id` accepts. */
 export type ScriptEditableFields = Pick<
   ScriptSummary,
-  'title' | 'description' | 'additional_reading'
+  'title' | 'description' | 'additional_reading' | 'exam_session' | 'exam_year'
 >
 
 export type ScriptManageActionsProps = {

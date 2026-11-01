@@ -826,6 +826,7 @@ export type Database = {
           description: Json | null
           download_count: number
           exam_session: string | null
+          exam_year: number | null
           id: string
           is_flagged: boolean
           professor_id: string
@@ -841,6 +842,7 @@ export type Database = {
           description?: Json | null
           download_count?: number
           exam_session?: string | null
+          exam_year?: number | null
           id?: string
           is_flagged?: boolean
           professor_id: string
@@ -856,6 +858,7 @@ export type Database = {
           description?: Json | null
           download_count?: number
           exam_session?: string | null
+          exam_year?: number | null
           id?: string
           is_flagged?: boolean
           professor_id?: string

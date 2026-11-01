@@ -1,3 +1,4 @@
+import type { ExamSession } from './academic.types'
 import type { FileType, ScriptFileInput } from './api.types'
 import type { Tables } from './database.types'
 import type { PortableTextValue } from './portable-text.types'
@@ -24,38 +25,32 @@ export type ScriptAuthorSummary = {
   avatar_url: string | null
 }
 
-/** Matches `study:studies(sanity_id, faculty_id)`. `sanity_id` drives
- * client-side Sanity queries for faculty/university/professor metadata;
- * `faculty_id` is server-side-only, for faculty scoping. */
+/** Matches `study:studies(sanity_id)`. `sanity_id` drives client-side Sanity
+ * queries for faculty/university/professor metadata. */
 export type ScriptStudyRef = {
   sanity_id: string | null
-  faculty_id: string
 }
 
 /**
- * Matches the current `subject:subjects(name, sanity_id, study:studies(sanity_id, faculty:
- * faculties(sanity_id)))` join — deliberately thin. `study.faculty.id` is kept
- * only because `applySelectedFacultyScope` (hono/src/routes/scripts.ts)
- * filters on it server-side; everything else a UI needs about the subject
+ * Matches the `subject:subjects(name, sanity_id, study:studies(sanity_id))`
+ * join — deliberately thin. Everything else a UI needs about the subject
  * (name, description, syllabus, professors, ...) comes from Sanity via
- * `sanity_id` now, fetched separately — see ScriptDetailPage's second-stage
- * fetch with `subjectByIdQuery`. This replaces the previous deep DB join
+ * `sanity_id`, fetched separately — see ScriptDetailPage's second-stage fetch
+ * with `subjectByIdQuery`. This replaces the previous deep DB join
  * (name/university chain duplicated from Sanity, which ARCHITECTURE.md §1
  * already establishes as the source of truth for that data).
+ *
+ * There is no faculty on it: scripts are not scoped by faculty any more.
  */
 export type ScriptSubjectRef = {
   name: string
   sanity_id: string | null
   study: {
     sanity_id: string | null
-    faculty: {
-      sanity_id: string | null
-      id: string
-    } | null
   } | null
 }
 
-/** Matches `subject:subjects(name, study:studies(sanity_id, faculty_id))`. */
+/** Matches `subject:subjects(name, study:studies(sanity_id))`. */
 export type ScriptSubjectSummary = {
   name: string
   study: ScriptStudyRef | null
@@ -80,6 +75,8 @@ export type ScriptSummary = {
   professor_id: string
   author_id: string
   exam_session: string | null
+  /** Year the exam session sits in; `null` for "general (all years)". */
+  exam_year: number | null
   additional_reading: Array<string>
   vote_score: number
   download_count: number
@@ -92,9 +89,8 @@ export type ScriptSummary = {
 }
 
 /** Shallow `study` shape used by `PATCH /:id`, `GET /my-scripts`, and
- * `GET /flagged/all` — study name only, no `sanity_id`/`faculty_id`. None
- * of those three endpoints need Sanity resolution or faculty scoping on
- * their response. */
+ * `GET /flagged/all` — study name only, no `sanity_id`. None of those three
+ * endpoints need Sanity resolution on their response. */
 type ScriptStudyNameOnly = {
   name: string
   study: { name: string } | null
@@ -152,11 +148,15 @@ export type ScriptPatchResponse = {
   script: ScriptPatchResult
 }
 
-/** `PATCH /:id` body. `description: null` clears it. */
+/** `PATCH /:id` body. `description: null` clears it; `exam_session: null` is
+ * the general (all sessions) option and `exam_year: null` the general (all
+ * years) one. */
 export type ScriptUpdateInput = {
   title: PortableTextValue
   description: PortableTextValue | null
   additional_reading: Array<string>
+  exam_session: ExamSession | null
+  exam_year: number | null
 }
 
 /** `DELETE /:id` and `DELETE /:scriptId/files/:fileId`. */

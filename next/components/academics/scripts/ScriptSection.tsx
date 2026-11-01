@@ -27,6 +27,7 @@ export const ScriptsSection = ({
   className,
   parentSubject,
   showGlobalSearch = false,
+  headerActions,
   ...rest
 }: ScriptsSectionProps) => {
   const {
@@ -54,6 +55,7 @@ export const ScriptsSection = ({
         title={title}
         subtitle={subtitle}
         count={visibleScripts.length}
+        actions={headerActions}
       />
 
       <Box className='ui-cluster items-stretch justify-between gap-3'>

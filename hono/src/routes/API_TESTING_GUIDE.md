@@ -348,6 +348,27 @@ curl -s -b cookies-student.txt -X POST $BASE/scripts -H "Content-Type: applicati
   \"files\": []
 }" | jq .
 
+# Exam session + year: `examSession` is january/june/september or null (general)
+# and `examYear` must be 2023..current year (the current year only if that
+# session has already happened this year). `examYear: null` = "all years".
+curl -s -b cookies-student.txt -X POST $BASE/scripts -H "Content-Type: application/json" -d "{
+  \"title\": [{\"_type\":\"block\",\"style\":\"normal\",\"markDefs\":[],\"children\":[{\"_type\":\"span\",\"text\":\"June 2025 Script\",\"marks\":[]}]}],
+  \"subject_id\": \"$SUBJ\",
+  \"professor_id\": \"$PROF1\",
+  \"exam_session\": \"june\",
+  \"exam_year\": 2025,
+  \"files\": []
+}" | jq '{id: .script.id, session: .script.exam_session, year: .script.exam_year}'
+
+# Out-of-range year or an unknown session — expect 400
+curl -s -b cookies-student.txt -X POST $BASE/scripts -H "Content-Type: application/json" -d "{
+  \"title\": [{\"_type\":\"block\",\"style\":\"normal\",\"markDefs\":[],\"children\":[{\"_type\":\"span\",\"text\":\"Future Script\",\"marks\":[]}]}],
+  \"subject_id\": \"$SUBJ\",
+  \"professor_id\": \"$PROF1\",
+  \"exam_session\": \"june\",
+  \"exam_year\": 2019
+}" | jq .
+
 # Unsupported Portable Text block type — expect 400 and no script created
 curl -s -b cookies-student.txt -X POST $BASE/scripts -H "Content-Type: application/json" -d "{
   \"title\": [{\"_type\":\"image\"}],
@@ -358,8 +379,8 @@ curl -s -b cookies-student.txt -X POST $BASE/scripts -H "Content-Type: applicati
 ```
 
 ```bash
-curl -s $BASE/scripts | jq 'length'                       # unauthenticated: sees everything
-curl -s -b cookies-student.txt $BASE/scripts | jq 'length' # scoped to selected faculties (still 1)
+curl -s $BASE/scripts | jq 'length'                       # public: every script
+curl -s -b cookies-student.txt $BASE/scripts | jq 'length' # same list; scripts are unscoped
 curl -s $BASE/scripts/$SCRIPT | jq '{id, title, files}'    # each file includes bucket, ordered by position
 curl -s $BASE/scripts/subject/$SUBJ | jq 'length'
 curl -s "$BASE/scripts/top?limit=5" | jq 'length'

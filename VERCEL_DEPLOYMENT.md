@@ -99,9 +99,15 @@ Production:
   - `https://scriptr-web-ivory.vercel.app`
   - `https://scriptr-web-team-slug.vercel.app`
   - `https://scriptr-web-git-main-team-slug.vercel.app`
-- `NEXT_REVALIDATE_URL` must be
-  `https://scriptr.uk/api/revalidate`.
-- `REVALIDATE_SECRET` must equal the web project's value.
+- `NEXT_REVALIDATE_URL` must be the web project's **Vercel alias**, not the
+  public hostname: `https://scriptr-web-team-slug.vercel.app/api/revalidate`.
+  `scriptr.uk` sits behind the Cloudflare proxy, and Cloudflare does not pass
+  the API's server-to-server request through to Vercel (the request never
+  reaches the deployment, so every mutation silently left the cache stale —
+  the homepage kept listing deleted scripts). Direct Vercel aliases are
+  DNS-only and accept the webhook.
+- `REVALIDATE_SECRET` must equal the web project's value, and must not be the
+  `.env.example` value: the API logs a production warning when it is.
 - Supabase, R2, and internal API credentials are required production secrets.
 - `OPTIMIZER_URL` and `OPTIMIZER_SECRET` are optional and set together, once
   the file optimizer service is deployed. The secret signs API-to-service

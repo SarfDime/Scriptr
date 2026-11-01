@@ -23,12 +23,12 @@ import { CloseButton } from './CloseButton'
  * of it through `dialogProps.className` (later classes win).
  */
 const CENTERED_DIALOG_CLASS = cn(
-  'dialog fixed top-0 m-0 w-full max-w-full overflow-y-auto p-0 text-fg ui-above',
+  'dialog fixed top-0 m-0 w-full max-w-full overflow-y-auto p-0 text-fg ui-above gap-0',
   'max-md:h-dvh max-md:max-h-dvh max-md:rounded-none max-md:border-0',
   'md:top-[10%] md:max-h-[85dvh] md:w-fit md:min-w-2xl md:max-w-[calc(100vw-2rem)] md:shadow-lg'
 )
 const CENTERED_HEADER_CLASS =
-  'flex items-center justify-between gap-3 border-b border-grey-300 px-5 py-4'
+  'flex items-center justify-between gap-3 border-b border-grey-400 px-3.5 py-2.5 shadow-above-inside'
 
 export type DialogProps = {
   title?: PortableTextValue | ReactNode

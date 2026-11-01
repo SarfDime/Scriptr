@@ -1,5 +1,6 @@
 import CheckmarkIcon from '@sanity/icons/Checkmark'
 import { UI_STRINGS } from '@shared/config/strings'
+import { AcademicBadge } from '@/components/academics/AcademicBadge'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { SectionHeader } from '@/components/common/SectionHeader'
@@ -107,6 +108,7 @@ export const OnboardingSubjectsStep = ({
                       >
                         {/* {isSubjectComplete && <CheckmarkIcon />} */}
                         {subject.name}
+                        {subject.elective && <AcademicBadge type='elective' />}
                       </Button>
                     )
                   })}

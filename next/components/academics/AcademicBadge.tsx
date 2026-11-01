@@ -1,3 +1,4 @@
+import { UI_STRINGS } from '@shared/config/strings'
 import type { SubjectSemester } from '@shared/types/academic.types'
 import { Badge, type BadgeProps } from '@/components/ui/Badge'
 import { getColorPalette } from '@/lib/color-pallette-gen'
@@ -7,6 +8,7 @@ type AcademicBadgeProps = (
   | { type: 'year'; value: number }
   | { type: 'credits'; value: number }
   | { type: 'semester'; value: SubjectSemester }
+  | { type: 'elective' }
   | { type: 'code'; value: string }
   | { type: 'title'; value: string }
 ) &
@@ -28,6 +30,11 @@ const getBadgeContent = (props: AcademicBadgeProps) => {
       return {
         colorPalette: getColorPalette({ type: 'semester', value: props.value }),
         label: `Semester ${props.value}`,
+      }
+    case 'elective':
+      return {
+        colorPalette: 'cp-amber' as const,
+        label: UI_STRINGS.subjects.electiveLabel,
       }
     case 'code':
       return {

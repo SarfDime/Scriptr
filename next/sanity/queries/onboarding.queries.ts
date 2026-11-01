@@ -9,6 +9,7 @@ const onboardingSidebarSubjectQuery = /* groq */ `
   credits,
   year,
   semester,
+  elective,
   "faculty": study->faculty->{
     _id,
     "slug": slug.current,
@@ -60,7 +61,7 @@ export const onboardingCatalogQuery = groq`
       ] | order(year asc){
       year,
       "subjects": *[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(name asc){
-        _id, dbId, name, year, "studyId": study._ref
+        _id, dbId, name, year, elective, "studyId": study._ref
       }
     },
   },

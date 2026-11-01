@@ -3,14 +3,13 @@ import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 import { SkeletonCircle } from '@/components/ui/skeleton/SkeletonCircle'
 import { SkeletonText } from '@/components/ui/skeleton/SkeletonText'
 
-export default function Loading() {
+/** Placeholder for everything under the script title while the detail body
+ * loads. Used as the page's Suspense fallback, which keeps the route free of a
+ * `loading.tsx` — a segment-level boundary would flush the response before the
+ * existence check and every missing script would answer `200`. */
+export function ScriptDetailSkeleton() {
   return (
-    <Box as='main' className='ui-container ui-section ui-stack gap-6'>
-      <Box className='ui-stack gap-2'>
-        <SkeletonText noOfLines={1} className='w-2/3' />
-        <SkeletonText noOfLines={3} />
-      </Box>
-
+    <Box className='ui-stack gap-6'>
       <div className='ui-cluster gap-3 items-center'>
         <Skeleton loading className='h-9 w-24' />
         <SkeletonCircle size='36' />

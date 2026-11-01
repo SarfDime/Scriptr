@@ -1,3 +1,4 @@
+import { UI_STRINGS } from '@shared/config/strings'
 import Link from 'next/link'
 import { Box } from '@/components/common/Box'
 import { Text } from '@/components/typography/Text'
@@ -9,8 +10,10 @@ export default function NotFound() {
       <Text className='ui-body'>
         This script may have been removed, or the link is incorrect.
       </Text>
-      <Link href='/scripts' className='button subtle'>
-        Back to scripts
+      {/* There is no `/scripts` index page — search is the way back to the
+          catalogue. */}
+      <Link href='/search' className='button subtle'>
+        {UI_STRINGS.scripts.search.pageTitle}
       </Link>
     </Box>
   )

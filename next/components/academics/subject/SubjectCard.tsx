@@ -12,6 +12,7 @@ export const SubjectCard = ({
   year,
   credits,
   semester,
+  elective,
   professors = [],
   study,
 }: SubjectSidebarItem) => {
@@ -51,6 +52,7 @@ export const SubjectCard = ({
           <Box className='ui-cluster flex-wrap gap-2'>
             {year && <AcademicBadge type='year' value={year} />}
             {credits && <AcademicBadge type='credits' value={credits} />}
+            {elective && <AcademicBadge type='elective' />}
           </Box>
           {semester && <AcademicBadge type='semester' value={semester} />}
         </ClickableCard.Footer>

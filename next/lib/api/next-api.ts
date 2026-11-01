@@ -189,23 +189,36 @@ export async function getRequestCookieHeader(): Promise<string> {
 }
 
 /**
+ * Safety net for every cached public read. Tag revalidation is what keeps
+ * these fresh (the API calls `/api/revalidate` after a mutation); this TTL
+ * only exists so a webhook that never arrives — unset `NEXT_REVALIDATE_URL`,
+ * a wrong secret, an unreachable deployment — cannot freeze a feed
+ * indefinitely. Before this, a stale entry had no expiry at all: the
+ * homepage kept listing scripts that had already been deleted.
+ */
+const PUBLIC_READ_REVALIDATE_SECONDS = 60
+
+/**
  * The "cached-unless-personalized" pattern used by every -api.ts read that
  * can optionally be scoped to the requesting user (scripts-api.ts,
  * comments-api.ts). Without a cookie: the normal tag-based Data Cache
  * entry, shared across all callers. With a cookie: forced `no-store` —
  * Next's fetch cache keys primarily by URL, not by headers, so a
- * personalized (e.g. faculty-scoped) result cached under a shared tag
- * could otherwise leak from one user to another. "Forward a cookie" and
- * "bypass the shared cache" are intentionally the same decision here, not
- * two separate things a caller could get out of sync.
+ * personalized result cached under a shared tag could otherwise leak from
+ * one user to another. "Forward a cookie" and "bypass the shared cache" are
+ * intentionally the same decision here, not two separate things a caller
+ * could get out of sync.
  */
 export function cachedUnlessPersonalized(
   cookie: string | undefined,
   tags: Array<string>
 ): Pick<ApiFetchOptions, 'headers' | 'cache'> & {
-  next?: { tags: Array<string> }
+  next?: { tags: Array<string>; revalidate: number }
 } {
   return cookie
     ? { headers: { cookie }, cache: 'no-store' }
-    : { cache: 'force-cache', next: { tags } }
+    : {
+        cache: 'force-cache',
+        next: { tags, revalidate: PUBLIC_READ_REVALIDATE_SECONDS },
+      }
 }

@@ -48,6 +48,8 @@ export function ScriptInfoPanel({ detail }: { detail: ScriptDetailViewModel }) {
             title: script.title,
             description: script.description,
             additional_reading: script.additional_reading,
+            exam_session: script.exam_session,
+            exam_year: script.exam_year,
           }}
           subjectHref={subjectHref}
         />

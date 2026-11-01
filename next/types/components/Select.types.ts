@@ -29,6 +29,9 @@ type SelectOptionListProps<T> = {
 
 type SelectProps<T = string> = {
   options: Array<SelectOptionType<T>>
+  /** Keeps the trigger closed and non-interactive, e.g. a select whose options
+   * depend on an earlier choice. */
+  disabled?: boolean
   defaultOption?: SelectOptionType<T>
   placeholder?: string
   clearable?: boolean
