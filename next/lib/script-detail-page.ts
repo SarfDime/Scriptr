@@ -28,10 +28,8 @@ export type ScriptDetailPageData = {
 export const loadScriptDetailScript = async (
   scriptId: string
 ): Promise<ScriptSummary> => {
-  const cookieHeader = (await cookies()).toString()
-
   try {
-    return await getScript(scriptId, cookieHeader)
+    return await getScript(scriptId)
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) notFound()
     throw error

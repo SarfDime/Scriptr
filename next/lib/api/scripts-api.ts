@@ -36,7 +36,7 @@ import type { ScriptUploadInput } from '@/types/components/Scripts.types'
 import {
   apiFetchPublicRead,
   apiFetchRequired,
-  cachedUnlessPersonalized,
+  cachedPublicRead,
 } from './next-api'
 import {
   isUserFacingUploadRejection,
@@ -46,36 +46,25 @@ import {
 
 const SCRIPT_COMMENT_COUNT_CACHE_VERSION = 2
 
-/** Shared/cached by default; the list endpoints are public and unscoped, so
- * every viewer sees the same rows. Forwarding a cookie is only relevant for
- * endpoints that read the viewer (it forces `no-store`, see
- * cachedUnlessPersonalized), which is why these list calls don't send one. */
-export const getScripts = (cookie?: string) =>
-  apiFetchPublicRead<Array<ScriptSummary>>(
-    withQuery(apiRoutes.scripts.index, {
-      commentCountVersion: SCRIPT_COMMENT_COUNT_CACHE_VERSION,
-    }),
-    [],
-    cachedUnlessPersonalized(cookie, [SCRIPT_CACHE_TAGS.list()])
-  )
-
-export const getScriptsBySubject = (subjectId: string, cookie?: string) =>
+/** Scripts for one subject. Public and unscoped, so the response is shared. */
+export const getScriptsBySubject = (subjectId: string) =>
   apiFetchPublicRead<Array<ScriptSummary>>(
     withQuery(apiRoutes.scripts.subjectBySubjectId(subjectId), {
       commentCountVersion: SCRIPT_COMMENT_COUNT_CACHE_VERSION,
     }),
     [],
-    cachedUnlessPersonalized(cookie, [
+    cachedPublicRead([
       SCRIPT_CACHE_TAGS.subject(subjectId),
       SCRIPT_CACHE_TAGS.list(),
     ])
   )
 
-export const getTopScripts = (limit = 10, cookie?: string) =>
+/** Platform-wide top scripts by vote score. Public and unscoped. */
+export const getTopScripts = (limit = 10) =>
   apiFetchPublicRead<Array<ScriptSummary>>(
     `${apiRoutes.scripts.top(limit)}&commentCountVersion=${SCRIPT_COMMENT_COUNT_CACHE_VERSION}`,
     [],
-    cachedUnlessPersonalized(cookie, [SCRIPT_CACHE_TAGS.top()])
+    cachedPublicRead([SCRIPT_CACHE_TAGS.top()])
   )
 
 /** Builds a personalized top list from individually cached public subject
@@ -102,34 +91,24 @@ export const getTopScriptsForSubjects = async (
     .slice(0, limit)
 }
 
-export const getPopularScripts = (limit = 10, cookie?: string) =>
-  apiFetchPublicRead<Array<ScriptSummary>>(
-    `${apiRoutes.scripts.popular(limit)}&commentCountVersion=${SCRIPT_COMMENT_COUNT_CACHE_VERSION}`,
-    [],
-    cachedUnlessPersonalized(cookie, [SCRIPT_CACHE_TAGS.popular()])
-  )
-
 /** Returns the script directly — GET /:id is NOT wrapped in `{ script }`
- * (that wrapper only exists on the POST /scripts create response). Pass
- * `cookie` when the caller needs the request to be uncached (any cookie
- * forces `no-store`); the route itself is public and unscoped. */
-export const getScript = (scriptId: string, cookie?: string) =>
+ * (that wrapper only exists on the POST /scripts create response). Public and
+ * unscoped, so the response is cached per script id and shared by everyone. */
+export const getScript = (scriptId: string) =>
   apiFetchRequired<ScriptSummary>(
     withQuery(apiRoutes.scripts.byId(scriptId), {
       commentCountVersion: SCRIPT_COMMENT_COUNT_CACHE_VERSION,
     }),
-    cachedUnlessPersonalized(cookie, [SCRIPT_CACHE_TAGS.detail(scriptId)])
+    cachedPublicRead([SCRIPT_CACHE_TAGS.detail(scriptId)])
   )
 
 /** Never cached regardless — search results must always reflect the live
- * dataset. `cookie` is accepted for consistency with the other reads; there
- * is no cache trade-off either way since this is already `no-store`. */
-export const searchScripts = (query: string, cookie?: string) =>
+ * dataset. Public and unscoped, so no cookie is sent. */
+export const searchScripts = (query: string) =>
   apiFetchPublicRead<Array<ScriptSummary>>(
     apiRoutes.scripts.search(query),
     [],
     {
-      ...(cookie && { headers: { cookie } }),
       cache: 'no-store',
     }
   )

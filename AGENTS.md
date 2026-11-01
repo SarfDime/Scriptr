@@ -8,7 +8,7 @@
 
 **Read First**
 
-* `ARCHITECTURE.md` (how the system works) and `PROGRESS.md` (done vs. outstanding — never propose something already listed done). Plus the target workspace's README before working in it.
+* `ARCHITECTURE.md` (how the system works) and `PROGRESS.md` (outstanding work only — never propose something already listed there as done, and don't re-add finished features to it). Plus the target workspace's README before working in it.
 * `hono/src/routes/API_DOCUMENTATION.md` before touching a route: it records the real RLS/client model per table, which is not what the route file implies.
 * Where docs and code disagree, trust the code and flag the drift rather than working around it.
 
@@ -25,7 +25,7 @@
   * A schema change isn't done until dead references are removed across `hono/`, `next/` and `sanity/` and a full `corepack pnpm check-types` passes.
 * Secrets only in `.env` — never in docs, fixtures, or commits.
 * From the root: `corepack pnpm dev:{hono|next|sanity|optimizer}` (bare `dev` runs all four), `check-types` (`--filter <package>` to scope), `test` (`tsx --test` on `node:test`, `*.test.ts` beside the code — API and optimizer), `format` (Biome; it is the linter, so don't run a separate one).
-* Validate the smallest affected workspace and keep changes scoped — no unrelated refactors riding along. When a feature or route changes, update `PROGRESS.md` and, if the design changed, `ARCHITECTURE.md`. Doc filenames stay uppercase.
+* Validate the smallest affected workspace and keep changes scoped — no unrelated refactors riding along. When a feature or route changes, update `PROGRESS.md` (remove what the change finishes, add what it leaves open) and, if the design changed, `ARCHITECTURE.md`. Doc filenames stay uppercase.
 
 **Database & Supabase**
 

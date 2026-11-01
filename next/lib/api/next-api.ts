@@ -217,8 +217,19 @@ export function cachedUnlessPersonalized(
 } {
   return cookie
     ? { headers: { cookie }, cache: 'no-store' }
-    : {
-        cache: 'force-cache',
-        next: { tags, revalidate: PUBLIC_READ_REVALIDATE_SECONDS },
-      }
+    : cachedPublicRead(tags)
+}
+
+/** Cache options for a read that returns the same rows to every viewer (the
+ * script reads): a tagged Data Cache entry with the revalidate safety net. */
+export function cachedPublicRead(tags: Array<string>): Pick<
+  ApiFetchOptions,
+  'cache'
+> & {
+  next: { tags: Array<string>; revalidate: number }
+} {
+  return {
+    cache: 'force-cache',
+    next: { tags, revalidate: PUBLIC_READ_REVALIDATE_SECONDS },
+  }
 }
