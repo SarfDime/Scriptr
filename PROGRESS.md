@@ -117,13 +117,6 @@ before anyone builds it).
 
 ## Infrastructure and deployment
 
-- **Migration drift:** 33 migrations were applied through the Supabase
-  dashboard and have no file in `hono/supabase/migrations`, so
-  `supabase db push` refuses to run. Reconcile with `supabase migration repair`
-  or a `supabase db pull` baseline before adding the next migration. Note that
-  `20261031120000_add_script_exam_year.sql` was applied out-of-band with
-  `supabase db query --linked`, so it has to be marked applied during that
-  reconciliation.
 - **Cloudflare in front of the web host:** `scriptr.uk` is proxied, and the
   proxy drops the API's server-to-server revalidation POST, which is why
   `NEXT_REVALIDATE_URL` points at the web project's Vercel alias
@@ -176,7 +169,7 @@ before anyone builds it).
 2. Correctness and quality: draft-mode endpoint, state coverage, inline
    strings, accessibility, toolbar, error UX, SEO/performance.
 3. Optimizer tuning and the serving-cost review.
-4. The migration-drift reconciliation and the privilege review.
+4. The privilege review.
 5. Sanity cleanup and the open Studio decisions.
 6. Tooling: Biome rules, error hygiene, internal secrets.
 7. Deferred: achievement-definition CRUD and moderator notifications.

@@ -94,6 +94,18 @@ automatically. `gen:api-types` regenerates the Supabase types after a schema
 change; `gen:api-endpoints` (run from the repository root) regenerates
 `shared/config/api-routes.ts` after any route is added, removed, or renamed.
 
+## Database Migrations
+
+`hono/supabase/migrations` mirrors the remote migration history one-to-one;
+`supabase migration list --linked` should show no local/remote mismatch. Make
+schema changes only by adding a migration file here and applying it with
+`supabase db push --linked` (preview with `--dry-run`), then run
+`corepack pnpm gen:api-types`. Do not apply schema changes through the Supabase
+dashboard SQL editor: it records a migration with no file, and `db push` then
+refuses to run. If that happens, `supabase migration fetch --linked` writes the
+missing files (it overwrites existing files with the recorded SQL, so restore
+those with `git checkout` and keep only the new ones).
+
 ## API Base Path
 
 The app is built with `.basePath('/api')`, so **every** route — including

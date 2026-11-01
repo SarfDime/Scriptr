@@ -1,0 +1,27 @@
+begin;
+
+alter table public.study_programs rename to studies;
+alter table public.profile_study_programs rename to profile_studies;
+alter table public.professor_study_programs rename to professor_studies;
+alter table public.subjects rename column study_program_id to study_id;
+alter table public.profile_studies rename column study_program_id to study_id;
+alter table public.professor_studies rename column study_program_id to study_id;
+
+alter table public.studies rename constraint study_programs_pkey to studies_pkey;
+alter table public.studies rename constraint study_programs_faculty_id_fkey to studies_faculty_id_fkey;
+alter table public.studies rename constraint study_programs_faculty_id_name_key to studies_faculty_id_name_key;
+alter table public.studies rename constraint study_programs_sanity_id_key to studies_sanity_id_key;
+alter table public.subjects rename constraint subjects_study_program_id_fkey to subjects_study_id_fkey;
+alter table public.profile_studies rename constraint profile_study_programs_pkey to profile_studies_pkey;
+alter table public.profile_studies rename constraint profile_study_programs_profile_id_fkey to profile_studies_profile_id_fkey;
+alter table public.profile_studies rename constraint profile_study_programs_study_program_id_fkey to profile_studies_study_id_fkey;
+alter table public.professor_studies rename constraint professor_study_programs_pkey to professor_studies_pkey;
+alter table public.professor_studies rename constraint professor_study_programs_professor_id_fkey to professor_studies_professor_id_fkey;
+alter table public.professor_studies rename constraint professor_study_programs_study_program_id_fkey to professor_studies_study_id_fkey;
+
+alter index public.study_programs_faculty_id_idx rename to studies_faculty_id_idx;
+alter index public.subjects_study_program_id_idx rename to subjects_study_id_idx;
+alter index public.idx_profile_study_programs_study_program_id rename to idx_profile_studies_study_id;
+alter index public.idx_professor_study_programs_study_program_id rename to idx_professor_studies_study_id;
+
+commit;;
