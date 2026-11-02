@@ -37,7 +37,7 @@ REST API reference for Scriptr. All paths are relative to `/api`
 - [Role-Based Access Control](#role-based-access-control)
 - [Error Responses](#error-responses)
 - [Notes](#notes)
-- [Planned Endpoints (Not Yet Implemented)](#planned-endpoints-not-yet-implemented)
+- [Achievement definitions](#achievement-definitions)
 
 ---
 
@@ -280,7 +280,7 @@ bucket server-side. Deleted scripts remove their associated R2 objects.
 | `GET /scripts/top?limit=10`       | By vote score                                                                                                                                                                                               |
 | `GET /scripts/popular?limit=10`   | By download count                                                                                                                                                                                           |
 | `GET /scripts/search?q=`          | Fuzzy match on title/description (Portable Text → plain text)                                                                                                                                               |
-| `POST /scripts/:id/download`      | Records a download, deduped by account → IP → `x-device-id` header. Runs on service-role — `download_events` has no client-facing INSERT policy for any role. Returns `{ success: true, counted: boolean }` |
+| `POST /scripts/:id/download`      | Records a download, deduped by account → IP → `x-device-id` header. Runs on service-role — `download_events` has no client-facing INSERT policy for any role. The count is incremented atomically (`increment_script_download_count` RPC, service-role only). A signed-in author downloading their own script returns `counted: false` and records nothing; anonymous self-downloads can't be detected and still count. Returns `{ success: true, counted: boolean }` |
 
 Response excludes `is_flagged` (internal moderation state). Each file in
 `files` includes `bucket` (see [File Uploads](#file-uploads)).
@@ -355,11 +355,11 @@ Single `flags` table for scripts, users, and comments
 
 | Route                                                   | Access                                                                                                                                         |
 | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /flags`                                           | Any authenticated, non-restricted user. `{ target_type: 'user'\|'script'\|'comment', target_id, reason (≥10 chars) }`. Authors cannot report their own scripts or comments (`403`); each reporter can have only one pending flag per target (`400` for a duplicate). |
+| `POST /flags`                                           | Any authenticated, non-restricted user. `{ target_type: 'user'\|'script'\|'comment', target_id, reason (≥10 chars) }`. Authors cannot report their own scripts or comments (`403`); each reporter can have only one pending flag per target (`400` for a duplicate). At five distinct reporters with non-dismissed flags on the same target, each admin receives a `flag_threshold` notification. |
 | `GET /flags/my-flags`                                   | Reporter, own flags only                                                                                                                       |
 | `DELETE /flags/:id`                                     | Reporter (own flag) **or** admin (any flag). Not restriction-checked.                                                                          |
 | `GET /flags`, `/flags/pending`, `/flags/status/:status` | Admin only — RLS grants admins direct `SELECT`                                                                                                 |
-| `PATCH /flags/:id`                                      | Admin only. `{ status: 'pending'\|'reviewed'\|'dismissed' }`. Dismissing clears `is_flagged` on the target once no other pending flag remains. |
+| `PATCH /flags/:id`                                      | Admin only. `{ status: 'pending'\|'reviewed'\|'dismissed' }`. A transition to `reviewed` or `dismissed` records `reviewed_by` and `reviewed_at`; returning to `pending` clears them. Dismissing clears `is_flagged` on the target once no other pending flag remains. |
 
 Reporters can create, view their own, and delete their own flag — that's the
 complete self-service surface. They cannot change a flag's `status`; only an
@@ -371,19 +371,24 @@ admin can resolve one. Moderators have no flag access at all (see
 ## Restrictions
 
 Admin-managed. `profile_restrictions` has `profile_id` as its primary key —
-one row per restricted user; its presence *is* the restriction. Enforced
-elsewhere via `is_restricted()` in RLS (blocks creating/updating scripts,
-comments, flags, comment reactions, votes, ratings — see
-[Role-Based Access Control](#role-based-access-control)); this section is
-just the admin CRUD surface.
+one row per user. It is active when `expires_at` is `null` (permanent) or is
+later than the current time. Expired rows remain in the table for the admin
+list, but `is_restricted()` ignores them. Restricted users are blocked from
+creating/updating scripts, comments, flags, comment reactions, votes, and
+ratings — see [Role-Based Access Control](#role-based-access-control).
+`profile_restriction_history` records each applied restriction. The ladder
+counts history rows that were not lifted early: first = two weeks, second =
+one calendar month, third and later = permanent.
 
 | Route                             | Access                                                                                                                                              |
 | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /restrictions`               | Admin only. All active restrictions.                                                                                                                |
-| `GET /restrictions/me`            | Any authenticated user. Own restriction status, or `null`.                                                                                          |
-| `GET /restrictions/:profileId`    | Owner or admin (RLS-enforced) — a non-admin querying someone else's status silently gets `null`, indistinguishable from unrestricted.               |
-| `PUT /restrictions/:profileId`    | Admin only. `{ reason (3–500 chars) }` — upsert; restricting an already-restricted user updates the reason and `restricted_by` instead of erroring. |
-| `DELETE /restrictions/:profileId` | Admin only. Lifts the restriction. `404` if the user wasn't restricted.                                                                             |
+| `GET /restrictions`               | Admin only. Active and lapsed rows, including `expires_at` and an `active` flag. |
+| `GET /restrictions/me`            | Any authenticated user. Own active restriction, or `null` when unrestricted or expired. Limited to 15 requests per minute per user (`429`). |
+| `GET /restrictions/lifted` | Admin only. History rows lifted early (`lifted_early_at` set), newest first, with profile and admin names. |
+| `GET /restrictions/lookup?username=...` or `?profile_id=...` | Admin only. Minimal profile fields, count of ladder-eligible history rows, and any active restriction. Exactly one query parameter is required. |
+| `GET /restrictions/:profileId`    | Owner or admin (RLS-enforced) — a non-admin querying someone else's status silently gets `null`, indistinguishable from unrestricted. |
+| `PUT /restrictions/:profileId`    | Admin only. `{ reason (3–500 chars) }`. Returns `400` when the target is an admin account (including the caller); `lookup` does the same. For an active restriction, updates only the reason; otherwise replaces a lapsed row using the ladder and inserts history. |
+| `DELETE /restrictions/:profileId` | Admin only. Lifts the row. An active lift marks the latest history row `lifted_early_at`; removing a lapsed row does not change the ladder. `404` if no row exists. |
 
 ---
 
@@ -404,9 +409,26 @@ the count includes root comments and replies and is read through the
 `get_script_comment_counts` RPC rather than a direct comments-table embed.
 Missing profiles return `404`; profile database failures return a generic
 `500` response rather than exposing database details.
+Every profile payload (including `GET /profiles/me`) carries `achievements`:
+`[{ achievement_id, earned_at, achievement: { title, description, metric,
+threshold, rarity } | null }]`. `title` and `description` are the database
+fallback: seeded wording lives in `ACHIEVEMENT_COPY`
+(`shared/config/achievements.ts`), which both the UI and the award notification
+prefer, keyed by `achievement_id`. `rarity` is one of `common`, `uncommon`,
+`rare`, `epic`, `legendary`; `metric` and `rarity` are plain strings in the
+payload. Awards are permanent; they are read on the session client (the
+`profile_achievements` and `achievement_definitions` SELECT policies are
+`true`).
 
 ### Authenticated
 `GET /profiles/me`, `PATCH /profiles/me`, `DELETE /profiles/me`.
+
+`GET /profiles/me/preferences` and `PATCH /profiles/me/preferences` are
+authenticated own-row operations on `profile_preferences`, limited to 15 requests per minute per user (`429`). A missing row reads
+as `{}`. The PATCH body is `{ preferences }` and merges into the v1 shape:
+`{ version: 1, notifications: { toasts: boolean, achievements: 'show'|'hide' } }`.
+Unknown keys and invalid values are rejected. Restriction and moderation
+notifications are not configurable.
 
 `PATCH /profiles/me` body is `ProfileUpdateRequest`: `{ username (required),
 full_name?, selected_faculty_ids?, selected_study_ids? }`. `username` and
@@ -563,11 +585,20 @@ least one rating appear.
 
 ## Notifications
 
-Own-resource, authenticated. System-generated — there is no user-facing
-create endpoint, matching `notifications` RLS (`INSERT` is admin/service-role
-only). Emitted today for: achievements (`type: 'achievement_earned'`),
-onboarding, and account creation. The `type` column is open-ended, so new
-kinds need no migration; type-specific payload lives in `data`.
+Own-resource, authenticated. Rate limited per user (15 requests per minute
+across all notification routes, `429` beyond that). System-generated — there
+is no user-facing create endpoint. Admin-triggered moderation notifications use the session
+client under the admin INSERT policy; achievement and flag-threshold
+notifications use the service-role client. Kinds include achievements,
+restriction applied/lifted, content removed, and the five-reporter flag
+threshold alert. Onboarding and account creation notifications remain
+supported. The `type` column is open-ended, so new kinds need no migration;
+type-specific payload lives in `data`.
+
+The frontend merges server rows with per-user local notifications. It refreshes
+on mount, tray open, and window focus/visibility change; it does not poll or use
+realtime. The persistent restriction notice is derived from
+`GET /restrictions/me`, not from a deletable notification row.
 
 | Route                             | Notes                                                                                                 |
 | --------------------------------- | ----------------------------------------------------------------------------------------------------- |
@@ -590,7 +621,7 @@ idempotent, service-role, never fails the triggering request.
 | `scripts_uploaded`       | `POST /scripts`                                | The uploader                                              |
 | `comments_posted`        | `POST /comments`, `POST /comments/:id/replies` | The comment/reply author                                  |
 | `total_script_votes`     | `POST /votes/:scriptId` (either direction)     | The **voted-on script's author**, not the voter           |
-| `total_script_downloads` | `POST /scripts/:id/download`                   | The script's author (no seeded achievement uses this yet) |
+| `total_script_downloads` | `POST /scripts/:id/download`                   | The script's author (seeded downloads achievements start at 1; a signed-in author downloading their own script is not counted) |
 
 ---
 
@@ -607,7 +638,8 @@ own resource (`author_id`/`user_id`/`profile_id` = `auth.uid()`), or an
 scripts/comments/profiles admin actions, all "own resource" endpoints, flags
 (list/resolve/delete, now that admin has direct SELECT/DELETE RLS), rating
 types, professor/subject ratings, profile faculties/studies/subjects,
-notifications, restrictions.
+notifications, restrictions, and profile preferences. Restriction history is
+admin-accessible through its admin RLS policies.
 
 **Use the service role** only where no RLS path exists for the caller:
 - All catalog + catalog-junction tables (`universities` → `professor_studies`)
@@ -615,8 +647,11 @@ notifications, restrictions.
   only write path.
 - `POST /scripts/:id/download` — `download_events` has zero client-facing
   `INSERT` policy for any role.
-- Creating notifications and awarding achievements (`INSERT` is not granted
-  to clients).
+- Awarding achievements and creating flag-threshold alerts (`INSERT` is not
+  granted to non-admin clients). Admin-triggered moderation notifications use
+  the session client under the admin INSERT policy.
+- Reading/writing `profile_preferences` and admin restriction history uses the
+  session client under its own-row or admin RLS policies.
 - `PATCH /internal/profiles/:id/role` — deliberately hardened past what RLS
   alone would require, given how sensitive the column is.
 - `POST /profiles/me/avatar` writing `profiles.avatar_url` — the value is a
@@ -660,7 +695,7 @@ any elevated database privilege today.**
    all `is_admin()`-gated in RLS, all usable via the admin's own session.
 4. **Moderators have zero elevated access anywhere in this API.** The role is
    reserved for a planned notification-trigger feature (see
-   [Planned Endpoints](#planned-endpoints-not-yet-implemented)), not direct
+   [Achievement definitions](#achievement-definitions)), not direct
    write access. Any code still branching on `role === 'moderator'` for
    elevated behavior is stale and should check `admin`.
 5. Internal catalog writes and role changes require `x-internal-secret`.
@@ -691,7 +726,7 @@ applied at the route with `c.json<T>(...)` (e.g. the auth routes above), so
 clamped at zero. No downvotes exist anywhere in the schema or API.
 
 **Flag system**: `is_flagged` is set on the target when a flag lands, cleared
-once no pending flags remain. Flagged content stays publicly visible —
+once no pending flags remain. Both writes use the internal (service-role) client, because `authenticated` has no `UPDATE` grant on `is_flagged`. Flagged content stays publicly visible —
 flagging surfaces content for review, it never hides it.
 
 **File types**: `pdf`, `jpg`, `jpeg`, `png`, `webp`, `md`, `docx`, `xlsx`
@@ -716,10 +751,33 @@ descriptions are limited to 50 KiB. Comments require at least 3
 non-whitespace characters and 10 KiB of serialized JSON. Postgres also
 enforces its JSON size caps.
 
-## Planned Endpoints (Not Yet Implemented)
+## Achievement definitions
 
-- **Achievement definitions CRUD** — admin create/update/delete for
-  `achievement_definitions`; only the public read exists today.
-- **Moderator notification pipeline** — repeated flags notifying moderators,
-  a moderator's flag escalating to admins. No schema or backend work started;
-  moderators have no elevated access today.
+Definitions are rows: admins create and edit their metric, threshold and
+rarity at runtime, while the title and description are code (`ACHIEVEMENT_COPY`
+in `shared/config/achievements.ts`). Only profiles earn achievements, so
+entity_type is always profile and is never sent by a client.
+
+- GET /achievement-definitions — public; full rows, ordered by metric then threshold.
+- POST /achievement-definitions — admin; body AchievementDefinitionInput. The id is immutable after create.
+- PATCH /achievement-definitions/:id — admin; body AchievementDefinitionPatch.
+- DELETE /achievement-definitions/:id — admin; 409 once anyone has earned it, because awards are permanent.
+
+Body fields: id (create only), metric, threshold, rarity. Title and
+description are **not** client input: they live in `ACHIEVEMENT_COPY`
+(`shared/config/achievements.ts`), and `POST` rejects an id that has no entry
+there with `400`, because the badge and the notification have nothing to show
+otherwise. The API writes that copy onto the row, and every `PATCH` re-syncs it,
+so the database copy is only a snapshot used if an entry is ever removed.
+
+Validation mirrors the database: id matches ^[a-z0-9_]{2,60}$, threshold is a
+whole number above 0, metric is one of the four metrics above, and rarity is
+one of common, uncommon, rare, epic, legendary. Errors: 400 validation, 403
+not an admin, 409 duplicate id or a delete blocked by earned awards.
+
+Awards are permanent and are never recomputed. Editing a definition's rarity
+leaves existing awards in place and only changes how they render; changing its
+title or description is a code change in `ACHIEVEMENT_COPY`, which updates the
+badge, the admin list and future notifications together. Adding a definition or lowering a threshold awards users the
+next time they take that qualifying action; there is no backfill and no
+recheck action. Deleting a definition nobody holds is allowed.

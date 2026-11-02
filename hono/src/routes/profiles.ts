@@ -18,6 +18,7 @@ import type {
   ProfileUpdateConflictResponse,
   ProfileUpdateResponse,
 } from '../../../shared/types/profile.types'
+import type { ProfilePreferencesResponse } from '../../../shared/types/profile-preferences.types'
 import {
   isAdmin,
   validateFullName,
@@ -31,9 +32,17 @@ import {
 import { revalidateCacheTags } from '../lib/cache-revalidate'
 import { optimizeStagedFile } from '../lib/file-optimizer'
 import { honoLog } from '../lib/logger'
+import {
+  mergeProfilePreferences,
+  readStoredProfilePreferences,
+} from '../lib/profile-preferences'
 import { deleteR2Files } from '../lib/r2'
 import { createRateLimiter } from '../lib/rate-limit'
-import { databaseErrorResponse, requiredParam } from '../lib/request'
+import {
+  databaseErrorResponse,
+  readJsonBody,
+  requiredParam,
+} from '../lib/request'
 import {
   createStagedUpload,
   failureResponse,
@@ -49,7 +58,7 @@ import type { HonoEnv } from '../types/env.types'
 
 // profile_achievements replaced the old profiles.achievements jsonb column.
 const PROFILE_ACHIEVEMENTS_SELECT =
-  'achievements:profile_achievements(achievement_id, earned_at, achievement:achievement_definitions(title, description, metric, threshold))'
+  'achievements:profile_achievements(achievement_id, earned_at, achievement:achievement_definitions(title, description, metric, threshold, rarity))'
 
 /**
  * Shared by /me, /:id, and /username/:username — a viewer can render any
@@ -492,7 +501,9 @@ profiles.get('/me', authMiddleware, async (c) => {
 
   const { data, error } = await supabase
     .from('profiles')
-    .select(`*, ${PROFILE_ACADEMIC_SELECT}, ${PROFILE_SCRIPTS_SELECT}`)
+    .select(
+      `*, ${PROFILE_ACHIEVEMENTS_SELECT}, ${PROFILE_ACADEMIC_SELECT}, ${PROFILE_SCRIPTS_SELECT}`
+    )
     .eq('id', user.id)
     .single()
 
@@ -510,6 +521,86 @@ profiles.get('/me', authMiddleware, async (c) => {
     ...data,
     scripts,
     favorite_scripts: favoriteScripts,
+  })
+})
+
+const isPreferencesLimited = createRateLimiter({
+  limit: 15,
+  windowMs: 60_000,
+})
+
+/** Read the caller's optional preferences. Missing rows remain `{}`. */
+profiles.get('/me/preferences', authMiddleware, async (c) => {
+  const user = c.get('user')
+  if (isPreferencesLimited(user.id)) {
+    return c.json({ error: 'Too many requests. Please slow down.' }, 429)
+  }
+  const { data, error } = await createSupabaseClient(c)
+    .from('profile_preferences')
+    .select('preferences')
+    .eq('profile_id', user.id)
+    .maybeSingle()
+
+  if (error) return databaseErrorResponse(c, error)
+  const preferences = data ? readStoredProfilePreferences(data.preferences) : {}
+  if (!preferences) {
+    honoLog({
+      logLevel: 'error',
+      message: 'Stored profile preferences are invalid',
+      error: new Error('Invalid profile preference value'),
+    })
+    return c.json({ error: 'Unable to load preferences' }, 500)
+  }
+  return c.json<ProfilePreferencesResponse>({ preferences })
+})
+
+/** Merge and save the caller's versioned preferences. */
+profiles.patch('/me/preferences', authMiddleware, async (c) => {
+  const user = c.get('user')
+  if (isPreferencesLimited(user.id)) {
+    return c.json({ error: 'Too many requests. Please slow down.' }, 429)
+  }
+  const supabase = createSupabaseClient(c)
+  const body = await readJsonBody(c)
+  const { data: current, error: currentError } = await supabase
+    .from('profile_preferences')
+    .select('preferences')
+    .eq('profile_id', user.id)
+    .maybeSingle()
+  if (currentError) return databaseErrorResponse(c, currentError)
+
+  const preferences = mergeProfilePreferences(
+    current?.preferences ?? {},
+    body.preferences
+  )
+  if (!preferences) {
+    return c.json(
+      { error: 'preferences must match the supported version 1 shape' },
+      400
+    )
+  }
+
+  const { data, error } = await supabase
+    .from('profile_preferences')
+    .upsert(
+      {
+        profile_id: user.id,
+        preferences,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'profile_id' }
+    )
+    .select('preferences')
+    .single()
+  if (error) return databaseErrorResponse(c, error)
+  const storedPreferences = readStoredProfilePreferences(data.preferences)
+  if (!storedPreferences) {
+    return databaseErrorResponse(c, {
+      message: 'Saved profile preferences could not be validated',
+    })
+  }
+  return c.json<ProfilePreferencesResponse>({
+    preferences: storedPreferences,
   })
 })
 

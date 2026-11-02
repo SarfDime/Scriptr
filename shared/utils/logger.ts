@@ -19,6 +19,11 @@ interface RequestLogParams {
   note?: string
 }
 
+/** Production keeps only errors so request and info lines don't clutter the
+ * host's logs. Read per call so tests and runtimes can set it late. */
+const shouldLog = (level: LogLevel) =>
+  level === 'error' || globalThis.process?.env?.NODE_ENV !== 'production'
+
 const ANSI = {
   reset: '\u001b[0m',
   blue: '\u001b[34m',
@@ -87,6 +92,7 @@ function createLogger({ identifier }: { identifier: string }) {
    * Logs a message with the specified log level.
    */
   function log({ message, logLevel, error }: LogParams) {
+    if (!shouldLog(logLevel)) return
     const logMethod = logLevelMap[logLevel]
     if (error && logLevel === 'error') {
       if (error instanceof Error) {
@@ -119,6 +125,7 @@ function createLogger({ identifier }: { identifier: string }) {
       forcedLevel ??
       // biome-ignore lint/style/noNestedTernary: <Simplest way>
       (status >= 500 ? 'error' : status >= 400 ? 'warn' : 'success')
+    if (!shouldLog(level)) return
     const logMethod = logLevelMap[level]
     const color = statusColor(status)
     const suffix = note ? ` ${ANSI.dim}(${note})${ANSI.reset}` : ''

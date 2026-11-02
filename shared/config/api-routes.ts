@@ -57,6 +57,7 @@ export type ApiEndpoint =
   | `/api/favorites/${string}`
   | '/api/profiles'
   | '/api/profiles/me'
+  | '/api/profiles/me/preferences'
   | '/api/profiles/me/avatar/upload-url'
   | '/api/profiles/me/avatar'
   | `/api/profiles/username/${string}`
@@ -82,8 +83,12 @@ export type ApiEndpoint =
   | `/api/ratings/subject/${string}/stats`
   | `/api/ratings/subject/${string}/my-ratings`
   | `/api/ratings/subject/${string}/${string}`
+  | '/api/achievement-definitions'
+  | `/api/achievement-definitions/${string}`
   | '/api/restrictions'
+  | '/api/restrictions/lifted'
   | '/api/restrictions/me'
+  | '/api/restrictions/lookup'
   | `/api/restrictions/${string}`
   | `/api/internal/profiles/${string}/role`
   | '/api/internal/universities'
@@ -224,6 +229,7 @@ export const apiRoutes = {
   profiles: {
     index: '/api/profiles',
     me: '/api/profiles/me',
+    mePreferences: '/api/profiles/me/preferences',
     meAvatarUploadUrl: '/api/profiles/me/avatar/upload-url',
     meAvatar: '/api/profiles/me/avatar',
     usernameByUsername: (username: string | number) =>
@@ -277,9 +283,16 @@ export const apiRoutes = {
       ratingTypeId: string | number
     ) => `/api/ratings/subject/${subjectId}/${ratingTypeId}` as const,
   },
+  achievementDefinitions: {
+    index: '/api/achievement-definitions',
+    byId: (id: string | number) =>
+      `/api/achievement-definitions/${id}` as const,
+  },
   restrictions: {
     index: '/api/restrictions',
+    lifted: '/api/restrictions/lifted',
     me: '/api/restrictions/me',
+    lookup: '/api/restrictions/lookup',
     byProfileId: (profileId: string | number) =>
       `/api/restrictions/${profileId}` as const,
   },

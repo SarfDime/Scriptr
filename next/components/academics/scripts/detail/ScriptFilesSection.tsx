@@ -44,7 +44,7 @@ export function ScriptFilesSection({
         // not `w-fit`; any narrower and the buttons would wrap.
         <Box
           className={cn(
-            'grid grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] items-start gap-3',
+            'ui-card-grid items-start [--grid-min:18rem]',
             files.length === 1 && 'max-w-152'
           )}
         >

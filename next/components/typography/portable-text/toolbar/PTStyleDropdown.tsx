@@ -34,7 +34,7 @@ export const PTStyleDropdown = ({
       title={PT_STRINGS.toolbar.style.title}
       icon={resolveStyleIcon(activeStyle) ?? STYLE_ICON}
       active={activeStyle !== 'normal'}
-      iconClass='w-auto items-center justify-center !text-xs'
+      iconClass='ml-1 w-auto items-center justify-center !text-xs'
     >
       {styles.map((s) => (
         <RowButton

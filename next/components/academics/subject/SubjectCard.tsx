@@ -46,7 +46,7 @@ export const SubjectCard = ({
           : undefined
       }
       headerAside={code && <AcademicBadge type='code' value={code} />}
-      className='group gap-4 ui-above-inside'
+      className='group ui-above-inside'
       footer={
         <ClickableCard.Footer className='ui-cluster w-full flex-wrap items-center justify-between gap-2 pt-2.5 transition-colors duration-300 group-hover:border-t-brand-300'>
           <Box className='ui-cluster flex-wrap gap-2'>

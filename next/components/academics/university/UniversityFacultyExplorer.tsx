@@ -27,7 +27,7 @@ export const UniversityFacultyExplorer = ({
   <Card className='ui-stack ui-above'>
     <SectionHeader title={title} count={`${faculties.length} Faculties`} />
     {faculties.length > 0 ? (
-      <Box className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+      <Box className='ui-grid-split'>
         {faculties
           .filter((faculty): faculty is Faculty & { slug: string } =>
             Boolean(faculty.slug)

@@ -1,3 +1,4 @@
+import { cn } from '@/lib/common-utils'
 import { Box } from '../common/Box'
 import { NextLink } from '../common/NextLink'
 import { Text } from '../typography/Text'
@@ -11,6 +12,7 @@ type UserCardProps = {
    * someone else (not currently done anywhere, but the prop exists so
    * this stays reusable) would pass that user's profile URL instead. */
   href?: string
+  restricted?: boolean
 }
 
 export const UserCard = ({
@@ -18,10 +20,14 @@ export const UserCard = ({
   userRole,
   avatarUrl,
   href = '/user',
+  restricted = false,
 }: UserCardProps) => (
   <NextLink
     href={href}
-    className='button justify-start subtle w-full gap-2 p-2 grow h-full'
+    className={cn(
+      'button justify-start w-full gap-2 p-2 grow h-full',
+      restricted ? 'danger' : 'subtle'
+    )}
   >
     <Avatar
       name={name}
@@ -38,7 +44,9 @@ export const UserCard = ({
       }}
     />
     <Box className='text-left'>
-      <Text className='ui-label text-fg-700'>{name}</Text>
+      <Text className={cn('ui-label', !restricted && 'text-fg-700')}>
+        {name}
+      </Text>
       {userRole && <Text className='ui-caption'>{userRole}</Text>}
     </Box>
   </NextLink>

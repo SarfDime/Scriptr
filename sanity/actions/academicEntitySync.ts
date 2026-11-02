@@ -28,6 +28,10 @@ type DialogState =
   | { type: 'confirm'; message: string; onConfirm: () => void }
   | { type: 'error'; message: string }
 
+/** Studio builds inline `SANITY_STUDIO_*` env vars at build time. */
+const STUDIO_API_URL =
+  process.env.SANITY_STUDIO_API_URL ?? 'http://localhost:8787'
+
 function apiHeaders() {
   return {
     'Content-Type': 'application/json',
@@ -187,7 +191,7 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
     if (doc?.dbId) return null
 
     const endpoints = getDatabaseAcademicEndpoints(entityType)
-    const endpoint = apiUrl(endpoints.create)
+    const endpoint = apiUrl(endpoints.create, STUDIO_API_URL)
 
     const handleConfirm = async () => {
       setDialogState({ type: 'none' })
@@ -264,7 +268,7 @@ export function syncWithDatabaseAction(entityType: AcademicEntityType) {
     if (!dbId) return null
 
     const endpoints = getDatabaseAcademicEndpoints(entityType)
-    const endpoint = apiUrl(endpoints.sync(String(dbId)))
+    const endpoint = apiUrl(endpoints.sync(String(dbId)), STUDIO_API_URL)
 
     const handleConfirm = async () => {
       setDialogState({ type: 'none' })
@@ -346,7 +350,7 @@ export function createCheckedDeleteAction(entityType: AcademicEntityType) {
       }
 
       const endpoints = getDatabaseAcademicEndpoints(entityType)
-      const endpoint = apiUrl(endpoints.byId(String(dbId)))
+      const endpoint = apiUrl(endpoints.byId(String(dbId)), STUDIO_API_URL)
 
       try {
         const response = await fetch(endpoint, {
@@ -432,7 +436,7 @@ export function createDeleteInDatabaseAction(
       setDialogState({ type: 'none' })
 
       const endpoints = getDatabaseAcademicEndpoints(entityType)
-      const endpoint = apiUrl(endpoints.byId(String(dbId)))
+      const endpoint = apiUrl(endpoints.byId(String(dbId)), STUDIO_API_URL)
 
       try {
         const response = await fetch(endpoint, {

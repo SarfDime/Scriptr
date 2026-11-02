@@ -90,6 +90,25 @@ export type ProfileScriptSummary = {
   files: Array<ScriptFile>
 }
 
+/**
+ * Matches PROFILE_ACHIEVEMENTS_SELECT in hono/src/routes/profiles.ts. `metric`
+ * and `rarity` are plain strings because the DB columns are `text`; narrow
+ * them with `isAchievementMetric` / `isAchievementRarity` from
+ * `shared/config/achievements.ts`. `achievement` is nullable because it comes
+ * from an embedded relationship.
+ */
+export type ProfileAchievement = {
+  achievement_id: string
+  earned_at: string
+  achievement: {
+    title: string
+    description: string | null
+    metric: string
+    threshold: number
+    rarity: string
+  } | null
+}
+
 /** The fields GET /profiles/me, GET /profiles/:id, and GET
  * /profiles/username/:username all return identically — a viewer can
  * render any profile (their own or someone else's) through this one
@@ -101,6 +120,7 @@ export type ProfileScriptSummary = {
  * those two fields until the schema has somewhere to put them. */
 export type ProfileCore = Tables<'profiles'> & {
   subjects: Array<ProfileSubjectRow>
+  achievements: Array<ProfileAchievement>
   selected_faculties: Array<{ faculty: FacultyWithUniversity | null }>
   selected_studies: Array<{ study: StudyWithFacultyAndUniversity | null }>
   scripts: Array<ProfileScriptSummary>

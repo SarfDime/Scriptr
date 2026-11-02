@@ -58,7 +58,6 @@ export function ScriptDetailsFields({
           key={`title-${resetKey}`}
           initialContent={title}
           onChange={changeTitle}
-          showActions={false}
           ariaLabel={UI_STRINGS.scripts.uploadModal.formTitle}
           editorOptions={RESTRICTED_EDITOR_OPTIONS}
           editorClassName='h-10 min-h-0 overflow-hidden whitespace-nowrap p-2'
@@ -80,7 +79,6 @@ export function ScriptDetailsFields({
           key={`description-${resetKey}`}
           initialContent={description}
           onChange={changeDescription}
-          showActions={false}
           ariaLabel={UI_STRINGS.scripts.uploadModal.formDescription}
           editorOptions={{
             excludedStyles: ['h1', 'h2', 'h3'],

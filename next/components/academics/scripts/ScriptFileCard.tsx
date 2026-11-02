@@ -84,7 +84,7 @@ export function ScriptFileCard({
           <Box className='ui-stack gap-2'>
             {/* Label, type and size read as one line; they used to be pushed
                 to opposite edges, which left a gap across a wide card. */}
-            <Box className='ui-cluster items-center gap-2'>
+            <Box className='ui-cluster gap-2'>
               <Text className='ui-label min-w-0 max-w-full truncate'>
                 {fileLabel}
               </Text>

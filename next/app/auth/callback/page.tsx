@@ -20,7 +20,7 @@ export default function AuthCallbackPage() {
           </Text>
         ) : (
           <>
-            <Text className='ui-caption text-danger-600'>{state.message}</Text>
+            <Text className='ui-caption cp-danger-nb'>{state.message}</Text>
             <NextLink href='/auth' className='w-full'>
               <Button className='button solid w-full justify-center'>
                 {UI_STRINGS.auth.callback.backToSignIn}

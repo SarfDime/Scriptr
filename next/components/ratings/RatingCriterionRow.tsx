@@ -110,7 +110,7 @@ export function RatingCriterionRow({
 
   return (
     <Box as='li' className='ui-stack gap-0.5' aria-busy={busy || undefined}>
-      <Box className='ui-cluster items-center justify-between gap-x-3 gap-y-0.5'>
+      <Box className='ui-cluster justify-between gap-x-3 gap-y-0.5'>
         <Box className='ui-cluster items-baseline gap-x-2'>
           <Text as='span' className='ui-body'>
             {label}
@@ -121,7 +121,7 @@ export function RatingCriterionRow({
         </Box>
 
         {canRate && (
-          <Box className='ui-cluster items-center gap-1'>
+          <Box className='ui-cluster gap-1'>
             {myScore !== undefined && (
               <Button
                 className='button button-sm danger'

@@ -1,7 +1,4 @@
-import type {
-  SubjectExamSession,
-  SubjectSemester,
-} from '@shared/types/academic.types'
+import type { ExamSession, SubjectSemester } from '@shared/types/academic.types'
 import type {
   ColorPaletteClass,
   ColorPaletteVariant,
@@ -77,10 +74,10 @@ const getSemesterColor = (
 }
 
 const getExamSessionColor = (
-  month: SubjectExamSession,
+  month: ExamSession,
   variant?: ColorPaletteVariant
 ) => {
-  const map: Record<SubjectExamSession, ColorPaletteClass> = {
+  const map: Record<ExamSession, ColorPaletteClass> = {
     january: 'cp-amber',
     // february: 'cp-green',
     // march: 'cp-blue',
@@ -131,7 +128,7 @@ const getColorPalette = (input: ColorPaletteInput) => {
     case 'semester':
       return getSemesterColor(value as SubjectSemester, variant)
     case 'exam':
-      return getExamSessionColor(value as SubjectExamSession, variant)
+      return getExamSessionColor(value as ExamSession, variant)
     case 'credits':
       return getCreditColor(value as number, variant)
     default:

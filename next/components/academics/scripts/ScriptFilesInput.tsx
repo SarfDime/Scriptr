@@ -100,8 +100,8 @@ function FileDropzone({
 
   const borderClass = (() => {
     if (isDragging) return 'border-brand border-solid'
-    if (invalid) return 'border-danger-600'
-    if (valid) return 'border-success-600'
+    if (invalid) return 'cp-danger'
+    if (valid) return 'cp-success'
     return 'border-grey-300'
   })()
 
@@ -173,7 +173,7 @@ function FileRow({
         </Text>
         <Text className='ui-caption'>{formatFileSize(entry.file.size)}</Text>
         {entry.error && (
-          <Text className='ui-caption text-danger-600'>{entry.error}</Text>
+          <Text className='ui-caption cp-danger-nb'>{entry.error}</Text>
         )}
       </Box>
       <Box className='flex shrink-0 items-center gap-2'>

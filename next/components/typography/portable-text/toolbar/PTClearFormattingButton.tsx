@@ -50,9 +50,9 @@ export const ClearFormattingButton = () => {
       onClick={handleClear}
       aria-label={PT_STRINGS.toolbar.clearFormatting.title}
       title={PT_STRINGS.toolbar.clearFormatting.title}
-      className='button button-sm danger rounded'
+      className='button button-sm danger rounded p-0.5'
     >
-      <Remove className='flex h-5 w-5 shrink-0' />
+      <Remove />
     </Button>
   )
 }

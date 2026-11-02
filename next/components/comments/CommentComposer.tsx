@@ -1,131 +1,52 @@
 'use client'
 
-import { PORTABLE_TEXT_LIMITS } from '@shared/config/portable-text-limits'
 import { COMMENT_STRINGS } from '@shared/strings/comments-strings'
-import { useState } from 'react'
-import { Box } from '@/components/common/Box'
-import { Button } from '@/components/common/Button'
-import { PortableTextContent } from '@/components/typography/PortableTextContent'
+import { portableTextToPlainText } from '@shared/utils/portable-text.utils'
 import { Text } from '@/components/typography/Text'
-import { Card } from '@/components/ui/Card'
-import { ConfirmAction } from '@/components/ui/ConfirmAction'
 import { useProtectedAction } from '@/hooks/useProtectedAction'
-import { useRichTextDraft } from '@/hooks/useRichTextDraft'
+import { validateCommentContent } from '@/lib/comment-validation'
 import { CommentEditor } from './CommentEditor'
 import { useCommentsServices } from './CommentsProvider'
+
+const COMPOSER_ACTION_LABELS = {
+  clear: COMMENT_STRINGS.composer.clear,
+  preview: COMMENT_STRINGS.composer.showPreview,
+  hidePreview: COMMENT_STRINGS.composer.hidePreview,
+  cancel: COMMENT_STRINGS.composer.cancel,
+  save: COMMENT_STRINGS.composer.submit,
+}
 
 /** Editor card for a new top-level comment. Mounted only while composing, so
  * closing it discards the draft by unmounting. */
 export function CommentComposer({ onClose }: { onClose: () => void }) {
   const { target, api, addComment } = useCommentsServices()
-  const draft = useRichTextDraft()
-  const [showPreview, setShowPreview] = useState(false)
-  const { state, run } = useProtectedAction(api.postComment, {
+  const { run } = useProtectedAction(api.postComment, {
     errorTitle: COMMENT_STRINGS.composer.postError,
   })
 
-  const handleClear = () => {
-    draft.reset()
-    setShowPreview(false)
-  }
-
-  const handleSubmit = async () => {
-    if (!draft.content || !draft.isValid) return
-    const result = await run(target, draft.content)
-    if (result.ok) {
-      addComment(result.data.comment)
-      onClose()
-    }
-  }
-
   return (
-    <Card className='ui-above-inside'>
-      <Card.Body className='ui-stack gap-3'>
-        <CommentEditor
-          key={draft.editorKey}
-          onChange={draft.setContent}
-          ariaLabel={COMMENT_STRINGS.composer.editorAriaLabel}
-          className='bg-background-250'
-          autoFocus
-        />
-        {(state.status === 'error' || state.status === 'restricted') && (
-          <Text role='alert' className='text-danger-600'>
-            {state.message}
-          </Text>
-        )}
-        {showPreview && draft.content && draft.hasContent && (
-          <Box className='ui-stack gap-1 rounded-lg bg-background-250 p-3'>
-            <Text className='ui-caption'>
-              {COMMENT_STRINGS.composer.previewLabel}
-            </Text>
-            <PortableTextContent>{draft.content}</PortableTextContent>
-          </Box>
-        )}
-        <Box className='ui-cluster items-center justify-between gap-x-3 gap-y-2'>
-          <Box className='ui-stack gap-1'>
-            <Text className='ui-caption'>
-              {COMMENT_STRINGS.composer.characterCount(draft.characterCount)}
-            </Text>
-            {draft.hasContent && !draft.hasMinimumLength && (
-              <Text role='alert' className='ui-caption text-danger-600'>
-                {COMMENT_STRINGS.general.minimumLength()}
-              </Text>
-            )}
-            {draft.isTooLarge && (
-              <Text role='alert' className='ui-caption text-danger-600'>
-                {COMMENT_STRINGS.validation.maximumSize(
-                  PORTABLE_TEXT_LIMITS.commentMaximumBytes
-                )}
-              </Text>
-            )}
-          </Box>
-          <Box className='ui-cluster items-center justify-end gap-2'>
-            <Button
-              onClick={handleClear}
-              disabled={!draft.hasContent}
-              className='button subtle'
-            >
-              {COMMENT_STRINGS.composer.clear}
-            </Button>
-            <Button
-              onClick={() => setShowPreview((open) => !open)}
-              disabled={!draft.hasContent}
-              isActive={showPreview}
-              aria-pressed={showPreview}
-              className='button ghost'
-            >
-              {showPreview
-                ? COMMENT_STRINGS.composer.hidePreview
-                : COMMENT_STRINGS.composer.showPreview}
-            </Button>
-            {draft.hasContent ? (
-              <ConfirmAction
-                title={COMMENT_STRINGS.moderation.discardTitle}
-                description={COMMENT_STRINGS.moderation.discardDescription}
-                confirmLabel={COMMENT_STRINGS.moderation.discardConfirm}
-                cancelLabel={COMMENT_STRINGS.composer.cancel}
-                onConfirm={onClose}
-                trigger={(open) => (
-                  <Button onClick={open} className='button subtle'>
-                    {COMMENT_STRINGS.composer.cancel}
-                  </Button>
-                )}
-              />
-            ) : (
-              <Button onClick={onClose} className='button subtle'>
-                {COMMENT_STRINGS.composer.cancel}
-              </Button>
-            )}
-            <Button
-              onClick={handleSubmit}
-              disabled={!draft.isValid || state.status === 'pending'}
-              className='button solid'
-            >
-              {COMMENT_STRINGS.composer.submit}
-            </Button>
-          </Box>
-        </Box>
-      </Card.Body>
-    </Card>
+    <CommentEditor
+      ariaLabel={COMMENT_STRINGS.composer.editorAriaLabel}
+      editorClassName='bg-background-250'
+      autoFocus
+      actions={['clear', 'preview', 'cancel', 'save']}
+      actionLabels={COMPOSER_ACTION_LABELS}
+      confirmCancelWhenDirty
+      validate={validateCommentContent}
+      renderMeta={(value) => (
+        <Text className='ui-caption'>
+          {COMMENT_STRINGS.composer.characterCount(
+            portableTextToPlainText(value).trim().length
+          )}
+        </Text>
+      )}
+      onSave={async (value) => {
+        const result = await run(target, value)
+        if (result.ok) addComment(result.data.comment)
+        return result.ok
+      }}
+      onSaveSuccess={onClose}
+      onCancel={onClose}
+    />
   )
 }

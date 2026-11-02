@@ -1,3 +1,5 @@
+import type { NotificationKind } from '@shared/types/notifications.types'
+import type { ProfilePreferences } from '@shared/types/profile-preferences.types'
 import type { ComponentColorPalettes } from './components/ColorPalettes.types'
 
 export type NotificationAction = {
@@ -7,6 +9,7 @@ export type NotificationAction = {
 }
 
 export type NotificationType = 'info' | 'success' | 'warning' | 'error'
+export type NotificationDisplayType = NotificationType | NotificationKind
 
 export type AppNotification = {
   id: string
@@ -22,19 +25,24 @@ export type AppNotification = {
   action?: NotificationAction
   /** Drives the accent color in `NotificationsAside`. Defaults to `'info'`
    * wherever it's omitted (see `NOTIFICATION_PALETTE`). */
-  type?: NotificationType
+  type?: NotificationDisplayType
+  sourceType?: string
 }
 
-/** Single source of truth for which `cp-*` palette each notification type
- * renders with — keep this in sync with `STYLING_GUIDE.md`'s palette list. */
+/** Single source of truth for semantic and server-kind notification palettes. */
 export const NOTIFICATION_PALETTE: Record<
-  NotificationType,
+  NotificationDisplayType,
   ComponentColorPalettes
 > = {
   info: 'cp-sky',
   success: 'cp-success',
   warning: 'cp-warning',
   error: 'cp-danger',
+  achievement_earned: 'cp-success',
+  restriction_applied: 'cp-danger',
+  restriction_lifted: 'cp-sky',
+  content_removed: 'cp-danger',
+  flag_threshold: 'cp-warning',
 }
 
 export type PushInput = {
@@ -51,6 +59,18 @@ export type NotificationsContextValue = {
   setTrayOpen: (open: boolean) => void
   notifications: Array<AppNotification>
   unreadCount: number
+  loading: boolean
+  error: string | null
+  refresh: () => void
+  preferences: ProfilePreferences
+  preferencesReady: boolean
+  applyPreferences: (preferences: ProfilePreferences) => void
+  syncRestriction: () => void
+  /** The active restriction notice, or `null` when the user isn't restricted. */
+  restrictionNotice: AppNotification | null
+  restrictedModalOpen: boolean
+  openRestrictedModal: () => void
+  closeRestrictedModal: () => void
   push: (input: PushInput) => void
   dismiss: (id: string) => void
   dismissAll: () => void

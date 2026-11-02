@@ -16,6 +16,7 @@ import {
   useEffect,
   useState,
 } from 'react'
+import { clearAccountState } from '@/lib/account-state-storage'
 import {
   completeAuthCallback,
   getSession,
@@ -183,6 +184,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       // Clear client state even on a failed request — staying "logged
       // in" in the UI after a failed logout is worse than optimistically
       // clearing it (a stale cookie just makes the next request 401).
+      clearAccountState()
       setSession({ status: 'unauthenticated' })
       refreshServerState()
     }

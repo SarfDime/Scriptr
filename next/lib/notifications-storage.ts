@@ -1,51 +1,67 @@
 import type { AppNotification } from '@/types/notifications.types'
 
 const STORAGE_KEY = 'scriptr:local-notifications'
-const storageListeners = new Set<() => void>()
-let cachedNotifications: Array<AppNotification> | null = null
+const storageListeners = new Map<string, Set<() => void>>()
+const cachedNotifications = new Map<string, Array<AppNotification>>()
 
-export const readLocalNotifications = (): Array<AppNotification> => {
+const getStorageKey = (userId?: string) => `${STORAGE_KEY}:${userId ?? 'guest'}`
+
+export const readLocalNotifications = (
+  userId?: string
+): Array<AppNotification> => {
   if (typeof window === 'undefined') return []
-  if (cachedNotifications) return cachedNotifications
+  const key = getStorageKey(userId)
+  const cached = cachedNotifications.get(key)
+  if (cached) return cached
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    cachedNotifications = raw ? JSON.parse(raw) : []
+    const raw = window.localStorage.getItem(key)
+    const notifications: Array<AppNotification> = raw ? JSON.parse(raw) : []
+    cachedNotifications.set(key, notifications)
   } catch {
-    cachedNotifications = []
+    cachedNotifications.set(key, [])
   }
-  return cachedNotifications ?? []
+  return cachedNotifications.get(key) ?? []
 }
 
 export const writeLocalNotifications = (
-  notifications: Array<AppNotification>
+  notifications: Array<AppNotification>,
+  userId?: string
 ) => {
   if (typeof window === 'undefined') return
-  cachedNotifications = notifications
+  const key = getStorageKey(userId)
+  cachedNotifications.set(key, notifications)
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications))
+    window.localStorage.setItem(key, JSON.stringify(notifications))
   } catch {
     // Keep the in-memory store usable when browser storage is unavailable.
   }
-  for (const listener of storageListeners) listener()
+  for (const listener of storageListeners.get(key) ?? []) listener()
 }
 
-export const subscribeToLocalNotifications = (listener: () => void) => {
+export const subscribeToLocalNotifications = (
+  listener: () => void,
+  userId?: string
+) => {
   if (typeof window === 'undefined') {
     return () => {
       // Server-rendered snapshots do not have a browser subscription.
     }
   }
 
-  storageListeners.add(listener)
+  const key = getStorageKey(userId)
+  const listeners = storageListeners.get(key) ?? new Set<() => void>()
+  listeners.add(listener)
+  storageListeners.set(key, listeners)
   const handleStorage = (event: StorageEvent) => {
-    if (event.key !== STORAGE_KEY) return
-    cachedNotifications = null
+    if (event.key !== key) return
+    cachedNotifications.delete(key)
     listener()
   }
   window.addEventListener('storage', handleStorage)
 
   return () => {
-    storageListeners.delete(listener)
+    listeners.delete(listener)
+    if (listeners.size === 0) storageListeners.delete(key)
     window.removeEventListener('storage', handleStorage)
   }
 }

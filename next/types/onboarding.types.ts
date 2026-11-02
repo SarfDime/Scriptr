@@ -87,7 +87,6 @@ export const EMPTY_GUEST_ACADEMIC_DATA: GuestAcademicData = {
 
 export type OnboardingSelectStepProps = {
   title: string
-  description: string
   options: Array<OnboardingOption>
   selectedId: string | null
   onSelect: (id: string) => void

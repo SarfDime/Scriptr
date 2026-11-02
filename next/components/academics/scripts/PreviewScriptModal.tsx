@@ -1,5 +1,7 @@
 'use client'
 
+import CollapseIcon from '@sanity/icons/Collapse'
+import ExpandIcon from '@sanity/icons/Expand'
 import EyeOpen from '@sanity/icons/EyeOpen'
 import { UI_STRINGS } from '@shared/config/strings'
 import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
@@ -15,11 +17,17 @@ import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { Dialog } from '@/components/ui/Dialog'
 import { getColorPalette } from '@/lib/color-pallette-gen'
+import { cn } from '@/lib/common-utils'
 import { formatFileSize, getPreviewableKind } from '@/lib/file-preview'
 import { getScriptFileLabel, getScriptFileName } from '@/lib/script-file-name'
 import { ScriptDownloadButton } from './actions/ScriptDownloadButton'
 import { StoredFilePreviewContent } from './FilePreviewContent'
 import { ScriptPanel } from './ScriptPanel'
+
+// Fullscreen: the dialog covers the viewport as a flex column so the preview
+// takes everything under the header, which keeps the title and the controls.
+const PREVIEW_FULLSCREEN_DIALOG_CLASS =
+  'overflow-hidden open:flex open:flex-col md:top-0 md:h-dvh md:max-h-dvh md:w-screen md:max-w-none md:min-w-0 md:rounded-none md:border-0 md:shadow-none'
 
 export type PreviewScriptModalProps = {
   scriptId: string
@@ -38,6 +46,8 @@ export function PreviewScriptModal({
   isOpen,
   onClose,
 }: PreviewScriptModalProps) {
+  const [isFullscreen, setIsFullscreen] = useState(false)
+
   const firstPreviewableFile = files.find((file) =>
     Boolean(getPreviewableKind(file.file_type))
   )
@@ -49,6 +59,12 @@ export function PreviewScriptModal({
   const selectedFileKind = selectedFile
     ? getPreviewableKind(selectedFile.file_type)
     : null
+  const previewable = Boolean(selectedFile && selectedFileKind && isOpen)
+
+  const handleClose = () => {
+    setIsFullscreen(false)
+    onClose()
+  }
 
   useEffect(() => {
     if (
@@ -67,15 +83,40 @@ export function PreviewScriptModal({
       title={<PortableTextContent>{title}</PortableTextContent>}
       hideTrigger
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
+      headerActions={
+        previewable ? (
+          <Button
+            onClick={() => setIsFullscreen((current) => !current)}
+            aria-label={
+              isFullscreen
+                ? SCRIPT_STRINGS.preview.exitFullscreen
+                : SCRIPT_STRINGS.preview.enterFullscreen
+            }
+            className='button ghost p-1'
+          >
+            {isFullscreen ? <CollapseIcon /> : <ExpandIcon />}
+          </Button>
+        ) : undefined
+      }
       dialogProps={{
-        className:
+        className: cn(
           'overflow-hidden md:top-0 md:bottom-0 md:my-auto md:max-h-[90vh] md:w-[min(72rem,calc(100vw-2rem))] md:min-w-0 open:flex open:flex-col',
+          isFullscreen && PREVIEW_FULLSCREEN_DIALOG_CLASS
+        ),
       }}
     >
-      <Card.Body className='ui-stack min-h-0 flex-1 gap-4 overflow-y-auto p-5'>
+      {/* One tree for both sizes, so toggling never remounts (reloads) the preview. */}
+      <Card.Body
+        className={cn(
+          'ui-stack min-h-0 flex-1',
+          isFullscreen
+            ? 'flex flex-col gap-0 overflow-hidden p-0'
+            : 'gap-4 overflow-y-auto p-5'
+        )}
+      >
         {description && (
-          <ScriptPanel as='div'>
+          <ScriptPanel as='div' className={cn(isFullscreen && 'hidden')}>
             <PortableTextContent>{description}</PortableTextContent>
           </ScriptPanel>
         )}
@@ -85,11 +126,26 @@ export function PreviewScriptModal({
             {UI_STRINGS.scripts.actions.noFilesAttached}
           </Text>
         ) : (
-          <Box className='grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(17rem,0.65fr)]'>
-            <ScriptPanel as='div' className='min-w-0'>
+          <Box
+            className={cn(
+              'grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(17rem,0.65fr)]',
+              isFullscreen && 'flex min-h-0 flex-1'
+            )}
+          >
+            <ScriptPanel
+              as='div'
+              className={cn(
+                'min-w-0',
+                isFullscreen &&
+                  'min-h-0 flex-1 gap-0 rounded-none border-0 bg-background-200 p-0'
+              )}
+            >
               {selectedFile && selectedFileKind && isOpen ? (
                 <>
-                  <Text className='ui-label' aria-live='polite'>
+                  <Text
+                    className={cn('ui-label', isFullscreen && 'hidden')}
+                    aria-live='polite'
+                  >
                     {SCRIPT_STRINGS.preview.previewing(
                       getScriptFileName(selectedFile)
                     )}
@@ -98,6 +154,7 @@ export function PreviewScriptModal({
                     fileKey={selectedFile.file_url}
                     kind={selectedFileKind}
                     fileName={getScriptFileName(selectedFile)}
+                    fillHeight={isFullscreen}
                   />
                 </>
               ) : (
@@ -107,7 +164,9 @@ export function PreviewScriptModal({
               )}
             </ScriptPanel>
 
-            <Box className='ui-stack min-w-0 gap-3'>
+            <Box
+              className={cn('ui-stack min-w-0 gap-3', isFullscreen && 'hidden')}
+            >
               <Box className='ui-stack gap-1'>
                 <Title as='h3' className='ui-title'>
                   {SCRIPT_STRINGS.preview.filesTitle}

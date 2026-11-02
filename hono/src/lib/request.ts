@@ -15,6 +15,19 @@ export function databaseErrorResponse(
   return c.json({ error: 'Unable to complete the request' }, 500)
 }
 
+export async function readJsonBody(
+  c: Context<HonoEnv>
+): Promise<Record<string, unknown>> {
+  try {
+    const body: unknown = await c.req.json()
+    return body && typeof body === 'object' && !Array.isArray(body)
+      ? (body as Record<string, unknown>)
+      : {}
+  } catch {
+    return {}
+  }
+}
+
 export function requiredParam(c: Context<HonoEnv>, name: string): string {
   const value = c.req.param(name)
   if (!value) {

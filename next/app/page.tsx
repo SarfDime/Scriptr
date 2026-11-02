@@ -87,6 +87,7 @@ const Page = async ({
         {user ? (
           <SubjectsSidebar
             subjects={subjects.slice(0, 3)}
+            showAllHref='/user'
             studyTip={studyTip}
           />
         ) : (

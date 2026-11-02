@@ -82,6 +82,8 @@ export const SCRIPT_STRINGS = {
     previewing: (fileName: string) => `Previewing ${fileName}`,
     previewFile: (fileName: string) => `Preview ${fileName}`,
     noPreviewSelected: 'Choose a previewable file to view it here.',
+    enterFullscreen: 'Enter full screen',
+    exitFullscreen: 'Exit full screen',
   },
   description: {
     title: 'Description',

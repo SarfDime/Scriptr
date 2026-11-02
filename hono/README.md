@@ -106,6 +106,27 @@ refuses to run. If that happens, `supabase migration fetch --linked` writes the
 missing files (it overwrites existing files with the recorded SQL, so restore
 those with `git checkout` and keep only the new ones).
 
+`corepack pnpm db:migrate` wraps that flow with the checks `db push` leaves to
+you. It is a dry run unless you pass `--apply`:
+
+```bash
+corepack pnpm db:migrate                    # analyse and preview
+corepack pnpm db:migrate --apply            # push, then regenerate the types
+corepack pnpm db:migrate --apply --skip-types
+```
+
+It stops before touching the database when the linked project is missing, when
+the remote history has a migration with no local file, when a pending migration
+is uncommitted (pass `--allow-uncommitted`), or when a pending file contains a
+destructive statement — `DROP TABLE`/`COLUMN`/`SCHEMA`, `TRUNCATE`, an
+`ALTER COLUMN … TYPE`, or a `DELETE` with no `WHERE` (pass
+`--allow-destructive` once you've reviewed it). After a successful push it
+regenerates `shared/types/database.types.ts`, re-checks that nothing is still
+pending, reminds you to run `corepack pnpm check-types`, and revalidates the
+cached public profile pages, because a migration can change data those pages
+already embedded (an achievement's title, for example). That last step is
+skipped when `NEXT_REVALIDATE_URL` and `REVALIDATE_SECRET` are unset.
+
 ## API Base Path
 
 The app is built with `.basePath('/api')`, so **every** route — including

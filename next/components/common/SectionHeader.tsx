@@ -31,7 +31,7 @@ export const SectionHeader = ({
 }: SectionHeaderProps) => {
   return (
     <Box className={cn('ui-stack gap-1', className)} {...rest}>
-      <Box className='ui-cluster items-center justify-between gap-3'>
+      <Box className='ui-cluster justify-between gap-3'>
         <Box className='ui-cluster min-w-0 items-center gap-2'>
           {Icon && (
             <Icon

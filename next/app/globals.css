@@ -53,6 +53,11 @@ body:has(dialog[open]) .ui-container {
   --font-bricolage: var(--font-bricolage), sans-serif;
 }
 
+html,
+body {
+  overscroll-behavior: none;
+}
+
 body {
   background: var(--color-background);
   color: var(--color-fg);

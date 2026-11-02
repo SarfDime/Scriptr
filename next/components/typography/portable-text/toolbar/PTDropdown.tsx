@@ -42,10 +42,10 @@ export const PTDropdown = ({
         title={title}
         aria-label={title ?? label}
         className={cn(
-          'flex list-none items-center gap-1 rounded-md border border-grey-300',
-          'cursor-pointer select-none bg-background px-2 py-1 text-fg text-xs',
+          'button button-sm subtle rounded-sm py-0.5 px-1 pl-0.5',
+          'list-none select-none',
           '[&::-webkit-details-marker]:hidden',
-          active && 'border-brand-350 bg-brand-350 text-background'
+          active && ' bg-brand-300/15'
         )}
       >
         {displayIcons?.map((iconComponent, index) => {
@@ -60,7 +60,12 @@ export const PTDropdown = ({
         {label && <span className='hidden md:block'>{label}</span>}
         <DROPDOWN_CARET className='h-4 w-4 shrink-0 transition-transform group-open:rotate-180 md:block hidden' />
       </summary>
-      <div className='absolute right-0 z-10 mt-1 flex max-w-[calc(100vw-1rem)] min-w-max flex-col items-stretch gap-0.5 overflow-x-auto rounded border border-grey-300 bg-background p-1 text-left shadow-md'>
+      <div
+        className={cn(
+          'absolute right-0 z-10 mt-1 flex max-w-[calc(100vw-1rem)] min-w-max flex-col items-stretch gap-0.5 overflow-x-auto',
+          'bg-background-150 rounded-md p-1 text-left'
+        )}
+      >
         {children}
       </div>
     </details>

@@ -1,6 +1,9 @@
 'use client'
 
+import Checkmark from '@sanity/icons/Checkmark'
 import CloseIcon from '@sanity/icons/Close'
+import CloseCircle from '@sanity/icons/CloseCircle'
+import { NOTIFICATIONS_STRINGS } from '@shared/strings/notifications-strings'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { NextLink } from '@/components/common/NextLink'
@@ -13,6 +16,7 @@ import {
   NOTIFICATION_PALETTE,
 } from '@/types/notifications.types'
 import { Dialog } from '../ui/Dialog'
+import { Divider } from '../ui/Divider'
 
 const NotificationRow = ({
   notification,
@@ -27,30 +31,40 @@ const NotificationRow = ({
     <Box
       className={cn(
         'ui-stack gap-2 rounded-lg border p-3 border-l-4',
-        palette,
+        'ui-above-inside',
         !notification.read
       )}
     >
-      <Box className='ui-cluster items-start justify-between gap-2'>
-        <Text className='ui-body-strong'>{notification.title}</Text>
+      <Box className='ui-cluster items-start gap-1'>
+        <Text className='ui-body-strong mr-auto'>{notification.title}</Text>
+        {!notification.read && !notification.persistent && (
+          <Button
+            onClick={() => markRead(notification.id)}
+            aria-label={NOTIFICATIONS_STRINGS.markAsRead}
+            className='button button-sm ghost p-0.5'
+          >
+            <Checkmark className='h-5 w-5 overwrite' />
+          </Button>
+        )}
         {!notification.persistent && (
           <Button
             onClick={() => dismiss(notification.id)}
-            aria-label='Dismiss notification'
-            className='button subtle p-1'
+            aria-label={NOTIFICATIONS_STRINGS.dismiss}
+            className='button button-sm ghost p-0.5'
           >
-            <CloseIcon />
+            <CloseIcon className='h-5 w-5 overwrite' />
           </Button>
         )}
       </Box>
+      <Divider className={palette} />
       {notification.body && (
-        <Text className='ui-caption'>{notification.body}</Text>
+        <Text className='ui-large-caption'>{notification.body}</Text>
       )}
       {notification.action?.kind === 'link' && notification.action.href && (
         <NextLink
           href={notification.action.href}
-          className='ui-caption hover:underline'
           onClick={() => markRead(notification.id)}
+          className={cn('button button-sm w-fit', palette)}
         >
           {notification.action.label}
         </NextLink>
@@ -61,7 +75,7 @@ const NotificationRow = ({
             markRead(notification.id)
             open()
           }}
-          className='button button-sm subtle w-fit'
+          className={cn('button button-sm subtle w-fit', palette)}
         >
           {notification.action.label}
         </Button>
@@ -70,30 +84,38 @@ const NotificationRow = ({
   )
 }
 
-// ...NotificationsAside unchanged...
 /** Notification shade: a bell trigger plus a slide-over aside. The aside's
  * content only mounts while open. */
 export const NotificationsAside = () => {
-  const { notifications, dismissAll, trayOpen, setTrayOpen } =
-    useNotifications()
-  const hasDismissible = notifications?.some((n) => !n?.persistent)
+  const {
+    notifications,
+    dismissAll,
+    trayOpen,
+    setTrayOpen,
+    loading,
+    error,
+    refresh,
+  } = useNotifications()
+  const hasDismissible = notifications.some(
+    (notification) => !notification.persistent
+  )
 
   return (
     <Dialog
       as='aside'
-      aria-label='Notifications'
+      aria-label={NOTIFICATIONS_STRINGS.openNotifications}
       isOpen={trayOpen}
-      title='Notifications'
+      title={NOTIFICATIONS_STRINGS.trayTitle}
       hideTrigger
       onClose={() => setTrayOpen(false)}
       placement='right'
       hideBackdrop={true}
       dialogProps={{
         className: cn(
-          'fixed top-16 z-50 ui-stack h-full w-full max-w-full md:max-w-sm overflow-y-auto md:min-w-[unset] md:w-full',
+          'fixed top-16 z-50 ui-stack h-[calc(100%-4rem)] w-full max-w-full md:max-w-sm overflow-y-auto md:min-w-[unset] md:w-full',
           trayOpen && 'transition-transform transform translate-x-0',
           !trayOpen && 'transition-transform transform translate-x-full',
-          'ui-above rounded-none border-r-0 border-b-0 border-t-0'
+          'ui-above-nav rounded-none border-r-0 border-b-0 border-t-0 shadow-none'
         ),
       }}
       headerProps={{
@@ -102,20 +124,39 @@ export const NotificationsAside = () => {
     >
       {hasDismissible && (
         <>
-          <Button onClick={dismissAll} className='button subtle px-3 py-1'>
-            Dismiss all
+          <Button onClick={dismissAll} className='button button-sm subtle'>
+            <CloseCircle />
+            {NOTIFICATIONS_STRINGS.dismissAll}
           </Button>
-          {/* <Divider orientation='vertical' className='h-full' /> */}
+          <Divider />
         </>
       )}
-      {notifications?.length > 0 ? (
+      {loading && (
+        <Text className='ui-caption' aria-live='polite'>
+          {NOTIFICATIONS_STRINGS.loading}
+        </Text>
+      )}
+      {error && (
+        <Box role='alert' className='ui-cluster justify-between'>
+          <Text className='ui-caption'>{error}</Text>
+          <Button onClick={refresh} className='button subtle px-3 py-1'>
+            {NOTIFICATIONS_STRINGS.retry}
+          </Button>
+        </Box>
+      )}
+      {notifications.length > 0 ? (
         <Box className='ui-stack gap-2'>
-          {notifications?.map((n) => (
-            <NotificationRow key={n?.id} notification={n} />
+          {notifications.map((notification) => (
+            <NotificationRow
+              key={notification.id}
+              notification={notification}
+            />
           ))}
         </Box>
       ) : (
-        <Text className='ui-caption'>You're all caught up.</Text>
+        !loading && (
+          <Text className='ui-caption'>{NOTIFICATIONS_STRINGS.empty}</Text>
+        )
       )}
     </Dialog>
   )

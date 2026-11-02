@@ -6,6 +6,8 @@ import { Box } from '../common/Box'
 import { Divider } from '../ui/Divider'
 import { SimpleModeToggle } from '../ui/SimpleModeToggle'
 import { ThemeToggle } from '../ui/ThemeToggle'
+import { AdminNavLink } from './AdminNavLink'
+import { NavFavorites } from './NavFavorites'
 import { NavigationLinks } from './NavigationLinks'
 import { NavLogo } from './NavLogo'
 import { NavToggle } from './NavToggle'
@@ -34,8 +36,8 @@ export const NavBar = ({ navItems }: NavMenuType) => (
       aria-label={UI_STRINGS.navigation.mainNavigation}
       className={cn(
         'fixed inset-y-0 left-0 z-20 w-(--nav-width)',
-        'ui-stack gap-5 p-2.5 pt-0',
-        'ui-above-nav',
+        'ui-stack p-2.5 pt-0',
+        'ui-above-nav gap-3',
         'transition-[translate,visibility] duration-300',
         'max-lg:invisible max-lg:-translate-x-full',
         'max-lg:group-data-[nav-open=true]/nav:visible',
@@ -44,7 +46,7 @@ export const NavBar = ({ navItems }: NavMenuType) => (
         'lg:group-data-[nav-collapsed=true]/nav:-translate-x-full'
       )}
     >
-      <Box className='ui-cluster items-center justify-between h-16 px-3 border-b border-grey-300'>
+      <Box className='ui-cluster justify-between h-16 px-3 border-b border-grey-300'>
         <NavLogo />
         <NavToggle
           action='close'
@@ -58,9 +60,14 @@ export const NavBar = ({ navItems }: NavMenuType) => (
 
       <Divider />
 
+      <NavFavorites />
+
       <Box className='ui-stack mt-auto gap-3'>
         <ThemeToggle className='w-full flex-row' />
-        <SimpleModeToggle />
+        <Box className='ui-cluster flex-nowrap gap-2'>
+          <SimpleModeToggle className='min-w-0 flex-1' />
+          <AdminNavLink />
+        </Box>
         <Divider />
         <NavUserSlot />
       </Box>

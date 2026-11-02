@@ -3,6 +3,7 @@
 import User from '@sanity/icons/User'
 import { UI_STRINGS } from '@shared/config/strings'
 import { getDisplayName } from '@/lib/profile-display'
+import { useNotifications } from '@/providers/notification/NotificationProvider'
 import { useMyProfile } from '@/providers/ProfileProvider'
 import { useSession } from '@/providers/SessionProvider'
 import { LogoutButton } from '../auth/LogoutButton'
@@ -17,6 +18,7 @@ import { UserCard } from './UserCard'
 export const NavUserSlot = () => {
   const { session } = useSession()
   const profileState = useMyProfile()
+  const { restrictionNotice } = useNotifications()
 
   if (session.status === 'unauthenticated') {
     return (
@@ -41,6 +43,7 @@ export const NavUserSlot = () => {
                 UI_STRINGS.navigation.account)
           }
           avatarUrl={profile?.avatar_url ?? undefined}
+          restricted={restrictionNotice !== null}
         />
         <Divider orientation='vertical' className='h-[90%] my-auto' />
         <LogoutButton />

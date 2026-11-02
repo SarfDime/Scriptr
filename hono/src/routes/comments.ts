@@ -9,6 +9,7 @@ import {
   isReactionType,
 } from '@shared/config/shared-constants'
 import { COMMENT_STRINGS } from '@shared/strings/comments-strings'
+import { NOTIFICATIONS_STRINGS } from '@shared/strings/notifications-strings'
 import type {
   CommentCreateResult,
   CommentFlaggedSummary,
@@ -32,6 +33,7 @@ import { Hono } from 'hono'
 import { checkCommentsPosted } from '../lib/achievements'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
 import { honoLog } from '../lib/logger'
+import { notifyProfileBestEffort } from '../lib/notifications'
 import { createRateLimiter } from '../lib/rate-limit'
 import { requiredParam } from '../lib/request'
 import {
@@ -1302,7 +1304,7 @@ comments.delete('/:id', authMiddleware, async (c) => {
     supabase.from('profiles').select('role').eq('id', user.id).single(),
     supabase
       .from('comments')
-      .select('author_id, script_id, professor_id')
+      .select('author_id, script_id, professor_id, content')
       .eq('id', commentId)
       .maybeSingle(),
   ])
@@ -1327,6 +1329,7 @@ comments.delete('/:id', authMiddleware, async (c) => {
       403
     )
   }
+  const isAdminCaller = isAdmin(profile.role)
 
   const { data: deletedComment, error } = await supabase
     .from('comments')
@@ -1337,6 +1340,20 @@ comments.delete('/:id', authMiddleware, async (c) => {
 
   if (error) return databaseErrorResponse(c, error, 'Failed to delete comment')
   if (!deletedComment) return c.json({ error: 'Comment not found' }, 404)
+
+  if (isAdminCaller && comment.author_id !== user.id) {
+    const title = isCommentPortableTextValue(comment.content)
+      ? portableTextToPlainText(comment.content).trim().slice(0, 120) ||
+        'Comment'
+      : 'Comment'
+    await notifyProfileBestEffort(c, comment.author_id, {
+      type: 'content_removed',
+      title: NOTIFICATIONS_STRINGS.contentRemovedTitle(title),
+      body: NOTIFICATIONS_STRINGS.contentRemovedBody('comment'),
+      data: { target_kind: 'comment', title },
+    })
+  }
+
   let target: Awaited<ReturnType<typeof countTargetComments>>
   if (comment.script_id) {
     target = await countTargetComments(supabase, 'script_id', comment.script_id)

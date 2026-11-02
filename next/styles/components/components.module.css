@@ -29,6 +29,8 @@
   flex-grow: 1;
   min-height: 100dvh;
   overflow-y: auto;
+  /* The page scrolls here, not on body: don't chain or rubber-band past the footer. */
+  overscroll-behavior-y: none;
   margin-left: auto;
   transition: max-width 300ms ease-in-out;
 
@@ -78,11 +80,19 @@
 }
 
 @utility ui-label {
-  @apply text-xs font-semibold text-fg-muted;
+  @apply text-sm font-semibold text-fg-muted;
 }
 
 @utility ui-caption {
   @apply text-xs text-fg-muted;
+}
+
+@utility ui-large-caption {
+  @apply text-sm text-fg-muted;
+}
+
+@utility ui-nav-caption {
+  @apply text-xs text-fg-muted uppercase tracking-[.15rem];
 }
 
 @utility ui-stat {
@@ -100,6 +110,33 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 1rem;
+}
+
+/* Card grids. Columns are at least `--grid-min` wide (default 16rem, set with
+ * `[--grid-min:22rem]`). `ui-card-grid` lets few cards stretch to fill the row;
+ * `ui-card-grid-fill` keeps every card at column width. */
+@utility ui-card-grid {
+  @apply grid-auto-fit gap-3;
+}
+
+@utility ui-card-grid-fill {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(
+      auto-fill,
+      minmax(min(var(--grid-min, 16rem), 100%), 1fr)
+    );
+}
+
+/* One column, two from the `sm` breakpoint. */
+@utility ui-grid-split {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+
+  @variant sm {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @utility ui-center {
@@ -195,6 +232,12 @@
     var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
     var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
     var(--shadow-above-inside);
+}
+
+@utility ui-above-reverse {
+  @apply ui-above-defaults;
+  @apply bg-background-300/75;
+  --ui-above-shadow: var(--shadow-edge-top);
 }
 
 /* Static brand gradient with a faint dot grid. Used instead of the StarCanvas
@@ -348,4 +391,8 @@
 
 :root[data-simple] .ui-above-inside {
   background-color: var(--color-background-200);
+}
+
+:root[data-simple] .ui-above-reverse {
+  background-color: var(--color-background-300);
 }

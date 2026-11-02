@@ -62,11 +62,13 @@ corepack pnpm build:next         # Build the frontend
 corepack pnpm start:next         # Serve the built frontend
 corepack pnpm build:sanity       # Build Sanity Studio
 corepack pnpm gen:api-types      # Generate Supabase API types
+corepack pnpm db:migrate         # Apply pending Supabase migrations safely (dry run without --apply)
 corepack pnpm gen:api-endpoints  # Regenerate shared/config/api-routes.ts from the live route tree
 corepack pnpm check-types        # Type-check all workspaces
 corepack pnpm check-types:sanity # Type-check Sanity only
 corepack pnpm test              # Run the API's unit tests (node:test)
 corepack pnpm format             # Apply Biome formatting and safe fixes (replaces a separate lint step)
+corepack pnpm format:unsafe      # Also apply unsafe fixes (can delete "unused" effect dependencies; review the diff)
 corepack pnpm sanity:typegen     # Extract the Sanity schema and generate types
 corepack pnpm sanity:schema      # Extract schema.json only
 corepack pnpm sanity:types       # Generate TypeScript types only

@@ -13,7 +13,7 @@ import { useOnboarding } from '@/providers/onboarding/OnboardingProvider'
 import { useSession } from '@/providers/SessionProvider'
 import type { OnboardingCatalog } from '@/types/onboarding.types'
 import { OnboardingAccountPrompt } from './OnboardingAccountPrompt'
-import { OnboardingSelectStep } from './OnboardingSelectStep'
+import { OnboardingProgramFields } from './OnboardingProgramFields'
 import { OnboardingSubjectsStep } from './OnboardingSubjectsStep'
 
 type OnboardingModalProps = { catalog: OnboardingCatalog }
@@ -103,53 +103,31 @@ export const OnboardingModal = ({ catalog }: OnboardingModalProps) => {
       onClose={() => handleClose(false)}
       dialogProps={{ className: 'md:min-w-xl' }}
     >
-      <Box className='ui-stack gap-6 p-6'>
+      <Box className='ui-stack gap-4 p-5'>
         {wizard.step === 'selection' && (
           <>
-            <Box className='ui-stack gap-6'>
-              <OnboardingSelectStep
-                title={UI_STRINGS.onboarding.universityTitle}
-                description={UI_STRINGS.onboarding.universityDescription}
-                options={catalog.universities.map((u) => ({
-                  id: u._id,
-                  name: u.name,
-                }))}
-                selectedId={wizard.data.universityId}
-                onSelect={wizard.selectUniversity}
-              />
-              <OnboardingSelectStep
-                title={UI_STRINGS.onboarding.facultyTitle}
-                description={UI_STRINGS.onboarding.facultyDescription}
-                options={wizard.catalog.faculties.map((f) => ({
-                  id: f._id,
-                  name: f.name,
-                }))}
-                selectedId={wizard.data.facultyId}
-                onSelect={wizard.selectFaculty}
-                disabledReason={
-                  wizard.data.universityId
-                    ? undefined
-                    : UI_STRINGS.onboarding.selectUniversityFirst
-                }
-              />
-              <OnboardingSelectStep
-                title={UI_STRINGS.onboarding.studyTitle}
-                description={UI_STRINGS.onboarding.studyDescription}
-                options={wizard.catalog.studies.map((s) => ({
-                  id: s._id,
-                  name: s.name,
-                }))}
-                selectedId={wizard.data.studyId}
-                onSelect={wizard.selectStudy}
-                disabledReason={
-                  wizard.data.facultyId
-                    ? undefined
-                    : UI_STRINGS.onboarding.selectFacultyFirst
-                }
-              />
-            </Box>
+            <OnboardingProgramFields
+              universities={catalog.universities.map((u) => ({
+                id: u._id,
+                name: u.name,
+              }))}
+              faculties={wizard.catalog.faculties.map((f) => ({
+                id: f._id,
+                name: f.name,
+              }))}
+              studies={wizard.catalog.studies.map((st) => ({
+                id: st._id,
+                name: st.name,
+              }))}
+              universityId={wizard.data.universityId}
+              facultyId={wizard.data.facultyId}
+              studyId={wizard.data.studyId}
+              onSelectUniversity={wizard.selectUniversity}
+              onSelectFaculty={wizard.selectFaculty}
+              onSelectStudy={wizard.selectStudy}
+            />
 
-            <Box className='border-t border-grey-200 pt-6'>
+            <Box className='border-t border-grey-200 pt-4'>
               <OnboardingSubjectsStep
                 subjectsByYear={wizard.catalog.subjectsByYear}
                 completedYears={wizard.data.completedYears}
@@ -178,9 +156,9 @@ export const OnboardingModal = ({ catalog }: OnboardingModalProps) => {
         {wizard.step === 'selection' && (
           <Box className='ui-stack gap-3 border-t border-grey-200 pt-4'>
             {saveError && (
-              <Text className='ui-caption text-danger-600'>{saveError}</Text>
+              <Text className='ui-caption cp-danger-nb'>{saveError}</Text>
             )}
-            <Box className='ui-cluster items-center justify-end'>
+            <Box className='ui-cluster justify-end'>
               <Button
                 onClick={handleContinue}
                 disabled={!canContinue || isSaving}

@@ -28,7 +28,7 @@ export function AvatarField({
   const caption = error ?? file?.name ?? null
 
   return (
-    <Box className='ui-cluster items-center gap-4'>
+    <Box className='ui-cluster gap-4'>
       <Avatar
         name={name}
         picture={
@@ -73,7 +73,7 @@ export function AvatarField({
         {caption && (
           <Text
             id={captionId}
-            className={cn('ui-caption', error && 'text-danger-600')}
+            className={cn('ui-caption', error && 'cp-danger-nb')}
           >
             {caption}
           </Text>

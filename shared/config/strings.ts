@@ -7,6 +7,10 @@ export const UI_STRINGS = {
     restrictedAction:
       "This action isn't available right now — your account is currently restricted.",
     actionUnavailable: 'Action unavailable',
+    restrictedModalTitle: 'Not allowed',
+    restrictedModalIntro:
+      'You can’t do this because your account is restricted.',
+    restrictedModalClose: 'Close',
     tryAgain: 'Please try again.',
     year: (year: number) => `Year ${year}`,
     unexpectedError: 'Something went wrong',
@@ -190,6 +194,7 @@ export const UI_STRINGS = {
     noMatchingSubjects: 'No subjects match those filters.',
     sidebarTitle: 'Your subjects',
     sidebarSubtitle: 'Subjects from your selected studies.',
+    showAll: 'Show all',
     emptyState: 'Complete your study setup to see your current subjects here.',
     guestStudyPrompt:
       'Choose a study during onboarding to see your subjects here.',
@@ -224,12 +229,8 @@ export const UI_STRINGS = {
   onboarding: {
     title: 'Set up your studies',
     universityTitle: 'Which university do you attend?',
-    universityDescription:
-      "We'll use this to tailor everything else to your program.",
     facultyTitle: 'Which faculty?',
-    facultyDescription: 'Pick the faculty your study program belongs to.',
     studyTitle: 'Which study program?',
-    studyDescription: 'This determines which subjects show up below.',
     selectUniversityFirst: 'Select a university first.',
     selectFacultyFirst: 'Select a faculty first.',
     selectStudyFirst: 'Select a study to see subjects.',
@@ -319,6 +320,7 @@ export const UI_STRINGS = {
     professors: 'Professors',
     workspace: 'Workspace',
     favorites: 'Favorites',
+    favoritesShowAll: 'Show all favorites',
     comments: 'Comments',
     newScript: 'New script',
     notifications: 'Notifications',

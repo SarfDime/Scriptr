@@ -144,6 +144,33 @@ surface and, inside it, a lighter fill where the text is shown.
 content such as file cards. Do not put `ui-card` and a `bg-*` utility on one
 element to override its fill; use `ScriptPanel` or a plain `Box`.
 
+## Admin pages
+
+The admin pages (`app/admin/*`) are thin Server Components. They share one
+frame and one set of building blocks in `components/admin/`:
+
+| Piece | Use |
+| ----- | --- |
+| `AdminPageLayout` | Wraps every admin page: `PageLayout` header (admin title plus section label) and `AdminNavigation`. Takes the `section` key. The root layout already supplies `<main>`. |
+| `AdminNavigation` | Plain links with `aria-current`; the current section is `solid`, the others `subtle`. The section lives in the URL, so no client state. |
+| `AdminListStatus` | The loading (three `Skeleton`s), error (retry) and empty states of a list; rows render as `children` only when there is something to show. |
+| `FlagItem`, `RestrictionItem`, `RatingTypeItem` | One row each, as `ui-stack ui-above`. Nested groups of fields or actions inside a row use `ui-above-inside`. |
+| `RatingTypeForm`, `RestrictionDialog` | Forms built from `FormContainer`, `Field`/`InputWrapper` and `Card.Footer`. |
+
+Rules specific to admin UI:
+
+- Fetching and state live in hooks under `hooks/admin/` (`useAdminList`,
+  `useAdminErrorToast`, `useRestrictionForm`); components don't fetch.
+- Group headings use `SectionHeader` with a `count`. Grouped cards sit in a
+  wrapping grid: `grid grid-cols-[repeat(auto-fill,minmax(min(100%,16rem),1fr))] items-start gap-3`.
+- Pass `required` only in `inputProps`, never to `Field`. `Field` marks itself
+  invalid when `required` is set and it is not yet valid, so an untouched
+  field would show as an error.
+- Render a field's error outside the row it shares with a button; an error
+  inside the field makes it taller and shifts the button.
+- Strings come from `shared/strings/admin-strings.ts`; validation helpers from
+  `lib/admin-validation.ts`.
+
 ## Responsive layout
 
 - **Wrap by space, not by breakpoint.** Use `flex flex-wrap` with a `basis-*`
@@ -166,6 +193,18 @@ element to override its fill; use `ScriptPanel` or a plain `Box`.
   <div className='grid-single gap-4 md:grid-repeat-2 lg:grid-repeat-3' />
   <div className='grid-auto-fit gap-4 [--grid-min:12rem]' />
   ```
+
+  Prefer the component utilities in `components.module.css` for the common
+  cases:
+
+  | Class                | Behaviour                                                              |
+  | -------------------- | ---------------------------------------------------------------------- |
+  | `ui-card-grid`       | `grid-auto-fit` with a standard gap; few cards stretch across the row  |
+  | `ui-card-grid-fill`  | Like `ui-card-grid`, but cards keep column width (`auto-fill`)         |
+  | `ui-grid-split`      | One column, two from the `sm` breakpoint                               |
+
+  Set the minimum card width with `[--grid-min:22rem]`. `ui-cluster`
+  already centres its items, so don't add `items-center`.
 - **Container queries** are built into Tailwind v4: mark the element
   `@container` and use `@md:` and friends on its descendants, so the layout
   follows the element's own width. Only viewport breakpoints are customized

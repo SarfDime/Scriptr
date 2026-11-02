@@ -13,7 +13,7 @@ const NavItem = ({ stringTitle, icon, ...rest }: NavItemType) => {
       href={slug}
       className={cn(
         'button ghost',
-        'w-full justify-start align-left gap-3 p-2.5',
+        'w-full justify-start align-left gap-3 p-2',
         'text-left text-sm'
       )}
     >

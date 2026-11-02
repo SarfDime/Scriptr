@@ -1,52 +1,42 @@
 import { UI_STRINGS } from '@shared/config/strings'
-import { Box } from '@/components/common/Box'
-import { SectionHeader } from '@/components/common/SectionHeader'
-import { Text } from '@/components/typography/Text'
-import { Radio } from '@/components/ui/radio/RadioButton'
+import { Field } from '@/components/ui/field/Field'
+import { Select } from '@/components/ui/select/Select'
 import type { OnboardingSelectStepProps } from '@/types/onboarding.types'
 
 /**
- * A single-choice selection block, reused for university, faculty, and
- * study — all rendered together now rather than one at a time, so each
- * one needs to be able to show why it can't be interacted with yet
- * (`disabledReason`) instead of relying on not being on screen at all.
- * When exactly one option exists it is still clickable. Auto-selection normally
- * fills it in, but keeping the option interactive prevents hydration timing
- * from leaving the wizard with an apparently dead control.
+ * A single-choice dropdown, reused for university, faculty and study. All
+ * three show together, so one that can't be used yet says why
+ * (`disabledReason`) in its trigger instead of disappearing. Remounted when
+ * the selection changes from outside (e.g. a parent pick clearing it), since
+ * `Select` keeps its own copy of the chosen option.
  */
 export const OnboardingSelectStep = ({
   title,
-  description,
   options,
   selectedId,
   onSelect,
   disabledReason,
 }: OnboardingSelectStepProps) => {
+  const selectOptions = options.map((option) => ({
+    id: option.id,
+    value: option.id,
+    label: option.name,
+  }))
   const placeholder =
     disabledReason ??
-    (options?.length === 0 ? UI_STRINGS.onboarding.noOptions : null)
+    (options.length === 0 ? UI_STRINGS.onboarding.noOptions : undefined)
 
   return (
-    <Box className='ui-stack gap-4'>
-      <SectionHeader title={title} subtitle={description} />
-
-      {placeholder ? (
-        <Text className='ui-caption'>{placeholder}</Text>
-      ) : (
-        <Box className='ui-stack gap-2'>
-          {options.map((option) => (
-            <Radio
-              key={option.id}
-              label={option.name}
-              value={option.id}
-              checked={selectedId === option.id}
-              onChange={() => onSelect(option.id)}
-              hasBorder
-              aria-label={option.name}
-            />
-          ))}
-        </Box>
-      )}
-    </Box>
+    <Field label={title} valid={Boolean(selectedId)}>
+      <Select
+        key={selectedId ?? 'none'}
+        options={selectOptions}
+        defaultOption={selectOptions.find(({ id }) => id === selectedId)}
+        setSelectedValue={onSelect}
+        placeholder={placeholder}
+        disabled={Boolean(placeholder)}
+        triggerProps={{ 'aria-label': title }}
+      />
+    </Field>
   )
 }

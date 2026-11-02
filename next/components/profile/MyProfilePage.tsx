@@ -1,6 +1,7 @@
 'use client'
 
 import { UI_STRINGS } from '@shared/config/strings'
+import { useEffect } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { PageLayout } from '@/components/layout/PageLayout'
@@ -27,11 +28,20 @@ export function MyProfilePage({
   studyTip?: StudyTipData
 }) {
   const profileState = useMyProfile()
-  const { refresh } = useMyProfileActions()
+  const { refresh, reload } = useMyProfileActions()
   const { catalog } = useOnboarding()
   const statsState = useProfileStats(
     profileState.status === 'loaded' ? profileState.profile.id : null
   )
+
+  // ProfileProvider fetches /me once per session, so achievements earned since
+  // then (they are awarded as a side effect of other requests) would be missing.
+  // Re-fetch quietly on mount: `reload` skips the loading state and keeps the
+  // current profile if it fails.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Mount-only. `reload` is not guaranteed a stable identity, and each reload re-renders the provider, so listing it could refetch in a loop.
+  useEffect(() => {
+    reload()
+  }, [])
 
   if (profileState.status !== 'loaded') {
     return (

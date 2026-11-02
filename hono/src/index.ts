@@ -4,6 +4,7 @@ import { cors } from 'hono/cors'
 
 import { getRequestListener } from '@hono/node-server'
 import { honoLog, honoLogRequest } from './lib/logger'
+import achievementDefinitions from './routes/achievement-definitions'
 import auth from './routes/auth'
 import comments from './routes/comments'
 import faculties from './routes/faculties'
@@ -103,6 +104,7 @@ app.route('/profile-studies', profileStudies)
 app.route('/profile-faculties', profileFaculties)
 app.route('/notifications', notifications)
 app.route('/ratings', ratings)
+app.route('/achievement-definitions', achievementDefinitions)
 app.route('/restrictions', restrictions)
 app.route('/internal', internal)
 

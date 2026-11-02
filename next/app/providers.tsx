@@ -1,5 +1,6 @@
 'use client'
 
+import { RestrictedActionModal } from '@/components/notifications/RestrictedActionModal'
 import { AuthModalProvider } from '@/providers/AuthModalProvider'
 import { LoadingProvider } from '@/providers/loading/LoadingProvider'
 import { NotificationsProvider } from '@/providers/notification/NotificationProvider'
@@ -26,6 +27,7 @@ export function Providers({
               <OnboardingProvider catalog={catalog}>
                 <NotificationsProvider>
                   <AuthModalProvider>{children}</AuthModalProvider>
+                  <RestrictedActionModal />
                 </NotificationsProvider>
               </OnboardingProvider>
             </ProfileProvider>

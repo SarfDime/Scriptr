@@ -3,11 +3,15 @@ import { ScriptsSection } from '@/components/academics/scripts/ScriptSection'
 import { ActivityStats } from '@/components/common/ActivityStats'
 import { Box } from '@/components/common/Box'
 import { PageLayout } from '@/components/layout/PageLayout'
+import { AchievementBadges } from '@/components/profile/AchievementBadges'
 import { EditAcademicsButton } from '@/components/profile/EditAcademicsDialog'
 import { EditProfileButton } from '@/components/profile/EditProfileDialog'
+import { PreferencesButton } from '@/components/profile/PreferencesDialog'
 import { ProfileCard } from '@/components/profile/ProfileCard'
 import { ProfileSubjectsSidebar } from '@/components/profile/ProfileSubjectsSidebar'
 import { Divider } from '@/components/ui/Divider'
+import { FlagReportButton } from '@/components/ui/FlagReportButton'
+import { sortAchievements } from '@/lib/achievement-display'
 import { getDisplayName } from '@/lib/profile-display'
 import { toScriptDetails } from '@/lib/script-display'
 import type { ProfilePageProps } from '@/types/components/ProfilePage.types'
@@ -32,19 +36,32 @@ export const ProfilePage = ({
   studyTip,
 }: ProfilePageProps) => {
   const displayName = getDisplayName(profile)
+  const username = profile.username
+  const reportButton =
+    profile.role === 'admin' ? undefined : (
+      <FlagReportButton
+        targetType='user'
+        targetId={profile.id}
+        triggerClassName='button button-sm warning gap-1.5'
+      />
+    )
 
   return (
     <PageLayout
       header={{
         greeting: UI_STRINGS.profile.greeting,
         title: displayName,
-        subtitle: profile.role,
+        subtitle: username,
         actions: isOwner ? (
-          <Box className='ui-cluster gap-2'>
+          <Box className='ui-cluster gap-2 ui-above p-2.5 rounded-2xl'>
+            <PreferencesButton />
+            <Divider orientation='vertical' className='h-4' />
             <EditProfileButton profile={profile} />
             <EditAcademicsButton profile={profile} />
           </Box>
-        ) : undefined,
+        ) : (
+          reportButton
+        ),
       }}
       sidebar={
         <>
@@ -68,6 +85,11 @@ export const ProfilePage = ({
         name={displayName}
         academics={academics}
         picture={profile.avatar_url ? { src: profile.avatar_url } : undefined}
+        badges={
+          <AchievementBadges
+            achievements={sortAchievements(profile.achievements)}
+          />
+        }
       />
       <ScriptsSection
         scripts={toScriptDetails(profile.scripts)}

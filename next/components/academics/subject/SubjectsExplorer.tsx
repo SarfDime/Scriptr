@@ -55,7 +55,7 @@ export const SubjectsExplorer = ({ subjects }: SubjectsExplorerProps) => {
       </Box>
 
       {visibleSubjects.length > 0 ? (
-        <Box className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+        <Box className='ui-grid-split'>
           {visibleSubjects.map((subject) => (
             <SubjectCard key={subject._id} {...subject} />
           ))}

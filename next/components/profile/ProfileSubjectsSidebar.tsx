@@ -51,7 +51,7 @@ export function ProfileSubjectsSidebar({
   studyTip,
 }: ProfileSubjectsSidebarProps) {
   const strings = UI_STRINGS.profile.subjects
-  const [view, setView] = useState<SubjectView>('completed')
+  const [view, setView] = useState<SubjectView>('currently_taking')
   const [studyId, setStudyId] = useState<string>(ALL)
   const [year, setYear] = useState<string>(ALL)
 
@@ -92,8 +92,8 @@ export function ProfileSubjectsSidebar({
   }
 
   const views: Array<{ value: SubjectView; label: string }> = [
-    { value: 'completed', label: strings.completed },
     { value: 'currently_taking', label: strings.currentlyTaking },
+    { value: 'completed', label: strings.completed },
   ]
   const viewCopy =
     view === 'completed'

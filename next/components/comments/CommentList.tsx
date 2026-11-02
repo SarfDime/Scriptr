@@ -43,7 +43,7 @@ export function CommentList() {
       )}
       {commentsError && (
         <Box className='ui-stack gap-2'>
-          <Text className='text-danger-600'>{commentsError}</Text>
+          <Text className='cp-danger-nb'>{commentsError}</Text>
           <Button
             type='button'
             className='button outline'

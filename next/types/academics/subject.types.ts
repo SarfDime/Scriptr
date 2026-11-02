@@ -55,6 +55,8 @@ export type SubjectsSidebarProps = Omit<
    * subjects — for controls such as view toggles and filters. */
   toolbar?: ReactNode
   headerProps?: Partial<SectionHeaderProps>
+  /** When set, a "Show all" link to this page closes the subject list. */
+  showAllHref?: string
   /** Today's study tip. The tip card (and the divider above it) only render
    * when this is given. */
   studyTip?: StudyTipData

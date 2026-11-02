@@ -3,6 +3,7 @@ import { Divider } from '@/components/ui/Divider'
 import { cn } from '@/lib/common-utils'
 import type { SubjectsSidebarProps } from '@/types/academics/subject.types'
 import { Box } from '../../common/Box'
+import { NextLink } from '../../common/NextLink'
 import { SectionHeader } from '../../common/SectionHeader'
 import { StudyTipCard } from '../../common/StudyTipCard'
 import { SubjectCard } from './SubjectCard'
@@ -16,6 +17,7 @@ export const SubjectsSidebar = ({
   emptyMessage = UI_STRINGS.subjects.emptyState,
   toolbar,
   headerProps,
+  showAllHref,
   studyTip,
   className,
   ...props
@@ -42,6 +44,11 @@ export const SubjectsSidebar = ({
             <SubjectCard key={item._id} {...item} />
           ))}
         </Box>
+      )}
+      {hasSubjects && showAllHref && (
+        <NextLink href={showAllHref} className='button subtle w-full'>
+          {UI_STRINGS.subjects.showAll}
+        </NextLink>
       )}
       {studyTip && (
         <>

@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { ApiError } from '@/lib/api/next-api'
 import { UserFacingError } from '@/lib/user-facing-error'
 import { useAuthModal } from '@/providers/AuthModalProvider'
+import { useNotifications } from '@/providers/notification/NotificationProvider'
 import { useSession } from '@/providers/SessionProvider'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 
@@ -58,6 +59,8 @@ export function useProtectedAction<Args extends Array<unknown>, T>(
   const [state, setState] = useState<ProtectedActionState>({ status: 'idle' })
   const { session, refresh, logout } = useSession()
   const { addToast } = useToast()
+  const { syncRestriction, openRestrictedModal, restrictionNotice } =
+    useNotifications()
   const { open: openAuthModal } = useAuthModal()
   const errorTitle = options?.errorTitle
 
@@ -70,6 +73,16 @@ export function useProtectedAction<Args extends Array<unknown>, T>(
         message: UI_STRINGS.general.signInRequired,
       })
       openAuthModal()
+      return { ok: false }
+    }
+
+    // Known-restricted users never reach the API; the server still enforces it.
+    if (restrictionNotice) {
+      setState({
+        status: 'restricted',
+        message: UI_STRINGS.general.restrictedAction,
+      })
+      openRestrictedModal()
       return { ok: false }
     }
 
@@ -124,17 +137,12 @@ export function useProtectedAction<Args extends Array<unknown>, T>(
     }
 
     if (isRestrictedError(actionError)) {
+      syncRestriction()
       setState({
         status: 'restricted',
         message: UI_STRINGS.general.restrictedAction,
       })
-      if (errorTitle) {
-        addToast({
-          type: 'error',
-          title: UI_STRINGS.general.actionUnavailable,
-          description: UI_STRINGS.general.restrictedAction,
-        })
-      }
+      openRestrictedModal()
       return { ok: false }
     }
 

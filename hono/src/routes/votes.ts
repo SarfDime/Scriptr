@@ -147,11 +147,13 @@ votes.post('/:scriptId', authMiddleware, async (c) => {
     .single()
 
   if (script?.author_id && script.subject_id) {
+    // Award before invalidating: an award created after the revalidation would
+    // be missed by the re-fetched public profile (tag `profiles:public`).
+    await checkTotalScriptVotes(c, script.author_id)
     await revalidateCacheTags(
       c.env,
       scriptMutationTags({ id: scriptId, ...script })
     )
-    await checkTotalScriptVotes(c, script.author_id)
   }
 
   return c.json<{ voted: boolean; vote_score: number }>({

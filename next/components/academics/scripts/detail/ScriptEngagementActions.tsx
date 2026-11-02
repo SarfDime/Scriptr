@@ -23,7 +23,7 @@ export function ScriptEngagementActions({
   viewerDataFailed,
 }: ScriptEngagementActionsProps) {
   return (
-    <Box className='ui-cluster items-center gap-2'>
+    <Box className='ui-cluster gap-2'>
       {(!isAuthor || hasVoted) && (
         <ScriptVoteButton
           scriptId={scriptId}

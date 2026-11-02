@@ -22,6 +22,11 @@ export type MyRating = Pick<
 /** `POST /api/ratings/{professor,subject}/:id` */
 export type RatingUpsertResponse = { success: true; rating: MyRating }
 
+export type RatingTypeMutationResponse = {
+  success: true
+  rating_type: RatingType
+}
+
 /** The rated entity: its target kind and its database id (never a slug). */
 export type RatingTarget = {
   targetType: RatingTargetType

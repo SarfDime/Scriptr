@@ -37,7 +37,7 @@ export const OnboardingSubjectsStep = ({
     (subjectsByYear.size === 0 ? UI_STRINGS.onboarding.noSubjects : null)
 
   return (
-    <Box className='ui-stack gap-4'>
+    <Box className='ui-stack gap-3'>
       <SectionHeader
         title={UI_STRINGS.onboarding.subjectsTitle}
         subtitle={UI_STRINGS.onboarding.subjectsSubtitle}
@@ -54,12 +54,9 @@ export const OnboardingSubjectsStep = ({
             ).length
 
             return (
-              <Box
-                key={year}
-                className='ui-stack gap-2 rounded-lg p-2 shadow-md bg-background-300'
-              >
-                <Box className='ui-cluster items-center justify-between'>
-                  <Box className='ui-cluster items-center gap-2'>
+              <Box key={year} className='ui-stack ui-above-inside gap-2 p-3'>
+                <Box className='ui-cluster justify-between'>
+                  <Box className='ui-cluster gap-2'>
                     <Text className='ui-body-strong'>
                       {UI_STRINGS.general.year(year)}
                     </Text>
@@ -102,11 +99,10 @@ export const OnboardingSubjectsStep = ({
                         }
                         aria-pressed={isSubjectComplete}
                         className={cn(
-                          'button gap-1',
+                          'button button-sm gap-1',
                           isSubjectComplete ? 'solid' : 'subtle'
                         )}
                       >
-                        {/* {isSubjectComplete && <CheckmarkIcon />} */}
                         {subject.name}
                         {subject.elective && <AcademicBadge type='elective' />}
                       </Button>

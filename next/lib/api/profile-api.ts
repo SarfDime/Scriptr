@@ -15,8 +15,32 @@ import type {
   ProfileUpdateResponse,
   PublicProfileResponse,
 } from '@shared/types/profile.types'
+import type {
+  ProfilePreferencesPatch,
+  ProfilePreferencesResponse,
+} from '@shared/types/profile-preferences.types'
 import { apiFetchPublicRead, apiFetchRequired } from './next-api'
 import { putToStaging, toUserFacingUploadError } from './upload'
+
+export const getMyProfilePreferences = (cookie?: string) =>
+  apiFetchRequired<ProfilePreferencesResponse>(
+    apiRoutes.profiles.mePreferences,
+    {
+      cache: 'no-store',
+      ...(cookie ? { headers: { cookie } } : {}),
+    }
+  )
+
+export const updateMyProfilePreferences = (
+  preferences: ProfilePreferencesPatch
+) =>
+  apiFetchRequired<ProfilePreferencesResponse>(
+    apiRoutes.profiles.mePreferences,
+    {
+      method: 'PATCH',
+      body: { preferences },
+    }
+  )
 
 /**
  * Session-scoped, like getSession/getMyScriptVote: never cached. Two call

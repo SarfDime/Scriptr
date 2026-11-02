@@ -35,7 +35,10 @@ export function CommentsHeader({
         titleProps={{ id: headingId }}
         actions={
           !isComposing && (
-            <Button onClick={handleWriteClick} className='button solid'>
+            <Button
+              onClick={handleWriteClick}
+              className='button solid button-md'
+            >
               {COMMENT_STRINGS.composer.openButton}
             </Button>
           )
@@ -43,14 +46,14 @@ export function CommentsHeader({
       />
       {commentCount > 0 && (
         <Box
-          className='ui-cluster items-center gap-2'
+          className='ui-cluster gap-2'
           role='group'
           aria-label={COMMENT_STRINGS.general.sortComments}
         >
           <Button
             type='button'
             className={cn(
-              'button button-md',
+              'button button-sm',
               sort === 'newest' ? 'solid' : 'subtle'
             )}
             aria-pressed={sort === 'newest'}
@@ -61,7 +64,7 @@ export function CommentsHeader({
           <Button
             type='button'
             className={cn(
-              'button button-md',
+              'button button-sm',
               sort === 'top' ? 'solid' : 'subtle'
             )}
             aria-pressed={sort === 'top'}
@@ -69,7 +72,7 @@ export function CommentsHeader({
           >
             {COMMENT_STRINGS.general.top}
           </Button>
-          <Divider className='mt-3' />
+          <Divider className='mt-3' colorScheme='dark' />
         </Box>
       )}
     </Box>

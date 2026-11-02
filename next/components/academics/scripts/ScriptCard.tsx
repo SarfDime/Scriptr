@@ -45,7 +45,7 @@ export const ScriptCard = ({
         </Box>
 
         <Box className='ui-stack grow gap-1'>
-          <Box className='ui-cluster items-center gap-1 grow justify-between'>
+          <Box className='ui-cluster gap-1 grow justify-between'>
             <PortableTextContent className='ui-title'>
               {script.title}
             </PortableTextContent>

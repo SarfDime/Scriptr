@@ -2,10 +2,12 @@ import { zValidator } from '@hono/zod-validator'
 import type { Context } from 'hono'
 import { Hono } from 'hono'
 import { z } from 'zod'
+import { NOTIFICATIONS_STRINGS } from '../../../shared/strings/notifications-strings'
 import type { ExamSession } from '../../../shared/types/academic.types'
 import type { ScriptFileInput } from '../../../shared/types/api.types'
 import type { PortableTextValue } from '../../../shared/types/portable-text.types'
 import type {
+  DownloadResponse,
   MyScriptSummary,
   ScriptAttachFilesResponse,
   ScriptDeleteResponse,
@@ -33,6 +35,7 @@ import {
   scriptMutationTags,
 } from '../lib/cache-revalidate'
 import { honoLog } from '../lib/logger'
+import { notifyProfileBestEffort } from '../lib/notifications'
 import { deleteR2Files } from '../lib/r2'
 import { databaseErrorResponse, requiredParam } from '../lib/request'
 import { verifyReportedFiles } from '../lib/script-files'
@@ -684,6 +687,9 @@ scripts.post(
       return c.json({ error: 'Failed to save script files' }, 500)
     }
 
+    // Award before invalidating: an award created after the revalidation can
+    // leave the force-cached public profile (tag `profiles:public`) stale.
+    await checkScriptsUploaded(c, user.id)
     await revalidateCacheTags(
       c.env,
       scriptMutationTags({
@@ -692,7 +698,6 @@ scripts.post(
         author_id: user.id,
       })
     )
-    await checkScriptsUploaded(c, user.id)
 
     return c.json<{ success: true; script: { id: string }; message: string }>({
       success: true,
@@ -981,14 +986,17 @@ scripts.delete('/:id', authMiddleware, async (c) => {
   const [{ data: script }, { data: profile }] = await Promise.all([
     supabase
       .from('scripts')
-      .select('author_id, subject_id')
+      .select('author_id, subject_id, title')
       .eq('id', scriptId)
       .single(),
     supabase.from('profiles').select('role').eq('id', user.id).single(),
   ])
 
+  if (!script) return c.json({ error: 'Script not found' }, 404)
+
   // Check if user is author or admin
-  if (script?.author_id !== user.id && !isAdmin(profile?.role)) {
+  const isAdminCaller = isAdmin(profile?.role)
+  if (script.author_id !== user.id && !isAdminCaller) {
     return c.json(
       { error: 'Unauthorized: You can only delete your own scripts' },
       403
@@ -1020,7 +1028,7 @@ scripts.delete('/:id', authMiddleware, async (c) => {
     })
   }
 
-  if (script?.subject_id) {
+  if (script.subject_id) {
     await revalidateCacheTags(
       c.env,
       scriptMutationTags({
@@ -1031,11 +1039,63 @@ scripts.delete('/:id', authMiddleware, async (c) => {
     )
   }
 
+  if (isAdminCaller && script.author_id !== user.id) {
+    const title = isPortableTextValue(script.title)
+      ? portableTextToPlainText(script.title).trim() || 'Script'
+      : 'Script'
+    await notifyProfileBestEffort(c, script.author_id, {
+      type: 'content_removed',
+      title: NOTIFICATIONS_STRINGS.contentRemovedTitle(title),
+      body: NOTIFICATIONS_STRINGS.contentRemovedBody('script'),
+      data: { target_kind: 'script', title },
+    })
+  }
+
   return c.json<ScriptDeleteResponse>({
     success: true,
     message: 'Script deleted successfully',
   })
 })
+
+/**
+ * Tail of a counted download: atomic increment -> award check -> cache
+ * revalidation -> response. The award check runs before revalidation so a
+ * freshly created award is already in the data the invalidated public profile
+ * re-fetches. The check is best-effort and never fails the request.
+ */
+async function finishCountedDownload(
+  c: Context<HonoEnv>,
+  script: Parameters<typeof scriptMutationTags>[0],
+  /** The dedupe row this call wrote, if any, so a failed increment can undo it
+   * instead of leaving the download permanently marked as already counted. */
+  recordedIdentityKey: string | null
+) {
+  const supabase = createInternalSupabaseClient(c)
+  const { error } = await supabase.rpc('increment_script_download_count', {
+    p_script_id: script.id,
+  })
+  if (error) {
+    if (recordedIdentityKey) {
+      const { error: rollbackError } = await supabase
+        .from('download_events')
+        .delete()
+        .eq('script_id', script.id)
+        .eq('identity_key', recordedIdentityKey)
+      if (rollbackError) {
+        honoLog({
+          logLevel: 'error',
+          message: 'Failed to roll back a download event after a failed count',
+          error: rollbackError,
+        })
+      }
+    }
+    return databaseErrorResponse(c, error)
+  }
+
+  await checkTotalScriptDownloads(c, script.author_id)
+  await revalidateCacheTags(c.env, scriptMutationTags(script))
+  return c.json<DownloadResponse>({ success: true, counted: true })
+}
 
 /** Record a download, deduplicated per identity (account, then IP, then device) */
 scripts.post('/:id/download', async (c) => {
@@ -1044,7 +1104,7 @@ scripts.post('/:id/download', async (c) => {
 
   const { data: script } = await supabase
     .from('scripts')
-    .select('download_count, author_id, subject_id')
+    .select('author_id, subject_id')
     .eq('id', scriptId)
     .single()
 
@@ -1055,24 +1115,19 @@ scripts.post('/:id/download', async (c) => {
   const { userId, ipAddress, deviceId, identityKey } =
     await resolveDownloadIdentity(c)
 
-  if (!identityKey) {
-    const { error } = await supabase
-      .from('scripts')
-      .update({ download_count: (script.download_count || 0) + 1 })
-      .eq('id', scriptId)
-
-    if (error) return databaseErrorResponse(c, error)
-    await revalidateCacheTags(
-      c.env,
-      scriptMutationTags({
-        id: scriptId,
-        subject_id: script.subject_id,
-        author_id: script.author_id,
-      })
-    )
-    await checkTotalScriptDownloads(c, script.author_id)
-    return c.json({ success: true, counted: true })
+  // A signed-in author downloading their own script is never counted. Anonymous
+  // self-downloads can't be told apart from anyone else's, so they still count.
+  if (userId && userId === script.author_id) {
+    return c.json<DownloadResponse>({ success: true, counted: false })
   }
+
+  const countedScript = {
+    id: scriptId,
+    subject_id: script.subject_id,
+    author_id: script.author_id,
+  }
+
+  if (!identityKey) return finishCountedDownload(c, countedScript, null)
 
   const { error: insertError } = await supabase.from('download_events').insert({
     script_id: scriptId,
@@ -1084,27 +1139,12 @@ scripts.post('/:id/download', async (c) => {
 
   if (insertError) {
     if (insertError.code === '23505') {
-      return c.json({ success: true, counted: false })
+      return c.json<DownloadResponse>({ success: true, counted: false })
     }
     return databaseErrorResponse(c, insertError)
   }
 
-  const { error: updateError } = await supabase
-    .from('scripts')
-    .update({ download_count: (script.download_count || 0) + 1 })
-    .eq('id', scriptId)
-
-  if (updateError) return databaseErrorResponse(c, updateError)
-  await revalidateCacheTags(
-    c.env,
-    scriptMutationTags({
-      id: scriptId,
-      subject_id: script.subject_id,
-      author_id: script.author_id,
-    })
-  )
-  await checkTotalScriptDownloads(c, script.author_id)
-  return c.json({ success: true, counted: true })
+  return finishCountedDownload(c, countedScript, identityKey)
 })
 
 /** Get flagged scripts (admin only) */

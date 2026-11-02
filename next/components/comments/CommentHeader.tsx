@@ -22,11 +22,11 @@ export function CommentHeader({
   const profileHref = getAuthorProfileHref(author)
 
   return (
-    <Box className='ui-cluster items-center gap-x-2 gap-y-0'>
+    <Box className='ui-cluster gap-x-2 gap-y-0'>
       {profileHref ? (
         <NextLink
           href={profileHref}
-          className='ui-cluster items-center gap-2 hover:text-brand'
+          className='ui-cluster gap-2 hover:text-brand'
         >
           <CommentAuthorAvatar
             name={name}
@@ -36,7 +36,7 @@ export function CommentHeader({
           <Text className='ui-label'>{name}</Text>
         </NextLink>
       ) : (
-        <Box className='ui-cluster items-center gap-2'>
+        <Box className='ui-cluster gap-2'>
           <CommentAuthorAvatar
             name={name}
             avatarUrl={author?.avatar_url}

@@ -1,6 +1,5 @@
 import type { CommentSort } from '@shared/config/shared-constants'
 import type { SessionUser } from '@shared/types/auth.types'
-import type { PortableTextValue } from '@shared/types/portable-text.types'
 import type { ReactNode } from 'react'
 import type * as commentsApi from '@/lib/api/comments-api'
 import type { CommentEntity, CommentSectionProps } from './Comments.types'
@@ -107,12 +106,4 @@ export type CommentLikeButtonProps = {
   initialLiked: boolean
   initialCount: number
   disabled?: boolean
-}
-
-export type CommentEditorProps = {
-  onChange: (value: PortableTextValue) => void
-  ariaLabel: string
-  initialContent?: PortableTextValue
-  autoFocus?: boolean
-  className?: string
 }

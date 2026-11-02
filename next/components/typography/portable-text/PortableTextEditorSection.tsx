@@ -5,32 +5,18 @@ import { EventListenerPlugin, NodePlugin } from '@portabletext/editor/plugins'
 import { PT_STRINGS } from '@shared/config/pt-strings'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
 import { generateRandomKey } from '@shared/utils/common-utils'
+import { portableTextToPlainText } from '@shared/utils/portable-text.utils'
 import { useState, useTransition } from 'react'
 import { Box } from '@/components/common/Box'
-import { Button } from '@/components/common/Button'
+import { PortableTextContent } from '@/components/typography/PortableTextContent'
+import { Text } from '@/components/typography/Text'
 import { cn } from '@/lib/common-utils'
+import { useToast } from '@/providers/toaster/ToasterProvider'
+import type { PortableTextEditorSectionProps } from '@/types/components/PortableTextEditor.types'
+import { PortableTextEditorActions } from './PortableTextEditorActions'
 import { ClearOtherDecorators } from './toolbar/PTClearOtherDecorators'
 import { Toolbar } from './toolbar/PTToolbar'
-import {
-  createPortableTextEditorConfig,
-  type PortableTextEditorOptions,
-} from './toolbar/schema'
-
-export type PortableTextEditorSectionProps = {
-  initialContent?: PortableTextValue
-  onSave?: (value: PortableTextValue) => Promise<void>
-  onPreview?: (value: PortableTextValue) => void
-  onChange?: (value: PortableTextValue) => void
-  onCancel?: () => void
-  onSaveSuccess?: () => void
-  showActions?: boolean
-  ariaLabel?: string
-  autoFocus?: boolean
-  editorOptions?: PortableTextEditorOptions
-  editorClassName?: string
-  editorContainerClassName?: string
-  singleLine?: boolean
-}
+import { createPortableTextEditorConfig } from './toolbar/schema'
 
 const createEmptyContent = (): PortableTextValue => [
   {
@@ -44,12 +30,15 @@ const createEmptyContent = (): PortableTextValue => [
 
 export const PortableTextEditorSection = ({
   initialContent,
+  actions = [],
+  actionLabels,
   onSave,
-  onPreview,
-  onChange,
-  onCancel,
   onSaveSuccess,
-  showActions = true,
+  onCancel,
+  onChange,
+  validate,
+  confirmCancelWhenDirty = false,
+  renderMeta,
   ariaLabel,
   autoFocus = false,
   editorOptions,
@@ -60,38 +49,63 @@ export const PortableTextEditorSection = ({
   const [draftValue, setDraftValue] = useState<PortableTextValue>(
     () => initialContent ?? createEmptyContent()
   )
-  const [saveError, setSaveError] = useState<string | null>(null)
+  const [editorKey, setEditorKey] = useState(0)
+  const [isPreviewing, setIsPreviewing] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const { addToast } = useToast()
   const { schemaDefinition, editorNodes } =
     createPortableTextEditorConfig(editorOptions)
 
-  const handleSave = () => {
+  const hasContent = portableTextToPlainText(draftValue).trim().length > 0
+
+  const reportFailure = (description: string) =>
+    addToast({
+      type: 'error',
+      title: PT_STRINGS.editor.saveFailedTitle,
+      description,
+    })
+
+  const validateDraft = () => {
     if (!onSave) {
-      setSaveError(PT_STRINGS.editor.notConfigured)
-      return
+      reportFailure(PT_STRINGS.editor.notConfigured)
+      return false
     }
+    const validationMessage = validate?.(draftValue)
+    if (validationMessage) {
+      reportFailure(validationMessage)
+      return false
+    }
+    return true
+  }
+
+  const handleSave = () => {
+    if (!onSave || !validateDraft()) return
     const save = onSave
 
     startTransition(async () => {
       try {
-        await save(draftValue)
-        setSaveError(null)
-        onSaveSuccess?.()
+        const saved = await save(draftValue)
+        if (saved !== false) onSaveSuccess?.()
       } catch (error) {
-        setSaveError(
+        reportFailure(
           error instanceof Error ? error.message : PT_STRINGS.editor.saveFailed
         )
       }
     })
   }
 
-  const handlePreview = () => {
-    onPreview?.(draftValue)
+  const handleClear = () => {
+    const emptyValue = createEmptyContent()
+    setDraftValue(emptyValue)
+    setIsPreviewing(false)
+    setEditorKey((key) => key + 1)
+    onChange?.(emptyValue)
   }
 
   return (
-    <Box className={cn('ui-stack gap-1.5', editorContainerClassName)}>
+    <Box className={cn('ui-stack ui-above-inside', editorContainerClassName)}>
       <EditorProvider
+        key={editorKey}
         initialConfig={{
           schemaDefinition,
           initialValue: draftValue,
@@ -118,44 +132,35 @@ export const PortableTextEditorSection = ({
             }
           }}
           className={cn(
-            'min-h-40 whitespace-pre-line rounded-md border border-grey-300 bg-background-200 p-3 pt-editor-container text-fg text-sm outline-none focus:border-brand',
+            'min-h-40 whitespace-pre-line ui-above-reverse pt-editor-container text-fg text-sm outline-none focus:border-brand',
             editorClassName
           )}
         />
       </EditorProvider>
 
-      {saveError && <p className='text-red-600 text-sm'>{saveError}</p>}
-
-      {showActions && (
-        <Box className='flex flex-wrap gap-2'>
-          {onPreview && (
-            <Button
-              aria-label={PT_STRINGS.editor.preview}
-              onClick={handlePreview}
-              disabled={isPending}
-              className='rounded-md border border-grey-300 px-4 py-2 text-fg text-sm'
-            >
-              {PT_STRINGS.editor.preview}
-            </Button>
-          )}
-          <Button
-            aria-label={PT_STRINGS.editor.save}
-            onClick={handleSave}
-            disabled={isPending}
-            className='rounded-md bg-fg px-4 py-2 text-sm text-white'
-          >
-            {PT_STRINGS.editor.save}
-          </Button>
-          <Button
-            aria-label={PT_STRINGS.editor.cancel}
-            onClick={onCancel}
-            disabled={isPending}
-            className='rounded-md border border-grey-300 px-4 py-2 text-fg text-sm'
-          >
-            {PT_STRINGS.editor.cancel}
-          </Button>
+      {isPreviewing && hasContent && (
+        <Box className='ui-stack ui-above-reverse gap-1'>
+          <Text className='ui-caption'>
+            {actionLabels?.preview ?? PT_STRINGS.editor.preview}
+          </Text>
+          <PortableTextContent>{draftValue}</PortableTextContent>
         </Box>
       )}
+
+      <PortableTextEditorActions
+        actions={actions}
+        labels={actionLabels}
+        hasContent={hasContent}
+        isPending={isPending}
+        isPreviewing={isPreviewing}
+        confirmCancel={confirmCancelWhenDirty && hasContent}
+        onSaveAttempt={validateDraft}
+        meta={renderMeta?.(draftValue)}
+        onClear={handleClear}
+        onPreview={() => setIsPreviewing((open) => !open)}
+        onCancel={() => onCancel?.()}
+        onSave={handleSave}
+      />
     </Box>
   )
 }

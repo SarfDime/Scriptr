@@ -69,7 +69,7 @@ export const ActivityStats = ({
               key={key}
               className='ui-stack flex-[1_1_8rem] gap-1 rounded-md p-2'
             >
-              <Box className='ui-cluster items-center gap-2'>
+              <Box className='ui-cluster gap-2'>
                 <Icon className={`${color} h-7 w-7 rounded-md p-1`} />
                 <Text className='ui-stat'>{count}</Text>
               </Box>

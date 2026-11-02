@@ -21,6 +21,7 @@ export type Database = {
           entity_type: string
           id: string
           metric: string
+          rarity: string
           threshold: number
           title: string
         }
@@ -30,6 +31,7 @@ export type Database = {
           entity_type: string
           id: string
           metric: string
+          rarity?: string
           threshold: number
           title: string
         }
@@ -39,6 +41,7 @@ export type Database = {
           entity_type?: string
           id?: string
           metric?: string
+          rarity?: string
           threshold?: number
           title?: string
         }
@@ -585,21 +588,95 @@ export type Database = {
           },
         ]
       }
-      profile_restrictions: {
+      profile_preferences: {
+        Row: {
+          preferences: Json
+          profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          preferences?: Json
+          profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          preferences?: Json
+          profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'profile_preferences_profile_id_fkey'
+            columns: ['profile_id']
+            isOneToOne: true
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      profile_restriction_history: {
         Row: {
           created_at: string
+          expires_at: string | null
+          id: string
+          lifted_early_at: string | null
           profile_id: string
           reason: string
           restricted_by: string
         }
         Insert: {
           created_at?: string
+          expires_at?: string | null
+          id?: string
+          lifted_early_at?: string | null
           profile_id: string
           reason: string
           restricted_by: string
         }
         Update: {
           created_at?: string
+          expires_at?: string | null
+          id?: string
+          lifted_early_at?: string | null
+          profile_id?: string
+          reason?: string
+          restricted_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'profile_restriction_history_profile_id_fkey'
+            columns: ['profile_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'profile_restriction_history_restricted_by_fkey'
+            columns: ['restricted_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      profile_restrictions: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          profile_id: string
+          reason: string
+          restricted_by: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          profile_id: string
+          reason: string
+          restricted_by: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
           profile_id?: string
           reason?: string
           restricted_by?: string
@@ -1123,6 +1200,10 @@ export type Database = {
         Returns: {
           comment_id: string
         }[]
+      }
+      increment_script_download_count: {
+        Args: { p_script_id: string }
+        Returns: number
       }
       is_admin: { Args: { uid: string }; Returns: boolean }
       is_moderator: { Args: { uid: string }; Returns: boolean }

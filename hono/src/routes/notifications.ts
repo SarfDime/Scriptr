@@ -1,12 +1,31 @@
 import { Hono } from 'hono'
 import type { NotificationRecord } from '../../../shared/types/api.types'
-import { databaseErrorResponse, requiredParam } from '../lib/request'
+import { createRateLimiter } from '../lib/rate-limit'
+import {
+  databaseErrorResponse,
+  readJsonBody,
+  requiredParam,
+} from '../lib/request'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
+
+const NOTIFICATIONS_LIMIT = 15
+const NOTIFICATIONS_WINDOW_MS = 60_000
+
+const isNotificationsLimited = createRateLimiter({
+  limit: NOTIFICATIONS_LIMIT,
+  windowMs: NOTIFICATIONS_WINDOW_MS,
+})
 
 const notifications = new Hono<HonoEnv>()
 
 notifications.use('*', authMiddleware)
+notifications.use('*', async (c, next) => {
+  if (isNotificationsLimited(c.get('user').id)) {
+    return c.json({ error: 'Too many requests. Please slow down.' }, 429)
+  }
+  return next()
+})
 /** List the current user's notifications, optionally filtered by read state */
 notifications.get('/', async (c) => {
   const user = c.get('user')
@@ -61,7 +80,7 @@ notifications.patch('/:id', async (c) => {
   const user = c.get('user')
   const notificationId = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)
-  const { is_read } = await c.req.json<{ is_read?: unknown }>()
+  const { is_read } = await readJsonBody(c)
 
   if (typeof is_read !== 'boolean') {
     return c.json({ error: 'is_read must be a boolean' }, 400)
@@ -75,7 +94,12 @@ notifications.patch('/:id', async (c) => {
     .select()
     .single()
 
-  if (error) return c.json({ error: 'Notification not found' }, 404)
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return c.json({ error: 'Notification not found' }, 404)
+    }
+    return databaseErrorResponse(c, error)
+  }
   return c.json<NotificationRecord>(data)
 })
 

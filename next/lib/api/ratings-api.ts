@@ -5,6 +5,7 @@ import type {
   RatingStat,
   RatingTarget,
   RatingType,
+  RatingTypeMutationResponse,
   RatingUpsertResponse,
 } from '@shared/types/ratings.types'
 import { apiFetchRequired } from './next-api'
@@ -41,6 +42,52 @@ export const getRatingTypes = (targetType: RatingTargetType) =>
   apiFetchRequired<Array<RatingType>>(
     apiRoutes.ratings.types(targetType),
     NO_STORE
+  )
+
+export const getAllRatingTypes = async (cookie?: string) => {
+  const options = {
+    ...NO_STORE,
+    ...(cookie ? { headers: { cookie } } : {}),
+  }
+  const [professorTypes, subjectTypes] = await Promise.all([
+    apiFetchRequired<Array<RatingType>>(
+      apiRoutes.ratings.types('professor'),
+      options
+    ),
+    apiFetchRequired<Array<RatingType>>(
+      apiRoutes.ratings.types('subject'),
+      options
+    ),
+  ])
+  return [...professorTypes, ...subjectTypes]
+}
+
+export const createRatingType = (input: {
+  id: string
+  target_type: RatingTargetType
+  label: string
+}) =>
+  apiFetchRequired<RatingTypeMutationResponse>(
+    apiRoutes.ratings.types('professor'),
+    {
+      method: 'POST',
+      body: input,
+    }
+  )
+
+export const renameRatingType = (id: string, label: string) =>
+  apiFetchRequired<RatingTypeMutationResponse>(
+    apiRoutes.ratings.typesById(id),
+    {
+      method: 'PATCH',
+      body: { label },
+    }
+  )
+
+export const removeRatingType = (id: string) =>
+  apiFetchRequired<{ success: true; message: string }>(
+    apiRoutes.ratings.typesById(id),
+    { method: 'DELETE' }
   )
 
 /** Public. Only criteria with at least one rating appear. */

@@ -48,7 +48,7 @@ export function RatingsSection({ targetType, targetId }: RatingTarget) {
       )}
 
       {catalog.status === 'error' && (
-        <Box className='ui-cluster items-center gap-2'>
+        <Box className='ui-cluster gap-2'>
           <Text className='ui-caption' role='alert'>
             {RATING_STRINGS.loadError}
           </Text>
@@ -65,7 +65,7 @@ export function RatingsSection({ targetType, targetId }: RatingTarget) {
       {catalog.status === 'loaded' && catalog.types.length > 0 && (
         <>
           {viewer.status === 'guest' && (
-            <Box className='ui-cluster items-center gap-2'>
+            <Box className='ui-cluster gap-2'>
               <Text className='ui-caption'>{RATING_STRINGS.signInPrompt}</Text>
               <Button
                 className='button button-sm subtle'
@@ -81,7 +81,7 @@ export function RatingsSection({ targetType, targetId }: RatingTarget) {
             </Text>
           )}
           {viewer.status === 'error' && (
-            <Box className='ui-cluster items-center gap-2'>
+            <Box className='ui-cluster gap-2'>
               <Text className='ui-caption' role='alert'>
                 {RATING_STRINGS.loadMineError}
               </Text>

@@ -35,8 +35,8 @@ export function CommentActions({
   )
 
   return (
-    <Box className='ui-cluster items-center gap-3'>
-      <Box className='ui-cluster items-center gap-3'>
+    <Box className='ui-cluster gap-3'>
+      <Box className='ui-cluster gap-3'>
         <CommentLikeButton
           commentId={comment.id}
           initialLiked={comment.liked_by_me}
@@ -60,7 +60,7 @@ export function CommentActions({
         )}
       </Box>
 
-      <Box className='ui-cluster items-center gap-3'>
+      <Box className='ui-cluster gap-3'>
         {canManage && (
           <Button onClick={onEdit} className='button subtle button-sm'>
             <EditIcon />

@@ -4,7 +4,7 @@ What is left to do. The system as it stands is described in
 [`ARCHITECTURE.md`](ARCHITECTURE.md); this file only tracks work, so finished
 features are not repeated here.
 
-Last reconciled: 2026-11-01. Tags: **[bug]**, **[decision]** (needs a call
+Last reconciled: 2026-11-02. Tags: **[bug]**, **[decision]** (needs a call
 before anyone builds it).
 
 > **Standing rule:** any Postgres or Sanity schema change is followed by
@@ -15,14 +15,14 @@ before anyone builds it).
 
 ### Administration and moderation
 
-- **Admin UI:** academic sync and dependency tools, `professor_studies`, user
-  restrictions, flag resolution/moderation, suspicious-download review.
-- **Notification settings:** preferences and the remaining user-facing
-  notification kinds/UX. Moderator notifications stay deferred.
+- **Remaining admin tools:** academic sync and dependency tools,
+  `professor_studies`, suspicious-download review.
 
 ### Profile and academics
 
-- **Achievements:** show them on profiles (definition CRUD is deferred).
+- **Achievement badge overflow:** once the profile badge strip ships it shows
+  every earned achievement and wraps. When enough definitions exist to crowd
+  the avatar, cap the visible badges and add a "+N" / full-list control.
 - **Atomic profile save:** the profile row is written before the
   faculty/study selections, so a later failure leaves the two out of sync —
   move the pair into one RPC.
@@ -45,6 +45,12 @@ before anyone builds it).
 
 ## Correctness and quality
 
+- **Public profile list [decision]:** `GET /profiles` is unauthenticated and
+  unpaginated: one response returns every profile (id, username, full name,
+  role, avatar, subjects and earned achievements), and nothing in `next/` or
+  `sanity/` calls it. Remove it, restrict it to admins, or paginate it with a
+  hard limit, and update `API_DOCUMENTATION.md` and `API_TESTING_GUIDE.md` to
+  match.
 - **Draft-mode exit [bug]:** [`next/app/layout.tsx`](next/app/layout.tsx)
   renders `VisualEditing` and `DisableDraft`, but there is no
   `/api/disable-draft` endpoint for the button to call.
@@ -71,6 +77,11 @@ before anyone builds it).
   copies ([`PTClearOtherDecorators.tsx`](next/components/typography/portable-text/toolbar/PTClearOtherDecorators.tsx)).
 - **Root layout:** factor the font setup out of [`next/app/layout.tsx`](next/app/layout.tsx)
   and build `metadata` with `generateMetadata` from Sanity data.
+- **Profile page loader:** `next/app/user/[username]/page.tsx` fetches the
+  profile, stats, catalog and subjects and composes `ProfilePage` inline.
+  Move that into a `next/lib/profile-page.ts` loader that returns a view model
+  (`ARCHITECTURE.md` §8) so both profile pages stay thin. Do it on its own,
+  not alongside feature work.
 - **Type cleanup:** derive `AcademicPathInput` in
   [`academic-routes.ts`](next/lib/academic-routes.ts) from Sanity types.
 - **Button accessibility:** require an accessible name (type level) in
@@ -157,23 +168,28 @@ before anyone builds it).
 
 ## Deferred (Do Last)
 
-- **Achievement definitions CRUD:** admin management for
-  `achievement_definitions`; public reading and awarding already exist.
-- **Moderator notifications:** escalate repeated flags to moderators and route
-  moderator-generated flags to admins. The moderator role stays
-  notification-only and never gets moderation tools.
+- **Download achievement thresholds:** `total_script_downloads` is seeded now,
+  but anonymous self-downloads cannot be detected and IP/device rotation can
+  inflate the count, so its thresholds are softer evidence than the other
+  metrics. The suspicious-download review under Administration is the
+  longer-term answer, and thresholds may need raising once it exists.
 
 ## Suggested order
 
-1. Admin/moderation UI, then notification settings.
-2. Correctness and quality: draft-mode endpoint, state coverage, inline
-   strings, accessibility, toolbar, error UX, SEO/performance.
-3. Optimizer tuning and the serving-cost review.
-4. The privilege review.
-5. Sanity cleanup and the open Studio decisions.
-6. Tooling: Biome rules, error hygiene, internal secrets.
-7. Deferred: achievement-definition CRUD and moderator notifications.
+1. Public profile list: remove, restrict or paginate `GET /profiles`.
+2. Remaining admin and academic-sync tools.
+3. Correctness and quality: draft-mode endpoint, state coverage, inline
+   strings, accessibility, toolbar, error UX, profile page loader,
+   SEO/performance.
+4. Optimizer tuning and the serving-cost review.
+5. The privilege review.
+6. Sanity cleanup and the open Studio decisions.
+7. Tooling: Biome rules, error hygiene, internal secrets.
+8. Deferred: the download achievement thresholds above.
 
 ## Exploratory ideas
 
 - **Christmas effects:** a seasonal background and effects.
+- **Computed rarity:** derive an achievement's rarity from the share of
+  profiles that hold it instead of the admin-set tier. Only meaningful with a
+  much larger user base.

@@ -23,7 +23,7 @@ export const StudyExplorer = ({
       <SectionHeader title={title} count={studies.length} />
 
       {studies.length > 0 ? (
-        <Box className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+        <Box className='ui-grid-split'>
           {studies.map((study) => {
             const universitySlug = study.faculty?.university?.slug
             const facultySlug = study.faculty?.slug

@@ -38,6 +38,8 @@ export type DialogProps = {
   headerProps?: Omit<BoxProps, 'children'>
   titleProps?: TitleProps
   hideCloseButton?: boolean
+  /** Extra controls rendered in the header, just before the close button. */
+  headerActions?: ReactNode
   closeButtonProps?: CloseButtonProps
   isOpen?: boolean
   skipCheck?: boolean
@@ -91,6 +93,7 @@ export function Dialog({
   dialogProps,
   headerProps,
   hideCloseButton = false,
+  headerActions,
   closeButtonProps,
   titleProps,
   hideTrigger,
@@ -149,14 +152,20 @@ export function Dialog({
     dialogRef.current.close()
   }
 
-  const handleToggle = () => {
+  const handleToggle = (e: React.SyntheticEvent<HTMLDialogElement>) => {
+    if (e.target !== e.currentTarget) return
     const open = dialogRef.current?.open ?? false
     setShowBackdrop(open)
     setInternalDialogOpen(open)
     onToggle?.()
   }
 
-  const handleNativeClose = () => {
+  // React re-dispatches `close`, `cancel` and `toggle` up the React tree, which
+  // includes any dialog rendered inside this one's children (even though it is
+  // portaled elsewhere in the DOM). Ignore events that belong to a nested
+  // dialog, or closing it would also close this one.
+  const handleNativeClose = (e: React.SyntheticEvent<HTMLDialogElement>) => {
+    if (e.target !== e.currentTarget) return
     setShowBackdrop(false)
     setInternalDialogOpen(false)
     onClose?.()
@@ -189,6 +198,7 @@ export function Dialog({
   }
 
   const handleCancel = (e: React.SyntheticEvent<HTMLDialogElement>) => {
+    if (e.target !== e.currentTarget) return
     // The dialog 'cancel' event is fired for Escape key; prevent it if closeOnEsc is false
     if (!closeOnEsc) {
       // prevent the dialog from closing
@@ -197,6 +207,10 @@ export function Dialog({
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDialogElement>) => {
+    // Key events from a nested dialog bubble through the React tree too; its
+    // Esc/Tab handling is its own, not this dialog's.
+    if (!dialogRef.current?.contains(e.target as Node)) return
+
     if (!closeOnEsc && e.key === 'Escape') {
       e.preventDefault()
       e.stopPropagation()
@@ -225,6 +239,15 @@ export function Dialog({
       first.focus()
     }
   }
+
+  const closeButton = hideCloseButton ? null : (
+    <CloseButton
+      onClick={handleClose}
+      aria-label='Close dialog'
+      {...closeButtonProps}
+      className={cn('button ghost p-1', closeButtonProps?.className)}
+    />
+  )
 
   return (
     <>
@@ -287,16 +310,13 @@ export function Dialog({
                 >
                   {title}
                 </Title>
-                {!hideCloseButton && (
-                  <CloseButton
-                    onClick={handleClose}
-                    aria-label='Close dialog'
-                    {...closeButtonProps}
-                    className={cn(
-                      'button ghost p-1',
-                      closeButtonProps?.className
-                    )}
-                  />
+                {headerActions ? (
+                  <Box className='flex shrink-0 items-center gap-1'>
+                    {headerActions}
+                    {closeButton}
+                  </Box>
+                ) : (
+                  closeButton
                 )}
               </Box>
               {/* Content */}

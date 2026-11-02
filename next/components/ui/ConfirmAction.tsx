@@ -8,7 +8,7 @@ import { Text } from '@/components/typography/Text'
 import { cn } from '@/lib/common-utils'
 import { Dialog } from './Dialog'
 
-type ConfirmActionProps = {
+export type ConfirmActionProps = {
   title: PortableTextValue | ReactNode
   description: string
   confirmLabel?: string

@@ -1,11 +1,12 @@
 'use client'
 
+import BookIcon from '@sanity/icons/Book'
 import { UI_STRINGS } from '@shared/config/strings'
 import type { MyProfileResponse } from '@shared/types/profile.types'
 import { useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
-import { OnboardingSelectStep } from '@/components/onboarding/OnboardingSelectStep'
+import { OnboardingProgramFields } from '@/components/onboarding/OnboardingProgramFields'
 import { OnboardingSubjectsStep } from '@/components/onboarding/OnboardingSubjectsStep'
 import { FormContainer } from '@/components/typography/FormContainer'
 import { Text } from '@/components/typography/Text'
@@ -28,8 +29,9 @@ export function EditAcademicsButton({
     <>
       <Button
         onClick={() => setIsOpen(true)}
-        className='button button-sm subtle'
+        className='button button-sm subtle ui-cluster gap-1.5'
       >
+        <BookIcon />
         {UI_STRINGS.profile.academics.editLabel}
       </Button>
       {isOpen && (
@@ -82,49 +84,29 @@ function EditAcademicsDialog({
         onSubmit={handleSubmit}
         className='flex min-h-0 flex-1 flex-col'
       >
-        <Card.Body className='ui-stack min-h-0 flex-1 gap-6 overflow-y-auto p-5'>
-          <OnboardingSelectStep
-            title={UI_STRINGS.onboarding.universityTitle}
-            description={UI_STRINGS.onboarding.universityDescription}
-            options={catalog.universities.map((university) => ({
+        <Card.Body className='ui-stack min-h-0 flex-1 gap-4 overflow-y-auto p-5'>
+          <OnboardingProgramFields
+            universities={catalog.universities.map((university) => ({
               id: university._id,
               name: university.name,
             }))}
-            selectedId={data.universityId}
-            onSelect={selections.selectUniversity}
-          />
-          <OnboardingSelectStep
-            title={UI_STRINGS.onboarding.facultyTitle}
-            description={UI_STRINGS.onboarding.facultyDescription}
-            options={selections.catalog.faculties.map((faculty) => ({
+            faculties={selections.catalog.faculties.map((faculty) => ({
               id: faculty._id,
               name: faculty.name,
             }))}
-            selectedId={data.facultyId}
-            onSelect={selections.selectFaculty}
-            disabledReason={
-              data.universityId
-                ? undefined
-                : UI_STRINGS.onboarding.selectUniversityFirst
-            }
-          />
-          <OnboardingSelectStep
-            title={UI_STRINGS.onboarding.studyTitle}
-            description={UI_STRINGS.onboarding.studyDescription}
-            options={selections.catalog.studies.map((study) => ({
+            studies={selections.catalog.studies.map((study) => ({
               id: study._id,
               name: study.name,
             }))}
-            selectedId={data.studyId}
-            onSelect={selections.selectStudy}
-            disabledReason={
-              data.facultyId
-                ? undefined
-                : UI_STRINGS.onboarding.selectFacultyFirst
-            }
+            universityId={data.universityId}
+            facultyId={data.facultyId}
+            studyId={data.studyId}
+            onSelectUniversity={selections.selectUniversity}
+            onSelectFaculty={selections.selectFaculty}
+            onSelectStudy={selections.selectStudy}
           />
 
-          <Box className='border-t border-grey-200 pt-6'>
+          <Box className='border-t border-grey-200 pt-4'>
             <OnboardingSubjectsStep
               subjectsByYear={selections.catalog.subjectsByYear}
               completedYears={completedYears}
@@ -144,7 +126,7 @@ function EditAcademicsDialog({
 
         <Card.Footer className='ui-stack shrink-0 gap-3 border-grey-200 border-t px-5 py-4'>
           {prepareError && (
-            <Text className='ui-caption text-danger-600'>{prepareError}</Text>
+            <Text className='ui-caption cp-danger-nb'>{prepareError}</Text>
           )}
           <Box className='ui-cluster justify-end gap-2'>
             <Button

@@ -20,15 +20,32 @@ export const Popover = ({
   offsetX,
   ...rest
 }: PopoverProps) => {
-  const [isVisible, setIsVisible] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
+  // Hover and focus never fire on a tap in mobile Safari, so touch devices get
+  // an explicit toggle instead.
+  const [isPinned, setIsPinned] = useState(false)
+  const isVisible = isHovered || isPinned
+
+  const handleClick = () => {
+    if (window.matchMedia('(hover: hover)').matches) return
+    setIsPinned((pinned) => !pinned)
+  }
+
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key !== 'Escape') return
+    setIsPinned(false)
+    setIsHovered(false)
+  }
 
   return (
     <Box
       className={cn('relative inline-block', className)}
-      onMouseOver={() => setIsVisible(true)}
-      onMouseLeave={() => setIsVisible(false)}
-      onFocus={() => setIsVisible(true)}
-      onBlur={() => setIsVisible(false)}
+      onMouseOver={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onFocus={() => setIsHovered(true)}
+      onBlur={() => setIsHovered(false)}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
       {...rest}
     >
       {trigger}

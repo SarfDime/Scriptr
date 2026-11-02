@@ -8,6 +8,7 @@ import { Text } from '@/components/typography/Text'
 import { useRequireSignIn } from '@/hooks/useRequireSignIn'
 import { addFavorite, removeFavorite } from '@/lib/api/favorites-api'
 import { cn } from '@/lib/common-utils'
+import { useMyProfileActions } from '@/providers/ProfileProvider'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 
 export type ScriptSaveButtonProps = {
@@ -35,6 +36,7 @@ export function ScriptSaveButton({
   const [isPending, setIsPending] = useState(false)
   const { addToast } = useToast()
   const requireSignIn = useRequireSignIn()
+  const { reload: reloadProfile } = useMyProfileActions()
 
   const handleClick = async () => {
     if (!requireSignIn()) return
@@ -48,6 +50,7 @@ export function ScriptSaveButton({
         await addFavorite(scriptId)
       }
       setSaved(!wasSaved)
+      await reloadProfile()
     } catch {
       addToast({
         type: 'error',

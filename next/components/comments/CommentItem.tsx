@@ -141,7 +141,7 @@ export function CommentItem({
             {(isRoot || replyErrors[comment.id]) && (
               <Box className='ui-stack gap-4'>
                 {replyErrors[comment.id] && (
-                  <Text className='text-danger-600'>
+                  <Text className='cp-danger-nb'>
                     {replyErrors[comment.id]}
                   </Text>
                 )}

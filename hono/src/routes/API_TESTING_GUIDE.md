@@ -190,6 +190,16 @@ curl -s $BASE/profiles/username/localstudent | jq '{id, username}'
 curl -s $BASE/profiles/$STUDENT/stats | jq .
 ```
 
+Every profile payload carries `achievements` with each definition's `rarity`
+(the single-profile endpoints and `/me` must all include it):
+
+```bash
+curl -s -b cookies-student.txt $BASE/profiles/me \
+  | jq '.achievements[] | {achievement_id, earned_at, rarity: .achievement.rarity}'
+curl -s $BASE/profiles/username/localstudent | jq '.achievements | length'
+curl -s $BASE/profiles/$STUDENT | jq '[.achievements[].achievement.rarity] | unique'
+```
+
 Profile script summaries preserve their `comments: [{ count }]` response
 shape. Counts include replies as well as root comments. If a profile query
 fails because of a database error, the API returns a generic `500` rather
@@ -407,6 +417,13 @@ curl -s -X POST $BASE/scripts/$SCRIPT/download -H "x-device-id: test-device-1" |
 # Download dedupe: authenticated (dedupes by account instead)
 curl -s -b cookies-student.txt -X POST $BASE/scripts/$SCRIPT/download | jq .            # counted: true
 curl -s -b cookies-student.txt -X POST $BASE/scripts/$SCRIPT/download | jq .            # counted: false
+
+# Author self-download: a signed-in author downloading their own script is never counted.
+# OWN_SCRIPT must be a script authored by the account behind cookies-student.txt.
+# No download_events row, no download_count change, no award check (download_count stays put).
+curl -s -b cookies-student.txt -X POST $BASE/scripts/$OWN_SCRIPT/download | jq .       # counted: false
+# Anonymous self-downloads can't be detected, so the same script with no cookie still counts.
+curl -s -X POST $BASE/scripts/$OWN_SCRIPT/download -H "x-device-id: test-device-2" | jq .   # counted: true
 ```
 
 ```bash
@@ -580,6 +597,17 @@ curl -s -b cookies-student.txt -X PATCH $BASE/notifications/$NOTIF -H "Content-T
 curl -s -b cookies-student.txt -X PATCH $BASE/notifications/$NOTIF -H "Content-Type: application/json" -d '{"is_read":"yes"}' | jq .   # 400: must be boolean
 curl -s -b cookies-student.txt -X PATCH $BASE/notifications/read-all | jq .
 curl -s -b cookies-student.txt $BASE/notifications/unread-count | jq .   # 0
+
+# Preferences are own-row data. Missing rows return {}, and PATCH merges.
+# Preferences, /restrictions/me and /notifications share a 15 requests/min/user limit (429).
+curl -s -b cookies-student.txt $BASE/profiles/me/preferences | jq .
+curl -s -b cookies-student.txt -X PATCH $BASE/profiles/me/preferences \
+  -H "Content-Type: application/json" \
+  -d '{"preferences":{"version":1,"notifications":{"toasts":false,"achievements":"hide"}}}' | jq .
+curl -s -b cookies-student.txt $BASE/profiles/me/preferences | jq .
+curl -s -b cookies-student.txt -X PATCH $BASE/profiles/me/preferences \
+  -H "Content-Type: application/json" \
+  -d '{"preferences":{"version":1,"notifications":{"unknown":true}}}' | jq . # 400
 ```
 
 ---
@@ -622,6 +650,26 @@ curl -s -b cookies-admin.txt -X PATCH $BASE/flags/$FLAG -H "Content-Type: applic
 curl -s -b cookies-admin.txt $BASE/comments/flagged/all | jq 'length'   # back to not including it
 ```
 
+### Five-distinct-reporter alert
+
+Set `THRESHOLD_SCRIPT` to a script that none of the five reporter accounts
+owns and that has not already been flagged by those accounts. Each reporter
+must use a separate cookie jar:
+
+```bash
+for COOKIE in cookies-reporter-1.txt cookies-reporter-2.txt cookies-reporter-3.txt cookies-reporter-4.txt cookies-reporter-5.txt; do
+  curl -s -b "$COOKIE" -X POST $BASE/flags -H "Content-Type: application/json" \
+    -d "{\"target_type\":\"script\",\"target_id\":\"$THRESHOLD_SCRIPT\",\"reason\":\"Threshold alert test\"}" | jq '.success'
+done
+
+# Every admin should have one alert for the target after the fifth distinct reporter.
+curl -s -b cookies-admin.txt "$BASE/notifications?is_read=false" \
+  | jq '[.[] | select(.type=="flag_threshold" and .data.target_id=="'"$THRESHOLD_SCRIPT"'")] | length'
+
+# Re-flagging after review/dismissal with an existing reporter must not increase
+# the distinct count or create a second alert for an admin.
+```
+
 ```bash
 # A second flag, deleted by admin rather than the reporter — exercises the admin-delete branch
 FLAG2=$(curl -s -b cookies-admin.txt -X POST $BASE/flags -H "Content-Type: application/json" -d "{
@@ -645,6 +693,65 @@ curl -s -b cookies-admin.txt -X PATCH $BASE/profiles/$STUDENT -H "Content-Type: 
   -d '{"full_name":"Renamed By Admin"}' | jq '.profile.full_name'
 ```
 
+## Phase 10c — Achievement definitions
+
+Public read is unauthenticated; writes need the admin cookie. Titles and
+descriptions come from `ACHIEVEMENT_COPY` (`shared/config/achievements.ts`), so
+a definition can only be created for an id that already has wording there —
+`script_stack` is a seeded one, so it is the safe id for this walkthrough.
+A definition nobody has earned can be deleted, so teardown is safe.
+
+~~~bash
+curl -s $BASE/achievement-definitions | jq .
+
+# Student cannot write — expect 403
+curl -s -b cookies-student.txt -X POST $BASE/achievement-definitions \
+  -H "Content-Type: application/json" \
+  -d '{"id":"script_stack","metric":"scripts_uploaded","threshold":3,"rarity":"uncommon"}' | jq .
+
+# An id with no code entry — expect 400 naming ACHIEVEMENT_COPY
+curl -s -b cookies-admin.txt -X POST $BASE/achievement-definitions \
+  -H "Content-Type: application/json" \
+  -d '{"id":"not_in_the_catalogue","metric":"scripts_uploaded","threshold":1,"rarity":"common"}' | jq .
+
+# Admin creates one; the row picks up the catalogue wording
+curl -s -b cookies-admin.txt -X POST $BASE/achievement-definitions \
+  -H "Content-Type: application/json" \
+  -d '{"id":"script_stack","metric":"scripts_uploaded","threshold":3,"rarity":"uncommon"}' \
+  | jq '.achievement_definition | {id, title, description, rarity, threshold}'
+
+# Duplicate id — expect 409
+curl -s -b cookies-admin.txt -X POST $BASE/achievement-definitions \
+  -H "Content-Type: application/json" \
+  -d '{"id":"script_stack","metric":"scripts_uploaded","threshold":3,"rarity":"uncommon"}' | jq .
+
+# Unknown rarity, then a zero threshold — each expect 400
+curl -s -b cookies-admin.txt -X POST $BASE/achievement-definitions \
+  -H "Content-Type: application/json" \
+  -d '{"id":"script_stack","metric":"scripts_uploaded","threshold":1,"rarity":"mythic"}' | jq .
+curl -s -b cookies-admin.txt -X PATCH $BASE/achievement-definitions/script_stack \
+  -H "Content-Type: application/json" -d '{"threshold":0}' | jq .
+
+# `title` is no longer a body field — it is ignored
+curl -s -b cookies-admin.txt -X PATCH $BASE/achievement-definitions/script_stack \
+  -H "Content-Type: application/json" -d '{"title":"Renamed","threshold":3}' \
+  | jq '.achievement_definition | {title, threshold}'   # title stays the catalogue copy
+
+# Edit rarity and threshold; profiles see the new rarity on their next read
+curl -s -b cookies-admin.txt -X PATCH $BASE/achievement-definitions/script_stack \
+  -H "Content-Type: application/json" \
+  -d '{"rarity":"legendary","threshold":2}' | jq '.achievement_definition | {rarity, threshold}'
+curl -s $BASE/profiles/username/localstudent \
+  | jq '.achievements[] | select(.achievement_id == "script_stack") | .achievement.rarity'
+
+# Delete it (nobody has earned it), then expect 404
+curl -s -b cookies-admin.txt -X DELETE $BASE/achievement-definitions/script_stack | jq .
+curl -s -b cookies-admin.txt -X DELETE $BASE/achievement-definitions/script_stack | jq .
+
+# A definition somebody holds cannot be deleted — expect 409
+curl -s -b cookies-admin.txt -X DELETE $BASE/achievement-definitions/first_upload | jq .
+~~~
+
 ## Phase 10b — Restrictions
 
 Restricted users can't create or update content, but can still remove their
@@ -658,8 +765,15 @@ curl -s -b cookies-student.txt -X PUT $BASE/restrictions/$STUDENT -H "Content-Ty
 # Admin restricts the student (reason is 3–500 chars)
 curl -s -b cookies-admin.txt -X PUT $BASE/restrictions/$STUDENT -H "Content-Type: application/json" \
   -d '{"reason":"Testing the restriction flow"}' | jq .
-curl -s -b cookies-admin.txt $BASE/restrictions | jq 'length'          # includes the student
+curl -s -b cookies-admin.txt "$BASE/restrictions/lookup?profile_id=$STUDENT" | jq .
+curl -s -b cookies-admin.txt $BASE/restrictions | jq '.[] | select(.profile_id=="'"$STUDENT"'") | {active, expires_at, reason}'
 curl -s -b cookies-student.txt $BASE/restrictions/me | jq .             # own status, non-null
+
+# Re-restricting an active user changes only the reason; compare the response
+# with the previous row to confirm restricted_by, created_at, and expires_at
+# did not move.
+curl -s -b cookies-admin.txt -X PUT $BASE/restrictions/$STUDENT -H "Content-Type: application/json" \
+  -d '{"reason":"Reason update only"}' | jq '.restriction | {reason, restricted_by, created_at, expires_at}'
 
 # Blocked while restricted — each expect 403
 curl -s -b cookies-student.txt -X POST $BASE/comments -H "Content-Type: application/json" -d "{
@@ -681,6 +795,12 @@ curl -s -b cookies-admin.txt -X DELETE $BASE/restrictions/$STUDENT | jq .
 curl -s -b cookies-admin.txt -X DELETE $BASE/restrictions/$STUDENT | jq .   # 404: not restricted
 curl -s -b cookies-student.txt $BASE/restrictions/me | jq .                  # null
 ```
+
+The pure ladder cases run in `corepack pnpm --filter @scriptr/api test`:
+first restriction = 14 days, second = one calendar month (clamped at month
+end), third and later = permanent. For an end-to-end ladder walkthrough, let
+each temporary restriction lapse before applying the next one; an early lift
+is excluded from the count. The admin list keeps lapsed rows until removed.
 
 ---
 

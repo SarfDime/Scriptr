@@ -105,16 +105,18 @@ export const Select = <T = string>({
   return (
     <Box
       {...rest}
-      // onBlur={(e) => {
-      //   if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      //     setListOpen(false)
-      //   }
-      // }}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+          setListOpen(false)
+        }
+      }}
       className={cn(
         'group/select relative flex w-full items-center text-fg',
         'button button-sm basic rounded-lg ui-above-inside p-0',
+        disabled && 'pointer-events-none',
         rest.className
       )}
+      aria-disabled={disabled}
       data-open={listOpen}
       data-valid={Boolean(selectedOption)}
     >
@@ -126,7 +128,6 @@ export const Select = <T = string>({
         className={cn(
           'group/trigger grow flex justify-start items-center text-left text-base leading-4 md:leading-[inherit] ',
           'cursor-pointer p-2 gap-2 [&>span]:truncate',
-          disabled && 'cursor-not-allowed opacity-60',
           triggerProps?.className
         )}
       >

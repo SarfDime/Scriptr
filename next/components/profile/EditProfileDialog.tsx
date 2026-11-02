@@ -1,5 +1,6 @@
 'use client'
 
+import UserIcon from '@sanity/icons/User'
 import { UI_STRINGS } from '@shared/config/strings'
 import type { MyProfileResponse } from '@shared/types/profile.types'
 import { useState } from 'react'
@@ -23,8 +24,9 @@ export function EditProfileButton({ profile }: { profile: MyProfileResponse }) {
     <>
       <Button
         onClick={() => setIsOpen(true)}
-        className='button button-sm subtle'
+        className='button button-sm subtle ui-cluster gap-1.5'
       >
+        <UserIcon />
         {UI_STRINGS.profile.editProfileLabel}
       </Button>
       {isOpen && (
@@ -76,7 +78,7 @@ function EditProfileDialog({
         onSubmit={handleSubmit}
         className='flex min-h-0 flex-1 flex-col'
       >
-        <Card.Body className='ui-stack min-h-0 flex-1 gap-5 overflow-y-auto p-5'>
+        <Card.Body className='ui-stack min-h-0 flex-1 gap-4 p-4 overflow-y-auto'>
           <AvatarField
             name={getDisplayName(profile)}
             avatarUrl={profile.avatar_url}
@@ -123,11 +125,19 @@ function EditProfileDialog({
           />
         </Card.Body>
 
-        <Card.Footer className='ui-cluster shrink-0 justify-end gap-2 border-grey-200 border-t px-5 py-4'>
-          <Button onClick={onClose} disabled={isBusy} className='button subtle'>
+        <Card.Footer className='ui-cluster shrink-0 justify-end gap-2 px-4 py-3'>
+          <Button
+            onClick={onClose}
+            disabled={isBusy}
+            className='button button-md subtle'
+          >
             {UI_STRINGS.profile.edit.cancel}
           </Button>
-          <Button type='submit' disabled={!canSubmit} className='button solid'>
+          <Button
+            type='submit'
+            disabled={!canSubmit}
+            className='button button-md solid'
+          >
             {UI_STRINGS.profile.edit.save}
           </Button>
         </Card.Footer>

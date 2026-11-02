@@ -25,7 +25,7 @@ export const Toolbar = ({
   showLists = true,
   showAlignment = true,
 }: PortableTextEditorOptions) => (
-  <Box className='ui-cluster gap-1'>
+  <Box className='ui-cluster gap-2'>
     <ClearFormattingButton />
 
     {showStyles && <PTStyleDropdown excludedStyles={excludedStyles} />}

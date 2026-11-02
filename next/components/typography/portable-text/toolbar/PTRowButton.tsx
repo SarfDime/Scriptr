@@ -22,10 +22,10 @@ export const RowButton = ({
   <Button
     onClick={onClick}
     className={cn(
-      'flex w-full items-center justify-start gap-1.5 rounded px-2 py-1',
-      'text-left text-xs capitalize',
-      'button button-sm subtle justify-start rounded border-0 text-left shadow-none outline-0',
-      active && 'bg-brand-350 text-background'
+      'flex w-full items-center justify-start',
+      'text-left capitalize',
+      'button button-sm subtle justify-start rounded border-0 text-left shadow-none outline-0 pl-1 pr-2 py-1',
+      active && 'solid'
     )}
   >
     {Icon ? (

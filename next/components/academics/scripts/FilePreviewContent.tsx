@@ -7,6 +7,7 @@ import { NextImage } from '@/components/common/NextImage'
 import { Text } from '@/components/typography/Text'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { getScriptFileUrl } from '@/lib/api/scripts-api'
+import { cn } from '@/lib/common-utils'
 import type { PreviewableFileKind } from '@/lib/file-preview'
 import { IMAGE_SIZES } from '@/styles/style'
 
@@ -15,6 +16,9 @@ export type FilePreviewContentProps = {
   kind: PreviewableFileKind
   fileName: string
   cacheKey?: string
+  /** Fill the parent's height (a flex column) instead of the fixed
+   * viewport-relative heights. Used by the fullscreen preview. */
+  fillHeight?: boolean
 }
 
 /**
@@ -29,16 +33,25 @@ export function FilePreviewContent({
   kind,
   fileName,
   cacheKey,
+  fillHeight = false,
 }: FilePreviewContentProps) {
+  const frameClass = fillHeight ? 'min-h-0 flex-1' : 'h-[70vh] rounded-lg'
+  const radiusClass = fillHeight ? '' : 'rounded-lg'
+
   if (kind === 'image') {
     if (url.startsWith('blob:')) {
       return (
-        <Box className='relative h-[70vh] w-full overflow-hidden rounded-lg bg-background-200'>
+        <Box
+          className={cn(
+            'relative w-full overflow-hidden bg-background-200',
+            frameClass
+          )}
+        >
           {/* biome-ignore lint/performance/noImgElement: Blob URLs are local, transient files and cannot use Next image optimization. */}
           <img
             src={url}
             alt={fileName}
-            className='block h-full w-full rounded-lg object-contain'
+            className={cn('block h-full w-full object-contain', radiusClass)}
           />
         </Box>
       )
@@ -48,13 +61,18 @@ export function FilePreviewContent({
     // create-script flow) use the native image path above because they are
     // not eligible for Next's image optimization.
     return (
-      <Box className='relative h-[70vh] w-full overflow-hidden rounded-lg bg-background-200'>
+      <Box
+        className={cn(
+          'relative w-full overflow-hidden bg-background-200',
+          frameClass
+        )}
+      >
         <NextImage
           src={url}
           alt={fileName}
           fillProp
           sizes={IMAGE_SIZES.FILE_PREVIEW}
-          className='rounded-lg object-contain'
+          className={cn('object-contain', radiusClass)}
         />
       </Box>
     )
@@ -65,7 +83,12 @@ export function FilePreviewContent({
       <iframe
         src={url}
         title={fileName}
-        className='h-[75vh] w-full rounded-lg border border-grey-300 bg-background-100'
+        className={cn(
+          'w-full bg-background-100',
+          fillHeight
+            ? 'min-h-0 flex-1 border-0'
+            : 'h-[75vh] rounded-lg border border-grey-300'
+        )}
       />
     )
   }
@@ -75,6 +98,7 @@ export function FilePreviewContent({
       url={url}
       fileName={fileName}
       cacheKey={cacheKey ?? fileName}
+      fillHeight={fillHeight}
     />
   )
 }
@@ -113,6 +137,7 @@ export function StoredFilePreviewContent({
   fileKey,
   kind,
   fileName,
+  fillHeight,
 }: Omit<FilePreviewContentProps, 'url'> & { fileKey: string }) {
   const state = useStoredFileUrl(fileKey)
 
@@ -120,7 +145,7 @@ export function StoredFilePreviewContent({
 
   if (state.status === 'error') {
     return (
-      <Text className='ui-caption text-danger-600'>
+      <Text className='ui-caption cp-danger-nb'>
         {SCRIPT_STRINGS.preview.loadFailed(fileName)}
       </Text>
     )
@@ -132,6 +157,7 @@ export function StoredFilePreviewContent({
       kind={kind}
       fileName={fileName}
       cacheKey={fileKey}
+      fillHeight={fillHeight}
     />
   )
 }
@@ -147,10 +173,12 @@ function TextFilePreview({
   url,
   fileName,
   cacheKey,
+  fillHeight,
 }: {
   url: string
   fileName: string
   cacheKey: string
+  fillHeight: boolean
 }) {
   const [state, setState] = useState<TextFilePreviewState>({
     status: 'loading',
@@ -192,14 +220,19 @@ function TextFilePreview({
 
   if (state.status === 'error') {
     return (
-      <Text className='ui-caption text-danger-600'>
+      <Text className='ui-caption cp-danger-nb'>
         {SCRIPT_STRINGS.preview.loadFailed(fileName)}
       </Text>
     )
   }
 
   return (
-    <pre className='ui-card max-h-[70vh] overflow-auto whitespace-pre-wrap p-4 ui-caption'>
+    <pre
+      className={cn(
+        'ui-card overflow-auto whitespace-pre-wrap p-4 ui-caption',
+        fillHeight ? 'min-h-0 flex-1' : 'max-h-[70vh]'
+      )}
+    >
       {state.text}
     </pre>
   )

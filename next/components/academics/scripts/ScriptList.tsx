@@ -11,7 +11,7 @@ type ScriptListProps = {
 /** Renders script cards in an auto-fit grid, or `emptyMessage` when there are none. */
 export const ScriptList = ({ scripts, emptyMessage }: ScriptListProps) =>
   scripts.length > 0 ? (
-    <Box className='grid-auto-fit gap-3 [--grid-min:22rem]'>
+    <Box className='ui-card-grid [--grid-min:22rem]'>
       {scripts.map((script) => (
         <ScriptCard
           key={script.id}
@@ -21,7 +21,7 @@ export const ScriptList = ({ scripts, emptyMessage }: ScriptListProps) =>
       ))}
     </Box>
   ) : (
-    <Text className='ui-above-inside ui-subtitle rounded-xl border border-dashed border-grey-300 px-6 py-14 text-center'>
+    <Text className='ui-above-inside ui-subtitle border-dashed px-6 py-14 text-center'>
       {emptyMessage}
     </Text>
   )

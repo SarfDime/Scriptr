@@ -1,12 +1,16 @@
-import { type Context, Hono } from 'hono'
+import { Hono } from 'hono'
 import type {
   MyRating,
   RatingStat,
   RatingType,
   RatingUpsertResponse,
 } from '../../../shared/types/ratings.types'
-import { isAdmin } from '../../../shared/utils/api.utils'
-import { databaseErrorResponse, requiredParam } from '../lib/request'
+import {
+  databaseErrorResponse,
+  readJsonBody,
+  requiredParam,
+} from '../lib/request'
+import { requireAdmin } from '../lib/require-admin'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
@@ -20,19 +24,6 @@ const isRatingScore = (value: unknown): value is number =>
   Number.isInteger(value) &&
   value >= 1 &&
   value <= 5
-
-async function requireAdmin(
-  supabase: ReturnType<typeof createSupabaseClient>,
-  userId: string
-) {
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', userId)
-    .single()
-
-  return isAdmin(profile?.role)
-}
 
 /** Map a rating insert/update error to a clean HTTP response */
 function ratingErrorResponse(error: { code?: string; message: string }) {
@@ -54,19 +45,6 @@ function ratingErrorResponse(error: { code?: string; message: string }) {
   return {
     body: { error: 'Unable to complete the rating request' },
     status: 500 as const,
-  }
-}
-
-/** Parse a JSON object body. A missing, malformed or non-object body yields
- * `{}`, so the caller's field validation answers 400 instead of a 500. */
-async function readJsonBody(c: Context<HonoEnv>) {
-  try {
-    const body: unknown = await c.req.json()
-    return body && typeof body === 'object' && !Array.isArray(body)
-      ? (body as Record<string, unknown>)
-      : {}
-  } catch {
-    return {}
   }
 }
 
