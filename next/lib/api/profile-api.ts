@@ -1,4 +1,8 @@
-import { apiRoutes } from '@shared/config/api-routes'
+import {
+  type ApiEndpoint,
+  apiRoutes,
+  withQuery,
+} from '@shared/config/api-routes'
 import { PROFILE_CACHE_TAGS } from '@shared/config/cache-tags'
 import { UPLOAD_FINALIZE_TIMEOUT_MS } from '@shared/config/next-constants'
 import type { QueryApiEndpointType } from '@shared/types/api.types'
@@ -59,6 +63,20 @@ export const getMyProfile = (cookie?: string) =>
   })
 
 /**
+ * Versions the cached public-profile payloads, the same way
+ * `SCRIPT_COMMENT_COUNT_CACHE_VERSION` versions the script reads: it rides
+ * along as a query parameter, so bumping it changes the fetch URL and every
+ * cached body is bypassed instead of being read in a shape the app no longer
+ * expects.
+ *
+ * Raised to 2 when `slug` joined `PROFILE_SCRIPT_FIELDS` in
+ * `hono/src/routes/profiles.ts`. A copy cached before that has no `slug` on the
+ * profile's scripts, and `getAcademicPath` threw on `undefined.startsWith`,
+ * taking the whole profile page down.
+ */
+const PROFILE_PAYLOAD_VERSION = 2
+
+/**
  * Public — no auth, no cookie forwarding needed (the response is the same
  * for every viewer). Script uploads/deletes, favorites changes, and profile
  * edits revalidate the shared public-profile tag.
@@ -81,11 +99,18 @@ const fetchPublicProfile = async (path: QueryApiEndpointType) => {
   }
 }
 
+/** Every public-profile read carries `PROFILE_PAYLOAD_VERSION`, so a bump
+ * bypasses the cached bodies instead of reading them in the old shape. */
+const versionedProfilePath = (path: ApiEndpoint) =>
+  withQuery(path, { payloadVersion: PROFILE_PAYLOAD_VERSION })
+
 export const getPublicProfileById = (id: string) =>
-  fetchPublicProfile(apiRoutes.profiles.byId(id))
+  fetchPublicProfile(versionedProfilePath(apiRoutes.profiles.byId(id)))
 
 export const getPublicProfileByUsername = (username: string) =>
-  fetchPublicProfile(apiRoutes.profiles.usernameByUsername(username))
+  fetchPublicProfile(
+    versionedProfilePath(apiRoutes.profiles.usernameByUsername(username))
+  )
 
 /** Public — no auth. Invalidated when the profile's public stats change.
  *

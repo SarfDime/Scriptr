@@ -12,7 +12,7 @@ import type { HonoEnv } from '../types/env.types'
 
 // Mirrors scripts.ts PUBLIC_SCRIPT_COLUMNS — excludes is_flagged (internal moderation state).
 const PUBLIC_SCRIPT_COLUMNS =
-  'id, title, description, subject_id, professor_id, author_id, exam_session, additional_reading, vote_score, download_count, created_at, updated_at, files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, file_name, created_at)'
+  'id, slug, title, description, subject_id, professor_id, author_id, exam_session, exam_year, additional_reading, vote_score, download_count, created_at, updated_at, files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, file_name, created_at)'
 
 const favorites = new Hono<HonoEnv>()
 

@@ -23,10 +23,19 @@ export type AcademicPathInput =
   | ({ type: 'professor' } & ProfessorRouteParams)
   | { type: 'script'; scriptSlug: string }
 
-const cleanEntityId = (id: string): string =>
-  id.startsWith('drafts.') ? id.slice('drafts.'.length) : id
+/**
+ * A slug the schema requires can still be absent at runtime: a doc saved before
+ * the validation, a published field cleared in the Studio, or a payload cached
+ * in a shape that predates the field. That used to throw from `startsWith` and
+ * take the whole page down (see the profile cache note in
+ * `lib/api/profile-api.ts`), so a missing value is handled here instead.
+ */
+const cleanEntityId = (id: string | null | undefined): string => {
+  if (!id) return ''
+  return id.startsWith('drafts.') ? id.slice('drafts.'.length) : id
+}
 
-export const getAcademicPath = (input: AcademicPathInput): string => {
+const buildAcademicPath = (input: AcademicPathInput): string => {
   switch (input.type) {
     case 'university':
       return `/university/${cleanEntityId(input.universitySlug)}`
@@ -43,4 +52,12 @@ export const getAcademicPath = (input: AcademicPathInput): string => {
     default:
       return '/'
   }
+}
+
+/** A link with an empty segment (`/university//study/x`) is broken anyway, so a
+ * path built from a missing slug resolves to the index rather than being
+ * minted. Cards keep rendering and the bad doc is a data problem to fix. */
+export const getAcademicPath = (input: AcademicPathInput): string => {
+  const path = buildAcademicPath(input)
+  return path.includes('//') ? '/' : path
 }

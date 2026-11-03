@@ -82,6 +82,6 @@ ${sanityFunctionQueries}
 /** Static params query for pre-generating all professor subroutes */
 export const professorStaticParamsQuery = groq`
 *[_type == "professor" && !(_id in path("drafts.**")) && dbId != null] {
-  "professorSlug": coalesce(slug.current)
+  "professorSlug": coalesce(slug.current, _id)
 }
 `
