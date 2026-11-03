@@ -1,19 +1,58 @@
-import { SectionHeader } from '@/components/common/SectionHeader'
-import { PortableTextContent } from '@/components/typography/PortableTextContent'
-import { Card } from '@/components/ui/Card'
+import Component from '@sanity/icons/Component'
+import EarthGlobe from '@sanity/icons/EarthGlobe'
+import Envelope from '@sanity/icons/Envelope'
+import Marker from '@sanity/icons/Marker'
+import { OverviewCard } from '@/components/layout/OverviewCard/OverviewCard'
 import type { UniversityDetail } from '@/types/academics/university.types'
+import type { OverviewCardActionItem } from '@/types/components/OverviewCard.types'
+import type { PersonSummary } from '@/types/components/Person.types'
 
 export const UniversityOverviewCard = ({
-  university,
-}: {
-  university: UniversityDetail
-}) => (
-  <Card className='ui-stack ui-above'>
-    <SectionHeader title={`About ${university.name}`} />
-    {university.description && (
-      <PortableTextContent className='ui-above-inside'>
-        {university.description}
-      </PortableTextContent>
-    )}
-  </Card>
-)
+  website,
+  rector,
+  viceRectors,
+  streetAddress,
+  email,
+  ...university
+}: UniversityDetail) => {
+  const administrators: Array<PersonSummary> = [
+    ...(rector ? [rector] : []),
+    ...(viceRectors ?? []),
+  ]
+
+  const actions: Array<OverviewCardActionItem> = [
+    website && {
+      key: 'website',
+      icon: <EarthGlobe />,
+      label: 'Visit website',
+      href: website,
+      colorPalette: 'cp-brand',
+    },
+    streetAddress && {
+      key: 'location',
+      icon: <Marker />,
+      label: 'Location',
+      href: streetAddress,
+      colorPalette: 'cp-rose',
+    },
+    email && {
+      key: 'email',
+      icon: <Envelope />,
+      label: email,
+      href: `mailto:${email}`,
+      colorPalette: 'cp-amber',
+      hideExternalIcon: true,
+    },
+  ].filter(Boolean) as Array<OverviewCardActionItem>
+
+  return (
+    <OverviewCard
+      imageAlt={university.name || 'Faculty image'}
+      administrators={administrators}
+      eyebrow='About the faculty'
+      eyebrowIcon={<Component />}
+      actions={actions}
+      {...university}
+    />
+  )
+}

@@ -1,7 +1,7 @@
 import { UI_STRINGS } from '@shared/config/strings'
 import { FacultyOverviewCard } from '@/components/academics/faculty/FacultyOverviewCard'
 import { ProfessorsSection } from '@/components/academics/professor/ProfessorsSection'
-import { StudyExplorer } from '@/components/academics/StudyExplorer'
+import { StudyExplorer } from '@/components/academics/study/StudyExplorer'
 import { BackLink } from '@/components/common/BackLink'
 import { PageLayout } from '@/components/layout/PageLayout'
 import {

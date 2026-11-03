@@ -48,16 +48,16 @@ export const UniversityFacultyExplorer = ({
               })}
               subtitle={faculty.studies.map((study) => study.name).join(', ')}
               media={
-                faculty.picture ? (
+                faculty.logo && (
                   <NextImage
-                    {...faculty.picture}
-                    alt={`${faculty.name} Logo`}
+                    {...faculty.logo}
+                    alt={faculty.name}
                     fillProp
                     sizes={IMAGE_SIZES.UNIVERSITY_HERO}
                     className='h-10 w-10 rounded-full'
                     objectFitProp='cover'
                   />
-                ) : undefined
+                )
               }
             />
           ))}

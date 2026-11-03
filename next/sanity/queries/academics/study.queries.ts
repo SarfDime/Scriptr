@@ -19,11 +19,11 @@ export const studySeoQuery = groq`
 
 export const minimalStudyQuery = /* groq */ `
 _id,
-dbId,
 "slug": slug.current,
 name,
 studentCount,
 "picture": sanityImage::full(picture),
+"logo": sanityImage::full(logo),
 assistant->{
   _id,
   name,

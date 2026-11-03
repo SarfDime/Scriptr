@@ -13,8 +13,7 @@ const NavItem = ({ stringTitle, icon, ...rest }: NavItemType) => {
       href={slug}
       className={cn(
         'button ghost',
-        'w-full justify-start align-left gap-3 p-2',
-        'text-left text-sm'
+        'w-full justify-start align-left gap-2 p-2'
       )}
     >
       {icon && (
@@ -25,7 +24,7 @@ const NavItem = ({ stringTitle, icon, ...rest }: NavItemType) => {
           sizes={IMAGE_SIZES.LINK_LOGO}
         />
       )}
-      <Text>{stringTitle}</Text>
+      <Text className='ui-large-caption truncate'>{stringTitle}</Text>
     </NextLink>
   )
 }

@@ -33,10 +33,11 @@ ${sanityFunctionQueries}
 *[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {
   _id,
   "slug": slug.current,
-  dbId,
   _type,
   name,
   description,
+  "picture": sanityImage::full(picture),
+  "logo": sanityImage::full(logo),
   streetAddress,
   telephone,
   email,
@@ -45,13 +46,13 @@ ${sanityFunctionQueries}
     _id,
     name,
     title,
-    image
+    "picture": sanityImage::full(picture)
   },
   viceRectors[]->{
     _id,
     name,
     title,
-    image
+    "picture": sanityImage::full(picture)
   },
   "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {
     ${minimalFacultyQuery}

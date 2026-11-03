@@ -32,7 +32,6 @@ syllabus,
   _id,
   "slug": slug.current,
   name,
-  dbId,
   university->{
     _id,
     "slug": slug.current,
@@ -43,7 +42,6 @@ study->{
   _id,
   "slug": slug.current,
   name,
-  dbId,
   faculty->{
     _id,
     "slug": slug.current,
@@ -89,7 +87,6 @@ ${sanityFunctionQueries}
 ][0] {
   ${minimalSubjectQuery}
   _type,
-  dbId,
   professors[]->{
     _id,
     "slug": slug.current,
@@ -110,7 +107,6 @@ ${sanityFunctionQueries}
 *[_type == "subject" && (_id == $subjectId || _id == "drafts." + $subjectId || dbId == $subjectId)][0] {
   ${minimalSubjectQuery}
   _type,
-  dbId,
   professors[]->{
     _id,
     "slug": slug.current,

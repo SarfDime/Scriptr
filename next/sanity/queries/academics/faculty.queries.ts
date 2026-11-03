@@ -24,6 +24,7 @@ _id,
 name,
 studentCount,
 "picture": sanityImage::full(picture),
+"logo": sanityImage::full(logo),
 dean->{
   _id,
   name,
@@ -45,8 +46,7 @@ viceDeans[]->{
 university->{
   _id,
   "slug": slug.current,
-  name,
-  dbId
+  name
 },
 "studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),
 "professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),
@@ -80,7 +80,6 @@ ${sanityFunctionQueries}
 ][0] {
   ${minimalFacultyQuery}
   _type,
-  dbId,
   description,
   streetAddress,
   telephone,

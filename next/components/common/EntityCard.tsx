@@ -63,7 +63,7 @@ export const EntityCard = ({
           <Box className='ui-cluster w-full min-w-0 flex-nowrap items-center justify-between gap-2'>
             <Title
               as='h3'
-              className='ui-body-strong min-w-0 max-md:[overflow-wrap:anywhere] md:truncate transition-colors group-hover:text-brand-500'
+              className='ui-body-strong min-w-0 max-md:wrap-anywhere md:truncate transition-colors group-hover:text-brand-500'
             >
               {title}
             </Title>
@@ -71,19 +71,19 @@ export const EntityCard = ({
           </Box>
 
           {subtitle && (
-            <Text className='ui-caption max-md:[overflow-wrap:anywhere] md:truncate'>
+            <Text className='ui-caption max-md:wrap-anywhere md:truncate'>
               {subtitle}
             </Text>
           )}
 
           {caption && (
-            <Text className='ui-caption font-medium max-md:[overflow-wrap:anywhere] md:truncate'>
+            <Text className='ui-caption font-medium max-md:wrap-anywhere md:truncate'>
               {caption}
             </Text>
           )}
 
           {secondaryCaption && (
-            <Text className='ui-caption font-medium max-md:[overflow-wrap:anywhere] md:truncate'>
+            <Text className='ui-caption font-medium max-md:wrap-anywhere md:truncate'>
               {secondaryCaption}
             </Text>
           )}

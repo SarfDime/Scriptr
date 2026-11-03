@@ -34,7 +34,9 @@ type Primitive = string | number | boolean | null | undefined
  * Recursively walks a Sanity TypeGen result and applies three structural fixes
  * at any depth, inside objects or arrays:
  *
- * 1. Pictures: Replaces fields matching `TPictureKey` with a non-nullable `SanityImageType`.
+ * 1. Pictures: Replaces fields matching `TPictureKey` (`picture` and `logo`, the
+ *    two keys `sanityImage::full` projections use) with a non-nullable
+ *    `SanityImageType`.
  * 2. Media: Replaces `media: unknown` inside PortableText image blocks with `Record<string, unknown>`.
  * 3. Rich Text: Forces fields matching `TRichTextKey` to be strictly `NonNullable`.
  *
@@ -46,7 +48,7 @@ type Primitive = string | number | boolean | null | undefined
  */
 type WithResolvedSanityData<
   T,
-  TPictureKey extends string = 'picture',
+  TPictureKey extends string = 'picture' | 'logo',
   TRichTextKey extends string = 'description' | 'bio',
 > = T extends Primitive
   ? T

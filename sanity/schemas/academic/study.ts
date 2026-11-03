@@ -22,6 +22,7 @@ export const Study = defineType({
     ...academicFields(ENTITY, [
       'name',
       'slug',
+      'logo',
       'picture',
       'description',
       'studentCount',

@@ -72,9 +72,7 @@ export default async function UniversityDetailPage({
         </>
       }
     >
-      {university.description && (
-        <UniversityOverviewCard university={university} />
-      )}
+      <UniversityOverviewCard {...university} />
       <UniversityFacultyExplorer
         faculties={university.faculties ?? []}
         universitySlug={routeParams.universitySlug}

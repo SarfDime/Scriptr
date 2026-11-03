@@ -78,12 +78,11 @@ export function NextImage({
         >
           <Image
             {...imageProps}
-            className={cn(
-              imageProps?.className,
-              `object-${
-                objectFitProp ?? 'contain'
-              } object-${objectPositionProp ?? 'center'}`
-            )}
+            className={cn(imageProps?.className)}
+            style={{
+              objectFit: objectFitProp ?? 'contain',
+              objectPosition: objectPositionProp ?? 'center',
+            }}
             quality={quality ?? IMAGE_QUALITY.MAXIMUM}
             alt={alt || 'Data unavailable'}
             src={src || urlFor({ asset, crop, hotspot }).url()}
