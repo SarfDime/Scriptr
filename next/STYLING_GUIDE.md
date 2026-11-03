@@ -382,6 +382,14 @@ when the action is not obvious from a familiar icon.
   (`inset 0 1px 0 white 24%` / `inset 0 -1px 0 black 10%`, both scaled by
   `--ui-sheen-strength`).
 
+**Disabled.** `:disabled` renders a control at `opacity: .55` with
+`filter: grayscale(1)`. A container that only borrows `.button` for its look —
+the `Select` wrapper — is a `div` and never matches `:disabled`, so it would
+keep its full-strength surface while the trigger inside faded; `Box` marks it
+with `data-disabled` and the same rule covers `[data-disabled="true"]`. Any new
+button-styled container gets that treatment by passing `disabled` to its `Box`,
+not by adding its own dimming.
+
 ## Shadows
 
 Shadows are crisp and directional: a 1px contact line plus a short, tight drop

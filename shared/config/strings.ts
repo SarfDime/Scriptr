@@ -203,6 +203,8 @@ export const UI_STRINGS = {
         unsupportedScript:
           'Use Latin or Cyrillic letters only. Other languages are not supported yet.',
         noProfessors: 'No professors are available for this subject',
+        professorsUnavailable:
+          "This subject's professors are not linked yet, so none can be chosen",
         filesInvalid: 'Remove or replace the files with errors',
       },
       slug: {

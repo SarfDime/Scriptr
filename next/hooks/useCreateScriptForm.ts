@@ -48,15 +48,23 @@ export function useCreateScriptForm({
   const { state, upload, reset: resetUpload } = useScriptUpload()
 
   const subjectId = subject.dbId ?? ''
+  // A professor without a `dbId` has no row in Postgres, so the API has nothing
+  // to assign it to. Offering it anyway is what made the picker show a phantom
+  // selection: `String(null)` became the option value, `professorId` stayed
+  // empty, and the form looked ready while submitting no professor at all. Such
+  // an option is listed as disabled instead — visible, unpickable, and never
+  // the default.
   const professors: Array<SelectOptionType> = subject.professors.map(
     (professor) => ({
       id: String(professor._id),
-      value: String(professor.dbId),
+      value: professor.dbId ? String(professor.dbId) : '',
       label: professor.name,
+      disabled: !professor.dbId,
     })
   )
+  const defaultProfessor = professors.find((option) => !option.disabled)
   const [professorId, setProfessorId] = useState(
-    () => subject.professors[0]?.dbId ?? ''
+    () => defaultProfessor?.value ?? ''
   )
 
   const textFields = useScriptTextFields(EMPTY_TEXT)
@@ -85,7 +93,7 @@ export function useCreateScriptForm({
     sessionFields.reset(EMPTY_SESSION)
     readingLinks.reset()
     files.clearFiles()
-    setProfessorId(subject.professors[0]?.dbId ?? '')
+    setProfessorId(defaultProfessor?.value ?? '')
     resetUpload()
   }
 

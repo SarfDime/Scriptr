@@ -81,6 +81,16 @@
     opacity: 0.55;
   }
 
+  /* A container that only borrows `.button` for its look — the `Select` wrapper
+   * — is not a form control, so `:disabled` never matches it and it kept its
+   * full-strength surface while the trigger inside faded. `Box` marks it with
+   * `data-disabled`, so the two look disabled together. */
+  &[data-disabled="true"] {
+    pointer-events: none;
+    filter: grayscale(1);
+    opacity: 0.55;
+  }
+
   /* Press feedback belongs to the control itself. A container that reuses
    * `.button` purely for its look (the `Select` wrapper) must not scale when
    * something inside it is pressed: its open option list is absolutely

@@ -106,6 +106,10 @@ export const Select = <T = string>({
   return (
     <Box
       {...rest}
+      // Box marks the wrapper (`data-disabled`, the `disabled` utility), which is
+      // what gives the whole control the muted look — the wrapper is not a form
+      // control, so it never matches `:disabled` the way the trigger does.
+      disabled={disabled}
       onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget as Node)) {
           setListOpen(false)
@@ -114,10 +118,8 @@ export const Select = <T = string>({
       className={cn(
         'group/select relative flex w-full items-center text-fg',
         'button button-sm basic rounded-lg ui-above-inside p-0',
-        disabled && 'pointer-events-none',
         rest.className
       )}
-      aria-disabled={disabled}
       data-open={listOpen}
       data-valid={Boolean(selectedOption)}
     >

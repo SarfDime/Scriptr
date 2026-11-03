@@ -63,7 +63,11 @@ export function CreateScriptModal({
     setFormKey((current) => current + 1)
   }
 
-  const hasProfessors = form.professors.length > 0
+  // Only a linked professor can be assigned, so "has one" means "has a
+  // selectable one" — with every professor unlinked the field says so instead of
+  // looking filled in.
+  const hasProfessors = form.professors.some((option) => !option.disabled)
+  const hasProfessorOptions = form.professors.length > 0
 
   return (
     <>
@@ -111,7 +115,10 @@ export function CreateScriptModal({
               label={UI_STRINGS.scripts.uploadModal.professorLabel}
               labelProps={SCRIPT_FIELD_LABEL_PROPS}
               errorText={
-                UI_STRINGS.scripts.uploadModal.fieldErrors.noProfessors
+                hasProfessorOptions
+                  ? UI_STRINGS.scripts.uploadModal.fieldErrors
+                      .professorsUnavailable
+                  : UI_STRINGS.scripts.uploadModal.fieldErrors.noProfessors
               }
               required
               valid={hasProfessors}
@@ -121,7 +128,15 @@ export function CreateScriptModal({
                 // Remounted on clear so it shows the reset professor again.
                 key={`professor-${formKey}`}
                 className='w-full bg-background-200'
-                defaultOption={form.professors[0]}
+                // Read back from the form's value, so the trigger cannot show a
+                // professor the form is not actually submitting.
+                defaultOption={form.professors.find(
+                  // Only a selectable option can equal the form's value; the
+                  // unlinked ones all carry an empty value, so matching on the
+                  // value alone would show one of them.
+                  (option) =>
+                    !option.disabled && option.value === form.professorId
+                )}
                 options={form.professors}
                 setSelectedValue={form.setProfessorId}
                 triggerProps={{
