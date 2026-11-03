@@ -73,8 +73,7 @@ export const client = createClient({
  * The published reader: what the live site serves.
  *
  * Published documents are public and cacheable, so they go through Sanity's CDN
- * (`cache-control: max-age=60`); the Data Cache in front of it expires on the
- * same minute (see `SANITY_READ_REVALIDATE_SECONDS` in `./utils`).
+ * (`cache-control: max-age=60`).
  */
 export const prodClient = createClient({
   projectId: sanityProjectId,

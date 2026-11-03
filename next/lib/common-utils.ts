@@ -13,8 +13,8 @@ import { toPlainText } from 'next-sanity'
 import { twMerge } from 'tailwind-merge'
 import type { EntityCardStat } from '@/components/common/EntityCard'
 import { isProd } from '@/config/env'
+import { client } from '@/sanity/lib/client'
 import type { PersonSummary } from '@/types/components/Person.types'
-import { client } from '../sanityClient'
 import type { ComponentPlacement } from '../types/component.types'
 
 /**

@@ -37,7 +37,7 @@ export function CommentsHeader({
           !isComposing && (
             <Button
               onClick={handleWriteClick}
-              className='button solid button-md'
+              className='button solid button-sm'
             >
               {COMMENT_STRINGS.composer.openButton}
             </Button>

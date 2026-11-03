@@ -62,21 +62,45 @@ export function RatingsSection({ targetType, targetId }: RatingTarget) {
       aria-busy={catalog.status === 'loading' || undefined}
       className='ui-stack gap-2'
     >
-      <Text id={headingId} className='ui-label'>
-        {RATING_STRINGS.title}
-      </Text>
+      {/* The viewer state sits at the far end of the heading row and wraps under
+       * the heading when the card is too narrow for both, so neither line costs
+       * the rows below any height of their own. */}
+      <Box className='ui-cluster justify-between gap-x-3 gap-y-1'>
+        <Text id={headingId} className='ui-label'>
+          {RATING_STRINGS.title}
+        </Text>
+        {catalog.status === 'loaded' && catalog.types.length > 0 && (
+          <>
+            {viewer.status === 'guest' && (
+              <Box className='ui-cluster gap-2'>
+                <Text className='ui-caption'>
+                  {RATING_STRINGS.signInPrompt}
+                </Text>
+                <Button
+                  className='button button-sm subtle'
+                  onClick={() => openAuthModal()}
+                >
+                  {RATING_STRINGS.signIn}
+                </Button>
+              </Box>
+            )}
+            {viewer.status === 'checking' && (
+              <Text className='ui-caption' role='status'>
+                {RATING_STRINGS.checkingAccess}
+              </Text>
+            )}
+          </>
+        )}
+      </Box>
 
       {catalog.status === 'loading' && (
         // Rows, not a one-line message: the loaded block is a row per criterion,
         // so announcing it in the space of one line made the card below jump
-        // when the catalog arrived. The viewer slot is reserved here too, since
-        // it is part of the loaded block's height.
+        // when the catalog arrived.
         <>
-          <Box className='min-h-[1.625rem]'>
-            <Text className='sr-only' role='status'>
-              {RATING_STRINGS.loading}
-            </Text>
-          </Box>
+          <Text className='sr-only' role='status'>
+            {RATING_STRINGS.loading}
+          </Text>
           <Box
             as='ul'
             className={cn(
@@ -116,43 +140,18 @@ export function RatingsSection({ targetType, targetId }: RatingTarget) {
 
       {catalog.status === 'loaded' && catalog.types.length > 0 && (
         <>
-          {/* One slot for whatever the viewer state has to say — the prompt
-           * for a guest, the check while the session resolves, nothing for a
-           * member — held at the prompt's height so the rows below (and the
-           * card under this one) do not move when it resolves. */}
-          <Box className='min-h-6.5'>
-            {viewer.status === 'guest' && (
-              <Box className='ui-cluster gap-2'>
-                <Text className='ui-caption'>
-                  {RATING_STRINGS.signInPrompt}
-                </Text>
-                <Button
-                  className='button button-sm subtle'
-                  onClick={() => openAuthModal()}
-                >
-                  {RATING_STRINGS.signIn}
-                </Button>
-              </Box>
-            )}
-            {viewer.status === 'checking' && (
-              <Text className='ui-caption' role='status'>
-                {RATING_STRINGS.checkingAccess}
+          {/* A failed "my ratings" read keeps its own line — it carries a retry
+           * and should not sit inside the heading row. */}
+          {viewer.status === 'error' && (
+            <Box className='ui-cluster gap-2'>
+              <Text className='ui-caption' role='alert'>
+                {RATING_STRINGS.loadMineError}
               </Text>
-            )}
-            {viewer.status === 'error' && (
-              <Box className='ui-cluster gap-2'>
-                <Text className='ui-caption' role='alert'>
-                  {RATING_STRINGS.loadMineError}
-                </Text>
-                <Button
-                  className='button button-sm subtle'
-                  onClick={retryViewer}
-                >
-                  {RATING_STRINGS.retry}
-                </Button>
-              </Box>
-            )}
-          </Box>
+              <Button className='button button-sm subtle' onClick={retryViewer}>
+                {RATING_STRINGS.retry}
+              </Button>
+            </Box>
+          )}
           {restricted && (
             <Text className='ui-caption' role='note'>
               {UI_STRINGS.general.restrictedAction}

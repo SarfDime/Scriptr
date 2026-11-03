@@ -16,6 +16,14 @@ export const PROFILE_CACHE_TAGS = {
   stats: (profileId: string) => `profiles:stats:${profileId}`,
 }
 
+/** Public rating reads: the admin-managed criteria, and the averages and
+ * counts for one professor or subject. */
+export const RATING_CACHE_TAGS = {
+  types: () => 'ratings:types',
+  professor: (professorId: string) => `ratings:professor:${professorId}`,
+  subject: (subjectId: string) => `ratings:subject:${subjectId}`,
+}
+
 /** Tags to revalidate whenever a script is created, updated, or deleted. */
 export function scriptMutationTags(script: {
   id: string

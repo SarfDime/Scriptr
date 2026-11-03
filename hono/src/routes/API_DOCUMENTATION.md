@@ -597,6 +597,14 @@ match the target — the DB trigger raises `P0001` before the foreign key is che
 Stats are aggregated in the route from the raw rows, so only types with at
 least one rating appear.
 
+The Next frontend caches the public reads — the criteria list and one entry per
+`{professor,subject}/:id/stats` — under `RATING_CACHE_TAGS`
+(`shared/config/cache-tags.ts`) with no time-based expiry. A rating type
+mutation therefore revalidates `ratings:types`, and a rating upsert/delete
+revalidates `ratings:professor:<id>` or `ratings:subject:<id>`. The browser
+reads both fresh, because the rating widget re-reads the averages right after a
+rating changes.
+
 ---
 
 ## Notifications

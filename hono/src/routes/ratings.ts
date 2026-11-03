@@ -1,10 +1,12 @@
 import { Hono } from 'hono'
+import { RATING_CACHE_TAGS } from '../../../shared/config/cache-tags'
 import type {
   MyRating,
   RatingStat,
   RatingType,
   RatingUpsertResponse,
 } from '../../../shared/types/ratings.types'
+import { revalidateCacheTags } from '../lib/cache-revalidate'
 import {
   databaseErrorResponse,
   readJsonBody,
@@ -154,6 +156,8 @@ ratings.post('/types', authMiddleware, async (c) => {
     return databaseErrorResponse(c, error)
   }
 
+  await revalidateCacheTags(c.env, [RATING_CACHE_TAGS.types()])
+
   return c.json({ success: true, rating_type: data })
 })
 
@@ -181,6 +185,10 @@ ratings.patch('/types/:id', authMiddleware, async (c) => {
     .single()
 
   if (error) return databaseErrorResponse(c, error)
+
+  // The label is part of the cached criteria list the rating widgets read.
+  await revalidateCacheTags(c.env, [RATING_CACHE_TAGS.types()])
+
   return c.json({ success: true, rating_type: data })
 })
 
@@ -205,6 +213,8 @@ ratings.delete('/types/:id', authMiddleware, async (c) => {
     }
     return databaseErrorResponse(c, error)
   }
+
+  await revalidateCacheTags(c.env, [RATING_CACHE_TAGS.types()])
 
   return c.json({
     success: true,
@@ -290,6 +300,8 @@ ratings.post('/professor/:professorId', authMiddleware, async (c) => {
     return c.json(body, status)
   }
 
+  await revalidateCacheTags(c.env, [RATING_CACHE_TAGS.professor(professorId)])
+
   return c.json<RatingUpsertResponse>({ success: true, rating: data })
 })
 
@@ -311,6 +323,9 @@ ratings.delete(
       .eq('rating_type_id', ratingTypeId)
 
     if (error) return databaseErrorResponse(c, error)
+
+    await revalidateCacheTags(c.env, [RATING_CACHE_TAGS.professor(professorId)])
+
     return c.json({ success: true })
   }
 )
@@ -393,6 +408,8 @@ ratings.post('/subject/:subjectId', authMiddleware, async (c) => {
     return c.json(body, status)
   }
 
+  await revalidateCacheTags(c.env, [RATING_CACHE_TAGS.subject(subjectId)])
+
   return c.json<RatingUpsertResponse>({ success: true, rating: data })
 })
 
@@ -414,6 +431,9 @@ ratings.delete(
       .eq('rating_type_id', ratingTypeId)
 
     if (error) return databaseErrorResponse(c, error)
+
+    await revalidateCacheTags(c.env, [RATING_CACHE_TAGS.subject(subjectId)])
+
     return c.json({ success: true })
   }
 )

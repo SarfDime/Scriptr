@@ -1,5 +1,6 @@
 import type { RatingTargetType } from '@shared/config/api'
 import { apiRoutes } from '@shared/config/api-routes'
+import { RATING_CACHE_TAGS } from '@shared/config/cache-tags'
 import type {
   MyRating,
   RatingStat,
@@ -8,11 +9,27 @@ import type {
   RatingTypeMutationResponse,
   RatingUpsertResponse,
 } from '@shared/types/ratings.types'
-import { apiFetchRequired } from './next-api'
+import {
+  type ApiFetchOptions,
+  apiFetchRequired,
+  cachedPublicRead,
+} from './next-api'
 
 /** Ratings are read in the browser, after mount, so the professor and subject
- * pages stay static. Never cache: averages change with every rating. */
+ * pages stay static. The viewer's own scores are never cached. */
 const NO_STORE = { cache: 'no-store' } as const
+
+/** The criteria and the aggregates are the same for every viewer, so a
+ * server-side read is a tagged Data Cache entry. The browser always reads them
+ * fresh: `useRatings` re-reads the averages straight after a rating changes,
+ * and a cached body would show the previous numbers. */
+const ratingRead = (tags: Array<string>): ApiFetchOptions =>
+  typeof window === 'undefined' ? cachedPublicRead(tags) : NO_STORE
+
+const statsTag = ({ targetType, targetId }: RatingTarget) =>
+  targetType === 'professor'
+    ? RATING_CACHE_TAGS.professor(targetId)
+    : RATING_CACHE_TAGS.subject(targetId)
 
 const ratingPaths = ({ targetType, targetId }: RatingTarget) =>
   targetType === 'professor'
@@ -41,14 +58,15 @@ const ratingPaths = ({ targetType, targetId }: RatingTarget) =>
 export const getRatingTypes = (targetType: RatingTargetType) =>
   apiFetchRequired<Array<RatingType>>(
     apiRoutes.ratings.types(targetType),
-    NO_STORE
+    ratingRead([RATING_CACHE_TAGS.types()])
   )
 
-export const getAllRatingTypes = async (cookie?: string) => {
-  const options = {
-    ...NO_STORE,
-    ...(cookie ? { headers: { cookie } } : {}),
-  }
+/** Both target types in one list, for the admin page. `rating_types` is
+ * publicly readable and the endpoint takes no session, so nothing is
+ * personalized: the server-side read is a tagged Data Cache entry refreshed
+ * only when a rating type changes. */
+export const getAllRatingTypes = async () => {
+  const options = ratingRead([RATING_CACHE_TAGS.types()])
   const [professorTypes, subjectTypes] = await Promise.all([
     apiFetchRequired<Array<RatingType>>(
       apiRoutes.ratings.types('professor'),
@@ -92,7 +110,10 @@ export const removeRatingType = (id: string) =>
 
 /** Public. Only criteria with at least one rating appear. */
 export const getRatingStats = (target: RatingTarget) =>
-  apiFetchRequired<Array<RatingStat>>(ratingPaths(target).stats, NO_STORE)
+  apiFetchRequired<Array<RatingStat>>(
+    ratingPaths(target).stats,
+    ratingRead([statsTag(target)])
+  )
 
 /** Requires a session. */
 export const getMyRatings = (target: RatingTarget) =>

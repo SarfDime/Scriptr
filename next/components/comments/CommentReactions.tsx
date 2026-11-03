@@ -39,7 +39,7 @@ export function CommentReactions(props: CommentReactionsProps) {
             aria-pressed={isMine}
             aria-label={COMMENT_STRINGS.reactions.reactWith(label, count)}
             className={cn(
-              'button button-sm gap-1.5 p-2 disabled:opacity-100 disabled:filter-none',
+              'button button-sm gap-1.5 disabled:opacity-100 disabled:filter-none',
               isMine ? 'hollow' : 'ghost'
             )}
           >

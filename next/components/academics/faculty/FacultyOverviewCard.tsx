@@ -25,7 +25,7 @@ export const FacultyOverviewCard = ({
       icon: <EarthGlobe />,
       label: UI_STRINGS.academics.visitWebsite,
       href: faculty.website,
-      colorPalette: 'cp-brand',
+      colorPalette: 'cp-brand-int',
     },
     faculty.studentCount && {
       key: 'student-count',
@@ -38,14 +38,14 @@ export const FacultyOverviewCard = ({
       icon: <Marker />,
       label: UI_STRINGS.academics.location,
       href: faculty.streetAddress,
-      colorPalette: 'cp-rose',
+      colorPalette: 'cp-rose-int',
     },
     faculty.email && {
       key: 'email',
       icon: <Envelope />,
       label: faculty.email,
       href: `mailto:${faculty.email}`,
-      colorPalette: 'cp-amber',
+      colorPalette: 'cp-amber-int',
       hideExternalIcon: true,
     },
   ].filter(Boolean) as Array<OverviewCardActionItem>

@@ -2,10 +2,10 @@ import { UI_STRINGS } from '@shared/config/strings'
 import type { ReactNode } from 'react'
 import { Box } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
-import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
 import { Avatar } from '@/components/ui/Avatar'
 import { Card } from '@/components/ui/Card'
+import { Divider } from '@/components/ui/Divider'
 import { IMAGE_SIZES } from '@/styles/style'
 import type { ProfessorDetail } from '@/types/academics/professor.types'
 
@@ -30,65 +30,67 @@ export const ProfessorContactCard = ({
 
   return (
     <Card className='ui-stack ui-above'>
-      <SectionHeader
-        as='h3'
-        title={UI_STRINGS.academics.professor.contactDetails}
-      />
-
-      <Box className='ui-cluster ui-above-inside'>
-        {picture && (
-          <Avatar
-            name={name}
-            picture={{ ...picture, sizes: IMAGE_SIZES.LARGE_AVATAR }}
-          />
-        )}
-        <Box className='ui-stack gap-2'>
-          {office && (
-            <Box className='ui-stack gap-0.5'>
-              <Text className='ui-label'>
-                {UI_STRINGS.academics.professor.office}
-              </Text>
-              <Text className='ui-body'>{office}</Text>
+      <Box className='ui-stack ui-above-inside'>
+        <Box className='ui-cluster'>
+          {picture && (
+            // The avatar fills its box (`h-full aspect-square`), so the box is
+            // sized here: an unsized one in this wrapping row collapses.
+            <Box className='relative h-28 w-28 shrink-0 overflow-hidden rounded-md'>
+              <Avatar
+                name={name}
+                picture={{ ...picture, sizes: IMAGE_SIZES.LARGE_AVATAR }}
+              />
             </Box>
           )}
-          {telephone && (
-            <Box className='ui-stack gap-0.5'>
-              <Text className='ui-label'>
-                {UI_STRINGS.academics.professor.phone}
-              </Text>
-              <Text className='ui-body'>{telephone}</Text>
-            </Box>
-          )}
-          {email && (
-            <Box className='ui-stack gap-0.5'>
-              <Text className='ui-label'>
-                {UI_STRINGS.academics.professor.email}
-              </Text>
-              <NextLink
-                href={`mailto:${email}`}
-                className='ui-body break-all button link w-fit'
-              >
-                {email}
-              </NextLink>
-            </Box>
-          )}
-          {website && (
-            <Box className='ui-stack gap-0.5'>
-              <Text className='ui-label'>
-                {UI_STRINGS.academics.professor.website}
-              </Text>
-              <NextLink
-                href={website}
-                className='ui-body break-all text-brand hover:underline'
-              >
-                {website}
-              </NextLink>
-            </Box>
-          )}
+          <Box className='ui-stack gap-2'>
+            {office && (
+              <Box className='ui-stack gap-0.5'>
+                <Text className='ui-label'>
+                  {UI_STRINGS.academics.professor.office}
+                </Text>
+                <Text className='ui-body'>{office}</Text>
+              </Box>
+            )}
+            {telephone && (
+              <Box className='ui-stack gap-0.5'>
+                <Text className='ui-label'>
+                  {UI_STRINGS.academics.professor.phone}
+                </Text>
+                <Text className='ui-body'>{telephone}</Text>
+              </Box>
+            )}
+            {email && (
+              <Box className='ui-stack gap-0.5'>
+                <Text className='ui-label'>
+                  {UI_STRINGS.academics.professor.email}
+                </Text>
+                <NextLink
+                  href={`mailto:${email}`}
+                  className='ui-body break-all button link w-fit'
+                >
+                  {email}
+                </NextLink>
+              </Box>
+            )}
+            {website && (
+              <Box className='ui-stack gap-0.5'>
+                <Text className='ui-label'>
+                  {UI_STRINGS.academics.professor.website}
+                </Text>
+                <NextLink
+                  href={website}
+                  className='ui-body break-all text-brand hover:underline'
+                >
+                  {website}
+                </NextLink>
+              </Box>
+            )}
+          </Box>
         </Box>
-      </Box>
 
-      {children}
+        <Divider colorScheme='light' />
+        {children}
+      </Box>
     </Card>
   )
 }

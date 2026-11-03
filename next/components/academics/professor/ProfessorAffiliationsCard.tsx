@@ -26,7 +26,7 @@ export const ProfessorAffiliationsCard = ({
           if (!universitySlug || !faculty.slug) return null
 
           return (
-            <Box key={faculty._id} className='ui-stack gap-0.5'>
+            <Box key={faculty._id} className='ui-stack gap-0.5 ui-above-inside'>
               <NextLink
                 href={getAcademicPath({
                   type: 'faculty',

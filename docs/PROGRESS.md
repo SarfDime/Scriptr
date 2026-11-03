@@ -149,11 +149,11 @@ described in
   in Search Console and Bing first, then only build a route if a crawler
   directive is genuinely needed (that would mean turning the platform's
   injection off first).
-- **Sitemap freshness:** `/sitemap.xml` is prerendered and revalidated on Next's
-  default 60-second window. A route-segment `revalidate` export is ignored on a
-  metadata route in this version (verified against the build manifest), so the
-  freshness knob is the platform, not the file — relevant if the script count
-  ever makes a full rewrite per regeneration expensive.
+- **Sitemap freshness:** `/sitemap.xml` is prerendered at build time and has no
+  revalidation window, so it lists the scripts and Sanity entities that existed
+  when the deployment was built; a new or deleted script reaches it only on the
+  next rebuild. That also means a full rewrite of the file per deploy, relevant
+  if the script count ever makes the cost noticeable.
 - **Cache Components:** investigate the `use cache` directive and partial
   prerendering.
 - **Font weights:** the declarations and the preload links are settled — the
@@ -217,16 +217,16 @@ described in
   and deploy workflows in every workspace.
 
 - **Sanity content freshness:** `fetchSanityData`
-  ([`next/sanity/lib/utils.ts`](../next/sanity/lib/utils.ts)) now reads through
-  the client with `next: { revalidate: 60 }` and a single `sanity` tag. It used
-  `sanityFetch`, which caches with `revalidate: false` and expects
-  `<SanityLive />` to expire entries from the sync tags its queries return —
-  with that component unmounted, every entry stayed frozen for a year and a
-  rebuild on Vercel read the same entry out of the persisted Data Cache, so a
-  Studio edit only appeared on some later deploy. What is left: a Sanity
-  **publish webhook** to `POST https://scriptr.uk/api/revalidate` with
-  `{ "tags": ["sanity"] }`, which makes a publish land immediately instead of
-  within a minute. The same read no longer decides drafts-vs-published from
+  ([`next/sanity/lib/utils.ts`](../next/sanity/lib/utils.ts)) reads through the
+  client with `next: { revalidate: false }` and a single `sanity` tag, so a
+  document read is cached until the next build. It used to carry a 60-second
+  TTL, from when a production build read through the staging client
+  (`useCdn: false`); that workaround only made every Sanity entry refetch each
+  minute, and the persisted Data Cache it blamed was not the cause. What is
+  left: a Sanity **publish webhook** to `POST https://scriptr.uk/api/revalidate`
+  with `{ "tags": ["sanity"] }`, which expires the tag without waiting for a
+  deploy — nothing invalidates it today, so CMS edits appear on the next rebuild.
+  The same read no longer decides drafts-vs-published from
   `NEXT_PUBLIC_ENVIRONMENT_TYPE` alone: a Vercel production deployment is
   production even when that variable is missing, and `useCdn` is a property of
   the read (origin for drafts, CDN for published) rather than of the build.

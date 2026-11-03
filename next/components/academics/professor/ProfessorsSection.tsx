@@ -17,7 +17,7 @@ export const ProfessorsSection = ({ professors }: ProfessorsSectionProps) => {
       />
 
       {professorList.length > 0 ? (
-        <Box className='ui-stack'>
+        <Box className='ui-stack gap-2'>
           {professorList.map((professor) => (
             <ProfessorCard key={professor._id} {...professor} />
           ))}

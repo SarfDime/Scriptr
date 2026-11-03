@@ -7,24 +7,9 @@ import { sanityFunctionQueries } from '../queries/functions.queries'
 import { client, prodClient } from './client'
 
 /**
- * How long a Sanity document read stays cached.
- *
- * These reads used to go through `sanityFetch` from `defineLive`, which caches
- * with `revalidate: false` — an entry that never expires. It expects
- * `<SanityLive />` to expire them from the sync tags its queries return, and
- * that component is no longer rendered (see the preview note in PROGRESS), so
- * nothing ever did: every page kept serving the JSON captured on the build that
- * first rendered it, and a rebuild on Vercel read the same entry back out of the
- * persisted Data Cache. A minute matches `PUBLIC_READ_REVALIDATE_SECONDS` for
- * the API reads, so CMS edits and database edits land on the same schedule.
- */
-const SANITY_READ_REVALIDATE_SECONDS = 60
-
-/**
  * One tag for the whole dataset, so a publish webhook can expire every
  * Sanity-backed page at once. `sanityFetch` emitted per-document sync tags
- * instead, which nothing outside this app can compute. Nothing invalidates this
- * tag yet — the TTL above is what keeps the content fresh.
+ * instead, which nothing outside this app can compute.
  */
 const SANITY_CACHE_TAG = 'sanity'
 
@@ -88,8 +73,10 @@ async function fetchSanityData<QueryResponse>({
       // returns published documents, which dropped every page whose slug only
       // exists in the draft from `generateStaticParams`.
       token: isProductionDeployment ? undefined : sanityAuthToken,
+      // Sanity reads are cached until the next build; the `sanity` tag can
+      // expire them manually.
       next: {
-        revalidate: SANITY_READ_REVALIDATE_SECONDS,
+        revalidate: false,
         tags: [SANITY_CACHE_TAG],
       },
     })

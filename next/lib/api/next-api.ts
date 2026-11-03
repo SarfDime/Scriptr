@@ -207,15 +207,12 @@ export async function getRequestCookieHeader(): Promise<string> {
   return (await cookies()).toString()
 }
 
-/**
- * Safety net for every cached public read. Tag revalidation is what keeps
- * these fresh (the API calls `/api/revalidate` after a mutation); this TTL
- * only exists so a webhook that never arrives — unset `NEXT_REVALIDATE_URL`,
- * a wrong secret, an unreachable deployment — cannot freeze a feed
- * indefinitely. Before this, a stale entry had no expiry at all: the
- * homepage kept listing scripts that had already been deleted.
+/*
+ * Every cached public read below is refreshed only by tag invalidation: the API
+ * calls `/api/revalidate` after a mutation. There is no time-based expiry, so a
+ * failed call leaves the entry stale until the next invalidation that reaches
+ * this deployment.
  */
-const PUBLIC_READ_REVALIDATE_SECONDS = 60
 
 /**
  * The "cached-unless-personalized" pattern used by every -api.ts read that
@@ -232,7 +229,7 @@ export function cachedUnlessPersonalized(
   cookie: string | undefined,
   tags: Array<string>
 ): Pick<ApiFetchOptions, 'headers' | 'cache'> & {
-  next?: { tags: Array<string>; revalidate: number }
+  next?: { tags: Array<string> }
 } {
   return cookie
     ? { headers: { cookie }, cache: 'no-store' }
@@ -240,15 +237,16 @@ export function cachedUnlessPersonalized(
 }
 
 /** Cache options for a read that returns the same rows to every viewer (the
- * script reads): a tagged Data Cache entry with the revalidate safety net. */
+ * script reads): a tagged Data Cache entry that lives until its tags are
+ * invalidated. */
 export function cachedPublicRead(tags: Array<string>): Pick<
   ApiFetchOptions,
   'cache'
 > & {
-  next: { tags: Array<string>; revalidate: number }
+  next: { tags: Array<string> }
 } {
   return {
     cache: 'force-cache',
-    next: { tags, revalidate: PUBLIC_READ_REVALIDATE_SECONDS },
+    next: { tags },
   }
 }
