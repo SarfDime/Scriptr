@@ -216,6 +216,23 @@ described in
   per-environment salts that both sides verify — and apply it to config, docs
   and deploy workflows in every workspace.
 
+- **Sanity content freshness:** `fetchSanityData`
+  ([`next/sanity/lib/utils.ts`](../next/sanity/lib/utils.ts)) now reads through
+  the client with `next: { revalidate: 60 }` and a single `sanity` tag. It used
+  `sanityFetch`, which caches with `revalidate: false` and expects
+  `<SanityLive />` to expire entries from the sync tags its queries return —
+  with that component unmounted, every entry stayed frozen for a year and a
+  rebuild on Vercel read the same entry out of the persisted Data Cache, so a
+  Studio edit only appeared on some later deploy. What is left: a Sanity
+  **publish webhook** to `POST https://scriptr.uk/api/revalidate` with
+  `{ "tags": ["sanity"] }`, which makes a publish land immediately instead of
+  within a minute. The same read no longer decides drafts-vs-published from
+  `NEXT_PUBLIC_ENVIRONMENT_TYPE` alone: a Vercel production deployment is
+  production even when that variable is missing, and `useCdn` is a property of
+  the read (origin for drafts, CDN for published) rather than of the build.
+  Restoring visual editing should bring `<SanityLive />` back at the same time,
+  since `sanityFetch` is only correct together with it.
+
 ## Deferred (Do Last)
 
 - **Visual editing and draft preview:** switched off for now.
@@ -224,10 +241,10 @@ described in
   "Preview" view is gone (`iframeBuilder`/`getDocumentSlug` targeted
   `/api/draft?secret=…`, which was never implemented); `defaultDocumentNode`
   now shows the form plus references only. The components and
-  `next/sanity/lib/live.ts` stay in place (`sanityFetch` still uses it), and
-  `sanity-plugin-iframe-pane` is still installed. Restoring it needs
-  `/api/draft-mode/enable` (`defineEnableDraftMode` from `next-sanity`
-  validates the studio's preview-URL secret, so no extra env var),
+  `next/sanity/lib/live.ts` stay in place (unused until this returns — see the
+  cache note above), and `sanity-plugin-iframe-pane` is still installed.
+  Restoring it needs `/api/draft-mode/enable` (`defineEnableDraftMode` from
+  `next-sanity` validates the studio's preview-URL secret, so no extra env var),
   `/api/disable-draft` for the exit link, and the layout block back behind
   `isStaging` — `getDraftMode` returns false in production builds, so the
   flow only ever worked on staging and locally. The Presentation tool's

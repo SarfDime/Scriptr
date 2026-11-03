@@ -2,10 +2,42 @@ import type { QueryParams } from 'next-sanity'
 import type { LivePerspective } from 'next-sanity/live'
 import { isProd, isStaging } from '@/config/env'
 import { nextLogs } from '@/lib/logger'
-import { sanityWebsiteId } from '../env'
+import { sanityAuthToken, sanityWebsiteId } from '../env'
 import { sanityFunctionQueries } from '../queries/functions.queries'
-import { prodClient } from './client'
-import { sanityFetch } from './live'
+import { client, prodClient } from './client'
+
+/**
+ * How long a Sanity document read stays cached.
+ *
+ * These reads used to go through `sanityFetch` from `defineLive`, which caches
+ * with `revalidate: false` — an entry that never expires. It expects
+ * `<SanityLive />` to expire them from the sync tags its queries return, and
+ * that component is no longer rendered (see the preview note in PROGRESS), so
+ * nothing ever did: every page kept serving the JSON captured on the build that
+ * first rendered it, and a rebuild on Vercel read the same entry back out of the
+ * persisted Data Cache. A minute matches `PUBLIC_READ_REVALIDATE_SECONDS` for
+ * the API reads, so CMS edits and database edits land on the same schedule.
+ */
+const SANITY_READ_REVALIDATE_SECONDS = 60
+
+/**
+ * One tag for the whole dataset, so a publish webhook can expire every
+ * Sanity-backed page at once. `sanityFetch` emitted per-document sync tags
+ * instead, which nothing outside this app can compute. Nothing invalidates this
+ * tag yet — the TTL above is what keeps the content fresh.
+ */
+const SANITY_CACHE_TAG = 'sanity'
+
+/**
+ * Drafts are a staging instrument, and getting this wrong is not symmetric:
+ * `isProd` comes from `NEXT_PUBLIC_ENVIRONMENT_TYPE`, which is set per
+ * deployment by hand and is inlined at build time. When it was missing on
+ * Vercel, production took the drafts branch and served unpublished documents as
+ * if they were live. `VERCEL_ENV` is server-only and always set by Vercel, so a
+ * real production deployment cannot fall into that branch; being server-only,
+ * it also cannot disagree between the server and the browser.
+ */
+const isProductionDeployment = isProd || process.env.VERCEL_ENV === 'production'
 
 export type FetchSanityLiveProps = {
   perspective?: LivePerspective
@@ -42,18 +74,27 @@ async function fetchSanityData<QueryResponse>({
 
     const mergedQuery = sanityFunctionQueries + query
 
-    const { data } = await sanityFetch({
-      query: mergedQuery,
-      params: mergedParams,
-      perspective,
+    // One read per environment, not two: production sees published documents,
+    // every other environment sees drafts (which is what staging has always
+    // shown), and only staging carries stega marks for the Studio.
+    const data = await (isProductionDeployment
+      ? prodClient
+      : client
+    ).fetch<QueryResponse>(mergedQuery, mergedParams, {
+      perspective: isProductionDeployment ? 'published' : perspective,
       stega: isStaging ? stega : false,
+      // Drafts are only readable with a token. `sanityFetch` used to attach
+      // `serverToken` for exactly this; without it a drafts read silently
+      // returns published documents, which dropped every page whose slug only
+      // exists in the draft from `generateStaticParams`.
+      token: isProductionDeployment ? undefined : sanityAuthToken,
+      next: {
+        revalidate: SANITY_READ_REVALIDATE_SECONDS,
+        tags: [SANITY_CACHE_TAG],
+      },
     })
 
-    const prodData = isProd
-      ? await prodClient.fetch<QueryResponse>(mergedQuery, mergedParams)
-      : (null as QueryResponse)
-
-    return isProd ? prodData : (data as QueryResponse)
+    return data
   } catch (error) {
     nextLogs({
       logLevel: 'error',

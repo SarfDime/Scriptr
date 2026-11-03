@@ -1,5 +1,4 @@
 import { createClient } from 'next-sanity'
-import { isProd } from '@/config/env'
 import {
   sanityApiVersion,
   sanityAuthToken,
@@ -8,11 +7,18 @@ import {
   studioURL,
 } from '../env'
 
+/**
+ * The drafts reader: development, staging and deploy previews.
+ *
+ * `useCdn` describes the read, not the deployment. A drafts read carries a token
+ * and must be current, so it goes to the API origin — the CDN cannot cache it
+ * usefully and would only add a layer that can answer with published documents.
+ */
 export const client = createClient({
   projectId: sanityProjectId,
   dataset: sanityDataset,
   apiVersion: sanityApiVersion,
-  useCdn: isProd,
+  useCdn: false,
   stega: {
     studioUrl: studioURL,
     filter: (props) => {
@@ -63,11 +69,18 @@ export const client = createClient({
   },
 })
 
+/**
+ * The published reader: what the live site serves.
+ *
+ * Published documents are public and cacheable, so they go through Sanity's CDN
+ * (`cache-control: max-age=60`); the Data Cache in front of it expires on the
+ * same minute (see `SANITY_READ_REVALIDATE_SECONDS` in `./utils`).
+ */
 export const prodClient = createClient({
   projectId: sanityProjectId,
   dataset: sanityDataset,
   apiVersion: sanityApiVersion,
   perspective: 'published',
   token: sanityAuthToken,
-  useCdn: isProd,
+  useCdn: true,
 })
