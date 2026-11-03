@@ -34,7 +34,11 @@ export const Professor = defineType({
   }),
   ...academicGrouping(ENTITY),
   fields: [
-    ...academicFields(ENTITY, ['name', 'slug', 'title', 'description']),
+    ...academicFields(ENTITY, ['name', 'slug', 'title', 'description'], {
+      overrides: {
+        slug: { required: true },
+      },
+    }),
     ...academicFields(
       ENTITY,
       ['picture', 'bio', 'office', 'telephone', 'email', 'website'],

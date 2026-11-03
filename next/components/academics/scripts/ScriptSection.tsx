@@ -27,6 +27,7 @@ export const ScriptsSection = ({
   className,
   parentSubject,
   showGlobalSearch = false,
+  scriptsUnavailable = false,
   headerActions,
   ...rest
 }: ScriptsSectionProps) => {
@@ -54,31 +55,39 @@ export const ScriptsSection = ({
       <SectionHeader
         title={title}
         subtitle={subtitle}
-        count={visibleScripts.length}
+        count={scriptsUnavailable ? undefined : visibleScripts.length}
         actions={headerActions}
       />
 
-      <Box className='ui-cluster items-stretch justify-between gap-3'>
-        <SearchBar
-          inputVal={query}
-          inputOnChange={(event) => setQuery(event.target.value)}
-          className='min-w-[50%]'
-        />
+      {!scriptsUnavailable && (
+        <Box className='ui-cluster items-stretch justify-between gap-3'>
+          <SearchBar
+            inputVal={query}
+            inputOnChange={(event) => setQuery(event.target.value)}
+            className='min-w-[50%]'
+          />
 
-        <ScriptFilters
-          subject={subject}
-          subjects={subjectOptions}
-          sort={sort}
-          onSubjectChange={setSubject}
-          onSortChange={setSort}
-        />
-        {parentSubject && <CreateScriptModal subject={parentSubject} />}
-      </Box>
+          <ScriptFilters
+            subject={subject}
+            subjects={subjectOptions}
+            sort={sort}
+            onSubjectChange={setSubject}
+            onSortChange={setSort}
+          />
+          {parentSubject && <CreateScriptModal subject={parentSubject} />}
+        </Box>
+      )}
 
-      <ScriptList
-        scripts={shownScripts}
-        emptyMessage={UI_STRINGS.scripts.emptyState}
-      />
+      {scriptsUnavailable ? (
+        <Text className='ui-above-inside ui-subtitle border-dashed px-6 py-14 text-center'>
+          {UI_STRINGS.scripts.loadFailed}
+        </Text>
+      ) : (
+        <ScriptList
+          scripts={shownScripts}
+          emptyMessage={UI_STRINGS.scripts.emptyState}
+        />
+      )}
 
       {showGlobalSearch && trimmedQuery && (
         <NextLink

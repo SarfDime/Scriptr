@@ -4,6 +4,7 @@ export type NotificationKind =
   | 'restriction_lifted'
   | 'content_removed'
   | 'flag_threshold'
+  | 'announcement'
 
 export type ModerationNotificationKind = Exclude<
   NotificationKind,

@@ -14,8 +14,8 @@ import type { ScriptDetail } from '@/types/components/Scripts.types'
  * favorited script as written by the profile owner).
  *
  * `likes` stands in for `vote_score` — the schema has no separate "likes"
- * concept for scripts, only the upvote score (see ARCHITECTURE.md on votes
- * vs. comment-level likes).
+ * concept for scripts, only the upvote score (see
+ * docs/ARCHITECTURE-SCRIPTS-UPLOADS.md on votes vs. comment-level likes).
  *
  * `professor` and `year` are left undefined — see PROFILE_SCRIPT_FIELDS'
  * comment for why neither is obtainable via a simple join today. Both are
@@ -24,6 +24,7 @@ import type { ScriptDetail } from '@/types/components/Scripts.types'
  */
 export const toScriptDetail = (script: ProfileScriptSummary): ScriptDetail => ({
   id: script.id,
+  slug: script.slug,
   title: script.title,
   description: script.description ?? undefined,
   subject: script.subject?.name ?? '',
@@ -44,6 +45,7 @@ export const toScriptSummaryDetails = (
 ): Array<ScriptDetail> =>
   scripts.map((script) => ({
     id: script.id,
+    slug: script.slug,
     title: script.title,
     description: script.description ?? undefined,
     subject: script.subject?.name ?? '',

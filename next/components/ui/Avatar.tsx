@@ -45,7 +45,7 @@ export const Avatar = ({
             name={name}
             color={accent}
             className={cn(
-              'h-full aspect-square ui-center p-6',
+              'h-full aspect-square ui-center',
               initialsIconProps?.className,
               className
             )}

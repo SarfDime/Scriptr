@@ -46,7 +46,7 @@ export const MainLayout = ({ children, className, ...rest }: BoxProps) => {
       {/* The container grows to full width while the navbar is collapsed (so the
           header spans the screen); page content keeps its docked-navbar width
           and is centered. `grow` pushes the footer to the bottom of short pages. */}
-      <Box className='mx-auto w-full grow lg:max-w-(--nav-width-offset)'>
+      <Box className='mx-auto w-full grow xl:max-w-(--nav-width-offset)'>
         {children}
       </Box>
       <Footer />

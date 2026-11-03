@@ -13,6 +13,7 @@ import { SectionHeader } from '@/components/common/SectionHeader'
 import { FormContainer } from '@/components/typography/FormContainer'
 import { Card } from '@/components/ui/Card'
 import { Dialog } from '@/components/ui/Dialog'
+import { DialogFooter } from '@/components/ui/DialogFooter'
 import { Field } from '@/components/ui/field/Field'
 import { Select } from '@/components/ui/select/Select'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
@@ -103,19 +104,13 @@ const PreferencesDialog = ({ onClose }: { onClose: () => void }) => {
             />
           </Box>
         </Card.Body>
-        <Card.Footer className='ui-cluster justify-end gap-2 px-4 py-3'>
-          <Button onClick={onClose} className='button button-md subtle'>
-            {PREFERENCES_STRINGS.cancel}
-          </Button>
-          <Button
-            type='submit'
-            isLoading={saving}
-            disabled={!dirty}
-            className='button button-md solid'
-          >
-            {PREFERENCES_STRINGS.save}
-          </Button>
-        </Card.Footer>
+        <DialogFooter
+          secondaryLabel={PREFERENCES_STRINGS.cancel}
+          onSecondary={onClose}
+          primaryLabel={PREFERENCES_STRINGS.save}
+          primaryDisabled={!dirty}
+          primaryLoading={saving}
+        />
       </FormContainer>
     </Dialog>
   )

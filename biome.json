@@ -83,7 +83,12 @@
         "useHookAtTopLevel": "error"
       },
       "a11y": {
-        "useAltText": "error"
+        "noNoninteractiveElementInteractions": "error",
+        "noStaticElementInteractions": "error",
+        "useAltText": "error",
+        "useFocusableInteractive": "error",
+        "useKeyWithClickEvents": "error",
+        "useSemanticElements": "warn"
       },
       "nursery": {
         "noDuplicateFieldDefinitionNames": "error",

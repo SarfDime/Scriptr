@@ -1,16 +1,20 @@
 import LaunchIcon from '@sanity/icons/Launch'
 import Link, { type LinkProps } from 'next/link'
-import type { HTMLAttributes, ReactNode } from 'react'
-import type { SanityIconProps } from '@/types/component.types'
+import type { HTMLAttributes } from 'react'
+import type {
+  AccessibleNameProps,
+  SanityIconProps,
+} from '@/types/component.types'
 import { cn, externalLink } from '../../lib/common-utils'
 
-export type NextLinkProps = {
-  children: ReactNode
+export type NextLinkBaseProps = {
   href: string
   externalIconProps?: SanityIconProps
   hideExternalIcon?: boolean
 } & LinkProps &
   HTMLAttributes<HTMLAnchorElement>
+
+export type NextLinkProps = NextLinkBaseProps & AccessibleNameProps
 
 /** General link component with optional click and hover tracking */
 export function NextLink({

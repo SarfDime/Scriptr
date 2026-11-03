@@ -35,7 +35,7 @@ export const HeaderProfileLink = () => {
       aria-label={UI_STRINGS.profile.viewProfileAriaLabel}
       className={cn(
         'button ghost p-1',
-        'lg:group-data-[nav-collapsed=false]/nav:hidden'
+        'xl:group-data-[nav-collapsed=false]/nav:hidden'
       )}
     >
       <Avatar
@@ -48,9 +48,9 @@ export const HeaderProfileLink = () => {
               }
             : undefined
         }
-        initialsIconProps={{
-          className: 'h-6 w-6 rounded-full shadow-sm p-1 text-sm',
-        }}
+        // Only the box is set: `InitialsIcon` sizes its letters from the box, so
+        // a padding and a font size here made the initials overflow it.
+        initialsIconProps={{ className: 'h-6 w-6 rounded-full shadow-sm' }}
       />
     </NextLink>
   )

@@ -6,6 +6,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { SectionHeader } from '@/components/common/SectionHeader'
+import { Text } from '@/components/typography/Text'
 import { getTargetComments } from '@/lib/api/comments-api'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 import type { CommentSectionProps } from '@/types/components/comments/Comments.types'
@@ -69,9 +70,9 @@ export function CommentSection({
           titleProps={{ id: 'comments-heading' }}
         />
         <Box className='ui-cluster gap-3' role='alert'>
-          <p className='ui-subtitle'>
+          <Text className='ui-subtitle'>
             {COMMENT_STRINGS.general.loadCommentsError}
-          </p>
+          </Text>
           <Button
             type='button'
             className='button solid'

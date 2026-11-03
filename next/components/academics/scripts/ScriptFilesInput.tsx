@@ -121,6 +121,10 @@ function FileDropzone({
           event.target.value = ''
         }}
       />
+      {/* The drop zone is the label for the file input above, so the control
+       * is reachable and named through that input; only drag-and-drop, which
+       * has no keyboard equivalent anywhere, is attached here. */}
+      {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: a label for a file input is the accessible surface of that input. */}
       <label
         htmlFor={inputId}
         onDragOver={(event) => {
@@ -190,7 +194,9 @@ function FileRow({
           onClick={onRemove}
           disabled={disabled}
           className='button button-sm danger rounded-md'
-          aria-label={`Remove ${entry.file.name}`}
+          aria-label={UI_STRINGS.scripts.uploadModal.removeFileAriaLabel(
+            entry.file.name
+          )}
         >
           {UI_STRINGS.scripts.uploadModal.removeButtonLabel}
         </Button>

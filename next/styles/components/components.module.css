@@ -8,12 +8,35 @@
         opacity: 1;
       }
     }
+
+    /* Error-page astronaut: a slow drift, not a bounce. Simple mode clamps
+       every animation to one 0.01ms iteration further down this file, so it
+       stops there without a rule of its own. */
+    @keyframes errorFloat {
+      0%,
+      100% {
+        transform: translateY(-4px) rotate(-1deg);
+      }
+      50% {
+        transform: translateY(4px) rotate(1deg);
+      }
+    }
   }
 
   @apply placeholder:select-none;
 
   .fadeInElement {
     @apply animate-[fadeIn_0.2s_ease-in-out_1.5s_forwards];
+  }
+
+  .error-float {
+    @apply animate-[errorFloat_6s_ease-in-out_infinite];
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .error-float {
+      animation: none;
+    }
   }
 
   .opacity-start {
@@ -34,9 +57,9 @@
   margin-left: auto;
   transition: max-width 300ms ease-in-out;
 
-  /* Below the `lg` breakpoint, where the navbar is off-canvas. */
+  /* Below the `xl` breakpoint, where the navbar is off-canvas. */
   /* biome-ignore lint/correctness/noUnknownFunction: <This is not unknown> */
-  @media (width < theme(--breakpoint-lg)) {
+  @media (width < theme(--breakpoint-xl)) {
     max-width: unset;
   }
 }
@@ -81,6 +104,10 @@
 
 @utility ui-label {
   @apply text-sm font-semibold text-fg-muted;
+}
+
+@utility ui-small-label {
+  @apply text-[0.65rem] uppercase tracking-[.15rem] text-fg-muted;
 }
 
 @utility ui-caption {
@@ -152,15 +179,21 @@
   gap: 1rem;
   border: 1px solid var(--color-grey-300);
   border-radius: 0.75rem;
-  background: var(--color-background-100);
+  /* Longhand on purpose: the `background` shorthand reset the sheen image when
+   * a card also carried `ui-above`. */
+  background-color: var(--color-background-100);
   color: var(--color-fg-700);
-  box-shadow: var(--shadow-sm);
+  box-shadow:
+    inset 0 1px 0 var(--ui-lit-edge),
+    var(--shadow-sm);
+  @apply ui-sheen;
 }
 
 @utility ui-card-header {
   padding-block: 1rem;
   padding-top: 0;
-  border-bottom: 1px solid var(--color-grey-300);
+  border-bottom: 1px solid var(--divider-cut);
+  @apply ui-groove-b;
 }
 
 @utility ui-card-body {
@@ -170,8 +203,9 @@
 @utility ui-card-footer {
   margin-top: auto;
   padding-top: 1rem;
-  border-top: 1px solid var(--color-grey-300);
+  border-top: 1px solid var(--divider-cut);
   color: var(--color-fg-muted);
+  @apply ui-groove-t;
 }
 
 @utility ui-badge {
@@ -185,43 +219,150 @@
   }
 }
 
+/* Light catching the top edge. The per-surface knobs are the alpha
+ * (`--ui-sheen`), the colour (`--ui-sheen-color`, white unless a palette wants
+ * its own hue) and the band height (`--ui-sheen-length`), so a panel and an
+ * input catch the same light. White in both themes on purpose:
+ * `--color-background-50` is black in dark mode, which turned the same wash into
+ * a shadow (see `button.module.css`). */
+@utility ui-sheen {
+  /* Corner to corner, the way light falls across a pane. The band stops at 60%
+   * of the box as well as at `--ui-sheen-length`, so a 90px card gets a short
+   * band instead of being washed edge to edge; `--ui-sheen-strength` is the
+   * theme's dial (dark mode gets 60% of it). Tried a pure percentage (45% of
+   * the box) so a bigger pane carried more of it, and a 471px panel washed
+   * almost to its footer — the fixed band reads better, so it stays. */
+  background-image: linear-gradient(
+    135deg,
+    color-mix(
+        in oklab,
+        var(--ui-sheen-color, white)
+          calc(var(--ui-sheen, 11%) * var(--ui-sheen-strength, 1)),
+        transparent
+      )
+      0,
+    transparent min(var(--ui-sheen-length, 96px), 60%)
+  );
+  /* Surfaces add this as their first inset shadow: the 1px edge a real pane
+   * has where the light hits it. */
+  --ui-lit-edge: color-mix(
+    in oklab,
+    white var(--ui-sheen-edge, 20%),
+    transparent
+  );
+}
+
 @utility ui-above-defaults {
   @apply rounded-xl border border-background-300;
   @apply p-4 gap-4 rounded-xl;
+  @apply ui-sheen;
 }
 
 @utility ui-above {
-  @apply bg-background-300/50 backdrop-blur-md md:backdrop-blur-xl;
+  /* `lg` (16px) from `md` up, not `xl` (24px): at a 50% fill the extra radius
+   * buys nothing visible and the blur is the most expensive thing on the page
+   * (see docs/PROGRESS.md). Compared side by side before changing. */
+  @apply bg-background-300/50 backdrop-blur-md md:backdrop-blur-lg;
   @apply ui-above-defaults;
   box-shadow:
-    var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
-    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    inset 0 1px 0 var(--ui-lit-edge),
+    var(--tw-inset-shadow, 0 0 #0000),
+    var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000),
     var(--ui-above-shadow, var(--shadow-above));
 }
 
 /* Same surface as ui-above for the docked navbar (right edge) and the header
  * (bottom edge): square, one border, and a shadow on that side only. */
-@utility ui-above-nav {
+/* The frame around the content: the panel recipe with a denser, darker fill and
+ * a stronger border, so the nav, header and footer read as their own layer
+ * instead of another card (`--ui-chrome-bg`, theme + simple mode). */
+@utility ui-above-chrome {
   @apply ui-above;
+  background-color: var(--ui-chrome-bg);
+  border-color: var(--ui-chrome-border);
+}
+
+@utility ui-above-nav {
+  @apply ui-above-chrome;
   border-radius: 0;
   border-width: 0 1px 0 0;
   --ui-above-shadow: var(--shadow-edge-right);
 }
 
 @utility ui-above-header {
-  @apply ui-above;
+  @apply ui-above-chrome;
   border-radius: 0;
   border-width: 0 0 1px;
   --ui-above-shadow: var(--shadow-edge-bottom);
 }
 
 @utility ui-above-light {
-  @apply bg-background-300/65 backdrop-blur-lg md:backdrop-blur-2xl;
+  @apply bg-background-300/65 backdrop-blur-md md:backdrop-blur-lg;
   @apply ui-above-defaults;
   box-shadow:
-    var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
-    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    inset 0 1px 0 var(--ui-lit-edge),
+    var(--tw-inset-shadow, 0 0 #0000),
+    var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000),
     var(--shadow-above);
+}
+
+/* A hairline, not a pane: `Divider` used to borrow `ui-above-inside`, which gave
+ * a 2px strip a fill, a shadow and a lit edge. It is a groove now — the border is
+ * the cut and the orientation class adds the lip that catches the light under
+ * it, so the line reads as pressed into the surface instead of drawn on it. */
+/* A divider paints both bands of the groove in one gradient. Drawing the cut as
+ * a border and the lip as an inset shadow let the two layers snap to device rows
+ * independently, so identical dividers read at different strengths depending on
+ * the fractional offset layout gave them. */
+@utility ui-divider {
+  background-color: transparent;
+  border-width: 0;
+  /* Call sites tint the line by setting this, either directly or through the
+   * `cp-divider` palette helper. */
+  --divider-line: var(--divider-cut);
+}
+
+@utility ui-divider-h {
+  height: 2px;
+  background-image: linear-gradient(
+    to bottom,
+    var(--divider-line) 0 1px,
+    var(--divider-lip) 1px 2px
+  );
+}
+
+@utility ui-divider-v {
+  width: 2px;
+  background-image: linear-gradient(
+    to right,
+    var(--divider-line) 0 1px,
+    var(--divider-lip) 1px 2px
+  );
+}
+
+/* Turn any border into the same groove: the border is the cut, the class paints
+ * the lip just inside it. One per side, so an element that already draws a
+ * separator with a border (a card footer, a dialog header) gets the treatment
+ * without becoming a `Divider`. Only for elements that carry no shadow of their
+ * own — this replaces `box-shadow`. */
+@utility ui-groove-t {
+  box-shadow: inset 0 1px 0 var(--divider-lip);
+}
+
+@utility ui-groove-b {
+  box-shadow: inset 0 -1px 0 var(--divider-lip);
+}
+
+@utility ui-groove-l {
+  box-shadow: inset 1px 0 0 var(--divider-lip);
+}
+
+@utility ui-groove-r {
+  box-shadow: inset -1px 0 0 var(--divider-lip);
 }
 
 @utility ui-above-inside {
@@ -229,8 +370,11 @@
   @apply ui-above-defaults border-background-300/70 rounded-lg;
   /* Composed with Tailwind's ring variables so `ring-*` (inputs) still shows. */
   box-shadow:
-    var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
-    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    inset 0 1px 0 var(--ui-lit-edge),
+    var(--tw-inset-shadow, 0 0 #0000),
+    var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000),
     var(--shadow-above-inside);
 }
 
@@ -244,6 +388,10 @@
  * in simple mode and when no StarCanvas is configured in Sanity. */
 @utility ui-simple-backdrop {
   background-color: var(--color-background-100);
+  /* Four washes: the brand glow bottom-right, a second hue top-left so the
+   * background is not one colour, the soft centre, and the tint across the top.
+   * Strength is per theme (`--simple-*` in semantic.module.css`), and light
+   * carries the more colourful set. */
   background-image:
     radial-gradient(
       circle at 1px 1px,
@@ -252,10 +400,19 @@
     ),
     radial-gradient(
       circle at 100% 100%,
-      color-mix(in oklab, var(--color-brand) 60%, transparent) 0%,
-      color-mix(in oklab, var(--color-brand-450) 28%, transparent)
-        var(--simple-glow-mid, 9%),
+      color-mix(
+          in oklab,
+          var(--color-brand) var(--simple-glow, 60%),
+          transparent
+        )
+        0%,
+      var(--simple-accent) var(--simple-glow-mid, 9%),
       transparent var(--simple-glow-end, 24%)
+    ),
+    radial-gradient(
+      circle at 6% 8%,
+      var(--simple-accent-alt) 0%,
+      transparent 48%
     ),
     radial-gradient(
       circle at 50% 50%,
@@ -264,11 +421,17 @@
     ),
     linear-gradient(
       var(--simple-tint-angle, 160deg),
-      color-mix(in oklab, var(--color-brand-300) 30%, transparent) 0%,
-      transparent 40%
+      color-mix(
+          in oklab,
+          var(--color-brand-300) var(--simple-wash, 42%),
+          transparent
+        )
+        0%,
+      transparent 45%
     );
   background-size:
     28px 28px,
+    auto,
     auto,
     auto,
     auto;
@@ -384,8 +547,10 @@
   background-color: var(--color-background-100);
 }
 
-:root[data-simple]
-  :is(.ui-above, .ui-above-light, .ui-above-nav, .ui-above-header) {
+/* Panels only: the chrome (`ui-above-nav`, `ui-above-header`, the footer) gets
+ * its own, darker fill from `--ui-chrome-bg`, and listing it here would override
+ * that back to the panel colour. */
+:root[data-simple] :is(.ui-above, .ui-above-light) {
   background-color: var(--color-background-250);
 }
 
@@ -395,4 +560,23 @@
 
 :root[data-simple] .ui-above-reverse {
   background-color: var(--color-background-300);
+}
+
+/* Without blur a translucent frame would just pick up the page behind it, so
+ * simple mode makes the chrome opaque and a step darker than the panels. */
+:root[data-simple] {
+  --ui-chrome-bg: var(--color-background-350);
+  --ui-chrome-border: var(--color-background-400);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-simple]:not([data-theme="light"]) {
+    --ui-chrome-bg: var(--color-background-200);
+    --ui-chrome-border: var(--color-background-300);
+  }
+}
+
+:root[data-simple][data-theme="dark"] {
+  --ui-chrome-bg: var(--color-background-200);
+  --ui-chrome-border: var(--color-background-300);
 }

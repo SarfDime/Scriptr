@@ -1,3 +1,4 @@
+import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { EntityCard } from '@/components/common/EntityCard'
 import { NextImage } from '@/components/common/NextImage'
@@ -5,7 +6,6 @@ import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
 import { Card } from '@/components/ui/Card'
 import { getAcademicPath } from '@/lib/academic-routes'
-import { compactStats } from '@/lib/common-utils'
 import { IMAGE_SIZES } from '@/styles/style'
 import type { MinimalStudy } from '@/types/academics/study.types'
 
@@ -47,17 +47,17 @@ export const StudyExplorer = ({
                       {...study.logo}
                       alt={study.name}
                       fillProp
-                      sizes={IMAGE_SIZES.UNIVERSITY_HERO}
+                      sizes={IMAGE_SIZES.AVATAR}
                       className='h-10 w-10 rounded-full'
                       objectFitProp='cover'
                     />
                   ) : undefined
                 }
                 title={study.name}
-                stats={compactStats({
-                  Subjects: study.subjectCount,
-                  Professors: study.professorCount,
-                })}
+                subtitle={UI_STRINGS.academics.studySummary(
+                  study.subjectCount,
+                  study.professorCount
+                )}
                 className='ui-above-inside'
               />
             )

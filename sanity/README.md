@@ -3,7 +3,7 @@
 Sanity Studio for Scriptr's editorial content: the academic catalog
 (University → Faculty → Study → Subject, plus Professors) and the site's pages,
 navigation, and sections. Academic documents are linked to Postgres rows through
-a `dbId`; see `ARCHITECTURE.md` §2 for the sync model.
+a `dbId`; see `docs/ARCHITECTURE.md` §2 for the sync model.
 
 ## Setup
 
@@ -27,6 +27,14 @@ SANITY_STUDIO_INTERNAL_SECRET=development_secret_key
 - `SANITY_STUDIO_INTERNAL_SECRET` must match `INTERNAL_API_SECRET` in
   `hono/.env`, or every sync/delete action fails. Check this before debugging
   an action failure as a logic bug.
+- Production values belong in `sanity/.env.production`, not `sanity/.env`:
+  `sanity build`/`sanity deploy` load it in Vite production mode on top of
+  `.env`, so the deployed bundle gets the real API URL and secret while
+  `sanity dev` keeps pointing at localhost. A deploy without it ships an empty
+  `SANITY_STUDIO_INTERNAL_SECRET` and every action 403s.
+- CORS is not open for the hosted Studio by default: the API only adds the
+  localhost dev ports automatically, and only outside production. A deployed
+  Studio must be listed in the API's `CORS_ORIGINS`.
 
 ## Commands
 

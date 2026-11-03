@@ -19,17 +19,17 @@ const getBadgeContent = (props: AcademicBadgeProps) => {
     case 'year':
       return {
         colorPalette: getColorPalette({ type: 'year', value: props.value }),
-        label: `Year ${props.value}`,
+        label: UI_STRINGS.general.year(props.value),
       }
     case 'credits':
       return {
         colorPalette: getColorPalette({ type: 'credits', value: props.value }),
-        label: `${props.value} ECTS`,
+        label: UI_STRINGS.academics.professor.ects(props.value),
       }
     case 'semester':
       return {
         colorPalette: getColorPalette({ type: 'semester', value: props.value }),
-        label: `Semester ${props.value}`,
+        label: UI_STRINGS.academics.semester(props.value),
       }
     case 'elective':
       return {

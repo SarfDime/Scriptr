@@ -1,3 +1,4 @@
+import { UI_STRINGS } from '@shared/config/strings'
 import { ProfessorAffiliationsCard } from '@/components/academics/professor/ProfessorAffiliationsCard'
 import { ProfessorBiographyCard } from '@/components/academics/professor/ProfessorBiographyCard'
 import { ProfessorComments } from '@/components/academics/professor/ProfessorComments'
@@ -37,13 +38,14 @@ export const generateMetadata = createAcademicMetadata<
   ProfessorRouteParams
 >({
   query: professorDetailQuery,
-  pageDomain: 'professors',
-  entityLabel: 'Professor',
+  getPath: (p) =>
+    getAcademicPath({ type: 'professor', professorSlug: p.professorSlug }),
+  entityLabel: UI_STRINGS.academics.entity.professor,
   fetchOriginPrefix: 'professor',
   getOwnSlug: (p) => p.professorSlug,
   getDescription: (professor) => professor.bio,
   descriptionFallback: (professor) =>
-    `Academic profile, courses taught, and contact details for ${professor.name}.`,
+    UI_STRINGS.academics.metadata.professorDescription(professor.name),
 })
 
 export default async function ProfessorDetailPage({
@@ -59,7 +61,8 @@ export default async function ProfessorDetailPage({
   return (
     <PageLayout
       header={{
-        greeting: professor.title ?? 'Academic Staff',
+        greeting:
+          professor.title ?? UI_STRINGS.academics.professor.academicStaff,
         title: professor.name,
         actions: professor.universities?.flatMap((university) =>
           university.slug

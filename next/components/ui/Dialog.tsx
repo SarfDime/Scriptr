@@ -1,5 +1,6 @@
 'use client'
 
+import { UI_STRINGS } from '@shared/config/strings'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
 import type { DetailedHTMLProps, DialogHTMLAttributes, ReactNode } from 'react'
 import { useEffect, useEffectEvent, useId, useRef, useState } from 'react'
@@ -28,7 +29,7 @@ const CENTERED_DIALOG_CLASS = cn(
   'md:top-[10%] md:max-h-[85dvh] md:w-fit md:min-w-2xl md:max-w-[calc(100vw-2rem)] md:shadow-lg'
 )
 const CENTERED_HEADER_CLASS =
-  'flex items-center justify-between gap-3 border-b border-grey-400 px-3.5 py-2.5 shadow-above-inside'
+  'flex items-center justify-between gap-3 border-b border-[var(--divider-cut)] px-3.5 py-2.5 ui-groove-b'
 
 export type DialogProps = {
   title?: PortableTextValue | ReactNode
@@ -243,7 +244,7 @@ export function Dialog({
   const closeButton = hideCloseButton ? null : (
     <CloseButton
       onClick={handleClose}
-      aria-label='Close dialog'
+      aria-label={UI_STRINGS.general.closeDialog}
       {...closeButtonProps}
       className={cn('button ghost p-1', closeButtonProps?.className)}
     />
@@ -254,7 +255,7 @@ export function Dialog({
       {/* Dialog Opener Button (if not hidden) */}
       {!hideTrigger && (
         <Button onClick={handleOpen} {...triggerButtonProps}>
-          {triggerButtonProps?.children || 'Open Dialog'}
+          {triggerButtonProps?.children || UI_STRINGS.general.openDialog}
         </Button>
       )}
 

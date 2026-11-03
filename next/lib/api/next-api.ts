@@ -2,6 +2,7 @@ import type { QueryApiEndpointType } from '@shared/types/api.types'
 import { generatePath } from '@shared/utils/common-utils'
 import { API_URL } from '@/config/env'
 import { nextLogs } from '@/lib/logger'
+import { UserFacingError } from '@/lib/user-facing-error'
 
 export type ApiFetchOptions = Omit<RequestInit, 'body'> & {
   /** Accepts a raw object for JSON, FormData for files, or standard BodyInit */
@@ -126,16 +127,34 @@ export async function apiFetch<T>(
   return result.success ? result.data : null
 }
 
+/**
+ * A rate limit is the one rejection this layer passes on word for word: every
+ * 429 body in the API is written for the reader ("Too many comments. Please
+ * try again later.", "Too many uploads. Please wait a few minutes and try
+ * again.") and says what to do about it, which the generic action-failed copy
+ * cannot. `data` is only set when the body parsed as JSON, so a 429 from a
+ * proxy counts as no message and keeps the generic copy. Everything else stays
+ * an `ApiError` for the caller to decide on.
+ */
+const toRateLimitError = (error: unknown): unknown =>
+  error instanceof ApiError && error.status === 429 && error.data !== undefined
+    ? new UserFacingError(error.message)
+    : error
+
 export async function apiFetchRequired<T>(
   path: QueryApiEndpointType,
   options: ApiFetchOptions = {}
 ): Promise<T> {
-  const result = await performApiFetch<T>(path, options)
-  if (!result.success) {
-    throw new ApiError(`API request unavailable for ${path}`, 503)
-  }
+  try {
+    const result = await performApiFetch<T>(path, options)
+    if (!result.success) {
+      throw new ApiError(`API request unavailable for ${path}`, 503)
+    }
 
-  return result.data
+    return result.data
+  } catch (error) {
+    throw toRateLimitError(error)
+  }
 }
 
 /**
@@ -163,17 +182,17 @@ export async function apiFetchPublicRead<T>(
 /**
  * Reads the current request's `Cookie` header, for a Server Component to
  * forward to the Hono API (session-gated endpoints like GET /my-scripts
- * need it explicitly — see ARCHITECTURE.md §1: cookie-based Supabase auth,
- * no Bearer-token path, and a server-to-server fetch doesn't carry the
- * browser's cookies automatically).
+ * need it explicitly — see docs/ARCHITECTURE-SYSTEM-OVERVIEW.md:
+ * cookie-based Supabase auth, no Bearer-token path, and a server-to-server
+ * fetch doesn't carry the browser's cookies automatically).
  *
  * Deliberately NOT called automatically inside apiFetch above. `cookies()`
  * (from next/headers) marks the *entire calling route* as dynamic — it
  * opts the route out of static generation. apiFetch is the one fetch
- * wrapper used for every API call in the app (AGENTS.md), so making cookie
- * reads automatic there would silently force every page that calls it —
- * including statically-generated pages with no session-dependent data at
- * all — into full dynamic rendering. Call sites that genuinely need
+ * wrapper used for every API call in the app (`docs/AGENTS-FRONTEND.md`), so
+ * making cookie reads automatic there would silently force every page that
+ * calls it — including statically-generated pages with no session-dependent
+ * data at all — into full dynamic rendering. Call sites that genuinely need
  * session-aware data (faculty-scoped catalog reads, "my X" endpoints,
  * comment engagement flags) opt in explicitly instead.
  *

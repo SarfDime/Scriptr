@@ -110,17 +110,21 @@ background, breathing over 1.8s), not a brand color. Change them only in
 The preferred component APIs are `Box`, `Card`, `Button`, `Badge`, and
 `Divider`.
 
-| Class            | Use                                                                                       |
-| ---------------- | ----------------------------------------------------------------------------------------- |
-| `ui-card`        | Framed surface. Prefer the `Card` component.                                              |
-| `ui-card-header` | Card heading section.                                                                     |
-| `ui-card-body`   | Main card content.                                                                        |
-| `ui-card-footer` | Card footer with a top border.                                                            |
-| `ui-badge`       | Shared radius and sizing behavior for badges.                                             |
-| `ui-above`       | Semi transparent blurred background, blur and shadow. Sets no border width; add `border`. |
-| `ui-above-light` | Lighter variant of `ui-above`.                                                            |
-| `ui-loading-overlay` | The global loading screen's modal `<dialog>`: fills the viewport, frosted background, fades in and out. Not for other overlays. |
-| `ui-loading-overlay-exiting` | Added alongside `ui-loading-overlay` for the fade-out, just before the dialog is closed. |
+| Class                           | Use                                                                                                                                                                           |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ui-card`                       | Framed surface. Prefer the `Card` component.                                                                                                                                  |
+| `ui-card-header`                | Card heading section.                                                                                                                                                         |
+| `ui-card-body`                  | Main card content.                                                                                                                                                            |
+| `ui-card-footer`                | Card footer with a top border.                                                                                                                                                |
+| `ui-badge`                      | Shared radius and sizing behavior for badges.                                                                                                                                 |
+| `ui-above`                      | Semi transparent blurred background, blur and shadow. Sets no border width; add `border`.                                                                                     |
+| `ui-above-light`                | Lighter variant of `ui-above`.                                                                                                                                                |
+| `ui-above-chrome`               | `ui-above` for app chrome (navbar, header, footer), one step darker than `ui-above` so the frame separates from the content. Colours: `--ui-chrome-bg`, `--ui-chrome-border`. |
+| `ui-divider`                    | Base for `Divider`: paints the groove line and uses no border.                                                                                                                |
+| `ui-divider-h` / `ui-divider-v` | The groove itself, horizontal or vertical (2px).                                                                                                                              |
+| `ui-groove-t/b/l/r`             | Turns an element's own border on that side into the same groove.                                                                                                              |
+| `ui-loading-overlay`            | The global loading screen's modal `<dialog>`: fills the viewport, frosted background, fades in and out. Not for other overlays.                                               |
+| `ui-loading-overlay-exiting`    | Added alongside `ui-loading-overlay` for the fade-out, just before the dialog is closed.                                                                                      |
 
 ```tsx
 <Card>
@@ -143,6 +147,53 @@ surface and, inside it, a lighter fill where the text is shown.
 `ScriptPanel` renders an `aside` by default; pass `as='div'` for non-landmark
 content such as file cards. Do not put `ui-card` and a `bg-*` utility on one
 element to override its fill; use `ScriptPanel` or a plain `Box`.
+
+## Glass detail
+
+Three utilities give the frosted surfaces their material. All three are opt-in
+through the surfaces themselves, so a component that already uses `ui-above`,
+`ui-card` or a filled button needs no extra class.
+
+- **`ui-sheen`** paints a light-to-nothing band across the top left of the
+  element, so the pane catches light like a bevel. It is one gradient,
+  `135deg`, with a **fixed 96px band** (`--ui-sheen-length`, capped at 60% of the
+  box). Percentage-sized ramps were tried and reverted: on a tall panel the band
+  covered the whole element and read as a flat wash. Strength comes from
+  `--ui-sheen` (per component, default 11%) multiplied by `--ui-sheen-strength`
+  (per theme: 1 light, 0.6 dark), so one knob dims every sheen in dark mode, and
+  the colour comes from `--ui-sheen-color` (white by default). The `cp-*`
+  palettes set it to their own hue at 18%: white is invisible on a chip that is
+  near-white already, while a hue wash reads in both themes.
+- **`--ui-lit-edge`** is the 1px inner highlight along the top edge. Every
+  surface sets `inset 0 1px 0 var(--ui-lit-edge)` **first** in its `box-shadow`
+  stack; keep that order or a later shadow paints over the light.
+- **Grain** (a tiled noise overlay) was prototyped and removed: at any opacity
+  that reads as texture it also dulls the surface to a flat tone. Do not re-add
+  it without a different compositing approach.
+
+### Dividers and grooves
+
+A divider is a **single paint**: `2px` of `background-image` where the first
+1px is the cut (`--divider-cut`) and the second is the lip (`--divider-lip`).
+Drawing the cut as a border and the lip as an inset shadow was the earlier
+version and made identical dividers render at different strengths — the two
+layers snapped to device rows independently, which is visible at any non-100%
+zoom.
+
+- Tint a divider by setting `--divider-line`, either directly
+  (`[--divider-line:var(--color-grey-500)]`) or through the `cp-divider` helper,
+  which derives the same colour a palette uses for its border. A palette class
+  on a divider contributes only its hue: `color-palettes.module.css` excludes
+  `.ui-divider` from the palette surface and border rules.
+- `ui-groove-t/b/l/r` gives any element that already separates itself with a
+  border (card footer, dialog header) the same groove, so it does not need to
+  become a `Divider`. Only for elements that carry no shadow of their own — the
+  groove is a shadow, so the two would fight.
+- `--divider-lip: transparent` collapses the groove to a single crisp line.
+- **`outline` is reserved for the focus ring** (a global `:focus-visible` rule in
+  `utilities.module.css` draws 2px of brand at 2px offset). Never draw a border
+  or a hairline with `outline`; `hollow` and `subtle` use inset `box-shadow`
+  rings for exactly this reason.
 
 ## Admin pages
 
@@ -269,6 +320,10 @@ Notes:
 - **Palette borders.** `cp-*` classes without `-nb` include a 1px border. Under
   a parent with `overflow-hidden rounded-*` the border's corners are clipped;
   round the element itself.
+- **`background` shorthand wipes the sheen.** `ui-sheen` is a
+  `background-image`, so setting `background:` on the same element (or a
+  shorthand later in the cascade) removes it. Use `background-color`
+  (and keep it before the utility) instead.
 - **`NextImage`** applies `className` to its skeleton wrapper, not the `<img>`.
   Use `objectFitProp='cover'` to crop (the default is contain) and pass `sizes`.
   Always select `sizes` from the shared `IMAGE_SIZES` registry.
@@ -307,6 +362,26 @@ The base utility is `button`; add `button-sm` for compact buttons, add `button-m
 Use an icon and an accessible `aria-label` for icon-only controls. Use text
 when the action is not obvious from a familiar icon.
 
+### The filled recipe
+
+`solid`, `success`, `warning`, `danger`, `inverted`, `subtle` and the pressed
+`[data-active='true']` state share one gradient:
+`color-mix(--button-bg 85%, --button-lit --button-sheen) → --button-bg`.
+
+- `--button-bg` is the variant's fill and `--button-sheen` its highlight share
+  (45% light / 30% dark); the `--button-lit` colour is the *light* added to the
+  fill, not the ink.
+- `--button-lit` defaults to white. A variant whose fill flips with the theme
+  (like `solid`, which is dark in light mode and light in dark mode) must set it
+  to `var(--color-background-50)`, or the "light" mixed into a light fill turns
+  the top of the button into a grey wash.
+- Ink follows the fill, never the theme: `danger` uses
+  `color-mix(--color-error-red 20%, black)` so it stays dark on the red fill in
+  both themes. Only `solid` takes an ink that flips.
+- `hollow` and `subtle` are not flat: they keep a 7-8% sheen plus a bevel
+  (`inset 0 1px 0 white 24%` / `inset 0 -1px 0 black 10%`, both scaled by
+  `--ui-sheen-strength`).
+
 ## Shadows
 
 Shadows are crisp and directional: a 1px contact line plus a short, tight drop
@@ -325,7 +400,8 @@ past the edge). Do not add zero-offset glows or blur above about 12px.
 Tailwind's defaults for `shadow-sm/md/lg/xl` are overridden, so the built-in
 class names follow this scale. `--shadow-strength` (`semantic.module.css`) is
 1 in light mode and 1.8 in dark mode and scales every alpha, so the same
-tokens stay visible on dark surfaces. Change the look of the whole site by
+tokens stay visible on dark surfaces; simple mode sets it to 0.7, where the blur
+and the background gradients are gone and the same shadows overpower the page. Change the look of the whole site by
 editing `shadows.module.css`; do not hardcode `box-shadow` values in
 components.
 
@@ -368,6 +444,13 @@ Palettes are driven by variables (`--cp-hue`, `--cp-bg`, `--cp-border`,
 `--cp-hover`, `--cp-ink`). To add one, add a variable rule and its three names
 to the shared lists in `color-palettes.module.css`; do not copy a rule block.
 
+Every palette surface also carries the sheen in its own hue (`--ui-sheen: 18%`,
+`--ui-sheen-color: var(--cp-hue)`), which is strongest at the top left — the
+corner chip text sits in. Contrast was checked there, not on the flat fill: the
+worst case (blue and brand in light mode) is 5.19:1 against 6.20:1 on the flat
+fill, so palette ink keeps its margin. Do not raise `--ui-sheen` without
+re-checking that corner.
+
 ### Known color-scale quirks
 
 The `fg-*` and `grey-*` scales are not monotonic (for example `fg-400` is
@@ -375,6 +458,15 @@ lighter than `fg-350`, and `grey-200` is lighter than `grey-150`) and they flip
 direction in dark mode. Reordering them would shift colors across the app, so
 they are left as is. For secondary text use `text-fg-muted` rather than
 picking a step.
+
+### Simple mode
+
+`data-simple` on `<html>` drops the blur, the star canvas and the gradients. Two
+knobs compensate, both set on `:root[data-simple]` in `semantic.module.css`:
+`--color-fg-muted` steps to `fg-450` (`fg-500` in light mode), and
+`--shadow-strength` drops to 0.7. Muted captions were measured at 3.4-4.1:1 on
+the simple backdrop before that; they now land at 4.9-8.2:1. Keep the
+combination — raising only one of the two reintroduces the washed-out look.
 
 ## Rules for new UI
 

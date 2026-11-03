@@ -48,13 +48,17 @@ type SessionContextValue = {
 
 const SessionContext = createContext<SessionContextValue | null>(null)
 
+/**
+ * Sign-in copy, which is the one place the API's own wording is shown: the
+ * auth routes pass Supabase's message through for a rejected sign-in
+ * ("Invalid login credentials", "Email not confirmed", a weak password), and
+ * every one of those is a 4xx. A 5xx body is internal — `apiFetchRequired`
+ * throws a 503 naming the endpoint when the API is unreachable — so it falls
+ * back to the generic line.
+ */
 function extractErrorMessage(error: unknown): string {
-  if (error instanceof ApiError && error.status === 503) {
-    return UI_STRINGS.general.apiUnavailable
-  }
-  return error instanceof ApiError || error instanceof Error
-    ? error.message
-    : UI_STRINGS.general.unexpectedError
+  if (!(error instanceof ApiError)) return UI_STRINGS.general.unexpectedError
+  return error.status < 500 ? error.message : UI_STRINGS.general.apiUnavailable
 }
 
 /** The unique field a register `409` names, if the error is one. */

@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { profileMutationTags } from '../../../shared/config/cache-tags'
 import type { Database } from '../../../shared/types/database.types'
+import type { ScriptSitemapEntry } from '../../../shared/types/scripts.types'
 import { isUserRole } from '../../../shared/utils/api.utils'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
 import { databaseErrorResponse, requiredParam } from '../lib/request'
@@ -241,6 +242,25 @@ internal.use('*', async (c, next) => {
   }
 
   return next()
+})
+
+/** Every script's address, for the sitemap.
+ *
+ * Internal rather than public because `GET /scripts` is admin-only and
+ * paginated: a crawler-facing list has to be complete, but it also has no
+ * business carrying files, comment counts or author profiles, so it selects
+ * two columns and nothing else. */
+internal.get('/scripts/sitemap', async (c) => {
+  const supabase = createInternalSupabaseClient(c)
+
+  const { data, error } = await supabase
+    .from('scripts')
+    .select('slug, updated_at')
+    .order('created_at', { ascending: false })
+
+  if (error) return databaseErrorResponse(c, error)
+
+  return c.json<Array<ScriptSitemapEntry>>(data)
 })
 
 /** Update a user's role */

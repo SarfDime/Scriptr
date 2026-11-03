@@ -1,6 +1,7 @@
 import { apiRoutes } from '@shared/config/api-routes'
 import { PROFILE_CACHE_TAGS } from '@shared/config/cache-tags'
 import { UPLOAD_FINALIZE_TIMEOUT_MS } from '@shared/config/next-constants'
+import type { QueryApiEndpointType } from '@shared/types/api.types'
 import type {
   AvatarUploadRequest,
   AvatarUploadResponse,
@@ -19,7 +20,8 @@ import type {
   ProfilePreferencesPatch,
   ProfilePreferencesResponse,
 } from '@shared/types/profile-preferences.types'
-import { apiFetchPublicRead, apiFetchRequired } from './next-api'
+import { nextLogs } from '@/lib/logger'
+import { ApiError, apiFetchRequired } from './next-api'
 import { putToStaging, toUserFacingUploadError } from './upload'
 
 export const getMyProfilePreferences = (cookie?: string) =>
@@ -60,39 +62,53 @@ export const getMyProfile = (cookie?: string) =>
  * Public — no auth, no cookie forwarding needed (the response is the same
  * for every viewer). Script uploads/deletes, favorites changes, and profile
  * edits revalidate the shared public-profile tag.
+ *
+ * `null` means the API answered `404`: no such profile. Anything else —
+ * unreachable API, a `5xx` — throws instead, because the page turns `null`
+ * into `notFound()` and would otherwise tell the reader a profile that
+ * exists does not. There is no build-time use of these reads, so the
+ * fallback in `apiFetchPublicRead` is not needed here.
  */
-export const getPublicProfileById = (id: string) =>
-  apiFetchPublicRead<PublicProfileResponse | null>(
-    apiRoutes.profiles.byId(id),
-    null,
-    {
+const fetchPublicProfile = async (path: QueryApiEndpointType) => {
+  try {
+    return await apiFetchRequired<PublicProfileResponse>(path, {
       cache: 'force-cache',
       next: { tags: [PROFILE_CACHE_TAGS.public()] },
-    }
-  )
+    })
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null
+    throw error
+  }
+}
+
+export const getPublicProfileById = (id: string) =>
+  fetchPublicProfile(apiRoutes.profiles.byId(id))
 
 export const getPublicProfileByUsername = (username: string) =>
-  apiFetchPublicRead<PublicProfileResponse | null>(
-    apiRoutes.profiles.usernameByUsername(username),
-    null,
-    { cache: 'force-cache', next: { tags: [PROFILE_CACHE_TAGS.public()] } }
-  )
+  fetchPublicProfile(apiRoutes.profiles.usernameByUsername(username))
 
-/** Public — no auth. Invalidated when the profile's public stats change. */
-export const getProfileStats = (id: string) =>
-  apiFetchPublicRead<ProfileStats>(
-    apiRoutes.profiles.statsById(id),
-    {
-      scripts_uploaded: 0,
-      total_votes_received: 0,
-      total_downloads: 0,
-      comments_made: 0,
-    },
-    {
-      cache: 'force-cache',
-      next: { tags: [PROFILE_CACHE_TAGS.stats(id)] },
-    }
-  )
+/** Public — no auth. Invalidated when the profile's public stats change.
+ *
+ * `null` when the read fails. The caller renders these as plain numbers, so
+ * falling back to zeros would claim the person has uploaded nothing. */
+export const getProfileStats = async (id: string) => {
+  try {
+    return await apiFetchRequired<ProfileStats>(
+      apiRoutes.profiles.statsById(id),
+      {
+        cache: 'force-cache',
+        next: { tags: [PROFILE_CACHE_TAGS.stats(id)] },
+      }
+    )
+  } catch (error) {
+    nextLogs({
+      message: `Profile stats could not be read for ${id}.`,
+      logLevel: 'warn',
+      error,
+    })
+    return null
+  }
+}
 
 /**
  * Updates the signed-in user's profile. `username` is required on every

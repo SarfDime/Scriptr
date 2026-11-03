@@ -20,5 +20,11 @@
       "import": "./*.ts",
       "default": "./*.ts"
     }
+  },
+  "scripts": {
+    "test": "tsx --test \"utils/**/*.test.ts\""
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15"
   }
 }

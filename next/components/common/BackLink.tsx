@@ -1,7 +1,7 @@
 import ArrowLeft from '@sanity/icons/ArrowLeft'
 import ChevronLeft from '@sanity/icons/ChevronLeft'
 import DoubleChevronLeft from '@sanity/icons/DoubleChevronLeft'
-import { NextLink, type NextLinkProps } from '@/components/common/NextLink'
+import { NextLink, type NextLinkBaseProps } from '@/components/common/NextLink'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
 import { Badge, type BadgeProps } from '../ui/Badge'
@@ -16,7 +16,7 @@ export type BackLinkProps = {
   badgeProps?: BadgeProps
   label: string
   backLevel?: keyof typeof BACK_LINK_ICONS
-} & Omit<NextLinkProps, 'children'>
+} & Omit<NextLinkBaseProps, 'children'>
 
 export const BackLink = ({
   badgeProps,

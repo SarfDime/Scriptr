@@ -1,4 +1,5 @@
 import Book from '@sanity/icons/Book'
+import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { PortableTextContent } from '@/components/typography/PortableTextContent'
 import { Text } from '@/components/typography/Text'
@@ -28,7 +29,7 @@ export const SubjectOverviewCard = ({
   const administrators = createPersonSummaries(
     {
       target: professors,
-      title: 'Professor',
+      title: UI_STRINGS.academics.entity.professor,
       getHref: (professor) =>
         getAcademicPath({
           type: 'professor',
@@ -37,7 +38,7 @@ export const SubjectOverviewCard = ({
     },
     {
       target: study,
-      title: 'Study',
+      title: UI_STRINGS.academics.entity.study,
       getHref: () =>
         getAcademicPath({
           type: 'study',
@@ -48,13 +49,13 @@ export const SubjectOverviewCard = ({
     },
     {
       target: faculty,
-      title: 'Faculty',
+      title: UI_STRINGS.academics.entity.faculty,
       getHref: () =>
         getAcademicPath({ type: 'faculty', universitySlug, facultySlug }),
     },
     {
       target: university,
-      title: 'University',
+      title: UI_STRINGS.academics.entity.university,
       getHref: () => getAcademicPath({ type: 'university', universitySlug }),
     }
   )
@@ -64,7 +65,7 @@ export const SubjectOverviewCard = ({
       <Box className='ui-cluster items-start justify-between gap-5'>
         <Box className='ui-stack gap-2'>
           <Text className='ui-caption uppercase tracking-wide'>
-            Subject overview
+            {UI_STRINGS.academics.subject.overview}
           </Text>
           {description && (
             <PortableTextContent>{description}</PortableTextContent>
@@ -80,7 +81,7 @@ export const SubjectOverviewCard = ({
         </Box>
       </Box>
 
-      <Divider className={cn('mt-auto cp-green-nb', colorBorder)} />
+      <Divider className={cn('mt-auto cp-divider', colorBorder)} />
 
       <AdministratorList
         administrators={administrators}

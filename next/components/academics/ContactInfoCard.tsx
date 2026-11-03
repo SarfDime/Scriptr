@@ -1,3 +1,4 @@
+import { UI_STRINGS } from '@shared/config/strings'
 import { cn } from '@/lib/common-utils'
 import { Box } from '../common/Box'
 import { SectionHeader } from '../common/SectionHeader'
@@ -15,9 +16,9 @@ export type ContactInfoCardProps = {
 }
 
 export const ContactInfoCard = ({
-  title = 'Contact & Location',
+  title = UI_STRINGS.academics.contactAndLocation,
   streetAddress,
-  addressLabel = 'Address',
+  addressLabel = UI_STRINGS.academics.address,
   telephone,
   email,
   website,
@@ -38,19 +39,25 @@ export const ContactInfoCard = ({
       )}
       {telephone && (
         <Box className='ui-stack gap-0.5'>
-          <Text className='ui-label'>Phone</Text>
+          <Text className='ui-label'>
+            {UI_STRINGS.academics.professor.phone}
+          </Text>
           <Text className='ui-body'>{telephone}</Text>
         </Box>
       )}
       {email && (
         <Box className='ui-stack gap-0.5'>
-          <Text className='ui-label'>Email</Text>
+          <Text className='ui-label'>
+            {UI_STRINGS.academics.professor.email}
+          </Text>
           <Text className='ui-body'>{email}</Text>
         </Box>
       )}
       {website && (
         <Box className='ui-stack gap-0.5'>
-          <Text className='ui-label'>Website</Text>
+          <Text className='ui-label'>
+            {UI_STRINGS.academics.professor.website}
+          </Text>
           <a
             href={website}
             target='_blank'

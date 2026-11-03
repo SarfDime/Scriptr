@@ -71,13 +71,17 @@ export const ProfilePage = ({
             title={isOwner ? undefined : UI_STRINGS.subjects.title}
             studyTip={studyTip}
           />
-          <Divider />
+          {authoredCount !== undefined && commentCount !== undefined && (
+            <>
+              <Divider />
 
-          <ActivityStats
-            savedCount={profile.favorite_scripts.length}
-            authoredCount={authoredCount}
-            commentCount={commentCount}
-          />
+              <ActivityStats
+                savedCount={profile.favorite_scripts.length}
+                authoredCount={authoredCount}
+                commentCount={commentCount}
+              />
+            </>
+          )}
         </>
       }
     >

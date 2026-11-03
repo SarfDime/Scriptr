@@ -16,18 +16,30 @@ export function Divider({
   ...rest
 }: DividerProps) {
   const baseStyles = 'ui-divider'
-  const variantStyles = variant === 'dashed' ? 'border-dashed' : 'border-solid'
+  // The orientation paints the groove; the line is tinted through `--divider-line`.
   const orientationStyles =
-    orientation === 'horizontal' ? 'border-t w-full' : 'border-l h-full min-h-4'
+    orientation === 'horizontal'
+      ? 'ui-divider-h w-full'
+      : 'ui-divider-v h-full min-h-4'
+  // A dashed line cannot come out of the groove gradient, so it falls back to a
+  // border — which has to beat the width/background the groove sets.
+  const variantStyles =
+    variant === 'dashed'
+      ? cn(
+          'h-px! border-dashed border-(--divider-line)',
+          orientation === 'horizontal' ? 'border-t!' : 'border-l!',
+          'bg-none!'
+        )
+      : ''
   const colorSchemeStyles =
-    colorScheme === 'dark' ? 'ui-above-inside p-0' : 'border-grey-300'
+    colorScheme === 'dark' ? '' : '[--divider-line:var(--color-grey-300)]'
 
   return (
     <Box
       className={cn(
         baseStyles,
-        variantStyles,
         orientationStyles,
+        variantStyles,
         colorSchemeStyles,
         className
       )}

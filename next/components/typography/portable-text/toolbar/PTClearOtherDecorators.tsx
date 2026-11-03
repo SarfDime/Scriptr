@@ -1,37 +1,10 @@
-'use client'
-
 import { useEditor } from '@portabletext/editor'
 import { defineBehavior } from '@portabletext/editor/behaviors'
 import {
-  ALIGNMENT_DECORATORS,
-  type AlignmentType,
-  COLOR_DECORATORS,
-  type ColorsType,
-  type FontWeightType,
-  WEIGHT_DECORATORS,
+  DECORATOR_CATEGORIES,
+  getDecoratorCategory,
 } from '@shared/config/shared-pt-config'
 import { useEffect } from 'react'
-
-/**
- * Same categorization your Studio version uses, just reading `.name`
- * instead of `.value` — that's the field your shared config actually
- * exports (see schema.ts, which builds the decorator schema off `.name`).
- */
-const DecoratorCategories = {
-  alignment: ALIGNMENT_DECORATORS.map((d) => d.name),
-  color: COLOR_DECORATORS.map((d) => d.name),
-  weight: WEIGHT_DECORATORS.map((d) => d.name),
-}
-
-const getDecoratorCategory = (decorator: string) => {
-  if (DecoratorCategories.color.includes(decorator as ColorsType))
-    return 'color'
-  if (DecoratorCategories.weight.includes(decorator as FontWeightType))
-    return 'weight'
-  if (DecoratorCategories.alignment.includes(decorator as AlignmentType))
-    return 'alignment'
-  return undefined
-}
 
 /**
  * Mount this once inside `EditorProvider`, alongside other plugins
@@ -56,11 +29,10 @@ export const ClearOtherDecorators = () => {
         // forwarding unknown event properties through `raise`, this breaks.
         event: { decorator: string; _originalEvent?: boolean }
       }) => {
-        const category = getDecoratorCategory(event.decorator)
         return (
           event.decorator !== 'clear-formatting' &&
           !event._originalEvent &&
-          Boolean(category)
+          Boolean(getDecoratorCategory(event.decorator))
         )
       },
       actions: [
@@ -68,7 +40,7 @@ export const ClearOtherDecorators = () => {
           const category = getDecoratorCategory(event.decorator)
           if (!category) return [] // satisfies types; guard already filtered this out
 
-          const siblingsToRemove = DecoratorCategories[category]
+          const siblingsToRemove = DECORATOR_CATEGORIES[category]
             .filter((decorator) => decorator !== event.decorator)
             .map(
               (decorator) =>

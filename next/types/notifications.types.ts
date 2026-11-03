@@ -26,7 +26,7 @@ export type AppNotification = {
   /** Drives the accent color in `NotificationsAside`. Defaults to `'info'`
    * wherever it's omitted (see `NOTIFICATION_PALETTE`). */
   type?: NotificationDisplayType
-  sourceType?: string
+  sourceType?: NotificationKind
 }
 
 /** Single source of truth for semantic and server-kind notification palettes. */
@@ -43,6 +43,7 @@ export const NOTIFICATION_PALETTE: Record<
   restriction_lifted: 'cp-sky',
   content_removed: 'cp-danger',
   flag_threshold: 'cp-warning',
+  announcement: 'cp-brand',
 }
 
 export type PushInput = {

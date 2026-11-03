@@ -24,7 +24,7 @@ export const NavUserSlot = () => {
     return (
       <NextLink href='/auth' className='button subtle w-full rounded-lg'>
         <User />
-        <Text className='ui-label'>Sign in</Text>
+        <Text className='ui-label'>{UI_STRINGS.navigation.signIn}</Text>
       </NextLink>
     )
   }

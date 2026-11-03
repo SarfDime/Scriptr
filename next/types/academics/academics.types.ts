@@ -1,14 +1,29 @@
+import type {
+  FacultyStaticParamsQueryResult,
+  ProfessorStaticParamsQueryResult,
+  StudyStaticParamsQueryResult,
+  SubjectStaticParamsQueryResult,
+  UniversityStaticParamsQueryResult,
+} from '@shared/types/sanity.types'
+
 export type AcademicDetailPageProps<
   TParams extends Record<string, string> = { slug: string },
 > = {
   params: Promise<TParams>
 }
 
-export type UniversityRouteParams = { universitySlug: string }
-export type FacultyRouteParams = UniversityRouteParams & { facultySlug: string }
-export type StudyRouteParams = FacultyRouteParams & { studySlug: string }
-export type SubjectRouteParams = StudyRouteParams & { subjectSlug: string }
-export type ProfessorRouteParams = { professorSlug: string }
+/**
+ * The params each academic route is served at, taken from the Sanity
+ * static-params query that enumerates it. `generateStaticParams` returns exactly
+ * these, `generateMetadata` and the page receive exactly these, and
+ * `getAcademicPath` builds a URL from exactly these — one shape, so a query
+ * change surfaces here instead of silently disagreeing.
+ */
+export type UniversityRouteParams = UniversityStaticParamsQueryResult[number]
+export type FacultyRouteParams = FacultyStaticParamsQueryResult[number]
+export type StudyRouteParams = StudyStaticParamsQueryResult[number]
+export type SubjectRouteParams = SubjectStaticParamsQueryResult[number]
+export type ProfessorRouteParams = ProfessorStaticParamsQueryResult[number]
 
 export type MinimalEntity = {
   _id: string

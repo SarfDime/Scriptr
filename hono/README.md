@@ -50,6 +50,13 @@ Universities can override `R2_BUCKET` per-university via
 `INTERNAL_API_SECRET` must match `SANITY_STUDIO_INTERNAL_SECRET` in the Sanity
 Studio environment, or every Studio sync/delete action fails.
 
+`CORS_ORIGINS` is the origin allowlist. The localhost dev ports
+(`3000`, `5173`, `3333`) are added automatically unless `NODE_ENV` is
+`production`; everything else — including the hosted Studio — must be listed
+there. Studio actions run in the browser, so an unlisted Studio hostname fails
+its preflight with `(Reason: CORS request did not succeed)`, while a
+`403 Forbidden` after that means the two secrets above disagree.
+
 `R2_ENDPOINT` must be the bucket's S3 endpoint and nothing more — a path on the
 end (e.g. `.../scriptr`) makes the SDK store every object under an extra prefix,
 which shows up as broken public avatar URLs.
@@ -74,7 +81,7 @@ value in the frontend's environment (`next/.env.example`). In production the
 URL must be the web project's Vercel alias
 (`https://scriptr-web-team-slug.vercel.app/api/revalidate`), because the
 public hostname is behind Cloudflare and the proxy drops the API's server-to-
-server request. See [`VERCEL_DEPLOYMENT.md`](../VERCEL_DEPLOYMENT.md).
+server request. See [`VERCEL_DEPLOYMENT.md`](../docs/VERCEL_DEPLOYMENT.md).
 
 Never commit `.env` files or storage credentials.
 
@@ -191,4 +198,4 @@ fully built and documented but never mounted type-checks clean, passes review,
 and silently 404s in production (this already happened once with `ratings.ts`).
 Before calling route work done, grep `src/index.ts` for the new route file,
 run `corepack pnpm gen:api-endpoints`, and update `API_DOCUMENTATION.md`,
-`API_TESTING_GUIDE.md`, and `PROGRESS.md`.
+`API_TESTING_GUIDE.md`, and `docs/PROGRESS.md`.

@@ -82,4 +82,4 @@ goes in `shared/strings/<area>-strings.ts` (or `UI_STRINGS`), not inline.
 
 Use the existing components, styles, and API client for new screens. See the
 [styling guide](STYLING_GUIDE.md), [Hono API reference](../hono/src/routes/API_DOCUMENTATION.md),
-and root [`AGENTS.md`](../AGENTS.md) for React/Next.js version and directive conventions.
+and [`docs/AGENTS-FRONTEND.md`](../docs/AGENTS-FRONTEND.md) for React/Next.js version and directive conventions.

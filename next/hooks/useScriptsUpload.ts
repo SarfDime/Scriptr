@@ -30,7 +30,7 @@ export function useScriptUpload() {
       addToast({
         type: 'success',
         title: UI_STRINGS.scripts.uploadModal.statuses.success,
-        description: 'Your script is now available to the subject community.',
+        description: UI_STRINGS.scripts.uploadModal.statuses.successDescription,
       })
       return script.id
     },

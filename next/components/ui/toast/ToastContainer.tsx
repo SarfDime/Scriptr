@@ -12,9 +12,18 @@ export const ToastContainer = () => {
   const { toasts, removeToast } = useToast()
 
   return (
+    // A live region, because a toast is the only report a mutation gives: without
+    // one, a screen reader user gets no answer at all to a save or a failed
+    // upload. Polite, so it waits for the current sentence instead of cutting in.
     <Box
+      role='status'
+      aria-live='polite'
+      aria-atomic='false'
       className={cn(
-        'fixed top-4 right-4 space-y-2 transition',
+        // The region spans a column of toasts but not the page: only the toasts
+        // themselves take pointer events, so the empty part of it cannot sit
+        // over a control.
+        'fixed top-4 right-4 space-y-2 transition pointer-events-none *:pointer-events-auto',
         Z_INDEX.TOASTER
       )}
     >

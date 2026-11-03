@@ -3,6 +3,7 @@ import { cors } from 'hono/cors'
 /// <reference path="./sanity-stub.d.ts" />
 
 import { getRequestListener } from '@hono/node-server'
+import { resolveCorsOrigin } from './lib/cors'
 import { honoLog, honoLogRequest } from './lib/logger'
 import achievementDefinitions from './routes/achievement-definitions'
 import auth from './routes/auth'
@@ -49,29 +50,7 @@ app.use('*', async (c, next) => {
 app.use(
   '*',
   cors({
-    origin: (origin) => {
-      const allowedOrigins = [
-        'http://localhost:3000',
-        'http://localhost:5173',
-        'http://localhost:3333',
-        ...(process.env.CORS_ORIGINS?.split(',') ?? []),
-      ].map((value) => value.trim())
-
-      // Entries like `*.scriptr.uk` match any https subdomain.
-      const isAllowed = allowedOrigins.some((entry) => {
-        if (!entry.startsWith('*.')) return entry === origin
-        try {
-          const url = new URL(origin)
-          return (
-            url.protocol === 'https:' && url.hostname.endsWith(entry.slice(1))
-          )
-        } catch {
-          return false
-        }
-      })
-
-      return isAllowed ? origin : ''
-    },
+    origin: (origin) => resolveCorsOrigin(origin),
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowHeaders: [
       'Content-Type',

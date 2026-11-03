@@ -3,13 +3,10 @@ import {
   SANITY_PROJECT_ID,
 } from '@shared/config/sanity-constants'
 import type { PortableTextBlock } from 'sanity'
-import type { StructureBuilder } from 'sanity/structure'
-import { Iframe } from 'sanity-plugin-iframe-pane'
 import type {
   LinkSelectorPreviewProps,
   PreviewPrepareProps,
 } from '../../types/common.types'
-import type { Doc } from '../../types/schema-prop.types'
 
 /**
  * Flatten a Portable Text block array into a plain string,
@@ -86,48 +83,6 @@ export const sanitizeSlug = (slug?: string) => {
 export const slugifyString = (input: Array<PortableTextBlock>) => {
   const flattenedInput = flattenFirstRichTextBlock(input)
   return sanitizeSlug(flattenedInput)
-}
-
-// The URL that will be passed to the Iframe plugin.
-const iFrameUrl = ({ slug }: { slug: string }) =>
-  `${process.env.SANITY_STUDIO_PREVIEW_ORIGIN ?? 'http://localhost:3000'}/api/draft?secret=PREVIEWMODE&slug=${slug}`
-
-/**
- * Generates the editing document slug needed for the iFrameUrl
- */
-export const getDocumentSlug = ({ doc }: { doc: Doc }) => {
-  const typeSlugMap: Record<string, string> = {
-    newsPost: 'news',
-    researchPost: 'research',
-    videoPost: 'videos',
-    blogPost: 'blog',
-  }
-
-  const prefix = typeSlugMap[doc?._type || '']
-  const slugPath = prefix
-    ? `/${prefix}/${doc?.slug?.current}`
-    : `/${doc?.pageSlug?.current ?? ''}`
-
-  return iFrameUrl({ slug: slugPath })
-}
-
-/**
- * Builds the frame with the content that we are trying to show on the frame.
- * Pass the StructureBuilder, url of what you want to embed, and the title of the action button
- */
-export const iframeBuilder = (s: StructureBuilder, title: string) => {
-  return s.view
-    .component(Iframe)
-    .options({
-      url: (doc: Doc) =>
-        getDocumentSlug({
-          doc,
-        }),
-      reload: {
-        button: true,
-      },
-    })
-    .title(title)
 }
 
 /** * Converts minutes and seconds to a string

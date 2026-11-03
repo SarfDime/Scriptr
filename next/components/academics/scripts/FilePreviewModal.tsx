@@ -7,7 +7,7 @@ import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
 import type { FileType } from '@shared/types/api.types'
 import { useState } from 'react'
 import { Box } from '@/components/common/Box'
-import type { ButtonProps } from '@/components/common/Button'
+import type { ButtonBaseProps } from '@/components/common/Button'
 import { Button } from '@/components/common/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Dialog } from '@/components/ui/Dialog'
@@ -47,7 +47,7 @@ export type FilePreviewFile = FilePreviewSource & {
 export type FilePreviewModalProps = {
   file: FilePreviewFile
   triggerLabel?: string
-  triggerButtonProps?: Omit<ButtonProps, 'children'>
+  triggerButtonProps?: Omit<ButtonBaseProps, 'children'>
   /** Controlled mode: when `open` is provided the modal renders no trigger of
    * its own — the caller opens it (e.g. from a thumbnail) and hears about
    * closing through `onOpenChange`. */

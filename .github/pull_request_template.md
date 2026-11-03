@@ -20,7 +20,7 @@
 - [ ] `corepack pnpm check-types`
 - [ ] `corepack pnpm format`
 - [ ] Generated files regenerated when needed (`corepack pnpm gen:api-types`, `corepack pnpm sanity:typegen`, `corepack pnpm gen:api-endpoints`)
-- [ ] Docs updated (`PROGRESS.md`; `API_DOCUMENTATION.md` and `API_TESTING_GUIDE.md` for route changes; `ARCHITECTURE.md` if the design changed)
+- [ ] Docs updated (`docs/PROGRESS.md`; `API_DOCUMENTATION.md` and `API_TESTING_GUIDE.md` for route changes; `docs/ARCHITECTURE.md` if the design changed)
 - [ ] Relevant manual testing completed
 
 ## Security and data considerations

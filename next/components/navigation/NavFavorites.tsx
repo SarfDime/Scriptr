@@ -3,6 +3,7 @@
 import BookmarkIcon from '@sanity/icons/Bookmark'
 import { UI_STRINGS } from '@shared/config/strings'
 import { portableTextToPlainText } from '@shared/utils/portable-text.utils'
+import { getAcademicPath } from '@/lib/academic-routes'
 import { useMyProfile } from '@/providers/ProfileProvider'
 import { Box } from '../common/Box'
 import { NextLink } from '../common/NextLink'
@@ -32,7 +33,7 @@ export const NavFavorites = () => {
       {favorites.slice(0, MAX_FAVORITES).map((script) => (
         <NextLink
           key={script.id}
-          href={`/scripts/${script.id}`}
+          href={getAcademicPath({ type: 'script', scriptSlug: script.slug })}
           className='group button button-sm basic w-full justify-start gap-1 p-1 text-left'
         >
           <BookmarkIcon className='shrink-0 group-hover:text-amber' />

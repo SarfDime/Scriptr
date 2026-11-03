@@ -12,6 +12,7 @@ import { FormContainer } from '@/components/typography/FormContainer'
 import { Text } from '@/components/typography/Text'
 import { Card } from '@/components/ui/Card'
 import { Dialog } from '@/components/ui/Dialog'
+import { DialogFooter } from '@/components/ui/DialogFooter'
 import { useEditAcademicsForm } from '@/hooks/profile/useEditAcademicsForm'
 import { useDeviceType } from '@/hooks/useDeviceType'
 import { useOnboarding } from '@/providers/onboarding/OnboardingProvider'
@@ -124,27 +125,20 @@ function EditAcademicsDialog({
           </Box>
         </Card.Body>
 
-        <Card.Footer className='ui-stack shrink-0 gap-3 border-grey-200 border-t px-5 py-4'>
-          {prepareError && (
-            <Text className='ui-caption cp-danger-nb'>{prepareError}</Text>
-          )}
-          <Box className='ui-cluster justify-end gap-2'>
-            <Button
-              onClick={onClose}
-              disabled={isBusy}
-              className='button subtle'
-            >
-              {UI_STRINGS.profile.edit.cancel}
-            </Button>
-            <Button
-              type='submit'
-              disabled={!canSubmit}
-              className='button solid'
-            >
-              {UI_STRINGS.profile.edit.save}
-            </Button>
-          </Box>
-        </Card.Footer>
+        <DialogFooter
+          className='ui-stack shrink-0 gap-3 border-grey-200 border-t px-5 py-4'
+          size='sm'
+          note={
+            prepareError ? (
+              <Text className='ui-caption cp-danger-nb'>{prepareError}</Text>
+            ) : undefined
+          }
+          secondaryLabel={UI_STRINGS.profile.edit.cancel}
+          onSecondary={onClose}
+          secondaryDisabled={isBusy}
+          primaryLabel={UI_STRINGS.profile.edit.save}
+          primaryDisabled={!canSubmit}
+        />
       </FormContainer>
     </Dialog>
   )

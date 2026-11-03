@@ -1,6 +1,6 @@
 import type { PortableTextValue } from '@shared/types/portable-text.types'
 import type { BoxProps } from '@/components/common/Box'
-import type { ButtonProps } from '@/components/common/Button'
+import type { ButtonBaseProps } from '@/components/common/Button'
 import type { TitleProps } from '@/components/typography/Title'
 import type { SanityIconProps } from '../component.types'
 
@@ -16,7 +16,7 @@ type CollapseTriggerProps = {
   currentIsOpen?: boolean
   toggleCollapse?: () => void
 } & CommonCollapseProps &
-  Omit<ButtonProps, 'title'>
+  Omit<ButtonBaseProps, 'title'>
 
 type CollapseContentProps = {
   currentIsOpen?: boolean

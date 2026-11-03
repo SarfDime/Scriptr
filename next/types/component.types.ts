@@ -2,6 +2,7 @@ import type {
   AriaAttributes,
   CSSProperties,
   HTMLAttributes,
+  ReactNode,
   RefAttributes,
   SVGProps,
 } from 'react'
@@ -38,6 +39,31 @@ type BoxTags =
 type SanityIconProps = Omit<SVGProps<SVGSVGElement>, 'ref'> &
   RefAttributes<SVGSVGElement>
 
+/**
+ * A control has to have an accessible name: rendered content, or an explicit
+ * `aria-label`/`aria-labelledby` when it has none.
+ *
+ * It lives in the type rather than in a lint rule because lint cannot see
+ * "this button's only child is an icon" — a `<Button><CloseIcon /></Button>`
+ * satisfies every DOM rule and still announces nothing. Making the name a
+ * condition of the props means the compiler asks for one at the call site,
+ * next to the icon it is describing.
+ */
+type AccessibleNameProps =
+  | { children: ReactNode; 'aria-label'?: string; 'aria-labelledby'?: string }
+  | { children?: never; 'aria-label'?: string; 'aria-labelledby': string }
+  | { children?: never; 'aria-label': string; 'aria-labelledby'?: string }
+
+/**
+ * `Omit` that survives a union. The built-in one keeps only the keys every
+ * member has, so wrapping `ButtonProps`/`NextLinkProps` in it would quietly
+ * drop the prop types instead of narrowing them — including the accessible-name
+ * requirement below.
+ */
+type OmitProps<T, K extends PropertyKey> = T extends unknown
+  ? Omit<T, K>
+  : never
+
 type AdditionalComponentAttributes = {
   children?: React.ReactNode
   disabled?: boolean
@@ -46,9 +72,11 @@ type AdditionalComponentAttributes = {
   Omit<HTMLAttributes<HTMLElement>, 'style'>
 
 export type {
+  AccessibleNameProps,
   AdditionalComponentAttributes,
   BoxTags,
   ComponentPlacement,
   ComponentTags,
+  OmitProps,
   SanityIconProps,
 }

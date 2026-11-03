@@ -1,6 +1,7 @@
 'use client'
 
 import { IMAGE_QUALITY } from '@shared/config/next-constants'
+import { UI_STRINGS } from '@shared/config/strings'
 import type { SanityImageType } from '@shared/types/sanity-transform.types'
 import Image, { type ImageProps } from 'next/image'
 import { useState } from 'react'
@@ -84,7 +85,7 @@ export function NextImage({
               objectPosition: objectPositionProp ?? 'center',
             }}
             quality={quality ?? IMAGE_QUALITY.MAXIMUM}
-            alt={alt || 'Data unavailable'}
+            alt={alt || UI_STRINGS.general.dataUnavailable}
             src={src || urlFor({ asset, crop, hotspot }).url()}
             fill={Boolean(fillProp)}
             sizes={sizes}

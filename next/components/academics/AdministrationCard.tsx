@@ -1,3 +1,4 @@
+import { UI_STRINGS } from '@shared/config/strings'
 import { cn } from '@/lib/common-utils'
 import type { PersonSummary } from '@/types/components/Person.types'
 import { Box } from '../common/Box'
@@ -16,10 +17,10 @@ export type AdministrationCardProps = {
 }
 
 export const AdministrationCard = ({
-  title = 'Administration',
-  leaderLabel = 'Dean',
+  title = UI_STRINGS.academics.administration,
+  leaderLabel = UI_STRINGS.academics.dean,
   leader,
-  deputiesLabel = 'Vice Deans',
+  deputiesLabel = UI_STRINGS.academics.viceDeans,
   deputies,
   secretary,
   className,
@@ -54,7 +55,7 @@ export const AdministrationCard = ({
       )}
       {secretary && (
         <Box className='ui-stack gap-0.5'>
-          <Text className='ui-label'>Secretary</Text>
+          <Text className='ui-label'>{UI_STRINGS.academics.secretary}</Text>
           <Text className='ui-body'>{secretary}</Text>
         </Box>
       )}

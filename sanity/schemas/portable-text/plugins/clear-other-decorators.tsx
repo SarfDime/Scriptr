@@ -1,37 +1,17 @@
-/** biome-ignore-all lint/style/useNamingConvention: <Need to be like this> */
 import { useEditor } from '@portabletext/editor'
 import { defineBehavior } from '@portabletext/editor/behaviors'
-import { useEffect } from 'react'
 import {
-  AlignmentDecorators,
-  ColorDecorators,
-  WeightDecorators,
-} from '../decorators'
+  DECORATOR_CATEGORIES,
+  getDecoratorCategory,
+} from '@shared/config/shared-pt-config'
+import { useEffect } from 'react'
 
-/** Categorizes decorators */
-const DecoratorCategories = {
-  alignment: AlignmentDecorators.map((decorator) => decorator.value),
-  color: ColorDecorators.map((decorator) => decorator.value),
-  weight: WeightDecorators.map((decorator) => decorator.value),
-}
-
-/** Gets type of decorator */
-const GetDecoratorType = (decorator: string) => {
-  if (DecoratorCategories.color.some((color) => color === decorator)) {
-    return 'color'
-  }
-  if (DecoratorCategories.weight.some((weight) => weight === decorator)) {
-    return 'weight'
-  }
-  if (
-    DecoratorCategories.alignment.some((alignment) => alignment === decorator)
-  ) {
-    return 'alignment'
-  }
-  return undefined
-}
-
-/** Registers a behavior that clears all other decorators of same type and applies the selected decorator.
+/**
+ * Registers a behavior that clears every other decorator in the same set and
+ * then applies the selected one, so choosing "center" clears "left"/"right".
+ *
+ * The categories themselves live in `shared-pt-config` because the web editor
+ * enforces the same rule and the map has to agree in both.
  */
 export const ClearOtherDecorators = () => {
   const editor = useEditor()
@@ -44,27 +24,20 @@ export const ClearOtherDecorators = () => {
       guard: ({
         event,
       }: {
-        // _originalEvent is a custom property
-        // sent to the original event to prevent recursion
-        // if they update this to not spread properties it will break
+        // _originalEvent is a custom property re-sent on the replayed event
+        // to prevent recursion — if a future editor version stops
+        // forwarding unknown event properties through `raise`, this breaks.
         event: { decorator: string; _originalEvent?: boolean }
-      }) => {
-        const decoratorType = GetDecoratorType(event.decorator)
-
-        return (
-          event.decorator !== 'clear-formatting' &&
-          !event._originalEvent &&
-          decoratorType
-        )
-      },
+      }) =>
+        event.decorator !== 'clear-formatting' &&
+        !event._originalEvent &&
+        Boolean(getDecoratorCategory(event.decorator)),
       actions: [
         ({ event }) => {
-          const decoratorType = GetDecoratorType(event.decorator)
-          if (!decoratorType)
-            // Just to satisfy types
-            return []
+          const category = getDecoratorCategory(event.decorator)
+          if (!category) return []
 
-          const siblingsToRemove = DecoratorCategories[decoratorType]
+          const siblingsToRemove = DECORATOR_CATEGORIES[category]
             .filter((decorator) => decorator !== event.decorator)
             .map(
               (decorator) =>

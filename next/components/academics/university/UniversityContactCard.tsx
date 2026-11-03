@@ -1,3 +1,4 @@
+import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
 import { SectionHeader } from '@/components/common/SectionHeader'
@@ -20,38 +21,50 @@ export const UniversityContactCard = ({
 
   return (
     <Card className='ui-stack ui-above'>
-      <SectionHeader as='h3' title='Contact & Location' />
+      <SectionHeader as='h3' title={UI_STRINGS.academics.contactAndLocation} />
       {streetAddress && (
         <Box className='ui-stack gap-0.5 ui-above-inside'>
-          <Text className='ui-label'>Address</Text>
-          <Text className='ui-body'>{streetAddress}</Text>
+          <Text className='ui-label'>{UI_STRINGS.academics.address}</Text>
+          <NextLink
+            href={streetAddress}
+            className='button link w-fit break-all items-start'
+          >
+            {streetAddress}
+          </NextLink>
         </Box>
       )}
       {telephone && (
         <Box className='ui-stack gap-0.5 ui-above-inside'>
-          <Text className='ui-label'>Phone</Text>
+          <Text className='ui-label'>
+            {UI_STRINGS.academics.professor.phone}
+          </Text>
           <Text className='ui-body'>{telephone}</Text>
         </Box>
       )}
       {email && (
         <Box className='ui-stack gap-0.5 ui-above-inside'>
-          <Text className='ui-label'>Email</Text>
-          <NextLink href={`mailto:${email}`} className='ui-body w-fit'>
+          <Text className='ui-label'>
+            {UI_STRINGS.academics.professor.email}
+          </Text>
+          <NextLink
+            href={`mailto:${email}`}
+            className='button link w-fit break-all items-start'
+          >
             {email}
           </NextLink>
         </Box>
       )}
       {website && (
         <Box className='ui-stack gap-0.5 ui-above-inside'>
-          <Text className='ui-label'>Website</Text>
-          <a
+          <Text className='ui-label'>
+            {UI_STRINGS.academics.professor.website}
+          </Text>
+          <NextLink
             href={website}
-            target='_blank'
-            rel='noreferrer'
-            className='ui-body text-brand hover:underline break-all'
+            className='button link break-all items-start w-fit'
           >
             {website}
-          </a>
+          </NextLink>
         </Box>
       )}
     </Card>

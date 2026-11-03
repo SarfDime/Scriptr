@@ -78,6 +78,8 @@ export type StudyWithFacultyAndUniversity = Tables<'studies'> & {
  */
 export type ProfileScriptSummary = {
   id: string
+  /** Address segment of the script's page — see `ScriptSummary.slug`. */
+  slug: string
   title: PortableTextValue
   description: PortableTextValue | null
   vote_score: number
@@ -138,6 +140,24 @@ export type MyProfileResponse = ProfileCore
  * shape — an arbitrary user's profile, viewable by anyone. Same
  * rationale as `MyProfileResponse` above for keeping a distinct name. */
 export type PublicProfileResponse = ProfileCore
+
+/** One row of `GET /api/profiles` (admin only): only the columns that route
+ * selects, so the per-profile script and selection embeds are absent.
+ * `subjects.status` is the generated column type (`string`), not the
+ * `ProfileSubjectStatus` union the public profile shapes use, because this
+ * shape is what PostgREST infers for the embed. */
+export type ProfileListEntry = Pick<
+  Tables<'profiles'>,
+  'id' | 'username' | 'full_name' | 'role' | 'avatar_url' | 'created_at'
+> & {
+  subjects: Array<
+    Pick<Tables<'profile_subjects'>, 'subject_id' | 'status' | 'updated_at'>
+  >
+  achievements: Array<ProfileAchievement>
+}
+
+/** `GET /api/profiles`'s shape — every profile, unpaginated, admin only. */
+export type ProfilesListResponse = Array<ProfileListEntry>
 
 /** Body of `PATCH /api/profiles/me` (and the admin `PATCH /api/profiles/:id`).
  * `username` is required on every call; the other fields are only written

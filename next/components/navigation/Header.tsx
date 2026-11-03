@@ -37,7 +37,7 @@ export const Header = () => {
         'px-5'
       )}
     >
-      {/* Always available below lg. From lg up it is `display: none` while the
+      {/* Always available below xl. From xl up it is `display: none` while the
         navbar is docked. `transition-discrete` (allow-discrete) lets `display`
         flip at the end of the width/opacity transition when hiding, and
         `starting:` supplies the from-state when it appears again, so the header
@@ -47,9 +47,9 @@ export const Header = () => {
           'w-10 shrink-0 opacity-100',
           'transition-[width,opacity,display] transition-discrete duration-300 ease-in-out',
           'starting:w-0 starting:opacity-0',
-          'lg:group-data-[nav-collapsed=false]/nav:hidden',
-          'lg:group-data-[nav-collapsed=false]/nav:w-0',
-          'lg:group-data-[nav-collapsed=false]/nav:opacity-0'
+          'xl:group-data-[nav-collapsed=false]/nav:hidden',
+          'xl:group-data-[nav-collapsed=false]/nav:w-0',
+          'xl:group-data-[nav-collapsed=false]/nav:opacity-0'
         )}
       >
         <NavToggle
@@ -65,7 +65,7 @@ export const Header = () => {
       <Text className='ui-caption hidden lg:block'>
         {dateLabel} <span className='mx-2 text-grey-400'>/</span> Week {week}
       </Text>
-      <NavLogo className='lg:hidden' />
+      <NavLogo className='xl:hidden' />
       <HeaderActions />
     </header>
   )

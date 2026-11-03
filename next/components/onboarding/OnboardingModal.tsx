@@ -8,6 +8,7 @@ import { Text } from '@/components/typography/Text'
 import { Dialog } from '@/components/ui/Dialog'
 import { useOnboardingWizard } from '@/hooks/onboarding/useOnboardingWizard'
 import { saveAuthenticatedOnboarding } from '@/lib/profile-sync'
+import { toUserMessage } from '@/lib/user-facing-error'
 import { useNotifications } from '@/providers/notification/NotificationProvider'
 import { useOnboarding } from '@/providers/onboarding/OnboardingProvider'
 import { useSession } from '@/providers/SessionProvider'
@@ -64,11 +65,7 @@ export const OnboardingModal = ({ catalog }: OnboardingModalProps) => {
       await saveAuthenticatedOnboarding(catalog, wizard.data)
       handleFinish()
     } catch (error) {
-      setSaveError(
-        error instanceof Error
-          ? error.message
-          : UI_STRINGS.onboarding.saveFailed
-      )
+      setSaveError(toUserMessage(error, UI_STRINGS.onboarding.saveFailed))
     } finally {
       setIsSaving(false)
     }

@@ -1,3 +1,4 @@
+import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
@@ -10,7 +11,10 @@ export const ProfessorsSection = ({ professors }: ProfessorsSectionProps) => {
 
   return (
     <Card className='ui-stack ui-above'>
-      <SectionHeader title='Professors' count={professorList.length} />
+      <SectionHeader
+        title={UI_STRINGS.navigation.professors}
+        count={professorList.length}
+      />
 
       {professorList.length > 0 ? (
         <Box className='ui-stack'>
@@ -20,7 +24,7 @@ export const ProfessorsSection = ({ professors }: ProfessorsSectionProps) => {
         </Box>
       ) : (
         <Text className='ui-caption ui-above-inside'>
-          No professors assigned to this faculty.
+          {UI_STRINGS.academics.noProfessorsAssigned}
         </Text>
       )}
     </Card>

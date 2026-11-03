@@ -78,8 +78,11 @@ export const FieldContent = ({
 
       {children}
       {invalid && errorText && (
+        // `role='alert'` announces the message as it appears; the field's own
+        // control is not linked to it yet (see docs/PROGRESS.md).
         <Text
           {...errorProps}
+          role='alert'
           className={cn('text-error-red ui-caption', errorProps?.className)}
         >
           {errorText}

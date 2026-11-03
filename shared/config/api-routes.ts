@@ -90,6 +90,7 @@ export type ApiEndpoint =
   | '/api/restrictions/me'
   | '/api/restrictions/lookup'
   | `/api/restrictions/${string}`
+  | '/api/internal/scripts/sitemap'
   | `/api/internal/profiles/${string}/role`
   | '/api/internal/universities'
   | `/api/internal/universities/by-sanity/${string}`
@@ -297,6 +298,7 @@ export const apiRoutes = {
       `/api/restrictions/${profileId}` as const,
   },
   internal: {
+    scriptsSitemap: '/api/internal/scripts/sitemap',
     profilesRoleById: (id: string | number) =>
       `/api/internal/profiles/${id}/role` as const,
     universities: '/api/internal/universities',

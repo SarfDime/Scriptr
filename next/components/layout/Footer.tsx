@@ -7,7 +7,7 @@ import { NavLogo } from '../navigation/NavLogo'
  * when the navbar is collapsed). The year is read at render time, so on
  * prerendered pages it is the build year until the page is regenerated. */
 export const Footer = () => (
-  <footer className='ui-above rounded-none h-(--footer-height) w-full shrink-0 border-b-0 border-l-0 border-r-0 sticky bottom-0 ui-cluster justify-between'>
+  <footer className='ui-above-chrome rounded-none h-(--footer-height) w-full shrink-0 border-b-0 border-l-0 border-r-0 sticky bottom-0 ui-cluster justify-between'>
     <NavLogo />
     <small className='ui-caption'>
       {UI_STRINGS.footer.copyright(new Date().getFullYear())}

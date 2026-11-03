@@ -14,6 +14,7 @@ import {
   buildAcademicSelections,
   planAcademicSave,
 } from '@/lib/profile-academics'
+import { toUserMessage } from '@/lib/user-facing-error'
 import { useOnboarding } from '@/providers/onboarding/OnboardingProvider'
 import { useMyProfileActions } from '@/providers/ProfileProvider'
 import { useSession } from '@/providers/SessionProvider'
@@ -111,10 +112,7 @@ export function useEditAcademicsForm({
     } catch (error) {
       addToast({
         title: UI_STRINGS.profile.academics.saveFailed,
-        description:
-          error instanceof Error
-            ? error.message
-            : UI_STRINGS.profile.academics.saveFailed,
+        description: toUserMessage(error, UI_STRINGS.general.tryAgain),
         type: 'error',
       })
       await refreshViews()

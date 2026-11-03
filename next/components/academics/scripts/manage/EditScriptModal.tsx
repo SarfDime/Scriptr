@@ -75,7 +75,11 @@ function EditScriptDialog({
       isBusy={form.isBusy}
       canSubmit={form.canSubmit}
     >
-      <ScriptDetailsFields fields={form.textFields} resetKey='edit' />
+      <ScriptDetailsFields
+        fields={form.textFields}
+        resetKey='edit'
+        slug={script.slug}
+      />
 
       <Box className={SCRIPT_FORM_COLUMNS_CLASS}>
         <Box className='min-w-0'>

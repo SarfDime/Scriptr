@@ -1,3 +1,4 @@
+import { UI_STRINGS } from '@shared/config/strings'
 import type { RegistrationAcademicProfile } from '@shared/types/auth.types'
 import type {
   MyProfileResponse,
@@ -9,6 +10,7 @@ import {
   getMyProfile,
   setProfileSubjectStatus,
 } from '@/lib/api/profile-api'
+import { UserFacingError } from '@/lib/user-facing-error'
 import type {
   GuestAcademicData,
   OnboardingCatalog,
@@ -83,9 +85,7 @@ export const saveAuthenticatedOnboarding = async (
     onboardingCompletedAt: guest.onboardingCompletedAt ?? 'pending',
   })
   if (!academicProfile) {
-    throw new Error(
-      'Your academic selections could not be prepared. Please review them and try again.'
-    )
+    throw new UserFacingError(UI_STRINGS.profile.academics.notPrepared)
   }
 
   const profile = await getMyProfile()

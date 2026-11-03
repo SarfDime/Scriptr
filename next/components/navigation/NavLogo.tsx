@@ -1,11 +1,11 @@
 import { cn } from '@/lib/common-utils'
-import { NextLink, type NextLinkProps } from '../common/NextLink'
+import { NextLink, type NextLinkBaseProps } from '../common/NextLink'
 
 export const NavLogo = ({
   className,
   href,
   ...props
-}: Omit<NextLinkProps, 'href' | 'children'> & { href?: string }) => (
+}: Omit<NextLinkBaseProps, 'href' | 'children'> & { href?: string }) => (
   <NextLink
     {...props}
     href={href ?? '/'}

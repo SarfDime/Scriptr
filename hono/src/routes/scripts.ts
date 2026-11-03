@@ -14,6 +14,7 @@ import type {
   ScriptFlaggedSummary,
   ScriptPatchResponse,
   ScriptSummary,
+  ScriptsListResponse,
 } from '../../../shared/types/scripts.types'
 import { isAdmin, isScriptFileInput } from '../../../shared/utils/api.utils'
 import {
@@ -26,6 +27,8 @@ import {
   isExamSession,
   isValidScriptYear,
 } from '../../../shared/utils/script-session.utils'
+import { buildScriptSlug, isUuid } from '../../../shared/utils/slug.utils'
+import { hasUnsupportedScript } from '../../../shared/utils/text-language.utils'
 import {
   checkScriptsUploaded,
   checkTotalScriptDownloads,
@@ -38,6 +41,7 @@ import { honoLog } from '../lib/logger'
 import { notifyProfileBestEffort } from '../lib/notifications'
 import { deleteR2Files } from '../lib/r2'
 import { databaseErrorResponse, requiredParam } from '../lib/request'
+import { requireAdmin } from '../lib/require-admin'
 import { verifyReportedFiles } from '../lib/script-files'
 import { isOwnUploadKey } from '../lib/storage-scope'
 import {
@@ -50,7 +54,7 @@ import type { HonoEnv } from '../types/env.types'
 // Excludes is_flagged and the comments aggregate, which uses the separately
 // permissioned get_script_comment_counts RPC.
 const PUBLIC_SCRIPT_COLUMNS =
-  'id, title, description, subject_id, professor_id, author_id, exam_session, exam_year, additional_reading, vote_score, download_count, created_at, updated_at, files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, file_name, created_at)'
+  'id, slug, title, description, subject_id, professor_id, author_id, exam_session, exam_year, additional_reading, vote_score, download_count, created_at, updated_at, files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, file_name, created_at)'
 
 /**
  * Reused by every list/detail endpoint below (`/`, `/subject/:subjectId`,
@@ -58,10 +62,10 @@ const PUBLIC_SCRIPT_COLUMNS =
  * selects — one select string instead of the same literal duplicated per
  * route. `subject` carries its display name plus `sanity_id`, which client
  * Sanity queries use to resolve the subject's faculty/university/professor
- * metadata (see `ARCHITECTURE.md §1`). There is deliberately no faculty join:
- * scripts are not scoped by faculty (studies are the real academic scope).
- * Matches `ScriptSummary` in `shared/types/scripts.types.ts` exactly; keep the
- * two in sync if this changes.
+ * metadata (see `docs/ARCHITECTURE-SYSTEM-OVERVIEW.md`). There is deliberately
+ * no faculty join: scripts are not scoped by faculty (studies are the real
+ * academic scope). Matches `ScriptSummary` in `shared/types/scripts.types.ts`
+ * exactly; keep the two in sync if this changes.
  */
 const SCRIPT_SUMMARY_SELECT = `
     ${PUBLIC_SCRIPT_COLUMNS},
@@ -181,6 +185,14 @@ function levenshteinDistance(left: string, right: string) {
   return previousRow[right.length] ?? right.length
 }
 
+/** The project is not localized yet, so authored text is Latin or Cyrillic
+ * only — see `hasUnsupportedScript`. */
+/** Bounded like the comment routes: the caller asks for a page, not the table. */
+const SCRIPTS_PAGE_SIZE = 50
+
+const UNSUPPORTED_SCRIPT_MESSAGE =
+  'Use Latin or Cyrillic letters only. Other languages are not supported yet.'
+
 /**
  * POST /scripts body. Accepts both camelCase and snake_case for
  * subject/professor/examSession/examYear/additionalReading, matching the API's
@@ -251,24 +263,62 @@ const createScriptSchema = z
     message: 'Title cannot be empty',
     path: ['title'],
   })
+  .refine(
+    (body) => !hasUnsupportedScript(portableTextToPlainText(body.title)),
+    { message: UNSUPPORTED_SCRIPT_MESSAGE, path: ['title'] }
+  )
+  .refine(
+    (body) =>
+      body.description === null ||
+      !hasUnsupportedScript(portableTextToPlainText(body.description)),
+    { message: UNSUPPORTED_SCRIPT_MESSAGE, path: ['description'] }
+  )
 
 const scripts = new Hono<HonoEnv>()
 
-/** Get all scripts (public) */
-scripts.get('/', async (c) => {
+/** One page of every script, newest first. Admin-only: the response carries
+ * every script with its files, author and comment count, and nothing in the app
+ * reads it anonymously — the sitemap gets compact entries from the internal API
+ * instead. */
+scripts.get('/', authMiddleware, async (c) => {
+  const user = c.get('user')
   const supabase = createSupabaseClient(c)
 
-  const { data, error } = await supabase
+  if (!(await requireAdmin(supabase, user.id))) {
+    return c.json({ error: 'Unauthorized: Admin access required' }, 403)
+  }
+
+  const limit = Number(c.req.query('limit') ?? SCRIPTS_PAGE_SIZE)
+  const offset = Number(c.req.query('offset') ?? 0)
+  if (
+    !Number.isSafeInteger(limit) ||
+    limit < 1 ||
+    limit > SCRIPTS_PAGE_SIZE ||
+    !Number.isSafeInteger(offset) ||
+    offset < 0
+  ) {
+    return c.json({ error: 'Invalid pagination parameters' }, 400)
+  }
+
+  const { data, error, count } = await supabase
     .from('scripts')
-    .select(SCRIPT_SUMMARY_SELECT)
+    .select(SCRIPT_SUMMARY_SELECT, { count: 'exact' })
     .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
+    .range(offset, offset + limit - 1)
 
   if (error) return databaseErrorResponse(c, error)
   const scriptsWithCounts = await attachCommentCounts(supabase, data)
   if (!scriptsWithCounts) {
     return c.json({ error: 'Failed to fetch scripts' }, 500)
   }
-  return c.json<Array<ScriptSummary>>(scriptsWithCounts)
+
+  const totalCount = count ?? scriptsWithCounts.length
+  return c.json<ScriptsListResponse>({
+    items: scriptsWithCounts,
+    hasMore: offset + scriptsWithCounts.length < totalCount,
+    totalCount,
+  })
 })
 
 /** Get scripts by subject */
@@ -513,16 +563,16 @@ scripts.delete('/:scriptId/files/:fileId', authMiddleware, async (c) => {
   })
 })
 
-/** Get a single script by ID */
+/** Get a single script by slug, or by id for links minted before slugs existed */
 scripts.get('/:id', async (c) => {
-  const scriptId = requiredParam(c, 'id')
+  const identifier = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)
 
-  const { data, error } = await supabase
-    .from('scripts')
-    .select(SCRIPT_SUMMARY_SELECT)
-    .eq('id', scriptId)
-    .single()
+  const query = supabase.from('scripts').select(SCRIPT_SUMMARY_SELECT)
+  const { data, error } = await (isUuid(identifier)
+    ? query.eq('id', identifier)
+    : query.eq('slug', identifier)
+  ).single()
 
   if (error) {
     if (error.code === 'PGRST116') {
@@ -590,9 +640,16 @@ scripts.post(
     }
     const files = verified.files
 
+    // The id is minted here rather than by the column default so the slug can
+    // be derived from it in the same insert: the suffix is what makes two
+    // identically titled scripts distinct, and the slug is never rewritten.
+    const scriptId = crypto.randomUUID()
+
     const { data, error } = await supabase
       .from('scripts')
       .insert({
+        id: scriptId,
+        slug: buildScriptSlug(portableTextToPlainText(title), scriptId),
         title,
         description,
         subject_id: subjectId,
@@ -868,6 +925,17 @@ scripts.patch('/:id', authMiddleware, async (c) => {
 
   const { title, description, additional_reading, exam_session, exam_year } =
     await c.req.json()
+
+  const writtenText: Array<unknown> = [title, description]
+  if (
+    writtenText.some(
+      (value) =>
+        isPortableTextValue(value) &&
+        hasUnsupportedScript(portableTextToPlainText(value))
+    )
+  ) {
+    return c.json({ error: UNSUPPORTED_SCRIPT_MESSAGE }, 400)
+  }
 
   if (
     (title !== undefined && !isScriptTitlePortableTextValue(title)) ||

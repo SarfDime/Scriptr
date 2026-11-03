@@ -1,3 +1,4 @@
+import { UI_STRINGS } from '@shared/config/strings'
 import { ScriptsSection } from '@/components/academics/scripts/ScriptSection'
 import { SubjectHighlightsCard } from '@/components/academics/subject/SubjectHighlightsCard'
 import { SubjectOverviewCard } from '@/components/academics/subject/SubjectOverviewCard'
@@ -36,13 +37,13 @@ export const generateMetadata = createAcademicMetadata<
   SubjectRouteParams
 >({
   query: subjectDetailQuery,
-  pageDomain: 'subjects',
-  entityLabel: 'Subject',
+  getPath: (p) => getAcademicPath({ type: 'subject', ...p }),
+  entityLabel: UI_STRINGS.academics.entity.subject,
   fetchOriginPrefix: 'subject',
   getOwnSlug: (p) => p.subjectSlug,
   getDescription: (subject) => subject.description,
   descriptionFallback: (subject) =>
-    `Syllabus, academic year, exam sessions, and course details for ${subject.name}.`,
+    UI_STRINGS.academics.metadata.subjectDescription(subject.name),
 })
 
 export default async function SubjectDetailPage({
@@ -57,14 +58,15 @@ export default async function SubjectDetailPage({
   })
 
   const study = subject.study
-  const scripts = subject.dbId
-    ? toScriptSummaryDetails(await getScriptsBySubject(subject.dbId))
+  const subjectScripts = subject.dbId
+    ? await getScriptsBySubject(subject.dbId)
     : []
+  const scripts = toScriptSummaryDetails(subjectScripts ?? [])
 
   return (
     <PageLayout
       header={{
-        greeting: study?.name ?? 'Subject',
+        greeting: study?.name ?? UI_STRINGS.academics.entity.subject,
         title: subject.name,
         actions: study?.faculty && (
           <>
@@ -106,7 +108,11 @@ export default async function SubjectDetailPage({
         </SubjectHighlightsCard>
       </Box>
 
-      <ScriptsSection scripts={scripts} parentSubject={subject} />
+      <ScriptsSection
+        scripts={scripts}
+        scriptsUnavailable={subjectScripts === null}
+        parentSubject={subject}
+      />
     </PageLayout>
   )
 }

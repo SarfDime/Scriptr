@@ -1,25 +1,26 @@
 'use client'
 
-import { Box } from '@/components/common/Box'
+import { UI_STRINGS } from '@shared/config/strings'
 import { Button } from '@/components/common/Button'
-import { Text } from '@/components/typography/Text'
+import { ErrorState } from '@/components/ui/ErrorState'
 
+/** Route-level boundary for a script page. The thrown message is not rendered:
+ * it is an exception, not copy, and may carry database or stack details. */
 export default function ScriptError({
-  error,
   reset,
 }: {
   error: Error & { digest?: string }
   reset: () => void
 }) {
   return (
-    <Box as='main' className='ui-container ui-section ui-stack gap-3'>
-      <Text className='ui-title'>
-        Something went wrong loading this script.
-      </Text>
-      <Text className='ui-body'>{error.message || 'Please try again.'}</Text>
-      <Button onClick={reset} className='button solid'>
-        Try again
-      </Button>
-    </Box>
+    <ErrorState
+      title={UI_STRINGS.scripts.detail.errorTitle}
+      description={UI_STRINGS.scripts.detail.errorFallback}
+      action={
+        <Button onClick={reset} className='button solid'>
+          {UI_STRINGS.scripts.detail.errorRetry}
+        </Button>
+      }
+    />
   )
 }

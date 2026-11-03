@@ -2,11 +2,12 @@
 
 import { cn } from '@/lib/common-utils'
 import { useNav } from '@/providers/nav/NavProvider'
+import type { OmitProps } from '@/types/component.types'
 import { Button, type ButtonProps } from '../common/Button'
 
 type NavToggleProps = {
   action: 'open' | 'close'
-} & Omit<ButtonProps, 'onClick'>
+} & OmitProps<ButtonProps, 'onClick'>
 
 /**
  * The only client-side piece of the navbar chrome: a button that shows or

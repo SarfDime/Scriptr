@@ -137,3 +137,28 @@ export type {
   FontSizeType,
   FontWeightType,
 }
+
+/**
+ * Decorators that mean "one of a set": picking a colour should clear the other
+ * colours, and the same for weights and alignments. Both editors enforce that
+ * with a `decorator.add` behavior, and both used to build this map themselves —
+ * two copies that had to be kept in step with the lists above.
+ */
+export const DECORATOR_CATEGORIES = {
+  alignment: ALIGNMENT_DECORATORS.map((decorator) => decorator.name),
+  color: COLOR_DECORATORS.map((decorator) => decorator.name),
+  weight: WEIGHT_DECORATORS.map((decorator) => decorator.name),
+} as const
+
+export type DecoratorCategory = keyof typeof DECORATOR_CATEGORIES
+
+/** Which mutually-exclusive set `decorator` belongs to, if any. */
+export const getDecoratorCategory = (
+  decorator: string
+): DecoratorCategory | undefined => {
+  const categories = Object.entries(DECORATOR_CATEGORIES) as Array<
+    [DecoratorCategory, ReadonlyArray<string>]
+  >
+
+  return categories.find(([, names]) => names.includes(decorator))?.[0]
+}

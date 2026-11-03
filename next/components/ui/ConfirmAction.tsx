@@ -1,12 +1,12 @@
 'use client'
 
+import { UI_STRINGS } from '@shared/config/strings'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
 import { type ReactNode, useState } from 'react'
 import { Box } from '@/components/common/Box'
-import { Button } from '@/components/common/Button'
 import { Text } from '@/components/typography/Text'
-import { cn } from '@/lib/common-utils'
 import { Dialog } from './Dialog'
+import { DialogFooter } from './DialogFooter'
 
 export type ConfirmActionProps = {
   title: PortableTextValue | ReactNode
@@ -36,8 +36,8 @@ export type ConfirmActionProps = {
 export const ConfirmAction = ({
   title,
   description,
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
+  confirmLabel = UI_STRINGS.general.confirm,
+  cancelLabel = UI_STRINGS.general.cancel,
   destructive = true,
   onConfirm,
   trigger,
@@ -62,23 +62,15 @@ export const ConfirmAction = ({
         >
           <Box className='ui-stack gap-4 p-5'>
             <Text className='ui-body'>{description}</Text>
-            <Box className='ui-cluster justify-end gap-2'>
-              <Button
-                onClick={() => setIsOpen(false)}
-                className='button button-sm basic px-3 py-1.5'
-              >
-                {cancelLabel}
-              </Button>
-              <Button
-                onClick={handleConfirm}
-                className={cn(
-                  'button button-sm px-3 py-1.5',
-                  destructive ? 'danger' : 'solid'
-                )}
-              >
-                {confirmLabel}
-              </Button>
-            </Box>
+            <DialogFooter
+              size='sm'
+              secondaryLabel={cancelLabel}
+              onSecondary={() => setIsOpen(false)}
+              primaryLabel={confirmLabel}
+              primaryType='button'
+              onPrimary={handleConfirm}
+              destructive={destructive}
+            />
           </Box>
         </Dialog>
       )}

@@ -1,20 +1,26 @@
+import type {
+  FacultyRouteParams,
+  ProfessorRouteParams,
+  StudyRouteParams,
+  SubjectRouteParams,
+  UniversityRouteParams,
+} from '@/types/academics/academics.types'
+
+/**
+ * One of the routes an academic entity is served at. The slug tuples come from
+ * the route-param types, which are themselves derived from the Sanity
+ * static-params queries — so a slug the catalog query can return is a slug this
+ * builder accepts, and the two cannot drift apart.
+ *
+ * `script` is the exception: scripts live in Postgres, so there is no query
+ * result to derive from.
+ */
 export type AcademicPathInput =
-  | { type: 'university'; universitySlug: string }
-  | { type: 'faculty'; universitySlug: string; facultySlug: string }
-  | {
-      type: 'study'
-      universitySlug: string
-      facultySlug: string
-      studySlug: string
-    }
-  | {
-      type: 'subject'
-      universitySlug: string
-      facultySlug: string
-      studySlug: string
-      subjectSlug: string
-    }
-  | { type: 'professor'; professorSlug: string }
+  | ({ type: 'university' } & UniversityRouteParams)
+  | ({ type: 'faculty' } & FacultyRouteParams)
+  | ({ type: 'study' } & StudyRouteParams)
+  | ({ type: 'subject' } & SubjectRouteParams)
+  | ({ type: 'professor' } & ProfessorRouteParams)
   | { type: 'script'; scriptSlug: string }
 
 const cleanEntityId = (id: string): string =>

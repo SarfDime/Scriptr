@@ -1,8 +1,9 @@
 import type { ExamSession } from '../types/academic.types'
 import type { FileType } from '../types/api.types'
 
-// Per ARCHITECTURE.md §3: supported file types and upload size limits. Keep
-// this the single source of truth rather than repeating literals elsewhere.
+// Per docs/ARCHITECTURE-SCRIPTS-UPLOADS.md: supported file types and upload
+// size limits. Keep this the single source of truth rather than repeating
+// literals elsewhere.
 
 /** Extensions accepted for upload. Legacy `.doc`/`.xls` are intentionally not
  * accepted: they can't be optimized, and every current editor exports

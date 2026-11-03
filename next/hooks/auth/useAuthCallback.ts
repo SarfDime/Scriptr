@@ -1,5 +1,6 @@
 'use client'
 
+import { UI_STRINGS } from '@shared/config/strings'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useSession } from '@/providers/SessionProvider'
@@ -35,7 +36,7 @@ export function useAuthCallback() {
       if (!accessToken || !refreshToken) {
         return {
           ok: false as const,
-          message: 'This link is missing or invalid.',
+          message: UI_STRINGS.auth.callback.invalidLink,
         }
       }
       return loginWithTokens({

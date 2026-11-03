@@ -2,15 +2,22 @@ import type { ButtonType } from '@shared/types/common.types'
 import { getAttribute } from '@shared/utils/common-utils'
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/common-utils'
-import type { AdditionalComponentAttributes } from '@/types/component.types'
+import type {
+  AccessibleNameProps,
+  AdditionalComponentAttributes,
+} from '@/types/component.types'
 import { LoadingSpinner } from '../ui/LoadingSpinner'
 
-export type ButtonProps = {
+export type ButtonBaseProps = {
   type?: ButtonType
   isLoading?: boolean
   isActive?: boolean
+  /** An element rendered beside the content. It is not a label: an icon-only
+   * button needs `aria-label` too, which `ButtonProps` enforces. */
   icon?: ReactNode
 } & AdditionalComponentAttributes
+
+export type ButtonProps = ButtonBaseProps & AccessibleNameProps
 
 /** A generic button component that extends the default HTML button element.
  * It renders a loading spinner if `isLoading` is set to true.

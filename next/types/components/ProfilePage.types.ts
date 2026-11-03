@@ -21,10 +21,25 @@ export type ProfilePageProps = {
   profile: ProfileCore
   academics: ProfileAcademics
   subjects: ProfileSubjectSections
-  authoredCount: number
-  commentCount: number
+  /** Omitted when the stats read failed; the activity strip is then skipped
+   * rather than rendered with invented zeros. */
+  authoredCount?: number
+  commentCount?: number
   /** The signed-in user's own profile: adds the edit actions and keeps
    * the "Your subjects" title. */
   isOwner?: boolean
+  studyTip?: StudyTipData
+}
+
+/** What `loadPublicProfilePage` hands the `/user/[username]` page: the shared
+ * profile view model without `isOwner`, since an owner is redirected to
+ * `/user` before anything is loaded. */
+export type PublicProfilePageViewModel = Omit<ProfilePageProps, 'isOwner'>
+
+/** What `loadMyProfilePage` hands the `/user` page. The profile itself is not
+ * here: that page reads the shared profile state so an edit shows up in place. */
+export type MyProfilePageViewModel = {
+  subjects: ProfileSubjectSections
+  /** Today's study tip; the card is omitted without it. */
   studyTip?: StudyTipData
 }

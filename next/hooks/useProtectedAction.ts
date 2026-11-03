@@ -45,7 +45,7 @@ function isUnauthenticatedError(error: unknown): boolean {
 /**
  * Wraps a create/update action that the backend restriction check can
  * reject with a 403. Only wrap actions that are actually
- * restriction-checked per ARCHITECTURE.md §4:
+ * restriction-checked per docs/ARCHITECTURE-USERS-AUTH.md:
  *   - script / comment / comment-reaction / vote-cast / rating creation
  *   - script / comment / rating update
  *   - comment likes and flag submission (RLS rejects restricted users)

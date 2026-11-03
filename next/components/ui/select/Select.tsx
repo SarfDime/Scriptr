@@ -1,6 +1,7 @@
 'use client'
 
 import { ChevronDownIcon } from '@sanity/icons/ChevronDown'
+import { UI_STRINGS } from '@shared/config/strings'
 import { type CSSProperties, type MouseEvent, useState } from 'react'
 
 import { cn } from '../../../lib/common-utils'
@@ -68,7 +69,7 @@ function getListStyle(trigger: HTMLElement): CSSProperties {
  */
 export const Select = <T = string>({
   options,
-  placeholder = 'Select...',
+  placeholder = UI_STRINGS.general.selectPlaceholder,
   clearable = false,
   hideChevron,
   selectListProps,

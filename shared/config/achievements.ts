@@ -5,7 +5,8 @@
  * Metrics are code-bound (each one has a calculator in
  * hono/src/lib/achievements.ts that queries a different table), so this list
  * has to be extended by hand when a metric is added — unlike achievement
- * *definitions*, which are a plain data insert (see ARCHITECTURE.md §4).
+ * *definitions*, which are a plain data insert (see
+ * docs/ARCHITECTURE-USERS-AUTH.md).
  *
  * Rarities are ordered: index 0 is the lowest tier. The DB CHECK on
  * `achievement_definitions.rarity` guards the same set of values.

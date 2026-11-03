@@ -19,6 +19,14 @@ adding it) — every catalog route needs it:
 SECRET=<value of INTERNAL_API_SECRET>
 ```
 
+Confirming the Phase 2 accounts by hand and deleting them at teardown use
+Supabase's admin API, which needs the service key:
+
+```bash
+SUPABASE_URL=<value of SUPABASE_URL>
+SERVICE_KEY=<value of SUPABASE_SECRET_KEY>
+```
+
 IDs are UUIDs. Slug-style IDs will 404 or 500 — there's no fallback.
 
 ---
@@ -114,14 +122,27 @@ curl -s $BASE/professors/$PROF1 -H "x-internal-secret: $SECRET" | jq '{faculties
 
 ## Phase 2 — Accounts
 
-One regular account, one promoted to admin, so permission boundaries are
-actually testable later. Registration takes only `email`, `password`,
-`username`, and `full_name`; academic selections are set separately in
-Phase 3.
+Two fixed local accounts, so permission boundaries are actually testable in
+later phases: one regular user, one promoted to admin.
+
+| Role    | Email                | Username     | Password       |
+| ------- | -------------------- | ------------ | -------------- |
+| student | `student@test.local` | `localstudent` | `REDACTED_LOCAL_TEST_PASSWORD` |
+| admin   | `admin@test.local`   | `localadmin`   | `REDACTED_LOCAL_TEST_PASSWORD` |
+
+Both are local-only (`@test.local`); the password is deliberately trivial.
+It has to satisfy `validateNewPassword` — 8+ characters with a lowercase,
+an uppercase, a digit and a symbol — which is why the older `REDACTED_LOCAL_TEST_PASSWORD`
+examples no longer register.
+
+Registration takes only `email`, `password`, `username` and `full_name`;
+academic selections are set separately in Phase 3.
 
 ```bash
+# Create the two accounts. Once they exist this answers 409 for each — that is
+# expected, so on a re-run skip to the login block below.
 curl -s -c cookies-student.txt -X POST $BASE/auth/register -H "Content-Type: application/json" \
-  -d '{"email":"redacted@example.test","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"localstudent","full_name":"Test Student"}'
+  -d '{"email":"student@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"localstudent","full_name":"Test Student"}'
 curl -s -c cookies-admin.txt -X POST $BASE/auth/register -H "Content-Type: application/json" \
   -d '{"email":"admin@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"localadmin","full_name":"Test Admin"}'
 
@@ -129,23 +150,35 @@ curl -s -c cookies-admin.txt -X POST $BASE/auth/register -H "Content-Type: appli
 curl -s -X POST $BASE/auth/register -H "Content-Type: application/json" \
   -d '{"email":"incomplete@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD"}' | jq .
 
-# Duplicate username (409, field: username), duplicate email (409, field: email)
-# and disposable-email rejection (400)
+# Duplicate username (409, field: username) and duplicate email (409, field:
+# email) — each needs a different email so the other field is what collides
 curl -s -X POST $BASE/auth/register -H "Content-Type: application/json" \
-  -d '{"email":"student@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"localstudent","full_name":"Duplicate User"}' | jq .
+  -d '{"email":"other@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"localstudent","full_name":"Duplicate User"}' | jq .
 curl -s -X POST $BASE/auth/register -H "Content-Type: application/json" \
   -d '{"email":"student@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"otherstudent","full_name":"Other Student"}' | jq .
+
+# Disposable-email rejection — expect 400
 curl -s -X POST $BASE/auth/register -H "Content-Type: application/json" \
   -d '{"email":"test@mailinator.com","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"disposableuser","full_name":"Disposable User"}' | jq .
-
-# Repeated attempts from the same IP are rate-limited — expect 429 after the burst
-for i in $(seq 1 11); do curl -s -o /tmp/auth-rate-limit.json -w '%{http_code}\n' -X POST $BASE/auth/login \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"student@test.local","password":"wrong"}'; done | tail -n 3
 ```
 
-> If local Supabase Auth requires email confirmation, confirm both users
-> (dashboard, or disable confirmation for local dev) before logging in.
+> Local Supabase only demands email confirmation when the running stack
+> predates `[auth.email] enable_confirmations = false` in
+> `hono/supabase/config.toml` — `supabase stop && supabase start` picks it up.
+> If login answers `{"error":"Email not confirmed"}`, confirm both users
+> without the dashboard:
+>
+> ```bash
+> curl -s "$SUPABASE_URL/auth/v1/admin/users?per_page=200" \
+>   -H "apikey: $SERVICE_KEY" -H "Authorization: Bearer $SERVICE_KEY" \
+>   | jq -r '.users[] | select(.email | test("@test\\.local$")) | .id' \
+>   | while read -r ID; do
+>       curl -s -o /dev/null -X PUT "$SUPABASE_URL/auth/v1/admin/users/$ID" \
+>         -H "apikey: $SERVICE_KEY" -H "Authorization: Bearer $SERVICE_KEY" \
+>         -H "Content-Type: application/json" -d '{"email_confirm":true}'
+>     done
+> ```
+>
 > `POST /auth/callback` (`{ access_token, refresh_token }`) is the endpoint the
 > frontend calls with the tokens from a real confirmation link; it can't be
 > exercised with curl without a live link, so test it through the browser.
@@ -153,13 +186,13 @@ for i in $(seq 1 11); do curl -s -o /tmp/auth-rate-limit.json -w '%{http_code}\n
 ```bash
 # Login returns the app-shaped session user (id, email, username, role, subjects, ...)
 curl -s -c cookies-student.txt -X POST $BASE/auth/login -H "Content-Type: application/json" \
-  -d '{"email":"student@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD"}' | jq '{success, user: {id, email, username, role}}'
+  -d '{"email":"student@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD"}' | jq '{success, user: (.user | {id, email, username, role})}'
 curl -s -c cookies-admin.txt -X POST $BASE/auth/login -H "Content-Type: application/json" \
-  -d '{"email":"admin@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD"}' | jq '{success, user: {id, email, username, role}}'
+  -d '{"email":"admin@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD"}' | jq '{success, user: (.user | {id, email, username, role})}'
 
 # Bad credentials — expect 401
 curl -s -X POST $BASE/auth/login -H "Content-Type: application/json" \
-  -d '{"email":"student@test.local","password":"wrong"}' | jq .
+  -d '{"email":"student@test.local","password":"WrongPass123!"}' | jq .
 
 STUDENT=$(curl -s -b cookies-student.txt $BASE/auth/session | jq -r '.user.id')
 ADMIN=$(curl -s -b cookies-admin.txt $BASE/auth/session | jq -r '.user.id')
@@ -177,6 +210,16 @@ curl -s -b cookies-admin.txt $BASE/auth/session | jq '.user.role'     # admin
 curl -s $BASE/auth/session | jq .                                     # no cookie: user is null
 ```
 
+Login is limited to 10 attempts per 15 minutes per IP, and blocked attempts
+keep the block in place. Run this last in the phase, otherwise the next login
+answers `429`:
+
+```bash
+for i in $(seq 1 11); do curl -s -o /tmp/auth-rate-limit.json -w '%{http_code}\n' \
+  -X POST $BASE/auth/login -H 'Content-Type: application/json' \
+  -d '{"email":"student@test.local","password":"WrongPass123!"}'; done | tail -n 3
+```
+
 `GET /auth/session` refreshes a valid session only when its access token
 expires within 60 seconds. Access tokens are configured for one week in
 `hono/supabase/config.toml`; hosted Supabase projects must have the same JWT
@@ -184,7 +227,9 @@ expiry configured in their Auth settings. If the refresh token is invalid or
 expired, the endpoint clears the local session and returns `user: null`.
 
 ```bash
-curl -s $BASE/profiles | jq '.[] | {id, username, role}'
+curl -s -b cookies-admin.txt $BASE/profiles | jq '.[] | {id, username, role}'
+curl -s -o /dev/null -w '%{http_code}\n' $BASE/profiles                          # 401, admin only
+curl -s -o /dev/null -w '%{http_code}\n' -b cookies-student.txt $BASE/profiles   # 403, admin only
 curl -s -b cookies-student.txt $BASE/profiles/me | jq '{id, username, role}'
 curl -s $BASE/profiles/username/localstudent | jq '{id, username}'
 curl -s $BASE/profiles/$STUDENT/stats | jq .
@@ -831,6 +876,13 @@ curl -s -b cookies-student.txt -X DELETE $BASE/profile-faculties/$FAC | jq .
 curl -s -b cookies-student.txt -X DELETE $BASE/profiles/me | jq .
 curl -s -b cookies-admin.txt -X DELETE $BASE/profiles/me | jq .
 
+# Without this the `student@test.local` / `admin@test.local` emails stay taken,
+# so the next Phase 2 run registers nothing and `409`s instead
+curl -s -X DELETE "$SUPABASE_URL/auth/v1/admin/users/$STUDENT" \
+  -H "apikey: $SERVICE_KEY" -H "Authorization: Bearer $SERVICE_KEY"
+curl -s -X DELETE "$SUPABASE_URL/auth/v1/admin/users/$ADMIN" \
+  -H "apikey: $SERVICE_KEY" -H "Authorization: Bearer $SERVICE_KEY"
+
 # Catalog, narrowest to widest
 curl -s -X DELETE $BASE/internal/professors/$PROF1/faculties/$FAC -H "x-internal-secret: $SECRET"
 curl -s -X DELETE $BASE/internal/professors/$PROF1/studies/$STUDY -H "x-internal-secret: $SECRET"
@@ -863,6 +915,7 @@ rm -f cookies-student.txt cookies-admin.txt /tmp/test-script.md /tmp/test-script
 | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `{"error":"Not authenticated"}`                            | Missing `-b cookies-*.txt`, or the session expired or was cleared (access tokens last one week) — log in again                  |
 | `{"error":"Forbidden"}` on any catalog/internal route      | `x-internal-secret` header missing/wrong, or `INTERNAL_API_SECRET` unset in `hono/.env` (restart after setting it)              |
+| `403` on `GET /profiles`                                   | Admin only — use `cookies-admin.txt`; the listing is not public                                                                 |
 | `403` on a create/update that should work                  | The account is still restricted from Phase 10b — lift it with `DELETE /restrictions/:profileId`                                 |
 | `404 Route not found` on a documented endpoint             | The route file isn't mounted in `hono/src/index.ts`                                                                             |
 | `invalid input syntax for type uuid`                       | A captured `jq -r` variable came back `null` — check the previous step's response shape                                         |
@@ -872,6 +925,6 @@ rm -f cookies-student.txt cookies-admin.txt /tmp/test-script.md /tmp/test-script
 
 **Server**: `hono/` via `@hono/node-server`, port `8787`, env file
 `hono/.env`. **Auth cookie**: `sb-auth-token` (HttpOnly, `SameSite=Lax`,
-`Path=/`). **CORS**: `http://localhost:3000`, `http://localhost:5173`,
-`http://localhost:3333`, and a placeholder Vercel origin — browser clients
-need `credentials: true`.
+`Path=/`). **CORS**: the localhost ports are allowed automatically outside
+production; in production only `CORS_ORIGINS` decides (see
+`docs/VERCEL_DEPLOYMENT.md`), and browser clients need `credentials: true`.

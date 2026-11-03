@@ -27,9 +27,21 @@
   /* Filled variants share one recipe; each only sets --button-bg/--button-fg. */
   :is(.solid, .success, .danger, .error, .warning, .golden) {
     background-color: var(--button-bg);
+    /* `--button-lit` is what the sheen mixes toward, and it has to move away
+     * from the ink rather than be white everywhere. `solid` pairs a fill and an
+     * ink that both flip with the theme, so it keeps the theme's flip
+     * (`--color-background-50`: white in light, black in dark) and reads as a
+     * richer shade at the top. The fixed-hue fills (`success`, `warning`,
+     * `danger`) sit under a dark, fill-derived ink in both themes, so for them
+     * the default white is the only direction that stays legible — mixing with
+     * `--color-background-50` darkened the top to 2-4:1 against that ink. */
     background-image: linear-gradient(
-      160deg,
-      color-mix(in oklab, var(--button-bg) 85%, var(--color-background-50) 50%),
+      135deg,
+      color-mix(
+        in oklab,
+        var(--button-bg) 85%,
+        var(--button-lit, white) var(--button-sheen, 45%)
+      ),
       var(--button-bg)
     );
     color: var(--button-fg);
@@ -79,16 +91,13 @@
     opacity: 0.85;
   }
 
-  &:focus-visible {
-    outline: 2px solid var(--color-brand);
-    outline-offset: 2px;
-  }
-
   &[data-active="true"]:not(:disabled) {
     background-color: var(--color-brand-100);
     color: var(--color-brand-700);
     box-shadow: inset 0 0 0 1px
       color-mix(in srgb, var(--color-brand) 35%, transparent);
+    /* A pressed/selected control is a small pane, so it catches the same light. */
+    @apply ui-sheen;
   }
 }
 
@@ -98,6 +107,7 @@
 @utility solid {
   --button-bg: var(--color-brand-550);
   --button-fg: var(--color-background-100);
+  --button-lit: var(--color-background-50);
 }
 
 /* Dark ink derived from the fill: white on jade is only ~2.7:1. */
@@ -106,9 +116,13 @@
   --button-fg: color-mix(in oklab, var(--color-jade) 20%, black);
 }
 
+/* Ink derived from the fill, like `success`: the red is the same in both
+ * themes, so an ink that flips with `--color-background` put a near-black label
+ * on it in dark mode and the glyph disappeared (worst on the 1px bar the editor
+ * toolbar draws). */
 @utility danger {
   --button-bg: var(--color-error-red);
-  --button-fg: var(--color-background);
+  --button-fg: color-mix(in oklab, var(--color-error-red) 20%, black);
 }
 
 /* Ink is derived from the fill so it stays dark in both themes. */
@@ -120,17 +134,26 @@
 /* --- Quiet variants --- */
 
 @utility hollow {
-  outline: 1px solid var(--color-brand-150);
+  /* The hairline is an inset ring, not an `outline`: the outline is the focus
+   * ring everywhere (`base/utilities.module.css`), and a control that drew its
+   * border with it kept the border colour when focused. */
   background-color: transparent;
   color: var(--color-brand);
   font-weight: 600;
-  box-shadow: var(--shadow-button);
+  box-shadow:
+    inset 0 0 0 1px var(--color-brand-150),
+    var(--shadow-button);
+  /* The same top-edge light as the filled variants and the panels, at a lower
+   * strength: this one sits on no fill of its own. */
+  --ui-sheen: 8%;
+  @apply ui-sheen;
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
-      outline-color: var(--color-brand-250);
       background-color: var(--color-brand-50);
-      box-shadow: var(--shadow-button-hover);
+      box-shadow:
+        inset 0 0 0 1px var(--color-brand-250),
+        var(--shadow-button-hover);
     }
   }
 }
@@ -189,6 +212,7 @@
 @utility inverted {
   background-color: var(--color-background-100);
   color: var(--color-brand);
+  @apply ui-sheen;
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
@@ -200,9 +224,18 @@
 @utility subtle {
   background-color: var(--color-grey-200);
   color: var(--color-fg-muted);
-  outline: 1px solid var(--outline-light);
   font-weight: 600;
-  box-shadow: var(--shadow-sm);
+  /* A raised chip: less sheen than a pane (it was reading too bright), a lip
+   * along its top edge and a shade under it, so it sits on the surface. The
+   * hairline is an inset ring rather than an `outline`, which is the focus ring
+   * everywhere now. */
+  --ui-sheen: 7%;
+  @apply ui-sheen;
+  box-shadow:
+    inset 0 0 0 1px var(--outline-light),
+    inset 0 1px 0 rgb(255 255 255 / calc(var(--shadow-strength, 1) * 0.24)),
+    inset 0 -1px 0 rgb(0 0 0 / calc(var(--shadow-strength, 1) * 0.1)),
+    var(--shadow-sm);
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {

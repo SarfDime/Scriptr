@@ -369,7 +369,7 @@ export const academicOfficeLocationField = ({
 
 export const academicSlugField = ({
   grouping = 'information',
-  required = false,
+  required = true,
   ...rest
 }: Omit<AcademicLinkFieldOptions, 'validation'>): FieldDefinition => {
   return defineField({
@@ -417,6 +417,7 @@ export type AcademicFieldKey =
 
 export type AcademicFieldsOverrides = Partial<{
   name: AcademicFieldOptions
+  slug: AcademicFieldOptions & { required?: boolean }
   title: AcademicFieldOptions
   description: AcademicFieldOptions & { required?: boolean }
   keywords: AcademicFieldOptions
@@ -442,7 +443,8 @@ const FIELD_BUILDERS: Record<
   AcademicFieldKey,
   (context: AcademicFieldContext) => FieldDefinition
 > = {
-  slug: ({ grouping }) => academicSlugField({ grouping }),
+  slug: ({ grouping, overrides }) =>
+    academicSlugField({ grouping, ...overrides.slug }),
   name: ({ grouping, overrides }) =>
     academicNameField({ grouping, ...overrides.name }),
   title: ({ grouping, overrides }) =>

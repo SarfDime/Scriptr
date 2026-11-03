@@ -1,4 +1,5 @@
 import Launch from '@sanity/icons/Launch'
+import { UI_STRINGS } from '@shared/config/strings'
 import type { ReactNode } from 'react'
 import { Box } from '@/components/common/Box'
 import { Text } from '@/components/typography/Text'
@@ -6,6 +7,7 @@ import { Card } from '@/components/ui/Card'
 import { DetailLink } from '@/components/ui/DetailLink'
 import { Divider } from '@/components/ui/Divider'
 import { getColorPalette } from '@/lib/color-pallette-gen'
+import { cn } from '@/lib/common-utils'
 import type { SubjectDetail } from '@/types/academics/subject.types'
 import { AcademicBadge } from '../AcademicBadge'
 
@@ -24,7 +26,7 @@ export const SubjectHighlightsCard = ({
   return (
     <Card className='p-6 ui-stack gap-4 ui-above'>
       <Text className='ui-caption uppercase tracking-wide'>
-        Curriculum details
+        {UI_STRINGS.academics.subject.curriculumDetails}
       </Text>
 
       <Box className='ui-cluster gap-2'>
@@ -37,24 +39,23 @@ export const SubjectHighlightsCard = ({
 
       {children}
 
-      <Divider className={colorBorder} />
+      <Divider className={cn('cp-divider', colorBorder)} />
 
       <Text className='ui-body text-fg-muted'>
-        Use this course's shared scripts and syllabus to revisit key material in
-        your own time.
+        {UI_STRINGS.academics.subject.revisitPrompt}
       </Text>
 
       {syllabus && (
         <>
-          <Divider className={colorBorder} />
+          <Divider className={cn('cp-divider', colorBorder)} />
           <DetailLink
             href={syllabus}
-            label='Syllabus'
+            label={UI_STRINGS.academics.subject.syllabusLabel}
             hideExternalIcon
             className={color}
             value={
               <>
-                View Syllabus Document
+                {UI_STRINGS.academics.subject.viewSyllabusDocument}
                 <Launch />
               </>
             }

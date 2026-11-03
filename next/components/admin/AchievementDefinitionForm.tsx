@@ -66,7 +66,7 @@ export const AchievementDefinitionForm = ({
   }
 
   return (
-    <Box className='ui-stack ui-above relative has-[[data-open=true]]:z-20'>
+    <Box className='ui-stack ui-above relative has-data-[open=true]:z-20'>
       <SectionHeader title={ADMIN_STRINGS.createAchievementDefinition} />
       <Text className='ui-caption'>{ADMIN_STRINGS.achievementNotice}</Text>
       <FormContainer onSubmit={handleSubmit} className='ui-stack gap-4'>

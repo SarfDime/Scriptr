@@ -57,6 +57,7 @@ export function CommentsHeader({
               sort === 'newest' ? 'solid' : 'subtle'
             )}
             aria-pressed={sort === 'newest'}
+            isActive={sort === 'newest'}
             onClick={() => setSort('newest')}
           >
             {COMMENT_STRINGS.general.newest}
@@ -68,6 +69,7 @@ export function CommentsHeader({
               sort === 'top' ? 'solid' : 'subtle'
             )}
             aria-pressed={sort === 'top'}
+            isActive={sort === 'top'}
             onClick={() => setSort('top')}
           >
             {COMMENT_STRINGS.general.top}

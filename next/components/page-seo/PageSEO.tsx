@@ -16,10 +16,12 @@ type PageSEOProps = {
   twitterCreator?: string
   twitterSite?: string
   openGraphType?: OpenGraphType
-  param?: string
   keywords?: Array<string>
-  pageDomain?: string
-  pagePath?: string
+  /** Site-relative path of the page, built with `getAcademicPath`. It becomes
+   * the canonical and the Open Graph URL, so it has to be the URL the route is
+   * actually served at — parent segments and the singular `/university` prefix
+   * included. */
+  pagePath: string
 }
 
 /** Builds Next.js metadata using the site origin plus the route path relative to the root. */
@@ -34,18 +36,12 @@ export function PageSEO({
   twitterCreator,
   twitterSite,
   openGraphType = 'website',
-  param,
   keywords,
-  pageDomain,
   pagePath,
 }: PageSEOProps): Metadata {
-  const routePath = pagePath ?? pageDomain ?? ''
   const baseUrl = siteUrl || websiteDomain || 'https://localhost:3000'
-  const segments: Array<string> = [routePath, param].filter(
-    (segment): segment is string => Boolean(segment)
-  )
   const canonicalPath = generatePath({
-    segments,
+    segments: [pagePath],
     leadingSlash: true,
   })
   const url = new URL(canonicalPath, baseUrl).toString()

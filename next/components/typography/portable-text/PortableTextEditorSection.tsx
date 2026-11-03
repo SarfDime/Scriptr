@@ -11,6 +11,7 @@ import { Box } from '@/components/common/Box'
 import { PortableTextContent } from '@/components/typography/PortableTextContent'
 import { Text } from '@/components/typography/Text'
 import { cn } from '@/lib/common-utils'
+import { toUserMessage } from '@/lib/user-facing-error'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 import type { PortableTextEditorSectionProps } from '@/types/components/PortableTextEditor.types'
 import { PortableTextEditorActions } from './PortableTextEditorActions'
@@ -87,9 +88,7 @@ export const PortableTextEditorSection = ({
         const saved = await save(draftValue)
         if (saved !== false) onSaveSuccess?.()
       } catch (error) {
-        reportFailure(
-          error instanceof Error ? error.message : PT_STRINGS.editor.saveFailed
-        )
+        reportFailure(toUserMessage(error, PT_STRINGS.editor.saveFailed))
       }
     })
   }

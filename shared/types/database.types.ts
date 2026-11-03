@@ -907,6 +907,7 @@ export type Database = {
           id: string
           is_flagged: boolean
           professor_id: string
+          slug: string
           subject_id: string
           title: Json
           updated_at: string
@@ -923,6 +924,7 @@ export type Database = {
           id?: string
           is_flagged?: boolean
           professor_id: string
+          slug: string
           subject_id: string
           title: Json
           updated_at?: string
@@ -939,6 +941,7 @@ export type Database = {
           id?: string
           is_flagged?: boolean
           professor_id?: string
+          slug?: string
           subject_id?: string
           title?: Json
           updated_at?: string

@@ -5,6 +5,7 @@ const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000)
 export const FAKE_SCRIPTS: Array<ScriptDetail> = [
   {
     id: 'script-1',
+    slug: 'script-1',
     title: [
       {
         _key: 'block-1',
@@ -29,6 +30,7 @@ export const FAKE_SCRIPTS: Array<ScriptDetail> = [
   },
   {
     id: 'script-2',
+    slug: 'script-2',
     title: [
       {
         _key: 'block-1',
@@ -53,6 +55,7 @@ export const FAKE_SCRIPTS: Array<ScriptDetail> = [
   },
   {
     id: 'script-3',
+    slug: 'script-3',
     title: [
       {
         _key: 'block-1',
@@ -77,6 +80,7 @@ export const FAKE_SCRIPTS: Array<ScriptDetail> = [
   },
   {
     id: 'script-4',
+    slug: 'script-4',
     title: [
       {
         _key: 'block-1',

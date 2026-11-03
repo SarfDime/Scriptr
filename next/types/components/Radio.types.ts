@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import type { BoxProps } from '@/components/common/Box'
-import type { ButtonProps } from '@/components/common/Button'
+import type { ButtonBaseProps } from '@/components/common/Button'
 import type { TextProps } from '@/components/typography/Text'
 import type { SanityIconProps } from '../component.types'
 
@@ -28,6 +28,6 @@ type RadioProps = {
   labelProps?: TextProps
   checkMarkProps?: SanityIconProps
   hasBorder?: boolean
-} & Omit<ButtonProps, 'onChange'>
+} & Omit<ButtonBaseProps, 'onChange'>
 
 export type { OptionType, RadioGroupProps, RadioProps }

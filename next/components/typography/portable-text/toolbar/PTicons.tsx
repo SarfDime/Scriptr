@@ -8,7 +8,6 @@ import Strikethrough from '@sanity/icons/Strikethrough'
 import Text from '@sanity/icons/Text'
 import Ulist from '@sanity/icons/Ulist'
 import Underline from '@sanity/icons/Underline'
-
 import {
   ALIGNMENT_DECORATORS,
   type AlignmentType,
@@ -17,6 +16,7 @@ import {
   FONT_SIZE_STYLES,
   WEIGHT_DECORATORS,
 } from '@shared/config/shared-pt-config'
+import { UI_STRINGS } from '@shared/config/strings'
 import type { ComponentType, SVGProps } from 'react'
 import { cn } from '@/lib/common-utils'
 
@@ -26,7 +26,7 @@ type AlignTextProps = SVGProps<SVGSVGElement> & { alignment: AlignmentType }
 
 const AlignText = ({ alignment, ...props }: AlignTextProps) => (
   <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' {...props}>
-    <title>Align Text {alignment}</title>
+    <title>{UI_STRINGS.editor.alignText(alignment)}</title>
     {alignment === 'left' && (
       <path
         fill='none'
@@ -80,7 +80,7 @@ const ColorSwatch = ({
       viewBox='0 0 24 24'
       className={cn(className, colorClass[color], 'fill-current stroke-fg')}
     >
-      <title>Color Swatch {color}</title>
+      <title>{UI_STRINGS.editor.colorSwatch(color)}</title>
       <circle cx='12' cy='12' r='9' fill='currentColor' />
     </svg>
   )
@@ -101,15 +101,22 @@ const COLOR_ICONS: Record<string, PTIconComponent> = Object.fromEntries(
   ])
 )
 
+/**
+ * `SB`/`B`/`B+` drawn at the weight they select. The caller's icon class sizes
+ * boxes for glyph icons (`h-5 w-5`); a text label in one of those clipped
+ * against a second, conflicting width, so the sizing is fixed here instead of
+ * combined with it. `leading-none` keeps the letters centred in the box.
+ */
 const WEIGHT_ICONS: Record<string, PTIconComponent> = Object.fromEntries(
-  WEIGHT_DECORATORS.map((d) => [
-    d.name,
-    ({ className }: { className?: string }) => (
+  WEIGHT_DECORATORS.map((decorator) => [
+    decorator.name,
+    () => (
       <span
-        className={cn(className, 'w-7 justify-center text-center')}
-        style={{ fontWeight: d.weight }}
+        aria-hidden
+        className='flex h-5 w-5 shrink-0 items-center justify-center text-[0.7rem] leading-none'
+        style={{ fontWeight: decorator.weight }}
       >
-        {d.label}
+        {decorator.label}
       </span>
     ),
   ])

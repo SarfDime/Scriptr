@@ -47,10 +47,18 @@ const createTextBlock = ({
               ?.name
           : undefined
 
+      // The list marker has to sit on the block element itself. A `list-item`
+      // span inside a per-block wrapper made every item the only item of its
+      // parent, so a numbered list rendered 1. 1. 1. — the implicit counter
+      // only continues across siblings.
       return (
         <div
           {...attributes}
-          className={list ? 'my-0.5' : undefined}
+          className={
+            list
+              ? `my-0.5 list-item list-inside ${listClass} ${fontSizeClass ?? ''}`
+              : fontSizeClass
+          }
           style={{
             paddingLeft: list
               ? `${(node.level ?? 1) * paddingAmount}rem`
@@ -58,15 +66,7 @@ const createTextBlock = ({
             textAlign,
           }}
         >
-          <span
-            className={
-              list
-                ? `list-item list-inside ${listClass} ${fontSizeClass ?? ''}`
-                : fontSizeClass
-            }
-          >
-            {children}
-          </span>
+          {children}
         </div>
       )
     },

@@ -12,6 +12,7 @@ import {
 import { ApiError } from '@/lib/api/next-api'
 import { updateMyProfile, uploadMyAvatar } from '@/lib/api/profile-api'
 import { validateAvatarFile } from '@/lib/profile-avatar'
+import { toUserMessage } from '@/lib/user-facing-error'
 import { useMyProfileActions } from '@/providers/ProfileProvider'
 import { useSession } from '@/providers/SessionProvider'
 import { useToast } from '@/providers/toaster/ToasterProvider'
@@ -24,9 +25,6 @@ const EDIT_PROFILE_FIELDS: ReadonlyArray<EditProfileField> = [
 ]
 
 type EditProfileValues = Record<EditProfileField, string>
-
-const getErrorMessage = (error: unknown) =>
-  error instanceof Error ? error.message : UI_STRINGS.profile.edit.saveFailed
 
 /**
  * State and submit flow for the edit-profile dialog. Validation is the same
@@ -102,7 +100,7 @@ export function useEditProfileForm({
   const toastError = (error: unknown) =>
     addToast({
       title: UI_STRINGS.profile.edit.saveFailed,
-      description: getErrorMessage(error),
+      description: toUserMessage(error, UI_STRINGS.general.tryAgain),
       type: 'error',
     })
 

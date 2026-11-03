@@ -180,13 +180,10 @@ export function CommentsProvider({
           ),
         },
       }))
-    } catch (error) {
+    } catch {
       setSortErrors((current) => ({
         ...current,
-        [sort]:
-          error instanceof Error
-            ? error.message
-            : COMMENT_STRINGS.general.loadMoreCommentsError,
+        [sort]: COMMENT_STRINGS.general.loadMoreCommentsError,
       }))
     } finally {
       setLoadingSorts((current) => {
@@ -216,13 +213,10 @@ export function CommentsProvider({
           serverLoadedCount: result.items.length,
         },
       }))
-    } catch (error) {
+    } catch {
       setSortErrors((current) => ({
         ...current,
-        [nextSort]:
-          error instanceof Error
-            ? error.message
-            : COMMENT_STRINGS.general.loadCommentsError,
+        [nextSort]: COMMENT_STRINGS.general.loadCommentsError,
       }))
     } finally {
       setLoadingSorts((current) => {
@@ -265,13 +259,10 @@ export function CommentsProvider({
         }
         return next
       })
-    } catch (error) {
+    } catch {
       setReplyErrors((current) => ({
         ...current,
-        [commentId]:
-          error instanceof Error
-            ? error.message
-            : COMMENT_STRINGS.general.loadRepliesError,
+        [commentId]: COMMENT_STRINGS.general.loadRepliesError,
       }))
     } finally {
       setLoadingReplyIds((current) => {

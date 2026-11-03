@@ -1,4 +1,5 @@
 import DocumentTextIcon from '@sanity/icons/DocumentText'
+import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
 import { PortableTextContent } from '@/components/typography/PortableTextContent'
@@ -31,9 +32,9 @@ export const ScriptCard = ({
       {...props}
     >
       <NextLink
-        href={getAcademicPath({ type: 'script', scriptSlug: script.id })}
+        href={getAcademicPath({ type: 'script', scriptSlug: script.slug })}
         className='flex items-start gap-3'
-        aria-label={`Open ${script.author}'s script`}
+        aria-label={UI_STRINGS.scripts.actions.openScript(script.author)}
       >
         <Box
           className={cn(
@@ -65,6 +66,7 @@ export const ScriptCard = ({
       <Card.Footer className='ui-cluster flex-wrap items-center gap-2 transition-colors duration-300 group-hover:border-t-brand-300'>
         <ScriptActions
           id={script.id}
+          slug={script.slug}
           scriptTitle={script.title}
           likes={script.likes}
           comments={script.comments}

@@ -148,12 +148,18 @@
     .cp-danger,
     .cp-danger-nb,
     .cp-danger-int
-  ) {
+  ):not(.ui-divider) {
+    /* The same light every other surface catches, but in the palette's own hue:
+     * a white wash is invisible on a chip that is already near-white in light
+     * mode, while the hue carries in both themes. */
+    --ui-sheen: 18%;
+    --ui-sheen-color: var(--cp-hue);
     background-color: color-mix(
       in srgb,
       var(--cp-hue) var(--cp-bg),
       var(--color-background-100)
     );
+    @apply ui-sheen;
     color: var(
       --cp-text,
       color-mix(in srgb, var(--cp-hue) var(--cp-ink), var(--color-fg-1000))
@@ -161,6 +167,7 @@
   }
 
   /* --- Border (everything except -nb) --- */
+  /* A divider (`ui-divider`) paints its line itself and must not inherit one. */
   :is(
     .cp-red,
     .cp-red-int,
@@ -186,7 +193,7 @@
     .cp-warning-int,
     .cp-danger,
     .cp-danger-int
-  ) {
+  ):not(.ui-divider) {
     border: 1px solid
       var(
         --cp-border-color,
@@ -243,5 +250,19 @@
         background-color: color-mix(in srgb, currentColor 8%, transparent);
       }
     }
+  }
+
+  /* --- Groove tint --- */
+  /* Hands a `ui-divider` the colour the palette would draw its border with. The
+   * palette's own surface and border skip dividers, so the groove is unchanged. */
+  .cp-divider {
+    --divider-line: var(
+      --cp-border-color,
+      color-mix(
+        in srgb,
+        var(--cp-hue) var(--cp-border),
+        var(--color-background-100)
+      )
+    );
   }
 }

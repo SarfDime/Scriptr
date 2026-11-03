@@ -11,8 +11,7 @@ import { useProfileStats } from '@/hooks/useProfileStats'
 import { buildProfileAcademics } from '@/lib/profile-academic-links'
 import { useOnboarding } from '@/providers/onboarding/OnboardingProvider'
 import { useMyProfile, useMyProfileActions } from '@/providers/ProfileProvider'
-import type { ProfileSubjectSections } from '@/types/components/ProfilePage.types'
-import type { StudyTipData } from '@/types/components/StudyTipCard.types'
+import type { MyProfilePageViewModel } from '@/types/components/ProfilePage.types'
 
 /**
  * `/user`: the signed-in user's profile. Reads the shared profile state (so
@@ -20,13 +19,7 @@ import type { StudyTipData } from '@/types/components/StudyTipCard.types'
  * hands the loaded profile to the shared `ProfilePage`. The subjects are
  * resolved by the server page, which re-runs after an academics edit.
  */
-export function MyProfilePage({
-  subjects,
-  studyTip,
-}: {
-  subjects: ProfileSubjectSections
-  studyTip?: StudyTipData
-}) {
+export function MyProfilePage({ subjects, studyTip }: MyProfilePageViewModel) {
   const profileState = useMyProfile()
   const { refresh, reload } = useMyProfileActions()
   const { catalog } = useOnboarding()

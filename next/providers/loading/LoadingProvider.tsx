@@ -1,5 +1,6 @@
 'use client'
 
+import { UI_STRINGS } from '@shared/config/strings'
 import {
   createContext,
   use,
@@ -224,7 +225,7 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
 
       <dialog
         ref={dialogRef}
-        aria-label='Loading'
+        aria-label={UI_STRINGS.general.loading}
         aria-busy={true}
         onCancel={(event) => event.preventDefault()}
         className={cn(

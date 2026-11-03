@@ -77,6 +77,14 @@ sections below for the rest. These are the endpoints the Sanity Studio
 
 ---
 
+## Scripts (internal)
+
+Internal-only, `x-internal-secret` required.
+
+| Route                       | Notes                                                                                                  |
+| --------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `GET /internal/scripts/sitemap` | Every script's `{ slug, updated_at }`, newest first. Feeds `/sitemap.xml`, which needs the complete list that the admin-only `GET /scripts` no longer serves, and only the two columns a crawler list needs |
+
 ## Universities
 
 Internal-only, `x-internal-secret` required for all routes (reads and writes).
@@ -274,8 +282,8 @@ bucket server-side. Deleted scripts remove their associated R2 objects.
 
 | Route                             | Notes                                                                                                                                                                                                       |
 | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /scripts`                    | All scripts, newest first. Public and unscoped: a cookie does not change the result                                                                                                                          |
-| `GET /scripts/:id`                | One script by id. Public and unscoped; `404` only when the script does not exist                                                                                                                             |
+| `GET /scripts`                    | **Admin only.** One page of every script, newest first: `?limit` (max 50, default 50) and `?offset`; returns `{ items, hasMore, totalCount }`. Was public and unpaginated |
+| `GET /scripts/:id`                | One script by **slug or id** — both resolve. Public and unscoped; `404` only when the script does not exist. `slug` is minted at creation (`<transliterated title>-<first 8 id chars>`) and never changes |
 | `GET /scripts/subject/:subjectId` | Scripts for a subject, sorted by vote score                                                                                                                                                                 |
 | `GET /scripts/top?limit=10`       | By vote score                                                                                                                                                                                               |
 | `GET /scripts/popular?limit=10`   | By download count                                                                                                                                                                                           |
@@ -395,7 +403,7 @@ one calendar month, third and later = permanent.
 ## Profiles
 
 ### Public
-`GET /profiles`, `/profiles/username/:username`, `/profiles/:id`,
+`/profiles/username/:username`, `/profiles/:id`,
 `/profiles/:id/stats` — no auth required. The Next frontend caches public
 profile and stats responses; profile, selection, favorite, script, vote, and
 download mutations revalidate those tags. A public profile response includes
@@ -422,6 +430,14 @@ payload. Awards are permanent; they are read on the session client (the
 
 ### Authenticated
 `GET /profiles/me`, `PATCH /profiles/me`, `DELETE /profiles/me`.
+
+`GET /profiles` is **admin only** and deliberately unpaginated: it returns
+`ProfilesListResponse` — every profile row with only
+`id, username, full_name, role, avatar_url, created_at`, its
+`subjects` (`subject_id, status, updated_at`) and its `achievements` — with no
+limit. Nothing in `next/` or `sanity/` calls it. `401` without a session,
+`403` for a signed-in non-admin. The `profiles` SELECT policy is public, so
+this route's admin check is the only thing gating the listing.
 
 `GET /profiles/me/preferences` and `PATCH /profiles/me/preferences` are
 authenticated own-row operations on `profile_preferences`, limited to 15 requests per minute per user (`429`). A missing row reads

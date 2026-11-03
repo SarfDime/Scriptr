@@ -22,6 +22,7 @@
   "scripts": {
     "check-types": "tsc --noEmit",
     "db:migrate": "tsx scripts/db-migrate.ts",
+    "backfill:script-slugs": "tsx --env-file=.env scripts/backfill-script-slugs.ts",
     "dev": "tsx watch --env-file=.env --import=tsx src/server.ts",
     "gen:types": "supabase gen types typescript --project-id \"$PROJECT_REF\" --schema public > ../shared/types/database.types.ts",
     "test": "tsx --test \"src/**/*.test.ts\""

@@ -1,5 +1,5 @@
 import { Box, type BoxPropsWithoutChildren } from '@/components/common/Box'
-import { NextLink, type NextLinkProps } from '@/components/common/NextLink'
+import { NextLink, type NextLinkBaseProps } from '@/components/common/NextLink'
 import { Text, type TextProps } from '@/components/typography/Text'
 import { cn } from '@/lib/common-utils'
 
@@ -8,7 +8,7 @@ export type DetailLinkProps = {
   labelProps?: Omit<TextProps, 'children'>
   value?: React.ReactNode
   valueProps?: BoxPropsWithoutChildren
-} & Omit<NextLinkProps, 'children'>
+} & Omit<NextLinkBaseProps, 'children'>
 
 export const DetailLink = ({
   className,

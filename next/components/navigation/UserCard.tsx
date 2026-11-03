@@ -40,7 +40,7 @@ export const UserCard = ({
           : undefined
       }
       initialsIconProps={{
-        className: 'h-6 w-6 rounded-full shadow-sm p-1 text-xs',
+        className: 'h-6 w-6 rounded-full shadow-sm',
       }}
     />
     <Box className='text-left'>

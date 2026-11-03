@@ -1,3 +1,5 @@
+import { TIME_AGO_STRINGS } from '@shared/strings/time-strings'
+
 /**
  * Returns an object with the specified attribute name and value if the condition is true, otherwise returns an empty object.
  */
@@ -50,5 +52,29 @@ export const generateRandomKey = (): string =>
   typeof crypto !== 'undefined' && 'randomUUID' in crypto
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2)
+
+/** Formats a given date string into a human-readable string indicating how long ago it was updated. */
+export const formatDate = (dateString: string): string => {
+  const parsedDate = new Date(dateString)
+
+  const date = Number.isNaN(parsedDate.getTime())
+    ? new Date(dateString.replace(/\.\d+/, (match) => match.slice(0, 4)))
+    : parsedDate
+
+  if (Number.isNaN(date.getTime())) return TIME_AGO_STRINGS.invalidDate
+
+  const diffMs = Date.now() - date.getTime()
+  const diffMinutes = Math.floor(diffMs / (1000 * 60))
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+  if (diffMinutes < 1) return TIME_AGO_STRINGS.justNow
+  if (diffMinutes === 1) return TIME_AGO_STRINGS.oneMinuteAgo
+  if (diffMinutes < 60) return TIME_AGO_STRINGS.minutesAgo(diffMinutes)
+  if (diffHours === 1) return TIME_AGO_STRINGS.anHourAgo
+  if (diffHours < 24) return TIME_AGO_STRINGS.hoursAgo(diffHours)
+  if (diffDays === 1) return TIME_AGO_STRINGS.yesterday
+  return TIME_AGO_STRINGS.daysAgo(diffDays)
+}
 
 export { camelCase, capitalize, getAttribute }

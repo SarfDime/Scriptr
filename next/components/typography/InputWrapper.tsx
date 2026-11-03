@@ -1,5 +1,6 @@
 import { CloseIcon } from '@sanity/icons/Close'
 import { INPUT_MAX_LENGTH } from '@shared/config/next-constants'
+import { UI_STRINGS } from '@shared/config/strings'
 import type {
   ChangeEventHandler,
   DetailedHTMLProps,
@@ -69,6 +70,7 @@ export function InputWrapper({
             onClick={inputOnClear}
             icon={<CloseIcon />}
             type='button'
+            aria-label={UI_STRINGS.general.clearInput}
           />
         )}
       </Box>

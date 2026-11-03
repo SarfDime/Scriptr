@@ -47,7 +47,9 @@ export function useProfileStats(userId: string | null) {
 
     getProfileStats(userId)
       .then((stats) => {
-        if (!cancelled) setFetchState({ status: 'loaded', stats })
+        if (cancelled) return
+        // `null` is a failed read, not a profile with no activity.
+        setFetchState(stats ? { status: 'loaded', stats } : { status: 'error' })
       })
       .catch(() => {
         if (!cancelled) setFetchState({ status: 'error' })

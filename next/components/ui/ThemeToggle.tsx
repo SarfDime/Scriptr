@@ -3,15 +3,16 @@
 import Desktop from '@sanity/icons/Desktop'
 import Moon from '@sanity/icons/Moon'
 import Sun from '@sanity/icons/Sun'
+import { UI_STRINGS } from '@shared/config/strings'
 import type { ReactNode } from 'react'
 import { cn } from '../../lib/common-utils'
 import { type ThemeMode, useTheme } from '../../providers/theme/ThemeProvider'
 import { Button } from '../common/Button'
 
 const modes: Array<{ value: ThemeMode; label: string; icon: ReactNode }> = [
-  { value: 'light', label: 'Light', icon: <Sun /> },
-  { value: 'auto', label: 'Auto', icon: <Desktop /> },
-  { value: 'dark', label: 'Dark', icon: <Moon /> },
+  { value: 'light', label: UI_STRINGS.general.themeLight, icon: <Sun /> },
+  { value: 'auto', label: UI_STRINGS.general.themeAuto, icon: <Desktop /> },
+  { value: 'dark', label: UI_STRINGS.general.themeDark, icon: <Moon /> },
 ]
 
 export function ThemeToggle({ className }: { className?: string }) {
@@ -24,7 +25,7 @@ export function ThemeToggle({ className }: { className?: string }) {
         className
       )}
     >
-      <legend className='sr-only'>Color theme</legend>
+      <legend className='sr-only'>{UI_STRINGS.general.colorTheme}</legend>
       {modes.map(({ value, label }) => (
         <Button
           className={'button ghost grow px-1.5 py-2 text-sm rounded-lg'}

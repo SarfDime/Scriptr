@@ -53,7 +53,7 @@ export const UniversityFacultyExplorer = ({
                     {...faculty.logo}
                     alt={faculty.name}
                     fillProp
-                    sizes={IMAGE_SIZES.UNIVERSITY_HERO}
+                    sizes={IMAGE_SIZES.AVATAR}
                     className='h-10 w-10 rounded-full'
                     objectFitProp='cover'
                   />

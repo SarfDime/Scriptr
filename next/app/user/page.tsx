@@ -1,24 +1,13 @@
-import { redirect } from 'next/navigation'
 import { MyProfilePage } from '@/components/profile/MyProfilePage'
-import { getSessionRequired } from '@/lib/api/auth-api'
-import { getRequestCookieHeader } from '@/lib/api/next-api'
-import { getProfileSubjectSections } from '@/lib/profile-subjects'
-import { getDailyStudyTip } from '@/lib/study-tip'
+import { loadMyProfilePage } from '@/lib/profile-page'
 
+/**
+ * The signed-in user's own profile. Server Component: the loader resolves the
+ * session redirect, the subjects and the study tip, then the client page reads
+ * the shared profile state so an edit shows up without a reload.
+ */
 export default async function Page() {
-  const session = await getSessionRequired(await getRequestCookieHeader())
+  const viewModel = await loadMyProfilePage()
 
-  if (!session?.user) {
-    redirect('/auth')
-  }
-
-  const [subjects, studyTip] = await Promise.all([
-    getProfileSubjectSections(
-      session.user.selected_study_ids,
-      session.user.subjects
-    ),
-    getDailyStudyTip(),
-  ])
-
-  return <MyProfilePage subjects={subjects} studyTip={studyTip} />
+  return <MyProfilePage {...viewModel} />
 }

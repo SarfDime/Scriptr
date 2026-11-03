@@ -8,9 +8,20 @@ import type { SearchPageViewModel } from '@/types/components/Search.types'
 const { search } = UI_STRINGS.scripts
 
 /** Results for a submitted query, or a prompt while there isn't one yet. */
-export const SearchResults = ({ query, scripts }: SearchPageViewModel) => {
+export const SearchResults = ({
+  query,
+  scripts,
+  failed,
+}: SearchPageViewModel) => {
   if (!query)
     return <Text className='ui-above ui-subtitle'>{search.prompt}</Text>
+
+  if (failed)
+    return (
+      <Box as='section' role='alert' className='ui-stack ui-above h-fit'>
+        <Text className='ui-subtitle'>{search.loadFailed}</Text>
+      </Box>
+    )
 
   return (
     <Box as='section' className='ui-stack ui-above h-fit'>

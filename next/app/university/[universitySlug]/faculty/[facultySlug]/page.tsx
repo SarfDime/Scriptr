@@ -33,13 +33,13 @@ export const generateMetadata = createAcademicMetadata<
   FacultyRouteParams
 >({
   query: facultyDetailQuery,
-  pageDomain: 'faculties',
-  entityLabel: 'Faculty',
+  getPath: (p) => getAcademicPath({ type: 'faculty', ...p }),
+  entityLabel: UI_STRINGS.academics.entity.faculty,
   fetchOriginPrefix: 'faculty',
   getOwnSlug: (p) => p.facultySlug,
   getDescription: (faculty) => faculty.description,
   descriptionFallback: (faculty) =>
-    `Explore academic subjects, faculty administration, and professors at ${faculty.name}.`,
+    UI_STRINGS.academics.metadata.facultyDescription(faculty.name),
 })
 
 export default async function FacultyDetailPage({
@@ -56,7 +56,8 @@ export default async function FacultyDetailPage({
   return (
     <PageLayout
       header={{
-        greeting: faculty.university?.name ?? 'Faculty',
+        greeting:
+          faculty.university?.name ?? UI_STRINGS.academics.entity.faculty,
         title: faculty.name,
         actions: (
           <BackLink

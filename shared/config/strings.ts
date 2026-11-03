@@ -12,6 +12,15 @@ export const UI_STRINGS = {
       'You can’t do this because your account is restricted.',
     restrictedModalClose: 'Close',
     tryAgain: 'Please try again.',
+    errors: {
+      description:
+        'This page could not be loaded. Try again, and if it keeps happening come back a little later.',
+      retry: 'Try again',
+      notFoundTitle: 'Page not found',
+      notFoundDescription:
+        'The page you’re looking for doesn’t exist, or it has moved.',
+      backHome: 'Go to the homepage',
+    },
     year: (year: number) => `Year ${year}`,
     unexpectedError: 'Something went wrong',
     apiUnavailable:
@@ -23,6 +32,21 @@ export const UI_STRINGS = {
       `${label} ${noun} (${count})`,
     removeVote: (label: string, noun: string, count: number) =>
       `Remove ${label.toLowerCase()} from ${noun} (${count})`,
+    close: 'Close',
+    closeDialog: 'Close dialog',
+    /** Clears whatever a field holds; the icon-only button in `InputWrapper`. */
+    clearInput: 'Clear input',
+    colorTheme: 'Color theme',
+    trophyIcon: 'Trophy Icon',
+    confirm: 'Confirm',
+    cancel: 'Cancel',
+    openDialog: 'Open Dialog',
+    selectPlaceholder: 'Select...',
+    dataUnavailable: 'Data unavailable',
+    loading: 'Loading',
+    themeLight: 'Light',
+    themeAuto: 'Auto',
+    themeDark: 'Dark',
   },
   flags: {
     report: 'Report',
@@ -42,6 +66,9 @@ export const UI_STRINGS = {
     minimumReasonLength: 10,
   },
   home: {
+    greeting: 'Welcome',
+    metaDescription:
+      'A platform for students to share and discover study materials.',
     title: 'Make studying feel a little lighter.',
     subtitle:
       'Find the notes, scripts, and shared knowledge you need to move through this week with confidence.',
@@ -57,6 +84,8 @@ export const UI_STRINGS = {
     searchLabel: 'Search scripts',
     searchPlaceholder: 'Search scripts by title, author, or tag...',
     emptyState: 'No scripts match these filters.',
+    loadFailed:
+      'These scripts could not be loaded right now. Try again in a moment.',
     browseAll: 'Browse all scripts',
     search: {
       pageTitle: 'Search scripts',
@@ -67,6 +96,8 @@ export const UI_STRINGS = {
       resultsTitle: 'Results',
       resultsSubtitle: (query: string) => `Scripts matching “${query}”.`,
       prompt: 'Enter a search term to find scripts.',
+      loadFailed:
+        'Search is unavailable right now. Try again in a moment — your query is still in the box above.',
       noResults: (query: string) =>
         `No scripts match “${query}”. Try different keywords or check the spelling.`,
       searchAll: (query: string) => `Search all scripts for “${query}”`,
@@ -86,6 +117,18 @@ export const UI_STRINGS = {
       download: 'Download',
       preview: 'Preview',
       noFilesAttached: 'No files attached to this script.',
+      upvote: 'Upvote',
+      voteNoun: 'script',
+      openScript: (author: string) => `Open ${author}'s script`,
+      viewComments: (title: string) => `View comments on ${title}`,
+    },
+    detail: {
+      errorTitle: 'Something went wrong loading this script.',
+      errorRetry: 'Try again',
+      notFoundTitle: 'Script not found',
+      notFoundDescription:
+        'This script may have been removed, or the link is incorrect.',
+      errorFallback: 'Please try again.',
     },
     feed: {
       toggleLabel: 'Script feed',
@@ -102,7 +145,8 @@ export const UI_STRINGS = {
       cancelButtonLabel: 'Clear',
       description: 'Add the details your classmates need. Files are optional.',
       formTitle: 'Script title',
-      formTitleHelp: 'Use a clear, descriptive name.',
+      formTitleHelp:
+        'Use a clear, distinctive name — it becomes the link to your script.',
       formDescription: 'Description',
       formDescriptionHelp:
         'Summarize the content, coverage, or useful context.',
@@ -125,6 +169,7 @@ export const UI_STRINGS = {
         'Optionally add supported files by dragging them here or browsing your device.',
       removeButtonLabel: 'Remove',
       removeLinkAriaLabel: 'Remove link',
+      removeFileAriaLabel: (name: string) => `Remove ${name}`,
       readingLinkPlaceholder: 'https://...',
       addLinkButtonLabel: 'Add link',
       progress: {
@@ -142,6 +187,8 @@ export const UI_STRINGS = {
         creating: 'Creating script…',
         error: 'An error occurred while creating the script.',
         success: 'Script created successfully.',
+        successDescription:
+          'Your script is now available to the subject community.',
       },
       readingLinkErrors: {
         invalid: 'Enter a valid link, e.g. https://example.com/notes',
@@ -153,9 +200,23 @@ export const UI_STRINGS = {
         titleRequired: 'Enter a title for your script',
         titleTooLong: 'Script title must be 2 KB or less',
         descriptionTooLong: 'Script description must be 50 KB or less',
+        unsupportedScript:
+          'Use Latin or Cyrillic letters only. Other languages are not supported yet.',
         noProfessors: 'No professors are available for this subject',
         filesInvalid: 'Remove or replace the files with errors',
       },
+      slug: {
+        label: 'Link',
+        path: (slug: string) => `/scripts/${slug}`,
+        /** `stem` is what the title produces; the stored slug also carries a
+         * short suffix the preview cannot know before the script exists. */
+        previewPath: (stem: string) => `/scripts/${stem}-…`,
+        previewNote:
+          'Built from the title. The last characters are added when the script is created to keep it unique.',
+        fixedNote:
+          'Set when the script was created and cannot be changed. Editing the title will not change it.',
+      },
+
       fileErrors: {
         noFiles: 'At least one file is required',
         tooMany: (max: number) => `You can upload at most ${max} files at once`,
@@ -201,6 +262,14 @@ export const UI_STRINGS = {
     guestNoIncompleteSubjects:
       'All subjects in your selected study are marked complete.',
     electiveLabel: 'Elective',
+    filters: {
+      allYears: 'All years',
+      sortByYear: 'Sort by year',
+      sortBySubject: 'Sort by subject',
+      sortByProfessor: 'Sort by professor',
+      filterByYear: 'Filter by year',
+      sortSubjects: 'Sort subjects',
+    },
   },
   academics: {
     studiesTitle: 'Studies',
@@ -211,6 +280,28 @@ export const UI_STRINGS = {
     studyAbout: 'About the Study',
     visitWebsite: 'Visit website',
     location: 'Location',
+    secretary: 'Secretary',
+    administration: 'Administration',
+    faculties: 'Faculties',
+    noProfessorsAssigned: 'No professors assigned to this faculty.',
+    contactAndLocation: 'Contact & Location',
+    address: 'Address',
+    dean: 'Dean',
+    viceDeans: 'Vice Deans',
+    semester: (semester: number) => `Semester ${semester}`,
+    aboutFaculty: 'About the faculty',
+    aboutUniversity: 'About the university',
+    facultyImageAlt: 'Faculty image',
+    universityImageAlt: 'University image',
+    studySummary: (subjects: number, professors: number) =>
+      `${subjects} Subjects • ${professors} Professors`,
+    entity: {
+      university: 'University',
+      faculty: 'Faculty',
+      study: 'Study',
+      professor: 'Professor',
+      subject: 'Subject',
+    },
     professor: {
       contactDetails: 'About',
       office: 'Office',
@@ -224,7 +315,34 @@ export const UI_STRINGS = {
         `${count} ${count === 1 ? 'course' : 'courses'}`,
       year: (year: number) => `Year ${year}`,
       ects: (credits: number) => `${credits} ECTS`,
+      academicStaff: 'Academic Staff',
     },
+    subject: {
+      overview: 'Subject overview',
+      curriculumDetails: 'Curriculum details',
+      viewSyllabusDocument: 'View Syllabus Document',
+      syllabusLabel: 'Syllabus',
+      revisitPrompt:
+        "Use this course's shared scripts and syllabus to revisit key material in your own time.",
+    },
+    metadata: {
+      professorDescription: (name: string) =>
+        `Academic profile, courses taught, and contact details for ${name}.`,
+      universityDescription: (name: string) =>
+        `Explore faculties, departments, and academic programs at ${name}.`,
+      facultyDescription: (name: string) =>
+        `Explore academic subjects, faculty administration, and professors at ${name}.`,
+      studyDescription: (name: string) =>
+        `Explore academic subjects, faculty administration, and professors at ${name}.`,
+      subjectDescription: (name: string) =>
+        `Syllabus, academic year, exam sessions, and course details for ${name}.`,
+      notFoundTitle: (entityLabel: string, siteName: string) =>
+        `${entityLabel} Not Found | ${siteName}`,
+    },
+  },
+  editor: {
+    alignText: (alignment: string) => `Align Text ${alignment}`,
+    colorSwatch: (color: string) => `Color Swatch ${color}`,
   },
   onboarding: {
     title: 'Set up your studies',
@@ -324,6 +442,7 @@ export const UI_STRINGS = {
     comments: 'Comments',
     newScript: 'New script',
     notifications: 'Notifications',
+    signIn: 'Sign in',
     closeNavigation: 'Close navigation',
     simpleMode: 'Simple mode',
     simpleModeDescription:
@@ -386,6 +505,7 @@ export const UI_STRINGS = {
     callback: {
       processingLabel: 'Signing you in…',
       backToSignIn: 'Back to sign in',
+      invalidLink: 'This link is missing or invalid.',
     },
   },
 } as const

@@ -24,10 +24,10 @@ export type FlagReportButtonProps = {
 
 /**
  * Reuses the shared Dialog for modal chrome. Flag creation is
- * restriction-checked (ARCHITECTURE.md §4); withdrawing an own flag via
- * DELETE apiRoutes.flags.byId is not — this component only ever creates, so
- * useProtectedAction is the right (and only) wrapper needed here. Failures
- * (restricted, other) are toasted by the hook, not rendered inline.
+ * restriction-checked (docs/ARCHITECTURE-USERS-AUTH.md); withdrawing an own
+ * flag via DELETE apiRoutes.flags.byId is not — this component only ever
+ * creates, so useProtectedAction is the right (and only) wrapper needed here.
+ * Failures (restricted, other) are toasted by the hook, not rendered inline.
  *
  * The dialog is controlled so a signed-out visitor gets the login modal when
  * they click Report, instead of writing a report that can't be submitted.

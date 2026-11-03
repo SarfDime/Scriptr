@@ -1,0 +1,7 @@
+# Moderation
+
+* **Flags:** one `flags` table for scripts, users, and comments (exactly one target per row). Users manage only their own flags and cannot report their own scripts or comments. When the number of distinct reporters with non-dismissed flags first reaches five, every admin receives a `flag_threshold` alert; reporter identities are not included.
+* **Resolution:** admins only (`pending → reviewed → dismissed`, with `reviewed_by`/`reviewed_at`); dismissing the last pending flag clears `is_flagged`. Flagged content stays visible.
+* **Admin UI v1:** flags queue with status filters, restrictions and username lookup, and rating-type and achievement-definition CRUD. Suspicious-download review, academic sync, and moderator tools are not included.
+* **Download dedupe:** raw attempts go to append-only `download_events` (service-role only), aggregated account → IP → device. A signed-in author's download of their own script is not counted (`counted: false`, nothing recorded); anonymous self-downloads can't be detected and still count. Counted downloads bump `scripts.download_count` through the atomic `increment_script_download_count` RPC, then run the `total_script_downloads` award check, then revalidate cache tags (award before revalidation, so the cached public profile never goes stale after a new award).
+* **Moderators:** no elevated access or notification escalation pipeline.

@@ -35,6 +35,6 @@
     "sanity:types": "corepack pnpm --filter scriptr-sanity types:generate",
     "setup": "corepack pnpm install --frozen-lockfile",
     "start:next": "corepack pnpm --filter scriptr-next start",
-    "test": "corepack pnpm --filter @scriptr/api test && corepack pnpm --filter @scriptr/optimizer test"
+    "test": "corepack pnpm --filter @scriptr/api test && corepack pnpm --filter @scriptr/optimizer test && corepack pnpm --filter @scriptr/shared test"
   }
 }

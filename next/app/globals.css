@@ -50,7 +50,6 @@ body:has(dialog[open]) .ui-container {
   --font-matter: var(--font-matter), sans-serif;
   --font-olive: var(--font-antique-olive), sans-serif;
   --font-olive-cond: var(--font-antique-olive-cond), sans-serif;
-  --font-bricolage: var(--font-bricolage), sans-serif;
 }
 
 html,

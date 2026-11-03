@@ -1,3 +1,5 @@
+import type { NotificationKind } from '@shared/types/notifications.types'
+
 const formatDate = (value: string) => new Date(value).toLocaleDateString()
 
 export const NOTIFICATIONS_STRINGS = {
@@ -32,4 +34,13 @@ export const NOTIFICATIONS_STRINGS = {
   flagThresholdTitle: 'Flag review threshold reached',
   flagThresholdBody: (count: number, target: string) =>
     `${count} distinct users have flagged ${target}.`,
+} as const
+
+export const NOTIFICATION_TYPE_STRINGS: Record<NotificationKind, string> = {
+  achievement_earned: 'Achievement',
+  content_removed: 'Content removed',
+  restriction_lifted: 'Restriction lifted',
+  restriction_applied: 'Restriction applied',
+  flag_threshold: 'Flag threshold',
+  announcement: 'Announcement',
 } as const

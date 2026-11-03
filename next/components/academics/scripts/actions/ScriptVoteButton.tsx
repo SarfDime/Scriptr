@@ -1,5 +1,6 @@
 'use client'
 
+import { UI_STRINGS } from '@shared/config/strings'
 import { VoteButton } from '@/components/ui/VoteButton'
 import { castVote } from '@/lib/api/votes-api'
 
@@ -37,8 +38,8 @@ export function ScriptVoteButton({
         const result = await castVote(scriptId)
         return { voted: result.voted, count: result.vote_score }
       }}
-      label='Upvote'
-      noun='script'
+      label={UI_STRINGS.scripts.actions.upvote}
+      noun={UI_STRINGS.scripts.actions.voteNoun}
       disabled={disabled}
       className={className}
     />

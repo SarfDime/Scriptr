@@ -22,9 +22,9 @@ export type ScriptSaveButtonProps = {
 /**
  * Save/bookmark toggle for the script detail page. Saved state is seeded by
  * the server (no mount-time fetch), then toggled via POST/DELETE on
- * apiRoutes.favorites.byScriptId. Favoring is exempt from restriction
- * checks (ARCHITECTURE.md §4), so there's no useProtectedAction wrapper —
- * failures are surfaced as a toast.
+ * apiRoutes.favorites.byScriptId. Favoring is exempt from restriction checks
+ * (docs/ARCHITECTURE-USERS-AUTH.md), so there's no useProtectedAction
+ * wrapper — failures are surfaced as a toast.
  */
 export function ScriptSaveButton({
   scriptId,

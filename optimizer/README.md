@@ -3,8 +3,8 @@
 A small Hono service that shrinks uploaded files before they are stored in R2:
 PDFs with Ghostscript, images with sharp (converted to WebP). The API calls it
 from `POST /file-ops/finalize` and `POST /profiles/me/avatar` when
-`OPTIMIZER_URL` and `OPTIMIZER_SECRET` are set; see `ARCHITECTURE.md` and
-`PROGRESS.md`.
+`OPTIMIZER_URL` and `OPTIMIZER_SECRET` are set; see `docs/ARCHITECTURE.md` and
+`docs/PROGRESS.md`.
 
 ## What `POST /optimize` does
 

@@ -8,6 +8,7 @@ import {
   portableTextJsonByteLength,
   portableTextToPlainText,
 } from '@shared/utils/portable-text.utils'
+import { hasUnsupportedScript } from '@shared/utils/text-language.utils'
 import { useState } from 'react'
 
 /** The two rich-text fields a script form edits. */
@@ -42,14 +43,17 @@ export function useScriptTextFields({
       current.has(field) ? current : new Set(current).add(field)
     )
 
-  const titleHasContent = portableTextToPlainText(title).trim() !== ''
+  const titleText = portableTextToPlainText(title)
+  const descriptionText = portableTextToPlainText(description)
+  const titleHasContent = titleText.trim() !== ''
   const titleTooLong =
     portableTextJsonByteLength(title) > PORTABLE_TEXT_LIMITS.scriptTitleBytes
-  const descriptionHasContent =
-    portableTextToPlainText(description).trim() !== ''
+  const titleUnsupportedScript = hasUnsupportedScript(titleText)
+  const descriptionHasContent = descriptionText.trim() !== ''
   const descriptionTooLong =
     portableTextJsonByteLength(description) >
     PORTABLE_TEXT_LIMITS.scriptDescriptionBytes
+  const descriptionUnsupportedScript = hasUnsupportedScript(descriptionText)
 
   return {
     title,
@@ -66,15 +70,23 @@ export function useScriptTextFields({
     descriptionHasContent,
     titleTooLong,
     descriptionTooLong,
+    titleUnsupportedScript,
+    descriptionUnsupportedScript,
     /** Both fields hold what the API accepts. */
     isValid:
       isScriptTitlePortableTextValue(title) &&
       isScriptDescriptionPortableTextValue(description) &&
       !titleTooLong &&
-      !descriptionTooLong,
-    titleValid: titleHasContent && !titleTooLong,
-    titleInvalid: touched.has('title') && (!titleHasContent || titleTooLong),
-    descriptionInvalid: touched.has('description') && descriptionTooLong,
+      !descriptionTooLong &&
+      !titleUnsupportedScript &&
+      !descriptionUnsupportedScript,
+    titleValid: titleHasContent && !titleTooLong && !titleUnsupportedScript,
+    titleInvalid:
+      touched.has('title') &&
+      (!titleHasContent || titleTooLong || titleUnsupportedScript),
+    descriptionInvalid:
+      touched.has('description') &&
+      (descriptionTooLong || descriptionUnsupportedScript),
     touchAll: () =>
       setTouched(new Set<ScriptTextField>(['title', 'description'])),
     reset: (next: ScriptTextValues) => {

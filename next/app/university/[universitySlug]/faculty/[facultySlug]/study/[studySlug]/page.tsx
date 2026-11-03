@@ -1,3 +1,4 @@
+import { UI_STRINGS } from '@shared/config/strings'
 import { ProfessorsSection } from '@/components/academics/professor/ProfessorsSection'
 import { StudyOverviewCard } from '@/components/academics/study/StudyOverviewCard'
 import { SubjectsExplorer } from '@/components/academics/subject/SubjectsExplorer'
@@ -32,13 +33,13 @@ export const generateMetadata = createAcademicMetadata<
   StudyRouteParams
 >({
   query: studyDetailQuery,
-  pageDomain: 'studies',
-  entityLabel: 'Study',
+  getPath: (p) => getAcademicPath({ type: 'study', ...p }),
+  entityLabel: UI_STRINGS.academics.entity.study,
   fetchOriginPrefix: 'study',
   getOwnSlug: (p) => p.studySlug,
   getDescription: (study) => study.description,
   descriptionFallback: (study) =>
-    `Explore academic subjects, faculty administration, and professors at ${study.name}.`,
+    UI_STRINGS.academics.metadata.studyDescription(study.name),
 })
 
 export default async function StudyDetailPage({
@@ -55,7 +56,7 @@ export default async function StudyDetailPage({
   return (
     <PageLayout
       header={{
-        greeting: study.faculty?.name ?? 'Faculty',
+        greeting: study.faculty?.name ?? UI_STRINGS.academics.entity.faculty,
         title: study.name,
         actions: (
           <>

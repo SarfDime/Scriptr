@@ -37,8 +37,9 @@ export type ScriptStudyRef = {
  * (name, description, syllabus, professors, ...) comes from Sanity via
  * `sanity_id`, fetched separately — see ScriptDetailPage's second-stage fetch
  * with `subjectByIdQuery`. This replaces the previous deep DB join
- * (name/university chain duplicated from Sanity, which ARCHITECTURE.md §1
- * already establishes as the source of truth for that data).
+ * (name/university chain duplicated from Sanity, which
+ * docs/ARCHITECTURE-SYSTEM-OVERVIEW.md already establishes as the source of
+ * truth for that data).
  *
  * There is no faculty on it: scripts are not scoped by faculty any more.
  */
@@ -69,6 +70,9 @@ export type ScriptSubjectSummary = {
  */
 export type ScriptSummary = {
   id: string
+  /** Address segment: the title folded to ASCII plus the first id characters
+   * (`buildScriptSlug`). Minted once, at creation, so links survive a retitle. */
+  slug: string
   title: PortableTextValue
   description: PortableTextValue | null
   subject_id: string
@@ -86,6 +90,21 @@ export type ScriptSummary = {
   files: Array<ScriptFile>
   author: ScriptAuthorSummary | null
   subject: ScriptSubjectRef | null
+}
+
+/** One script's address, for the sitemap: enough to build a URL and say when it
+ * last changed, nothing that would make the response heavy. Served by the
+ * internal API, since the public listing is admin-only. */
+export type ScriptSitemapEntry = {
+  slug: string
+  updated_at: string
+}
+
+/** One page of the admin-only script listing. */
+export type ScriptsListResponse = {
+  items: Array<ScriptSummary>
+  hasMore: boolean
+  totalCount: number
 }
 
 /** Shallow `study` shape used by `PATCH /:id`, `GET /my-scripts`, and

@@ -91,8 +91,8 @@ export function VoteButton({
         aria-pressed={voted}
         aria-label={ariaLabel}
         className={cn(
-          'button button-sm subtle gap-1.5',
-          voted && 'text-rose-pink',
+          'group button button-sm gap-1.5 hover:text-rose-pink hover:bg-rose-pink/5',
+          voted ? 'cp-rose-int' : 'subtle',
           className
         )}
       >
@@ -109,8 +109,8 @@ export function VoteButton({
       aria-pressed={voted}
       aria-label={ariaLabel}
       className={cn(
-        'group button button-sm subtle gap-1.5 hover:text-rose-pink hover:bg-rose-pink/5 pl-3',
-        voted && 'cp-rose',
+        'group button button-sm gap-1.5 hover:text-rose-pink hover:bg-rose-pink/5 pl-3',
+        voted ? 'cp-rose-int' : 'subtle',
         className
       )}
     >

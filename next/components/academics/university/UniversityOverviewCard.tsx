@@ -2,6 +2,7 @@ import Component from '@sanity/icons/Component'
 import EarthGlobe from '@sanity/icons/EarthGlobe'
 import Envelope from '@sanity/icons/Envelope'
 import Marker from '@sanity/icons/Marker'
+import { UI_STRINGS } from '@shared/config/strings'
 import { OverviewCard } from '@/components/layout/OverviewCard/OverviewCard'
 import type { UniversityDetail } from '@/types/academics/university.types'
 import type { OverviewCardActionItem } from '@/types/components/OverviewCard.types'
@@ -10,28 +11,25 @@ import type { PersonSummary } from '@/types/components/Person.types'
 export const UniversityOverviewCard = ({
   website,
   rector,
-  viceRectors,
   streetAddress,
   email,
+  viceRectors: _viceRectors,
   ...university
 }: UniversityDetail) => {
-  const administrators: Array<PersonSummary> = [
-    ...(rector ? [rector] : []),
-    ...(viceRectors ?? []),
-  ]
+  const administrators: Array<PersonSummary> = [...(rector ? [rector] : [])]
 
   const actions: Array<OverviewCardActionItem> = [
     website && {
       key: 'website',
       icon: <EarthGlobe />,
-      label: 'Visit website',
+      label: UI_STRINGS.academics.visitWebsite,
       href: website,
       colorPalette: 'cp-brand',
     },
     streetAddress && {
       key: 'location',
       icon: <Marker />,
-      label: 'Location',
+      label: UI_STRINGS.academics.location,
       href: streetAddress,
       colorPalette: 'cp-rose',
     },
@@ -47,9 +45,9 @@ export const UniversityOverviewCard = ({
 
   return (
     <OverviewCard
-      imageAlt={university.name || 'Faculty image'}
+      imageAlt={university.name || UI_STRINGS.academics.universityImageAlt}
       administrators={administrators}
-      eyebrow='About the faculty'
+      eyebrow={UI_STRINGS.academics.aboutUniversity}
       eyebrowIcon={<Component />}
       actions={actions}
       {...university}

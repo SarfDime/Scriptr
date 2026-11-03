@@ -1,0 +1,11 @@
+# System Overview
+
+* **Hierarchy:** `University → Faculty → Study → Subject`. Single university at launch, read-only catalog for users.
+* **Sanity CMS (source of truth for academic metadata):** bios, descriptions, syllabus, `year`, `semester`, `elective` (subjects only — electives have no fixed semester and are badged in the UI).
+* **Supabase DB (runtime):** identities, relationships, user content (scripts, comments, votes, ratings, flags), notifications, achievements, runtime script metadata (`exam_session`, `exam_year`, `additional_reading`, files).
+* **Junction tables:** `profile_faculties`, `profile_studies`, `profile_subjects`, `professor_faculties`, `professor_studies`, `subject_professors`.
+* **Data fetching:** the API merges DB identity/relationship records with Sanity metadata.
+* **Workspace dependencies:** pnpm 12 uses an isolated linker and a single root lockfile. Each app declares its own dependencies and the lightweight `@scriptr/shared` workspace package; existing `@shared/*` TypeScript aliases continue to resolve shared source. Vercel installs are filtered to the target app, its workspace dependencies, and root tooling, so unrelated app dependencies are not installed for that deployment.
+* **Type derivation:** Sanity TypeGen output generates into `shared/types/`, so `next/`, `hono/`, and `sanity/` share one copy. Academic entity types are derived from each query's result type via `WithResolvedSanityData<...>` (`shared/types/sanity-transform.types.ts`), which resolves `defined()`-guarded pictures, `NonNullable` Portable Text fields, and the `media: unknown` block field. `hono/src/sanity-stub.d.ts` lets `hono/` import these types without a real `@sanity/client` dependency.
+* **Access control:** enforced primarily by Postgres RLS. See [Client Access Patterns](../hono/src/routes/API_DOCUMENTATION.md#client-access-patterns) for which client (session vs. service-role) each route uses.
+* **API surface:** route groups mounted under `/api`: `auth`, `universities`, `faculties`, `studies`, `professors`, `subjects`, `file-ops`, `scripts`, `votes`, `comments`, `flags`, `favorites`, `profiles`, `profile-subjects`, `profile-studies`, `profile-faculties`, `notifications`, `ratings`, `restrictions`, `internal`.

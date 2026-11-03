@@ -24,12 +24,16 @@ export type ScriptDetailPageData = {
  * renders so `notFound()` can still produce a real 404 status: the route has
  * no `loading.tsx` on purpose, since a Suspense boundary above the page would
  * flush the response (and its 200) before this answer arrives.
+ *
+ * The segment takes a slug or a legacy id: the API resolves both, and the page
+ * redirects the id form to the slug, so the address people share and the
+ * address search engines index are the same one.
  */
 export const loadScriptDetailScript = async (
-  scriptId: string
+  identifier: string
 ): Promise<ScriptSummary> => {
   try {
-    return await getScript(scriptId)
+    return await getScript(identifier)
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) notFound()
     throw error

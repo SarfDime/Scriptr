@@ -53,16 +53,15 @@ const Page = async ({
   // platform-wide top list is the fallback, and the explicit choice behind the
   // feed switch, so early on everyone can still reach every script.
   const isCurated = !showAllScripts && incompleteSubjectIds.length > 0
-  const scripts = toScriptSummaryDetails(
-    isCurated
-      ? await getTopScriptsForSubjects(incompleteSubjectIds)
-      : topScripts
-  )
+  const feedScripts = isCurated
+    ? await getTopScriptsForSubjects(incompleteSubjectIds)
+    : topScripts
+  const scripts = toScriptSummaryDetails(feedScripts ?? [])
 
   return (
     <PageLayout>
       <PageHeader
-        greeting='Welcome'
+        greeting={UI_STRINGS.home.greeting}
         title={UI_STRINGS.home.title}
         subtitle={UI_STRINGS.home.subtitle}
       />
@@ -71,6 +70,7 @@ const Page = async ({
       <Box className='grid gap-10 xl:grid-cols-[minmax(0,1fr)_340px]'>
         <ScriptsSection
           scripts={scripts}
+          scriptsUnavailable={feedScripts === null}
           showGlobalSearch
           title={showAllScripts ? UI_STRINGS.scripts.feed.allTitle : undefined}
           subtitle={

@@ -1,6 +1,7 @@
 'use client'
 
 import Bell from '@sanity/icons/Bell'
+import { NOTIFICATIONS_STRINGS } from '@shared/strings/notifications-strings'
 import { useNotifications } from '@/providers/notification/NotificationProvider'
 import { Box } from '../common/Box'
 import { Button } from '../common/Button'
@@ -15,7 +16,7 @@ export const HeaderActions = () => {
       <HeaderSearch />
       <Button
         onClick={() => setTrayOpen(true)}
-        aria-label='Open notifications'
+        aria-label={NOTIFICATIONS_STRINGS.openNotifications}
         className='button ghost relative p-2'
       >
         <Bell />

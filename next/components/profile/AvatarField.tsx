@@ -40,7 +40,7 @@ export function AvatarField({
             : undefined
         }
         initialsIconProps={{
-          className: 'h-16 w-16 rounded-full shadow-sm p-1 text-xl',
+          className: 'h-16 w-16 rounded-full shadow-sm',
         }}
       />
       <Box className='ui-stack gap-1'>

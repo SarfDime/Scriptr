@@ -1,8 +1,10 @@
+import { UI_STRINGS } from '@shared/config/strings'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { PageSEO } from '@/components/page-seo/PageSEO'
 import { convertToPlainText } from '@/lib/common-utils'
+import { websiteDomain } from '@/sanity/env'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { websiteSeoQuery } from '@/sanity/queries/website.queries'
 
@@ -20,6 +22,24 @@ const fallbackWebsiteSeo: WebsiteSeoSettings = {
   defaultSeoTitle: 'Scriptr',
   defaultSeoDescription: 'Academic information and faculty resources.',
   defaultKeywords: ['academics', 'university', 'faculty', 'courses'],
+}
+
+/**
+ * `metadataBase` has to be a valid absolute URL, and `website.siteUrl` is free
+ * text typed in the Studio. Anything that does not parse falls back to the
+ * environment's origin, and if neither is usable the key is left out so Next
+ * skips it instead of throwing during a render.
+ */
+export const toOrigin = (value: string | undefined): URL | undefined => {
+  for (const candidate of [value, websiteDomain]) {
+    if (!candidate) continue
+    try {
+      return new URL(candidate)
+    } catch {
+      // Not a URL: try the next source.
+    }
+  }
+  return undefined
 }
 
 /** Fetches the globally shared SEO settings from the Website document. */
@@ -82,7 +102,7 @@ export const createAcademicMetadata = <
 >({
   query,
   seoQuery = query,
-  pageDomain,
+  getPath,
   entityLabel,
   fetchOriginPrefix,
   getOwnSlug,
@@ -91,7 +111,12 @@ export const createAcademicMetadata = <
 }: {
   query: string
   seoQuery?: string
-  pageDomain: string
+  /**
+   * The page's own site-relative path, built from the route params with
+   * `getAcademicPath`. It must equal the URL the route is served at, since it
+   * becomes the canonical and the Open Graph URL.
+   */
+  getPath: (params: TParams) => string
   entityLabel: string
   fetchOriginPrefix: string
   /** Pulls the page's own (leaf) slug out of the full route-params object, for logging/SEO param. */
@@ -118,7 +143,10 @@ export const createAcademicMetadata = <
 
     if (!detail) {
       return {
-        title: `${entityLabel} Not Found | ${websiteSettings.siteName ?? 'Scriptr'}`,
+        title: UI_STRINGS.academics.metadata.notFoundTitle(
+          entityLabel,
+          websiteSettings.siteName ?? 'Scriptr'
+        ),
       }
     }
 
@@ -129,8 +157,7 @@ export const createAcademicMetadata = <
     return PageSEO({
       seoTitle: `${detail.name} | ${websiteSettings.siteName ?? 'Scriptr'}`,
       seoDescription,
-      pageDomain,
-      param: ownSlug,
+      pagePath: getPath(routeParams),
       siteName: websiteSettings.siteName,
       siteUrl: websiteSettings.siteUrl,
       keywords: websiteSettings.defaultKeywords,

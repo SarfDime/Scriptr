@@ -98,7 +98,7 @@ export function CreateScriptModal({
             labelProps={SCRIPT_FIELD_LABEL_PROPS}
           >
             <SubjectCard {...subject} />
-            <Divider className='border-grey-500 my-2' />
+            <Divider className='[--divider-line:var(--color-grey-500)] my-2' />
             <ReadingLinksField
               {...form.readingLinks.fieldProps}
               disabled={form.isBusy}

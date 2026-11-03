@@ -10,6 +10,7 @@ import { FormContainer } from '@/components/typography/FormContainer'
 import { InputWrapper } from '@/components/typography/InputWrapper'
 import { Card } from '@/components/ui/Card'
 import { Dialog } from '@/components/ui/Dialog'
+import { DialogFooter } from '@/components/ui/DialogFooter'
 import { useEditProfileForm } from '@/hooks/profile/useEditProfileForm'
 import { useDeviceType } from '@/hooks/useDeviceType'
 import { getDisplayName } from '@/lib/profile-display'
@@ -125,22 +126,13 @@ function EditProfileDialog({
           />
         </Card.Body>
 
-        <Card.Footer className='ui-cluster shrink-0 justify-end gap-2 px-4 py-3'>
-          <Button
-            onClick={onClose}
-            disabled={isBusy}
-            className='button button-md subtle'
-          >
-            {UI_STRINGS.profile.edit.cancel}
-          </Button>
-          <Button
-            type='submit'
-            disabled={!canSubmit}
-            className='button button-md solid'
-          >
-            {UI_STRINGS.profile.edit.save}
-          </Button>
-        </Card.Footer>
+        <DialogFooter
+          secondaryLabel={UI_STRINGS.profile.edit.cancel}
+          onSecondary={onClose}
+          secondaryDisabled={isBusy}
+          primaryLabel={UI_STRINGS.profile.edit.save}
+          primaryDisabled={!canSubmit}
+        />
       </FormContainer>
     </Dialog>
   )

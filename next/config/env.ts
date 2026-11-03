@@ -25,9 +25,15 @@ const isDev =
 // Inlined at build time: redeploy after changing it.
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? ''
 
+// Shared secret for the API's internal routes (`x-internal-secret`). Server-only:
+// no `NEXT_PUBLIC_` prefix, so it never reaches the browser bundle. Used by the
+// sitemap, whose full script list the public API no longer serves.
+const INTERNAL_API_SECRET = process.env.INTERNAL_API_SECRET ?? ''
+
 export {
   API_URL,
   buildContext,
+  INTERNAL_API_SECRET,
   isBuild,
   isDeployPreview,
   isDev,

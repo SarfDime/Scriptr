@@ -84,7 +84,7 @@ corepack pnpm sanity:types       # Generate TypeScript types only
 - Vercel Git deployments are enabled for `main`, `staging`, and branches
   matching `feat-*`, `feat/**`, `fix-*`, or `fix/**`. The Ignored Build Step
   also requires commit subjects starting with `feat:` or `fix:`. See
-  [Vercel deployment](VERCEL_DEPLOYMENT.md) for details.
+  [Vercel deployment](docs/VERCEL_DEPLOYMENT.md) for details.
 - The production Sanity workflow deploys the Studio and GraphQL schema from
   `main-sanity` only when the pushed commit message contains `-s-`. The manual
   force-deploy workflow is restricted to `main-sanity` but does not require
@@ -119,13 +119,13 @@ The Studio is deployed at https://scriptr.sanity.studio.
 
 ## Documentation
 
-- [Architecture & requirements](ARCHITECTURE.md)
-- [Progress & todos](PROGRESS.md)
-- [Vercel deployment](VERCEL_DEPLOYMENT.md)
+- [Architecture & requirements](docs/ARCHITECTURE.md) — overview + links to the per-area files in `docs/`
+- [Progress & todos](docs/PROGRESS.md)
+- [Vercel deployment](docs/VERCEL_DEPLOYMENT.md)
 - [API setup](hono/README.md)
 - [API reference](hono/src/routes/API_DOCUMENTATION.md)
 - [API testing guide](hono/src/routes/API_TESTING_GUIDE.md)
 - [Frontend setup](next/README.md)
 - [Frontend styling guide](next/STYLING_GUIDE.md)
 - [Studio setup](sanity/README.md)
-- [Agent guide](AGENTS.md)
+- [Agent guide](AGENTS.md) — global rules, plus an index of the per-app agent guides in `docs/`

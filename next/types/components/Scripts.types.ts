@@ -3,8 +3,8 @@ import type { PortableTextValue } from '@shared/types/portable-text.types'
 import type { ScriptFile } from '@shared/types/scripts.types'
 import type { ReactNode } from 'react'
 import type { BoxPropsWithoutChildren } from '@/components/common/Box'
-import type { ButtonProps } from '@/components/common/Button'
-import type { NextLinkProps } from '@/components/common/NextLink'
+import type { ButtonBaseProps } from '@/components/common/Button'
+import type { NextLinkBaseProps } from '@/components/common/NextLink'
 import type { TextProps } from '@/components/typography/Text'
 import type { MinimalSubject, SubjectDetail } from '../academics/subject.types'
 import type { SanityIconProps } from '../component.types'
@@ -55,6 +55,9 @@ export type Script = BaseScript & {
 }
 
 export type ScriptDetail = BaseScript & {
+  /** Address segment of the script's page, so a card links to the canonical
+   * URL instead of redirecting through the id. */
+  slug: string
   author: string
   professor?: string
   year?: number
@@ -80,27 +83,31 @@ export type ScriptFiltersProps = {
 // -----------------------------------------------------------------------------
 
 export type ScriptPreviewButtonProps = ScriptId &
-  Omit<ButtonProps, 'title'> & {
+  Omit<ButtonBaseProps, 'title'> & {
     title: PortableTextValue
     description?: PortableTextValue
     files: Array<ScriptFile>
   }
 
 export type ScriptSaveButtonProps = BaseScriptAction &
-  Omit<ButtonProps, 'children'>
+  Omit<ButtonBaseProps, 'children'>
 
 export type ScriptLikeButtonProps = ScriptMeta & {
   likes: number
   iconProps?: Omit<SanityIconProps, 'children'>
   countProps?: Omit<TextProps, 'children'>
-} & Omit<ButtonProps, 'children'>
+} & Omit<ButtonBaseProps, 'children'>
 
 export type ScriptCommentsLinkProps = BaseScriptAction & {
   comments: number
-} & Omit<NextLinkProps, 'children' | 'href'>
+  /** Link target. The id still resolves, but lands through a redirect. */
+  slug: string
+} & Omit<NextLinkBaseProps, 'children' | 'href'>
 
 export type ScriptActionsProps = ScriptMeta &
   ScriptStats & {
+    /** The script's address segment, so its links stay canonical. */
+    slug: string
     title: PortableTextValue
     description?: PortableTextValue
     files: Array<ScriptFile>
@@ -120,6 +127,8 @@ export type ScriptCardProps = {
 
 export type ScriptsSectionProps = {
   scripts: Array<ScriptDetail>
+  /** The read failed, so an empty `scripts` means "unknown", not "none". */
+  scriptsUnavailable?: boolean
   title?: string
   subtitle?: string
   parentSubject?: SubjectDetail

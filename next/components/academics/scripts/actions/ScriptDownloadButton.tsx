@@ -17,10 +17,10 @@ export type ScriptDownloadButtonProps = {
 } & ButtonProps
 
 /** POST apiRoutes.scripts.downloadById records the attempt server-side
- * (service-role client, deduped account → IP → device per ARCHITECTURE.md
- * §5) before the file is saved to disk. Not restriction-checked — guests can
- * download — so no useProtectedAction wrapper. Failures surface as a toast,
- * like the other script actions.
+ * (service-role client, deduped account → IP → device per
+ * docs/ARCHITECTURE-MODERATION.md) before the file is saved to disk. Not
+ * restriction-checked — guests can download — so no useProtectedAction
+ * wrapper. Failures surface as a toast, like the other script actions.
  */
 export function ScriptDownloadButton({
   scriptId,

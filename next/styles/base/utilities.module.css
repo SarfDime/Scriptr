@@ -2,6 +2,20 @@ html {
   @apply scroll-smooth;
 }
 
+/*
+ * One focus ring for the whole app, in the brand colour. `:focus-visible` only,
+ * so pointer clicks stay clean; the offset keeps the ring off the control's own
+ * edge (and off a button's shadow). It lives in the base layer, so the handful of
+ * controls that draw their own ring (`focus-visible:ring-*`, `outline-none`)
+ * still win over it.
+ */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+}
+
 @utility vertical-text {
   writing-mode: vertical-lr;
   text-orientation: mixed;

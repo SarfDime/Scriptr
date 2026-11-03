@@ -25,9 +25,11 @@ type NavContextType = {
 const NavContext = createContext<NavContextType | null>(null)
 
 const COLLAPSED_KEY = 'scriptr-nav-collapsed'
-// Matches Tailwind's `lg` breakpoint, where the navbar switches from
-// off-canvas to docked.
-const DESKTOP_QUERY = '(min-width: 64rem)'
+// Matches Tailwind's `xl` breakpoint, where the navbar switches from off-canvas
+// to docked. It used to be `lg` (64rem): at that width the docked column left
+// the content too narrow to lay out two columns comfortably, and the off-canvas
+// navbar gives the page the full width until there is genuinely room for both.
+const DESKTOP_QUERY = '(min-width: 80rem)'
 
 // The collapsed preference lives in localStorage, exposed through
 // useSyncExternalStore so the server render and hydration both use

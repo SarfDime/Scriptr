@@ -20,7 +20,11 @@ export const Toast = ({ toast, onDismiss }: ToastComponentProps) => {
   const toastClass = cn(
     TOAST_VARIANTS[toast.type],
     'relative flex w-100 select-none flex-col rounded-md px-2 py-2 text-background-100 shadow-md transition-all duration-300',
-    isExiting ? 'translate-x-[110%] opacity-0' : 'animate-toast-enter',
+    // While leaving, the toast is invisible but still where it was: it must not
+    // catch clicks meant for the page under it.
+    isExiting
+      ? 'translate-x-[110%] opacity-0 pointer-events-none'
+      : 'animate-toast-enter',
     (toast.onClick || toast.href) && 'hover:opacity-90'
   )
 

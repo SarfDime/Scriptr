@@ -59,7 +59,7 @@ preset. The Hono preset's isolated TypeScript pass cannot resolve the generated
 Sanity module augmentation in this monorepo.
 
 Vercel's Node runtime requires a `(req, res)` listener. Therefore
-[`hono/src/index.ts`](hono/src/index.ts) exports:
+[`hono/src/index.ts`](../hono/src/index.ts) exports:
 
 ```ts
 export default getRequestListener(app.fetch)
@@ -67,7 +67,7 @@ export default getRequestListener(app.fetch)
 
 Do not replace this with `handle(app)` or `app`. Those values return a Web
 `Response`, which Vercel's Node runtime ignores and then times out.
-[`hono/src/server.ts`](hono/src/server.ts) remains the local development
+[`hono/src/server.ts`](../hono/src/server.ts) remains the local development
 server only.
 
 The Hono app uses `.basePath('/api')`. Its root health endpoint is
@@ -79,7 +79,7 @@ Store values in Vercel Environment Variables; never add them to Git.
 
 ### `scriptr-web`
 
-Use the variables from [`next/.env.example`](next/.env.example). In
+Use the variables from [`next/.env.example`](../next/.env.example). In
 Production:
 
 - `NEXT_PUBLIC_API_URL` must be `https://api.scriptr.uk`.
@@ -89,16 +89,22 @@ Production:
 
 ### `scriptr-api`
 
-Use the variables from [`hono/.env.example`](hono/.env.example). In
+Use the variables from [`hono/.env.example`](../hono/.env.example). In
 Production:
 
 - `COOKIE_DOMAIN` must be `.scriptr.uk` so the API cookie reaches the web host.
-- `CORS_ORIGINS` must include the production origins and stable web aliases:
+- `CORS_ORIGINS` is the only origin allowlist in production (the localhost dev
+  ports are added automatically only when `NODE_ENV` is not `production`), so it
+  must include the production origins, stable web aliases and the hosted Studio:
   - `https://scriptr.uk`
   - `*.scriptr.uk`
   - `https://scriptr-web-ivory.vercel.app`
   - `https://scriptr-web-team-slug.vercel.app`
   - `https://scriptr-web-git-main-team-slug.vercel.app`
+  - `https://scriptr.sanity.studio`
+  Leaving the Studio out makes every sync/delete action fail its preflight with
+  `(Reason: CORS request did not succeed)`; a `403 Forbidden` after that instead
+  means `SANITY_STUDIO_INTERNAL_SECRET` disagrees with `INTERNAL_API_SECRET`.
 - `NEXT_REVALIDATE_URL` must be the web project's **Vercel alias**, not the
   public hostname: `https://scriptr-web-team-slug.vercel.app/api/revalidate`.
   `scriptr.uk` sits behind the Cloudflare proxy, and Cloudflare does not pass

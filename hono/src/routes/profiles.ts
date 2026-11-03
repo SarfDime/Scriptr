@@ -15,6 +15,7 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import { profileMutationTags } from '../../../shared/config/cache-tags'
 import type {
+  ProfilesListResponse,
   ProfileUpdateConflictResponse,
   ProfileUpdateResponse,
 } from '../../../shared/types/profile.types'
@@ -43,6 +44,7 @@ import {
   readJsonBody,
   requiredParam,
 } from '../lib/request'
+import { requireAdmin } from '../lib/require-admin'
 import {
   createStagedUpload,
   failureResponse,
@@ -101,7 +103,7 @@ const PROFILE_ACADEMIC_SELECT =
  * whoever wrote it, not the profile being viewed.
  */
 const PROFILE_SCRIPT_FIELDS =
-  'id, title, description, vote_score, download_count, created_at, updated_at, subject:subjects(name), author:profiles!author_id(username, full_name), files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, file_name, created_at)'
+  'id, slug, title, description, vote_score, download_count, created_at, updated_at, subject:subjects(name), author:profiles!author_id(username, full_name), files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, file_name, created_at)'
 
 /**
  * `scripts!author_id`, not a bare `scripts` — script_favorites has FKs to
@@ -479,9 +481,16 @@ async function updateProfile(
 
 const profiles = new Hono<HonoEnv>()
 
-/** Get all profiles (public) */
-profiles.get('/', async (c) => {
+/** Get all profiles (admin only). Unpaginated: every profile row with its
+ * subjects and earned achievements. `profiles` SELECT is public, so this
+ * route is the only boundary — nothing else gates the listing. */
+profiles.get('/', authMiddleware, async (c) => {
+  const user = c.get('user')
   const supabase = createSupabaseClient(c)
+
+  if (!(await requireAdmin(supabase, user.id))) {
+    return c.json({ error: 'Unauthorized: Admin access required' }, 403)
+  }
 
   const { data, error } = await supabase
     .from('profiles')
@@ -491,7 +500,7 @@ profiles.get('/', async (c) => {
     .order('created_at', { ascending: false })
 
   if (error) return databaseErrorResponse(c, error)
-  return c.json(data)
+  return c.json<ProfilesListResponse>(data)
 })
 
 /** Get current user's profile */

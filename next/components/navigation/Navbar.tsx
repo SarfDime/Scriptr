@@ -28,7 +28,7 @@ export const NavBar = ({ navItems }: NavMenuType) => (
       aria-label={UI_STRINGS.navigation.closeNavigation}
       className={cn(
         'fixed inset-0 z-15 bg-background-200/70 backdrop-blur-sm',
-        'hidden max-lg:group-data-[nav-open=true]/nav:block'
+        'hidden max-xl:group-data-[nav-open=true]/nav:block'
       )}
     />
     <nav
@@ -39,11 +39,11 @@ export const NavBar = ({ navItems }: NavMenuType) => (
         'ui-stack p-2.5 pt-0',
         'ui-above-nav gap-3',
         'transition-[translate,visibility] duration-300',
-        'max-lg:invisible max-lg:-translate-x-full',
-        'max-lg:group-data-[nav-open=true]/nav:visible',
-        'max-lg:group-data-[nav-open=true]/nav:translate-x-0',
-        'lg:group-data-[nav-collapsed=true]/nav:invisible',
-        'lg:group-data-[nav-collapsed=true]/nav:-translate-x-full'
+        'max-xl:invisible max-xl:-translate-x-full',
+        'max-xl:group-data-[nav-open=true]/nav:visible',
+        'max-xl:group-data-[nav-open=true]/nav:translate-x-0',
+        'xl:group-data-[nav-collapsed=true]/nav:invisible',
+        'xl:group-data-[nav-collapsed=true]/nav:-translate-x-full'
       )}
     >
       <Box className='ui-cluster justify-between h-16 px-3 border-b border-grey-300'>

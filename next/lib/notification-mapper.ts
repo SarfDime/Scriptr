@@ -28,6 +28,8 @@ export const mapNotificationRecord = (
   record: NotificationRecord
 ): AppNotification => {
   const type = isNotificationKind(record.type) ? record.type : 'info'
+  const sourceType = isNotificationKind(record.type) ? record.type : undefined
+
   const href = getHref(record)
   return {
     id: `server:${record.id}`,
@@ -37,7 +39,7 @@ export const mapNotificationRecord = (
     read: record.is_read,
     dismissed: false,
     type,
-    sourceType: record.type,
+    sourceType,
     ...(href
       ? {
           action: {

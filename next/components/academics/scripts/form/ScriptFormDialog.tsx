@@ -1,10 +1,10 @@
 'use client'
 
 import type { ReactNode, SubmitEvent } from 'react'
-import { Button } from '@/components/common/Button'
 import { FormContainer } from '@/components/typography/FormContainer'
 import { Card } from '@/components/ui/Card'
 import { Dialog } from '@/components/ui/Dialog'
+import { DialogFooter } from '@/components/ui/DialogFooter'
 import { useDeviceType } from '@/hooks/useDeviceType'
 import {
   SCRIPT_FORM_BODY_CLASS,
@@ -64,18 +64,14 @@ export function ScriptFormDialog({
         className='flex min-h-0 flex-1 flex-col'
       >
         <Card.Body className={SCRIPT_FORM_BODY_CLASS}>{children}</Card.Body>
-        <Card.Footer className={SCRIPT_FORM_FOOTER_CLASS}>
-          <Button
-            onClick={onSecondaryAction}
-            disabled={isBusy}
-            className='button subtle'
-          >
-            {secondaryActionLabel}
-          </Button>
-          <Button type='submit' disabled={!canSubmit} className='button solid'>
-            {submitLabel}
-          </Button>
-        </Card.Footer>
+        <DialogFooter
+          className={SCRIPT_FORM_FOOTER_CLASS}
+          secondaryLabel={secondaryActionLabel}
+          onSecondary={onSecondaryAction}
+          secondaryDisabled={isBusy}
+          primaryLabel={submitLabel}
+          primaryDisabled={!canSubmit}
+        />
       </FormContainer>
     </Dialog>
   )

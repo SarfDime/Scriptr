@@ -18,6 +18,7 @@ import type {
   ScriptDeleteResponse,
   ScriptFile,
   ScriptPatchResponse,
+  ScriptSitemapEntry,
   ScriptSummary,
   ScriptUpdateInput,
   UploadResponse,
@@ -26,6 +27,8 @@ import {
   isRetryPointless,
   retrySizeCeiling,
 } from '@shared/utils/optimizer-retry'
+import { INTERNAL_API_SECRET } from '@/config/env'
+import { nextLogs } from '@/lib/logger'
 import {
   findOptimizerFailure,
   forgetOptimizerFailure,
@@ -33,39 +36,100 @@ import {
 } from '@/lib/optimizer-attempts'
 import { UserFacingError } from '@/lib/user-facing-error'
 import type { ScriptUploadInput } from '@/types/components/Scripts.types'
-import {
-  apiFetchPublicRead,
-  apiFetchRequired,
-  cachedPublicRead,
-} from './next-api'
+import { apiFetch, apiFetchRequired, cachedPublicRead } from './next-api'
 import {
   isUserFacingUploadRejection,
   putToStaging,
   toUserFacingUploadError,
 } from './upload'
 
-const SCRIPT_COMMENT_COUNT_CACHE_VERSION = 2
+/**
+ * Versions the cached script payloads. It rides along as a query parameter, so
+ * bumping it changes the fetch URL and every cached body is bypassed instead of
+ * being read in a shape the app no longer expects — which is what happens when
+ * a field is added to `SCRIPT_SUMMARY_SELECT` while a cached copy predates it.
+ * Raised to 3 when `slug` joined the select: a stale copy put `undefined` into
+ * `getAcademicPath` and took the whole page down.
+ */
+const SCRIPT_COMMENT_COUNT_CACHE_VERSION = 3
 
-/** Scripts for one subject. Public and unscoped, so the response is shared. */
-export const getScriptsBySubject = (subjectId: string) =>
-  apiFetchPublicRead<Array<ScriptSummary>>(
-    withQuery(apiRoutes.scripts.subjectBySubjectId(subjectId), {
-      commentCountVersion: SCRIPT_COMMENT_COUNT_CACHE_VERSION,
-    }),
-    [],
-    cachedPublicRead([
-      SCRIPT_CACHE_TAGS.subject(subjectId),
-      SCRIPT_CACHE_TAGS.list(),
-    ])
-  )
+/** Scripts for one subject. Public and unscoped, so the response is shared.
+ *
+ * Returns `null` when the read fails. An empty list is a real answer here, so
+ * a fallback to `[]` would present an unreachable API as "no scripts in this
+ * subject" and hide the outage. */
+export const getScriptsBySubject = async (subjectId: string) => {
+  try {
+    return await apiFetch<Array<ScriptSummary>>(
+      withQuery(apiRoutes.scripts.subjectBySubjectId(subjectId), {
+        commentCountVersion: SCRIPT_COMMENT_COUNT_CACHE_VERSION,
+      }),
+      cachedPublicRead([
+        SCRIPT_CACHE_TAGS.subject(subjectId),
+        SCRIPT_CACHE_TAGS.list(),
+      ])
+    )
+  } catch (error) {
+    nextLogs({
+      message: `Scripts for subject ${subjectId} could not be read.`,
+      logLevel: 'warn',
+      error,
+    })
+    return null
+  }
+}
 
-/** Platform-wide top scripts by vote score. Public and unscoped. */
-export const getTopScripts = (limit = 10) =>
-  apiFetchPublicRead<Array<ScriptSummary>>(
-    `${apiRoutes.scripts.top(limit)}&commentCountVersion=${SCRIPT_COMMENT_COUNT_CACHE_VERSION}`,
-    [],
-    cachedPublicRead([SCRIPT_CACHE_TAGS.top()])
-  )
+/**
+ * Every script's address, for the sitemap. Reads the API's internal route: the
+ * public listing is admin-only now, and a crawler list only needs the slug and
+ * the update time.
+ *
+ * `null` when the read fails or the secret is missing — the sitemap then leaves
+ * its script section out rather than publishing an empty one. This runs on the
+ * server only, which is where the secret lives.
+ */
+export const getScriptSitemapEntries = async () => {
+  if (!INTERNAL_API_SECRET) {
+    nextLogs({
+      message:
+        'INTERNAL_API_SECRET is not set; the sitemap will omit every script URL.',
+      logLevel: 'warn',
+    })
+    return null
+  }
+
+  try {
+    return await apiFetch<Array<ScriptSitemapEntry>>(
+      apiRoutes.internal.scriptsSitemap,
+      { headers: { 'x-internal-secret': INTERNAL_API_SECRET } }
+    )
+  } catch (error) {
+    nextLogs({
+      message: 'The script sitemap entries could not be read.',
+      logLevel: 'warn',
+      error,
+    })
+    return null
+  }
+}
+
+/** Platform-wide top scripts by vote score. Public and unscoped. `null` means
+ * the read failed, for the same reason as `getScriptsBySubject`. */
+export const getTopScripts = async (limit = 10) => {
+  try {
+    return await apiFetch<Array<ScriptSummary>>(
+      `${apiRoutes.scripts.top(limit)}&commentCountVersion=${SCRIPT_COMMENT_COUNT_CACHE_VERSION}`,
+      cachedPublicRead([SCRIPT_CACHE_TAGS.top()])
+    )
+  } catch (error) {
+    nextLogs({
+      message: 'Top scripts could not be read.',
+      logLevel: 'warn',
+      error,
+    })
+    return null
+  }
+}
 
 /** Builds a personalized top list from individually cached public subject
  * feeds. The selection itself stays request-specific; the script reads do
@@ -75,11 +139,15 @@ export const getTopScriptsForSubjects = async (
   limit = 10
 ) => {
   const uniqueSubjectIds = [...new Set(subjectIds)]
-  const scripts = (
-    await Promise.all(
-      uniqueSubjectIds.map((subjectId) => getScriptsBySubject(subjectId))
-    )
-  ).flat()
+  const results = await Promise.all(
+    uniqueSubjectIds.map((subjectId) => getScriptsBySubject(subjectId))
+  )
+  const scripts = results.flatMap((subjectScripts) => subjectScripts ?? [])
+
+  // A partial feed is still worth showing; only an all-failed read is an outage.
+  if (scripts.length === 0 && results.some((result) => result === null)) {
+    return null
+  }
 
   return scripts
     .sort(
@@ -103,15 +171,29 @@ export const getScript = (scriptId: string) =>
   )
 
 /** Never cached regardless — search results must always reflect the live
- * dataset. Public and unscoped, so no cookie is sent. */
-export const searchScripts = (query: string) =>
-  apiFetchPublicRead<Array<ScriptSummary>>(
-    apiRoutes.scripts.search(query),
-    [],
-    {
-      cache: 'no-store',
-    }
-  )
+ * dataset. Public and unscoped, so no cookie is sent.
+ *
+ * Returns `null` when the API is unreachable or rejects the request, instead
+ * of falling back to an empty list: on this page an empty list is a real
+ * answer ("nothing matched"), so substituting one for a failure told the
+ * reader their query had no results when the search never ran. The
+ * fallback-to-empty variants are for reads that a build must survive; `/search`
+ * renders per request. */
+export const searchScripts = async (query: string) => {
+  try {
+    return await apiFetch<Array<ScriptSummary>>(
+      apiRoutes.scripts.search(query),
+      { cache: 'no-store' }
+    )
+  } catch (error) {
+    nextLogs({
+      message: `Search request failed for query "${query}".`,
+      logLevel: 'warn',
+      error,
+    })
+    return null
+  }
+}
 
 /** Never cached: results are scoped to the requesting user's session, and
  * the endpoint requires auth unconditionally (authMiddleware) — so `cookie`

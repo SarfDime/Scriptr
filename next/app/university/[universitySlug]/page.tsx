@@ -9,6 +9,7 @@ import {
   createAcademicStaticParams,
   fetchAcademicDetailOrNotFound,
 } from '@/lib/academic-detail-page'
+import { getAcademicPath } from '@/lib/academic-routes'
 import {
   universityDetailQuery,
   universityStaticParamsQuery,
@@ -32,13 +33,14 @@ export const generateMetadata = createAcademicMetadata<
   UniversityRouteParams
 >({
   query: universityDetailQuery,
-  pageDomain: 'universities',
-  entityLabel: 'University',
+  getPath: (p) =>
+    getAcademicPath({ type: 'university', universitySlug: p.universitySlug }),
+  entityLabel: UI_STRINGS.academics.entity.university,
   fetchOriginPrefix: 'university',
   getOwnSlug: (p) => p.universitySlug,
   getDescription: (university) => university.description,
   descriptionFallback: (university) =>
-    `Explore faculties, departments, and academic programs at ${university.name}.`,
+    UI_STRINGS.academics.metadata.universityDescription(university.name),
 })
 
 export default async function UniversityDetailPage({
@@ -54,7 +56,7 @@ export default async function UniversityDetailPage({
   return (
     <PageLayout
       header={{
-        greeting: 'University',
+        greeting: UI_STRINGS.academics.entity.university,
         title: university.name,
       }}
       sidebar={
@@ -76,7 +78,7 @@ export default async function UniversityDetailPage({
       <UniversityFacultyExplorer
         faculties={university.faculties ?? []}
         universitySlug={routeParams.universitySlug}
-        title='Faculties'
+        title={UI_STRINGS.academics.faculties}
         emptyMessage={UI_STRINGS.academics.noFaculties}
       />
     </PageLayout>
