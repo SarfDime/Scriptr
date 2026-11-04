@@ -41,11 +41,9 @@ jobs:
         env:
           SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
           SANITY_STUDIO_API_URL: ${{ secrets.SANITY_STUDIO_API_URL }}
-          SANITY_STUDIO_INTERNAL_SECRET: ${{ secrets.SANITY_STUDIO_INTERNAL_SECRET }}
         run: corepack pnpm --filter scriptr-sanity run deploy
 
       - name: Deploy GraphQL schema
         env:
           SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
-          SANITY_STUDIO_INTERNAL_SECRET: ${{ secrets.SANITY_STUDIO_INTERNAL_SECRET }}
         run: corepack pnpm --filter scriptr-sanity run deploy-graphql:default

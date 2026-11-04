@@ -24,10 +24,10 @@ import {
 import { retrySizeCeiling } from '@shared/utils/optimizer-retry'
 import { Hono } from 'hono'
 import { z } from 'zod'
+import { createRateLimiter } from '../../../shared/utils/rate-limit'
 import { optimizeStagedFile } from '../lib/file-optimizer'
 import { honoLog } from '../lib/logger'
 import { createS3Client, deleteR2Files, getR2FileSizes } from '../lib/r2'
-import { createRateLimiter } from '../lib/rate-limit'
 import {
   createStagedUpload,
   failureResponse,

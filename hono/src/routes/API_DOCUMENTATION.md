@@ -11,7 +11,8 @@ REST API reference for Scriptr. All paths are relative to `/api`
 - [Professors](#professors)
 - [Studies](#studies)
 - [Subjects](#subjects)
-- [Internal Lookups](#internal-lookups)
+- [Admin access](#admin-access)
+- [Admin Lookups](#admin-lookups)
 - [File Uploads](#file-uploads)
 - [Scripts](#scripts)
   - [Public](#public)
@@ -25,7 +26,7 @@ REST API reference for Scriptr. All paths are relative to `/api`
   - [Public](#public-2)
   - [Authenticated](#authenticated-2)
   - [Admin](#admin)
-  - [Internal](#internal)
+  - [Role changes](#role-changes)
 - [Profile Selections](#profile-selections)
 - [Favorites](#favorites)
 - [Votes](#votes)
@@ -44,32 +45,33 @@ REST API reference for Scriptr. All paths are relative to `/api`
 ## Catalog
 
 Academic catalog data (universities, faculties, studies, professors, subjects)
-is admin-managed and closed to end users. **Every route below, reads
-included, requires the `x-internal-secret` header** matching
-`INTERNAL_API_SECRET` — this is independent of Supabase Auth roles, since RLS
-on these tables (and their junctions: `subject_professors`,
-`professor_faculties`, `professor_studies`) is read-only for every role,
-admin included. See [Client Access Patterns](#client-access-patterns).
+is admin-managed and closed to end users. **Every route below, reads included,
+requires an admin access token** in the `x-admin-token` header, and they are all
+mounted under `/api/sanity` — this is independent of Supabase Auth roles, since
+RLS on these tables (and their junctions: `subject_professors`,
+`professor_faculties`, `professor_studies`) is read-only for every role, admin
+included. See [Admin access](#admin-access) and
+[Client Access Patterns](#client-access-patterns).
 
 | Route                   | Response                                                                                          |
 | ----------------------- | ------------------------------------------------------------------------------------------------- |
-| `GET /universities`     | Universities with faculties (includes `r2_bucket_id`)                                             |
-| `GET /universities/:id` | One university with faculties (includes `r2_bucket_id`)                                           |
-| `GET /faculties`        | Faculties, each with `university`, `studies` (nested `subjects` for the count), `professor_count` |
-| `GET /faculties/:id`    | One faculty with `studies` (each with its `subjects`) and assigned `professors`                   |
-| `GET /professors`       | Professors with subjects, studies, faculties                                                      |
-| `GET /professors/:id`   | One professor with subjects, studies, faculties                                                   |
-| `GET /subjects`         | Subjects with study, faculty, professors, script counts                                           |
-| `GET /subjects/:id`     | One subject with study, faculty, professors, scripts                                              |
+| `GET /sanity/universities`     | Universities with faculties (includes `r2_bucket_id`)                           |
+| `GET /sanity/universities/:id` | One university with faculties (includes `r2_bucket_id`)                         |
+| `GET /sanity/faculties`        | Faculties                                                                       |
+| `GET /sanity/faculties/:id`    | One faculty with `studies` (each with its `subjects`) and assigned `professors`  |
+| `GET /sanity/professors`       | Professors                                                                      |
+| `GET /sanity/professors/:id`   | One professor with subjects, studies, faculties                                 |
+| `GET /sanity/subjects`         | Subjects                                                                        |
+| `GET /sanity/subjects/:id`     | One subject with study and assigned professors                                  |
 
 Note on shape: subjects relate to faculties only *through* studies
 (`subjects.study_id → studies.faculty_id`) — there is no direct
 `subjects.faculty_id`. Faculty responses nest subjects under `studies`
 accordingly; don't expect a flat `faculty.subjects` array.
 
-Catalog **mutations** live under `/api/internal` (below), same header — see
-[Universities](#universities) for university-specific mutations, and the
-sections below for the rest. These are the endpoints the Sanity Studio
+Catalog **mutations** live under the same `/api/sanity` prefix (below), same
+token — see [Universities](#universities) for university-specific mutations,
+and the sections below for the rest. These are the endpoints the Sanity Studio
 "Create in Database" / "Sync with Database" / checked-delete actions call
 (tested end to end).
 `profile_subjects`/`profile_faculties`/`profile_studies` are not catalog data
@@ -77,28 +79,61 @@ sections below for the rest. These are the endpoints the Sanity Studio
 
 ---
 
-## Scripts (internal)
+## Sitemap
 
-Internal-only, `x-internal-secret` required.
+`GET /sitemap/scripts` — every script's `{ slug, updated_at }`, newest first.
+Feeds `/sitemap.xml`, which needs the complete list that the admin-only
+`GET /scripts` no longer serves, and only the two columns a crawler list needs.
 
-| Route                       | Notes                                                                                                  |
-| --------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `GET /internal/scripts/sitemap` | Every script's `{ slug, updated_at }`, newest first. Feeds `/sitemap.xml`, which needs the complete list that the admin-only `GET /scripts` no longer serves, and only the two columns a crawler list needs |
+Requires the `x-sitemap-secret` header matching `SITEMAP_SECRET`. That secret is
+scoped to this one route and lives only in the Next build, so it grants nothing
+beyond a list of public slugs. The route is limited to 10 requests a day and 2 a
+minute per IP (`429` past either): `/sitemap.xml` is prerendered at build time
+and never revalidated, so one read per deployment is the whole expected load.
+
+## Studio access
+
+Everything under `/sanity/*` is the Sanity Studio's surface — no website route
+lives there, and no website code calls it. The Studio cannot hold a long-lived
+secret (its bundle is served to anyone who opens the Studio), so it proves
+possession of a TOTP secret instead:
+
+| Route               | Body       | Notes                                                                                                                                                                                                                  |
+| ------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /api/sanity/access` | `{ code }` | Exchanges the authenticator app's current six-digit code for `{ token, expiresAt }`, valid ten minutes. `400` when the code is not six digits, `401` for a wrong or already-used code, `429` after 5 attempts per IP in 15 minutes, `503` when `ADMIN_TOTP_SECRET` is unset or not base32. |
+
+Every other `/sanity/*` route takes that token in `x-admin-token`; a `401` means
+it is missing, expired or tampered with, and the caller has to exchange a fresh
+code. A code is accepted once, so a captured one cannot be replayed for the rest
+of its 90-second window. Generate the secret with
+`corepack pnpm --filter @scriptr/api admin:totp`, add the printed `otpauth` URI
+to an authenticator app, and set `ADMIN_TOTP_SECRET` on the API.
+
+**Origin pinning:** every `/sanity/*` route also requires the request's
+`Origin` to equal `SANITY_STUDIO_ORIGIN` (e.g.
+`https://scriptr.sanity.studio`). A mismatched origin is `403` even with a valid
+token or code. In production a missing `Origin` is a `403` too — browsers always
+send it on a cross-origin request; outside production it is allowed so `curl`
+and the route tests work. The origin must also be listed in `CORS_ORIGINS`, or
+the browser blocks the preflight before the API sees the request.
+
+The token is HMAC-signed and stateless, so it cannot be revoked before it
+expires; ten minutes is the whole revocation window.
 
 ## Universities
 
-Internal-only, `x-internal-secret` required for all routes (reads and writes).
+Admin-only: `x-admin-token` required for all routes (reads and writes).
 
 **Reads**: `GET /universities`, `GET /universities/:id` (see [Catalog](#catalog)).
 
-**Mutations** (`/api/internal`):
+**Mutations** (`/api/sanity`):
 
 | Route                                  | Body                                                 |
 | -------------------------------------- | ---------------------------------------------------- |
-| `POST /internal/universities`          | `{ name, sanity_id?, r2_bucket_id? }` — returns the existing row (`existing: true`) if the Sanity document is already linked |
-| `PATCH /internal/universities/:id`     | `{ name?, r2_bucket_id? }`             |
-| `DELETE /internal/universities/:id`    | — (blocked if any faculties still reference it)      |
-| `POST /internal/universities/:id/sync` | `{ name, r2_bucket_id? }` — full re-sync from Sanity (`404` if the database row doesn't exist) |
+| `POST /sanity/universities`          | `{ name, sanity_id?, r2_bucket_id? }` — returns the existing row (`existing: true`) if the Sanity document is already linked |
+| `PATCH /sanity/universities/:id`     | `{ name?, r2_bucket_id? }`             |
+| `DELETE /sanity/universities/:id`    | — (blocked if any faculties still reference it)      |
+| `POST /sanity/universities/:id/sync` | `{ name, r2_bucket_id? }` — full re-sync from Sanity (`404` if the database row doesn't exist) |
 
 `r2_bucket_id` is the Cloudflare R2 bucket used for this university's file
 storage — must match `^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$` (S3/R2 bucket naming
@@ -115,38 +150,38 @@ this route does.
 
 ## Faculties
 
-Internal-only, `x-internal-secret` required for all routes (reads and writes).
+Admin-only: `x-admin-token` required for all routes (reads and writes).
 
 **Reads**: `GET /faculties`, `GET /faculties/:id` (see [Catalog](#catalog)).
 
-**Mutations** (`/api/internal`):
+**Mutations** (`/api/sanity`):
 
 | Route                               | Body                                                                                                                           |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `POST /internal/faculties`          | `{ name, university_id, sanity_id? }` — returns the existing row (`existing: true`) if the Sanity document is already linked |
-| `PATCH /internal/faculties/:id`     | `{ name?, university_id? }`                                                                                                    |
-| `DELETE /internal/faculties/:id`    | — (`409` if referenced by studies, professor assignments, or user faculty selections)                                        |
-| `POST /internal/faculties/:id/sync` | `{ name, university_id }` — `404` if the database row doesn't exist                                                           |
+| `POST /sanity/faculties`          | `{ name, university_id, sanity_id? }` — returns the existing row (`existing: true`) if the Sanity document is already linked |
+| `PATCH /sanity/faculties/:id`     | `{ name?, university_id? }`                                                                                                    |
+| `DELETE /sanity/faculties/:id`    | — (`409` if referenced by studies, professor assignments, or user faculty selections)                                        |
+| `POST /sanity/faculties/:id/sync` | `{ name, university_id }` — `404` if the database row doesn't exist                                                           |
 
 ---
 
 ## Professors
 
-Internal-only, `x-internal-secret` required for all routes (reads and writes).
+Admin-only: `x-admin-token` required for all routes (reads and writes).
 
 **Reads**: `GET /professors`, `GET /professors/:id` (see [Catalog](#catalog)).
 
-**Mutations** (`/api/internal`):
+**Mutations** (`/api/sanity`):
 
 | Route                                                         | Body                                                                            |
 | ------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `POST /internal/professors`                                   | `{ name, faculty_ids?, study_ids?, sanity_id? }`                                |
-| `PATCH /internal/professors/:id`                              | `{ name? }`                                                                     |
-| `DELETE /internal/professors/:id`                             | — (blocked if referenced by subjects, faculties, studies, scripts, or comments) |
-| `POST`/`DELETE /internal/professors/:id/faculties/:facultyId` | —                                                                               |
-| `POST`/`DELETE /internal/professors/:id/studies/:studyId`     | —                                                                               |
-| `GET /internal/professors/by-sanity/:sanityId`                | Looks up the DB row linked to a Sanity document                                 |
-| `POST /internal/professors/:id/sync`                          | `{ name, faculty_ids?, study_ids? }` — full re-sync from Sanity                 |
+| `POST /sanity/professors`                                   | `{ name, faculty_ids?, study_ids?, sanity_id? }`                                |
+| `PATCH /sanity/professors/:id`                              | `{ name? }`                                                                     |
+| `DELETE /sanity/professors/:id`                             | — (blocked if referenced by subjects, faculties, studies, scripts, or comments) |
+| `POST`/`DELETE /sanity/professors/:id/faculties/:facultyId` | —                                                                               |
+| `POST`/`DELETE /sanity/professors/:id/studies/:studyId`     | —                                                                               |
+| `GET /sanity/professors/by-sanity/:sanityId`                | Looks up the DB row linked to a Sanity document                                 |
+| `POST /sanity/professors/:id/sync`                          | `{ name, faculty_ids?, study_ids? }` — full re-sync from Sanity                 |
 
 `professors` only has `id`, `name`, `sanity_id`, `created_at` in Postgres —
 bio/picture and other rich metadata live in Sanity, not here.
@@ -155,52 +190,84 @@ bio/picture and other rich metadata live in Sanity, not here.
 
 ## Studies
 
-Internal-only, `x-internal-secret` required for all routes. Reads live at
-plain `/studies` (matching every other catalog entity); only mutations live
-under `/internal`.
+Admin-only: `x-admin-token` required for all routes. Reads and mutations share
+the `/sanity/studies` path, like every other catalog entity.
 
-**Reads**: `GET /studies`, `GET /studies/:id` (see [Catalog](#catalog) pattern
-— faculty/university metadata, subjects, professor assignments).
+**Reads**: `GET /sanity/studies`, `GET /sanity/studies/:id` (see
+[Catalog](#catalog) — faculty/university metadata, subjects, professor
+assignments).
 
-**Mutations** (`/api/internal`):
+**Mutations** (`/api/sanity`):
 
 | Route                             | Body                                                                              |
 | --------------------------------- | --------------------------------------------------------------------------------- |
-| `POST /internal/studies`          | `{ name, faculty_id, sanity_id? }`                                                |
-| `PATCH /internal/studies/:id`     | `{ name?, faculty_id? }`                                                          |
-| `DELETE /internal/studies/:id`    | — (blocked if referenced by subjects, professor assignments, or user enrollments) |
-| `POST /internal/studies/:id/sync` | `{ name, faculty_id }`                                                            |
+| `POST /sanity/studies`          | `{ name, faculty_id, sanity_id? }`                                                |
+| `PATCH /sanity/studies/:id`     | `{ name?, faculty_id? }`                                                          |
+| `DELETE /sanity/studies/:id`    | — (blocked if referenced by subjects, professor assignments, or user enrollments) |
+| `POST /sanity/studies/:id/sync` | `{ name, faculty_id }`                                                            |
 
 ---
 
 ## Subjects
 
-Internal-only, `x-internal-secret` required for all routes. Does not apply to
+Admin-only: `x-admin-token` required for all routes. Does not apply to
 `/api/profile-subjects`, which is a user's own progress, not catalog data.
 
 **Reads**: `GET /subjects`, `GET /subjects/:id` (see [Catalog](#catalog)).
 
-**Mutations** (`/api/internal`):
+**Mutations** (`/api/sanity`):
 
 | Route                                                          | Body                                                                                  |
 | -------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `POST /internal/subjects`                                      | `{ name, study_id, professor_ids?, sanity_id? }`                                      |
-| `PATCH /internal/subjects/:id`                                 | `{ name?, study_id? }`                                                                |
-| `DELETE /internal/subjects/:id`                                | — (blocked if referenced by professor assignments, user subject statuses, or scripts) |
-| `POST`/`DELETE /internal/subjects/:id/professors/:professorId` | —                                                                                     |
-| `POST /internal/subjects/:id/sync`                             | `{ name, study_id, professor_ids? }`                                                  |
+| `POST /sanity/subjects`                                      | `{ name, study_id, professor_ids?, sanity_id? }`                                      |
+| `PATCH /sanity/subjects/:id`                                 | `{ name?, study_id? }`                                                                |
+| `DELETE /sanity/subjects/:id`                                | — (blocked if referenced by professor assignments, user subject statuses, or scripts) |
+| `POST`/`DELETE /sanity/subjects/:id/professors/:professorId` | —                                                                                     |
+| `POST /sanity/subjects/:id/sync`                             | `{ name, study_id, professor_ids? }`                                                  |
 
 ---
 
-## Internal Lookups
+## Website admin access
 
-Read-only helpers under `/api/internal` (`x-internal-secret`, service-role client).
+`/api/admin/*` is the website's admin surface, separate from
+[the Studio's](#studio-access). Nothing here is reachable by the Studio, and
+nothing under `/sanity/*` is reachable by the site.
+
+| Route                    | Body       | Notes                                                                                                                                                     |
+| ------------------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /api/admin/access` | `{ code }` | Verifies the authenticator code and sets the `scriptr-admin-access` cookie (`HttpOnly`, `SameSite=Lax`, `Max-Age=600`, domain from `COOKIE_DOMAIN`). Also returns `{ token, expiresAt }` for scripted callers. `400` malformed, `401` wrong/replayed code, `429` after 5 attempts per IP in 15 minutes, `503` when `ADMIN_TOTP_SECRET` is unset. |
+
+Every other `/api/admin/*` route needs that token — from the cookie or an
+`x-admin-token` header — **and** an admin session. The token proves the operator
+unlocked the surface; the session identifies who is acting and keeps RLS in
+force. `/admin`'s layout shows the code form whenever the cookie is missing or
+spent, and the code is entered once per ten minutes rather than per action.
+
+**Which routes are gated:** the admin-only operations on the site's ordinary
+routes carry the same guard — the flag queue (`GET /flags`, `GET /flags/pending`,
+`GET /flags/status/:status`) and `PATCH`/`DELETE /flags/:id`; the admin
+restriction reads and writes (`GET /restrictions`, `GET /restrictions/lifted`,
+`GET /restrictions/lookup`, `PUT`/`DELETE /restrictions/:profileId`); rating-type
+writes (`POST`/`PATCH`/`DELETE /ratings/types`); achievement-definition writes
+(`POST`/`PATCH`/`DELETE /achievement-definitions`); the admin script list
+(`GET /scripts`, `GET /scripts/flagged/all`, `GET /comments/flagged/all`); and
+`GET`/`PATCH`/`DELETE /profiles/:id` plus `GET /profiles`. Everything else — the site's public and
+per-user routes — stays session-authenticated only.
+
+**Origin pinning:** every `/api/admin/*` request must come from
+`WEBSITE_ORIGIN` (e.g. `https://scriptr.uk`); a mismatched origin is `403` even
+with a valid token, including requests from the Studio's own origin. In
+production a missing `Origin` is a `403` too. The origin must also be listed in
+`CORS_ORIGINS`, and staging needs its own `WEBSITE_ORIGIN` value.
+
+## Admin Lookups
+
+Read-only helpers under `/api/sanity` (`x-admin-token`, service-role client).
 
 | Route                                                                            | Response                                                                              |
 | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `GET /internal/{universities,faculties,studies,professors,subjects}`             | Plain rows, no embeds                                                                 |
-| `GET /internal/{universities,faculties,professors,subjects}/by-sanity/:sanityId` | The row linked to a Sanity document, or `404` ("Not linked to a database record yet") |
-| `GET /internal/comments`                                                         | All comments with author (`username`, `full_name`) and professor name, newest first   |
+| `GET /sanity/{universities,faculties,studies,professors,subjects}`             | Plain rows, no embeds                                                                 |
+| `GET /sanity/{universities,faculties,professors,subjects}/by-sanity/:sanityId` | The row linked to a Sanity document, or `404` ("Not linked to a database record yet") |
 
 ---
 
@@ -347,7 +414,7 @@ instances enforce the limits independently on each instance.
 | `POST /comments/:commentId/like`      | Toggle. Authors cannot like or react to their own comments. Shares the 15-per-minute engagement limit with reactions. Rejected if restricted. |
 | `PATCH /comments/:id`                 | Author or admin. `{ content }`; same allow-list, 3-character minimum, and 10 KiB limit as comment creation. `404` if missing. |
 | `DELETE /comments/:id`                | Author or admin. `404` if missing. Returns the updated `totalCommentCount` for the script/professor target, including replies deleted by cascade. |
-| `GET /comments/flagged/all`           | Admin only; internal service-role query after the route verifies the admin session, because `is_flagged` is not selectable by public roles. |
+| `GET /comments/flagged/all`           | Admin only, and needs the admin unlock; internal service-role query after the route verifies the admin session, because `is_flagged` is not selectable by public roles. |
 
 Comment and reply list responses are bounded to one page. Database
 errors map unique/FK conflicts to `409`, permission errors to `403`, custom
@@ -519,11 +586,13 @@ policies are `profile_id = auth.uid()` with no admin override, so
 `PATCH /profiles/:id` writes selections with the service-role client after
 the admin check.
 
-### Internal
-`PATCH /internal/profiles/:id/role` — `{ role: 'student'|'moderator'|'admin' }`,
-`x-internal-secret` required. Kept off the session-client path as extra
-hardening for a sensitive column, even though `is_admin()` RLS would
-technically allow it too.
+### Role changes
+`PATCH /admin/profiles/:id/role` — `{ role: 'student'|'moderator'|'admin' }`.
+Lives on the [website admin surface](#website-admin-access), so it needs the
+unlocked access cookie **and** an admin session (`403` for anyone else). The
+profiles UPDATE policy already allows `is_admin()`, so the write runs on the
+caller's own session and RLS stays the real boundary. The first admin has no
+route at all — promote that account directly in the database.
 
 ---
 
@@ -572,8 +641,8 @@ Professors and subjects each take multiple, independently extensible rating
 types via a shared `rating_types` lookup (`target_type: 'professor'|'subject'`).
 One rating per user per type per entity — posting again updates the score.
 
-**Rating types** — public read, admin-only write (`is_admin()` RLS, no
-internal secret involved):
+**Rating types** — public read, admin-only write (`is_admin()` RLS, no service
+secret involved):
 `GET /ratings/types` (optional `?target_type=`), `GET /ratings/types/:id`,
 `POST /ratings/types` (`{ id, target_type, label }`, `id` matches
 `^[a-z0-9_]{2,40}$`), `PATCH /ratings/types/:id` (`{ label }`),
@@ -667,7 +736,7 @@ admin-accessible through its admin RLS policies.
 
 **Use the service role** only where no RLS path exists for the caller:
 - All catalog + catalog-junction tables (`universities` → `professor_studies`)
-  — read-only via RLS for every role, admin included; `/api/internal` is the
+  — read-only via RLS for every role, admin included; `/api/sanity` is the
   only write path.
 - `POST /scripts/:id/download` — `download_events` has zero client-facing
   `INSERT` policy for any role.
@@ -676,8 +745,6 @@ admin-accessible through its admin RLS policies.
   the session client under the admin INSERT policy.
 - Reading/writing `profile_preferences` and admin restriction history uses the
   session client under its own-row or admin RLS policies.
-- `PATCH /internal/profiles/:id/role` — deliberately hardened past what RLS
-  alone would require, given how sensitive the column is.
 - `POST /profiles/me/avatar` writing `profiles.avatar_url` — the value is a
   public URL shown to everyone, so it must not be settable by the user, and
   `authenticated` has no grant on that column (see
@@ -711,18 +778,23 @@ after signing in. Responses are typed `RegisterResponse`, `LoginResponse`,
 `profiles.role` is `student` / `moderator` / `admin` — **only `admin` carries
 any elevated database privilege today.**
 
-1. Catalog routes require `x-internal-secret` for every request, independent
-   of Supabase role — RLS closes these tables to everyone regardless.
+1. Catalog routes require a short-lived admin access token on every request,
+   independent of Supabase role — RLS closes these tables to everyone
+   regardless. See [Admin access](#admin-access).
 2. Authenticated routes generally operate on the caller's own resources.
 3. Admin-only actions: full CRUD on any `scripts`/`comments`/`profiles` row,
    flag resolution, flag listing, rating-type management, user restrictions —
-   all `is_admin()`-gated in RLS, all usable via the admin's own session.
+   all `is_admin()`-gated in RLS **and** behind the ten-minute admin unlock
+   (see [Website admin access](#website-admin-access)), so the session alone is
+   not enough.
 4. **Moderators have zero elevated access anywhere in this API.** The role is
    reserved for a planned notification-trigger feature (see
    [Achievement definitions](#achievement-definitions)), not direct
    write access. Any code still branching on `role === 'moderator'` for
    elevated behavior is stale and should check `admin`.
-5. Internal catalog writes and role changes require `x-internal-secret`.
+5. Catalog writes require the admin access token; role changes are admin-session
+   routes (`PATCH /admin/profiles/:id/role`, which also needs the unlocked
+   admin access cookie).
 6. **Restricted users** (`profile_restrictions`, admin-managed, enforced via
    `is_restricted()` in RLS) are blocked from *creating or updating* scripts,
    comments, comment reactions/likes, flags, votes, and ratings — but can

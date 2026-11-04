@@ -1,10 +1,8 @@
 const encoder = new TextEncoder()
 
-export const OPTIMIZER_SIGNATURE_HEADER = 'x-optimizer-signature'
-export const OPTIMIZER_TIMESTAMP_HEADER = 'x-optimizer-timestamp'
 /** How far a request's timestamp may be from the verifier's clock, so a
  * captured request can't be replayed later. */
-export const OPTIMIZER_MAX_CLOCK_SKEW_MS = 5 * 60 * 1000
+export const REQUEST_MAX_CLOCK_SKEW_MS = 5 * 60 * 1000
 
 const importKey = (secret: string, usage: 'sign' | 'verify') =>
   crypto.subtle.importKey(
@@ -31,12 +29,13 @@ const fromHex = (hex: string): Uint8Array<ArrayBuffer> | null =>
     : null
 
 /**
- * HMAC-SHA256 over `${timestamp}.${body}`, as hex. The API signs the request
- * it sends to the optimizer service and the service verifies it, so the shared
- * secret never travels and a captured request expires. Web Crypto only, so it
- * runs in Node and on edge runtimes alike.
+ * HMAC-SHA256 over `${timestamp}.${body}`, as hex, shared by every signed
+ * server-to-server call (the optimizer service and the web app's revalidate
+ * route). The shared secret never travels, and a captured request expires
+ * instead of being replayable forever. Web Crypto only, so it runs in Node and
+ * on edge runtimes alike.
  */
-export const signOptimizerRequest = async (
+export const signRequest = async (
   secret: string,
   timestamp: string,
   body: string
@@ -49,7 +48,7 @@ export const signOptimizerRequest = async (
     )
   )
 
-type VerifyOptimizerRequestInput = {
+type VerifyRequestInput = {
   secret: string
   timestamp: string
   signature: string
@@ -59,17 +58,17 @@ type VerifyOptimizerRequestInput = {
 }
 
 /** Checks the signature (in constant time) and that the timestamp is fresh. */
-export const verifyOptimizerRequest = async ({
+export const verifyRequest = async ({
   secret,
   timestamp,
   signature,
   body,
   now = Date.now(),
-}: VerifyOptimizerRequestInput): Promise<boolean> => {
+}: VerifyRequestInput): Promise<boolean> => {
   const issuedAt = Number(timestamp)
   if (
     !Number.isFinite(issuedAt) ||
-    Math.abs(now - issuedAt) > OPTIMIZER_MAX_CLOCK_SKEW_MS
+    Math.abs(now - issuedAt) > REQUEST_MAX_CLOCK_SKEW_MS
   ) {
     return false
   }

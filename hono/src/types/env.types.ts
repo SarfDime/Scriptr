@@ -12,7 +12,17 @@ export type Env = {
   SUPABASE_URL: string
   SUPABASE_PUBLISHABLE_KEY: string
   SUPABASE_SECRET_KEY: string
-  INTERNAL_API_SECRET?: string
+  /** Scopes the sitemap's script list. Next holds the only copy. */
+  SITEMAP_SECRET?: string
+  /** Base32 TOTP secret the operator enrols in an authenticator app. Also
+   * derives the signing key for the ten-minute Studio token. */
+  ADMIN_TOTP_SECRET?: string
+  /** The only origin allowed to use `/api/sanity/*`, e.g.
+   * `https://scriptr.sanity.studio`. Required in production. */
+  SANITY_STUDIO_ORIGIN?: string
+  /** The only origin allowed to use the website's admin surface, e.g.
+   * `https://scriptr.uk`. Required in production. */
+  WEBSITE_ORIGIN?: string
   R2_ACCOUNT_ID: string
   R2_ACCESS_KEY_ID: string
   R2_SECRET_ACCESS_KEY: string

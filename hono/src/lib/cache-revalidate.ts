@@ -1,4 +1,9 @@
+import {
+  REVALIDATE_SIGNATURE_HEADER,
+  REVALIDATE_TIMESTAMP_HEADER,
+} from '../../../shared/config/access'
 import { scriptMutationTags } from '../../../shared/config/cache-tags'
+import { signRequest } from '../../../shared/utils/request-signature'
 import type { HonoEnv } from '../types/env.types'
 
 /** The value shipped in `.env.example`. Using it in production means anyone
@@ -42,13 +47,23 @@ export async function revalidateCacheTags(
   }
 
   try {
+    // The secret never travels: the web app verifies this signature over the
+    // body and a timestamp, so a captured request expires instead of being
+    // replayable forever.
+    const body = JSON.stringify({ tags })
+    const timestamp = String(Date.now())
     const response = await fetch(revalidateUrl, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
-        'x-revalidate-secret': secret,
+        [REVALIDATE_TIMESTAMP_HEADER]: timestamp,
+        [REVALIDATE_SIGNATURE_HEADER]: await signRequest(
+          secret,
+          timestamp,
+          body
+        ),
       },
-      body: JSON.stringify({ tags }),
+      body,
     })
 
     if (!response.ok) {

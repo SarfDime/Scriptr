@@ -15,6 +15,7 @@ import type {
   FlagListResponse,
   FlagMutationResponse,
 } from '../../../shared/types/flags.types'
+import { requireAdminAccess } from '../lib/admin-access'
 import { honoLog } from '../lib/logger'
 import { notifyAdminsAtFlagThreshold } from '../lib/notifications'
 import {
@@ -272,13 +273,15 @@ const listAdminFlags = async (c: Context<HonoEnv>, status?: string) => {
 }
 
 /** Get all flags (admin only) — RLS now grants admins SELECT directly */
-flags.get('/', authMiddleware, (c) => listAdminFlags(c))
+flags.get('/', authMiddleware, requireAdminAccess, (c) => listAdminFlags(c))
 
 /** Get pending flags (admin only) */
-flags.get('/pending', authMiddleware, (c) => listAdminFlags(c, 'pending'))
+flags.get('/pending', authMiddleware, requireAdminAccess, (c) =>
+  listAdminFlags(c, 'pending')
+)
 
 /** Get flags by status (admin only) */
-flags.get('/status/:status', authMiddleware, async (c) => {
+flags.get('/status/:status', authMiddleware, requireAdminAccess, async (c) => {
   const status = requiredParam(c, 'status')
   if (!isFlagStatus(status)) {
     return c.json(
@@ -441,7 +444,7 @@ flags.post('/', authMiddleware, async (c) => {
 })
 
 /** Resolve a flag's status (admin only). */
-flags.patch('/:id', authMiddleware, async (c) => {
+flags.patch('/:id', authMiddleware, requireAdminAccess, async (c) => {
   const user = c.get('user')
   const flagId = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)
@@ -543,7 +546,7 @@ flags.patch('/:id', authMiddleware, async (c) => {
 })
 
 /** Delete a flag (the reporter, or now an admin) */
-flags.delete('/:id', authMiddleware, async (c) => {
+flags.delete('/:id', authMiddleware, requireAdminAccess, async (c) => {
   const user = c.get('user')
   const flagId = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)

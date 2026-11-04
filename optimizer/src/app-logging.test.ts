@@ -1,14 +1,14 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import {
+  OPTIMIZER_SIGNATURE_HEADER,
+  OPTIMIZER_TIMESTAMP_HEADER,
+} from '@shared/config/access'
 import type {
   OptimizeFileRequest,
   OptimizeFileResult,
 } from '@shared/types/file-upload.types'
-import {
-  OPTIMIZER_SIGNATURE_HEADER,
-  OPTIMIZER_TIMESTAMP_HEADER,
-  signOptimizerRequest,
-} from '@shared/utils/optimizer-signature'
+import { signRequest } from '@shared/utils/request-signature'
 import { createApp } from './app'
 import type { optimizerLogRequest } from './logger'
 
@@ -44,11 +44,7 @@ const logsFor = async (
     method: 'POST',
     headers: {
       [OPTIMIZER_TIMESTAMP_HEADER]: timestamp,
-      [OPTIMIZER_SIGNATURE_HEADER]: await signOptimizerRequest(
-        SECRET,
-        timestamp,
-        body
-      ),
+      [OPTIMIZER_SIGNATURE_HEADER]: await signRequest(SECRET, timestamp, body),
     },
     body,
   })

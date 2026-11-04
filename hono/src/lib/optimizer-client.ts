@@ -1,14 +1,14 @@
+import {
+  OPTIMIZER_SIGNATURE_HEADER,
+  OPTIMIZER_TIMESTAMP_HEADER,
+} from '@shared/config/access'
 import type {
   OptimizeFileFailureReason,
   OptimizeFileRequest,
   OptimizeFileResult,
 } from '@shared/types/file-upload.types'
 import { isScriptFileInput } from '@shared/utils/api.utils'
-import {
-  OPTIMIZER_SIGNATURE_HEADER,
-  OPTIMIZER_TIMESTAMP_HEADER,
-  signOptimizerRequest,
-} from '@shared/utils/optimizer-signature'
+import { signRequest } from '@shared/utils/request-signature'
 import { honoLog } from './logger'
 
 /** Kept below the web client's finalize timeout (`UPLOAD_FINALIZE_TIMEOUT_MS`)
@@ -63,7 +63,7 @@ export const optimizeViaService = async (
       headers: {
         'Content-Type': 'application/json',
         [OPTIMIZER_TIMESTAMP_HEADER]: timestamp,
-        [OPTIMIZER_SIGNATURE_HEADER]: await signOptimizerRequest(
+        [OPTIMIZER_SIGNATURE_HEADER]: await signRequest(
           secret,
           timestamp,
           body

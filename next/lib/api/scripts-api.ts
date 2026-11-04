@@ -18,7 +18,6 @@ import type {
   ScriptDeleteResponse,
   ScriptFile,
   ScriptPatchResponse,
-  ScriptSitemapEntry,
   ScriptSummary,
   ScriptUpdateInput,
   UploadResponse,
@@ -27,7 +26,6 @@ import {
   isRetryPointless,
   retrySizeCeiling,
 } from '@shared/utils/optimizer-retry'
-import { INTERNAL_API_SECRET } from '@/config/env'
 import { nextLogs } from '@/lib/logger'
 import {
   findOptimizerFailure,
@@ -72,40 +70,6 @@ export const getScriptsBySubject = async (subjectId: string) => {
   } catch (error) {
     nextLogs({
       message: `Scripts for subject ${subjectId} could not be read.`,
-      logLevel: 'warn',
-      error,
-    })
-    return null
-  }
-}
-
-/**
- * Every script's address, for the sitemap. Reads the API's internal route: the
- * public listing is admin-only now, and a crawler list only needs the slug and
- * the update time.
- *
- * `null` when the read fails or the secret is missing — the sitemap then leaves
- * its script section out rather than publishing an empty one. This runs on the
- * server only, which is where the secret lives.
- */
-export const getScriptSitemapEntries = async () => {
-  if (!INTERNAL_API_SECRET) {
-    nextLogs({
-      message:
-        'INTERNAL_API_SECRET is not set; the sitemap will omit every script URL.',
-      logLevel: 'warn',
-    })
-    return null
-  }
-
-  try {
-    return await apiFetch<Array<ScriptSitemapEntry>>(
-      apiRoutes.internal.scriptsSitemap,
-      { headers: { 'x-internal-secret': INTERNAL_API_SECRET } }
-    )
-  } catch (error) {
-    nextLogs({
-      message: 'The script sitemap entries could not be read.',
       logLevel: 'warn',
       error,
     })

@@ -8,9 +8,10 @@ import type {
   RestrictionLookupResponse,
   RestrictionMutationResponse,
 } from '../../../shared/types/restrictions.types'
+import { createRateLimiter } from '../../../shared/utils/rate-limit'
+import { requireAdminAccess } from '../lib/admin-access'
 import { honoLog } from '../lib/logger'
 import { notifyProfileBestEffort } from '../lib/notifications'
-import { createRateLimiter } from '../lib/rate-limit'
 import {
   databaseErrorResponse,
   readJsonBody,
@@ -60,7 +61,7 @@ const requireAdmin = async (c: Parameters<typeof createSupabaseClient>[0]) => {
 }
 
 /** List active and lapsed restriction rows (admin only). */
-restrictions.get('/', async (c) => {
+restrictions.get('/', requireAdminAccess, async (c) => {
   const access = await requireAdmin(c)
   if (access.response) return access.response
 
@@ -79,7 +80,7 @@ restrictions.get('/', async (c) => {
 })
 
 /** Restrictions an admin lifted early, newest first (admin only). */
-restrictions.get('/lifted', async (c) => {
+restrictions.get('/lifted', requireAdminAccess, async (c) => {
   const access = await requireAdmin(c)
   if (access.response) return access.response
 
@@ -120,7 +121,7 @@ restrictions.get('/me', async (c) => {
 })
 
 /** Find a profile and its ladder position for the admin restriction dialog. */
-restrictions.get('/lookup', async (c) => {
+restrictions.get('/lookup', requireAdminAccess, async (c) => {
   const access = await requireAdmin(c)
   if (access.response) return access.response
 
@@ -195,7 +196,7 @@ restrictions.get('/:profileId', async (c) => {
 })
 
 /** Apply a restriction, or update only the reason of an active restriction. */
-restrictions.put('/:profileId', async (c) => {
+restrictions.put('/:profileId', requireAdminAccess, async (c) => {
   const access = await requireAdmin(c)
   if (access.response) return access.response
 
@@ -299,7 +300,7 @@ restrictions.put('/:profileId', async (c) => {
 })
 
 /** Lift a user's restriction (admin only). */
-restrictions.delete('/:profileId', async (c) => {
+restrictions.delete('/:profileId', requireAdminAccess, async (c) => {
   const access = await requireAdmin(c)
   if (access.response) return access.response
 

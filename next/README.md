@@ -26,8 +26,12 @@ SANITY_AUTH_TOKEN=your_token
 REVALIDATE_SECRET=development_secret_key
 ```
 
-`REVALIDATE_SECRET` protects `POST /api/revalidate`, which the Hono API calls to
-invalidate cache tags; it must match `REVALIDATE_SECRET` in `hono/.env`. Tags are
+`REVALIDATE_SECRET` is the signing key for `POST /api/revalidate`, which the
+Hono API calls to invalidate cache tags. The API sends `x-revalidate-timestamp`
+and `x-revalidate-signature` (an HMAC over `${timestamp}.${body}`), so the secret
+never travels and a captured request expires after five minutes; a mismatch with
+`hono/.env` answers `401`. The route is also limited to 30 calls a minute per IP.
+Tags are
 expired immediately (`revalidateTag(tag, { expire: 0 })`), not
 stale-while-revalidate, so the first request after a mutation never serves old
 data.

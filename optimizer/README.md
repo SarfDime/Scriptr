@@ -70,8 +70,13 @@ For one staged file (`OptimizeFileRequest`), in order:
 
 - Request: `OptimizeFileRequest` (`shared/types/file-upload.types.ts`) as JSON,
   signed with an HMAC over `${timestamp}.${body}` using `OPTIMIZER_SECRET`
-  (`shared/utils/optimizer-signature.ts`, headers `x-optimizer-timestamp` and
-  `x-optimizer-signature`).
+  (`shared/utils/request-signature.ts`, headers `x-optimizer-timestamp` and
+  `x-optimizer-signature`). A signature older than ±5 minutes is rejected.
+- Target: the buckets must be valid bucket names and the keys must follow the
+  shapes the API mints — `staging/<userId>/<uuid>.<ext>` and a destination base
+  ending in a generated id (`avatars/<userId>`, `<…>/<uuid>`). Anything else is
+  `400 Invalid storage target`, so a leaked secret cannot reach an arbitrary
+  object (`optimizer/src/object-key.ts`).
 - Response: `200` with an `OptimizeFileResult` for everything decided about the
   file, rejections included. A non-2xx status (`401` bad signature, `400` bad
   request, `500` when R2 can't be reached) is read by the API as the service

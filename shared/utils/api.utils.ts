@@ -180,39 +180,42 @@ const isScriptFileInput = (value: unknown): value is ScriptFileInput => {
   )
 }
 
+/** Catalog endpoints the Sanity Studio calls. They sit on their own `/api/sanity`
+ * surface behind an origin check and a ten-minute access token, never a
+ * long-lived secret: see `docs/ARCHITECTURE-ACADEMIC-CATALOG.md`. */
 function getDatabaseAcademicEndpoints(entityType: AcademicEntityType) {
-  const { internal } = apiRoutes
+  const { sanity } = apiRoutes
 
   switch (entityType) {
     case 'university':
       return {
-        create: internal.universities,
-        sync: (id: string) => internal.universitiesSyncById(id),
-        byId: (id: string) => internal.universitiesById(id),
+        create: sanity.universities,
+        sync: (id: string) => sanity.universitiesSyncById(id),
+        byId: (id: string) => sanity.universitiesById(id),
       }
     case 'faculty':
       return {
-        create: internal.faculties,
-        sync: (id: string) => internal.facultiesSyncById(id),
-        byId: (id: string) => internal.facultiesById(id),
+        create: sanity.faculties,
+        sync: (id: string) => sanity.facultiesSyncById(id),
+        byId: (id: string) => sanity.facultiesById(id),
       }
     case 'study':
       return {
-        create: internal.studies,
-        sync: (id: string) => internal.studiesSyncById(id),
-        byId: (id: string) => internal.studiesById(id),
+        create: sanity.studies,
+        sync: (id: string) => sanity.studiesSyncById(id),
+        byId: (id: string) => sanity.studiesById(id),
       }
     case 'subject':
       return {
-        create: internal.subjects,
-        sync: (id: string) => internal.subjectsSyncById(id),
-        byId: (id: string) => internal.subjectsById(id),
+        create: sanity.subjects,
+        sync: (id: string) => sanity.subjectsSyncById(id),
+        byId: (id: string) => sanity.subjectsById(id),
       }
     case 'professor':
       return {
-        create: internal.professors,
-        sync: (id: string) => internal.professorsSyncById(id),
-        byId: (id: string) => internal.professorsById(id),
+        create: sanity.professors,
+        sync: (id: string) => sanity.professorsSyncById(id),
+        byId: (id: string) => sanity.professorsById(id),
       }
     default: {
       // biome-ignore lint/style/useNamingConvention: exhaustive check

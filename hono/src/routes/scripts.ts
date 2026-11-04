@@ -33,6 +33,7 @@ import {
   checkScriptsUploaded,
   checkTotalScriptDownloads,
 } from '../lib/achievements'
+import { requireAdminAccess } from '../lib/admin-access'
 import {
   revalidateCacheTags,
   scriptMutationTags,
@@ -280,7 +281,7 @@ const scripts = new Hono<HonoEnv>()
  * every script with its files, author and comment count, and nothing in the app
  * reads it anonymously — the sitemap gets compact entries from the internal API
  * instead. */
-scripts.get('/', authMiddleware, async (c) => {
+scripts.get('/', authMiddleware, requireAdminAccess, async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)
 
@@ -1216,7 +1217,7 @@ scripts.post('/:id/download', async (c) => {
 })
 
 /** Get flagged scripts (admin only) */
-scripts.get('/flagged/all', authMiddleware, async (c) => {
+scripts.get('/flagged/all', authMiddleware, requireAdminAccess, async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)
 

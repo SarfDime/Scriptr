@@ -48,7 +48,7 @@ export const RatingTypesPanel = ({
     return action()
       .then(() => true)
       .catch((error: unknown) => {
-        reportError(errorMessage?.(error))
+        reportError(errorMessage?.(error), error)
         return false
       })
       .finally(() => setSaving(false))

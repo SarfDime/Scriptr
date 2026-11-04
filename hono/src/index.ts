@@ -1,30 +1,31 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import {
+  ACCESS_TOKEN_HEADER,
+  SITEMAP_SECRET_HEADER,
+} from '../../shared/config/access'
 /// <reference path="./sanity-stub.d.ts" />
 
 import { getRequestListener } from '@hono/node-server'
 import { resolveCorsOrigin } from './lib/cors'
 import { honoLog, honoLogRequest } from './lib/logger'
 import achievementDefinitions from './routes/achievement-definitions'
+import admin from './routes/admin'
 import auth from './routes/auth'
 import comments from './routes/comments'
-import faculties from './routes/faculties'
 import favorites from './routes/favorites'
 import fileOps from './routes/file-ops'
 import flags from './routes/flags'
-import internal from './routes/internal'
 import notifications from './routes/notifications'
-import professors from './routes/professors'
 import profileFaculties from './routes/profile-faculties'
 import profileStudies from './routes/profile-studies'
 import profileSubjects from './routes/profile-subjects'
 import profiles from './routes/profiles'
 import ratings from './routes/ratings'
 import restrictions from './routes/restrictions'
+import sanity from './routes/sanity'
 import scripts from './routes/scripts'
-import studies from './routes/studies'
-import subjects from './routes/subjects'
-import universities from './routes/universities'
+import sitemap from './routes/sitemap'
 import votes from './routes/votes'
 import type { HonoEnv } from './types/env.types'
 
@@ -57,7 +58,8 @@ app.use(
       'Authorization',
       'X-Client-Info',
       'X-Device-Id',
-      'X-Internal-Secret',
+      SITEMAP_SECRET_HEADER,
+      ACCESS_TOKEN_HEADER,
     ],
     exposeHeaders: ['Content-Length', 'X-Request-Id'],
     credentials: true,
@@ -66,11 +68,9 @@ app.use(
 )
 
 app.route('/auth', auth)
-app.route('/universities', universities)
-app.route('/faculties', faculties)
-app.route('/studies', studies)
-app.route('/professors', professors)
-app.route('/subjects', subjects)
+app.route('/sanity', sanity)
+app.route('/admin', admin)
+app.route('/sitemap', sitemap)
 app.route('/file-ops', fileOps)
 app.route('/scripts', scripts)
 app.route('/votes', votes)
@@ -85,7 +85,6 @@ app.route('/notifications', notifications)
 app.route('/ratings', ratings)
 app.route('/achievement-definitions', achievementDefinitions)
 app.route('/restrictions', restrictions)
-app.route('/internal', internal)
 
 app.get('/', (c) =>
   c.json({

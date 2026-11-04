@@ -25,6 +25,8 @@ import {
   validateFullName,
   validateUsername,
 } from '../../../shared/utils/api.utils'
+import { createRateLimiter } from '../../../shared/utils/rate-limit'
+import { requireAdminAccess } from '../lib/admin-access'
 import {
   avatarKeyBase,
   buildAvatarUrl,
@@ -38,7 +40,6 @@ import {
   readStoredProfilePreferences,
 } from '../lib/profile-preferences'
 import { deleteR2Files } from '../lib/r2'
-import { createRateLimiter } from '../lib/rate-limit'
 import {
   databaseErrorResponse,
   readJsonBody,
@@ -484,7 +485,7 @@ const profiles = new Hono<HonoEnv>()
 /** Get all profiles (admin only). Unpaginated: every profile row with its
  * subjects and earned achievements. `profiles` SELECT is public, so this
  * route is the only boundary — nothing else gates the listing. */
-profiles.get('/', authMiddleware, async (c) => {
+profiles.get('/', authMiddleware, requireAdminAccess, async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)
 
@@ -871,7 +872,7 @@ profiles.patch('/me', authMiddleware, (c) =>
 )
 
 /** Update any user's profile (admin only) */
-profiles.patch('/:id', authMiddleware, async (c) => {
+profiles.patch('/:id', authMiddleware, requireAdminAccess, async (c) => {
   const user = c.get('user')
   const targetId = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)
@@ -890,7 +891,7 @@ profiles.patch('/:id', authMiddleware, async (c) => {
 })
 
 /** Delete any user's profile (admin only) */
-profiles.delete('/:id', authMiddleware, async (c) => {
+profiles.delete('/:id', authMiddleware, requireAdminAccess, async (c) => {
   const user = c.get('user')
   const targetId = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)

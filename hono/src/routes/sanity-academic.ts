@@ -1,9 +1,8 @@
 import { Hono } from 'hono'
-import { profileMutationTags } from '../../../shared/config/cache-tags'
+import { ACCESS_TOKEN_HEADER } from '../../../shared/config/access'
 import type { Database } from '../../../shared/types/database.types'
-import type { ScriptSitemapEntry } from '../../../shared/types/scripts.types'
-import { isUserRole } from '../../../shared/utils/api.utils'
-import { revalidateCacheTags } from '../lib/cache-revalidate'
+import { InvalidSecretError, sharedAccessVerifier } from '../lib/admin-access'
+import { honoLog } from '../lib/logger'
 import { databaseErrorResponse, requiredParam } from '../lib/request'
 import { createInternalSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
@@ -230,66 +229,42 @@ async function findBlockingDependents(
 /** Create a subject, optionally assigning professors, or return the existing
  * one already linked to this Sanity document */
 
-const internal = new Hono<HonoEnv>()
+/** Academic catalog reads and writes for the Sanity Studio.
+ *
+ * Mounted at `/api/sanity/*` behind the origin check and the ten-minute access
+ * token (both applied by `./sanity.ts`): every handler here runs on the
+ * service-role client, so those checks are the only thing standing between a
+ * caller and RLS-bypassing writes. */
+const academic = new Hono<HonoEnv>()
 
-/** Internal API authentication middleware */
-internal.use('*', async (c, next) => {
-  const secret = c.req.header('x-internal-secret')
-  const expected = c.env.INTERNAL_API_SECRET
+/** Rejects anything without a valid token before a handler reaches the
+ * service-role client. */
+academic.use('*', async (c, next) => {
+  const secret = c.env.ADMIN_TOTP_SECRET
+  const token = c.req.header(ACCESS_TOKEN_HEADER)
 
-  if (!expected || !secret || secret !== expected) {
-    return c.json({ error: 'Forbidden' }, 403)
+  if (!secret || !token) {
+    return c.json({ error: 'Access code required' }, 401)
+  }
+
+  try {
+    if (!sharedAccessVerifier(secret).verifyToken(token)) {
+      return c.json({ error: 'Access expired. Enter a new code.' }, 401)
+    }
+  } catch (error) {
+    if (!(error instanceof InvalidSecretError)) throw error
+    honoLog({
+      logLevel: 'error',
+      message: `ADMIN_TOTP_SECRET is unusable: ${error.message}`,
+    })
+    return c.json({ error: 'Admin access is not configured' }, 503)
   }
 
   return next()
 })
 
-/** Every script's address, for the sitemap.
- *
- * Internal rather than public because `GET /scripts` is admin-only and
- * paginated: a crawler-facing list has to be complete, but it also has no
- * business carrying files, comment counts or author profiles, so it selects
- * two columns and nothing else. */
-internal.get('/scripts/sitemap', async (c) => {
-  const supabase = createInternalSupabaseClient(c)
-
-  const { data, error } = await supabase
-    .from('scripts')
-    .select('slug, updated_at')
-    .order('created_at', { ascending: false })
-
-  if (error) return databaseErrorResponse(c, error)
-
-  return c.json<Array<ScriptSitemapEntry>>(data)
-})
-
-/** Update a user's role */
-internal.patch('/profiles/:id/role', async (c) => {
-  const targetUserId = requiredParam(c, 'id')
-  const supabase = createInternalSupabaseClient(c)
-  const { role } = await c.req.json()
-
-  if (!isUserRole(role)) {
-    return c.json(
-      { error: 'Role must be "student", "moderator", or "admin"' },
-      400
-    )
-  }
-
-  const { data, error } = await supabase
-    .from('profiles')
-    .update({ role })
-    .eq('id', targetUserId)
-    .select()
-    .single()
-
-  if (error) return databaseErrorResponse(c, error)
-  await revalidateCacheTags(c.env, profileMutationTags(targetUserId))
-  return c.json({ success: true, profile: data })
-})
-
 /** List all universities */
-internal.get('/universities', async (c) => {
+academic.get('/universities', async (c) => {
   const supabase = createInternalSupabaseClient(c)
   const { data, error } = await supabase.from('universities').select('*')
 
@@ -298,7 +273,7 @@ internal.get('/universities', async (c) => {
 })
 
 /** Look up the university linked to a Sanity document, if one exists */
-internal.get('/universities/by-sanity/:sanityId', async (c) => {
+academic.get('/universities/by-sanity/:sanityId', async (c) => {
   const sanityId = requiredParam(c, 'sanityId')
   const supabase = createInternalSupabaseClient(c)
   const data = await findBySanityId(supabase, 'universities', sanityId)
@@ -309,7 +284,7 @@ internal.get('/universities/by-sanity/:sanityId', async (c) => {
 })
 
 /** Create a university, or return the existing one already linked to this Sanity document */
-internal.post('/universities', async (c) => {
+academic.post('/universities', async (c) => {
   const supabase = createInternalSupabaseClient(c)
   const { name, sanity_id, r2_bucket_id } = await c.req.json()
 
@@ -347,7 +322,7 @@ internal.post('/universities', async (c) => {
 })
 
 /** Update a university */
-internal.patch('/universities/:id', async (c) => {
+academic.patch('/universities/:id', async (c) => {
   const universityId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
   const { name, r2_bucket_id } = await c.req.json()
@@ -383,7 +358,7 @@ internal.patch('/universities/:id', async (c) => {
 })
 
 /** Sync a university with the latest Sanity values. */
-internal.post('/universities/:id/sync', async (c) => {
+academic.post('/universities/:id/sync', async (c) => {
   const universityId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
   const { name, r2_bucket_id } = await c.req.json()
@@ -428,7 +403,7 @@ internal.post('/universities/:id/sync', async (c) => {
 })
 
 /** Delete a university (blocked if any faculty still references it) */
-internal.delete('/universities/:id', async (c) => {
+academic.delete('/universities/:id', async (c) => {
   const universityId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
 
@@ -456,7 +431,7 @@ internal.delete('/universities/:id', async (c) => {
 })
 
 /** List all faculties */
-internal.get('/faculties', async (c) => {
+academic.get('/faculties', async (c) => {
   const supabase = createInternalSupabaseClient(c)
   const { data, error } = await supabase.from('faculties').select('*')
 
@@ -465,7 +440,7 @@ internal.get('/faculties', async (c) => {
 })
 
 /** Look up the faculty linked to a Sanity document, if one exists */
-internal.get('/faculties/by-sanity/:sanityId', async (c) => {
+academic.get('/faculties/by-sanity/:sanityId', async (c) => {
   const sanityId = requiredParam(c, 'sanityId')
   const supabase = createInternalSupabaseClient(c)
   const data = await findBySanityId(supabase, 'faculties', sanityId)
@@ -476,7 +451,7 @@ internal.get('/faculties/by-sanity/:sanityId', async (c) => {
 })
 
 /** Create a faculty, or return the existing one already linked to this Sanity document */
-internal.post('/faculties', async (c) => {
+academic.post('/faculties', async (c) => {
   const supabase = createInternalSupabaseClient(c)
   const { name, university_id, sanity_id } = await c.req.json()
 
@@ -509,7 +484,7 @@ internal.post('/faculties', async (c) => {
 })
 
 /** Update a faculty */
-internal.patch('/faculties/:id', async (c) => {
+academic.patch('/faculties/:id', async (c) => {
   const facultyId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
   const { name, university_id } = await c.req.json()
@@ -526,7 +501,7 @@ internal.patch('/faculties/:id', async (c) => {
 })
 
 /** Sync a faculty with the latest Sanity values. */
-internal.post('/faculties/:id/sync', async (c) => {
+academic.post('/faculties/:id/sync', async (c) => {
   const facultyId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
   const { name, university_id } = await c.req.json()
@@ -558,7 +533,7 @@ internal.post('/faculties/:id/sync', async (c) => {
 })
 
 /** Delete a faculty (blocked if anything still references it) */
-internal.delete('/faculties/:id', async (c) => {
+academic.delete('/faculties/:id', async (c) => {
   const facultyId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
 
@@ -593,7 +568,7 @@ internal.delete('/faculties/:id', async (c) => {
 })
 
 /** List all studies. */
-internal.get('/studies', async (c) => {
+academic.get('/studies', async (c) => {
   const supabase = createInternalSupabaseClient(c)
   const { data, error } = await supabase
     .from('studies')
@@ -605,7 +580,7 @@ internal.get('/studies', async (c) => {
 })
 
 /** Create a study, or return the existing Sanity-linked record. */
-internal.post('/studies', async (c) => {
+academic.post('/studies', async (c) => {
   const supabase = createInternalSupabaseClient(c)
   const { name, faculty_id, sanity_id } = await c.req.json()
 
@@ -635,7 +610,7 @@ internal.post('/studies', async (c) => {
 })
 
 /** Update a study. */
-internal.patch('/studies/:id', async (c) => {
+academic.patch('/studies/:id', async (c) => {
   const studyId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
   const { name, faculty_id } = await c.req.json()
@@ -652,7 +627,7 @@ internal.patch('/studies/:id', async (c) => {
 })
 
 /** Sync a study with its Sanity document. */
-internal.post('/studies/:id/sync', async (c) => {
+academic.post('/studies/:id/sync', async (c) => {
   const studyId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
   const { name, faculty_id } = await c.req.json()
@@ -673,7 +648,7 @@ internal.post('/studies/:id/sync', async (c) => {
 })
 
 /** Delete a study when no subject still references it. */
-internal.delete('/studies/:id', async (c) => {
+academic.delete('/studies/:id', async (c) => {
   const studyId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
   const blockers = await findBlockingDependents(supabase, studyId, [
@@ -707,7 +682,7 @@ internal.delete('/studies/:id', async (c) => {
 })
 
 /** List all professors */
-internal.get('/professors', async (c) => {
+academic.get('/professors', async (c) => {
   const supabase = createInternalSupabaseClient(c)
   const { data, error } = await supabase.from('professors').select('*')
 
@@ -716,7 +691,7 @@ internal.get('/professors', async (c) => {
 })
 
 /** Look up the professor linked to a Sanity document, if one exists */
-internal.get('/professors/by-sanity/:sanityId', async (c) => {
+academic.get('/professors/by-sanity/:sanityId', async (c) => {
   const sanityId = requiredParam(c, 'sanityId')
   const supabase = createInternalSupabaseClient(c)
   const data = await findBySanityId(supabase, 'professors', sanityId)
@@ -726,7 +701,7 @@ internal.get('/professors/by-sanity/:sanityId', async (c) => {
   return c.json(data)
 })
 
-internal.post('/professors', async (c) => {
+academic.post('/professors', async (c) => {
   const supabase = createInternalSupabaseClient(c)
   const { name, faculty_ids, study_ids, sanity_id } = await c.req.json()
 
@@ -777,7 +752,7 @@ internal.post('/professors', async (c) => {
 })
 
 /** Update a professor */
-internal.patch('/professors/:id', async (c) => {
+academic.patch('/professors/:id', async (c) => {
   const professorId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
   const { name } = await c.req.json()
@@ -794,7 +769,7 @@ internal.patch('/professors/:id', async (c) => {
 })
 
 /** Assign a professor to a study */
-internal.post('/professors/:id/studies/:studyId', async (c) => {
+academic.post('/professors/:id/studies/:studyId', async (c) => {
   const professorId = requiredParam(c, 'id')
   const studyId = requiredParam(c, 'studyId')
   const supabase = createInternalSupabaseClient(c)
@@ -811,7 +786,7 @@ internal.post('/professors/:id/studies/:studyId', async (c) => {
 })
 
 /** Remove a professor from a study */
-internal.delete('/professors/:id/studies/:studyId', async (c) => {
+academic.delete('/professors/:id/studies/:studyId', async (c) => {
   const professorId = requiredParam(c, 'id')
   const studyId = requiredParam(c, 'studyId')
   const supabase = createInternalSupabaseClient(c)
@@ -827,7 +802,7 @@ internal.delete('/professors/:id/studies/:studyId', async (c) => {
 })
 
 /** Sync a professor with the latest Sanity values and join-table assignments. */
-internal.post('/professors/:id/sync', async (c) => {
+academic.post('/professors/:id/sync', async (c) => {
   const professorId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
   const { name, faculty_ids, study_ids } = await c.req.json()
@@ -883,7 +858,7 @@ internal.post('/professors/:id/sync', async (c) => {
 })
 
 /** Delete a professor (blocked if anything still references it) */
-internal.delete('/professors/:id', async (c) => {
+academic.delete('/professors/:id', async (c) => {
   const professorId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
 
@@ -924,7 +899,7 @@ internal.delete('/professors/:id', async (c) => {
 })
 
 /** Assign a professor to a faculty */
-internal.post('/professors/:id/faculties/:facultyId', async (c) => {
+academic.post('/professors/:id/faculties/:facultyId', async (c) => {
   const professorId = requiredParam(c, 'id')
   const facultyId = requiredParam(c, 'facultyId')
   const supabase = createInternalSupabaseClient(c)
@@ -942,7 +917,7 @@ internal.post('/professors/:id/faculties/:facultyId', async (c) => {
 })
 
 /** Remove a professor from a faculty */
-internal.delete('/professors/:id/faculties/:facultyId', async (c) => {
+academic.delete('/professors/:id/faculties/:facultyId', async (c) => {
   const professorId = requiredParam(c, 'id')
   const facultyId = requiredParam(c, 'facultyId')
   const supabase = createInternalSupabaseClient(c)
@@ -958,7 +933,7 @@ internal.delete('/professors/:id/faculties/:facultyId', async (c) => {
 })
 
 /** List all subjects */
-internal.get('/subjects', async (c) => {
+academic.get('/subjects', async (c) => {
   const supabase = createInternalSupabaseClient(c)
   const { data, error } = await supabase.from('subjects').select('*')
 
@@ -967,7 +942,7 @@ internal.get('/subjects', async (c) => {
 })
 
 /** Look up the subject linked to a Sanity document, if one exists */
-internal.get('/subjects/by-sanity/:sanityId', async (c) => {
+academic.get('/subjects/by-sanity/:sanityId', async (c) => {
   const sanityId = requiredParam(c, 'sanityId')
   const supabase = createInternalSupabaseClient(c)
   const data = await findBySanityId(supabase, 'subjects', sanityId)
@@ -977,7 +952,7 @@ internal.get('/subjects/by-sanity/:sanityId', async (c) => {
   return c.json(data)
 })
 
-internal.post('/subjects', async (c) => {
+academic.post('/subjects', async (c) => {
   const supabase = createInternalSupabaseClient(c)
   const { name, professor_ids, study_id, sanity_id } = await c.req.json()
 
@@ -1027,7 +1002,7 @@ internal.post('/subjects', async (c) => {
 })
 
 /** Update a subject */
-internal.patch('/subjects/:id', async (c) => {
+academic.patch('/subjects/:id', async (c) => {
   const subjectId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
   const { name, study_id } = await c.req.json()
@@ -1047,7 +1022,7 @@ internal.patch('/subjects/:id', async (c) => {
 })
 
 /** Sync a subject with the latest Sanity values and professor assignments. */
-internal.post('/subjects/:id/sync', async (c) => {
+academic.post('/subjects/:id/sync', async (c) => {
   const subjectId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
   const { name, study_id, professor_ids } = await c.req.json()
@@ -1101,7 +1076,7 @@ internal.post('/subjects/:id/sync', async (c) => {
 })
 
 /** Delete a subject (blocked if anything still references it) */
-internal.delete('/subjects/:id', async (c) => {
+academic.delete('/subjects/:id', async (c) => {
   const subjectId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
 
@@ -1133,7 +1108,7 @@ internal.delete('/subjects/:id', async (c) => {
 })
 
 /** Assign a professor to a subject */
-internal.post('/subjects/:id/professors/:professorId', async (c) => {
+academic.post('/subjects/:id/professors/:professorId', async (c) => {
   const subjectId = requiredParam(c, 'id')
   const professorId = requiredParam(c, 'professorId')
   const supabase = createInternalSupabaseClient(c)
@@ -1148,7 +1123,7 @@ internal.post('/subjects/:id/professors/:professorId', async (c) => {
 })
 
 /** Remove a professor from a subject */
-internal.delete('/subjects/:id/professors/:professorId', async (c) => {
+academic.delete('/subjects/:id/professors/:professorId', async (c) => {
   const subjectId = requiredParam(c, 'id')
   const professorId = requiredParam(c, 'professorId')
   const supabase = createInternalSupabaseClient(c)
@@ -1163,21 +1138,101 @@ internal.delete('/subjects/:id/professors/:professorId', async (c) => {
   return c.json({ success: true, message: 'Professor removed from subject' })
 })
 
-/** List all comments (internal admin view) */
-internal.get('/comments', async (c) => {
+/** A university with its faculties, for the admin read path. */
+academic.get('/universities/:id', async (c) => {
+  const universityId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
 
   const { data, error } = await supabase
-    .from('comments')
-    .select(`
-        *,
-        author:profiles(username, full_name),
-        professor:professors(name)
-      `)
-    .order('created_at', { ascending: false })
+    .from('universities')
+    .select('*, faculties:faculties(*)')
+    .eq('id', universityId)
+    .single()
 
-  if (error) return databaseErrorResponse(c, error)
+  if (error) return c.json({ error: error.message }, 404)
   return c.json(data)
 })
 
-export default internal
+/** A faculty with its university, studies (and their subjects) and assigned
+ * professors. */
+academic.get('/faculties/:id', async (c) => {
+  const facultyId = requiredParam(c, 'id')
+  const supabase = createInternalSupabaseClient(c)
+
+  const { data, error } = await supabase
+    .from('faculties')
+    .select(
+      `*, university:universities(id, name), studies:studies(*, subjects:subjects(*)), professors:professor_faculties(professor:professors(*))`
+    )
+    .eq('id', facultyId)
+    .single()
+
+  if (error) return c.json({ error: error.message }, 404)
+  return c.json(data)
+})
+
+/** A study with its faculty, subjects and assigned professors. */
+academic.get('/studies/:id', async (c) => {
+  const studyId = requiredParam(c, 'id')
+  const supabase = createInternalSupabaseClient(c)
+
+  const { data, error } = await supabase
+    .from('studies')
+    .select(
+      `*, faculty:faculties(id, name), subjects:subjects(*), professors:professor_studies(professor:professors(*))`
+    )
+    .eq('id', studyId)
+    .single()
+
+  if (error) return c.json({ error: error.message }, 404)
+  return c.json(data)
+})
+
+/** A professor with its subjects, studies, faculties and comments. */
+academic.get('/professors/:id', async (c) => {
+  const professorId = requiredParam(c, 'id')
+  const supabase = createInternalSupabaseClient(c)
+
+  const { data, error } = await supabase
+    .from('professors')
+    .select(`
+        *,
+        subjects:subject_professors(
+          subject:subjects(*, study:studies(id, name, faculty:faculties(id, name, university:universities(id, name))))
+        ),
+        studies:professor_studies(
+          study:studies(id, name, faculty:faculties(id, name, university:universities(id, name)))
+        ),
+        faculties:professor_faculties(
+          faculty:faculties(id, name, university:universities(id, name))
+        ),
+        comments:comments(
+          *,
+          author:profiles(username, full_name)
+        )
+      `)
+    .eq('id', professorId)
+    .single()
+
+  if (error) return c.json({ error: error.message }, 404)
+  return c.json(data)
+})
+
+/** A subject with its study and assigned professors. */
+academic.get('/subjects/:id', async (c) => {
+  const subjectId = requiredParam(c, 'id')
+  const supabase = createInternalSupabaseClient(c)
+
+  const { data, error } = await supabase
+    .from('subjects')
+    .select(
+      `*, study:studies(id, name, faculty:faculties(id, name, university:universities(id, name))), professors:subject_professors(professor:professors(*))`
+    )
+    .eq('id', subjectId)
+    .single()
+
+  if (error) return c.json({ error: error.message }, 404)
+  return c.json(data)
+})
+
+export default academic

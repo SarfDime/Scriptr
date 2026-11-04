@@ -1,14 +1,14 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import {
+  OPTIMIZER_SIGNATURE_HEADER,
+  OPTIMIZER_TIMESTAMP_HEADER,
+} from '@shared/config/access'
 import type {
   OptimizeFileRequest,
   OptimizeFileResult,
 } from '@shared/types/file-upload.types'
-import {
-  OPTIMIZER_SIGNATURE_HEADER,
-  OPTIMIZER_TIMESTAMP_HEADER,
-  signOptimizerRequest,
-} from '@shared/utils/optimizer-signature'
+import { signRequest } from '@shared/utils/request-signature'
 import { createApp, OPTIMIZE_DEADLINE_MS } from './app'
 
 const SECRET = 'shh'
@@ -56,11 +56,7 @@ const post = async (
     method: 'POST',
     headers: {
       [OPTIMIZER_TIMESTAMP_HEADER]: timestamp,
-      [OPTIMIZER_SIGNATURE_HEADER]: await signOptimizerRequest(
-        secret,
-        timestamp,
-        body
-      ),
+      [OPTIMIZER_SIGNATURE_HEADER]: await signRequest(secret, timestamp, body),
     },
     body,
   })
@@ -108,6 +104,32 @@ test('POST /optimize rejects a signed body with the wrong shape', async () => {
     assert.equal(response.status, 400, JSON.stringify(body))
   }
   assert.equal(seen.length, 0)
+})
+
+test('POST /optimize rejects a signed request that names an unsafe storage target', async () => {
+  const { app, seen } = createTestApp()
+  for (const body of [
+    // a key with no generated id at the end
+    { ...validRequest, destinationKeyBase: 'index.html' },
+    // traversal in the destination
+    {
+      ...validRequest,
+      destinationKeyBase: '../avatars/223e4567-e89b-12d3-a456-426614174000',
+    },
+    // a staging key outside the staging prefix
+    {
+      ...validRequest,
+      stagingKey: 'avatars/223e4567-e89b-12d3-a456-426614174000.webp',
+    },
+    // a bucket that is not a valid name
+    { ...validRequest, stagingBucket: 'Not A Bucket' },
+    { ...validRequest, destinationBucket: '/absolute' },
+  ]) {
+    const response = await post(app, JSON.stringify(body))
+    assert.equal(response.status, 400, JSON.stringify(body))
+    assert.deepEqual(await response.json(), { error: 'Invalid storage target' })
+  }
+  assert.equal(seen.length, 0, 'the optimizer never runs for a bad target')
 })
 
 test('POST /optimize passes the request on with a deadline and returns the result', async () => {

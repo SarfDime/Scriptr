@@ -38,17 +38,25 @@ Each workspace has an `.env.example`. Copy it and fill in the values:
 
 | Workspace | Example file          | Copy to           | Covers                                            |
 | --------- | --------------------- | ----------------- | ------------------------------------------------- |
-| `hono/`   | `hono/.env.example`   | `hono/.env`       | Supabase, R2, internal secret, cache revalidation |
+| `hono/`   | `hono/.env.example`   | `hono/.env`       | Supabase, R2, sitemap secret, Studio TOTP secret, cache revalidation |
 | `next/`   | `next/.env.example`   | `next/.env.local` | API URL, Sanity project, revalidation secret      |
-| `sanity/` | `sanity/.env.example` | `sanity/.env`     | Studio API URL, internal secret, preview origin   |
+| `sanity/` | `sanity/.env.example` | `sanity/.env`     | Studio API URL, preview origin                    |
 
 Some values must match across workspaces:
 
-- `INTERNAL_API_SECRET` (`hono/`) and `SANITY_STUDIO_INTERNAL_SECRET` (`sanity/`),
-  or every Studio sync/delete action fails.
+- `SITEMAP_SECRET` (`hono/`) and `SITEMAP_SECRET` (`next/`), or the sitemap
+  drops every script URL.
+- `ADMIN_TOTP_SECRET` (`hono/`) and the code in your authenticator app — the
+  Studio asks for it once per ten minutes. Nothing secret is stored in
+  `sanity/`.
 - `REVALIDATE_SECRET` in `hono/` and `next/`, or cache revalidation is rejected.
 
 Keep secrets out of source control.
+
+Every app prints an environment checklist when it starts — what is set, what is
+missing and what breaks without it, names only, never values. The API, the web
+app, the Studio (`pnpm dev:sanity`) and the optimizer all use it, so a fresh
+checkout tells you what to fill in instead of failing on the first request.
 
 ## Commands
 

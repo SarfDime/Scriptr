@@ -21,8 +21,8 @@ import {
   validateEmailAddress,
   validateUsername,
 } from '../../../shared/utils/api.utils'
+import { createRateLimiter } from '../../../shared/utils/rate-limit'
 import { honoLog } from '../lib/logger'
-import { createRateLimiter } from '../lib/rate-limit'
 import {
   authMiddleware,
   createInternalSupabaseClient,

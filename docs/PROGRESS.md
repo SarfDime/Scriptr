@@ -150,9 +150,12 @@ described in
   directive is genuinely needed (that would mean turning the platform's
   injection off first).
 - **Sitemap freshness:** `/sitemap.xml` is prerendered at build time and has no
-  revalidation window, so it lists the scripts and Sanity entities that existed
-  when the deployment was built; a new or deleted script reaches it only on the
-  next rebuild. That also means a full rewrite of the file per deploy, relevant
+  revalidation window (confirmed in `next/.next/prerender-manifest.json`:
+  `compute: "static"`, `initialRevalidateSeconds: false`), so it lists the
+  scripts and Sanity entities that existed when the deployment was built; a new
+  or deleted script reaches it only on the next rebuild. `app/sitemap.ts` pins
+  `dynamic = 'force-static'` and `revalidate = false` so a later change cannot
+  quietly turn it into a per-request route. That also means a full rewrite of the file per deploy, relevant
   if the script count ever makes the cost noticeable.
 - **Cache Components:** investigate the `use cache` directive and partial
   prerendering.
@@ -209,12 +212,35 @@ described in
   ratio has been reviewed.
 - **Error hygiene:** project-wide review that stack traces and database details
   never reach users.
-- **Internal secrets [decision, project-wide]:** `INTERNAL_API_SECRET` (server)
-  and `SANITY_STUDIO_INTERNAL_SECRET` (Studio) travel in request headers, and
-  the same question applies to every service-to-service secret across `hono/`,
-  `next/`, `sanity/` and `shared/`. Pick one mechanism — encryption, or
-  per-environment salts that both sides verify — and apply it to config, docs
-  and deploy workflows in every workspace.
+- **Service-to-service secrets [partly resolved]:** the old
+  `INTERNAL_API_SECRET` / `SANITY_STUDIO_INTERNAL_SECRET` pair is gone. It had
+  been inlined into the Studio bundle by Vite (so anyone who loaded the hosted
+  Studio could read it) and it unlocked a service-role write surface, which meant
+  RLS was bypassable with a public string. What replaced it: the Studio now
+  trades a TOTP code for a ten-minute HMAC token (`POST /api/sanity/access`,
+  `hono/src/lib/admin-access.ts`), the `/api/internal/*` mount no longer exists,
+  catalog routes live at `/api/sanity/*`, and `GET /api/sitemap/scripts` is the
+  one remaining shared-secret route — scoped to that path, held only by the Next
+  build, and limited to 10 reads/day and 2/minute per IP.
+
+  The website's admin surface (`/api/admin/*`) uses the same TOTP second factor:
+  `POST /api/admin/access` exchanges a code for an HttpOnly ten-minute cookie, which the
+  server-rendered admin pages inherit, and every route there also requires an
+  admin session. Both non-session surfaces are origin-pinned
+  (`SANITY_STUDIO_ORIGIN`, `WEBSITE_ORIGIN`) and refuse a foreign origin even
+  with a valid token; production also refuses a missing `Origin`. Admin actions are covered too: the
+  flag queue, restriction management, rating-type and achievement-definition
+  writes, the admin script list and the admin profile routes all chain
+  `requireAdminAccess` on top of the session, and `/admin`'s layout renders the
+  unlock form instead of a page whenever the cookie is missing or spent.
+
+  Still open, in the same spirit: `REVALIDATE_SECRET` and `OPTIMIZER_SECRET` are
+  ordinary long-lived shared secrets between services. And three parts of the new
+  design are per-instance in memory (the code-replay guard, the 5-attempts/15-min
+  code throttle, the sitemap limiters), so a second warm serverless instance has
+  its own copy: it is abuse friction, not an exact quota, and it should move to a
+  table if it ever needs to be exact. Issued tokens are stateless, so a token
+  cannot be revoked before its ten minutes are up.
 
 - **Sanity content freshness:** `fetchSanityData`
   ([`next/sanity/lib/utils.ts`](../next/sanity/lib/utils.ts)) reads through the
@@ -259,14 +285,16 @@ described in
   only `id, username, full_name, role, avatar_url, created_at` plus `subjects`
   and `achievements`, so paginate it (`limit`/`offset`, the shape the comment
   routes validate) and widen the select for a management table (`updated_at`,
-  the faculty and study selections, script counts). Settle two things before
-  building: role changes have no session-scoped route — only
-  `PATCH /api/internal/profiles/:id/role`, which needs `x-internal-secret`
-  the web app must not hold — so either add an admin-gated
-  `PATCH /api/profiles/:id/role` or keep roles out of the tool; and
-  `DELETE /api/profiles/:id` removes the `profiles` row and its avatar only,
-  leaving the Supabase Auth user able to sign in with no profile, so decide
-  whether the tool also deletes the login through Supabase's admin API. Build
+  the faculty and study selections, script counts). Role changes live on the
+  website admin surface — `PATCH /api/admin/profiles/:id/role`, which needs an
+  admin unlock cookie (the `/admin` layout prompts for the code) plus an admin
+  session — so the tool has to
+  send the operator through the unlock when it gets a `401`; note the first
+  admin still has to be promoted directly in the database, since no route can
+  bootstrap itself. Still to settle: `DELETE /api/profiles/:id` removes
+  the `profiles` row and its avatar only, leaving the Supabase Auth user able to
+  sign in with no profile, so decide whether the tool also deletes the login
+  through Supabase's admin API. Build
   the page the way `/admin/restrictions` is built (a thin Server Component
   plus a `next/lib/admin-*-page.ts` loader) and register it in
   `ADMIN_SECTIONS`.

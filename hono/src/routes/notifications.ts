@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import type { NotificationRecord } from '../../../shared/types/api.types'
-import { createRateLimiter } from '../lib/rate-limit'
+import { createRateLimiter } from '../../../shared/utils/rate-limit'
 import {
   databaseErrorResponse,
   readJsonBody,

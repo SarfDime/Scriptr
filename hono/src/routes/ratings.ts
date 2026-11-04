@@ -6,6 +6,7 @@ import type {
   RatingType,
   RatingUpsertResponse,
 } from '../../../shared/types/ratings.types'
+import { requireAdminAccess } from '../lib/admin-access'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
 import {
   databaseErrorResponse,
@@ -116,7 +117,7 @@ ratings.get('/types/:id', async (c) => {
 })
 
 /** Create a rating type (admin only) */
-ratings.post('/types', authMiddleware, async (c) => {
+ratings.post('/types', authMiddleware, requireAdminAccess, async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)
 
@@ -162,7 +163,7 @@ ratings.post('/types', authMiddleware, async (c) => {
 })
 
 /** Update a rating type's label (admin only) */
-ratings.patch('/types/:id', authMiddleware, async (c) => {
+ratings.patch('/types/:id', authMiddleware, requireAdminAccess, async (c) => {
   const user = c.get('user')
   const id = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)
@@ -193,7 +194,7 @@ ratings.patch('/types/:id', authMiddleware, async (c) => {
 })
 
 /** Delete a rating type (admin only) — blocked at the DB by any existing ratings via the FK */
-ratings.delete('/types/:id', authMiddleware, async (c) => {
+ratings.delete('/types/:id', authMiddleware, requireAdminAccess, async (c) => {
   const user = c.get('user')
   const id = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)

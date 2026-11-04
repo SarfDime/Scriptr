@@ -19,19 +19,23 @@ Copy `sanity/.env.example` to `sanity/.env`:
 ```env
 SANITY_STUDIO_PREVIEW_ORIGIN=http://localhost:3000
 SANITY_STUDIO_API_URL=http://localhost:8787
-SANITY_STUDIO_INTERNAL_SECRET=development_secret_key
 ```
+
+No API secret goes here: Vite inlines every `SANITY_STUDIO_*` value into the
+deployed bundle, which is served to anyone who loads the Studio.
 
 - `SANITY_STUDIO_API_URL` must point at the real Hono API in any non-local
   environment.
-- `SANITY_STUDIO_INTERNAL_SECRET` must match `INTERNAL_API_SECRET` in
-  `hono/.env`, or every sync/delete action fails. Check this before debugging
-  an action failure as a logic bug.
+- Sync/delete actions need an access code: the API prints a TOTP secret with
+  `corepack pnpm --filter @scriptr/api admin:totp`, you enrol it in an
+  authenticator app, and the Studio asks for the current code the first time an
+  action runs and again whenever the ten-minute token lapses. A `401 Access
+  expired` means the token lapsed; `503 Admin access is not configured` means
+  `ADMIN_TOTP_SECRET` is missing on the API.
 - Production values belong in `sanity/.env.production`, not `sanity/.env`:
   `sanity build`/`sanity deploy` load it in Vite production mode on top of
-  `.env`, so the deployed bundle gets the real API URL and secret while
-  `sanity dev` keeps pointing at localhost. A deploy without it ships an empty
-  `SANITY_STUDIO_INTERNAL_SECRET` and every action 403s.
+  `.env`, so the deployed bundle gets the real API URL while `sanity dev` keeps
+  pointing at localhost.
 - CORS is not open for the hosted Studio by default: the API only adds the
   localhost dev ports automatically, and only outside production. A deployed
   Studio must be listed in the API's `CORS_ORIGINS`.
@@ -57,11 +61,14 @@ then `corepack pnpm check-types`. Never hand-edit `sanity/schema.json` or
 ## Academic entity actions
 
 Academic documents (`university`, `faculty`, `study`, `subject`, `professor`)
-share one pattern, implemented in `actions/academicEntitySync.ts` against the
-Hono `/api/internal` routes:
+share one pattern, implemented in `actions/academicEntitySync.tsx` against the
+Hono `/api/sanity/*` routes:
 
 - **Create in Database** creates the Postgres row and writes its id back as
   `dbId`.
+- Every one of these calls carries the ten-minute access token from
+  `lib/api-access.ts`; the first action in a window asks for the authenticator
+  code before it runs.
 - **Sync with Database** pushes later edits.
 - Publishing is blocked until a document has a `dbId`.
 - Deleting is blocked by the API's dependency check (`409`).

@@ -12,12 +12,19 @@ corepack pnpm dev:hono
 BASE=http://localhost:8787/api
 ```
 
-`INTERNAL_API_SECRET` must be set in `hono/.env` (restart the server after
-adding it) — every catalog route needs it:
+Catalog routes are admin-only and need a ten-minute access token. `ADMIN_TOTP_SECRET`
+must be set in `hono/.env` (restart the server after adding it) and enrolled in
+an authenticator app (`corepack pnpm --filter @scriptr/api admin:totp` prints a
+fresh secret and its `otpauth` URI). Trade the current code for a token:
 
 ```bash
-SECRET=<value of INTERNAL_API_SECRET>
+CODE=<current six-digit code>
+TOKEN=$(curl -s -X POST $BASE/sanity/access \
+  -H "Content-Type: application/json" \
+  -d "{\"code\":\"$CODE\"}" | jq -r '.token')
 ```
+
+Re-run that when a catalog call answers `401` — the token lasts ten minutes.
 
 Confirming the Phase 2 accounts by hand and deleting them at teardown use
 Supabase's admin API, which needs the service key:
@@ -38,84 +45,84 @@ the database yet, a bad create or a broken embed is obvious immediately.
 
 ```bash
 # University
-UNI=$(curl -s -X POST $BASE/internal/universities \
-  -H "x-internal-secret: $SECRET" -H "Content-Type: application/json" \
+UNI=$(curl -s -X POST $BASE/sanity/universities \
+  -H "x-admin-token: $TOKEN" -H "Content-Type: application/json" \
   -d '{"name":"Test University"}' | jq -r '.university.id')
 
-curl -s $BASE/universities -H "x-internal-secret: $SECRET" | jq '.[] | {id, name}'
-curl -s $BASE/universities/$UNI -H "x-internal-secret: $SECRET" | jq '{id, name, faculties, r2_bucket_id}'
+curl -s $BASE/sanity/universities -H "x-admin-token: $TOKEN" | jq '.[] | {id, name}'
+curl -s $BASE/sanity/universities/$UNI -H "x-admin-token: $TOKEN" | jq '{id, name, faculties, r2_bucket_id}'
 ```
 
 ```bash
 # University update + sync (what the Studio "Sync with Database" action calls)
-curl -s -X PATCH $BASE/internal/universities/$UNI \
-  -H "x-internal-secret: $SECRET" -H "Content-Type: application/json" \
+curl -s -X PATCH $BASE/sanity/universities/$UNI \
+  -H "x-admin-token: $TOKEN" -H "Content-Type: application/json" \
   -d '{"name":"Test University (renamed)"}' | jq .
-curl -s -X POST $BASE/internal/universities/$UNI/sync \
-  -H "x-internal-secret: $SECRET" -H "Content-Type: application/json" \
+curl -s -X POST $BASE/sanity/universities/$UNI/sync \
+  -H "x-admin-token: $TOKEN" -H "Content-Type: application/json" \
   -d '{"name":"Test University"}' | jq .
 
 # Invalid bucket name is rejected (must match S3/R2 naming rules) — expect 400.
-# Invalid bucket names are rejected by the canonical internal write path.
-curl -s -X PATCH $BASE/internal/universities/$UNI \
-  -H "x-internal-secret: $SECRET" -H "Content-Type: application/json" \
+# Invalid bucket names are rejected by the admin write path.
+curl -s -X PATCH $BASE/sanity/universities/$UNI \
+  -H "x-admin-token: $TOKEN" -H "Content-Type: application/json" \
   -d '{"r2_bucket_id":"Bad_Bucket"}' | jq .
 ```
 
 ```bash
 # Faculty
-FAC=$(curl -s -X POST $BASE/internal/faculties \
-  -H "x-internal-secret: $SECRET" -H "Content-Type: application/json" \
+FAC=$(curl -s -X POST $BASE/sanity/faculties \
+  -H "x-admin-token: $TOKEN" -H "Content-Type: application/json" \
   -d "{\"name\":\"Test Faculty\",\"university_id\":\"$UNI\"}" | jq -r '.faculty.id')
 
-curl -s $BASE/faculties -H "x-internal-secret: $SECRET" | jq '.[] | {id, name, subject_count, professor_count}'
-curl -s $BASE/faculties/$FAC -H "x-internal-secret: $SECRET" | jq '{id, name, university, studies, professors}'
+curl -s $BASE/sanity/faculties -H "x-admin-token: $TOKEN" | jq '.[] | {id, name, subject_count, professor_count}'
+curl -s $BASE/sanity/faculties/$FAC -H "x-admin-token: $TOKEN" | jq '{id, name, university, studies, professors}'
 
 # Dependency check: the university now has a faculty, so deleting it must be blocked (409)
-curl -s -i -X DELETE $BASE/internal/universities/$UNI -H "x-internal-secret: $SECRET" | head -n 1
+curl -s -i -X DELETE $BASE/sanity/universities/$UNI -H "x-admin-token: $TOKEN" | head -n 1
 ```
 
 ```bash
 # Study
-STUDY=$(curl -s -X POST $BASE/internal/studies \
-  -H "x-internal-secret: $SECRET" -H "Content-Type: application/json" \
+STUDY=$(curl -s -X POST $BASE/sanity/studies \
+  -H "x-admin-token: $TOKEN" -H "Content-Type: application/json" \
   -d "{\"name\":\"Test Study\",\"faculty_id\":\"$FAC\"}" | jq -r '.study.id')
 
-curl -s $BASE/studies -H "x-internal-secret: $SECRET" | jq '.[] | {id, name, subject_count}'
-curl -s $BASE/studies/$STUDY -H "x-internal-secret: $SECRET" | jq '{id, name, faculty, subjects, professors}'
+curl -s $BASE/sanity/studies -H "x-admin-token: $TOKEN" | jq '.[] | {id, name, subject_count}'
+curl -s $BASE/sanity/studies/$STUDY -H "x-admin-token: $TOKEN" | jq '{id, name, faculty, subjects, professors}'
 ```
 
 ```bash
 # Subject
-SUBJ=$(curl -s -X POST $BASE/internal/subjects \
-  -H "x-internal-secret: $SECRET" -H "Content-Type: application/json" \
+SUBJ=$(curl -s -X POST $BASE/sanity/subjects \
+  -H "x-admin-token: $TOKEN" -H "Content-Type: application/json" \
   -d "{\"name\":\"Test Subject\",\"study_id\":\"$STUDY\"}" | jq -r '.subject.id')
 
-curl -s $BASE/subjects -H "x-internal-secret: $SECRET" | jq '.[] | {id, name}'
-curl -s $BASE/subjects/$SUBJ -H "x-internal-secret: $SECRET" | jq '{id, name, study, professors, scripts}'
+curl -s $BASE/sanity/subjects -H "x-admin-token: $TOKEN" | jq '.[] | {id, name}'
+curl -s $BASE/sanity/subjects/$SUBJ -H "x-admin-token: $TOKEN" | jq '{id, name, study, professors, scripts}'
 ```
 
 ```bash
 # Two professors (need two to exercise many-to-many properly)
-PROF1=$(curl -s -X POST $BASE/internal/professors \
-  -H "x-internal-secret: $SECRET" -H "Content-Type: application/json" \
+PROF1=$(curl -s -X POST $BASE/sanity/professors \
+  -H "x-admin-token: $TOKEN" -H "Content-Type: application/json" \
   -d '{"name":"Dr. Test One"}' | jq -r '.professor.id')
-PROF2=$(curl -s -X POST $BASE/internal/professors \
-  -H "x-internal-secret: $SECRET" -H "Content-Type: application/json" \
+PROF2=$(curl -s -X POST $BASE/sanity/professors \
+  -H "x-admin-token: $TOKEN" -H "Content-Type: application/json" \
   -d '{"name":"Dr. Test Two"}' | jq -r '.professor.id')
 
-curl -s $BASE/professors -H "x-internal-secret: $SECRET" | jq '.[] | {id, name}'
+curl -s $BASE/sanity/professors -H "x-admin-token: $TOKEN" | jq '.[] | {id, name}'
 ```
 
 ```bash
 # Wire PROF1 into the hierarchy and confirm the joins/counts update
-curl -s -X POST $BASE/internal/professors/$PROF1/faculties/$FAC -H "x-internal-secret: $SECRET"
-curl -s -X POST $BASE/internal/professors/$PROF1/studies/$STUDY -H "x-internal-secret: $SECRET"
-curl -s -X POST $BASE/internal/subjects/$SUBJ/professors/$PROF1 -H "x-internal-secret: $SECRET"
+curl -s -X POST $BASE/sanity/professors/$PROF1/faculties/$FAC -H "x-admin-token: $TOKEN"
+curl -s -X POST $BASE/sanity/professors/$PROF1/studies/$STUDY -H "x-admin-token: $TOKEN"
+curl -s -X POST $BASE/sanity/subjects/$SUBJ/professors/$PROF1 -H "x-admin-token: $TOKEN"
 
-curl -s $BASE/faculties/$FAC -H "x-internal-secret: $SECRET" | jq '.professors'
-curl -s $BASE/subjects/$SUBJ -H "x-internal-secret: $SECRET" | jq '.professors'
-curl -s $BASE/professors/$PROF1 -H "x-internal-secret: $SECRET" | jq '{faculties, studies, subjects}'
+curl -s $BASE/sanity/faculties/$FAC -H "x-admin-token: $TOKEN" | jq '.professors'
+curl -s $BASE/sanity/subjects/$SUBJ -H "x-admin-token: $TOKEN" | jq '.professors'
+curl -s $BASE/sanity/professors/$PROF1 -H "x-admin-token: $TOKEN" | jq '{faculties, studies, subjects}'
 ```
 
 ---
@@ -169,11 +176,11 @@ curl -s -X POST $BASE/auth/register -H "Content-Type: application/json" \
 > without the dashboard:
 >
 > ```bash
-> curl -s "$SUPABASE_URL/auth/v1/admin/users?per_page=200" \
+> curl -s "$SUPABASE_URL/auth/v1/sanity/users?per_page=200" \
 >   -H "apikey: $SERVICE_KEY" -H "Authorization: Bearer $SERVICE_KEY" \
 >   | jq -r '.users[] | select(.email | test("@test\\.local$")) | .id' \
 >   | while read -r ID; do
->       curl -s -o /dev/null -X PUT "$SUPABASE_URL/auth/v1/admin/users/$ID" \
+>       curl -s -o /dev/null -X PUT "$SUPABASE_URL/auth/v1/sanity/users/$ID" \
 >         -H "apikey: $SERVICE_KEY" -H "Authorization: Bearer $SERVICE_KEY" \
 >         -H "Content-Type: application/json" -d '{"email_confirm":true}'
 >     done
@@ -199,10 +206,21 @@ ADMIN=$(curl -s -b cookies-admin.txt $BASE/auth/session | jq -r '.user.id')
 ```
 
 ```bash
-# Promote the admin account (internal-only route)
-curl -s -X PATCH $BASE/internal/profiles/$ADMIN/role \
-  -H "x-internal-secret: $SECRET" -H "Content-Type: application/json" \
-  -d '{"role":"admin"}' | jq '.profile.role'
+# Promote the admin account. Role changes are admin-session routes now, so the
+# first admin has to be promoted out of band: service key, straight at PostgREST.
+curl -s -X PATCH "$SUPABASE_URL/rest/v1/profiles?id=eq.$ADMIN" \
+  -H "apikey: $SERVICE_KEY" -H "Authorization: Bearer $SERVICE_KEY" \
+  -H "Content-Type: application/json" -d '{"role":"admin"}' | jq .
+# From here on, role changes go through the website admin surface, which needs
+# an admin session *and* a ten-minute unlock. This is what the /admin layout
+# prompts for in the browser: exchange the current code for an HttpOnly cookie.
+CODE=<current six-digit code>
+curl -s -b cookies-admin.txt -c cookies-admin.txt -X POST $BASE/admin/access \
+  -H "Content-Type: application/json" -d "{\"code\":\"$CODE\"}" | jq '{expiresAt}'
+
+# Change a role while unlocked (400 without the cookie, 401 once it lapses).
+curl -s -b cookies-admin.txt -X PATCH $BASE/admin/profiles/$STUDENT/role \
+  -H "Content-Type: application/json" -d '{"role":"moderator"}' | jq '.profile.role'
 
 # Confirm both sessions reflect the correct role
 curl -s -b cookies-student.txt $BASE/auth/session | jq '.user.role'   # student
@@ -657,6 +675,10 @@ curl -s -b cookies-student.txt -X PATCH $BASE/profiles/me/preferences \
 
 ---
 
+> Admin endpoints below need a live unlock. If the last code exchange was more
+> than ten minutes ago, re-run it — the cookie jar keeps the result:
+> `curl -s -b cookies-admin.txt -c cookies-admin.txt -X POST $BASE/admin/access -H "Content-Type: application/json" -d "{\"code\":\"$CODE\"}"`
+
 ## Phase 9 — Flags & moderation
 
 This is the permission-sensitive part of the API — worth confirming the
@@ -878,26 +900,26 @@ curl -s -b cookies-admin.txt -X DELETE $BASE/profiles/me | jq .
 
 # Without this the `student@test.local` / `admin@test.local` emails stay taken,
 # so the next Phase 2 run registers nothing and `409`s instead
-curl -s -X DELETE "$SUPABASE_URL/auth/v1/admin/users/$STUDENT" \
+curl -s -X DELETE "$SUPABASE_URL/auth/v1/sanity/users/$STUDENT" \
   -H "apikey: $SERVICE_KEY" -H "Authorization: Bearer $SERVICE_KEY"
-curl -s -X DELETE "$SUPABASE_URL/auth/v1/admin/users/$ADMIN" \
+curl -s -X DELETE "$SUPABASE_URL/auth/v1/sanity/users/$ADMIN" \
   -H "apikey: $SERVICE_KEY" -H "Authorization: Bearer $SERVICE_KEY"
 
 # Catalog, narrowest to widest
-curl -s -X DELETE $BASE/internal/professors/$PROF1/faculties/$FAC -H "x-internal-secret: $SECRET"
-curl -s -X DELETE $BASE/internal/professors/$PROF1/studies/$STUDY -H "x-internal-secret: $SECRET"
-curl -s -X DELETE $BASE/internal/subjects/$SUBJ/professors/$PROF1 -H "x-internal-secret: $SECRET"
-curl -s -X DELETE $BASE/internal/professors/$PROF1 -H "x-internal-secret: $SECRET" | jq .
-curl -s -X DELETE $BASE/internal/professors/$PROF2 -H "x-internal-secret: $SECRET" | jq .
-curl -s -X DELETE $BASE/internal/subjects/$SUBJ -H "x-internal-secret: $SECRET" | jq .
-curl -s -X DELETE $BASE/internal/studies/$STUDY -H "x-internal-secret: $SECRET" | jq .
-curl -s -X DELETE $BASE/internal/faculties/$FAC -H "x-internal-secret: $SECRET" | jq .
-curl -s -X DELETE $BASE/internal/universities/$UNI -H "x-internal-secret: $SECRET" | jq .   # now succeeds: no faculties left
+curl -s -X DELETE $BASE/sanity/professors/$PROF1/faculties/$FAC -H "x-admin-token: $TOKEN"
+curl -s -X DELETE $BASE/sanity/professors/$PROF1/studies/$STUDY -H "x-admin-token: $TOKEN"
+curl -s -X DELETE $BASE/sanity/subjects/$SUBJ/professors/$PROF1 -H "x-admin-token: $TOKEN"
+curl -s -X DELETE $BASE/sanity/professors/$PROF1 -H "x-admin-token: $TOKEN" | jq .
+curl -s -X DELETE $BASE/sanity/professors/$PROF2 -H "x-admin-token: $TOKEN" | jq .
+curl -s -X DELETE $BASE/sanity/subjects/$SUBJ -H "x-admin-token: $TOKEN" | jq .
+curl -s -X DELETE $BASE/sanity/studies/$STUDY -H "x-admin-token: $TOKEN" | jq .
+curl -s -X DELETE $BASE/sanity/faculties/$FAC -H "x-admin-token: $TOKEN" | jq .
+curl -s -X DELETE $BASE/sanity/universities/$UNI -H "x-admin-token: $TOKEN" | jq .   # now succeeds: no faculties left
 ```
 
 ```bash
 # Confirm a clean slate
-curl -s $BASE/universities -H "x-internal-secret: $SECRET" | jq 'length'   # 0
+curl -s $BASE/sanity/universities -H "x-admin-token: $TOKEN" | jq 'length'   # 0
 curl -s $BASE/scripts | jq 'length'                                        # 0
 
 rm -f cookies-student.txt cookies-admin.txt /tmp/test-script.md /tmp/test-script-2.md
@@ -914,7 +936,12 @@ rm -f cookies-student.txt cookies-admin.txt /tmp/test-script.md /tmp/test-script
 | Symptom                                                    | Cause                                                                                                                           |
 | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `{"error":"Not authenticated"}`                            | Missing `-b cookies-*.txt`, or the session expired or was cleared (access tokens last one week) — log in again                  |
-| `{"error":"Forbidden"}` on any catalog/internal route      | `x-internal-secret` header missing/wrong, or `INTERNAL_API_SECRET` unset in `hono/.env` (restart after setting it)              |
+| `{"error":"Access code required"}` on a catalog route      | No `x-admin-token` sent — run the token exchange in the setup block first                                                       |
+| `{"error":"Access expired. Enter a new code."}`            | The ten-minute token lapsed, or `ADMIN_TOTP_SECRET` changed since it was issued — exchange a fresh code                        |
+| `{"error":"Admin access code required"}` on `/api/admin/*` | No unlock cookie: run the `/api/admin/access` exchange (or send `x-admin-token`)                                                    |
+| `403` on any `/api/sanity/*` or `/api/admin/*` call        | The request came from another origin, or the matching `SANITY_STUDIO_ORIGIN` / `WEBSITE_ORIGIN` is unset                       |
+| `{"error":"Admin access is not configured"}` (503)         | `ADMIN_TOTP_SECRET` is unset or not base32 in `hono/.env` (restart after setting it)                                           |
+| `{"error":"Forbidden"}` on `GET /sitemap/scripts`          | `x-sitemap-secret` missing or does not match `SITEMAP_SECRET`                                                                  |
 | `403` on `GET /profiles`                                   | Admin only — use `cookies-admin.txt`; the listing is not public                                                                 |
 | `403` on a create/update that should work                  | The account is still restricted from Phase 10b — lift it with `DELETE /restrictions/:profileId`                                 |
 | `404 Route not found` on a documented endpoint             | The route file isn't mounted in `hono/src/index.ts`                                                                             |

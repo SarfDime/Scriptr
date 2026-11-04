@@ -44,5 +44,4 @@ jobs:
       - name: Validate GraphQL schema without deploying
         env:
           SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
-          SANITY_STUDIO_INTERNAL_SECRET: ${{ secrets.SANITY_STUDIO_INTERNAL_SECRET }}
         run: corepack pnpm --filter scriptr-sanity run deploy-graphql:dry

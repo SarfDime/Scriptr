@@ -8,16 +8,32 @@ export type ApiEndpoint =
   | '/api/auth/logout'
   | '/api/auth/callback'
   | '/api/auth/session'
-  | '/api/universities'
-  | `/api/universities/${string}`
-  | '/api/faculties'
-  | `/api/faculties/${string}`
-  | '/api/studies'
-  | `/api/studies/${string}`
-  | '/api/professors'
-  | `/api/professors/${string}`
-  | '/api/subjects'
-  | `/api/subjects/${string}`
+  | '/api/sanity/access'
+  | '/api/sanity/universities'
+  | `/api/sanity/universities/by-sanity/${string}`
+  | `/api/sanity/universities/${string}`
+  | `/api/sanity/universities/${string}/sync`
+  | '/api/sanity/faculties'
+  | `/api/sanity/faculties/by-sanity/${string}`
+  | `/api/sanity/faculties/${string}`
+  | `/api/sanity/faculties/${string}/sync`
+  | '/api/sanity/studies'
+  | `/api/sanity/studies/${string}`
+  | `/api/sanity/studies/${string}/sync`
+  | '/api/sanity/professors'
+  | `/api/sanity/professors/by-sanity/${string}`
+  | `/api/sanity/professors/${string}`
+  | `/api/sanity/professors/${string}/studies/${string}`
+  | `/api/sanity/professors/${string}/sync`
+  | `/api/sanity/professors/${string}/faculties/${string}`
+  | '/api/sanity/subjects'
+  | `/api/sanity/subjects/by-sanity/${string}`
+  | `/api/sanity/subjects/${string}`
+  | `/api/sanity/subjects/${string}/sync`
+  | `/api/sanity/subjects/${string}/professors/${string}`
+  | '/api/admin/access'
+  | `/api/admin/profiles/${string}/role`
+  | '/api/sitemap/scripts'
   | '/api/file-ops/upload-urls'
   | '/api/file-ops/finalize'
   | `/api/file-ops/get-file/${string}`
@@ -90,31 +106,6 @@ export type ApiEndpoint =
   | '/api/restrictions/me'
   | '/api/restrictions/lookup'
   | `/api/restrictions/${string}`
-  | '/api/internal/scripts/sitemap'
-  | `/api/internal/profiles/${string}/role`
-  | '/api/internal/universities'
-  | `/api/internal/universities/by-sanity/${string}`
-  | `/api/internal/universities/${string}`
-  | `/api/internal/universities/${string}/sync`
-  | '/api/internal/faculties'
-  | `/api/internal/faculties/by-sanity/${string}`
-  | `/api/internal/faculties/${string}`
-  | `/api/internal/faculties/${string}/sync`
-  | '/api/internal/studies'
-  | `/api/internal/studies/${string}`
-  | `/api/internal/studies/${string}/sync`
-  | '/api/internal/professors'
-  | `/api/internal/professors/by-sanity/${string}`
-  | `/api/internal/professors/${string}`
-  | `/api/internal/professors/${string}/studies/${string}`
-  | `/api/internal/professors/${string}/sync`
-  | `/api/internal/professors/${string}/faculties/${string}`
-  | '/api/internal/subjects'
-  | `/api/internal/subjects/by-sanity/${string}`
-  | `/api/internal/subjects/${string}`
-  | `/api/internal/subjects/${string}/sync`
-  | `/api/internal/subjects/${string}/professors/${string}`
-  | '/api/internal/comments'
   | '/api'
 
 export function withQuery(
@@ -139,25 +130,60 @@ export const apiRoutes = {
     callback: '/api/auth/callback',
     session: '/api/auth/session',
   },
-  universities: {
-    index: '/api/universities',
-    byId: (id: string | number) => `/api/universities/${id}` as const,
+  sanity: {
+    access: '/api/sanity/access',
+    universities: '/api/sanity/universities',
+    universitiesBySanityBySanityId: (sanityId: string | number) =>
+      `/api/sanity/universities/by-sanity/${sanityId}` as const,
+    universitiesById: (id: string | number) =>
+      `/api/sanity/universities/${id}` as const,
+    universitiesSyncById: (id: string | number) =>
+      `/api/sanity/universities/${id}/sync` as const,
+    faculties: '/api/sanity/faculties',
+    facultiesBySanityBySanityId: (sanityId: string | number) =>
+      `/api/sanity/faculties/by-sanity/${sanityId}` as const,
+    facultiesById: (id: string | number) =>
+      `/api/sanity/faculties/${id}` as const,
+    facultiesSyncById: (id: string | number) =>
+      `/api/sanity/faculties/${id}/sync` as const,
+    studies: '/api/sanity/studies',
+    studiesById: (id: string | number) => `/api/sanity/studies/${id}` as const,
+    studiesSyncById: (id: string | number) =>
+      `/api/sanity/studies/${id}/sync` as const,
+    professors: '/api/sanity/professors',
+    professorsBySanityBySanityId: (sanityId: string | number) =>
+      `/api/sanity/professors/by-sanity/${sanityId}` as const,
+    professorsById: (id: string | number) =>
+      `/api/sanity/professors/${id}` as const,
+    professorsStudiesByIdAndStudyId: (
+      id: string | number,
+      studyId: string | number
+    ) => `/api/sanity/professors/${id}/studies/${studyId}` as const,
+    professorsSyncById: (id: string | number) =>
+      `/api/sanity/professors/${id}/sync` as const,
+    professorsFacultiesByIdAndFacultyId: (
+      id: string | number,
+      facultyId: string | number
+    ) => `/api/sanity/professors/${id}/faculties/${facultyId}` as const,
+    subjects: '/api/sanity/subjects',
+    subjectsBySanityBySanityId: (sanityId: string | number) =>
+      `/api/sanity/subjects/by-sanity/${sanityId}` as const,
+    subjectsById: (id: string | number) =>
+      `/api/sanity/subjects/${id}` as const,
+    subjectsSyncById: (id: string | number) =>
+      `/api/sanity/subjects/${id}/sync` as const,
+    subjectsProfessorsByIdAndProfessorId: (
+      id: string | number,
+      professorId: string | number
+    ) => `/api/sanity/subjects/${id}/professors/${professorId}` as const,
   },
-  faculties: {
-    index: '/api/faculties',
-    byId: (id: string | number) => `/api/faculties/${id}` as const,
+  admin: {
+    access: '/api/admin/access',
+    profilesRoleById: (id: string | number) =>
+      `/api/admin/profiles/${id}/role` as const,
   },
-  studies: {
-    index: '/api/studies',
-    byId: (id: string | number) => `/api/studies/${id}` as const,
-  },
-  professors: {
-    index: '/api/professors',
-    byId: (id: string | number) => `/api/professors/${id}` as const,
-  },
-  subjects: {
-    index: '/api/subjects',
-    byId: (id: string | number) => `/api/subjects/${id}` as const,
+  sitemap: {
+    scripts: '/api/sitemap/scripts',
   },
   fileOps: {
     uploadUrls: '/api/file-ops/upload-urls',
@@ -296,57 +322,6 @@ export const apiRoutes = {
     lookup: '/api/restrictions/lookup',
     byProfileId: (profileId: string | number) =>
       `/api/restrictions/${profileId}` as const,
-  },
-  internal: {
-    scriptsSitemap: '/api/internal/scripts/sitemap',
-    profilesRoleById: (id: string | number) =>
-      `/api/internal/profiles/${id}/role` as const,
-    universities: '/api/internal/universities',
-    universitiesBySanityBySanityId: (sanityId: string | number) =>
-      `/api/internal/universities/by-sanity/${sanityId}` as const,
-    universitiesById: (id: string | number) =>
-      `/api/internal/universities/${id}` as const,
-    universitiesSyncById: (id: string | number) =>
-      `/api/internal/universities/${id}/sync` as const,
-    faculties: '/api/internal/faculties',
-    facultiesBySanityBySanityId: (sanityId: string | number) =>
-      `/api/internal/faculties/by-sanity/${sanityId}` as const,
-    facultiesById: (id: string | number) =>
-      `/api/internal/faculties/${id}` as const,
-    facultiesSyncById: (id: string | number) =>
-      `/api/internal/faculties/${id}/sync` as const,
-    studies: '/api/internal/studies',
-    studiesById: (id: string | number) =>
-      `/api/internal/studies/${id}` as const,
-    studiesSyncById: (id: string | number) =>
-      `/api/internal/studies/${id}/sync` as const,
-    professors: '/api/internal/professors',
-    professorsBySanityBySanityId: (sanityId: string | number) =>
-      `/api/internal/professors/by-sanity/${sanityId}` as const,
-    professorsById: (id: string | number) =>
-      `/api/internal/professors/${id}` as const,
-    professorsStudiesByIdAndStudyId: (
-      id: string | number,
-      studyId: string | number
-    ) => `/api/internal/professors/${id}/studies/${studyId}` as const,
-    professorsSyncById: (id: string | number) =>
-      `/api/internal/professors/${id}/sync` as const,
-    professorsFacultiesByIdAndFacultyId: (
-      id: string | number,
-      facultyId: string | number
-    ) => `/api/internal/professors/${id}/faculties/${facultyId}` as const,
-    subjects: '/api/internal/subjects',
-    subjectsBySanityBySanityId: (sanityId: string | number) =>
-      `/api/internal/subjects/by-sanity/${sanityId}` as const,
-    subjectsById: (id: string | number) =>
-      `/api/internal/subjects/${id}` as const,
-    subjectsSyncById: (id: string | number) =>
-      `/api/internal/subjects/${id}/sync` as const,
-    subjectsProfessorsByIdAndProfessorId: (
-      id: string | number,
-      professorId: string | number
-    ) => `/api/internal/subjects/${id}/professors/${professorId}` as const,
-    comments: '/api/internal/comments',
   },
 } as const
 

@@ -30,7 +30,8 @@ Create `hono/.env` locally. Use deployment secrets in production:
 SUPABASE_URL=your_supabase_url
 SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
 SUPABASE_SECRET_KEY=your_supabase_secret_key
-INTERNAL_API_SECRET=development_secret_key
+SITEMAP_SECRET=development_sitemap_secret
+ADMIN_TOTP_SECRET=
 R2_ACCOUNT_ID=your_cloudflare_account_id
 R2_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
 R2_ACCESS_KEY_ID=your_access_key
@@ -47,15 +48,21 @@ Universities can override `R2_BUCKET` per-university via
 `universities.r2_bucket_id` — see [File Uploads](src/routes/API_DOCUMENTATION.md#file-uploads).
 `R2_BUCKET` remains the fallback for any university without one set.
 
-`INTERNAL_API_SECRET` must match `SANITY_STUDIO_INTERNAL_SECRET` in the Sanity
-Studio environment, or every Studio sync/delete action fails.
+`SITEMAP_SECRET` scopes one read route (`GET /api/sitemap/scripts`) and must
+match `SITEMAP_SECRET` in `next/`.
+
+`ADMIN_TOTP_SECRET` gates the Studio's sync/delete actions. Generate one with
+`corepack pnpm --filter @scriptr/api admin:totp`, add the printed `otpauth` URI
+to an authenticator app, and paste the secret into `hono/.env`. The Studio asks
+for a code once per ten minutes; nothing secret is bundled into it.
 
 `CORS_ORIGINS` is the origin allowlist. The localhost dev ports
 (`3000`, `5173`, `3333`) are added automatically unless `NODE_ENV` is
 `production`; everything else — including the hosted Studio — must be listed
 there. Studio actions run in the browser, so an unlisted Studio hostname fails
 its preflight with `(Reason: CORS request did not succeed)`, while a
-`403 Forbidden` after that means the two secrets above disagree.
+`401 Access code required` after that means the Studio asked for a code before
+one was entered, or the ten-minute token lapsed.
 
 `R2_ENDPOINT` must be the bucket's S3 endpoint and nothing more — a path on the
 end (e.g. `.../scriptr`) makes the SDK store every object under an extra prefix,
@@ -159,7 +166,8 @@ the root health check (`GET /api/`) — is mounted below `/api`:
 - `/api/ratings`
 - `/api/notifications`
 - `/api/restrictions`
-- `/api/internal`
+- `/api/sanity`
+- `/api/sitemap/scripts`
 
 The complete endpoint, authentication, authorization, validation, and error
 reference is in [API_DOCUMENTATION.md](src/routes/API_DOCUMENTATION.md). A
@@ -168,10 +176,14 @@ curl walkthrough covering every route is in
 
 ## Security Notes
 
-- Academic catalog routes (`/api/universities`, `/api/faculties`, `/api/studies`, `/api/professors`, `/api/subjects`) are **not** public — every request, reads included, requires the `x-internal-secret` header matching `INTERNAL_API_SECRET`. RLS closes these tables to every Supabase role, admin included; there is no session-based access path at all.
-- Catalog writes and role changes are exposed on `/api/internal` and require `x-internal-secret`; `/api/universities` is read-only.
+- Academic catalog routes (`/api/sanity/universities`, `/api/sanity/faculties`, `/api/sanity/studies`, `/api/sanity/professors`, `/api/sanity/subjects`) are **not** public — every request, reads included, requires a ten-minute admin token in `x-admin-token`, obtained by trading a TOTP code at `POST /api/sanity/access`. RLS closes these tables to every Supabase role, admin included; there is no session-based access path at all.
+- That token is the only credential the Sanity Studio holds, and it lives in memory: nothing secret is bundled into the Studio, whose JavaScript is public.
+- **Every admin action needs the ten-minute unlock**, not just a session: the flag queue, restriction management, rating-type and achievement-definition writes, the admin script list and the admin profile routes all chain `requireAdminAccess` after `authMiddleware`. `/admin` shows the code form while the HttpOnly `scriptr-admin-access` cookie is missing or spent.
+- Role changes live on the website's admin surface (`PATCH /api/admin/profiles/:id/role`), with the same double gate; the first admin has to be promoted directly in the database.
+- `/api/admin/*` is the site's admin surface: pinned to `WEBSITE_ORIGIN` and unlocked with a TOTP code. `/api/sanity/*` is the Studio's, pinned to `SANITY_STUDIO_ORIGIN` and using the header form of the same token. A request from one surface's origin is `403` on the other.
+- `GET /api/sitemap/scripts` is the one route with a shared header secret (`x-sitemap-secret`), scoped to that path and held only by the Next build. It is limited to 10 requests a day and 2 a minute per IP.
 - Authentication uses the Supabase session cookie only (no Bearer-token path). `POST /api/auth/callback` establishes the session from the tokens in an email-confirmation link.
-- Rating types (`/api/ratings/types`) are the one lookup table that's actually public to read; only mutation is admin-gated, via `is_admin()` RLS on the admin's own session — no internal secret involved there.
+- Rating types (`/api/ratings/types`) are the one lookup table that's actually public to read; only mutation is admin-gated, via `is_admin()` RLS on the admin's own session — no service secret involved there.
 - User-specific write routes require a valid Supabase session cookie.
 - Role updates are never exposed on the public profile routes.
 - Moderators currently have zero elevated access anywhere in this API — the role exists in the schema but isn't checked by any policy or route yet.

@@ -74,7 +74,7 @@ export const RestrictionsPanel = ({
     setLiftingId(profileId)
     liftRestriction(profileId)
       .then(refresh)
-      .catch(() => reportError())
+      .catch((error: unknown) => reportError(undefined, error))
       .finally(() => setLiftingId(null))
   }
 

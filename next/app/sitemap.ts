@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { createAcademicStaticParams } from '@/lib/academic-detail-page'
 import { getAcademicPath } from '@/lib/academic-routes'
-import { getScriptSitemapEntries } from '@/lib/api/scripts-api'
+import { getScriptSitemapEntries } from '@/lib/api/sitemap-api'
 import { nextLogs } from '@/lib/logger'
 import { websiteDomain } from '@/sanity/env'
 import { facultyStaticParamsQuery } from '@/sanity/queries/academics/faculty.queries'
@@ -18,12 +18,17 @@ import type {
 } from '@/types/academics/academics.types'
 
 /**
- * Prerendered, then revalidated on Next's default 60-second window: the route
- * segment `revalidate` export has no effect on a metadata route here (checked
- * against the build manifest, which stays at 60 whatever it is set to), and
- * ISR only regenerates on the next request after that window lapses, so a
- * crawler still reads the cached copy.
+ * Prerendered at build time and never revalidated.
+ *
+ * The route is already static by default — the build manifest records
+ * `compute: "static"` and `initialRevalidateSeconds: false` — but the configs
+ * are pinned rather than inferred. A metadata route re-exports its named
+ * exports onto the generated route module, so pinning keeps `/sitemap.xml` a
+ * build artefact even if a later change introduces a dynamic API or a different
+ * Next default.
  */
+export const dynamic = 'force-static'
+export const revalidate = false
 
 type SitemapEntry = MetadataRoute.Sitemap[number]
 

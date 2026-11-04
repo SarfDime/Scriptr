@@ -14,6 +14,12 @@ import {
   useClient,
   useDocumentOperation,
 } from 'sanity'
+import { AccessCodeForm } from '../components/AccessCodeForm'
+import {
+  adminFetch,
+  hasValidAccessToken,
+  STUDIO_API_URL,
+} from '../lib/api-access'
 
 export type AcademicDocumentActionProps = {
   id: string
@@ -25,18 +31,27 @@ export type AcademicDocumentActionProps = {
 
 type DialogState =
   | { type: 'none' }
-  | { type: 'confirm'; message: string; onConfirm: () => void }
+  /** `access` means the action is confirmed but the ten-minute token is missing
+   * or spent, so the code is collected before the request goes out. */
+  | {
+      type: 'confirm' | 'access'
+      message: string
+      onConfirm: () => void
+    }
   | { type: 'error'; message: string }
 
-/** Studio builds inline `SANITY_STUDIO_*` env vars at build time. */
-const STUDIO_API_URL =
-  process.env.SANITY_STUDIO_API_URL ?? 'http://localhost:8787'
-
-function apiHeaders() {
-  return {
-    'Content-Type': 'application/json',
-    'x-internal-secret': process.env.SANITY_STUDIO_INTERNAL_SECRET ?? '',
-  }
+/** Confirms an action, inserting the access-code step only when a token is
+ * missing or spent. */
+function confirmAction(
+  setDialogState: (state: DialogState) => void,
+  message: string,
+  onConfirm: () => void
+) {
+  setDialogState({
+    type: hasValidAccessToken() ? 'confirm' : 'access',
+    message,
+    onConfirm,
+  })
 }
 
 function refId(value: unknown): string | undefined {
@@ -202,9 +217,8 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
           props.id,
           client
         )
-        const response = await fetch(endpoint, {
+        const response = await adminFetch(endpoint, {
           method: 'POST',
-          headers: apiHeaders(),
           body: JSON.stringify(body),
         })
         const result = await response.json()
@@ -239,12 +253,11 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
       tone: 'caution',
       disabled: !doc?.name || Boolean(doc?.dbId),
       onHandle: () =>
-        setDialogState({
-          type: 'confirm',
-          message:
-            'Are you sure you want to create a new database record for this document?',
-          onConfirm: handleConfirm,
-        }),
+        confirmAction(
+          setDialogState,
+          'Are you sure you want to create a new database record for this document?',
+          handleConfirm
+        ),
       dialog: renderDialog(dialogState, setDialogState, 'Create in Database'),
     }
   }
@@ -279,9 +292,8 @@ export function syncWithDatabaseAction(entityType: AcademicEntityType) {
           props.id,
           client
         )
-        const response = await fetch(endpoint, {
+        const response = await adminFetch(endpoint, {
           method: 'POST',
-          headers: apiHeaders(),
           body: JSON.stringify(body),
         })
         const result = await response.json()
@@ -314,12 +326,11 @@ export function syncWithDatabaseAction(entityType: AcademicEntityType) {
       tone: 'caution',
       disabled: !doc?.name || !doc?.dbId,
       onHandle: () =>
-        setDialogState({
-          type: 'confirm',
-          message:
-            'Are you sure you want to sync your recent changes to the database?',
-          onConfirm: handleConfirm,
-        }),
+        confirmAction(
+          setDialogState,
+          'Are you sure you want to sync your recent changes to the database?',
+          handleConfirm
+        ),
       dialog: renderDialog(dialogState, setDialogState, 'Sync with Database'),
     }
   }
@@ -353,10 +364,7 @@ export function createCheckedDeleteAction(entityType: AcademicEntityType) {
       const endpoint = apiUrl(endpoints.byId(String(dbId)), STUDIO_API_URL)
 
       try {
-        const response = await fetch(endpoint, {
-          method: 'DELETE',
-          headers: apiHeaders(),
-        })
+        const response = await adminFetch(endpoint, { method: 'DELETE' })
 
         if (response.status === 409) {
           const result = await response.json()
@@ -396,13 +404,19 @@ export function createCheckedDeleteAction(entityType: AcademicEntityType) {
       disabled: Boolean(deleteOp.disabled),
       tone: 'critical',
       onHandle: () =>
-        setDialogState({
-          type: 'confirm',
-          message: dbId
-            ? 'Are you sure you want to delete this document? It will also be removed from the linked database.'
-            : 'Are you sure you want to delete this document?',
-          onConfirm: handleConfirm,
-        }),
+        // Only a linked document reaches the API, so an unlinked one is deleted
+        // without asking for a code.
+        dbId
+          ? confirmAction(
+              setDialogState,
+              'Are you sure you want to delete this document? It will also be removed from the linked database.',
+              handleConfirm
+            )
+          : setDialogState({
+              type: 'confirm',
+              message: 'Are you sure you want to delete this document?',
+              onConfirm: handleConfirm,
+            }),
       dialog: renderDialog(dialogState, setDialogState, 'Cannot Delete'),
     }
   }
@@ -439,10 +453,7 @@ export function createDeleteInDatabaseAction(
       const endpoint = apiUrl(endpoints.byId(String(dbId)), STUDIO_API_URL)
 
       try {
-        const response = await fetch(endpoint, {
-          method: 'DELETE',
-          headers: apiHeaders(),
-        })
+        const response = await adminFetch(endpoint, { method: 'DELETE' })
 
         // Handle dependents conflict
         if (response.status === 409) {
@@ -484,12 +495,11 @@ export function createDeleteInDatabaseAction(
       icon: Trash,
       tone: 'critical',
       onHandle: () =>
-        setDialogState({
-          type: 'confirm',
-          message:
-            'Are you sure you want to delete this record from the Postgres database? The Sanity document will NOT be deleted.',
-          onConfirm: handleConfirm,
-        }),
+        confirmAction(
+          setDialogState,
+          'Are you sure you want to delete this record from the Postgres database? The Sanity document will NOT be deleted.',
+          handleConfirm
+        ),
       dialog: renderDialog(
         dialogState,
         setDialogState,
@@ -513,6 +523,23 @@ function renderDialog(
       message: state.message,
       onConfirm: state.onConfirm,
       onCancel: () => setState({ type: 'none' }),
+    }
+  }
+  if (state.type === 'access') {
+    return {
+      type: 'dialog' as const,
+      header: 'Access code required',
+      content: (
+        <AccessCodeForm
+          message={state.message}
+          onCancel={() => setState({ type: 'none' })}
+          onAuthorized={() => {
+            setState({ type: 'none' })
+            state.onConfirm()
+          }}
+        />
+      ),
+      onClose: () => setState({ type: 'none' }),
     }
   }
   if (state.type === 'error') {

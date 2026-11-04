@@ -1,12 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import type { OptimizeFileRequest } from '@shared/types/file-upload.types'
 import {
   OPTIMIZER_SIGNATURE_HEADER,
   OPTIMIZER_TIMESTAMP_HEADER,
-  signOptimizerRequest,
-  verifyOptimizerRequest,
-} from '@shared/utils/optimizer-signature'
+} from '@shared/config/access'
+import type { OptimizeFileRequest } from '@shared/types/file-upload.types'
+import { signRequest, verifyRequest } from '@shared/utils/request-signature'
 import { optimizeViaService } from './optimizer-client'
 
 const request: OptimizeFileRequest = {
@@ -33,14 +32,14 @@ const jsonResponse = (body: unknown, status = 200) =>
 test('a signature verifies, and fails for a different body, secret, or format', async () => {
   const timestamp = String(Date.now())
   const body = '{"a":1}'
-  const signature = await signOptimizerRequest('shh', timestamp, body)
+  const signature = await signRequest('shh', timestamp, body)
 
   assert.equal(
-    await verifyOptimizerRequest({ secret: 'shh', timestamp, signature, body }),
+    await verifyRequest({ secret: 'shh', timestamp, signature, body }),
     true
   )
   assert.equal(
-    await verifyOptimizerRequest({
+    await verifyRequest({
       secret: 'shh',
       timestamp,
       signature,
@@ -49,7 +48,7 @@ test('a signature verifies, and fails for a different body, secret, or format', 
     false
   )
   assert.equal(
-    await verifyOptimizerRequest({
+    await verifyRequest({
       secret: 'other',
       timestamp,
       signature,
@@ -58,7 +57,7 @@ test('a signature verifies, and fails for a different body, secret, or format', 
     false
   )
   assert.equal(
-    await verifyOptimizerRequest({
+    await verifyRequest({
       secret: 'shh',
       timestamp,
       signature: 'not-hex',
@@ -71,10 +70,10 @@ test('a signature verifies, and fails for a different body, secret, or format', 
 test('a signed request expires, so a captured one cannot be replayed', async () => {
   const issuedAt = Date.now() - 10 * 60 * 1000
   const timestamp = String(issuedAt)
-  const signature = await signOptimizerRequest('shh', timestamp, 'body')
+  const signature = await signRequest('shh', timestamp, 'body')
 
   assert.equal(
-    await verifyOptimizerRequest({
+    await verifyRequest({
       secret: 'shh',
       timestamp,
       signature,
@@ -83,7 +82,7 @@ test('a signed request expires, so a captured one cannot be replayed', async () 
     false
   )
   assert.equal(
-    await verifyOptimizerRequest({
+    await verifyRequest({
       secret: 'shh',
       timestamp,
       signature,
@@ -111,7 +110,7 @@ test('sends a signed request to /optimize and returns the service result', async
   assert.equal(seen?.url, 'https://optimizer.test/optimize')
   assert.deepEqual(JSON.parse(seen?.body ?? ''), request)
   assert.equal(
-    await verifyOptimizerRequest({
+    await verifyRequest({
       secret: 'shh',
       timestamp: seen?.headers.get(OPTIMIZER_TIMESTAMP_HEADER) ?? '',
       signature: seen?.headers.get(OPTIMIZER_SIGNATURE_HEADER) ?? '',

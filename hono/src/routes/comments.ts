@@ -30,11 +30,12 @@ import {
   portableTextToPlainText,
 } from '@shared/utils/portable-text.utils'
 import { Hono } from 'hono'
+import { createRateLimiter } from '../../../shared/utils/rate-limit'
 import { checkCommentsPosted } from '../lib/achievements'
+import { requireAdminAccess } from '../lib/admin-access'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
 import { honoLog } from '../lib/logger'
 import { notifyProfileBestEffort } from '../lib/notifications'
-import { createRateLimiter } from '../lib/rate-limit'
 import { requiredParam } from '../lib/request'
 import {
   authMiddleware,
@@ -1382,7 +1383,7 @@ comments.delete('/:id', authMiddleware, async (c) => {
 })
 
 /** Get flagged comments (admin only) */
-comments.get('/flagged/all', authMiddleware, async (c) => {
+comments.get('/flagged/all', authMiddleware, requireAdminAccess, async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)
 

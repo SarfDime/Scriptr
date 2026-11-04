@@ -1,15 +1,20 @@
+import {
+  OPTIMIZER_SIGNATURE_HEADER,
+  OPTIMIZER_TIMESTAMP_HEADER,
+} from '@shared/config/access'
 import type {
   OptimizeFileRequest,
   OptimizeFileResult,
 } from '@shared/types/file-upload.types'
 import { isFileType } from '@shared/utils/api.utils'
-import {
-  OPTIMIZER_SIGNATURE_HEADER,
-  OPTIMIZER_TIMESTAMP_HEADER,
-  verifyOptimizerRequest,
-} from '@shared/utils/optimizer-signature'
+import { verifyRequest } from '@shared/utils/request-signature'
 import { Hono } from 'hono'
 import { optimizerLog, optimizerLogRequest } from './logger'
+import {
+  isDestinationKeyBase,
+  isSafeBucketName,
+  isStagingKey,
+} from './object-key'
 
 /** How long one file may take, queueing included. Kept under the API's own
  * timeout for this call (`OPTIMIZER_REQUEST_TIMEOUT_MS`, 90 s), so the service
@@ -36,6 +41,17 @@ const isOptimizeFileRequest = (
     (request.purpose === undefined || request.purpose === 'avatar')
   )
 }
+
+/**
+ * The HMAC proves the caller holds the secret; this bounds *what* it may name.
+ * Buckets must be valid names and keys must follow the shapes the API mints, so
+ * a leaked secret cannot read, overwrite or delete an arbitrary object.
+ */
+const isSafeOptimizeTarget = (request: OptimizeFileRequest): boolean =>
+  isSafeBucketName(request.stagingBucket) &&
+  isSafeBucketName(request.destinationBucket) &&
+  isStagingKey(request.stagingKey) &&
+  isDestinationKeyBase(request.destinationKeyBase)
 
 type OptimizerEnv = {
   // biome-ignore lint/style/useNamingConvention: Hono requires this key name
@@ -86,7 +102,7 @@ export const createApp = ({
 
   app.post('/optimize', async (c) => {
     const body = await c.req.text()
-    const isAuthentic = await verifyOptimizerRequest({
+    const isAuthentic = await verifyRequest({
       secret,
       timestamp: c.req.header(OPTIMIZER_TIMESTAMP_HEADER) ?? '',
       signature: c.req.header(OPTIMIZER_SIGNATURE_HEADER) ?? '',
@@ -102,6 +118,9 @@ export const createApp = ({
     }
     if (!isOptimizeFileRequest(request)) {
       return c.json({ error: 'Invalid request' }, 400)
+    }
+    if (!isSafeOptimizeTarget(request)) {
+      return c.json({ error: 'Invalid storage target' }, 400)
     }
 
     // Counted from now, so time spent queued behind other files is included.

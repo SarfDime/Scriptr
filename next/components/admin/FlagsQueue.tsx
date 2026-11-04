@@ -100,7 +100,7 @@ export const FlagsQueue = ({
             : current.filter((item) => item.id !== flag.id)
         )
       )
-      .catch(() => reportError())
+      .catch((error: unknown) => reportError(undefined, error))
       .finally(() => setBusyFlagId(null))
   }
 
@@ -131,7 +131,7 @@ export const FlagsQueue = ({
         : deleteComment(target.id)
     deletion
       .then(() => loadFlags(status))
-      .catch(() => reportError())
+      .catch((error: unknown) => reportError(undefined, error))
       .finally(() => setBusyGroupKey(null))
   }
 
@@ -142,7 +142,7 @@ export const FlagsQueue = ({
     setRestrictingFlagId(flag.id)
     lookupRestriction({ profile_id: authorId })
       .then(setRestrictionLookup)
-      .catch(() => reportError())
+      .catch((error: unknown) => reportError(undefined, error))
       .finally(() => setRestrictingFlagId(null))
   }
 
@@ -153,7 +153,7 @@ export const FlagsQueue = ({
     setBusyGroupKey(group.key)
     lookupRestriction({ profile_id: target.id })
       .then(setRestrictionLookup)
-      .catch(() => reportError())
+      .catch((error: unknown) => reportError(undefined, error))
       .finally(() => setBusyGroupKey(null))
   }
 

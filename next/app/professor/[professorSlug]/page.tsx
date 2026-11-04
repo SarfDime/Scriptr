@@ -25,6 +25,15 @@ import type {
 import type { ProfessorDetail } from '@/types/academics/professor.types'
 import type { MinimalSubject } from '@/types/academics/subject.types'
 
+/**
+ * Rendered at build time and never regenerated: the URL space is fixed by
+ * `generateStaticParams`, and nothing here reads a request-time API. Pinned so a
+ * later edit cannot quietly turn the route dynamic — remove these two lines if
+ * the page ever needs `cookies()`/`headers()`/search params.
+ */
+export const dynamic = 'force-static'
+export const revalidate = false
+
 export const dynamicParams = false
 
 export const generateStaticParams =

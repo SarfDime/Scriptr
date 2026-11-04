@@ -85,7 +85,10 @@ Production:
 - `NEXT_PUBLIC_API_URL` must be `https://api.scriptr.uk`.
 - `NEXT_PUBLIC_SITE_URL` must be `https://scriptr.uk`.
 - `NEXT_TELEMETRY_DISABLED=1` disables Next.js telemetry during builds.
-- `REVALIDATE_SECRET` must equal the API's `REVALIDATE_SECRET`.
+- `REVALIDATE_SECRET` must equal the API's `REVALIDATE_SECRET`. It is a signing
+  key, not a header value: the API sends `x-revalidate-timestamp` +
+  `x-revalidate-signature` and this project verifies the HMAC, so the secret
+  never crosses the wire.
 
 ### `scriptr-api`
 
@@ -98,13 +101,16 @@ Production:
   must include the production origins, stable web aliases and the hosted Studio:
   - `https://scriptr.uk`
   - `*.scriptr.uk`
+  - `https://scriptr-web.vercel.app`
   - `https://scriptr-web-ivory.vercel.app`
   - `https://scriptr-web-team-slug.vercel.app`
   - `https://scriptr-web-git-main-team-slug.vercel.app`
+  - `https://scriptr-web-git-staging-team-slug.vercel.app`
   - `https://scriptr.sanity.studio`
   Leaving the Studio out makes every sync/delete action fail its preflight with
   `(Reason: CORS request did not succeed)`; a `403 Forbidden` after that instead
-  means `SANITY_STUDIO_INTERNAL_SECRET` disagrees with `INTERNAL_API_SECRET`.
+  means `ADMIN_TOTP_SECRET` is missing on the API (the Studio itself carries no
+  secret).
 - `NEXT_REVALIDATE_URL` must be the web project's **Vercel alias**, not the
   public hostname: `https://scriptr-web-team-slug.vercel.app/api/revalidate`.
   `scriptr.uk` sits behind the Cloudflare proxy, and Cloudflare does not pass
@@ -113,8 +119,21 @@ Production:
   the homepage kept listing deleted scripts). Direct Vercel aliases are
   DNS-only and accept the webhook.
 - `REVALIDATE_SECRET` must equal the web project's value, and must not be the
-  `.env.example` value: the API logs a production warning when it is.
-- Supabase, R2, and internal API credentials are required production secrets.
+  `.env.example` value: the API's startup report and `revalidateCacheTags` both
+  call that out in production.
+- `OPTIMIZER_SECRET` must equal the optimizer service's Secret Manager value;
+  it signs every `/optimize` call the same way.
+- Supabase, R2, and the API secrets are required production values:
+  `SITEMAP_SECRET` (must match the web project's) and `ADMIN_TOTP_SECRET` (the
+  base32 TOTP secret generated with `corepack pnpm --filter @scriptr/api admin:totp`,
+  also enrolled in an authenticator app).
+- `SANITY_STUDIO_ORIGIN` (`https://scriptr.sanity.studio`) and `WEBSITE_ORIGIN`
+  (the site's public hostname) pin the two non-session surfaces to their caller.
+  Both must also appear in `CORS_ORIGINS`. Leaving either unset makes its
+  surface answer `403` in production. The `staging` branch is not used, so only
+  Production carries these values; enabling staging later means adding all four
+  (`SANITY_STUDIO_ORIGIN`, `WEBSITE_ORIGIN`, `ADMIN_TOTP_SECRET`,
+  `SITEMAP_SECRET`) plus `CORS_ORIGINS` to the **Preview** environment.
 - `OPTIMIZER_URL` and `OPTIMIZER_SECRET` are optional and set together, once
   the file optimizer service is deployed. The secret signs API-to-service
   requests and must equal the service's own value.
@@ -160,6 +179,84 @@ commits are skipped, so a docs-only push deploys nothing by design.
 After changing production environment variables, redeploy both Vercel projects;
 `NEXT_PUBLIC_API_URL` is inlined at build time. Users need to sign in once again
 because their old session cookie is scoped to the Vercel API host.
+
+## Deploying the access refactor
+
+The three non-session surfaces (`/api/sanity/*`, `/api/admin/*`, `/api/sitemap/scripts`) replaced `x-internal-secret`. A half-deployed state has a short, operator-only failure window, so deploy in this order:
+
+1. **`scriptr-web`** — it verifies the new signed `/api/revalidate` calls, so deploying it first means the old API's unsigned calls are simply rejected (cache stays stale for a few minutes) instead of the reverse.
+2. **`scriptr-api`** — this is the switchover. Until it lands, `/api/sanity/*` and `/api/admin/*` do not exist; after it lands, `/api/internal/*` is gone, so an open Studio tab running the old bundle fails its sync/delete actions. Reload the Studio once the API is Healthy.
+3. **Sanity Studio** (`corepack pnpm deploy:sanity`) — the bundle no longer contains any secret, so this must be re-published for the TOTP flow to reach the operator.
+
+Environment changes required by the deploy:
+
+| Project | Add | Remove |
+| ------- | --- | ------ |
+| `scriptr-api` | `ADMIN_TOTP_SECRET`, `SANITY_STUDIO_ORIGIN`, `WEBSITE_ORIGIN`, `SITEMAP_SECRET`, refreshed `CORS_ORIGINS` | `INTERNAL_API_SECRET` |
+| `scriptr-web` | `SITEMAP_SECRET` (same value) | `INTERNAL_API_SECRET`, `SANITY_STUDIO_INTERNAL_SECRET` |
+| Sanity Studio | — | `SANITY_STUDIO_INTERNAL_SECRET` (in `sanity/.env.production`) and from the deploy workflows' `env:` blocks |
+
+`WEBSITE_ORIGIN` must be the **exact** hostname users load — `https://scriptr.uk`, not a Vercel alias — because it is compared against the browser's `Origin` on every admin call. Add both origins to `CORS_ORIGINS` as well; the check runs after the preflight, so a missing entry fails earlier and less clearly.
+
+**Rotate the old `INTERNAL_API_SECRET`** unless you can prove nothing else ever reused that value: it was readable by anyone who loaded the Studio, and any deployment still running the previous code keeps accepting it.
+
+Post-deploy checks, in order:
+
+```bash
+# 401 (route exists, token missing) — not 404, not 403
+curl -s -o /dev/null -w '%{http_code}\n' https://api.scriptr.uk/api/sanity/universities
+
+# 404 — the old surface is gone
+curl -s -o /dev/null -w '%{http_code}\n' https://api.scriptr.uk/api/internal/universities
+
+# 403 — the route-scoped sitemap secret is enforced
+curl -s -o /dev/null -w '%{http_code}\n' https://api.scriptr.uk/api/sitemap/scripts
+
+# 401 — unsigned revalidation is rejected
+curl -s -o /dev/null -w '%{http_code}\n' -X POST https://scriptr.uk/api/revalidate
+```
+
+Then, signed in as an admin: `/admin` shows the code form; after entering a code the flag queue loads, and the Studio's "Sync with Database" works on the same code.
+
+## Rotating the shared secrets
+
+Four values are shared between projects, and each only works when **both** sides
+change. Rotate them on a schedule and whenever someone with access leaves; use a
+unique random value per environment (`openssl rand -base64 32`), never the
+`.env.example` placeholder.
+
+| Secret | Held by | Rotation order |
+| ------ | ------- | -------------- |
+| `REVALIDATE_SECRET` | `scriptr-api`, `scriptr-web` | Add the new value to **both** projects, redeploy both, then remove the old one. A mismatch shows up as `401` on `/api/revalidate` and the API logs `Cache revalidation failed with status 401`. |
+| `OPTIMIZER_SECRET` | `scriptr-api`, Cloud Run (`optimizer-secret`) | Create a new Secret Manager version and deploy the service, then set the same value on the API and redeploy. Between the two deploys uploads fail with `503` — finalize fails closed rather than storing files unoptimized. |
+| `SITEMAP_SECRET` | `scriptr-api`, `scriptr-web` | Same as `REVALIDATE_SECRET`. A mismatch silently drops script URLs from `/sitemap.xml` (the API answers `403`, the web app logs a warning). |
+| `ADMIN_TOTP_SECRET` | `scriptr-api` only | Generate with `corepack pnpm --filter @scriptr/api admin:totp`, set it, and re-enrol the new `otpauth` URI in the authenticator app. Every issued token stops working immediately; the old secret is dead as soon as the API restarts. |
+
+**A version is not `latest` by being enabled.** `latest` means the highest
+version *number that exists*, whatever its state. Disabling or destroying a bad
+version does not move `latest` back — it makes the next mount fail with
+`FAILED_PRECONDITION` (Cloud Run) or an access error. Recover by adding a new
+version that holds the good value, piping it so it is never echoed:
+
+```bash
+gcloud secrets versions access <good-version> --secret=<name> \
+  | gcloud secrets versions add <name> --data-file=-
+```
+
+And never run that `add` with an unset variable: `<<< "$NEW_KEY"` sends a bare
+newline, which Cloudflare will reject but Cloud Run will happily mount as an
+empty secret. Check the length first — `printf '%s' "$NEW_KEY" | wc -c` should be
+non-zero — and remember that the running revision keeps the values it was
+deployed with until the next deploy.
+
+Two rules that make rotation uneventful:
+
+1. **Deploy the consumer first when it only verifies** (`scriptr-web` for
+   revalidation, the optimizer service for signing), so there is no window where
+   a new signer talks to an old verifier.
+2. **Check the startup report after deploying** — every app prints which
+   variables are set and which are missing, names only. A half-rotation shows up
+   there and in the first failing request.
 
 ## Verification
 

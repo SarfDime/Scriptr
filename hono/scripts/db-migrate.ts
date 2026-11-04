@@ -22,7 +22,12 @@
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
+import {
+  REVALIDATE_SIGNATURE_HEADER,
+  REVALIDATE_TIMESTAMP_HEADER,
+} from '../../shared/config/access'
 import { PROFILE_CACHE_TAGS } from '../../shared/config/cache-tags'
+import { signRequest } from '../../shared/utils/request-signature'
 
 const HONO_DIR = path.resolve(import.meta.dirname, '..')
 const REPO_DIR = path.resolve(HONO_DIR, '..')
@@ -165,7 +170,7 @@ const findUncommitted = (names: Array<string>) => {
  * achievement's title, for instance), and `db push` knows nothing about the
  * web cache. Best effort: a failure here is reported, not fatal.
  */
-const revalidatePublicPages = () => {
+const revalidatePublicPages = async () => {
   section('◇ Revalidating cached public pages')
   try {
     process.loadEnvFile(path.join(HONO_DIR, '.env'))
@@ -183,6 +188,10 @@ const revalidatePublicPages = () => {
     return
   }
 
+  const body = JSON.stringify({ tags: [PROFILE_CACHE_TAGS.public()] })
+  const timestamp = String(Date.now())
+  const signature = await signRequest(secret, timestamp, body)
+
   const result = spawnSync(
     'curl',
     [
@@ -193,9 +202,11 @@ const revalidatePublicPages = () => {
       '-H',
       'content-type: application/json',
       '-H',
-      `x-revalidate-secret: ${secret}`,
+      `${REVALIDATE_TIMESTAMP_HEADER}: ${timestamp}`,
+      '-H',
+      `${REVALIDATE_SIGNATURE_HEADER}: ${signature}`,
       '-d',
-      JSON.stringify({ tags: [PROFILE_CACHE_TAGS.public()] }),
+      body,
     ],
     { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
   )
@@ -227,7 +238,7 @@ const regenerateTypes = (ref: string) => {
   spawnSync('corepack', ['pnpm', 'format'], { cwd: REPO_DIR, stdio: 'inherit' })
 }
 
-const main = () => {
+const main = async () => {
   if (!fs.existsSync(MIGRATIONS_DIR)) {
     fail(`No migrations directory at ${MIGRATIONS_DIR}`)
   }
@@ -341,7 +352,7 @@ const main = () => {
     }
   }
 
-  revalidatePublicPages()
+  await revalidatePublicPages()
 
   console.log('\n✔ Migrations applied and types regenerated.')
 }

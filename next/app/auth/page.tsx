@@ -3,6 +3,15 @@ import { AuthCard } from '@/components/auth/AuthCard'
 import { PageLayout } from '@/components/layout/PageLayout'
 import { cn } from '@/lib/common-utils'
 
+/**
+ * A static shell: the card below is a client component and this page reads no
+ * request-time API. Pinned so a later edit cannot quietly turn the route
+ * dynamic — remove these two lines if it ever needs `cookies()`, `headers()`
+ * or search params.
+ */
+export const dynamic = 'force-static'
+export const revalidate = false
+
 export default function AuthPage() {
   return (
     <PageLayout
