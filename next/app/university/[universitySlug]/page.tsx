@@ -1,6 +1,5 @@
 import { UI_STRINGS } from '@shared/config/strings'
 import { UniversityAdministrationCard } from '@/components/academics/university/UniversityAdministrationCard'
-import { UniversityContactCard } from '@/components/academics/university/UniversityContactCard'
 import { UniversityFacultyExplorer } from '@/components/academics/university/UniversityFacultyExplorer'
 import { UniversityOverviewCard } from '@/components/academics/university/UniversityOverviewCard'
 import { PageLayout } from '@/components/layout/PageLayout'
@@ -69,18 +68,10 @@ export default async function UniversityDetailPage({
         title: university.name,
       }}
       sidebar={
-        <>
-          <UniversityContactCard
-            streetAddress={university.streetAddress}
-            telephone={university.telephone}
-            email={university.email}
-            website={university.website}
-          />
-          <UniversityAdministrationCard
-            rector={university.rector}
-            viceRectors={university.viceRectors}
-          />
-        </>
+        <UniversityAdministrationCard
+          rector={university.rector}
+          viceRectors={university.viceRectors}
+        />
       }
     >
       <UniversityOverviewCard {...university} />

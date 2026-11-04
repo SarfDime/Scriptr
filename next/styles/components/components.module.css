@@ -106,6 +106,10 @@
   @apply text-sm font-semibold text-fg-muted;
 }
 
+@utility ui-label-modern {
+  @apply text-xs uppercase tracking-[.125rem] text-fg-muted;
+}
+
 @utility ui-small-label {
   @apply text-[0.65rem] uppercase tracking-[.15rem] text-fg-muted;
 }
@@ -318,12 +322,27 @@
  * a border and the lip as an inset shadow let the two layers snap to device rows
  * independently, so identical dividers read at different strengths depending on
  * the fractional offset layout gave them. */
+/* Registered so `--divider-line` can interpolate: an unregistered custom
+ * property is discrete, and a gradient painted from a discrete value would jump.
+ * `transparent` is only the root default — `ui-divider` always sets the line. */
+@property --divider-line {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
 @utility ui-divider {
   background-color: transparent;
   border-width: 0;
   /* Call sites tint the line by setting this, either directly or through the
-   * `cp-divider` palette helper. */
+   * `cp-divider` palette helper. It is painted into a gradient, so it only
+   * interpolates because it is registered as a `<color>` below; without that
+   * the tint would snap between palettes instead of fading. */
   --divider-line: var(--divider-cut);
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: --divider-line 250ms ease-out;
+  }
 }
 
 @utility ui-divider-h {

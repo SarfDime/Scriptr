@@ -318,6 +318,7 @@ export const UI_STRINGS = {
       year: (year: number) => `Year ${year}`,
       ects: (credits: number) => `${credits} ECTS`,
       academicStaff: 'Academic Staff',
+      subjects: 'Subjects',
     },
     subject: {
       overview: 'Subject overview',

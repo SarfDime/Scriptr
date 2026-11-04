@@ -1,64 +1,106 @@
-import { UI_STRINGS } from '@shared/config/strings'
+import type { ReactNode } from 'react'
+import { getAcademicPath } from '@/lib/academic-routes'
+import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
-import type { PersonSummary } from '@/types/components/Person.types'
+import type { MinimalProfessor } from '@/types/academics/professor.types'
+import type { ComponentColorPalettes } from '@/types/components/ColorPalettes.types'
 import { Box } from '../common/Box'
-import { SectionHeader } from '../common/SectionHeader'
 import { Text } from '../typography/Text'
-import { Card } from '../ui/Card'
+import { Title } from '../typography/Title'
+import { Avatar } from '../ui/Avatar'
+import { Card, ClickableCard } from '../ui/Card'
+import { Divider } from '../ui/Divider'
 
-export type AdministrationCardProps = {
-  title?: string
-  leaderLabel?: string
-  leader?: PersonSummary
-  deputiesLabel?: string
-  deputies?: Array<PersonSummary>
-  secretary?: string
-  className?: string
+type AdministrationItemProps = Pick<MinimalProfessor, 'name' | 'picture'> & {
+  id?: string
+  subtitle?: ReactNode
+  slug?: string | null
+  color?: ComponentColorPalettes
+  children?: ReactNode
 }
 
+const AdministrationCardBody = ({
+  name,
+  subtitle,
+  picture,
+  color,
+  children,
+}: Omit<AdministrationItemProps, '_id'>) => (
+  <Card.Body
+    className={cn(
+      color,
+      'ui-cluster items-start flex-nowrap p-1 bg-transparent! bg-none! border-0! w-full'
+    )}
+  >
+    <Avatar className='shrink-0' picture={picture} name={name} color={color} />
+
+    <Box className='ui-stack gap-0.5 w-full overflow-hidden'>
+      <Title
+        as='h3'
+        className='ui-body-strong group-hover:text-current truncate'
+      >
+        {name}
+      </Title>
+
+      {subtitle && (
+        <Text className='ui-caption truncate group-hover:text-current/70'>
+          {subtitle}
+        </Text>
+      )}
+      {subtitle && children && (
+        <Divider className='my-2 group-hover:cp-divider' />
+      )}
+      {children}
+    </Box>
+  </Card.Body>
+)
+
+const ADMINISTRATION_ITEM_WRAPPER_CLASS = ' items-start ui-above-inside p-2'
+
 export const AdministrationCard = ({
-  title = UI_STRINGS.academics.administration,
-  leaderLabel = UI_STRINGS.academics.dean,
-  leader,
-  deputiesLabel = UI_STRINGS.academics.viceDeans,
-  deputies,
-  secretary,
-  className,
-}: AdministrationCardProps) => {
-  const hasDeputies = Boolean(deputies && deputies.length > 0)
-  if (!leader && !hasDeputies && !secretary) {
-    return null
-  }
+  color,
+  name,
+  subtitle,
+  picture,
+  slug,
+  id,
+  children,
+}: AdministrationItemProps) => {
+  const colorPalette =
+    color ?? getColorPalette({ type: 'seed', value: id ?? slug ?? name })
 
   return (
-    <Card className={cn('p-6 ui-stack gap-4', className)}>
-      <SectionHeader as='h3' title={title} />
-      {leader && (
-        <Box className='ui-stack gap-0.5'>
-          <Text className='ui-label'>{leaderLabel}</Text>
-          <Text className='ui-body-strong'>{leader.name}</Text>
-          {leader.title && <Text className='ui-caption'>{leader.title}</Text>}
-        </Box>
+    <>
+      {slug ? (
+        <ClickableCard
+          href={getAcademicPath({
+            type: 'professor',
+            professorSlug: slug,
+          })}
+          className={cn(ADMINISTRATION_ITEM_WRAPPER_CLASS, 'button group')}
+        >
+          <AdministrationCardBody
+            name={name}
+            subtitle={subtitle}
+            picture={picture}
+            color={colorPalette}
+            slug={slug}
+          >
+            {children}
+          </AdministrationCardBody>
+        </ClickableCard>
+      ) : (
+        <Card className={ADMINISTRATION_ITEM_WRAPPER_CLASS}>
+          <AdministrationCardBody
+            name={name}
+            subtitle={subtitle}
+            picture={picture}
+            color={colorPalette}
+          >
+            {children}
+          </AdministrationCardBody>
+        </Card>
       )}
-      {hasDeputies && (
-        <Box className='ui-stack gap-2'>
-          <Text className='ui-label'>{deputiesLabel}</Text>
-          {deputies?.map((deputy) => (
-            <Box key={deputy._id} className='ui-stack gap-0.5'>
-              <Text className='ui-body-strong'>{deputy.name}</Text>
-              {deputy.title && (
-                <Text className='ui-caption'>{deputy.title}</Text>
-              )}
-            </Box>
-          ))}
-        </Box>
-      )}
-      {secretary && (
-        <Box className='ui-stack gap-0.5'>
-          <Text className='ui-label'>{UI_STRINGS.academics.secretary}</Text>
-          <Text className='ui-body'>{secretary}</Text>
-        </Box>
-      )}
-    </Card>
+    </>
   )
 }

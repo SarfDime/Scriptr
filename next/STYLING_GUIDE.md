@@ -185,6 +185,15 @@ zoom.
   which derives the same colour a palette uses for its border. A palette class
   on a divider contributes only its hue: `color-palettes.module.css` excludes
   `.ui-divider` from the palette surface and border rules.
+- `cp-divider` is a Tailwind utility, so it takes variants like any other
+  (`group-hover:cp-divider`, `peer-checked:cp-divider`). Tint it conditionally
+  with a variant rather than adding a `-hover`/`-active` sibling class — the
+  trigger then belongs to the call site, not the palette file.
+- The tint fades: `ui-divider` transitions `--divider-line` over 200ms
+  `ease-in-out`. That only works because the variable is registered as a
+  `<color>` (`@property` in `components.module.css`) — an unregistered property
+  is discrete and a gradient built from it would jump. Keep divider tints
+  inside that type.
 - `ui-groove-t/b/l/r` gives any element that already separates itself with a
   border (card footer, dialog header) the same groove, so it does not need to
   become a `Divider`. Only for elements that carry no shadow of their own — the

@@ -61,10 +61,10 @@ export const SubjectOverviewCard = ({
   )
 
   return (
-    <Card className='p-6 ui-stack gap-5 ui-above'>
+    <Card className='ui-stack ui-above'>
       <Box className='ui-cluster items-start justify-between gap-5'>
         <Box className='ui-stack gap-2'>
-          <Text className='ui-caption uppercase tracking-wide'>
+          <Text className='ui-label-modern'>
             {UI_STRINGS.academics.subject.overview}
           </Text>
           {description && (

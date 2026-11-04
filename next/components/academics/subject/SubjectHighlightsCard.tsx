@@ -24,8 +24,8 @@ export const SubjectHighlightsCard = ({
   const color = getColorPalette({ type: 'seed', value: _id, variant: 'nb' })
   const colorBorder = getColorPalette({ type: 'seed', value: _id })
   return (
-    <Card className='p-6 ui-stack gap-4 ui-above'>
-      <Text className='ui-caption uppercase tracking-wide'>
+    <Card className='ui-stack ui-above'>
+      <Text className='ui-label-modern'>
         {UI_STRINGS.academics.subject.curriculumDetails}
       </Text>
 

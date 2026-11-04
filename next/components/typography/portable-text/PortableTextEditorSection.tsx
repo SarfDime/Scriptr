@@ -102,7 +102,12 @@ export const PortableTextEditorSection = ({
   }
 
   return (
-    <Box className={cn('ui-stack ui-above-inside', editorContainerClassName)}>
+    <Box
+      className={cn(
+        'ui-stack ui-above-inside overflow-x-hidden max-h-100',
+        editorContainerClassName
+      )}
+    >
       <EditorProvider
         key={editorKey}
         initialConfig={{
@@ -131,7 +136,7 @@ export const PortableTextEditorSection = ({
             }
           }}
           className={cn(
-            'min-h-40 whitespace-pre-line ui-above-reverse pt-editor-container text-fg text-sm outline-none focus:border-brand',
+            'overflow-y-scroll min-h-40 whitespace-pre-line ui-above-reverse pt-editor-container text-fg text-sm outline-none focus:border-brand',
             editorClassName
           )}
         />

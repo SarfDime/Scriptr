@@ -78,7 +78,7 @@ export const NotificationRow = ({
         )}
       </Box>
 
-      <Divider className={cn(palette, 'mt-2')} />
+      <Divider className={cn(palette, 'mt-2 cp-divider')} />
 
       <Box className='ui-cluster justify-between'>
         <Text className='ui-small-label tracking-[.15rem]'>

@@ -251,18 +251,20 @@
       }
     }
   }
+}
 
-  /* --- Groove tint --- */
-  /* Hands a `ui-divider` the colour the palette would draw its border with. The
-   * palette's own surface and border skip dividers, so the groove is unchanged. */
-  .cp-divider {
-    --divider-line: var(
-      --cp-border-color,
-      color-mix(
-        in srgb,
-        var(--cp-hue) var(--cp-border),
-        var(--color-background-100)
-      )
-    );
-  }
+/* --- Groove tint --- */
+/* Hands a `ui-divider` the colour the palette would draw its border with. The
+ * palette's own surface and border skip dividers, so the groove is unchanged.
+ * Declared as a utility (not a plain class) so variants compose:
+ * `group-hover:cp-divider`, `peer-checked:cp-divider`, `hover:cp-divider`. */
+@utility cp-divider {
+  --divider-line: var(
+    --cp-border-color,
+    color-mix(
+      in srgb,
+      var(--cp-hue) var(--cp-border),
+      var(--color-background-100)
+    )
+  );
 }

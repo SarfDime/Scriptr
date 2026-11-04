@@ -2,9 +2,11 @@ import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
+import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
+import { getColorPalette } from '@/lib/color-pallette-gen'
 import type { ProfessorsSectionProps } from '@/types/academics/professor.types'
-import { ProfessorCard } from './ProfessorCard'
+import { AdministrationCard } from '../AdministrationCard'
 
 export const ProfessorsSection = ({ professors }: ProfessorsSectionProps) => {
   const professorList = professors ?? []
@@ -18,9 +20,27 @@ export const ProfessorsSection = ({ professors }: ProfessorsSectionProps) => {
 
       {professorList.length > 0 ? (
         <Box className='ui-stack gap-2'>
-          {professorList.map((professor) => (
-            <ProfessorCard key={professor._id} {...professor} />
-          ))}
+          {professorList.map((professor) => {
+            const color = getColorPalette({
+              type: 'seed',
+              value: professor._id,
+            })
+            return (
+              <AdministrationCard
+                key={professor._id}
+                {...professor}
+                color={color}
+                subtitle={professor.title}
+              >
+                {professor.subjects?.length && (
+                  <Badge className='ui-caption truncate' colorPalette={color}>
+                    {UI_STRINGS.academics.professor.subjects}{' '}
+                    {professor.subjects.length}
+                  </Badge>
+                )}
+              </AdministrationCard>
+            )
+          })}
         </Box>
       ) : (
         <Text className='ui-caption ui-above-inside'>

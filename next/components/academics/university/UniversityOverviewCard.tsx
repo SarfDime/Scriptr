@@ -2,6 +2,7 @@ import Component from '@sanity/icons/Component'
 import EarthGlobe from '@sanity/icons/EarthGlobe'
 import Envelope from '@sanity/icons/Envelope'
 import Marker from '@sanity/icons/Marker'
+import MobileDevice from '@sanity/icons/MobileDevice'
 import { UI_STRINGS } from '@shared/config/strings'
 import { OverviewCard } from '@/components/layout/OverviewCard/OverviewCard'
 import type { UniversityDetail } from '@/types/academics/university.types'
@@ -13,6 +14,7 @@ export const UniversityOverviewCard = ({
   rector,
   streetAddress,
   email,
+  telephone,
   viceRectors: _viceRectors,
   ...university
 }: UniversityDetail) => {
@@ -38,6 +40,14 @@ export const UniversityOverviewCard = ({
       icon: <Envelope />,
       label: email,
       href: `mailto:${email}`,
+      colorPalette: 'cp-amber-int',
+      hideExternalIcon: true,
+    },
+    telephone && {
+      key: 'telephone',
+      icon: <MobileDevice />,
+      label: telephone,
+      href: `tel:${telephone}`,
       colorPalette: 'cp-amber-int',
       hideExternalIcon: true,
     },
