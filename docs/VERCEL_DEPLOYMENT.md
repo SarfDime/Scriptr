@@ -170,7 +170,10 @@ no separate alias workflow or GitHub token is required.
 Both projects use `git.deploymentEnabled` in their project-root `vercel.json`:
 Git deployments are enabled only from `main` (production) and `staging` (a
 Vercel Preview deployment); every other branch is disabled, so a feature branch
-builds nothing. A branch can still be previewed on demand with the Vercel CLI
+builds nothing. `main-sanity` is also disabled by name, not just by the `**`
+fallback: it only exists to trigger `deploy-sanity.yaml`, and the API/web have
+nothing to deploy for it, so a stray edit to `**` must not silently start
+building it. A branch can still be previewed on demand with the Vercel CLI
 (`vercel` from `hono/` or `next/`), which bypasses the allowlist. The
 project-level Ignored Build Step further limits automatic builds to commits
 whose subjects start with `feat:` or `fix:` — `docs:`, `chore:` and merge

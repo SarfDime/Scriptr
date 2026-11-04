@@ -6,7 +6,8 @@
     "deploymentEnabled": {
       "**": false,
       "main": true,
-      "staging": true
+      "staging": true,
+      "main-sanity": false
     }
   }
 }
