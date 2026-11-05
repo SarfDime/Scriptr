@@ -102,12 +102,7 @@ export const PortableTextEditorSection = ({
   }
 
   return (
-    <Box
-      className={cn(
-        'ui-stack ui-above-inside overflow-x-hidden max-h-100',
-        editorContainerClassName
-      )}
-    >
+    <Box className={cn('ui-stack ui-above-inside', editorContainerClassName)}>
       <EditorProvider
         key={editorKey}
         initialConfig={{
@@ -127,19 +122,23 @@ export const PortableTextEditorSection = ({
         />
         <ClearOtherDecorators />
         <Toolbar {...editorOptions} />
-        <PortableTextEditable
-          aria-label={ariaLabel}
-          autoFocus={autoFocus}
-          onKeyDown={(event) => {
-            if (singleLine && event.key === 'Enter') {
-              event.preventDefault()
-            }
-          }}
-          className={cn(
-            'overflow-y-scroll min-h-40 whitespace-pre-line ui-above-reverse pt-editor-container text-fg text-sm outline-none focus:border-brand',
-            editorClassName
-          )}
-        />
+        <Box
+        // Needed for overflow handling of the editor content and toolbar panels.
+        >
+          <PortableTextEditable
+            aria-label={ariaLabel}
+            autoFocus={autoFocus}
+            onKeyDown={(event) => {
+              if (singleLine && event.key === 'Enter') {
+                event.preventDefault()
+              }
+            }}
+            className={cn(
+              'overflow-y-scroll overflow-x-hidden wrap-break-word max-h-100 min-h-40 whitespace-pre-line ui-above-reverse pt-editor-container text-fg text-sm outline-none focus:border-brand',
+              editorClassName
+            )}
+          />
+        </Box>
       </EditorProvider>
 
       {isPreviewing && hasContent && (

@@ -42,7 +42,7 @@ export const ProfilePage = ({
       <FlagReportButton
         targetType='user'
         targetId={profile.id}
-        triggerClassName='button button-sm warning gap-1.5'
+        triggerClassName='button button-sm cp-warning-int gap-1.5'
       />
     )
 

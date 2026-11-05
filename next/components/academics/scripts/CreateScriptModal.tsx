@@ -20,7 +20,6 @@ import { ScriptSessionYearFields } from './form/ScriptSessionYearFields'
 import {
   SCRIPT_FIELD_LABEL_PROPS,
   SCRIPT_FORM_COLUMNS_CLASS,
-  SCRIPT_FORM_FILES_CLASS,
 } from './form/script-form-layout'
 import { ReadingLinksField } from './ReadingLinksField'
 import { ScriptFilesInput } from './ScriptFilesInput'
@@ -66,8 +65,14 @@ export function CreateScriptModal({
   // Only a linked professor can be assigned, so "has one" means "has a
   // selectable one" — with every professor unlinked the field says so instead of
   // looking filled in.
-  const hasProfessors = form.professors.some((option) => !option.disabled)
+  const selectableProfessors = form.professors.filter(
+    (option) => !option.disabled
+  )
+  const hasProfessors = selectableProfessors.length > 0
   const hasProfessorOptions = form.professors.length > 0
+  // A single professor is already the assigned one: nothing to pick, so the
+  // picker is shown but locked.
+  const isProfessorFixed = selectableProfessors.length <= 1
 
   return (
     <>
@@ -94,6 +99,8 @@ export function CreateScriptModal({
       >
         <ScriptDetailsFields fields={form.textFields} resetKey={formKey} />
 
+        <Divider />
+
         <Box className={SCRIPT_FORM_COLUMNS_CLASS}>
           {/* Fixed by the page, nothing to validate. */}
           <Field
@@ -102,7 +109,7 @@ export function CreateScriptModal({
             labelProps={SCRIPT_FIELD_LABEL_PROPS}
           >
             <SubjectCard {...subject} />
-            <Divider className='[--divider-line:var(--color-grey-500)] my-2' />
+            <Divider className='my-2' />
             <ReadingLinksField
               {...form.readingLinks.fieldProps}
               disabled={form.isBusy}
@@ -128,6 +135,7 @@ export function CreateScriptModal({
                 // Remounted on clear so it shows the reset professor again.
                 key={`professor-${formKey}`}
                 className='w-full bg-background-200'
+                disabled={isProfessorFixed}
                 // Read back from the form's value, so the trigger cannot show a
                 // professor the form is not actually submitting.
                 defaultOption={form.professors.find(
@@ -155,12 +163,13 @@ export function CreateScriptModal({
           </Box>
         </Box>
 
+        <Divider />
+
         <ScriptFilesInput
           files={form.files.files}
           disabled={form.isBusy}
           onAdd={form.files.addFiles}
           onRemove={form.files.removeFile}
-          fieldProps={{ className: SCRIPT_FORM_FILES_CLASS }}
         />
       </ScriptFormDialog>
     </>

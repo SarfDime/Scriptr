@@ -7,16 +7,41 @@ import dynamic from 'next/dynamic'
 import { Box } from '@/components/common/Box'
 import { RESTRICTED_EDITOR_OPTIONS } from '@/components/typography/portable-text/toolbar/editor-options'
 import { Text } from '@/components/typography/Text'
+import { Divider } from '@/components/ui/Divider'
 import { Field } from '@/components/ui/field/Field'
+import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 import type { UseScriptTextFieldsReturn } from '@/hooks/useScriptTextFields'
 import { SCRIPT_FIELD_LABEL_PROPS } from './script-form-layout'
+
+/** The editor's own boxes — padding, toolbar row and editing area — at the same
+ * heights, so the form does not jump when the editor replaces it. The editing
+ * area takes its height from `--pt-editor-height` on the field, which is set to
+ * match the `editorClassName` of the instance it stands in for. */
+function EditorPlaceholder() {
+  return (
+    <Box
+      role='status'
+      aria-busy='true'
+      aria-label={UI_STRINGS.general.loading}
+      className='ui-stack ui-above-inside'
+    >
+      <Box className='ui-cluster gap-2'>
+        <Skeleton loading className='h-7 w-10' />
+        <Skeleton loading className='h-7 w-14' />
+        <Skeleton loading className='h-7 w-14' />
+        <Skeleton loading className='h-7 w-12' />
+      </Box>
+      <Skeleton loading className='w-full min-h-(--pt-editor-height,7rem)' />
+    </Box>
+  )
+}
 
 const PortableTextEditorSection = dynamic(
   () =>
     import(
       '@/components/typography/portable-text/PortableTextEditorSection'
     ).then((module) => module.PortableTextEditorSection),
-  { ssr: false }
+  { ssr: false, loading: EditorPlaceholder }
 )
 
 export type ScriptDetailsFieldsProps = {
@@ -57,9 +82,10 @@ export function ScriptDetailsFields({
   })()
 
   return (
-    <Box className='ui-stack gap-5 p-5'>
+    <>
       <Field
-        className='min-w-0'
+        // `h-10` on the one-line editor: the placeholder is that tall too.
+        className='min-w-0 [--pt-editor-height:2.5rem]'
         label={UI_STRINGS.scripts.uploadModal.formTitle}
         labelProps={SCRIPT_FIELD_LABEL_PROPS}
         helperText={UI_STRINGS.scripts.uploadModal.formTitleHelp}
@@ -78,7 +104,6 @@ export function ScriptDetailsFields({
           singleLine
         />
       </Field>
-
       <Box className='ui-stack gap-1'>
         <Text className='ui-caption'>
           {UI_STRINGS.scripts.uploadModal.slug.label}:{' '}
@@ -90,12 +115,13 @@ export function ScriptDetailsFields({
                 )}
           </code>
         </Text>
-        <Text className='ui-caption'>
+        <Text className='ui-label'>
           {slug
             ? UI_STRINGS.scripts.uploadModal.slug.fixedNote
             : UI_STRINGS.scripts.uploadModal.slug.previewNote}
         </Text>
       </Box>
+      <Divider />
 
       <Field
         className='min-w-0'
@@ -121,6 +147,6 @@ export function ScriptDetailsFields({
           editorClassName='min-h-28'
         />
       </Field>
-    </Box>
+    </>
   )
 }

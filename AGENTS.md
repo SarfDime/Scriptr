@@ -22,6 +22,7 @@ its own guide in `docs/`. Start with [Read First](#read-first), then open the
 
 * Strict TypeScript, no `any`. SOLID, composition over inheritance.
 * DRY only at 2+ real usages — don't add abstractions speculatively.
+* KISS - keep it simple and avoid overengineering.
 * Types live in `shared/types/` (preferred), `next/types/`, or `hono/src/types/`. In-file types only if <3 fields and strictly local. **Anything a `hono/` route imports must live under `shared/`, never `next/types/`.**
 * **User-facing strings** live in `shared/strings/<area>-strings.ts` or `UI_STRINGS` (`shared/config/strings.ts`), never inline in components. Copy that depends on a value is a function on the strings object. Reuse before adding.
 * Academic entity types (faculty/study/subject/etc.) derive from the Sanity TypeGen query result via `WithResolvedSanityData<...>` (`shared/types/sanity-transform.types.ts`), not hand-written; hand-write only where no query-result type exists.

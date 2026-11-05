@@ -346,6 +346,7 @@
 }
 
 @utility ui-divider-h {
+  min-height: 2px;
   height: 2px;
   background-image: linear-gradient(
     to bottom,
@@ -355,6 +356,7 @@
 }
 
 @utility ui-divider-v {
+  min-width: 2px;
   width: 2px;
   background-image: linear-gradient(
     to right,

@@ -83,9 +83,10 @@ export const DialogFooter = ({
   return (
     <Card.Footer
       className={cn(
-        className ?? 'shrink-0 border-grey-200 border-t px-4 py-3',
+        'shrink-0 px-4 py-3',
         'ui-cluster justify-end gap-2',
-        note && 'ui-stack items-stretch'
+        note && 'ui-stack items-stretch',
+        className
       )}
     >
       {note}

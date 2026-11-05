@@ -17,11 +17,7 @@ export const InitialsIcon = ({
     className={cn(
       color,
       'aspect-square ui-center shrink-0 overflow-hidden rounded-lg',
-      // The initials scale with the box, so one component serves a 24px header
-      // avatar and a 64px profile one. The query belongs on the box and the
-      // size on the text: `cqi` on the container itself resolves against the
-      // *next* container up and rendered ~114px letters in a 24px circle.
-      '[container-type:inline-size]',
+      '@container',
       className
     )}
     {...props}

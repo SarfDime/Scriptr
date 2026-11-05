@@ -52,13 +52,20 @@ export const FieldContent = ({
                 {...badgeProps}
                 variant='outline'
                 className={cn(
-                  'rounded-md px-1.5 ui-center',
+                  'rounded-md px-1.5 ui-center text-sm',
                   badgeProps?.className
                 )}
                 colorPalette={getLabelPalette({ invalid, valid })}
               >
                 {label}
-                {required && <Asterisk className='h-3 w-3 overwrite mb-1' />}
+                {required && (
+                  <Asterisk
+                    className={cn(
+                      'h-3 w-3 overwrite mb-1',
+                      invalid || !valid ? 'text-error-red' : 'text-jade'
+                    )}
+                  />
+                )}
               </Badge>
             </Text>
           )}

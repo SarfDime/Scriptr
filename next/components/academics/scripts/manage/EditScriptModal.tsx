@@ -4,15 +4,13 @@ import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
 import { useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
+import { Divider } from '@/components/ui/Divider'
 import { useEditScriptForm } from '@/hooks/useEditScriptForm'
 import type { EditScriptModalProps } from '@/types/components/ScriptManage.types'
 import { ScriptDetailsFields } from '../form/ScriptDetailsFields'
 import { ScriptFormDialog } from '../form/ScriptFormDialog'
 import { ScriptSessionYearFields } from '../form/ScriptSessionYearFields'
-import {
-  SCRIPT_FORM_COLUMNS_CLASS,
-  SCRIPT_FORM_FILES_CLASS,
-} from '../form/script-form-layout'
+import { SCRIPT_FORM_COLUMNS_CLASS } from '../form/script-form-layout'
 import { ReadingLinksField } from '../ReadingLinksField'
 import { ScriptFilesInput } from '../ScriptFilesInput'
 
@@ -81,22 +79,22 @@ function EditScriptDialog({
         slug={script.slug}
       />
 
-      <Box className={SCRIPT_FORM_COLUMNS_CLASS}>
-        <Box className='min-w-0'>
-          <ReadingLinksField
-            {...form.readingLinks.fieldProps}
-            disabled={form.isBusy}
-          />
-        </Box>
+      <Divider />
 
-        <Box className='ui-stack min-w-0 gap-5'>
-          <ScriptSessionYearFields
-            fields={form.sessionFields}
-            resetKey='edit'
-            disabled={form.isBusy}
-          />
-        </Box>
+      <Box className={SCRIPT_FORM_COLUMNS_CLASS}>
+        <ReadingLinksField
+          {...form.readingLinks.fieldProps}
+          disabled={form.isBusy}
+        />
+
+        <ScriptSessionYearFields
+          fields={form.sessionFields}
+          resetKey='edit'
+          disabled={form.isBusy}
+        />
       </Box>
+
+      <Divider />
 
       <ScriptFilesInput
         files={form.files.files}
@@ -104,7 +102,6 @@ function EditScriptDialog({
         note={SCRIPT_STRINGS.manage.addFilesNote}
         onAdd={form.files.addFiles}
         onRemove={form.files.removeFile}
-        fieldProps={{ className: SCRIPT_FORM_FILES_CLASS }}
       />
     </ScriptFormDialog>
   )

@@ -84,7 +84,6 @@ function FileDropzone({
   note,
   onFiles,
   disabled,
-  valid,
   invalid,
 }: {
   label: string
@@ -101,7 +100,6 @@ function FileDropzone({
   const borderClass = (() => {
     if (isDragging) return 'border-brand border-solid'
     if (invalid) return 'cp-danger'
-    if (valid) return 'cp-success'
     return 'border-grey-300'
   })()
 
