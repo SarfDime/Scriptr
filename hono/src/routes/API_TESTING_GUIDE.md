@@ -356,6 +356,53 @@ curl -s -b cookies-student.txt $BASE/profile-subjects | jq .
 curl -s -b cookies-student.txt $BASE/auth/session | jq '{selected_faculty_ids, selected_study_ids, subjects}'
 ```
 
+Calendar notes are local-first, so the API only sees a pull and a push:
+
+```bash
+# Pull (counts as one sync)
+curl -s -b cookies-student.txt $BASE/calendar-notes | jq .
+
+# Push two notes and read the merged copy back
+curl -s -b cookies-student.txt -X POST $BASE/calendar-notes/sync \
+  -H "Content-Type: application/json" -d '{
+    "since": null,
+    "notes": [
+      { "id": "11111111-1111-4111-8111-111111111111", "day": "2026-11-06",
+        "type": "exam", "title": "Midterm", "body": null,
+        "updatedAt": "2026-11-01T10:00:00.000Z", "deleted": false },
+      { "id": "22222222-2222-4222-8222-222222222222", "day": "2026-11-06",
+        "type": "note", "title": "Bring index card", "body": null,
+        "updatedAt": "2026-11-01T10:00:01.000Z", "deleted": false }
+    ]
+  }' | jq .
+
+# A fourth note on one day is refused: three is the cap
+curl -s -b cookies-student.txt -o /dev/null -w '%{http_code}\n' \
+  -X POST $BASE/calendar-notes/sync -H "Content-Type: application/json" -d '{
+    "since": null,
+    "notes": [
+      { "id": "33333333-3333-4333-8333-333333333333", "day": "2026-11-06", "type": "note",
+        "title": "One", "body": null, "updatedAt": "2026-11-01T10:00:02.000Z", "deleted": false },
+      { "id": "44444444-4444-4444-8444-444444444444", "day": "2026-11-06", "type": "note",
+        "title": "Two", "body": null, "updatedAt": "2026-11-01T10:00:03.000Z", "deleted": false }
+    ]
+  }'
+
+# A deletion travels as a tombstone
+curl -s -b cookies-student.txt -X POST $BASE/calendar-notes/sync \
+  -H "Content-Type: application/json" -d '{
+    "since": "2026-11-01T10:00:01.000Z",
+    "notes": [
+      { "id": "22222222-2222-4222-8222-222222222222", "day": "2026-11-06", "type": "note",
+        "title": "Bring index card", "body": null,
+        "updatedAt": "2026-11-02T10:00:00.000Z", "deleted": true }
+    ]
+  }' | jq .
+
+# The fourth sync inside half an hour answers 429
+for i in 1 2 3; do curl -s -o /dev/null -w "%{http_code} " -b cookies-student.txt $BASE/calendar-notes; done; echo
+```
+
 ---
 
 ## Phase 4 — Scripts

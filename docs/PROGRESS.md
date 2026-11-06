@@ -4,7 +4,7 @@ What is left to do. The system as it stands is described in
 [`ARCHITECTURE.md`](ARCHITECTURE.md); this file only tracks work, so finished
 features are not repeated here.
 
-Last reconciled: 2026-11-02. Tags: **[bug]**, **[decision]** (needs a call
+Last reconciled: 2026-11-05. Tags: **[bug]**, **[decision]** (needs a call
 before anyone builds it).
 
 > **Standing rule:** any Postgres or Sanity schema change is followed by
@@ -35,6 +35,22 @@ before anyone builds it).
 
 ### Content and presentation
 
+- **Attach the next calendar before the half-year turns:** a `calendar` document
+  covers one fixed half-year, and the site reads only the six months either side
+  of the build. The current period and the one after it need to be attached on
+  `website.calendars`, or the page answers "no data for this period" once the
+  margin moves past the events.
+- **Notes are per browser until synced:** calendar notes live in
+  `localStorage` (namespaced per profile) and reach the database only through
+  an explicit sync. A reader who never syncs loses them with the browser's site
+  data, and the sync allowance is per warmed serverless instance, so it is
+  abuse friction rather than an exact quota. Decide whether a periodic
+  background sync is wanted once there is a per-user preference store.
+- **Calendar alerts are dismissed per browser:** the header alert's dismissal
+  map lives in `localStorage` (`scriptr:calendar-dismissed`), so it does not
+  follow a reader to another device and clearing site data brings the preview
+  back. That is deliberate — no DB table and no Hono route — but decide whether
+  dismissals should sync once there is a per-user preference store.
 - **Script browsing [decision]:** there is no script index page; "all scripts"
   is `/?scripts=all` (homepage feed switch) and `/search`. Decide whether a
   dedicated browse route is wanted or whether those two cover it.
@@ -252,6 +268,10 @@ described in
   left: a Sanity **publish webhook** to `POST https://scriptr.uk/api/revalidate`
   with `{ "tags": ["sanity"] }`, which expires the tag without waiting for a
   deploy — nothing invalidates it today, so CMS edits appear on the next rebuild.
+  That webhook now gates the calendar as well: `/calendar` and the header alert
+  read the `calendar` document (and, through it, its events) once per build, so a
+  new or edited event — or a change to the document's arrays — reaches readers on
+  the next rebuild too ([`ARCHITECTURE-CALENDAR.md`](ARCHITECTURE-CALENDAR.md)).
   The same read no longer decides drafts-vs-published from
   `NEXT_PUBLIC_ENVIRONMENT_TYPE` alone: a Vercel production deployment is
   production even when that variable is missing, and `useCdn` is a property of

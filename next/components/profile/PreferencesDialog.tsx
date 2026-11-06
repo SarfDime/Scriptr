@@ -19,6 +19,7 @@ import { Select } from '@/components/ui/select/Select'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 import { usePreferencesForm } from '@/hooks/profile/usePreferencesForm'
 import type { SelectOptionType } from '@/types/components/Select.types'
+import { CalendarNotesSyncSection } from './CalendarNotesSyncSection'
 
 type ToastPreference = 'on' | 'off'
 
@@ -103,6 +104,7 @@ const PreferencesDialog = ({ onClose }: { onClose: () => void }) => {
               onChange={updateNotifications}
             />
           </Box>
+          <CalendarNotesSyncSection />
         </Card.Body>
         <DialogFooter
           secondaryLabel={PREFERENCES_STRINGS.cancel}

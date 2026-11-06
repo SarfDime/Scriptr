@@ -12,6 +12,9 @@ export const PREFERENCES_STRINGS = {
     achievementsShow: 'Show',
     achievementsHide: 'Hide',
   },
+  notes: {
+    title: 'Calendar notes',
+  },
   save: 'Save preferences',
   cancel: 'Close',
   saved: 'Preferences saved',

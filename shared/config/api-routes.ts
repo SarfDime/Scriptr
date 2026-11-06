@@ -79,6 +79,8 @@ export type ApiEndpoint =
   | `/api/profiles/username/${string}`
   | `/api/profiles/${string}`
   | `/api/profiles/${string}/stats`
+  | '/api/calendar-notes'
+  | '/api/calendar-notes/sync'
   | '/api/profile-subjects'
   | `/api/profile-subjects/${string}`
   | '/api/profile-studies'
@@ -263,6 +265,10 @@ export const apiRoutes = {
       `/api/profiles/username/${username}` as const,
     byId: (id: string | number) => `/api/profiles/${id}` as const,
     statsById: (id: string | number) => `/api/profiles/${id}/stats` as const,
+  },
+  calendarNotes: {
+    index: '/api/calendar-notes',
+    sync: '/api/calendar-notes/sync',
   },
   profileSubjects: {
     index: '/api/profile-subjects',

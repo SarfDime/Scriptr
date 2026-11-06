@@ -3,6 +3,7 @@ const Z_INDEX = {
   DIALOG_BACKDROP: 'z-100',
   NAV_BAR: 'z-99',
   FEEDBACK: 'z-98',
+  POPOVER: 'z-30',
   INFO_BANNER: 'z-22',
   CTA_CARD: 'z-21',
   SKELETON: 'z-20',

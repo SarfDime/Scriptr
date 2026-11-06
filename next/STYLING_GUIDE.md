@@ -120,6 +120,8 @@ The preferred component APIs are `Box`, `Card`, `Button`, `Badge`, and
 | `ui-above`                      | Semi transparent blurred background, blur and shadow. Sets no border width; add `border`.                                                                                     |
 | `ui-above-light`                | Lighter variant of `ui-above`.                                                                                                                                                |
 | `ui-above-chrome`               | `ui-above` for app chrome (navbar, header, footer), one step darker than `ui-above` so the frame separates from the content. Colours: `--ui-chrome-bg`, `--ui-chrome-border`. |
+| `no-gradient`                   | Drops the sheen from any surface that keeps its fill, border and shadow: `ui-above no-gradient`, `ui-above-inside no-gradient`. For panels carrying dense text, where the wash competed with it. |
+| `ui-sheen-horizontal` and friends | Moves the sheen band, keeping its colour, strength and length: `ui-sheen-horizontal` (top edge, fades down), `ui-sheen-horizontal-inverted` (bottom edge, fades up), `ui-sheen-vertical` (left edge, fades right), `ui-sheen-vertical-inverted` (right edge, fades left), `ui-sheen-diagonal-inverted` (bottom-right corner). Named for the edge the band lies along, not the axis the ramp runs on. |
 | `ui-divider`                    | Base for `Divider`: paints the groove line and uses no border.                                                                                                                |
 | `ui-divider-h` / `ui-divider-v` | The groove itself, horizontal or vertical (2px).                                                                                                                              |
 | `ui-groove-t/b/l/r`             | Turns an element's own border on that side into the same groove.                                                                                                              |
@@ -155,8 +157,8 @@ through the surfaces themselves, so a component that already uses `ui-above`,
 `ui-card` or a filled button needs no extra class.
 
 - **`ui-sheen`** paints a light-to-nothing band across the top left of the
-  element, so the pane catches light like a bevel. It is one gradient,
-  `135deg`, with a **fixed 96px band** (`--ui-sheen-length`, capped at 60% of the
+  element, so the pane catches light like a bevel. It is one gradient, `135deg`
+  by default (`--ui-sheen-angle`), with a **fixed 96px band** (`--ui-sheen-length`, capped at 60% of the
   box). Percentage-sized ramps were tried and reverted: on a tall panel the band
   covered the whole element and read as a flat wash. Strength comes from
   `--ui-sheen` (per component, default 11%) multiplied by `--ui-sheen-strength`
@@ -164,6 +166,24 @@ through the surfaces themselves, so a component that already uses `ui-above`,
   the colour comes from `--ui-sheen-color` (white by default). The `cp-*`
   palettes set it to their own hue at 18%: white is invisible on a chip that is
   near-white already, while a hue wash reads in both themes.
+- **`no-gradient`** removes that sheen while keeping everything else the surface
+  paints. It is declared after every `*-above*` utility, so plain source order
+  settles the conflict — write it in any position in the class list. Use it for
+  a panel with dense text where the band sits under the copy.
+- **`ui-sheen-horizontal`** and its siblings keep the same band, colour,
+  strength and length and only turn the direction. The name is the edge the
+  band lies along rather than the axis the ramp runs on, because that is what
+  you see: `ui-sheen-horizontal` puts the band along the top edge and fades
+  down (`to bottom`), `ui-sheen-horizontal-inverted` along the bottom edge
+  (`to top`), `ui-sheen-vertical` along the left edge (`to right`),
+  `ui-sheen-vertical-inverted` along the right edge (`to left`), and
+  `ui-sheen-diagonal-inverted` comes out of the bottom-right corner (`315deg`,
+  the mirror of the `135deg` default). Each `@apply ui-sheen`s, so it also works
+  on an element with no surface class of its own, and each is declared after the
+  `*-above*` utilities for the same source-order reason as `no-gradient`. The
+  direction is a knob (`--ui-sheen-angle`); the ramp is not — every surface
+  catches the same light. Anything else is a variant on a call site:
+  `[--ui-sheen-angle:200deg]`, no new class.
 - **`--ui-lit-edge`** is the 1px inner highlight along the top edge. Every
   surface sets `inset 0 1px 0 var(--ui-lit-edge)` **first** in its `box-shadow`
   stack; keep that order or a later shadow paints over the light.

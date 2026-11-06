@@ -1,8 +1,11 @@
 import Menu from '@sanity/icons/Menu'
 import { UI_STRINGS } from '@shared/config/strings'
+import { getCalendarAlertEvents } from '@/lib/calendar-alert'
 import { cn } from '@/lib/common-utils'
 import { Box } from '../common/Box'
 import { Text } from '../typography/Text'
+import { Divider } from '../ui/Divider'
+import { CalendarAlert } from './CalendarAlert'
 import { HeaderActions } from './HeaderActions'
 import { NavLogo } from './NavLogo'
 import { NavToggle } from './NavToggle'
@@ -26,15 +29,20 @@ const getHeaderDateLabel = (date: Date) => {
   return { dateLabel, week }
 }
 
-export const Header = () => {
+/**
+ * Server Component. The calendar alert's events are read here, once, so the
+ * layout ships them with the page instead of the island fetching them per
+ * reader; `CalendarAlert` does the per-reader narrowing on the client.
+ */
+export const Header = async () => {
   const { dateLabel, week } = getHeaderDateLabel(new Date())
+  const calendarAlertEvents = await getCalendarAlertEvents()
 
   return (
     <header
       className={cn(
         'sticky top-0 z-10 flex h-16 items-center justify-between',
-        'ui-above-header',
-        'px-5'
+        'ui-above-header gap-2'
       )}
     >
       {/* Always available below xl. From xl up it is `display: none` while the
@@ -62,11 +70,22 @@ export const Header = () => {
         </NavToggle>
       </Box>
 
-      <Text className='ui-caption hidden lg:block'>
-        {dateLabel} <span className='mx-2 text-grey-400'>/</span> Week {week}
-      </Text>
-      <NavLogo className='xl:hidden' />
-      <HeaderActions />
+      {/* The calendar sits with the header's own date, not with the account
+          actions: it is about the academic calendar those dates come from. */}
+      <Box className='ui-cluster min-w-0 gap-2'>
+        <Text className='ui-caption hidden lg:block'>
+          {dateLabel} <span className='mx-2 text-grey-400'>/</span> Week {week}
+        </Text>
+        <Divider className='hidden lg:flex ml-2' orientation='vertical' />
+        <CalendarAlert
+          className='hidden lg:flex '
+          events={calendarAlertEvents}
+        />
+      </Box>
+      <NavLogo className='lg:hidden' />
+      <HeaderActions>
+        <CalendarAlert className='lg:hidden' events={calendarAlertEvents} />
+      </HeaderActions>
     </header>
   )
 }

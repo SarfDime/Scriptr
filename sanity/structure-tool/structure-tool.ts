@@ -1,12 +1,14 @@
 import BlockElementIcon from '@sanity/icons/BlockElement'
 import BookIcon from '@sanity/icons/Book'
 import BulbOutlineIcon from '@sanity/icons/BulbOutline'
+import CalendarIcon from '@sanity/icons/Calendar'
 import EarthGlobeIcon from '@sanity/icons/EarthGlobe'
 import MasterDetailIcon from '@sanity/icons/MasterDetail'
 import MenuIcon from '@sanity/icons/Menu'
 
 import type { StructureToolTypes } from '../types/common.types'
 import { buildAcademicStructure } from './academic-structure'
+import { buildCalendarStructure } from './calendar-structure'
 import { createColoredIcon } from './icon-helpers'
 import { buildMiscellaneousStructure } from './misc-structure'
 import { buildNavigationStructure } from './nav-structure'
@@ -69,6 +71,12 @@ export const customStructureTool = (build: StructureToolTypes['Build']) =>
         .icon(createColoredIcon(BulbOutlineIcon, 'content'))
         .title('Study tips')
         .child(build.documentTypeList('studyTip')),
+
+      build
+        .listItem()
+        .icon(createColoredIcon(CalendarIcon, 'content'))
+        .title('Calendar')
+        .child(buildCalendarStructure(build)),
 
       build.divider().title('Misc Content'),
 

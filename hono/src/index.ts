@@ -12,6 +12,7 @@ import { honoLog, honoLogRequest } from './lib/logger'
 import achievementDefinitions from './routes/achievement-definitions'
 import admin from './routes/admin'
 import auth from './routes/auth'
+import calendarNotes from './routes/calendar-notes'
 import comments from './routes/comments'
 import favorites from './routes/favorites'
 import fileOps from './routes/file-ops'
@@ -78,6 +79,7 @@ app.route('/comments', comments)
 app.route('/flags', flags)
 app.route('/favorites', favorites)
 app.route('/profiles', profiles)
+app.route('/calendar-notes', calendarNotes)
 app.route('/profile-subjects', profileSubjects)
 app.route('/profile-studies', profileStudies)
 app.route('/profile-faculties', profileFaculties)

@@ -109,6 +109,13 @@
     /* A pressed/selected control is a small pane, so it catches the same light. */
     @apply ui-sheen;
   }
+
+  &[data-active="true"]:disabled,
+  &[data-active="true"][data-disabled="true"] {
+    filter: none;
+    @apply ui-sheen;
+    opacity: 1;
+  }
 }
 
 /* --- Filled variants (surface recipe in the components layer above) --- */

@@ -1,5 +1,349 @@
 [
   {
+    "type": "type",
+    "name": "calendarEvent.reference",
+    "value": {
+      "type": "object",
+      "attributes": {
+        "_ref": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "string"
+          }
+        },
+        "_type": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "string",
+            "value": "reference"
+          }
+        },
+        "_weak": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "boolean"
+          },
+          "optional": true
+        }
+      },
+      "dereferencesTo": "calendarEvent"
+    }
+  },
+  {
+    "name": "calendar",
+    "type": "document",
+    "attributes": {
+      "_id": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "_type": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string",
+          "value": "calendar"
+        }
+      },
+      "_createdAt": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "_updatedAt": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "_rev": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "period": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "2026-h1"
+            },
+            {
+              "type": "string",
+              "value": "2026-h2"
+            },
+            {
+              "type": "string",
+              "value": "2027-h1"
+            },
+            {
+              "type": "string",
+              "value": "2027-h2"
+            },
+            {
+              "type": "string",
+              "value": "2028-h1"
+            },
+            {
+              "type": "string",
+              "value": "2028-h2"
+            },
+            {
+              "type": "string",
+              "value": "2029-h1"
+            },
+            {
+              "type": "string",
+              "value": "2029-h2"
+            },
+            {
+              "type": "string",
+              "value": "2030-h1"
+            },
+            {
+              "type": "string",
+              "value": "2030-h2"
+            },
+            {
+              "type": "string",
+              "value": "2031-h1"
+            },
+            {
+              "type": "string",
+              "value": "2031-h2"
+            }
+          ]
+        },
+        "optional": false
+      },
+      "events": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "array",
+          "of": {
+            "type": "object",
+            "attributes": {
+              "_key": {
+                "type": "objectAttribute",
+                "value": {
+                  "type": "string"
+                }
+              }
+            },
+            "rest": {
+              "type": "inline",
+              "name": "calendarEvent.reference"
+            }
+          }
+        },
+        "optional": true
+      }
+    }
+  },
+  {
+    "type": "type",
+    "name": "subject.reference",
+    "value": {
+      "type": "object",
+      "attributes": {
+        "_ref": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "string"
+          }
+        },
+        "_type": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "string",
+            "value": "reference"
+          }
+        },
+        "_weak": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "boolean"
+          },
+          "optional": true
+        }
+      },
+      "dereferencesTo": "subject"
+    }
+  },
+  {
+    "type": "type",
+    "name": "professor.reference",
+    "value": {
+      "type": "object",
+      "attributes": {
+        "_ref": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "string"
+          }
+        },
+        "_type": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "string",
+            "value": "reference"
+          }
+        },
+        "_weak": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "boolean"
+          },
+          "optional": true
+        }
+      },
+      "dereferencesTo": "professor"
+    }
+  },
+  {
+    "name": "calendarEvent",
+    "type": "document",
+    "attributes": {
+      "_id": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "_type": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string",
+          "value": "calendarEvent"
+        }
+      },
+      "_createdAt": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "_updatedAt": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "_rev": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "stringTitle": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": false
+      },
+      "stringSubtitle": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
+      "date": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": false
+      },
+      "type": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "exam"
+            },
+            {
+              "type": "string",
+              "value": "preliminary_exam"
+            },
+            {
+              "type": "string",
+              "value": "reminder"
+            },
+            {
+              "type": "string",
+              "value": "info"
+            },
+            {
+              "type": "string",
+              "value": "announcement"
+            }
+          ]
+        },
+        "optional": false
+      },
+      "importance": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "low"
+            },
+            {
+              "type": "string",
+              "value": "normal"
+            },
+            {
+              "type": "string",
+              "value": "high"
+            }
+          ]
+        },
+        "optional": false
+      },
+      "subject": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "inline",
+          "name": "subject.reference"
+        },
+        "optional": true
+      },
+      "professors": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "array",
+          "of": {
+            "type": "object",
+            "attributes": {
+              "_key": {
+                "type": "objectAttribute",
+                "value": {
+                  "type": "string"
+                }
+              }
+            },
+            "rest": {
+              "type": "inline",
+              "name": "professor.reference"
+            }
+          }
+        },
+        "optional": true
+      }
+    }
+  },
+  {
     "name": "studyTip",
     "type": "document",
     "attributes": {
@@ -388,36 +732,6 @@
           }
         }
       }
-    }
-  },
-  {
-    "type": "type",
-    "name": "professor.reference",
-    "value": {
-      "type": "object",
-      "attributes": {
-        "_ref": {
-          "type": "objectAttribute",
-          "value": {
-            "type": "string"
-          }
-        },
-        "_type": {
-          "type": "objectAttribute",
-          "value": {
-            "type": "string",
-            "value": "reference"
-          }
-        },
-        "_weak": {
-          "type": "objectAttribute",
-          "value": {
-            "type": "boolean"
-          },
-          "optional": true
-        }
-      },
-      "dereferencesTo": "professor"
     }
   },
   {
@@ -2427,6 +2741,36 @@
   },
   {
     "type": "type",
+    "name": "calendar.reference",
+    "value": {
+      "type": "object",
+      "attributes": {
+        "_ref": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "string"
+          }
+        },
+        "_type": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "string",
+            "value": "reference"
+          }
+        },
+        "_weak": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "boolean"
+          },
+          "optional": true
+        }
+      },
+      "dereferencesTo": "calendar"
+    }
+  },
+  {
+    "type": "type",
     "name": "navMenu.reference",
     "value": {
       "type": "object",
@@ -2548,6 +2892,28 @@
         "value": {
           "type": "inline",
           "name": "starCanvas.reference"
+        },
+        "optional": true
+      },
+      "calendars": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "array",
+          "of": {
+            "type": "object",
+            "attributes": {
+              "_key": {
+                "type": "objectAttribute",
+                "value": {
+                  "type": "string"
+                }
+              }
+            },
+            "rest": {
+              "type": "inline",
+              "name": "calendar.reference"
+            }
+          }
         },
         "optional": true
       },

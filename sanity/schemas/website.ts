@@ -1,3 +1,6 @@
+import { findCalendarPeriod } from '@shared/config/calendar'
+import { API_VERSION } from '@shared/config/sanity-constants'
+import { CALENDAR_STRINGS } from '@shared/strings/calendar-strings'
 import { defineType } from 'sanity'
 import { FieldsetWithClass } from '../components/FieldsetWithClass'
 import { filterExistingReferences } from './util-functions/schemaFilters'
@@ -98,6 +101,10 @@ export const Website = defineType({
       name: 'websitePagesMenu',
       title: 'Pages',
     },
+    {
+      name: 'calendarMenu',
+      title: 'Calendar',
+    },
   ],
   fieldsets: [
     {
@@ -111,6 +118,11 @@ export const Website = defineType({
     {
       name: 'theming',
       options: { collapsible: true, collapsed: false },
+    },
+    {
+      name: 'calendar',
+      title: 'Calendar',
+      options: { collapsible: false, collapsed: false },
     },
   ],
   fields: [
@@ -173,6 +185,60 @@ export const Website = defineType({
       name: 'ltBackground',
       type: 'reference',
       to: [{ type: 'starCanvas' }],
+    },
+    {
+      title: 'Calendars',
+      name: 'calendars',
+      type: 'array',
+      group: 'calendarMenu',
+      fieldset: 'calendar',
+      of: [
+        {
+          type: 'reference',
+          to: [{ type: 'calendar' }],
+          options: {
+            disableNew: true,
+            filter: filterExistingReferences,
+          },
+        },
+      ],
+      description:
+        'Seven to twelve months of calendars. Each covers one half-year; two calendars with the same period cannot both be attached.',
+      validation: (rule) =>
+        rule.unique().custom(async (value, context) => {
+          const ids = (Array.isArray(value) ? value : []).flatMap((item) =>
+            typeof item === 'object' &&
+            item !== null &&
+            '_ref' in item &&
+            typeof item._ref === 'string'
+              ? [item._ref]
+              : []
+          )
+          if (ids.length === 0) return true
+
+          const client = context.getClient({ apiVersion: API_VERSION })
+          const periods = await client.fetch<
+            Array<{ _id: string; period: string | null }>
+          >('*[_id in $ids]{_id, period}', { ids })
+          const seen = new Set<string>()
+          const duplicates = periods.filter(({ period }) => {
+            if (!period) return false
+            if (seen.has(period)) return true
+            seen.add(period)
+            return false
+          })
+
+          if (duplicates.length === 0) return true
+
+          const labels = duplicates.map(({ period }) => {
+            const found = findCalendarPeriod(period)
+            return found
+              ? CALENDAR_STRINGS.periodLabel(found)
+              : 'Unknown period'
+          })
+
+          return `Two attached calendars cannot share a period (${[...new Set(labels)].join(', ')}).`
+        }),
     },
     ...WebsiteContent,
   ],

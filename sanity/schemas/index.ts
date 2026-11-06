@@ -5,6 +5,8 @@ import { Study } from './academic/study'
 import { Subject } from './academic/subject'
 import { University } from './academic/university'
 import { Button } from './misc/button'
+import { Calendar } from './misc/calendar'
+import { CalendarEvent } from './misc/calendar-event'
 import { Person } from './misc/person'
 // Misc
 import { StarCanvas } from './misc/star-canvas'
@@ -45,4 +47,6 @@ export const schemaTypes = [
   Study,
   StarCanvas,
   StudyTip,
+  CalendarEvent,
+  Calendar,
 ]

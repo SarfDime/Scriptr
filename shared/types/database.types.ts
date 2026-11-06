@@ -555,6 +555,50 @@ export type Database = {
           },
         ]
       }
+      profile_calendar_notes: {
+        Row: {
+          body: string | null
+          day: string
+          deleted: boolean
+          note_id: string
+          profile_id: string
+          synced_at: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          day: string
+          deleted?: boolean
+          note_id: string
+          profile_id: string
+          synced_at?: string
+          title: string
+          type?: string
+          updated_at: string
+        }
+        Update: {
+          body?: string | null
+          day?: string
+          deleted?: boolean
+          note_id?: string
+          profile_id?: string
+          synced_at?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'profile_calendar_notes_profile_id_fkey'
+            columns: ['profile_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       profile_faculties: {
         Row: {
           created_at: string

@@ -2,6 +2,7 @@
 
 import { RestrictedActionModal } from '@/components/notifications/RestrictedActionModal'
 import { AuthModalProvider } from '@/providers/AuthModalProvider'
+import { CalendarNotesProvider } from '@/providers/calendar-notes/CalendarNotesProvider'
 import { LoadingProvider } from '@/providers/loading/LoadingProvider'
 import { NotificationsProvider } from '@/providers/notification/NotificationProvider'
 import { OnboardingProvider } from '@/providers/onboarding/OnboardingProvider'
@@ -26,8 +27,10 @@ export function Providers({
             <ProfileProvider>
               <OnboardingProvider catalog={catalog}>
                 <NotificationsProvider>
-                  <AuthModalProvider>{children}</AuthModalProvider>
-                  <RestrictedActionModal />
+                  <CalendarNotesProvider>
+                    <AuthModalProvider>{children}</AuthModalProvider>
+                    <RestrictedActionModal />
+                  </CalendarNotesProvider>
                 </NotificationsProvider>
               </OnboardingProvider>
             </ProfileProvider>

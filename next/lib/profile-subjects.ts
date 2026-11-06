@@ -1,13 +1,14 @@
-import type { SessionUserSubject } from '@shared/types/auth.types'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { subjectByIdQuery } from '@/sanity/queries/academics/subject.queries'
 import type { SubjectById } from '@/types/academics/subject.types'
 import type { ProfileSubjectSections } from '@/types/components/ProfilePage.types'
 import type { OnboardingCatalog } from '@/types/onboarding.types'
-
-/** The part of a subject selection these helpers read — satisfied by both
- * the session's subjects and a profile's `subjects` rows. */
-type SubjectSelection = Pick<SessionUserSubject, 'subject_id' | 'status'>
+import {
+  completedSubjectDbIds,
+  deriveIncompleteSubjectDbIds,
+  type SubjectSelection,
+  studySubjectDbIds,
+} from './study-subjects'
 
 export async function getOnboardingCatalog() {
   const { onboardingCatalogQuery } = await import(
@@ -37,64 +38,35 @@ async function fetchSubjects(
   ).filter((subject): subject is SubjectById => subject !== null)
 }
 
-const getCompletedSubjectIds = (selections: Array<SubjectSelection>) =>
-  new Set(
-    selections
-      .filter((subject) => subject.status === 'completed')
-      .map(({ subject_id }) => subject_id)
-  )
-
-async function getSelectedStudySubjectIds(
-  studyIds: Array<string>
-): Promise<Array<string>> {
-  if (studyIds.length === 0) return []
-
-  const catalog = await getOnboardingCatalog()
-  const selectedStudyIds = new Set(studyIds)
-  const selectedSanityStudyIds = new Set(
-    catalog.studies.flatMap((study) =>
-      study.dbId && selectedStudyIds.has(study.dbId) ? [study._id] : []
-    )
-  )
-
-  return catalog.subjects.flatMap((subject) =>
-    subject.dbId && selectedSanityStudyIds.has(subject.study._id)
-      ? [subject.dbId]
-      : []
-  )
-}
-
 /** Completed subjects that belong to the given studies. */
 export async function getCompletedSubjectsForStudies(
   studyIds: Array<string>,
   selections: Array<SubjectSelection>
 ): Promise<Array<SubjectById>> {
-  const completedSubjectIds = getCompletedSubjectIds(selections)
-  const subjectIds = (await getSelectedStudySubjectIds(studyIds)).filter(
-    (subjectId) => completedSubjectIds.has(subjectId)
+  if (studyIds.length === 0) return []
+
+  const completedSubjectIds = completedSubjectDbIds(selections)
+  const catalog = await getOnboardingCatalog()
+  const subjectIds = studySubjectDbIds(catalog, studyIds).filter((subjectId) =>
+    completedSubjectIds.has(subjectId)
   )
 
   return fetchSubjects(subjectIds, 'profile-subject')
 }
 
 /**
- * Ids of the subjects of the given studies that aren't completed. This is
- * derived from the study rather than read from stored `currently_taking`
- * rows, which aren't reliable for it: registration writes them for the rest
- * of the chosen study, but accounts set up later (the onboarding sync, the
- * academics editor) only get `completed` rows, and subjects added to a study
- * afterwards have no row at all. So every subject of a study someone is
- * enrolled in that isn't completed counts as one they are taking.
+ * Ids of the subjects of the given studies that aren't completed — the pure
+ * derivation lives in `study-subjects.ts` so the browser can run it too.
  */
 export async function getIncompleteSubjectIdsForStudies(
   studyIds: Array<string>,
   selections: Array<SubjectSelection>
 ): Promise<Array<string>> {
-  const completedSubjectIds = getCompletedSubjectIds(selections)
+  if (studyIds.length === 0) return []
 
-  return (await getSelectedStudySubjectIds(studyIds)).filter(
-    (subjectId) => !completedSubjectIds.has(subjectId)
-  )
+  const catalog = await getOnboardingCatalog()
+
+  return deriveIncompleteSubjectDbIds(catalog, studyIds, selections)
 }
 
 export async function getIncompleteSubjectsForStudies(

@@ -615,6 +615,37 @@ RLS, session-client-eligible.
 
 ---
 
+## Calendar notes
+
+Personal notes a reader writes on calendar days. They are **local-first**: the
+browser holds them, and these routes are the only times the database is
+involved. Both require authentication, operate on the caller only, and are
+session-client eligible (`profile_id = auth.uid()` RLS).
+
+| Route                      | Body                                  | Notes                                                                                                                                             |
+| -------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /calendar-notes`      | —                                     | `{ notes }` — every note of the profile, tombstones included (a pull needs the deletions too). Worth **one** sync.                                 |
+| `POST /calendar-notes/sync` | `{ since: string \| null, notes: [] }` | Pushes the notes changed since `since` and answers `{ notes, syncedAt }` with the merged copy. A stored note newer than the incoming one is kept. |
+
+Rules:
+
+- **Three notes per day**, enforced here against the merged result before
+  anything is written (`400` otherwise). The client caps the editor at the same
+  number.
+- **A deletion is a tombstone** (`deleted: true`), not a row removal, so it can
+  travel to the reader's other browser.
+- **Sync allowance: 3 per 30 minutes and 12 per day, per profile**, counted for
+  both directions together (`429`, with the window named in the message).
+  Preferences states the same numbers.
+- **Restricted accounts cannot push** (`403`); reading stays available. The
+  insert/update policies check `is_restricted()` too.
+- A payload whose notes all fail validation is a `400`, not an empty sync, so a
+  client bug cannot wipe the profile's copy.
+- Limits are per warmed serverless instance, like the other in-memory limiters:
+  abuse friction rather than an exact quota.
+
+---
+
 ## Favorites
 
 Authenticated, own resource. `GET /favorites`, `GET /favorites/:scriptId`,

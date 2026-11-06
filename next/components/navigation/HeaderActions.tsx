@@ -9,7 +9,7 @@ import { Badge } from '../ui/Badge'
 import { HeaderProfileLink } from './HeaderProfileLink'
 import { HeaderSearch } from './HeaderSearch'
 
-export const HeaderActions = () => {
+export const HeaderActions = ({ children }: { children?: React.ReactNode }) => {
   const { unreadCount, setTrayOpen } = useNotifications()
   return (
     <Box className='ml-auto flex items-center gap-2'>
@@ -29,12 +29,8 @@ export const HeaderActions = () => {
           </Badge>
         )}
       </Button>
+      {children}
       <HeaderProfileLink />
-      {/* TODO: Decide if want to keep this */}
-      {/* <Button className='button button-sm basic gap-2 border border-grey-300 px-3 py-2'>
-        <AddCircle />
-        <Text>{UI_STRINGS.navigation.newScript}</Text>
-      </Button> */}
     </Box>
   )
 }

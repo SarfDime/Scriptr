@@ -21,6 +21,72 @@ type ArrayOf<T> = Array<
 >
 
 // Source: schema.json
+export type CalendarEventReference = {
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'calendarEvent'
+}
+
+export type Calendar = {
+  _id: string
+  _type: 'calendar'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  period:
+    | '2026-h1'
+    | '2026-h2'
+    | '2027-h1'
+    | '2027-h2'
+    | '2028-h1'
+    | '2028-h2'
+    | '2029-h1'
+    | '2029-h2'
+    | '2030-h1'
+    | '2030-h2'
+    | '2031-h1'
+    | '2031-h2'
+  events?: Array<
+    {
+      _key: string
+    } & CalendarEventReference
+  >
+}
+
+export type SubjectReference = {
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'subject'
+}
+
+export type ProfessorReference = {
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'professor'
+}
+
+export type CalendarEvent = {
+  _id: string
+  _type: 'calendarEvent'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  stringTitle: string
+  stringSubtitle?: string
+  date: string
+  type: 'exam' | 'preliminary_exam' | 'reminder' | 'info' | 'announcement'
+  importance: 'low' | 'normal' | 'high'
+  subject?: SubjectReference
+  professors?: Array<
+    {
+      _key: string
+    } & ProfessorReference
+  >
+}
+
 export type StudyTip = {
   _id: string
   _type: 'studyTip'
@@ -81,13 +147,6 @@ export type RichTextLite = Array<{
   _type: 'block'
   _key: string
 }>
-
-export type ProfessorReference = {
-  _ref: string
-  _type: 'reference'
-  _weak?: boolean
-  [internalGroqTypeReferenceTo]?: 'professor'
-}
 
 export type StudyReference = {
   _ref: string
@@ -435,6 +494,13 @@ export type StarCanvasReference = {
   [internalGroqTypeReferenceTo]?: 'starCanvas'
 }
 
+export type CalendarReference = {
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'calendar'
+}
+
 export type NavMenuReference = {
   _ref: string
   _type: 'reference'
@@ -456,6 +522,11 @@ export type Website = {
   defaultKeywords?: Array<string>
   dtBackground?: StarCanvasReference
   ltBackground?: StarCanvasReference
+  calendars?: Array<
+    {
+      _key: string
+    } & CalendarReference
+  >
   navAndFooterFields?: string
   navMenu: NavMenuReference
   pagesFields?: string
@@ -1131,11 +1202,15 @@ export type Geopoint = {
 }
 
 export type AllSanitySchemaTypes =
+  | CalendarEventReference
+  | Calendar
+  | SubjectReference
+  | ProfessorReference
+  | CalendarEvent
   | StudyTip
   | SanityImageAssetReference
   | ButtonReference
   | RichTextLite
-  | ProfessorReference
   | StudyReference
   | Subject
   | PersonReference
@@ -1157,6 +1232,7 @@ export type AllSanitySchemaTypes =
   | Button
   | InfoBlock
   | StarCanvasReference
+  | CalendarReference
   | NavMenuReference
   | Website
   | StarCanvas
@@ -2535,6 +2611,33 @@ export type UniversityDetailQueryResult = {
 // Query: *[_type == "university" && !(_id in path("drafts.**")) && dbId != null] {  "universitySlug": coalesce(slug.current, _id)}
 export type UniversityStaticParamsQueryResult = Array<{
   universitySlug: string
+}>
+
+// Source: ../next/sanity/queries/calendar.queries.ts
+// Variable: calendarEventsQuery
+// Query: *[_type == "calendarEvent"  && _id in *[_id == $WEBSITE][0].calendars[]->events[]._ref  && dateTime(date) >= dateTime($from)  && dateTime(date) <= dateTime($to)] | order(date asc, _id asc) {    _id,  "title": stringTitle,  "description": stringSubtitle,  date,  type,  importance,  "subject": subject->{    _id,    dbId,    name,    "slug": coalesce(slug.current, _id),    "studySlug": coalesce(study->slug.current, study->_id),    "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),    "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id)  },  "professors": professors[]->{    _id,    dbId,    name,    "slug": coalesce(slug.current, _id)  }}
+export type CalendarEventsQueryResult = Array<{
+  _id: string
+  title: string
+  description: string | null
+  date: string
+  type: 'announcement' | 'exam' | 'info' | 'preliminary_exam' | 'reminder'
+  importance: 'high' | 'low' | 'normal'
+  subject: {
+    _id: string
+    dbId: string | null
+    name: string
+    slug: string
+    studySlug: string
+    facultySlug: string
+    universitySlug: string
+  } | null
+  professors: Array<{
+    _id: string
+    dbId: string | null
+    name: string
+    slug: string
+  }> | null
 }>
 
 // Source: ../next/sanity/queries/nav.queries.ts
@@ -4106,6 +4209,7 @@ declare global {
     '\n*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  description,\n}\n': UniversitySeoQueryResult
     '\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {\n  _id,\n  "slug": slug.current,\n  _type,\n  name,\n  description,\n  "picture": sanityImage::full(picture),\n  "logo": sanityImage::full(logo),\n  streetAddress,\n  telephone,\n  email,\n  website,\n  rector->{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n  },\n  viceRectors[]->{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n  },\n  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {\n    \n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\ndean->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nsecretary->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nviceDeans[]->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nuniversity->{\n  _id,\n  "slug": slug.current,\n  name\n},\n"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n},\n\n  }\n}\n': UniversityDetailQueryResult
     '\n*[_type == "university" && !(_id in path("drafts.**")) && dbId != null] {\n  "universitySlug": coalesce(slug.current, _id)\n}\n': UniversityStaticParamsQueryResult
+    '\n*[_type == "calendarEvent"\n  && _id in *[_id == $WEBSITE][0].calendars[]->events[]._ref\n  && dateTime(date) >= dateTime($from)\n  && dateTime(date) <= dateTime($to)\n] | order(date asc, _id asc) {\n  \n  _id,\n  "title": stringTitle,\n  "description": stringSubtitle,\n  date,\n  type,\n  importance,\n  "subject": subject->{\n    _id,\n    dbId,\n    name,\n    "slug": coalesce(slug.current, _id),\n    "studySlug": coalesce(study->slug.current, study->_id),\n    "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),\n    "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id)\n  },\n  "professors": professors[]->{\n    _id,\n    dbId,\n    name,\n    "slug": coalesce(slug.current, _id)\n  }\n\n}\n': CalendarEventsQueryResult
     '\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\n*[_id == $WEBSITE][0]{\n  "navMenu": navMenu->{\n    defined(title) => {title},\n    defined(websiteLogo)=>{ "websiteLogo": sanityImage::full(websiteLogo) },\n    navItems[]->{\n      stringTitle,\n      stringSubtitle,\n      ...linkSelector::full(@),\n      defined(new) => {new},\n      defined(comingSoon) => {comingSoon},\n      defined(disabled) => {disabled},\n      defined(icon) => { "icon": sanityImage::full(icon) },\n    },\n  }\n}.navMenu': NavMenuQueryResult
     '\n{\n  "universities": *[_type == "university" && dbId != null]{ _id, dbId, name, "slug": slug.current },\n  "faculties": *[_type == "faculty" && university._ref != null && dbId != null]{ _id, dbId, name, "slug": slug.current, "universityId": university._ref },\n  "studies": *[_type == "study" && faculty._ref != null && dbId != null]{\n    _id,\n    dbId,\n    name,\n    "slug": slug.current,\n    "facultyId": faculty._ref,\n    "subjectsByYear": *[_type == "subject" && study._ref == ^._id && dbId != null\n        && _id == (*[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(_id asc)[0]._id)\n      ] | order(year asc){\n      year,\n      "subjects": *[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(name asc){\n        _id, dbId, name, year, elective, "studyId": study._ref\n      }\n    },\n  },\n  "subjects": *[_type == "subject" && study._ref != null && dbId != null] | order(year asc){\n    \n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  code,\n  credits,\n  year,\n  semester,\n  elective,\n  "faculty": study->faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    dbId,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n  study->{\n    _id,\n    "slug": slug.current,\n    name,\n    dbId,\n    faculty->{\n      _id,\n      "slug": slug.current,\n      name,\n      university->{\n        _id,\n        "slug": slug.current,\n        name,\n      },\n    },\n  },\n  professors[]->{\n    _id,\n    dbId,\n    "slug": slug.current,\n    name,\n    title,\n  },\n\n  }\n}': OnboardingCatalogQueryResult
     '\n*[_type == "studyTip" && length(title) > 0 && length(content) > 0] | order(_createdAt asc, _id asc) {\n  _id,\n  title,\n  content\n}\n': StudyTipsQueryResult

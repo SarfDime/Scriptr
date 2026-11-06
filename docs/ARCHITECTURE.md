@@ -33,3 +33,7 @@ This describes the system as it currently stands, one file per area. Start here,
 ## 8. Frontend Structure & UI Conventions
 
 [Open](ARCHITECTURE-FRONTEND.md) — thin pages, loading and 404 behaviour, failure handling, surfaces and dialogs.
+
+## 9. Calendar
+
+[Open](ARCHITECTURE-CALENDAR.md) — Sanity-only events, the timezone constant, the URL-encoded view, build-time alert data, client matching and per-browser dismissals.

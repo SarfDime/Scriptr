@@ -1,4 +1,5 @@
 import LaunchIcon from '@sanity/icons/Launch'
+import { getAttribute } from '@shared/utils/common-utils'
 import Link, { type LinkProps } from 'next/link'
 import type { HTMLAttributes } from 'react'
 import type {
@@ -11,6 +12,8 @@ export type NextLinkBaseProps = {
   href: string
   externalIconProps?: SanityIconProps
   hideExternalIcon?: boolean
+  disabled?: boolean
+  isActive?: boolean
 } & LinkProps &
   HTMLAttributes<HTMLAnchorElement>
 
@@ -23,6 +26,8 @@ export function NextLink({
   className,
   externalIconProps,
   hideExternalIcon,
+  disabled,
+  isActive,
   ...rest
 }: NextLinkProps) {
   const { attributes, isExternal } = externalLink(href)
@@ -32,6 +37,9 @@ export function NextLink({
       href={href}
       {...attributes}
       {...rest}
+      {...getAttribute(Boolean(isActive), 'data-active', isActive)}
+      {...getAttribute(Boolean(disabled), 'data-disabled', disabled)}
+      {...getAttribute(Boolean(disabled), 'tabIndex', -1)}
       className={cn(
         isExternal &&
           !hideExternalIcon &&
