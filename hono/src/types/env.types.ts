@@ -15,7 +15,7 @@ export type Env = {
   /** Scopes the sitemap's script list. Next holds the only copy. */
   SITEMAP_SECRET?: string
   /** Base32 TOTP secret the operator enrols in an authenticator app. Also
-   * derives the signing key for the ten-minute Studio token. */
+   * derives the signing key for the twenty-minute Studio token. */
   ADMIN_TOTP_SECRET?: string
   /** The only origin allowed to use `/api/sanity/*`, e.g.
    * `https://scriptr.sanity.studio`. Required in production. */

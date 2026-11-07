@@ -18,7 +18,7 @@ import academic from './sanity-academic'
  *
  * This surface is deliberately separate from the website's routes: the Studio
  * is a browser app whose bundle is public, so it cannot hold a credential.
- * `POST /access` trades a TOTP code for a ten-minute token, every other route
+ * `POST /access` trades a TOTP code for a twenty-minute token, every other route
  * requires that token, and the surface is pinned to the Studio's origin
  * (`SANITY_STUDIO_ORIGIN`) in production.
  */
@@ -47,7 +47,7 @@ sanity.use('*', async (c, next) => {
   return next()
 })
 
-/** Exchange a TOTP code for a ten-minute access token. */
+/** Exchange a TOTP code for a twenty-minute access token. */
 sanity.post('/access', async (c) => {
   if (codeAttemptLimiter(`access:${clientIp(c)}`)) {
     return c.json(

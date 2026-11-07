@@ -12,7 +12,8 @@ corepack pnpm dev:hono
 BASE=http://localhost:8787/api
 ```
 
-Catalog routes are admin-only and need a ten-minute access token. `ADMIN_TOTP_SECRET`
+Catalog routes are admin-only and need a twenty-minute access token.
+`ADMIN_TOTP_SECRET`
 must be set in `hono/.env` (restart the server after adding it) and enrolled in
 an authenticator app (`corepack pnpm --filter @scriptr/api admin:totp` prints a
 fresh secret and its `otpauth` URI). Trade the current code for a token:
@@ -24,7 +25,7 @@ TOKEN=$(curl -s -X POST $BASE/sanity/access \
   -d "{\"code\":\"$CODE\"}" | jq -r '.token')
 ```
 
-Re-run that when a catalog call answers `401` — the token lasts ten minutes.
+Re-run that when a catalog call answers `401` — the token lasts twenty minutes.
 
 Confirming the Phase 2 accounts by hand and deleting them at teardown use
 Supabase's admin API, which needs the service key:
@@ -212,7 +213,7 @@ curl -s -X PATCH "$SUPABASE_URL/rest/v1/profiles?id=eq.$ADMIN" \
   -H "apikey: $SERVICE_KEY" -H "Authorization: Bearer $SERVICE_KEY" \
   -H "Content-Type: application/json" -d '{"role":"admin"}' | jq .
 # From here on, role changes go through the website admin surface, which needs
-# an admin session *and* a ten-minute unlock. This is what the /admin layout
+# an admin session *and* a twenty-minute unlock. This is what the /admin layout
 # prompts for in the browser: exchange the current code for an HttpOnly cookie.
 CODE=<current six-digit code>
 curl -s -b cookies-admin.txt -c cookies-admin.txt -X POST $BASE/admin/access \
@@ -245,9 +246,28 @@ expiry configured in their Auth settings. If the refresh token is invalid or
 expired, the endpoint clears the local session and returns `user: null`.
 
 ```bash
-curl -s -b cookies-admin.txt $BASE/profiles | jq '.[] | {id, username, role}'
+# Admin user manager: one page at a time, filtered and sorted, with the total
+# that the page control needs.
+curl -s -b cookies-admin.txt "$BASE/profiles?limit=5&offset=0" \
+  | jq '{total, limit, offset, users: [.profiles[] | {username, role}]}'
+curl -s -b cookies-admin.txt "$BASE/profiles?role=admin&sort=username&order=asc" \
+  | jq '.profiles[].username'
+curl -s -b cookies-admin.txt "$BASE/profiles?search=student" | jq '.profiles[].username'
+curl -s -b cookies-admin.txt "$BASE/profiles?sort=email" | jq .                   # 400, unknown sort column
+curl -s -b cookies-admin.txt $BASE/profiles/$STUDENT/admin \
+  | jq '{counts, faculties: (.faculties | length)}'
 curl -s -o /dev/null -w '%{http_code}\n' $BASE/profiles                          # 401, admin only
 curl -s -o /dev/null -w '%{http_code}\n' -b cookies-student.txt $BASE/profiles   # 403, admin only
+
+# One announcement to every profile, and what the recipient sees.
+curl -s -b cookies-admin.txt -X POST $BASE/admin/notifications \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Test announcement","body":"Sent from the API testing guide."}' | jq .
+curl -s -b cookies-student.txt $BASE/notifications | jq '.[0] | {type, title}'
+
+# DELETE /profiles/:id removes the profile, its avatar and its login, so it
+# ends the account. Not run here — later phases still use these users:
+# curl -s -b cookies-admin.txt -X DELETE $BASE/profiles/$STUDENT | jq .
 curl -s -b cookies-student.txt $BASE/profiles/me | jq '{id, username, role}'
 curl -s $BASE/profiles/username/localstudent | jq '{id, username}'
 curl -s $BASE/profiles/$STUDENT/stats | jq .
@@ -723,7 +743,7 @@ curl -s -b cookies-student.txt -X PATCH $BASE/profiles/me/preferences \
 ---
 
 > Admin endpoints below need a live unlock. If the last code exchange was more
-> than ten minutes ago, re-run it — the cookie jar keeps the result:
+> than twenty minutes ago, re-run it — the cookie jar keeps the result:
 > `curl -s -b cookies-admin.txt -c cookies-admin.txt -X POST $BASE/admin/access -H "Content-Type: application/json" -d "{\"code\":\"$CODE\"}"`
 
 ## Phase 9 — Flags & moderation
@@ -984,7 +1004,7 @@ rm -f cookies-student.txt cookies-admin.txt /tmp/test-script.md /tmp/test-script
 | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `{"error":"Not authenticated"}`                            | Missing `-b cookies-*.txt`, or the session expired or was cleared (access tokens last one week) — log in again                  |
 | `{"error":"Access code required"}` on a catalog route      | No `x-admin-token` sent — run the token exchange in the setup block first                                                       |
-| `{"error":"Access expired. Enter a new code."}`            | The ten-minute token lapsed, or `ADMIN_TOTP_SECRET` changed since it was issued — exchange a fresh code                        |
+| `{"error":"Access expired. Enter a new code."}`            | The twenty-minute token lapsed, or `ADMIN_TOTP_SECRET` changed since it was issued — exchange a fresh code                     |
 | `{"error":"Admin access code required"}` on `/api/admin/*` | No unlock cookie: run the `/api/admin/access` exchange (or send `x-admin-token`)                                                    |
 | `403` on any `/api/sanity/*` or `/api/admin/*` call        | The request came from another origin, or the matching `SANITY_STUDIO_ORIGIN` / `WEBSITE_ORIGIN` is unset                       |
 | `{"error":"Admin access is not configured"}` (503)         | `ADMIN_TOTP_SECRET` is unset or not base32 in `hono/.env` (restart after setting it)                                           |

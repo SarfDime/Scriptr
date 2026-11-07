@@ -33,6 +33,7 @@ export type ApiEndpoint =
   | `/api/sanity/subjects/${string}/professors/${string}`
   | '/api/admin/access'
   | `/api/admin/profiles/${string}/role`
+  | '/api/admin/notifications'
   | '/api/sitemap/scripts'
   | '/api/file-ops/upload-urls'
   | '/api/file-ops/finalize'
@@ -78,6 +79,7 @@ export type ApiEndpoint =
   | '/api/profiles/me/avatar'
   | `/api/profiles/username/${string}`
   | `/api/profiles/${string}`
+  | `/api/profiles/${string}/admin`
   | `/api/profiles/${string}/stats`
   | '/api/calendar-notes'
   | '/api/calendar-notes/sync'
@@ -183,6 +185,7 @@ export const apiRoutes = {
     access: '/api/admin/access',
     profilesRoleById: (id: string | number) =>
       `/api/admin/profiles/${id}/role` as const,
+    notifications: '/api/admin/notifications',
   },
   sitemap: {
     scripts: '/api/sitemap/scripts',
@@ -264,6 +267,7 @@ export const apiRoutes = {
     usernameByUsername: (username: string | number) =>
       `/api/profiles/username/${username}` as const,
     byId: (id: string | number) => `/api/profiles/${id}` as const,
+    adminById: (id: string | number) => `/api/profiles/${id}/admin` as const,
     statsById: (id: string | number) => `/api/profiles/${id}/stats` as const,
   },
   calendarNotes: {

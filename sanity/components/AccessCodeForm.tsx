@@ -15,8 +15,9 @@ type AccessCodeFormProps = {
 
 /**
  * Rendered as the content of a document action's dialog. Exchanges the
- * authenticator code for a ten-minute token; the action then continues on its
- * own, so the code is entered once per ten minutes rather than per request.
+ * authenticator code for a twenty-minute token; the action then continues on
+ * its own, so the code is entered once per twenty minutes rather than per
+ * request.
  */
 export function AccessCodeForm({
   message,
@@ -70,7 +71,7 @@ export function AccessCodeForm({
           />
           <Text muted size={1}>
             The code from your authenticator app. It unlocks write access for
-            ten minutes.
+            twenty minutes.
           </Text>
         </Stack>
         {error ? (

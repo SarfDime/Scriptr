@@ -4,7 +4,7 @@ What is left to do. The system as it stands is described in
 [`ARCHITECTURE.md`](ARCHITECTURE.md); this file only tracks work, so finished
 features are not repeated here.
 
-Last reconciled: 2026-11-05. Tags: **[bug]**, **[decision]** (needs a call
+Last reconciled: 2026-11-07. Tags: **[bug]**, **[decision]** (needs a call
 before anyone builds it).
 
 > **Standing rule:** any Postgres or Sanity schema change is followed by
@@ -233,14 +233,14 @@ described in
   been inlined into the Studio bundle by Vite (so anyone who loaded the hosted
   Studio could read it) and it unlocked a service-role write surface, which meant
   RLS was bypassable with a public string. What replaced it: the Studio now
-  trades a TOTP code for a ten-minute HMAC token (`POST /api/sanity/access`,
+  trades a TOTP code for a twenty-minute HMAC token (`POST /api/sanity/access`,
   `hono/src/lib/admin-access.ts`), the `/api/internal/*` mount no longer exists,
   catalog routes live at `/api/sanity/*`, and `GET /api/sitemap/scripts` is the
   one remaining shared-secret route — scoped to that path, held only by the Next
   build, and limited to 10 reads/day and 2/minute per IP.
 
   The website's admin surface (`/api/admin/*`) uses the same TOTP second factor:
-  `POST /api/admin/access` exchanges a code for an HttpOnly ten-minute cookie, which the
+  `POST /api/admin/access` exchanges a code for an HttpOnly twenty-minute cookie, which the
   server-rendered admin pages inherit, and every route there also requires an
   admin session. Both non-session surfaces are origin-pinned
   (`SANITY_STUDIO_ORIGIN`, `WEBSITE_ORIGIN`) and refuse a foreign origin even
@@ -256,7 +256,7 @@ described in
   code throttle, the sitemap limiters), so a second warm serverless instance has
   its own copy: it is abuse friction, not an exact quota, and it should move to a
   table if it ever needs to be exact. Issued tokens are stateless, so a token
-  cannot be revoked before its ten minutes are up.
+  cannot be revoked before its twenty minutes are up.
 
 - **Sanity content freshness:** `fetchSanityData`
   ([`next/sanity/lib/utils.ts`](../next/sanity/lib/utils.ts)) reads through the
@@ -295,29 +295,6 @@ described in
   `isStaging` — `getDraftMode` returns false in production builds, so the
   flow only ever worked on staging and locally. The Presentation tool's
   `previewUrl.origin` is untouched.
-- **Profiles management [decision]:** an admin page at `/admin/profiles` over
-  the admin-only `GET /api/profiles`, paginated, exposing read, update and
-  delete on any user profile. The API is closer than it looks:
-  `PATCH /api/profiles/:id` and `DELETE /api/profiles/:id` are already
-  admin-gated, and the admin PATCH syncs someone else's faculty/study
-  selections through the internal client (those tables' RLS has no admin
-  override). What is missing is the listing — it is unpaginated and returns
-  only `id, username, full_name, role, avatar_url, created_at` plus `subjects`
-  and `achievements`, so paginate it (`limit`/`offset`, the shape the comment
-  routes validate) and widen the select for a management table (`updated_at`,
-  the faculty and study selections, script counts). Role changes live on the
-  website admin surface — `PATCH /api/admin/profiles/:id/role`, which needs an
-  admin unlock cookie (the `/admin` layout prompts for the code) plus an admin
-  session — so the tool has to
-  send the operator through the unlock when it gets a `401`; note the first
-  admin still has to be promoted directly in the database, since no route can
-  bootstrap itself. Still to settle: `DELETE /api/profiles/:id` removes
-  the `profiles` row and its avatar only, leaving the Supabase Auth user able to
-  sign in with no profile, so decide whether the tool also deletes the login
-  through Supabase's admin API. Build
-  the page the way `/admin/restrictions` is built (a thin Server Component
-  plus a `next/lib/admin-*-page.ts` loader) and register it in
-  `ADMIN_SECTIONS`.
 - **Download achievement thresholds:** `total_script_downloads` is seeded now,
   but anonymous self-downloads cannot be detected and IP/device rotation can
   inflate the count, so its thresholds are softer evidence than the other

@@ -10,7 +10,7 @@ import type {
  *
  * The Studio runs in a browser, so it must never hold a long-lived credential —
  * anything bundled here is public. Instead the operator enters a TOTP code once
- * per ten minutes and the API issues a token that only these calls use.
+ * per twenty minutes and the API issues a token that only these calls use.
  */
 
 /** Studio builds inline `SANITY_STUDIO_*` env vars at build time. */
@@ -46,8 +46,8 @@ export function clearAccessToken(): void {
   accessToken = null
 }
 
-/** Exchanges a six-digit code for a ten-minute token. Throws with the API's own
- * wording when the code is rejected. */
+/** Exchanges a six-digit code for a twenty-minute token. Throws with the
+ * API's own wording when the code is rejected. */
 export async function requestAccessToken(code: string): Promise<void> {
   const response = await fetch(`${STUDIO_API_URL}${apiRoutes.sanity.access}`, {
     method: 'POST',

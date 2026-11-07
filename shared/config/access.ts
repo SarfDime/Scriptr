@@ -26,8 +26,9 @@ export const OPTIMIZER_SIGNATURE_HEADER = 'x-optimizer-signature'
 export const REVALIDATE_TIMESTAMP_HEADER = 'x-revalidate-timestamp'
 export const REVALIDATE_SIGNATURE_HEADER = 'x-revalidate-signature'
 
-/** How long an exchanged access token stays valid. */
-export const ACCESS_TOKEN_TTL_MS = 10 * 60 * 1000
+/** How long an exchanged access token stays valid. Shared by the Studio and the
+ * website admin surface, so both unlock windows move together. */
+export const ACCESS_TOKEN_TTL_MS = 20 * 60 * 1000
 
 /** Digits in the TOTP code an operator types, and how long each one is good
  * for. Verification accepts the current step and one either side, so a code

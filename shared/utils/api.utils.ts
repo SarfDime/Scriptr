@@ -181,7 +181,7 @@ const isScriptFileInput = (value: unknown): value is ScriptFileInput => {
 }
 
 /** Catalog endpoints the Sanity Studio calls. They sit on their own `/api/sanity`
- * surface behind an origin check and a ten-minute access token, never a
+ * surface behind an origin check and a twenty-minute access token, never a
  * long-lived secret: see `docs/ARCHITECTURE-ACADEMIC-CATALOG.md`. */
 function getDatabaseAcademicEndpoints(entityType: AcademicEntityType) {
   const { sanity } = apiRoutes

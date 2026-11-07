@@ -15,7 +15,9 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import { profileMutationTags } from '../../../shared/config/cache-tags'
 import type {
-  ProfilesListResponse,
+  AdminProfileDeleteResponse,
+  AdminProfileDetail,
+  AdminProfilesListResponse,
   ProfileUpdateConflictResponse,
   ProfileUpdateResponse,
 } from '../../../shared/types/profile.types'
@@ -27,6 +29,11 @@ import {
 } from '../../../shared/utils/api.utils'
 import { createRateLimiter } from '../../../shared/utils/rate-limit'
 import { requireAdminAccess } from '../lib/admin-access'
+import {
+  ADMIN_PROFILE_COLUMNS,
+  ADMIN_PROFILES_SELECT,
+  parseAdminProfilesQuery,
+} from '../lib/admin-profiles-query'
 import {
   avatarKeyBase,
   buildAvatarUrl,
@@ -482,9 +489,12 @@ async function updateProfile(
 
 const profiles = new Hono<HonoEnv>()
 
-/** Get all profiles (admin only). Unpaginated: every profile row with its
- * subjects and earned achievements. `profiles` SELECT is public, so this
- * route is the only boundary — nothing else gates the listing. */
+/** Get one page of profiles (admin only), filtered and sorted.
+ *
+ * The page size is bounded (`limit`/`offset`, the shape the comment routes
+ * validate) and `total` is the filtered count, so the UI can page without a
+ * second request. `profiles` SELECT is public, so this route's admin check is
+ * the only thing gating the listing. */
 profiles.get('/', authMiddleware, requireAdminAccess, async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)
@@ -493,15 +503,34 @@ profiles.get('/', authMiddleware, requireAdminAccess, async (c) => {
     return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 
-  const { data, error } = await supabase
+  const query = parseAdminProfilesQuery((name) => c.req.query(name))
+  if (!query) {
+    return c.json({ error: 'Invalid paging, filter or sort parameters' }, 400)
+  }
+
+  let request = supabase
     .from('profiles')
-    .select(
-      `id, username, full_name, role, ${PROFILE_ACHIEVEMENTS_SELECT}, avatar_url, created_at, subjects:profile_subjects(subject_id, status, updated_at)`
+    .select(ADMIN_PROFILES_SELECT, { count: 'exact' })
+
+  if (query.role) request = request.eq('role', query.role)
+  if (query.searchPattern) {
+    request = request.or(
+      `username.ilike.${query.searchPattern},full_name.ilike.${query.searchPattern}`
     )
-    .order('created_at', { ascending: false })
+  }
+
+  const { data, error, count } = await request
+    .order(query.sort, { ascending: query.order === 'asc', nullsFirst: false })
+    .range(query.offset, query.offset + query.limit - 1)
 
   if (error) return databaseErrorResponse(c, error)
-  return c.json<ProfilesListResponse>(data)
+
+  return c.json<AdminProfilesListResponse>({
+    profiles: data ?? [],
+    total: count ?? 0,
+    limit: query.limit,
+    offset: query.offset,
+  })
 })
 
 /** Get current user's profile */
@@ -890,7 +919,14 @@ profiles.patch('/:id', authMiddleware, requireAdminAccess, async (c) => {
   return updateProfile(c, targetId, 'admin')
 })
 
-/** Delete any user's profile (admin only) */
+/** Delete any user's profile (admin only).
+ *
+ * The profile row goes first — RLS is the boundary that allows it — then the
+ * avatar object, then the Supabase Auth login through the admin API. Deleting
+ * the login matters: without it the account can still sign in with no profile
+ * row behind it. A failure there does not fail the request (the profile is
+ * already gone), but it is logged and reported as `auth_user_deleted: false`.
+ */
 profiles.delete('/:id', authMiddleware, requireAdminAccess, async (c) => {
   const user = c.get('user')
   const targetId = requiredParam(c, 'id')
@@ -906,12 +942,102 @@ profiles.delete('/:id', authMiddleware, requireAdminAccess, async (c) => {
     return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 
+  if (targetId === user.id) {
+    return c.json({ error: 'You cannot delete your own account' }, 400)
+  }
+
+  const { data: existing, error: lookupError } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('id', targetId)
+    .maybeSingle()
+
+  if (lookupError) return databaseErrorResponse(c, lookupError)
+  if (!existing) return c.json({ error: 'Profile not found' }, 404)
+
   const { error } = await supabase.from('profiles').delete().eq('id', targetId)
 
   if (error) return databaseErrorResponse(c, error)
   await removeAvatarObject(c, targetId)
+
+  const { error: authError } =
+    await createInternalSupabaseClient(c).auth.admin.deleteUser(targetId)
+
+  if (authError) {
+    honoLog({
+      logLevel: 'error',
+      message: `Deleted profile ${targetId} but not its login`,
+      error: authError,
+    })
+  }
+
   await revalidateCacheTags(c.env, profileMutationTags(targetId))
-  return c.json({ success: true })
+  return c.json<AdminProfileDeleteResponse>({
+    success: true,
+    auth_user_deleted: !authError,
+  })
+})
+
+/** One profile with what the admin user manager shows for it (admin only):
+ * the editable columns, the selections it can display, and the counts that
+ * would otherwise cost a query per row. */
+profiles.get('/:id/admin', authMiddleware, requireAdminAccess, async (c) => {
+  const user = c.get('user')
+  const targetId = requiredParam(c, 'id')
+  const supabase = createSupabaseClient(c)
+
+  const { data: caller } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!isAdmin(caller?.role)) {
+    return c.json({ error: 'Unauthorized: Admin access required' }, 403)
+  }
+
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select(ADMIN_PROFILE_COLUMNS)
+    .eq('id', targetId)
+    .maybeSingle()
+
+  if (error) return databaseErrorResponse(c, error)
+  if (!profile) return c.json({ error: 'Profile not found' }, 404)
+
+  const [scripts, comments, faculties, studies] = await Promise.all([
+    supabase
+      .from('scripts')
+      .select('id', { count: 'exact', head: true })
+      .eq('author_id', targetId),
+    supabase
+      .from('comments')
+      .select('id', { count: 'exact', head: true })
+      .eq('author_id', targetId),
+    supabase
+      .from('profile_faculties')
+      .select('faculty:faculties(id, name)')
+      .eq('profile_id', targetId),
+    supabase
+      .from('profile_studies')
+      .select('study:studies(id, name)')
+      .eq('profile_id', targetId),
+  ])
+
+  const failure =
+    scripts.error ?? comments.error ?? faculties.error ?? studies.error
+  if (failure) return databaseErrorResponse(c, failure)
+
+  return c.json<AdminProfileDetail>({
+    profile,
+    counts: { scripts: scripts.count ?? 0, comments: comments.count ?? 0 },
+    faculties: (faculties.data ?? []).flatMap((row) =>
+      row.faculty ? [row.faculty] : []
+    ),
+    studies: (studies.data ?? []).flatMap((row) =>
+      row.study ? [row.study] : []
+    ),
+  })
 })
 
 /** Get user statistics */

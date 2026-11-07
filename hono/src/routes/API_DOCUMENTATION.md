@@ -100,7 +100,7 @@ possession of a TOTP secret instead:
 
 | Route               | Body       | Notes                                                                                                                                                                                                                  |
 | ------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /api/sanity/access` | `{ code }` | Exchanges the authenticator app's current six-digit code for `{ token, expiresAt }`, valid ten minutes. `400` when the code is not six digits, `401` for a wrong or already-used code, `429` after 5 attempts per IP in 15 minutes, `503` when `ADMIN_TOTP_SECRET` is unset or not base32. |
+| `POST /api/sanity/access` | `{ code }` | Exchanges the authenticator app's current six-digit code for `{ token, expiresAt }`, valid twenty minutes. `400` when the code is not six digits, `401` for a wrong or already-used code, `429` after 5 attempts per IP in 15 minutes, `503` when `ADMIN_TOTP_SECRET` is unset or not base32. |
 
 Every other `/sanity/*` route takes that token in `x-admin-token`; a `401` means
 it is missing, expired or tampered with, and the caller has to exchange a fresh
@@ -118,7 +118,7 @@ and the route tests work. The origin must also be listed in `CORS_ORIGINS`, or
 the browser blocks the preflight before the API sees the request.
 
 The token is HMAC-signed and stateless, so it cannot be revoked before it
-expires; ten minutes is the whole revocation window.
+expires; twenty minutes is the whole revocation window.
 
 ## Universities
 
@@ -235,13 +235,13 @@ nothing under `/sanity/*` is reachable by the site.
 
 | Route                    | Body       | Notes                                                                                                                                                     |
 | ------------------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /api/admin/access` | `{ code }` | Verifies the authenticator code and sets the `scriptr-admin-access` cookie (`HttpOnly`, `SameSite=Lax`, `Max-Age=600`, domain from `COOKIE_DOMAIN`). Also returns `{ token, expiresAt }` for scripted callers. `400` malformed, `401` wrong/replayed code, `429` after 5 attempts per IP in 15 minutes, `503` when `ADMIN_TOTP_SECRET` is unset. |
+| `POST /api/admin/access` | `{ code }` | Verifies the authenticator code and sets the `scriptr-admin-access` cookie (`HttpOnly`, `SameSite=Lax`, `Max-Age=1200`, domain from `COOKIE_DOMAIN`). Also returns `{ token, expiresAt }` for scripted callers. `400` malformed, `401` wrong/replayed code, `429` after 5 attempts per IP in 15 minutes, `503` when `ADMIN_TOTP_SECRET` is unset. |
 
 Every other `/api/admin/*` route needs that token — from the cookie or an
 `x-admin-token` header — **and** an admin session. The token proves the operator
 unlocked the surface; the session identifies who is acting and keeps RLS in
 force. `/admin`'s layout shows the code form whenever the cookie is missing or
-spent, and the code is entered once per ten minutes rather than per action.
+spent, and the code is entered once per twenty minutes rather than per action.
 
 **Which routes are gated:** the admin-only operations on the site's ordinary
 routes carry the same guard — the flag queue (`GET /flags`, `GET /flags/pending`,
@@ -251,8 +251,10 @@ restriction reads and writes (`GET /restrictions`, `GET /restrictions/lifted`,
 writes (`POST`/`PATCH`/`DELETE /ratings/types`); achievement-definition writes
 (`POST`/`PATCH`/`DELETE /achievement-definitions`); the admin script list
 (`GET /scripts`, `GET /scripts/flagged/all`, `GET /comments/flagged/all`); and
-`GET`/`PATCH`/`DELETE /profiles/:id` plus `GET /profiles`. Everything else — the site's public and
-per-user routes — stays session-authenticated only.
+`GET`/`PATCH`/`DELETE /profiles/:id`, `GET /profiles`, `GET
+/profiles/:id/admin`, and the announcement broadcast `POST
+/admin/notifications`. Everything else — the site's public and per-user routes —
+stays session-authenticated only.
 
 **Origin pinning:** every `/api/admin/*` request must come from
 `WEBSITE_ORIGIN` (e.g. `https://scriptr.uk`); a mismatched origin is `403` even
@@ -498,13 +500,29 @@ payload. Awards are permanent; they are read on the session client (the
 ### Authenticated
 `GET /profiles/me`, `PATCH /profiles/me`, `DELETE /profiles/me`.
 
-`GET /profiles` is **admin only** and deliberately unpaginated: it returns
-`ProfilesListResponse` — every profile row with only
-`id, username, full_name, role, avatar_url, created_at`, its
-`subjects` (`subject_id, status, updated_at`) and its `achievements` — with no
-limit. Nothing in `next/` or `sanity/` calls it. `401` without a session,
-`403` for a signed-in non-admin. The `profiles` SELECT policy is public, so
-this route's admin check is the only thing gating the listing.
+`GET /profiles` is **admin only**, paginated, filtered and sorted — it backs
+the admin user manager at `/admin/users`. Query parameters:
+
+| Parameter | Values | Default |
+| --- | --- | --- |
+| `limit` | 1–100 | 20 |
+| `offset` | 0 or more | 0 |
+| `search` | matches `username` or `full_name`, case-insensitively | none |
+| `role` | `student`, `moderator`, `admin` | none (all) |
+| `sort` | `created_at`, `updated_at`, `username`, `full_name`, `role` | `created_at` |
+| `order` | `asc`, `desc` | `desc` |
+
+The search term has the characters PostgREST's `or` filter grammar reserves
+(`,` `(` `)` and quotes) replaced with spaces and its `ilike` wildcards
+removed, so a term can only narrow the match. The response is
+`AdminProfilesListResponse` — `{ profiles, total, limit, offset }`, where
+`total` is the filtered count, so a page control needs no second request. Each
+row carries `id, username, full_name, role, avatar_url, created_at,
+updated_at`, its `subjects` (`subject_id, status, updated_at`) and the names of
+its selected faculties and studies. `400` for paging, a role, a sort column or
+a direction outside those lists; `401` without a session; `403` for a signed-in
+non-admin. The `profiles` SELECT policy is public, so this route's admin check
+is the only thing gating the listing.
 
 `GET /profiles/me/preferences` and `PATCH /profiles/me/preferences` are
 authenticated own-row operations on `profile_preferences`, limited to 15 requests per minute per user (`429`). A missing row reads
@@ -579,20 +597,45 @@ Limits and types live in `shared/config/avatar.ts`; the routes check them
 again, so the client-side check only saves a round trip.
 
 ### Admin
-`PATCH /profiles/:id`, `DELETE /profiles/:id` — same shape as the `/me`
-equivalents. The profiles row goes through the session client (`is_admin()`
-is baked into its RLS policy), but `profile_faculties`/`profile_studies`
-policies are `profile_id = auth.uid()` with no admin override, so
-`PATCH /profiles/:id` writes selections with the service-role client after
-the admin check.
+`GET /profiles/:id/admin`, `PATCH /profiles/:id`, `DELETE /profiles/:id` — an
+admin session **and** the unlock, like `GET /profiles`. The profiles row goes
+through the session client (`is_admin()` is baked into its RLS policy), but
+`profile_faculties`/`profile_studies` policies are `profile_id = auth.uid()`
+with no admin override, so `PATCH /profiles/:id` writes selections with the
+service-role client after the admin check. The PATCH body is the same as the
+`/me` equivalent, so the edit form sends the whole `username`/`full_name` pair
+even when only one changed.
+
+`GET /profiles/:id/admin` is the detail view behind the manager's dialog, so
+the listing stays one query: it returns `AdminProfileDetail` — `profile` (the
+columns the listing selects), `counts` (`scripts`, `comments`) and the names of
+the selected `faculties` and `studies`. `404` for an unknown id.
+
+`DELETE /profiles/:id` removes the profile row, its avatar object and its
+Supabase Auth login. The login matters: without it the account can still sign
+in with no profile behind it. The profile goes first on the caller's session
+client (the DELETE policy is `id = auth.uid() or is_admin()`); if the login
+deletion then fails, the profile stays deleted, the failure is logged and the
+response says so — `{ success: true, auth_user_deleted: false }` — instead of
+re-reporting a request that already removed the row. `400` when an admin targets
+their own account, `404` for an unknown id.
 
 ### Role changes
 `PATCH /admin/profiles/:id/role` — `{ role: 'student'|'moderator'|'admin' }`.
 Lives on the [website admin surface](#website-admin-access), so it needs the
-unlocked access cookie **and** an admin session (`403` for anyone else). The
-profiles UPDATE policy already allows `is_admin()`, so the write runs on the
-caller's own session and RLS stays the real boundary. The first admin has no
-route at all — promote that account directly in the database.
+unlocked access cookie **and** an admin session (`403` for anyone else); `404`
+for an unknown id. The first admin has no route at all — promote that account
+directly in the database.
+
+This is the one profile write that runs on the **service-role client**.
+`authenticated` holds column-level UPDATE on `(username, full_name)` only
+(`20261029120000_revoke_profile_avatar_url_write.sql` dropped the table-wide
+grant and granted the writable columns back), so a session-client write of
+`role` is refused with `42501` before RLS is consulted. Granting the column is
+not an option: the profiles UPDATE policy lets a caller update their **own**
+row, so every signed-in user could promote themselves through PostgREST. The
+role has no session path at all, which makes the unlock plus the explicit admin
+check in the handler the boundary.
 
 ---
 
@@ -714,10 +757,10 @@ across all notification routes, `429` beyond that). System-generated — there
 is no user-facing create endpoint. Admin-triggered moderation notifications use the session
 client under the admin INSERT policy; achievement and flag-threshold
 notifications use the service-role client. Kinds include achievements,
-restriction applied/lifted, content removed, and the five-reporter flag
-threshold alert. Onboarding and account creation notifications remain
-supported. The `type` column is open-ended, so new kinds need no migration;
-type-specific payload lives in `data`.
+restriction applied/lifted, content removed, the five-reporter flag threshold
+alert, and the admin announcement below. Onboarding and account creation
+notifications remain supported. The `type` column is open-ended, so new kinds
+need no migration; type-specific payload lives in `data`.
 
 The frontend merges server rows with per-user local notifications. It refreshes
 on mount, tray open, and window focus/visibility change; it does not poll or use
@@ -731,6 +774,19 @@ realtime. The persistent restriction notice is derived from
 | `PATCH /notifications/read-all`   | Marks all unread as read                                                                              |
 | `PATCH /notifications/:id`        | `{ is_read }` (boolean, else `400`) — update one notification's read state; `404` if not the caller's |
 | `DELETE /notifications/:id`       | Delete one notification                                                                               |
+| `POST /admin/notifications`       | Admin only. `{ title, body? }` — one `announcement` for every profile. See below                      |
+
+**Announcements** (`POST /admin/notifications`) are the one create path, and it
+is on the [website admin surface](#website-admin-access): an admin session plus
+the unlock. The body is `{ title, body? }`, with `title` 1–200 characters and
+`body` at most 1000, the same limits as the table's CHECK constraints; `400`
+otherwise, `413` over the 4 KiB request cap, `429` after ten broadcasts per
+admin per hour. Recipient ids are read in pages with the service-role client
+and the rows are written in chunks with the caller's session client, so the
+`admins can create notifications` INSERT policy stays the boundary on every
+row. The response is `{ success: true, recipients }`. A broadcast cannot be
+recalled — deleting the rows afterwards is the only undo, and each recipient
+can dismiss their own.
 
 ### Achievements
 
@@ -814,8 +870,9 @@ any elevated database privilege today.**
    regardless. See [Admin access](#admin-access).
 2. Authenticated routes generally operate on the caller's own resources.
 3. Admin-only actions: full CRUD on any `scripts`/`comments`/`profiles` row,
-   flag resolution, flag listing, rating-type management, user restrictions —
-   all `is_admin()`-gated in RLS **and** behind the ten-minute admin unlock
+   flag resolution, flag listing, rating-type management, user restrictions,
+   user management and announcements — all `is_admin()`-gated in RLS **and**
+   behind the twenty-minute admin unlock
    (see [Website admin access](#website-admin-access)), so the session alone is
    not enough.
 4. **Moderators have zero elevated access anywhere in this API.** The role is

@@ -1,5 +1,9 @@
 import type { AchievementDefinition } from '@shared/types/achievements.types'
 import type { FlagListResponse, FlagStatus } from '@shared/types/flags.types'
+import type {
+  AdminProfilesListResponse,
+  AdminProfilesQuery,
+} from '@shared/types/profile.types'
 import type { RatingType } from '@shared/types/ratings.types'
 import type {
   LiftedRestrictionItem,
@@ -22,4 +26,11 @@ export type AdminRatingTypesViewModel = {
 
 export type AdminAchievementDefinitionsViewModel = {
   achievementDefinitions: Array<AchievementDefinition>
+}
+
+/** The admin user manager: the first page the loader rendered, plus the query
+ * it used, so the panel's controls start where the server did. */
+export type AdminUsersViewModel = {
+  page: AdminProfilesListResponse
+  query: AdminProfilesQuery
 }

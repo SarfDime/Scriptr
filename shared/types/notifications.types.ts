@@ -17,3 +17,18 @@ export type FlagThresholdNotificationData = {
   count: number
   href: string
 }
+
+/** Body of `POST /api/admin/notifications`: one `announcement` notification
+ * for every profile. Length limits match `shared/config/shared-constants.ts`
+ * and the `notifications` table's CHECK constraints. */
+export type BroadcastNotificationRequest = {
+  title: string
+  body?: string
+}
+
+/** Success body of `POST /api/admin/notifications`. `recipients` counts the
+ * profiles the announcement was written for. */
+export type BroadcastNotificationResponse = {
+  success: true
+  recipients: number
+}

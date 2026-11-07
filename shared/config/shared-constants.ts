@@ -117,3 +117,21 @@ export type CommentSort = (typeof COMMENT_SORT_OPTIONS)[number]
  * rendered flat at the last indented level with a "replying to …" cue —
  * past ~3 levels the indent just squeezes the text, especially on mobile. */
 export const MAX_THREAD_DEPTH = 2
+
+/** Admin user manager: the page size the listing defaults to, the most a
+ * caller may ask for, and the columns `sort` accepts. */
+export const ADMIN_PROFILES_PAGE_SIZE = 20
+export const ADMIN_PROFILES_MAX_PAGE_SIZE = 100
+export const ADMIN_PROFILE_SORT_OPTIONS = [
+  'created_at',
+  'updated_at',
+  'username',
+  'full_name',
+  'role',
+] as const
+export type AdminProfileSortField = (typeof ADMIN_PROFILE_SORT_OPTIONS)[number]
+
+/** Limits `POST /api/admin/notifications` and the `notifications` table's own
+ * CHECK constraints: a title of 1–200 characters and a body of at most 1000. */
+export const ANNOUNCEMENT_TITLE_MAX_LENGTH = 200
+export const ANNOUNCEMENT_BODY_MAX_LENGTH = 1000

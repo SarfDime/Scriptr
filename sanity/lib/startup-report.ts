@@ -37,7 +37,7 @@ export function reportStudioEnvironment(
   )
 
   const notes = [
-    'no secret belongs here: sync actions ask for a TOTP code and exchange it for a ten-minute token',
+    'no secret belongs here: sync actions ask for a TOTP code and exchange it for a twenty-minute token',
   ]
 
   if (bundledSecrets.length > 0) {

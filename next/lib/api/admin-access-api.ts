@@ -4,7 +4,7 @@ import { API_URL } from '@/config/env'
 import { apiFetchRequired } from './next-api'
 
 /**
- * Unlocks the website's admin surface for ten minutes. The API sets an
+ * Unlocks the website's admin surface for twenty minutes. The API sets an
  * HttpOnly cookie, so the server-rendered admin pages see it on the next
  * request; the returned token is only useful to scripted callers.
  */

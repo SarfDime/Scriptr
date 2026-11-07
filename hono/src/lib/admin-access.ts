@@ -20,7 +20,7 @@ import { matchesSecret } from './secret'
  * shared header secret was inlined into its bundle by Vite and could be read by
  * anyone who loaded the Studio. Instead the operator proves possession of a
  * TOTP secret that only the API holds, and exchanges a code for a signed token
- * that expires in ten minutes.
+ * that expires in twenty minutes.
  */
 
 const TOTP_STEP_SECONDS = ACCESS_CODE_STEP_SECONDS
@@ -187,7 +187,7 @@ export function createAccessVerifier({
       return false
     },
 
-    /** A signed `v1.<expiresAt>.<signature>` token, valid for ten minutes. */
+    /** A signed `v1.<expiresAt>.<signature>` token, valid for twenty minutes. */
     issueToken(): { token: string; expiresAt: number } {
       const expiresAt = now() + ACCESS_TOKEN_TTL_MS
       const expiresAtSeconds = Math.floor(expiresAt / 1000)

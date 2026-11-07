@@ -1,3 +1,5 @@
+import type { AdminProfileSortField } from '../config/shared-constants'
+import type { SortDirection } from '../utils/array-utils/sort'
 import type { Tables } from './database.types'
 import type { PortableTextValue } from './portable-text.types'
 import type { ScriptFile } from './scripts.types'
@@ -141,23 +143,83 @@ export type MyProfileResponse = ProfileCore
  * rationale as `MyProfileResponse` above for keeping a distinct name. */
 export type PublicProfileResponse = ProfileCore
 
+/** Columns the admin user manager lists and edits. */
+export type AdminProfileFields = Pick<
+  Tables<'profiles'>,
+  | 'id'
+  | 'username'
+  | 'full_name'
+  | 'role'
+  | 'avatar_url'
+  | 'created_at'
+  | 'updated_at'
+>
+
+/** A selected faculty or study, as the admin listing embeds it. PostgREST
+ * embeds a to-one row under the table's name, and `null` when the joined row
+ * is missing. */
+export type AdminProfileFacultyRef = {
+  faculty: { id: string; name: string } | null
+}
+export type AdminProfileStudyRef = {
+  study: { id: string; name: string } | null
+}
+
 /** One row of `GET /api/profiles` (admin only): only the columns that route
- * selects, so the per-profile script and selection embeds are absent.
- * `subjects.status` is the generated column type (`string`), not the
+ * selects. `subjects.status` is the generated column type (`string`), not the
  * `ProfileSubjectStatus` union the public profile shapes use, because this
  * shape is what PostgREST infers for the embed. */
-export type ProfileListEntry = Pick<
-  Tables<'profiles'>,
-  'id' | 'username' | 'full_name' | 'role' | 'avatar_url' | 'created_at'
-> & {
+export type AdminProfileListItem = AdminProfileFields & {
   subjects: Array<
     Pick<Tables<'profile_subjects'>, 'subject_id' | 'status' | 'updated_at'>
   >
-  achievements: Array<ProfileAchievement>
+  faculties: Array<AdminProfileFacultyRef>
+  studies: Array<AdminProfileStudyRef>
 }
 
-/** `GET /api/profiles`'s shape — every profile, unpaginated, admin only. */
-export type ProfilesListResponse = Array<ProfileListEntry>
+/** `GET /api/profiles`'s shape — one page of profiles, with the total the
+ * pagination control needs. Admin only. */
+export type AdminProfilesListResponse = {
+  profiles: Array<AdminProfileListItem>
+  total: number
+  limit: number
+  offset: number
+}
+
+/** `GET /api/profiles/:id/admin`'s shape: the editable columns plus the
+ * numbers and selection names the management dialogs show. */
+export type AdminProfileDetail = {
+  profile: AdminProfileFields
+  counts: { scripts: number; comments: number }
+  faculties: Array<{ id: string; name: string }>
+  studies: Array<{ id: string; name: string }>
+}
+
+/** `DELETE /api/profiles/:id`'s body. `auth_user_deleted` is false when the
+ * profile row was removed but the Supabase Auth login could not be, which
+ * leaves an account that can sign in with no profile. */
+export type AdminProfileDeleteResponse = {
+  success: true
+  auth_user_deleted: boolean
+}
+
+/** Success body of `PATCH /api/admin/profiles/:id/role`. */
+export type AdminProfileRoleResponse = {
+  success: true
+  profile: Tables<'profiles'>
+}
+
+/** Columns the admin listing accepts as `sort`, and the shape of its query
+ * string. `limit`/`offset` mirror the comment routes. */
+export type AdminProfilesQuery = {
+  limit?: number
+  offset?: number
+  /** Matches `username` or `full_name`, case-insensitively. */
+  search?: string
+  role?: UserRole
+  sort?: AdminProfileSortField
+  order?: SortDirection
+}
 
 /** Body of `PATCH /api/profiles/me` (and the admin `PATCH /api/profiles/:id`).
  * `username` is required on every call; the other fields are only written

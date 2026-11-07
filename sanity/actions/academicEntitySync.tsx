@@ -31,8 +31,8 @@ export type AcademicDocumentActionProps = {
 
 type DialogState =
   | { type: 'none' }
-  /** `access` means the action is confirmed but the ten-minute token is missing
-   * or spent, so the code is collected before the request goes out. */
+  /** `access` means the action is confirmed but the twenty-minute token is
+   * missing or spent, so the code is collected before the request goes out. */
   | {
       type: 'confirm' | 'access'
       message: string

@@ -231,8 +231,8 @@ async function findBlockingDependents(
 
 /** Academic catalog reads and writes for the Sanity Studio.
  *
- * Mounted at `/api/sanity/*` behind the origin check and the ten-minute access
- * token (both applied by `./sanity.ts`): every handler here runs on the
+ * Mounted at `/api/sanity/*` behind the origin check and the twenty-minute
+ * access token (both applied by `./sanity.ts`): every handler here runs on the
  * service-role client, so those checks are the only thing standing between a
  * caller and RLS-bypassing writes. */
 const academic = new Hono<HonoEnv>()

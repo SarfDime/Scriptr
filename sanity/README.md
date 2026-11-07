@@ -29,7 +29,7 @@ deployed bundle, which is served to anyone who loads the Studio.
 - Sync/delete actions need an access code: the API prints a TOTP secret with
   `corepack pnpm --filter @scriptr/api admin:totp`, you enrol it in an
   authenticator app, and the Studio asks for the current code the first time an
-  action runs and again whenever the ten-minute token lapses. A `401 Access
+  action runs and again whenever the twenty-minute token lapses. A `401 Access
   expired` means the token lapsed; `503 Admin access is not configured` means
   `ADMIN_TOTP_SECRET` is missing on the API.
 - Production values belong in `sanity/.env.production`, not `sanity/.env`:
@@ -66,7 +66,7 @@ Hono `/api/sanity/*` routes:
 
 - **Create in Database** creates the Postgres row and writes its id back as
   `dbId`.
-- Every one of these calls carries the ten-minute access token from
+- Every one of these calls carries the twenty-minute access token from
   `lib/api-access.ts`; the first action in a window asks for the authenticator
   code before it runs.
 - **Sync with Database** pushes later edits.

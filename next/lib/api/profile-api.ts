@@ -13,12 +13,18 @@ import type {
   AvatarUploadUrlResponse,
 } from '@shared/types/avatar.types'
 import type {
+  AdminProfileDeleteResponse,
+  AdminProfileDetail,
+  AdminProfileRoleResponse,
+  AdminProfilesListResponse,
+  AdminProfilesQuery,
   MyProfileResponse,
   ProfileStats,
   ProfileSubjectStatus,
   ProfileUpdateRequest,
   ProfileUpdateResponse,
   PublicProfileResponse,
+  UserRole,
 } from '@shared/types/profile.types'
 import type {
   ProfilePreferencesPatch,
@@ -148,6 +154,56 @@ export const updateMyProfile = (input: ProfileUpdateRequest) =>
     method: 'PATCH',
     body: input,
   })
+
+const noStore = { cache: 'no-store' } as const
+
+/** One page of the admin user manager's listing. Admin session + unlock
+ * required, so the cookie has to come from the Server Component's loader. */
+export const getAdminProfiles = (query: AdminProfilesQuery, cookie?: string) =>
+  apiFetchRequired<AdminProfilesListResponse>(
+    withQuery(apiRoutes.profiles.index, {
+      limit: query.limit,
+      offset: query.offset,
+      search: query.search,
+      role: query.role,
+      sort: query.sort,
+      order: query.order,
+    }),
+    { ...noStore, ...(cookie ? { headers: { cookie } } : {}) }
+  )
+
+/** The admin view of one profile: columns, counts and selection ids. */
+export const getAdminProfile = (id: string, cookie?: string) =>
+  apiFetchRequired<AdminProfileDetail>(apiRoutes.profiles.adminById(id), {
+    ...noStore,
+    ...(cookie ? { headers: { cookie } } : {}),
+  })
+
+/** Admin edit of someone else's username and full name. The selections are
+ * sent only when the caller has them, and the API writes those with the
+ * service-role client (their RLS has no admin override). */
+export const updateProfileById = (
+  id: string,
+  input: Pick<ProfileUpdateRequest, 'username' | 'full_name'>
+) =>
+  apiFetchRequired<ProfileUpdateResponse>(apiRoutes.profiles.byId(id), {
+    method: 'PATCH',
+    body: input,
+  })
+
+/** Removes a profile, its avatar and its login. `auth_user_deleted: false`
+ * means the profile is gone but the account can still sign in. */
+export const deleteProfileById = (id: string) =>
+  apiFetchRequired<AdminProfileDeleteResponse>(apiRoutes.profiles.byId(id), {
+    method: 'DELETE',
+  })
+
+/** Admin role change, on the unlocked admin surface. */
+export const setProfileRole = (id: string, role: UserRole) =>
+  apiFetchRequired<AdminProfileRoleResponse>(
+    apiRoutes.admin.profilesRoleById(id),
+    { method: 'PATCH', body: { role } }
+  )
 
 /**
  * Changes the signed-in user's avatar with the same direct-to-R2 flow as a

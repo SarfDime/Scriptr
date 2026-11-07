@@ -1,5 +1,12 @@
 import type { AchievementMetric } from '../config/achievements'
+import {
+  type AdminProfileSortField,
+  ANNOUNCEMENT_BODY_MAX_LENGTH,
+  ANNOUNCEMENT_TITLE_MAX_LENGTH,
+} from '../config/shared-constants'
 import type { FlagStatus } from '../types/flags.types'
+import type { UserRole } from '../types/profile.types'
+import type { SortDirection } from '../utils/array-utils/sort'
 
 const ordinal = (number: number) => {
   let suffix = 'th'
@@ -18,12 +25,14 @@ export const ADMIN_STRINGS = {
   restrictionsTitle: 'Restrictions',
   ratingTypesTitle: 'Rating types',
   achievementDefinitionsTitle: 'Achievements',
+  usersTitle: 'Users',
+  announcementsTitle: 'Announcements',
   accessTitle: 'Admin access',
   accessHint:
-    'Admin actions are locked. Enter the six-digit code from your authenticator app to unlock them for ten minutes.',
+    'Admin actions are locked. Enter the six-digit code from your authenticator app to unlock them for 20 minutes.',
   accessCodeLabel: 'Access code',
   accessUnlock: 'Unlock',
-  accessUnlocked: 'Admin actions are unlocked for ten minutes.',
+  accessUnlocked: 'Admin actions are unlocked for 20 minutes.',
   accessExpired: 'Admin access expired. Enter a new code to continue.',
   accessRejected: 'That code was not accepted. Wait for the next one.',
   accessRateLimited: 'Too many attempts. Wait a few minutes and try again.',
@@ -143,4 +152,70 @@ export const ADMIN_STRINGS = {
   achievementInUse:
     'This achievement cannot be deleted because users have already earned it.',
   achievementIdTaken: 'An achievement with this ID already exists.',
+
+  /** Admin user manager. */
+  usersLoadError: "Couldn't load users.",
+  usersEmpty: 'No users match these filters.',
+  usersSearchLabel: 'Search users',
+  usersSearchPlaceholder: 'Username or full name',
+  usersSearchSubmit: 'Search',
+  usersRoleFilter: 'Role',
+  usersAllRoles: 'All roles',
+  usersSortLabel: 'Sort by',
+  usersSortNames: {
+    created_at: 'Joined',
+    updated_at: 'Last updated',
+    username: 'Username',
+    full_name: 'Name',
+    role: 'Role',
+  } satisfies Record<AdminProfileSortField, string>,
+  usersOrderLabel: 'Direction',
+  usersOrderNames: {
+    asc: 'Ascending',
+    desc: 'Descending',
+  } satisfies Record<SortDirection, string>,
+  usersRoleNames: {
+    student: 'Student',
+    moderator: 'Moderator',
+    admin: 'Admin',
+  } satisfies Record<UserRole, string>,
+  usersPageRange: (from: number, to: number, total: number) =>
+    `Showing ${from}–${to} of ${total}`,
+  usersPreviousPage: 'Previous',
+  usersNextPage: 'Next',
+  usersJoined: 'Joined',
+  usersUpdated: 'Updated',
+  usersView: 'View details',
+  usersDetailTitle: 'User details',
+  usersDetailScripts: 'Scripts',
+  usersDetailComments: 'Comments',
+  usersDetailFaculties: 'Faculties',
+  usersDetailStudies: 'Studies',
+  usersDetailNone: 'None selected',
+  usersEditTitle: 'Edit user',
+  usersEditUsername: 'Username',
+  usersEditFullName: 'Full name',
+  usersEditRole: 'Role',
+  usersEditSaved: 'User updated.',
+  usersUsernameTaken: 'That username is already taken.',
+  usersDeleteTitle: 'Delete this user?',
+  usersDeleteConfirm: (username: string) =>
+    `Delete @${username}? Their profile, avatar and login are removed. This cannot be undone.`,
+  usersDeleted: 'User deleted.',
+  usersDeleteLoginWarning:
+    'The profile was removed, but its login could not be deleted. Remove it from Supabase Auth.',
+  usersDeleteSelf: 'You cannot delete your own account.',
+  /** Announcement broadcast. */
+  announcementIntro:
+    'Sends one notification to every account. It appears in each notification tray on its next refresh.',
+  announcementTitleLabel: 'Title',
+  announcementBodyLabel: 'Message (optional)',
+  announcementSend: 'Send to everyone',
+  announcementConfirmTitle: 'Send this to every user?',
+  announcementConfirm: (title: string) =>
+    `“${title}” is delivered to every account and cannot be recalled.`,
+  announcementSent: (recipients: number) =>
+    `Announcement sent to ${recipients} ${recipients === 1 ? 'user' : 'users'}.`,
+  announcementTitleValidation: `Enter a title of at most ${ANNOUNCEMENT_TITLE_MAX_LENGTH} characters.`,
+  announcementBodyValidation: `Keep the message under ${ANNOUNCEMENT_BODY_MAX_LENGTH} characters.`,
 } as const

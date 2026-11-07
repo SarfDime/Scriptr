@@ -8,7 +8,8 @@ const isNotificationKind = (value: string): value is NotificationKind =>
   value === 'restriction_applied' ||
   value === 'restriction_lifted' ||
   value === 'content_removed' ||
-  value === 'flag_threshold'
+  value === 'flag_threshold' ||
+  value === 'announcement'
 
 const getHref = (record: NotificationRecord) => {
   const data = record.data

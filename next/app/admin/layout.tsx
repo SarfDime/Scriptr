@@ -6,9 +6,13 @@ import { isAdminUnlocked } from '@/lib/api/admin-access-api'
 import { getSessionRequired } from '@/lib/api/auth-api'
 
 /**
- * Two gates: an admin session, then the ten-minute TOTP unlock the admin API
- * also requires. The unlock is checked server-side on every render, so an
- * expired cookie shows the code form instead of a page of rejected requests.
+ * Two gates: an admin session, then the twenty-minute TOTP unlock the admin API
+ * also requires. An expired cookie shows the code form instead of a page of
+ * rejected requests.
+ *
+ * The unlock check here only covers a full load: a layout is not re-rendered
+ * when the browser moves between admin pages, so each page also calls
+ * `requireAdminUnlock` (`next/lib/admin-page-guard.ts`) before its loader.
  */
 export default async function AdminLayout({
   children,

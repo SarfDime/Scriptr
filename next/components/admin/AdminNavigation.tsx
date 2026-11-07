@@ -5,6 +5,7 @@ import { cn } from '@/lib/common-utils'
 
 export const ADMIN_SECTIONS = {
   flags: { href: '/admin/flags', label: ADMIN_STRINGS.flagsTitle },
+  users: { href: '/admin/users', label: ADMIN_STRINGS.usersTitle },
   restrictions: {
     href: '/admin/restrictions',
     label: ADMIN_STRINGS.restrictionsTitle,
@@ -16,6 +17,10 @@ export const ADMIN_SECTIONS = {
   'achievement-definitions': {
     href: '/admin/achievement-definitions',
     label: ADMIN_STRINGS.achievementDefinitionsTitle,
+  },
+  announcements: {
+    href: '/admin/announcements',
+    label: ADMIN_STRINGS.announcementsTitle,
   },
 } as const
 

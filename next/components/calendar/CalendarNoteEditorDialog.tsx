@@ -122,7 +122,9 @@ export const CalendarNoteEditorDialog = ({
                 isActive={type === option}
                 className={cn(
                   'button button-sm',
-                  CALENDAR_NOTE_SCHEMES[option].chip
+                  type === option
+                    ? CALENDAR_NOTE_SCHEMES[option].chip
+                    : 'subtle'
                 )}
               >
                 {CALENDAR_STRINGS.note.type[option]}

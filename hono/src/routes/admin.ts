@@ -71,8 +71,8 @@ admin.get('/access', siteOrigin(true), (c) => {
   return c.json({ unlocked: true })
 })
 
-/** Unlock admin actions for ten minutes: sets the cookie the site relies on and
- * returns the same token for scripted callers. */
+/** Unlock admin actions for twenty minutes: sets the cookie the site relies on
+ * and returns the same token for scripted callers. */
 admin.post('/access', siteOrigin(false), async (c) => {
   if (codeAttemptLimiter(`access:${clientIp(c)}`)) {
     return c.json(
