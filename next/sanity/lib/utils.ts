@@ -7,9 +7,11 @@ import { sanityFunctionQueries } from '../queries/functions.queries'
 import { client, prodClient } from './client'
 
 /**
- * One tag for the whole dataset, so a publish webhook can expire every
- * Sanity-backed page at once. `sanityFetch` emitted per-document sync tags
- * instead, which nothing outside this app can compute.
+ * One tag for the whole dataset. Nothing expires it today: a Sanity edit reaches
+ * readers on the next rebuild, which is the intended mechanism (a Studio action
+ * fires a deploy hook). It stays as the hook for tag-based expiry, which is
+ * deferred — that would need a tag per query, and `sanityFetch`'s per-document
+ * sync tags cannot be computed outside this app.
  */
 const SANITY_CACHE_TAG = 'sanity'
 

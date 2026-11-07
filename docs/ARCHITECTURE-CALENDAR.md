@@ -94,7 +94,9 @@
   API keeps whichever copy was edited last, so a stale push cannot roll an edit
   back. The allowance is 3 syncs per half hour and 12 per day per profile,
   counted for both directions, and a restricted account cannot push — the same
-  rules the table's policies apply.
+  rules the table's policies apply. A weekly automatic push — only when the
+  local copy changed, and rate limited per profile — is planned
+  (`PROGRESS.md`).
 * **Every day is reachable.** Month view renders its grid even when the period
   has no events (the empty state becomes a line above it), because an empty day
   is where a note gets written. In the grid, the add button appears on hover on
@@ -131,7 +133,9 @@
   while the badge keeps its count. Expired entries are pruned on first subscribe
   and on every dismiss; corrupt or unavailable storage reads as "nothing
   dismissed".
-* **Freshness.** There is no publish webhook, so a new or edited event appears
-  on the next rebuild — both on `/calendar` and in the header alert. The open
-  webhook work in `PROGRESS.md` covers the calendar too. Dismissals are per
-  browser and never leave it.
+* **Freshness.** A new or edited event appears on the next rebuild — both on
+  `/calendar` and in the header alert — because every Sanity read is cached
+  until then. That is the intended mechanism; the planned Studio rebuild action
+  (`PROGRESS.md`) exists to make a publish trigger one sooner, and expiring the
+  cache tag instead is deliberately not planned. Dismissals are deliberately
+  per browser and never leave it: no table and no route exist for them.

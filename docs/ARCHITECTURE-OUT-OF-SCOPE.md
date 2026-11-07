@@ -5,6 +5,6 @@
 * IP/device-based repeat-account prevention.
 * Restriction enforcement for file operations.
 
-The admin tools that are planned but not built yet — suspicious-download review
-and academic sync/dependency tooling — are tracked in
-[`PROGRESS.md`](PROGRESS.md), not here.
+Suspicious-download review is planned but not built yet (see
+[`PROGRESS.md`](PROGRESS.md)); academic sync/dependency tooling is deferred —
+the per-document sync covers the current scale.

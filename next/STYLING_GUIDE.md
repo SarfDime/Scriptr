@@ -19,6 +19,14 @@ or component class changes.
 - `styles/components/skeleton.module.css`: skeleton loading wash.
 - `styles/components/toast.module.css`: toast styles.
 
+**This order is load-bearing.** The imports above run in sequence, and rules of
+equal specificity resolve by source order within a file, so a split tidies by
+moving blocks verbatim and keeping the sequence — never reorder or alphabetise
+these files. Several utilities depend on it: `no-gradient` and the
+`ui-sheen-*` family must stay after the `*-above*` utilities, and `--ui-lit-edge`
+stays first in every `box-shadow` stack (see
+[Glass detail](#glass-detail)). `PROGRESS.md` tracks splitting the large ones.
+
 ## Layout
 
 Use these utilities for structure:

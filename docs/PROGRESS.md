@@ -5,38 +5,44 @@ What is left to do. The system as it stands is described in
 features are not repeated here.
 
 Last reconciled: 2026-11-07. Tags: **[bug]**, **[decision]** (needs a call
-before anyone builds it).
+before anyone builds it), **[deferred]** (recorded so it is not rediscovered,
+not queued).
 
 > **Standing rule:** any Postgres or Sanity schema change is followed by
 > `corepack pnpm gen:api-types` / `corepack pnpm sanity:typegen` and a clean
 > `corepack pnpm check-types` before it counts as done.
 
+## Next
+
+1. **Gate deploys on the API tests.** [`hono/vercel.json`](../hono/vercel.json)
+   builds with `corepack pnpm --filter @scriptr/api check-types` only, so a
+   failing test never blocks a deploy. Add
+   `corepack pnpm --filter @scriptr/api test` to that `buildCommand`.
+2. **Suspicious-download review.** The last admin page that needs building, and
+   what the download-achievement thresholds in [Deferred](#deferred) are
+   waiting on.
+
+Then, in roughly this order: the accessibility items (each independent), the
+weekly note sync, the comment and doc cleanup, and the remaining work below by
+area.
+
 ## Features
 
 ### Administration and moderation
 
-- **Academic sync and dependency tools:** the Studio syncs one document at a
-  time ([`academicEntitySync.tsx`](../sanity/actions/academicEntitySync.tsx) →
-  `/api/sanity/*/sync`), and that action is what writes the junction rows —
-  professors' faculties and studies, a subject's professors. What is missing is
-  working at the graph rather than one document: syncing a batch, and seeing or
-  repairing the dependencies around an entity (a subject's professors, a
-  professor's studies, rows pointing at a document that no longer has a `dbId`).
 - **Suspicious-download review:** counted downloads are recorded in
   `download_events` (append-only, service-role only, account → IP → device) and
-  nothing surfaces them. Needs an admin view over a script's or an account's
-  download pattern, which is also what the download-achievement thresholds in
-  [Deferred](#deferred-do-last) are waiting on.
+  nothing surfaces them. Needs an admin page over a script's or an account's
+  download pattern — a list of the accounts and scripts worth looking at, with
+  the events behind each, following the `/admin/restrictions` shape (thin Server
+  Component, `admin-*-page` loader, gated by the page's `requireAdminUnlock`
+  plus `requireAdminAccess` on the route).
 
 ### Profile and academics
 
 - **Atomic profile save:** the profile row is written before the
   faculty/study selections, so a later failure leaves the two out of sync —
   move the pair into one RPC.
-- **Registration writes `currently_taking` rows** that nothing reads for
-  display any more (profiles derive it from the selected studies, but
-  `POST /auth/register` still seeds `profile_subjects` with both statuses).
-  Either stop writing them or keep them in sync.
 - **Study overview metadata:** add the remaining administrator/study metadata
   to [`StudyOverviewCard.tsx`](../next/components/academics/study/StudyOverviewCard.tsx)
   once it exists — today the card has only the assistant, website, student
@@ -44,21 +50,16 @@ before anyone builds it).
 
 ### Content and presentation
 
-- **Notes are per browser until synced:** calendar notes live in
-  `localStorage` (namespaced per profile) and reach the database only through
-  an explicit sync. A reader who never syncs loses them with the browser's site
-  data, and the sync allowance is per warmed serverless instance, so it is
-  abuse friction rather than an exact quota. Decide whether a periodic
-  background sync is wanted once there is a per-user preference store.
-- **Calendar alerts are dismissed per browser:** the header alert's dismissal
-  map lives in `localStorage` (`scriptr:calendar-dismissed`), so it does not
-  follow a reader to another device and clearing site data brings the preview
-  back. That is deliberate — no DB table and no Hono route — but decide whether
-  dismissals should sync once there is a per-user preference store.
-- **Branding:** create the logo, apply it across the app, and use it as the
-  favicon; update the README. Today the wordmark in
-  [`NavLogo.tsx`](../next/components/navigation/NavLogo.tsx) is set text and
-  `next/public/` holds only Next's default SVGs.
+- **Weekly note sync:** calendar notes live in `localStorage` (namespaced per
+  profile) and reach the database only through the explicit sync in
+  Preferences, so a reader who never syncs loses them with the browser's site
+  data. They should also be pushed automatically, at most **once a week per
+  profile** and **only when the local copy actually changed**
+  (`notesChangedSince` already computes that, and the manual sync's
+  "latest edit wins" merge is the rule to reuse). That needs a per-profile
+  record of the last automatic sync — a real limit, unlike the explicit-sync
+  allowance, which is per warmed serverless instance — and a strictly rate
+  limited route on top of the existing 3-per-half-hour / 12-per-day allowance.
 - **Localization:** localize project strings plus script titles and
   descriptions. Comments stay as they are. Until it lands, titles are
   Macedonian, which is why a script's URL transliterates its title
@@ -73,25 +74,26 @@ before anyone builds it).
   were both tried and rejected (empty strip, and still shifted); the only
   scrollbar CSS today is the `scrollbar-hidden` utility. Next: a custom
   `::-webkit-scrollbar` with a reserved width, or a ref-counted lock.
-- **Accessibility audit [deferred]:** the type-level name rule and the a11y
-  lint rules cover what a compiler and a parser can see; these need a design
-  pass each, so they are listed rather than done.
-  - **Icon-only content is still invisible to both.** `<Button><CloseIcon /></Button>`
-    has children, so it satisfies `AccessibleNameProps`, and lint sees an
-    element with content. One such button shipped unnamed (`LogoutButton`, since
-    fixed); the honest limit is that a scan for `<Button>`/`<NextLink>` whose
-    only child is an element has to be a review pass, not a rule.
+- **Accessibility, one item at a time [low priority]:** the type-level
+  name rule and the a11y lint rules cover what a compiler and a parser can see.
+  These need a design pass each, so they are listed instead of done — split so
+  each ships on its own:
+  - **No skip link** past the navbar to `main`.
   - **Field errors are announced but not associated.** `FieldContent` renders
     the label as a `<label>` with no `htmlFor` and the error as a
     `role='alert'` paragraph with no id, so the message is read but cannot be
     linked to its control, and clicking the label does not focus the field.
     Fixing it means generating ids in `Field` and threading `aria-describedby`
     into every consumer — an API change, not a patch.
-  - **No skip link** past the navbar to `main`.
   - **The nav toggle has no `aria-expanded`**, so the off-canvas state is only
     visual. `aria-controls` is set on the header's open button (and the
     collapse trigger), but the toggle itself never reports whether the nav is
     open.
+  - **Icon-only content is still invisible to both.** `<Button><CloseIcon /></Button>`
+    has children, so it satisfies `AccessibleNameProps`, and lint sees an
+    element with content. One such button shipped unnamed (`LogoutButton`, since
+    fixed); the honest limit is that a scan for `<Button>`/`<NextLink>` whose
+    only child is an element has to be a review pass, not a rule.
   - **Toast severity:** the stack is one polite live region, so a failed save
     and a successful one are announced with the same urgency. Deciding which
     toasts are assertive means deciding which failures interrupt.
@@ -99,6 +101,34 @@ before anyone builds it).
   (the select list uses `z-90`), modal lifecycle (don't render closed dialogs),
   image sizing, a mobile layout pass, production CSS obfuscation, and more
   mobile-friendly toasts.
+- **Style-file split:** `components.module.css` is 662 lines holding unrelated
+  concerns — layout (`ui-container`, `ui-stack`, `ui-cluster`, the grid
+  utilities), typography (`ui-title` … `ui-caption`), surfaces (`ui-card`,
+  `ui-badge`, `ui-sheen`, `ui-above*`) and the divider/groove helpers — and
+  `base/colors.module.css` (292) and `components/color-palettes.module.css`
+  (270) are next by size. Split them by concern **without changing the
+  effective order**: equal-specificity utilities resolve by source order, and
+  this project leans on that (`no-gradient` and the `ui-sheen-*` family must
+  come after the `*-above*` utilities, `--ui-lit-edge` stays first in every
+  `box-shadow` stack — see
+  [`STYLING_GUIDE.md`](../next/STYLING_GUIDE.md#glass-detail)). Move blocks
+  verbatim, make `styles/main.css`'s import sequence reproduce the old
+  concatenation, and never alphabetise. Verify with before/after screenshots of
+  the glass, dialog, nav/header and simple-mode surfaces plus `build:next`, and
+  move the file list in the styling guide with it.
+
+## Code and comments
+
+- **Comment and docs cleanup:** much of the commentary explains the moment a
+  change was made rather than the code that is left, and the worst offenders
+  restate what the code already says — the type-declaration comments where the
+  type name is the whole explanation, and function docs that only repeat the
+  signature. Delete those, and the paragraphs that narrate a bug that is now
+  fixed in one sentence elsewhere. Keep what a future reader cannot infer: the
+  database grant and RLS model, cache tags and what invalidates them, and the
+  security decisions behind a route. The workspace guides
+  (`docs/AGENTS-*.md`, `next/STYLING_GUIDE.md`) are the place for conventions
+  the code should not repeat.
 
 ## Sanity Studio
 
@@ -193,21 +223,9 @@ described in
 - **Optimizer tuning:** the service is deployed; what is left is running real
   scans, text-heavy PDFs and 20 MB phone photos through it to see how often the
   3.5 MB cap is hit and whether the `/ebook` and `/screen` presets keep text
-  legible, then tuning the presets and the image ladder. The API deploy
-  ([`hono/vercel.json`](../hono/vercel.json)) builds with `check-types` only, so
-  also wire `corepack pnpm test` into it and make failing tests block deploys.
+  legible, then tuning the presets and the image ladder.
 - **Serving cost:** review the preview/download paths for avoidable egress and
   repeated signing.
-- **Finish production auth verification:** confirm the Supabase Auth Site URL
-  is `https://scriptr.uk` and that `https://scriptr.uk/auth/callback` is
-  allowed, then verify a signed-in hard refresh, vote/favorite state and Studio
-  sync.
-- **Database privileges review:** `anon` holds table-wide
-  `INSERT`/`UPDATE`/`DELETE`/`TRUNCATE` on the public tables checked so far
-  (Supabase's default grant; RLS blocks the row-level writes and `TRUNCATE` is
-  not reachable through PostgREST). Revoke what the API never uses, and include
-  `authenticated`'s table-wide `UPDATE` on `script_files`, which has no policy
-  and relies on RLS alone.
 
 ## Tooling and quality
 
@@ -226,24 +244,42 @@ described in
   memory per instance, so a second warm serverless instance has its own copy —
   abuse friction, not an exact quota, and it should move to a table if it ever
   needs to be exact.
-- **Sanity content freshness:** `fetchSanityData`
-  ([`next/sanity/lib/utils.ts`](../next/sanity/lib/utils.ts)) reads through the
-  client with `next: { revalidate: false }` and a single `sanity` tag, so a
-  document read is cached until the next build. What is left: a Sanity
-  **publish webhook** to `POST https://scriptr.uk/api/revalidate` with
-  `{ "tags": ["sanity"] }`, which expires the tag without waiting for a deploy
-  — nothing invalidates that tag today, so CMS edits appear on the next
-  rebuild. That webhook now gates the calendar as well: `/calendar` and the
-  header alert read the `calendar` document (and, through it, its events) once
-  per build. The same read no longer decides drafts-vs-published from
-  `NEXT_PUBLIC_ENVIRONMENT_TYPE` alone: a Vercel production deployment is
-  production even when that variable is missing, and `useCdn` is a property of
-  the read (origin for drafts, CDN for published) rather than of the build.
-  Restoring visual editing should bring `<SanityLive />` back at the same time,
-  since `sanityFetch` is only correct together with it.
+- **Sanity publishing:** a rebuild is the propagation mechanism, by design.
+  Every Sanity read is cached with `revalidate: false` and a single `sanity`
+  tag, so a CMS edit — a calendar event included — reaches readers on the next
+  rebuild. What is left is the trigger: a Studio plugin or document action that
+  calls a Vercel deploy hook when something is published, so a rebuild does not
+  wait for the next push. Expiring the tag from the publish webhook is
+  deliberately not the plan; see [Deferred](#deferred).
 
-## Deferred (Do Last)
+## Deferred
 
+- **Database privileges review:** `anon` holds table-wide
+  `INSERT`/`UPDATE`/`DELETE`/`TRUNCATE` on the public tables checked so far
+  (Supabase's default grant; RLS blocks the row-level writes and `TRUNCATE` is
+  not reachable through PostgREST), and `authenticated` holds a table-wide
+  `UPDATE` on `script_files` that no policy depends on. Revoke what the API
+  never uses — carefully, route by route: a wrong revoke fails closed at
+  runtime, which is how `PATCH /api/admin/profiles/:id/role` broke when the
+  profile grants were narrowed.
+- **Branding:** create the logo, apply it across the app, and use it
+  as the favicon; update the README. Today the tab still carries Next's
+  scaffold favicon and the wordmark in
+  [`NavLogo.tsx`](../next/components/navigation/NavLogo.tsx) is set text.
+- **`currently_taking` rows [decision]:** `POST /auth/register` still
+  seeds `profile_subjects` with both statuses, and nothing reads the
+  `currently_taking` ones for display (profiles derive it from the selected
+  studies). Decide first whether those rows will ever be needed by something
+  else, then either stop writing them or keep them in sync.
+- **Academic sync and dependency tools:** the Studio syncs one
+  document at a time ([`academicEntitySync.tsx`](../sanity/actions/academicEntitySync.tsx) →
+  `/api/sanity/*/sync`), which is enough at the current scale. A batch sync and
+  a dependency view (a subject's professors, a professor's studies, rows
+  pointing at a document with no `dbId`) are not needed yet.
+- **Per-query Sanity revalidation:** expiring cached Sanity reads
+  without a rebuild would need a tag per query and a way to map a published
+  document to the queries it affects — a large feature with no current need.
+  `fetchSanityData` keeps one `sanity` tag as the eventual hook.
 - **Visual editing and draft preview:** switched off for now.
   [`next/app/layout.tsx`](../next/app/layout.tsx) no longer renders
   `SanityLive`, `VisualEditing` or `DisableDraft`, and the Studio's iframe
@@ -263,18 +299,6 @@ described in
   inflate the count, so its thresholds are softer evidence than the other
   metrics. The suspicious-download review above is the longer-term answer, and
   thresholds may need raising once it exists.
-
-## Suggested order
-
-1. The two remaining admin tools: suspicious-download review, then the academic
-   sync and dependency tools.
-2. Correctness and quality: the deferred accessibility list, the font-weight
-   sweep, then the visual-fidelity pass (glass, grain, simple-mode contrast).
-3. Optimizer tuning and the serving-cost review.
-4. The privilege review.
-5. Sanity cleanup and the open Studio decisions.
-6. Tooling: the remaining Biome rules, error hygiene, secret rotation.
-7. Deferred: visual editing, then the download achievement thresholds.
 
 ## Exploratory ideas
 
