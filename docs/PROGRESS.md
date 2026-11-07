@@ -15,31 +15,35 @@ before anyone builds it).
 
 ### Administration and moderation
 
-- **Remaining admin tools:** academic sync and dependency tools,
-  `professor_studies`, suspicious-download review.
+- **Academic sync and dependency tools:** the Studio syncs one document at a
+  time ([`academicEntitySync.tsx`](../sanity/actions/academicEntitySync.tsx) →
+  `/api/sanity/*/sync`), and that action is what writes the junction rows —
+  professors' faculties and studies, a subject's professors. What is missing is
+  working at the graph rather than one document: syncing a batch, and seeing or
+  repairing the dependencies around an entity (a subject's professors, a
+  professor's studies, rows pointing at a document that no longer has a `dbId`).
+- **Suspicious-download review:** counted downloads are recorded in
+  `download_events` (append-only, service-role only, account → IP → device) and
+  nothing surfaces them. Needs an admin view over a script's or an account's
+  download pattern, which is also what the download-achievement thresholds in
+  [Deferred](#deferred-do-last) are waiting on.
 
 ### Profile and academics
 
-- **Achievement badge overflow:** once the profile badge strip ships it shows
-  every earned achievement and wraps. When enough definitions exist to crowd
-  the avatar, cap the visible badges and add a "+N" / full-list control.
 - **Atomic profile save:** the profile row is written before the
   faculty/study selections, so a later failure leaves the two out of sync —
   move the pair into one RPC.
 - **Registration writes `currently_taking` rows** that nothing reads for
-  display any more (profiles derive it from the selected studies). Either stop
-  writing them or keep them in sync.
+  display any more (profiles derive it from the selected studies, but
+  `POST /auth/register` still seeds `profile_subjects` with both statuses).
+  Either stop writing them or keep them in sync.
 - **Study overview metadata:** add the remaining administrator/study metadata
   to [`StudyOverviewCard.tsx`](../next/components/academics/study/StudyOverviewCard.tsx)
-  once it exists.
+  once it exists — today the card has only the assistant, website, student
+  count, location and email.
 
 ### Content and presentation
 
-- **Attach the next calendar before the half-year turns:** a `calendar` document
-  covers one fixed half-year, and the site reads only the six months either side
-  of the build. The current period and the one after it need to be attached on
-  `website.calendars`, or the page answers "no data for this period" once the
-  margin moves past the events.
 - **Notes are per browser until synced:** calendar notes live in
   `localStorage` (namespaced per profile) and reach the database only through
   an explicit sync. A reader who never syncs loses them with the browser's site
@@ -51,11 +55,10 @@ before anyone builds it).
   follow a reader to another device and clearing site data brings the preview
   back. That is deliberate — no DB table and no Hono route — but decide whether
   dismissals should sync once there is a per-user preference store.
-- **Script browsing [decision]:** there is no script index page; "all scripts"
-  is `/?scripts=all` (homepage feed switch) and `/search`. Decide whether a
-  dedicated browse route is wanted or whether those two cover it.
 - **Branding:** create the logo, apply it across the app, and use it as the
-  favicon; update the README.
+  favicon; update the README. Today the wordmark in
+  [`NavLogo.tsx`](../next/components/navigation/NavLogo.tsx) is set text and
+  `next/public/` holds only Next's default SVGs.
 - **Localization:** localize project strings plus script titles and
   descriptions. Comments stay as they are. Until it lands, titles are
   Macedonian, which is why a script's URL transliterates its title
@@ -67,7 +70,8 @@ before anyone builds it).
   removes the classic scrollbar, and the page jumps by its width when it
   returns. `scrollbar-gutter: stable` on `html` and a measured
   `padding-right` compensation in [`useBodyScroll.ts`](../next/hooks/useBodyScroll.ts)
-  were both tried and rejected (empty strip, and still shifted). Next: a custom
+  were both tried and rejected (empty strip, and still shifted); the only
+  scrollbar CSS today is the `scrollbar-hidden` utility. Next: a custom
   `::-webkit-scrollbar` with a reserved width, or a ref-counted lock.
 - **Accessibility audit [deferred]:** the type-level name rule and the a11y
   lint rules cover what a compiler and a parser can see; these need a design
@@ -85,51 +89,39 @@ before anyone builds it).
     into every consumer — an API change, not a patch.
   - **No skip link** past the navbar to `main`.
   - **The nav toggle has no `aria-expanded`**, so the off-canvas state is only
-    visual; one call site sets `aria-controls`, the others do not.
+    visual. `aria-controls` is set on the header's open button (and the
+    collapse trigger), but the toggle itself never reports whether the nav is
+    open.
   - **Toast severity:** the stack is one polite live region, so a failed save
     and a successful one are announced with the same urgency. Deciding which
     toasts are assertive means deciding which failures interrupt.
 - **UI polish:** take z-index values from `Z_INDEX` rather than inline classes
-  (the select list uses `z-90`), modal lifecycle (don't render closed dialogs,
-  confirm modal), image sizing, a mobile layout pass, production CSS
-  obfuscation, and more mobile-friendly toasts.
-- **`danger` buttons lose their label in dark mode [bug]:** the variant sets
-  `--button-fg: var(--color-background)`, and that token is near-black in the
-  dark theme, so a destructive button draws dark ink on
-  `--color-error-red`. In the editor toolbar the clear-formatting button reads
-  as a plain red square with no glyph at all. Derive the ink from the fill the
-  way `success` and `warning` already do, rather than from the background
-  token — that changes how every delete action looks, so it needs its own pass.
+  (the select list uses `z-90`), modal lifecycle (don't render closed dialogs),
+  image sizing, a mobile layout pass, production CSS obfuscation, and more
+  mobile-friendly toasts.
 
 ## Sanity Studio
 
-- **Unsynced professors have no page, but subject pages link them:** a professor
-  page exists only for a synced document —
-  [`professorStaticParamsQuery`](../next/sanity/queries/academics/professor.queries.ts)
-  filters `dbId != null` and the route sets `dynamicParams = false` — while the
-  subject pages link every professor they reference, falling back to the `_id`
-  when the document has no slug. In the production dataset that gap is the norm:
-  50 professor documents, 6 synced, and the 44 unsynced ones also have no
-  `slug.current` (it only became required in `24f7ded`, so the existing
-  documents predate the rule). A link to any of those answers `404` at
-  `/professor/<id>`. Syncing is in progress, so finish it — the Studio's "Sync
-  with Database" action is what mints the `dbId` publish is already blocked on
-  — and fill in the slugs as each one is edited. Then decide whether a
-  professor without a `dbId` should render as a link at all, so an unsynced
-  document cannot produce a dead end. Not observable on production yet: the
-  deployed build predates the professor route, and its 404 is Next's default
-  rather than the app's `not-found.tsx`, so check this after the branch deploys.
-- **Studio cleanup:** remove unused schemas, utilities and constants, including
-  the commented-out legacy hook in
-  [`useSanityFetch.ts`](../sanity/sanity-hooks/useSanityFetch.ts) (verify the live
-  hook against the production fetch flow) and the commented-out `renderChild`
-  in [`portable-highlights.tsx`](../sanity/schemas/portable-text/plugins/portable-highlights.tsx).
-- **Shared field builders:** allow overrides in
-  [`academicGrouping`](../sanity/schemas/common/academicFields.tsx), and decide
-  whether the string `bio` variant stays.
+- **Studio cleanup:** remove the exports nothing imports — `AccessCodeRequiredError`
+  and `clearAccessToken` ([`api-access.ts`](../sanity/lib/api-access.ts)),
+  `filterExcludeSchemas` and `createExcludeSchemaFilter`
+  ([`schemaFilters.ts`](../sanity/schemas/util-functions/schemaFilters.ts)),
+  `flattenFirstRichTextBlock`, `formatMinutesSeconds`,
+  `convertTimeToMinutesSeconds` and `sectionPreview`
+  ([`utilFunctions.ts`](../sanity/schemas/util-functions/utilFunctions.ts)),
+  and `structureToolIconColors`
+  ([`icon-helpers.tsx`](../sanity/structure-tool/icon-helpers.tsx)) — and
+  verify the live hook in
+  [`useSanityFetch.ts`](../sanity/sanity-hooks/useSanityFetch.ts) against the
+  production fetch flow. Every schema type is registered; the unused surface is
+  helpers, not documents.
+- **Shared field builders:** decide whether the string `bio` variant stays in
+  [`academicFields.tsx`](../sanity/schemas/common/academicFields.tsx)
+  (`AcademicBioOptions`). `academicGrouping` already takes the grouping keys as
+  an argument, so the override path exists.
 - **Link selector:** list pages and academic entities dynamically in
-  [`link-selector.ts`](../sanity/schemas/common/link-selector.ts) (or hardcode the
-  main pages), then use it for the plain `url` website field in
+  [`link-selector.ts`](../sanity/schemas/common/link-selector.ts) (it maps page
+  sections today), then use it for the plain `url` website field in
   [`person.ts`](../sanity/schemas/misc/person.ts).
 - **Validation:** add `min` for string fields in `buildLengthRules`
   ([`validation.ts`](../sanity/schemas/validation.ts)) once the validation revamp
@@ -171,17 +163,18 @@ described in
   scripts and Sanity entities that existed when the deployment was built; a new
   or deleted script reaches it only on the next rebuild. `app/sitemap.ts` pins
   `dynamic = 'force-static'` and `revalidate = false` so a later change cannot
-  quietly turn it into a per-request route. That also means a full rewrite of the file per deploy, relevant
-  if the script count ever makes the cost noticeable.
+  quietly turn it into a per-request route. That also means a full rewrite of
+  the file per deploy, relevant if the script count ever makes the cost
+  noticeable.
 - **Cache Components:** investigate the `use cache` directive and partial
   prerendering.
 - **Font weights:** the declarations and the preload links are settled — the
   local families preload nothing, and the unused Bricolage family is gone, so a
   page fetches the five faces it renders instead of 22 files. What is left is
-  trimming the *declared* weights: `Matter` declares twelve files and
-  `Antique Olive` eight, and no page uses more than three of each. That needs a
-  sweep of the UI's computed font-weights once the design is final, because
-  removing a declared weight changes any element that falls back to it.
+  trimming the *declared* weights: the fonts file declares 21 faces across
+  `Matter` and `Antique Olive`, and no page uses more than three of each. That
+  needs a sweep of the UI's computed font-weights once the design is final,
+  because removing a declared weight changes any element that falls back to it.
 - **Backdrop blur cost:** the frosted surfaces are the most expensive thing the
   page paints. Cost scales with radius × area × number of stacked surfaces, and
   all of it recomputes every frame because the star canvas behind animates
@@ -197,18 +190,12 @@ described in
 
 ## Infrastructure and deployment
 
-- **Cloudflare in front of the web host:** `scriptr.uk` is proxied, and the
-  proxy drops the API's server-to-server revalidation POST, which is why
-  `NEXT_REVALIDATE_URL` points at the web project's Vercel alias
-  (`VERCEL_DEPLOYMENT.md`). Keep new Cloudflare rules (bot protection, WAF)
-  from blocking that host pair again, and treat Bot Fight Mode as the suspect
-  if avatars or `files.scriptr.uk` requests start failing while the object is
-  fine.
 - **Optimizer tuning:** the service is deployed; what is left is running real
   scans, text-heavy PDFs and 20 MB phone photos through it to see how often the
   3.5 MB cap is hit and whether the `/ebook` and `/screen` presets keep text
-  legible, then tuning the presets and the image ladder. Also consider running
-  `corepack pnpm test` in the API build so failing tests block deploys.
+  legible, then tuning the presets and the image ladder. The API deploy
+  ([`hono/vercel.json`](../hono/vercel.json)) builds with `check-types` only, so
+  also wire `corepack pnpm test` into it and make failing tests block deploys.
 - **Serving cost:** review the preview/download paths for avoidable egress and
   repeated signing.
 - **Finish production auth verification:** confirm the Supabase Auth Site URL
@@ -224,55 +211,31 @@ described in
 
 ## Tooling and quality
 
-- **Biome coverage:** enable the additional rules once their signal-to-noise
-  ratio has been reviewed.
+- **Biome coverage:** the project-specific rules are on; review and enable the
+  remaining recommended ones that were left off.
 - **Error hygiene:** project-wide review that stack traces and database details
   never reach users.
-- **Service-to-service secrets [partly resolved]:** the old
-  `INTERNAL_API_SECRET` / `SANITY_STUDIO_INTERNAL_SECRET` pair is gone. It had
-  been inlined into the Studio bundle by Vite (so anyone who loaded the hosted
-  Studio could read it) and it unlocked a service-role write surface, which meant
-  RLS was bypassable with a public string. What replaced it: the Studio now
-  trades a TOTP code for a twenty-minute HMAC token (`POST /api/sanity/access`,
-  `hono/src/lib/admin-access.ts`), the `/api/internal/*` mount no longer exists,
-  catalog routes live at `/api/sanity/*`, and `GET /api/sitemap/scripts` is the
-  one remaining shared-secret route — scoped to that path, held only by the Next
-  build, and limited to 10 reads/day and 2/minute per IP.
-
-  The website's admin surface (`/api/admin/*`) uses the same TOTP second factor:
-  `POST /api/admin/access` exchanges a code for an HttpOnly twenty-minute cookie, which the
-  server-rendered admin pages inherit, and every route there also requires an
-  admin session. Both non-session surfaces are origin-pinned
-  (`SANITY_STUDIO_ORIGIN`, `WEBSITE_ORIGIN`) and refuse a foreign origin even
-  with a valid token; production also refuses a missing `Origin`. Admin actions are covered too: the
-  flag queue, restriction management, rating-type and achievement-definition
-  writes, the admin script list and the admin profile routes all chain
-  `requireAdminAccess` on top of the session, and `/admin`'s layout renders the
-  unlock form instead of a page whenever the cookie is missing or spent.
-
-  Still open, in the same spirit: `REVALIDATE_SECRET` and `OPTIMIZER_SECRET` are
-  ordinary long-lived shared secrets between services. And three parts of the new
-  design are per-instance in memory (the code-replay guard, the 5-attempts/15-min
-  code throttle, the sitemap limiters), so a second warm serverless instance has
-  its own copy: it is abuse friction, not an exact quota, and it should move to a
-  table if it ever needs to be exact. Issued tokens are stateless, so a token
-  cannot be revoked before its twenty minutes are up.
-
+- **Service-to-service secrets:** the Studio's shared secret is gone (a TOTP
+  code is exchanged for a twenty-minute HMAC token) and both remaining
+  service-to-service calls are signed rather than secret-bearing — the API
+  signs `${timestamp}.${body}` for `/api/revalidate` and `/optimize`. What is
+  left: `SITEMAP_SECRET` is still a header secret, scoped to one route and held
+  only by the Next build; the two HMAC keys (`REVALIDATE_SECRET`,
+  `OPTIMIZER_SECRET`) are long-lived and have no rotation; and the code-replay
+  guard, the 5-attempts/15-min code throttle and the sitemap limiters live in
+  memory per instance, so a second warm serverless instance has its own copy —
+  abuse friction, not an exact quota, and it should move to a table if it ever
+  needs to be exact.
 - **Sanity content freshness:** `fetchSanityData`
   ([`next/sanity/lib/utils.ts`](../next/sanity/lib/utils.ts)) reads through the
   client with `next: { revalidate: false }` and a single `sanity` tag, so a
-  document read is cached until the next build. It used to carry a 60-second
-  TTL, from when a production build read through the staging client
-  (`useCdn: false`); that workaround only made every Sanity entry refetch each
-  minute, and the persisted Data Cache it blamed was not the cause. What is
-  left: a Sanity **publish webhook** to `POST https://scriptr.uk/api/revalidate`
-  with `{ "tags": ["sanity"] }`, which expires the tag without waiting for a
-  deploy — nothing invalidates it today, so CMS edits appear on the next rebuild.
-  That webhook now gates the calendar as well: `/calendar` and the header alert
-  read the `calendar` document (and, through it, its events) once per build, so a
-  new or edited event — or a change to the document's arrays — reaches readers on
-  the next rebuild too ([`ARCHITECTURE-CALENDAR.md`](ARCHITECTURE-CALENDAR.md)).
-  The same read no longer decides drafts-vs-published from
+  document read is cached until the next build. What is left: a Sanity
+  **publish webhook** to `POST https://scriptr.uk/api/revalidate` with
+  `{ "tags": ["sanity"] }`, which expires the tag without waiting for a deploy
+  — nothing invalidates that tag today, so CMS edits appear on the next
+  rebuild. That webhook now gates the calendar as well: `/calendar` and the
+  header alert read the `calendar` document (and, through it, its events) once
+  per build. The same read no longer decides drafts-vs-published from
   `NEXT_PUBLIC_ENVIRONMENT_TYPE` alone: a Vercel production deployment is
   production even when that variable is missing, and `useCdn` is a property of
   the read (origin for drafts, CDN for published) rather than of the build.
@@ -298,19 +261,20 @@ described in
 - **Download achievement thresholds:** `total_script_downloads` is seeded now,
   but anonymous self-downloads cannot be detected and IP/device rotation can
   inflate the count, so its thresholds are softer evidence than the other
-  metrics. The suspicious-download review under Administration is the
-  longer-term answer, and thresholds may need raising once it exists.
+  metrics. The suspicious-download review above is the longer-term answer, and
+  thresholds may need raising once it exists.
 
 ## Suggested order
 
-1. Remaining admin and academic-sync tools.
+1. The two remaining admin tools: suspicious-download review, then the academic
+   sync and dependency tools.
 2. Correctness and quality: the deferred accessibility list, the font-weight
    sweep, then the visual-fidelity pass (glass, grain, simple-mode contrast).
 3. Optimizer tuning and the serving-cost review.
 4. The privilege review.
 5. Sanity cleanup and the open Studio decisions.
-6. Tooling: Biome rules, error hygiene, internal secrets.
-7. Deferred: the download achievement thresholds above.
+6. Tooling: the remaining Biome rules, error hygiene, secret rotation.
+7. Deferred: visual editing, then the download achievement thresholds.
 
 ## Exploratory ideas
 

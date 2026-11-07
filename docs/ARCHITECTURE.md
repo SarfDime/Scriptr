@@ -20,7 +20,7 @@ This describes the system as it currently stands, one file per area. Start here,
 
 ## 5. Moderation
 
-[Open](ARCHITECTURE-MODERATION.md) — flags, resolution, admin UI v1, download dedupe.
+[Open](ARCHITECTURE-MODERATION.md) — flags, resolution, the admin pages, download dedupe.
 
 ## 6. Out of Scope (Current Version)
 
