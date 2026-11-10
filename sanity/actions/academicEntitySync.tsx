@@ -167,6 +167,11 @@ async function buildDatabasePayload(
     body.professor_ids = (await fetchDbIds(doc.professors)).filter(Boolean)
   } else if (entityType === 'study') {
     body.faculty_id = await fetchParentDbId(parentReference)
+    const siteSlug = (doc.siteSlug as { current?: string } | undefined)?.current
+    if (siteSlug) body.site_slug = siteSlug
+    if (doc.r2BucketId && typeof doc.r2BucketId === 'string') {
+      body.r2_bucket_id = doc.r2BucketId
+    }
   } else if (entityType === 'university') {
     if (doc.r2BucketId && typeof doc.r2BucketId === 'string') {
       body.r2_bucket_id = doc.r2BucketId

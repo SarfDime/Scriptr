@@ -641,6 +641,19 @@ scripts.post(
     }
     const files = verified.files
 
+    // The study is denormalised onto the script for feeds, search and RLS, and
+    // the composite key checks it against the subject. A trigger keeps it right
+    // for every other writer; this path states it because the column is `not
+    // null`, and the read doubles as the subject check.
+    const { data: subject, error: subjectError } = await supabase
+      .from('subjects')
+      .select('study_id')
+      .eq('id', subjectId)
+      .maybeSingle()
+
+    if (subjectError) return databaseErrorResponse(c, subjectError)
+    if (!subject) return c.json({ error: 'Subject not found' }, 400)
+
     // The id is minted here rather than by the column default so the slug can
     // be derived from it in the same insert: the suffix is what makes two
     // identically titled scripts distinct, and the slug is never rewritten.
@@ -654,6 +667,7 @@ scripts.post(
         title,
         description,
         subject_id: subjectId,
+        study_id: subject.study_id,
         professor_id: professorId,
         author_id: user.id,
         exam_session: examSession,

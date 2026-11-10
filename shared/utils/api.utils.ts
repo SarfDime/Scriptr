@@ -5,6 +5,7 @@ import {
   MAX_UPLOAD_FILE_BYTES,
   OPTIMIZABLE_FILE_TYPES,
 } from '../config/shared-constants'
+import { isReservedSiteSlug, SITE_SLUG_PATTERN } from '../config/site-slugs'
 import type {
   FileType,
   FlagTargetType,
@@ -63,6 +64,24 @@ function validateUsername(username: unknown): string | null {
   }
   if (!USERNAME_PATTERN.test(normalizedUsername)) {
     return 'Username can only contain letters, numbers, hyphens, and underscores'
+  }
+  return null
+}
+
+/**
+ * A study's permanent site handle. Format and reserved words are checked before
+ * the write so a bad handle fails as a 400; the database enforces the same rules
+ * and its unique index decides a race between two callers.
+ */
+function validateSiteSlug(value: unknown): string | null {
+  if (typeof value !== 'string' || value.length === 0) {
+    return 'Site slug is required'
+  }
+  if (!SITE_SLUG_PATTERN.test(value)) {
+    return 'Site slug must be lowercase letters, digits and inner dashes'
+  }
+  if (isReservedSiteSlug(value)) {
+    return 'That site slug is reserved'
   }
   return null
 }
@@ -246,5 +265,6 @@ export {
   validateFullName,
   validateNewPassword,
   validatePassword,
+  validateSiteSlug,
   validateUsername,
 }

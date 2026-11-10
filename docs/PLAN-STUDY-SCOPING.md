@@ -9,14 +9,14 @@ implementation plan: what changes, in which app, and why.
 | Phase | Status | Notes |
 |---|---|---|
 | 1. Build and cache hygiene | Done | Benefits the current setup on its own |
-| 2. Data model | Not started | Foundation for everything else |
+| 2. Data model | Done | Foundation for everything else |
 | 3. Roles and permissions | Not started | Required before any write is scoped |
 | 4. Study routes | Not started | Frontend shell |
 | 5. Study-scoped API | Not started | Writes scoped, reads open |
 | 6. Achievements and notifications | Not started | Per study, plus global |
 | 7. Cleanup and docs | Not started | — |
 
-Last reconciled: 2026-11-10 (Phase 1 complete).
+Last reconciled: 2026-11-10 (Phases 1–2 complete).
 
 ## Important points
 
@@ -100,42 +100,49 @@ Small, independent of scoping, and pays off immediately.
 
 ### Hono (`hono/supabase/migrations/`)
 
-* [ ] `studies.site_slug text` — unique on `lower(site_slug)`, format
-  `^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`, reserved-word check. *Why:* the study
+* [x] `studies.site_slug text` — unique on `lower(site_slug)`, format
+  `^[a-z0-9]([a-z0-9-]{0,59}[a-z0-9])?$`, reserved-word check. *Why:* the study
   path segment must be globally unique.
-* [ ] `studies.r2_bucket_id text` — backfilled from the parent university.
+* [x] `studies.r2_bucket_id text` — backfilled from the parent university.
   *Why:* files are study-scoped, not university-scoped.
-* [ ] `scripts.study_id uuid not null` — backfilled from `subjects.study_id`,
+* [x] `scripts.study_id uuid not null` — backfilled from `subjects.study_id`,
   then held by a composite FK `(subject_id, study_id) → subjects(id, study_id)`
-  against a new `unique (id, study_id)` on `subjects`.
+  against a new `unique (id, study_id)` on `subjects`. A before-write trigger
+  derives it, and the older single-column key was dropped because two keys
+  between the same tables make every `subject:subjects(...)` embed ambiguous.
   *Why:* RLS, feeds, search and indexes stop needing a three-table join, and the
   denormalised value can never disagree with the subject.
-* [ ] Indexes: `scripts (study_id, created_at desc)` and
+* [x] Indexes: `scripts (study_id, created_at desc)` and
   `scripts (study_id, vote_score desc) where is_flagged = false`.
-* [ ] `profile_studies` gains `display_name`, `headline`, `year`, `is_primary`,
-  `is_public`, `updated_at`; unique `(profile_id, study_id)`, one primary per
-  profile, unique `(study_id, lower(display_name))` where public.
+* [x] `profile_studies` gains `display_name`, `headline`, `year`, `is_primary`,
+  `is_public`, `updated_at`; one primary per profile, unique
+  `(study_id, lower(display_name))` where public. The primary key already made
+  `(profile_id, study_id)` unique.
   *Why:* the academic profile is the per-study representation of a global
   identity.
-* [ ] `achievement_definitions.study_id uuid null`; `profile_achievements` gets
-  a study-scoped uniqueness rule.
+* [x] `achievement_definitions.study_id uuid null`.
   *Why:* achievements are per study, with global ones as `null`.
+  `profile_achievements` needs no change: a definition id stays globally unique,
+  so `(profile_id, achievement_id)` already scopes each award to its study.
 
 ### Sanity (`sanity/schemas/academic/`)
 
-* [ ] `study.siteSlug` — required, unique across all studies, reserved-word
-  validation, read-only once `dbId` is set.
-* [ ] `study.r2BucketId` — same field shape as
+* [x] `study.siteSlug` — required, unique across all studies, reserved-word
+  validation, read-only once `dbId` and a handle exist together.
+* [x] `study.r2BucketId` — same field shape as
   [`university.r2BucketId`](../sanity/schemas/academic/university.ts).
-* [ ] Per-study site settings: display name, logo, description, navigation.
+* [x] Per-study site settings: a tagline and an optional navigation-menu
+  reference. Name, logo and description already exist on the study document.
 
 ### Hono
 
-* [ ] Academic sync routes persist `site_slug` and `r2_bucket_id`; return `409`
-  when the slug is taken, mirroring the existing duplicate-study check in
+* [x] Academic sync routes persist `site_slug` and `r2_bucket_id`; return `409`
+  when the slug is taken or changed after it is set, mirroring the existing
+  duplicate-study check in
   [`sanity-academic.ts`](../hono/src/routes/sanity-academic.ts).
-* [ ] `resolveStorageScope` reads the study bucket and prefixes keys with
-  `<study>/<subject>/<user>` ([`lib/storage-scope.ts`](../hono/src/lib/storage-scope.ts)).
+* [x] `resolveStorageScope` reads the study bucket, falling back to the
+  university's, and prefixes keys with `<study>/<subject>/<user>`
+  ([`lib/storage-scope.ts`](../hono/src/lib/storage-scope.ts)).
 
 ---
 

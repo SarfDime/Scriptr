@@ -7,10 +7,11 @@ export type StorageScope = {
 }
 
 /**
- * Resolve where a subject's files should live: which R2 bucket (from the
- * subject's university) and which dbId-based key prefix (faculty/study/subject).
- * Falls back to the default bucket and a user-scoped prefix if the subject
- * can't be resolved (e.g. not provided yet, or catalog lookup fails).
+ * Resolve where a subject's files should live: the R2 bucket of the subject's
+ * study, falling back to its university's, and a dbId-based key prefix
+ * (study/subject/user). Falls back to the default bucket and a user-scoped
+ * prefix if the subject can't be resolved (e.g. not provided yet, or catalog
+ * lookup fails).
  */
 export async function resolveStorageScope(
   c: Parameters<typeof createInternalSupabaseClient>[0] & {
@@ -35,6 +36,7 @@ export async function resolveStorageScope(
       `id,
        study:studies(
          id,
+         r2_bucket_id,
          faculty:faculties(
            id,
            university:universities(r2_bucket_id)
@@ -46,15 +48,19 @@ export async function resolveStorageScope(
 
   const study = data?.study
   const faculty = study?.faculty
-  const bucket = faculty?.university?.r2_bucket_id
 
   if (error || !study || !faculty) {
     return fallback
   }
 
+  // Files belong to the study: its own bucket when it has one, otherwise the
+  // parent university's, decided once at the study so a later move does not
+  // split a study's files across buckets.
+  const bucket = study.r2_bucket_id ?? faculty.university?.r2_bucket_id
+
   return {
     bucket: bucket || c.env.R2_BUCKET,
-    keyPrefix: `${faculty.id}/${study.id}/${subjectId}/${userId}`,
+    keyPrefix: `${study.id}/${subjectId}/${userId}`,
   }
 }
 

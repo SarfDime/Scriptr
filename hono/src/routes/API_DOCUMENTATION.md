@@ -202,10 +202,16 @@ assignments).
 
 | Route                             | Body                                                                              |
 | --------------------------------- | --------------------------------------------------------------------------------- |
-| `POST /sanity/studies`          | `{ name, faculty_id, sanity_id? }`                                                |
-| `PATCH /sanity/studies/:id`     | `{ name?, faculty_id? }`                                                          |
+| `POST /sanity/studies`          | `{ name, faculty_id, site_slug, sanity_id?, r2_bucket_id? }`                      |
+| `PATCH /sanity/studies/:id`     | `{ name?, faculty_id?, site_slug?, r2_bucket_id? }`                               |
 | `DELETE /sanity/studies/:id`    | — (blocked if referenced by subjects, professor assignments, or user enrollments) |
-| `POST /sanity/studies/:id/sync` | `{ name, faculty_id }`                                                            |
+| `POST /sanity/studies/:id/sync` | `{ name, faculty_id, site_slug?, r2_bucket_id? }`                                 |
+
+`site_slug` is the study's permanent handle: lowercase letters, digits and inner
+dashes, not a reserved word, unique across every study, and refused with `409`
+once set. `r2_bucket_id` is the study's own R2 bucket; left empty, storage falls
+back to the parent university's bucket. Study files are keyed
+`<study>/<subject>/<user>`.
 
 ---
 

@@ -208,6 +208,13 @@ export type FacultyReference = {
   [internalGroqTypeReferenceTo]?: 'faculty'
 }
 
+export type NavMenuReference = {
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'navMenu'
+}
+
 export type Study = {
   _id: string
   _type: 'study'
@@ -236,7 +243,19 @@ export type Study = {
   studentCount?: number
   assistant?: PersonReference
   faculty: FacultyReference
+  siteSlug: Slug
+  r2BucketId?: string
+  siteSettings?: {
+    tagline?: string
+    navigation?: NavMenuReference
+  }
   dbId?: string
+}
+
+export type Slug = {
+  _type: 'slug'
+  current: string
+  source?: string
 }
 
 export type SanityImageCrop = {
@@ -253,12 +272,6 @@ export type SanityImageHotspot = {
   y: number
   height: number
   width: number
-}
-
-export type Slug = {
-  _type: 'slug'
-  current: string
-  source?: string
 }
 
 export type LocalizedStringArray = {
@@ -471,13 +484,6 @@ export type CalendarReference = {
   _type: 'reference'
   _weak?: boolean
   [internalGroqTypeReferenceTo]?: 'calendar'
-}
-
-export type NavMenuReference = {
-  _ref: string
-  _type: 'reference'
-  _weak?: boolean
-  [internalGroqTypeReferenceTo]?: 'navMenu'
 }
 
 export type Website = {
@@ -1066,10 +1072,11 @@ export type AllSanitySchemaTypes =
   | Subject
   | PersonReference
   | FacultyReference
+  | NavMenuReference
   | Study
+  | Slug
   | SanityImageCrop
   | SanityImageHotspot
-  | Slug
   | LocalizedStringArray
   | Professor
   | UniversityReference
@@ -1080,7 +1087,6 @@ export type AllSanitySchemaTypes =
   | Button
   | StarCanvasReference
   | CalendarReference
-  | NavMenuReference
   | Website
   | StarCanvas
   | Person

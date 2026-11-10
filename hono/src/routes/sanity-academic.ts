@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { ACCESS_TOKEN_HEADER } from '../../../shared/config/access'
 import type { Database } from '../../../shared/types/database.types'
+import { validateSiteSlug } from '../../../shared/utils/api.utils'
 import { InvalidSecretError, sharedAccessVerifier } from '../lib/admin-access'
 import { honoLog } from '../lib/logger'
 import { databaseErrorResponse, requiredParam } from '../lib/request'
@@ -30,6 +31,51 @@ function validateR2BucketId(value: unknown) {
 function normalizeR2BucketId(value: unknown): string | null | undefined {
   if (value === undefined || value === null) return value
   return isValidR2BucketId(value) ? value : undefined
+}
+
+/** The study columns a create, update or sync may carry. */
+type StudyUpdate = Database['public']['Tables']['studies']['Update']
+
+/**
+ * Validates the optional study fields shared by update and sync. `site_slug` is
+ * permanent once set: changing it would break every link to the study, so a
+ * change is refused rather than silently dropped.
+ */
+function resolveStudyWrite(
+  body: { site_slug?: unknown; r2_bucket_id?: unknown },
+  currentSiteSlug: string | null
+):
+  | { ok: true; fields: StudyUpdate }
+  | { ok: false; error: string; status: 400 | 409 } {
+  const fields: StudyUpdate = {}
+
+  if (body.r2_bucket_id !== undefined) {
+    const bucketError = validateR2BucketId(body.r2_bucket_id)
+    if (bucketError) return { ok: false, error: bucketError, status: 400 }
+    fields.r2_bucket_id = normalizeR2BucketId(body.r2_bucket_id) ?? null
+  }
+
+  if (body.site_slug !== undefined) {
+    const slugError = validateSiteSlug(body.site_slug)
+    if (slugError) return { ok: false, error: slugError, status: 400 }
+    if (currentSiteSlug !== null && currentSiteSlug !== body.site_slug) {
+      return {
+        ok: false,
+        error: 'Site slug cannot change once it is set',
+        status: 409,
+      }
+    }
+    fields.site_slug = body.site_slug as string
+  }
+
+  return { ok: true, fields }
+}
+
+/** 23505 on studies can mean the site handle or the faculty/name pair. */
+function duplicateStudyMessage(message: string): string {
+  return message.includes('studies_site_slug_key')
+    ? 'That site slug is already in use'
+    : 'This study already exists in this faculty'
 }
 
 function mapPostgresError(
@@ -582,11 +628,18 @@ academic.get('/studies', async (c) => {
 /** Create a study, or return the existing Sanity-linked record. */
 academic.post('/studies', async (c) => {
   const supabase = createInternalSupabaseClient(c)
-  const { name, faculty_id, sanity_id } = await c.req.json()
+  const { name, faculty_id, sanity_id, site_slug, r2_bucket_id } =
+    await c.req.json()
 
   if (!name || !faculty_id) {
     return c.json({ error: 'Name and faculty_id are required' }, 400)
   }
+
+  const slugError = validateSiteSlug(site_slug)
+  if (slugError) return c.json({ error: slugError }, 400)
+
+  const bucketError = validateR2BucketId(r2_bucket_id)
+  if (bucketError) return c.json({ error: bucketError }, 400)
 
   const existing = await findBySanityId(supabase, 'studies', sanity_id)
   if (existing) {
@@ -595,13 +648,19 @@ academic.post('/studies', async (c) => {
 
   const { data, error } = await supabase
     .from('studies')
-    .insert({ name, faculty_id, sanity_id: sanity_id ?? null })
+    .insert({
+      name,
+      faculty_id,
+      sanity_id: sanity_id ?? null,
+      site_slug: site_slug as string,
+      r2_bucket_id: normalizeR2BucketId(r2_bucket_id) ?? null,
+    })
     .select()
     .single()
 
   if (error) {
     if (error.code === '23505') {
-      return c.json({ error: 'This study already exists in this faculty' }, 409)
+      return c.json({ error: duplicateStudyMessage(error.message) }, 409)
     }
     return databaseErrorResponse(c, error)
   }
@@ -613,16 +672,40 @@ academic.post('/studies', async (c) => {
 academic.patch('/studies/:id', async (c) => {
   const studyId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
-  const { name, faculty_id } = await c.req.json()
+  const { name, faculty_id, site_slug, r2_bucket_id } = await c.req.json()
+
+  const { data: current, error: currentError } = await supabase
+    .from('studies')
+    .select('site_slug')
+    .eq('id', studyId)
+    .maybeSingle()
+
+  if (currentError) return databaseErrorResponse(c, currentError)
+  if (!current) return c.json({ error: 'Study not found' }, 404)
+
+  const write = resolveStudyWrite(
+    { site_slug, r2_bucket_id },
+    current.site_slug
+  )
+  if (!write.ok) return c.json({ error: write.error }, write.status)
+
+  const update: StudyUpdate = { ...write.fields }
+  if (name !== undefined) update.name = name
+  if (faculty_id !== undefined) update.faculty_id = faculty_id
 
   const { data, error } = await supabase
     .from('studies')
-    .update({ name, faculty_id })
+    .update(update)
     .eq('id', studyId)
     .select()
     .single()
 
-  if (error) return databaseErrorResponse(c, error)
+  if (error) {
+    if (error.code === '23505') {
+      return c.json({ error: duplicateStudyMessage(error.message) }, 409)
+    }
+    return databaseErrorResponse(c, error)
+  }
   return c.json({ success: true, study: data })
 })
 
@@ -630,20 +713,40 @@ academic.patch('/studies/:id', async (c) => {
 academic.post('/studies/:id/sync', async (c) => {
   const studyId = requiredParam(c, 'id')
   const supabase = createInternalSupabaseClient(c)
-  const { name, faculty_id } = await c.req.json()
+  const { name, faculty_id, site_slug, r2_bucket_id } = await c.req.json()
 
   if (!name || !faculty_id) {
     return c.json({ error: 'Name and faculty_id are required' }, 400)
   }
 
+  const { data: current, error: currentError } = await supabase
+    .from('studies')
+    .select('site_slug')
+    .eq('id', studyId)
+    .maybeSingle()
+
+  if (currentError) return databaseErrorResponse(c, currentError)
+  if (!current) return c.json({ error: 'Study database record not found' }, 404)
+
+  const write = resolveStudyWrite(
+    { site_slug, r2_bucket_id },
+    current.site_slug
+  )
+  if (!write.ok) return c.json({ error: write.error }, write.status)
+
   const { data, error } = await supabase
     .from('studies')
-    .update({ name, faculty_id })
+    .update({ ...write.fields, name, faculty_id })
     .eq('id', studyId)
     .select()
     .single()
 
-  if (error) return databaseErrorResponse(c, error)
+  if (error) {
+    if (error.code === '23505') {
+      return c.json({ error: duplicateStudyMessage(error.message) }, 409)
+    }
+    return databaseErrorResponse(c, error)
+  }
   return c.json({ success: true, study: data })
 })
 

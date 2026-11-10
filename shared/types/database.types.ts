@@ -22,6 +22,7 @@ export type Database = {
           id: string
           metric: string
           rarity: string
+          study_id: string | null
           threshold: number
           title: string
         }
@@ -32,6 +33,7 @@ export type Database = {
           id: string
           metric: string
           rarity?: string
+          study_id?: string | null
           threshold: number
           title: string
         }
@@ -42,10 +44,19 @@ export type Database = {
           id?: string
           metric?: string
           rarity?: string
+          study_id?: string | null
           threshold?: number
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'achievement_definitions_study_id_fkey'
+            columns: ['study_id']
+            isOneToOne: false
+            referencedRelation: 'studies'
+            referencedColumns: ['id']
+          },
+        ]
       }
       comment_likes: {
         Row: {
@@ -745,18 +756,36 @@ export type Database = {
       profile_studies: {
         Row: {
           created_at: string
+          display_name: string | null
+          headline: string | null
+          is_primary: boolean
+          is_public: boolean
           profile_id: string
           study_id: string
+          updated_at: string
+          year: number | null
         }
         Insert: {
           created_at?: string
+          display_name?: string | null
+          headline?: string | null
+          is_primary?: boolean
+          is_public?: boolean
           profile_id: string
           study_id: string
+          updated_at?: string
+          year?: number | null
         }
         Update: {
           created_at?: string
+          display_name?: string | null
+          headline?: string | null
+          is_primary?: boolean
+          is_public?: boolean
           profile_id?: string
           study_id?: string
+          updated_at?: string
+          year?: number | null
         }
         Relationships: [
           {
@@ -952,6 +981,7 @@ export type Database = {
           is_flagged: boolean
           professor_id: string
           slug: string
+          study_id: string
           subject_id: string
           title: Json
           updated_at: string
@@ -969,6 +999,7 @@ export type Database = {
           is_flagged?: boolean
           professor_id: string
           slug: string
+          study_id: string
           subject_id: string
           title: Json
           updated_at?: string
@@ -986,6 +1017,7 @@ export type Database = {
           is_flagged?: boolean
           professor_id?: string
           slug?: string
+          study_id?: string
           subject_id?: string
           title?: Json
           updated_at?: string
@@ -1000,18 +1032,18 @@ export type Database = {
             referencedColumns: ['id']
           },
           {
-            foreignKeyName: 'scripts_subject_id_fkey'
-            columns: ['subject_id']
-            isOneToOne: false
-            referencedRelation: 'subjects'
-            referencedColumns: ['id']
-          },
-          {
             foreignKeyName: 'scripts_subject_professor_fkey'
             columns: ['subject_id', 'professor_id']
             isOneToOne: false
             referencedRelation: 'subject_professors'
             referencedColumns: ['subject_id', 'professor_id']
+          },
+          {
+            foreignKeyName: 'scripts_subject_study_fkey'
+            columns: ['subject_id', 'study_id']
+            isOneToOne: false
+            referencedRelation: 'subjects'
+            referencedColumns: ['id', 'study_id']
           },
         ]
       }
@@ -1021,21 +1053,27 @@ export type Database = {
           faculty_id: string
           id: string
           name: string
+          r2_bucket_id: string | null
           sanity_id: string | null
+          site_slug: string | null
         }
         Insert: {
           created_at?: string
           faculty_id: string
           id?: string
           name: string
+          r2_bucket_id?: string | null
           sanity_id?: string | null
+          site_slug?: string | null
         }
         Update: {
           created_at?: string
           faculty_id?: string
           id?: string
           name?: string
+          r2_bucket_id?: string | null
           sanity_id?: string | null
+          site_slug?: string | null
         }
         Relationships: [
           {
