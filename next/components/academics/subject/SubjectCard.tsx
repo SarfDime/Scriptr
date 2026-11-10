@@ -29,6 +29,7 @@ export const SubjectCard = ({
     <EntityCard
       href={getAcademicPath({
         type: 'subject',
+        siteSlug: study?.siteSlug,
         universitySlug,
         facultySlug,
         studySlug,

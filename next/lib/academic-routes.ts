@@ -18,10 +18,16 @@ import type {
 export type AcademicPathInput =
   | ({ type: 'university' } & UniversityRouteParams)
   | ({ type: 'faculty' } & FacultyRouteParams)
-  | ({ type: 'study' } & StudyRouteParams)
-  | ({ type: 'subject' } & SubjectRouteParams)
+  | ({ type: 'study'; siteSlug?: string | null } & Omit<
+      StudyRouteParams,
+      'siteSlug'
+    >)
+  | ({ type: 'subject'; siteSlug?: string | null } & Omit<
+      SubjectRouteParams,
+      'siteSlug'
+    >)
   | ({ type: 'professor' } & ProfessorRouteParams)
-  | { type: 'script'; scriptSlug: string }
+  | { type: 'script'; scriptSlug: string; siteSlug?: string | null }
 
 /**
  * A slug the schema requires can still be absent at runtime: a doc saved before
@@ -35,20 +41,42 @@ const cleanEntityId = (id: string | null | undefined): string => {
   return id.startsWith('drafts.') ? id.slice('drafts.'.length) : id
 }
 
+/**
+ * The study site's root: `/study/[siteSlug]`. A study without a handle yet is
+ * still served at its nested catalog URL (see `buildAcademicPath`), which is
+ * what keeps the site working while the handle is being authored.
+ */
+export const getStudyPath = (siteSlug: string | null | undefined): string => {
+  const site = cleanEntityId(siteSlug)
+  return site ? `/study/${site}` : '/'
+}
+
 const buildAcademicPath = (input: AcademicPathInput): string => {
   switch (input.type) {
     case 'university':
       return `/university/${cleanEntityId(input.universitySlug)}`
     case 'faculty':
       return `/university/${cleanEntityId(input.universitySlug)}/faculty/${cleanEntityId(input.facultySlug)}`
-    case 'study':
+    case 'study': {
+      const site = cleanEntityId(input.siteSlug)
+      if (site) return getStudyPath(site)
       return `/university/${cleanEntityId(input.universitySlug)}/faculty/${cleanEntityId(input.facultySlug)}/study/${cleanEntityId(input.studySlug)}`
-    case 'subject':
+    }
+    case 'subject': {
+      const site = cleanEntityId(input.siteSlug)
+      if (site) {
+        return `${getStudyPath(site)}/subject/${cleanEntityId(input.subjectSlug)}`
+      }
       return `/university/${cleanEntityId(input.universitySlug)}/faculty/${cleanEntityId(input.facultySlug)}/study/${cleanEntityId(input.studySlug)}/subject/${cleanEntityId(input.subjectSlug)}`
+    }
     case 'professor':
       return `/professor/${cleanEntityId(input.professorSlug)}`
-    case 'script':
-      return `/scripts/${cleanEntityId(input.scriptSlug)}`
+    case 'script': {
+      const site = cleanEntityId(input.siteSlug)
+      const slug = cleanEntityId(input.scriptSlug)
+      if (site) return `${getStudyPath(site)}/scripts/${slug}`
+      return `/scripts/${slug}`
+    }
     default:
       return '/'
   }

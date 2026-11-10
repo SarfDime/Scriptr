@@ -11,12 +11,12 @@ implementation plan: what changes, in which app, and why.
 | 1. Build and cache hygiene | Done | Benefits the current setup on its own |
 | 2. Data model | Done | Foundation for everything else |
 | 3. Roles and permissions | Done | Owner and per-study admin/moderator roles, study-scoped policies, switcher-driven queues |
-| 4. Study routes | Not started | Frontend shell |
+| 4. Study routes | Done | Shell, chrome per tree, setup and selection pages, study-scoped calendar and scripts |
 | 5. Study-scoped API | Not started | Writes scoped, reads open |
 | 6. Achievements and notifications | Not started | Per study, plus global |
 | 7. Cleanup and docs | Not started | — |
 
-Last reconciled: 2026-11-10 (Phases 1–3 complete).
+Last reconciled: 2026-11-10 (Phases 1–4 complete).
 
 ## Important points
 
@@ -38,6 +38,12 @@ Last reconciled: 2026-11-10 (Phases 1–3 complete).
   keyed by study. Dismissing setup is per study and stops the redirect for that
   study. Either way the study site stays readable without an account.
 * **Restrictions and bans are org-wide.** They never carry a study id.
+* **Professors are university-scoped, not study-scoped.** A professor belongs to
+  one university and teaches across its studies, so a study never owns one and
+  the professor page stays a catalog page. Their comments and ratings are keyed
+  by the professor alone, which makes them university-wide while moderation is
+  study-scoped — left as they are for now and recorded as deferred in
+  [`PROGRESS.md`](PROGRESS.md).
 * **Role rights.** An owner acts org-wide and gets the whole admin UI. A study
   `admin` gets the admin UI and every edit or delete of another member's content,
   inside their own studies only. A `moderator` is study-scoped like an admin but
@@ -202,37 +208,77 @@ Small, independent of scoping, and pays off immediately.
 
 ### Frontend
 
-* [ ] Move the existing pages into a `(site)` route group; URLs do not change.
-* [ ] Add `app/study/[siteSlug]/` with `layout.tsx` (study chrome, theme,
-  `StudyProvider`), `page.tsx` (home), `academic-setup`,
-  `subject/[subjectSlug]`, `professor/[professorSlug]`,
-  `scripts/[scriptSlug]`, `user/[username]`, `search`.
-* [ ] Study layout resolves the study from `siteSlug` through one cached read,
-  and 404s an unknown slug.
-* [ ] `getAcademicPath` emits `/study/[siteSlug]/…` for study and subject paths
-  ([`lib/academic-routes.ts`](../next/lib/academic-routes.ts)); add
-  `getStudyPath`.
-* [ ] `next.config.ts` 308s the nested `/university/…/study/[slug]/…` routes into
-  the new tree. One canonical URL per entity.
-* [ ] Catalog pages keep `dynamicParams = false`; study content pages drop
-  `generateStaticParams` and use `revalidate`.
-* [ ] `academic-setup` is a study page, not a modal: it reads only that study's
+* [x] Study layout resolves the study from `siteSlug` through one cached read
+  (`getStudySite`), and 404s an unknown slug.
+* [x] `getAcademicPath` emits `/study/[siteSlug]/…` for study and subject paths
+  ([`lib/academic-routes.ts`](../next/lib/academic-routes.ts)), with
+  `getStudyPath` for the site root.
+* [x] 308 the nested `/university/…/study/[slug]/…` routes into the new tree,
+  from the route itself rather than `next.config.ts` (the target needs the
+  study's handle, which is data). A study without a handle keeps rendering at
+  its nested URL, so nothing breaks mid-transition. One canonical URL per
+  entity.
+* [x] Catalog pages keep `dynamicParams = false`; study content pages drop
+  `generateStaticParams` and `revalidate = false` — rendered once, then only the
+  publish webhook.
+* [x] `academic-setup` is a study page, not a modal: it reads only that study's
   subjects by year on the server and writes the academic profile directly. No
   provider, no client catalog.
-* [ ] Add the study-selection page inside the main layout for the initial setup:
-  university → faculty → study, names and slugs only, no subjects. It works for
-  guests and signed-in viewers alike and hands off to that study's
+* [x] The study-selection page lives in the main layout (`/start`): university →
+  faculty → study, names and slugs only, no subjects. Guests and signed-in
+  readers see the same page, and choosing a study hands off to its
   `academic-setup`.
-* [ ] Redirect a viewer with no academic profile for the study — and who has not
-  dismissed setup for it — to `academic-setup`. A guest counts as having no
-  profile until they have a browser record for that study.
-* [ ] `academic-setup` writes to `profile_studies` / `profile_subjects` when
-  signed in and to the guest bucket otherwise. "Skip for now" records a
-  per-study dismissal and returns to the study home with a resume link.
-* [ ] Replace the "resume setup" notification action (`open-onboarding`) with a
-  link to the setup page.
-* [ ] Metadata and canonical URLs built from the study path; study home
+* [x] A viewer with no academic profile for the study — and who has not
+  dismissed setup for it — is sent to `academic-setup` (`StudySetupGate`, on the
+  study home). Client-side on purpose: a guest's profile is in this browser, and
+  reading the session on the server would make every study page dynamic.
+* [x] `academic-setup` writes to `profile_studies` / `profile_subjects` when
+  signed in and to a per-study browser record otherwise. "Skip for now" records
+  a per-study dismissal and returns to the study home, which then offers the
+  resume link.
+* [x] Metadata and canonical URLs built from the study path; the study home's
   breadcrumbs link back to the catalog faculty page.
+* [x] Move the existing pages into a `(site)` route group; URLs do not change.
+  `admin`, `auth`, `api` and the sitemaps stay outside it, so site chrome can
+  later be added without touching them.
+* [x] `app/study/[siteSlug]/scripts/[scriptSlug]` — a script's canonical page.
+  The root `/scripts/[slug]` 308s there once the study has a handle, and the
+  page 404s a script that does not belong to its study. The handle comes from
+  `studies.site_slug`, so the redirect starts working when the study is synced
+  to the database.
+* [x] `app/study/[siteSlug]/user/[username]` — the person's academic profile in
+  that study, and a `404` when they are not a member. Identity stays global.
+* [x] `app/study/[siteSlug]/calendar` — a calendar belongs to a study, so the
+  `calendars` reference array moved from the website document onto the study
+  document and the page moved into the site. The header alert is read in the
+  study's layout and handed to the header from there, so it needs no
+  request-time read on the page and no client fetch.
+* [x] Chrome is per tree, not global-conditional: `app/(site)/layout.tsx` (the
+  catalog), `app/(app)/layout.tsx` (account and admin) and
+  `app/(study)/study/[siteSlug]/layout.tsx` (one study, with its calendar alert)
+  each render `MainLayout`. The root layout keeps only what is genuinely global:
+  providers, background, navigation drawer and notification tray.
+* [x] Scripts have no page of their own: `/scripts/[slug]` is an HTTP route
+  handler outside the catalog tree that only 308s to the owning study's site
+  (and 404s when that study has no handle), so the catalog contains no script
+  page at all — only forwarders for links minted before the move.
+* [x] The catalog profile page shows identity, affiliations and activity — not
+  the subject list, which belongs to the study site's view of the person.
+* [x] Global search is catalog-only: universities, faculties, studies and
+  professors. Scripts and subjects are searched inside a study.
+* [ ] No professor route: professors are university-scoped.
+* [x] The study home is the study's content surface: its subjects, its
+  professors and its scripts with the search, subject filter and sort inline
+  (`GET /scripts/study/:studyId`). No separate `/study/[siteSlug]/scripts`
+  listing or `/study/[siteSlug]/search` page — one page a reader already lands
+  on beats two more routes.
+* [x] The "resume setup" notification is a link to the chosen study's
+  `academic-setup` (or `/start` when nothing is chosen); the `open-onboarding`
+  action kind is gone.
+* [ ] Retire the onboarding modal and `OnboardingProvider` — Phase 5: the modal
+  no longer auto-opens on study sites and no longer owns the resume action, but
+  it still serves the pages outside the study tree, and its catalog read is
+  still used by the header alert's subject matching.
 
 ### Sanity
 
@@ -298,7 +344,9 @@ Small, independent of scoping, and pays off immediately.
 
 ## Phase 7 — Cleanup and docs
 
-* [ ] Delete unused nested study/subject routes and their static-param queries.
+* [ ] Delete unused nested study/subject routes and their static-param queries,
+  along with the redirect and compatibility shims listed under "Study-routing
+  shims" in [`PROGRESS.md`](PROGRESS.md).
 * [ ] Update [`ARCHITECTURE-ACADEMIC-CATALOG.md`](ARCHITECTURE-ACADEMIC-CATALOG.md),
   [`ARCHITECTURE-USERS-AUTH.md`](ARCHITECTURE-USERS-AUTH.md),
   [`ARCHITECTURE-SYSTEM-OVERVIEW.md`](ARCHITECTURE-SYSTEM-OVERVIEW.md) and

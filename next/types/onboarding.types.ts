@@ -42,6 +42,8 @@ export type OnboardingStudy = {
   dbId?: string
   name: string
   slug: string | null
+  /** The study's site handle; its page lives there once it has one. */
+  siteSlug?: string | null
   facultyId: string
   subjectsByYear: Array<OnboardingSubjectGroup>
 }

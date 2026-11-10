@@ -6,6 +6,7 @@ import {
   CATALOG_SECTION,
   hasSiteOrigin,
   listStudies,
+  listStudySites,
   MAX_URLS_PER_SITEMAP,
   SCRIPT_SECTION_PREFIX,
   STUDY_SECTION_PREFIX,
@@ -62,7 +63,9 @@ const toCatalogEntries = async (
       facultyStaticParamsQuery,
       'sitemap-faculties'
     ),
-    listStudies(),
+    // A study with a site has its own section, so only the ones still served
+    // at their nested catalog URL are listed here.
+    listStudies().then((studies) => studies.filter((study) => !study.siteSlug)),
     readParams<ProfessorRouteParams>(
       professorStaticParamsQuery,
       'sitemap-professors'
@@ -88,7 +91,7 @@ const toCatalogEntries = async (
 }
 
 const toStudyEntries = async (
-  study: StudyRouteParams,
+  study: StudyRouteParams & { siteSlug: string },
   toUrl: (path: string) => string
 ): Promise<Array<SitemapEntry>> => {
   const subjects = await readParams<SubjectRouteParams>(
@@ -115,7 +118,13 @@ const toScriptEntries = async (
   const offset = sectionIndex * MAX_URLS_PER_SITEMAP
 
   return scripts.slice(offset, offset + MAX_URLS_PER_SITEMAP).map((script) => ({
-    url: toUrl(getAcademicPath({ type: 'script', scriptSlug: script.slug })),
+    url: toUrl(
+      getAcademicPath({
+        type: 'script',
+        scriptSlug: script.slug,
+        siteSlug: script.study_site_slug,
+      })
+    ),
     lastModified: script.updated_at,
   }))
 }
@@ -140,7 +149,7 @@ export const buildSitemapSection = async (
 
   if (id.startsWith(STUDY_SECTION_PREFIX)) {
     const index = Number(id.slice(STUDY_SECTION_PREFIX.length))
-    const studies = await listStudies()
+    const studies = await listStudySites()
     const study = Number.isInteger(index) ? studies.at(index) : undefined
 
     return study ? toStudyEntries(study, toUrl) : []

@@ -1,5 +1,6 @@
 'use client'
 
+import { usePathname } from 'next/navigation'
 import {
   createContext,
   useContext,
@@ -94,7 +95,15 @@ export const OnboardingProvider = ({
   // there is nothing to set up during a splash or an upload anyway.
   const { isOverlayVisible } = useLoading()
 
+  // A study site has its own setup page (`/study/[siteSlug]/academic-setup`),
+  // created per study and written per study, so the global wizard must not open
+  // over it — two setup flows at once is what this used to do. It keeps serving
+  // the catalog and the pages outside the study tree until it is retired.
+  const pathname = usePathname()
+  const isStudySite = pathname?.startsWith('/study/') ?? false
+
   const autoShouldOpen =
+    !isStudySite &&
     !isOverlayVisible &&
     !stillDeciding &&
     !accountAlreadySetUp &&

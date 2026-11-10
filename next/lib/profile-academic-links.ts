@@ -62,6 +62,7 @@ export const buildProfileAcademics = (
     if (!study?.slug || !faculty?.slug || !university?.slug) return null
     return getAcademicPath({
       type: 'study',
+      siteSlug: study.siteSlug,
       universitySlug: university.slug,
       facultySlug: faculty.slug,
       studySlug: study.slug,

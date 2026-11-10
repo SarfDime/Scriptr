@@ -109,6 +109,7 @@ export const createAcademicMetadata = <
 >({
   query,
   seoQuery = query,
+  resolveQueryParams,
   getPath,
   entityLabel,
   fetchOriginPrefix,
@@ -119,6 +120,14 @@ export const createAcademicMetadata = <
 }: {
   query: string
   seoQuery?: string
+  /**
+   * Maps the route's params to the query's params when the two differ — a study
+   * site knows only its handle, while the shared queries take the slug tuple.
+   * Returning `null` means the route does not exist.
+   */
+  resolveQueryParams?: (
+    params: TParams
+  ) => Promise<Record<string, string> | null>
   /**
    * The page's own site-relative path, built from the route params with
    * `getAcademicPath`. It must equal the URL the route is served at, since it
@@ -140,14 +149,19 @@ export const createAcademicMetadata = <
   }): Promise<Metadata> => {
     const routeParams = await params
     const ownSlug = getOwnSlug(routeParams)
+    const queryParams = resolveQueryParams
+      ? await resolveQueryParams(routeParams)
+      : routeParams
 
     const [detail, websiteSettings] = await Promise.all([
-      fetchSanityData<TDetail | null>({
-        query: seoQuery,
-        params: routeParams,
-        fetchOrigin: `${fetchOriginPrefix}-metadata-${ownSlug}`,
-        tags,
-      }).catch(() => null),
+      queryParams
+        ? fetchSanityData<TDetail | null>({
+            query: seoQuery,
+            params: queryParams,
+            fetchOrigin: `${fetchOriginPrefix}-metadata-${ownSlug}`,
+            tags,
+          }).catch(() => null)
+        : Promise.resolve(null),
       fetchWebsiteSeoSettings(),
     ])
 

@@ -61,12 +61,20 @@ sitemap.get('/scripts', async (c) => {
 
   const { data, error } = await supabase
     .from('scripts')
-    .select('slug, updated_at')
+    .select('slug, updated_at, subject:subjects(study:studies(site_slug))')
     .order('created_at', { ascending: false })
 
   if (error) return databaseErrorResponse(c, error)
 
-  return c.json<Array<ScriptSitemapEntry>>(data)
+  // The page belongs to the study's site, so the sitemap advertises that
+  // address rather than the catalog one that would redirect to it.
+  return c.json<Array<ScriptSitemapEntry>>(
+    data.map((row) => ({
+      slug: row.slug,
+      updated_at: row.updated_at,
+      study_site_slug: row.subject?.study?.site_slug ?? null,
+    }))
+  )
 })
 
 export default sitemap

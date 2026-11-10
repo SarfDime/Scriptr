@@ -375,6 +375,29 @@ export const UI_STRINGS = {
       body: 'Pick up where you left off any time.',
       action: 'Resume setup',
     },
+    studySelection: {
+      title: 'Choose your study',
+      subtitle:
+        'Pick the university, faculty and study you attend. You can add another study later.',
+      empty: 'No studies are open for enrolment yet.',
+    },
+    academicSetup: {
+      title: 'Set up your academic profile',
+      subtitle: (studyName: string) =>
+        `Which years of ${studyName} have you finished? This only affects what you see here — you can change it later from your profile.`,
+      submit: 'Save and continue',
+      saved: 'Your academic profile is saved.',
+      skip: 'Skip for now',
+      resume: 'Finish setting up',
+      resumeTitle: 'Your setup is not finished',
+      resumeBody:
+        'Mark the years you have finished to see what is left to take.',
+      guestNote:
+        'Without an account this lives only in this browser. Create an account to keep it on every device.',
+      noSubjects: 'This study has no subjects synced to the database yet.',
+      notSynced:
+        'This study is not linked to the database yet, so setup is unavailable.',
+    },
     account: {
       title: 'Save your progress',
       subtitle:

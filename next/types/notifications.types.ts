@@ -4,7 +4,9 @@ import type { ComponentColorPalettes } from './components/ColorPalettes.types'
 
 export type NotificationAction = {
   label: string
-  kind: 'open-onboarding' | 'link'
+  kind: 'link'
+  /** Where the action goes. A notification stored before actions were links
+   * only may still carry no href; `NotificationRow` skips those. */
   href?: string
 }
 

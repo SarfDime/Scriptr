@@ -75,7 +75,7 @@ const PUBLIC_SCRIPT_COLUMNS =
 const SCRIPT_SUMMARY_SELECT = `
     ${PUBLIC_SCRIPT_COLUMNS},
     author:profiles!author_id(username, full_name, avatar_url),
-    subject:subjects(name, sanity_id, study:studies(sanity_id))
+    subject:subjects(name, sanity_id, study:studies(sanity_id, site_slug))
   `
 
 async function attachCommentCounts(
@@ -335,6 +335,29 @@ scripts.get('/subject/:subjectId', async (c) => {
     .from('scripts')
     .select(SCRIPT_SUMMARY_SELECT)
     .eq('subject_id', subjectId)
+    .order('vote_score', { ascending: false })
+
+  if (error) return databaseErrorResponse(c, error)
+  const scriptsWithCounts = await attachCommentCounts(supabase, data)
+  if (!scriptsWithCounts) {
+    return c.json({ error: 'Failed to fetch scripts' }, 500)
+  }
+  return c.json<Array<ScriptSummary>>(scriptsWithCounts)
+})
+
+/**
+ * Get a study's scripts. A script carries its study (`scripts.study_id`), so
+ * the study site's home lists its own content from one read, newest-voted
+ * first, and RLS still decides what a viewer may see.
+ */
+scripts.get('/study/:studyId', async (c) => {
+  const studyId = requiredParam(c, 'studyId')
+  const supabase = createSupabaseClient(c)
+
+  const { data, error } = await supabase
+    .from('scripts')
+    .select(SCRIPT_SUMMARY_SELECT)
+    .eq('study_id', studyId)
     .order('vote_score', { ascending: false })
 
   if (error) return databaseErrorResponse(c, error)

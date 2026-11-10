@@ -19,7 +19,9 @@ export const studySeoQuery = groq`
 
 export const minimalStudyQuery = /* groq */ `
 _id,
+dbId,
 "slug": slug.current,
+"siteSlug": siteSlug.current,
 name,
 studentCount,
 "picture": sanityImage::full(picture),
@@ -87,6 +89,50 @@ export const studyStaticParamsQuery = groq`
 *[_type == "study" && !(_id in path("drafts.**")) && dbId != null] {
   "studySlug": coalesce(slug.current, _id),
   "facultySlug": coalesce(faculty->slug.current, faculty->_id),
-  "universitySlug": coalesce(faculty->university->slug.current, faculty->university->_id)
+  "universitySlug": coalesce(faculty->university->slug.current, faculty->university->_id),
+  "siteSlug": siteSlug.current
 }
+`
+
+/**
+ * The catalog tree the study picker offers: names and slugs only, no subjects.
+ * A study is offered once it has a site handle and a database row, since that
+ * is what enrolling into it writes.
+ */
+export const studyPickerQuery = groq`
+{
+  "universities": *[_type == "university" && dbId != null] | order(name asc) {
+    _id,
+    name,
+    "slug": slug.current
+  },
+  "faculties": *[_type == "faculty" && dbId != null && university._ref != null] | order(name asc) {
+    _id,
+    name,
+    "slug": slug.current,
+    "universityId": university._ref
+  },
+  "studies": *[_type == "study" && dbId != null && faculty._ref != null && siteSlug.current != null] | order(name asc) {
+    _id,
+    name,
+    "slug": slug.current,
+    "siteSlug": siteSlug.current,
+    "facultyId": faculty._ref
+  }
+}
+`
+
+/** The catalog identity behind one site handle. Study pages are addressed by
+ * `siteSlug` alone; this turns it into the slug tuple the shared detail queries
+ * (and `getAcademicPath`) already take. */
+export const studySiteQuery = groq`
+*[_type == "study" && siteSlug.current == $siteSlug]{
+  _id,
+  "studySlug": coalesce(slug.current, _id),
+  "facultySlug": coalesce(faculty->slug.current, faculty->_id),
+  "universitySlug": coalesce(faculty->university->slug.current, faculty->university->_id),
+  "siteSlug": siteSlug.current,
+  "name": name,
+  dbId
+}[0]
 `

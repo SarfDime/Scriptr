@@ -1,25 +1,117 @@
-import { searchScripts } from '@/lib/api/scripts-api'
-import { toScriptSummaryDetails } from '@/lib/script-display'
+import type { CatalogSearchQueryResult } from '@shared/types/sanity.types'
+import { getAcademicPath } from '@/lib/academic-routes'
+import { ACADEMIC_CATALOG_TAGS } from '@/lib/sanity-tags'
 import {
   normalizeSearchQuery,
   type SearchQueryParam,
 } from '@/lib/script-search'
-import type { SearchPageViewModel } from '@/types/components/Search.types'
+import { fetchSanityData } from '@/sanity/lib/utils'
+import { catalogSearchQuery } from '@/sanity/queries/catalog-search.queries'
+import type { SearchResultGroups } from '@/types/components/Search.types'
 
-/** Loads the search page's view model. An empty query skips the API call
- * (`GET /scripts/search` rejects it with a 400). Search is public and
- * unscoped, so no cookie is forwarded — every viewer sees the same results.
+const EMPTY_RESULTS: SearchResultGroups = {
+  universities: [],
+  faculties: [],
+  studies: [],
+  professors: [],
+}
+
+/**
+ * Loads the catalog search: universities, faculties, studies and professors,
+ * each with the link its page lives at. Nothing here is a study's content —
+ * scripts and subjects are searched inside a study, not globally.
  *
- * A failed request is reported as `failed`, not as an empty result list:
- * "no scripts match" and "the search never ran" need different copy. */
+ * A failed read is reported as `failed`, not as an empty list: "nothing
+ * matches" and "the search never ran" need different copy.
+ */
 export const loadSearchPage = async (
   rawQuery: SearchQueryParam
-): Promise<SearchPageViewModel> => {
+): Promise<{
+  query: string
+  results: SearchResultGroups
+  failed: boolean
+}> => {
   const query = normalizeSearchQuery(rawQuery)
-  if (!query) return { query, scripts: [], failed: false }
+  if (!query) return { query, results: EMPTY_RESULTS, failed: false }
 
-  const scripts = await searchScripts(query)
-  if (!scripts) return { query, scripts: [], failed: true }
+  const catalog = await fetchSanityData<CatalogSearchQueryResult>({
+    query: catalogSearchQuery,
+    // GROQ's word matching, widened to a prefix of the last typed word.
+    params: { term: `${query}*` },
+    fetchOrigin: `catalog-search-${query}`,
+    tags: ACADEMIC_CATALOG_TAGS,
+  }).catch(() => null)
 
-  return { query, scripts: toScriptSummaryDetails(scripts), failed: false }
+  if (!catalog) return { query, results: EMPTY_RESULTS, failed: true }
+
+  return {
+    query,
+    failed: false,
+    results: {
+      universities: catalog.universities.flatMap((university) =>
+        university.slug
+          ? [
+              {
+                id: university._id,
+                name: university.name,
+                href: getAcademicPath({
+                  type: 'university',
+                  universitySlug: university.slug,
+                }),
+              },
+            ]
+          : []
+      ),
+      faculties: catalog.faculties.flatMap((faculty) =>
+        faculty.slug && faculty.university?.slug
+          ? [
+              {
+                id: faculty._id,
+                name: faculty.name,
+                context: faculty.university.name,
+                href: getAcademicPath({
+                  type: 'faculty',
+                  universitySlug: faculty.university.slug,
+                  facultySlug: faculty.slug,
+                }),
+              },
+            ]
+          : []
+      ),
+      studies: catalog.studies.flatMap((study) => {
+        const faculty = study.faculty
+        if (!study.slug || !faculty?.slug || !faculty.university?.slug)
+          return []
+
+        return [
+          {
+            id: study._id,
+            name: study.name,
+            context: faculty.name,
+            href: getAcademicPath({
+              type: 'study',
+              siteSlug: study.siteSlug,
+              universitySlug: faculty.university.slug,
+              facultySlug: faculty.slug,
+              studySlug: study.slug,
+            }),
+          },
+        ]
+      }),
+      professors: catalog.professors.flatMap((professor) =>
+        professor.slug
+          ? [
+              {
+                id: professor._id,
+                name: professor.name,
+                href: getAcademicPath({
+                  type: 'professor',
+                  professorSlug: professor.slug,
+                }),
+              },
+            ]
+          : []
+      ),
+    },
+  }
 }

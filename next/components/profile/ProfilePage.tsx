@@ -23,8 +23,9 @@ import type { ProfilePageProps } from '@/types/components/ProfilePage.types'
  * can be refreshed after edits; the public one is fetched on the server),
  * so the callers load it and pass it in. `isOwner` adds the edit actions.
  *
- * Favorites and subjects are public (the public profile endpoint returns
- * both), so the sidebar is the same for every viewer.
+ * The subject list is optional: the catalog profile page omits it (identity,
+ * affiliations and activity only), while the study site's profile page passes
+ * that study's subjects.
  */
 export const ProfilePage = ({
   profile,
@@ -65,12 +66,14 @@ export const ProfilePage = ({
       }}
       sidebar={
         <>
-          <ProfileSubjectsSidebar
-            completed={subjects.completed}
-            currentlyTaking={subjects.currentlyTaking}
-            title={isOwner ? undefined : UI_STRINGS.subjects.title}
-            studyTip={studyTip}
-          />
+          {subjects && (
+            <ProfileSubjectsSidebar
+              completed={subjects.completed}
+              currentlyTaking={subjects.currentlyTaking}
+              title={isOwner ? undefined : UI_STRINGS.subjects.title}
+              studyTip={studyTip}
+            />
+          )}
           {authoredCount !== undefined && commentCount !== undefined && (
             <>
               <Divider />

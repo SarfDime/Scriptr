@@ -3,7 +3,7 @@
 import { ADMIN_STRINGS } from '@shared/strings/admin-strings'
 import type { AdminStudyOption } from '@shared/types/admin.types'
 import { useRouter } from 'next/navigation'
-import { selectAdminStudy } from '@/app/admin/_actions/select-study'
+import { selectAdminStudy } from '@/app/(app)/admin/_actions/select-study'
 import { Box } from '@/components/common/Box'
 import { Text } from '@/components/typography/Text'
 import { Select } from '@/components/ui/select/Select'

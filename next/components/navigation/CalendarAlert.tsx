@@ -57,8 +57,10 @@ const describeWhen = (todayKey: string, date: string) => {
 
 type CalendarAlertProps = {
   className?: string
-  /** Build-time events from `getCalendarAlertEvents` — no user logic applied. */
+  /** The study's events, read on the server by the study layout. */
   events: Array<CalendarAlertEvent>
+  /** That study's `/calendar`. */
+  calendarHref: string
 }
 
 /**
@@ -70,7 +72,11 @@ type CalendarAlertProps = {
  * studies include and has not completed. While the session is still loading
  * only the global branch applies, which is also what the server rendered.
  */
-export const CalendarAlert = ({ className, events }: CalendarAlertProps) => {
+export const CalendarAlert = ({
+  className,
+  events,
+  calendarHref,
+}: CalendarAlertProps) => {
   const mounted = useMounted()
   const dismissals = useSyncExternalStore(
     subscribeToCalendarDismissals,
@@ -84,6 +90,7 @@ export const CalendarAlert = ({ className, events }: CalendarAlertProps) => {
   // they need the catalog; everyone else sees global events without it.
   const catalog =
     useOnboardingCatalog(Boolean(user)) ?? EMPTY_ONBOARDING_CATALOG
+
   const todayKey = currentCalendarDayKey()
   const uncompletedSubjectDbIds = user
     ? new Set(
@@ -124,7 +131,7 @@ export const CalendarAlert = ({ className, events }: CalendarAlertProps) => {
   return (
     <Box className={cn('flex items-center gap-1.5', className)}>
       <NextLink
-        href='/calendar'
+        href={calendarHref}
         aria-label={
           count > 0
             ? CALENDAR_STRINGS.alert.openCalendarWithAlerts(count)
@@ -144,7 +151,7 @@ export const CalendarAlert = ({ className, events }: CalendarAlertProps) => {
       </NextLink>
       {mounted && next && previewLabel && (
         <NextLink
-          href='/calendar'
+          href={calendarHref}
           className='button link hidden items-center gap-2 lg:flex'
         >
           <Text className='ui-caption font-semibold'>

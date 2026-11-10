@@ -25,6 +25,17 @@ export type StudyRouteParams = StudyStaticParamsQueryResult[number]
 export type SubjectRouteParams = SubjectStaticParamsQueryResult[number]
 export type ProfessorRouteParams = ProfessorStaticParamsQueryResult[number]
 
+/**
+ * The study site is addressed by its permanent handle alone; everything the
+ * shared academic queries need is resolved from it (`getStudySite`).
+ */
+export type StudySiteRouteParams = { siteSlug: string }
+
+export type SubjectSiteRouteParams = {
+  siteSlug: string
+  subjectSlug: string
+}
+
 export type MinimalEntity = {
   _id: string
   name: string

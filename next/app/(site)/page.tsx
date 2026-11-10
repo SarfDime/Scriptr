@@ -71,7 +71,6 @@ const Page = async ({
         <ScriptsSection
           scripts={scripts}
           scriptsUnavailable={feedScripts === null}
-          showGlobalSearch
           title={showAllScripts ? UI_STRINGS.scripts.feed.allTitle : undefined}
           subtitle={
             showAllScripts ? UI_STRINGS.scripts.feed.allSubtitle : undefined

@@ -215,6 +215,48 @@ described in
 
 ## Deferred
 
+- **Study-routing shims to delete when they go dead:** the path split left a
+  set of forwarders and fallbacks that exist only for links and data from before
+  the move. Each one names its exit condition; none is load-bearing for anything
+  created after it.
+  - `next/app/scripts/[slug]/route.ts` — 308s an old script URL to the study's
+    page. Goes once `ProfileScriptSummary` (the favorites list) and the
+    download-review payloads carry the study's `site_slug`, so nothing mints
+    `/scripts/…` any more.
+  - `app/(site)/university/…/study/[studySlug]/page.tsx` and its subject
+    sibling — they 308 to the study tree when the study has a handle and render
+    the old nested page when it does not. Go once every synced study has a
+    `siteSlug` (the Studio requires one now), either as bare `route.ts`
+    redirectors or removed outright.
+  - `getAcademicPath`'s nested study/subject fallback — the branch that builds
+    `/university/…/study/…` when no handle is passed. Keep it only while
+    handle-less studies can still exist.
+  - `is_admin()` — a database alias of `is_owner()` kept so nineteen older
+    policies did not have to be rewritten; rename those policies and drop it.
+    `is_moderator()` is already unread by any policy; the moderator narrowing
+    above decides whether it survives at all.
+  - The global guest record (`scriptr:guest-academic-data`), `lib/onboarding-storage.ts`
+    and `getRegistrationAcademicProfile` — dead once registration applies the
+    per-study browser records (Phase 5) and the onboarding modal is retired.
+  - The Studio navigation document still points at the nested study URL
+    (`…/faculty/faculty-of-pharmacy/study/laboratory-biomedical-engineering`);
+    it 308s correctly but should become `/study/lbe`.
+- **Calendar notes are not study-scoped:** the calendar is per study now, but a
+  note (`calendar-notes`, keyed by profile and day) carries no study, so the same
+  note shows on every study's calendar for that day. Decide whether a note
+  belongs to the study whose calendar it was written on (a `study_id` on the
+  row, and the same scope on the header alert's dismissal keys) or is genuinely
+  personal and should stay shared. Deferred: nothing reads notes across studies
+  today.
+- **Professor comments and ratings are university-wide:** a professor belongs to
+  one university and teaches across its studies, so the professor page stays a
+  catalog page, but its comments and ratings are keyed by the professor's
+  database id alone — every study in that university shares one thread and one
+  rating average, and a comment on a professor carries no study, so only an
+  owner can moderate it (study admins cannot). Decide whether professor threads
+  should gain a study dimension (a reader's comment belongs to the study they
+  wrote it in), a university dimension, or stay shared, and give the moderation
+  path the same scope. Deferred: nothing depends on it yet.
 - **Narrow moderator permissions:** a study `moderator` satisfies every
   `'moderator'` check today, so one can edit and delete other people's scripts
   and comments inside their study, exactly like a study admin. The intended

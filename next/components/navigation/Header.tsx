@@ -1,10 +1,9 @@
 import Menu from '@sanity/icons/Menu'
 import { UI_STRINGS } from '@shared/config/strings'
-import { getCalendarAlertEvents } from '@/lib/calendar-alert'
 import { cn } from '@/lib/common-utils'
+import type { CalendarAlertEvent } from '@/types/components/Calendar.types'
 import { Box } from '../common/Box'
 import { Text } from '../typography/Text'
-import { Divider } from '../ui/Divider'
 import { CalendarAlert } from './CalendarAlert'
 import { HeaderActions } from './HeaderActions'
 import { NavLogo } from './NavLogo'
@@ -30,13 +29,16 @@ const getHeaderDateLabel = (date: Date) => {
 }
 
 /**
- * Server Component. The calendar alert's events are read here, once, so the
- * layout ships them with the page instead of the island fetching them per
- * reader; `CalendarAlert` does the per-reader narrowing on the client.
+ * Server Component. The header is global chrome, so it knows nothing about
+ * studies: the calendar alert is per study and lives in the study's own frame
+ * (`app/(study)/study/[siteSlug]/layout.tsx`), which can read it on the server.
  */
-export const Header = async () => {
+export const Header = async ({
+  calendarAlert,
+}: {
+  calendarAlert?: { events: Array<CalendarAlertEvent>; calendarHref: string }
+}) => {
   const { dateLabel, week } = getHeaderDateLabel(new Date())
-  const calendarAlertEvents = await getCalendarAlertEvents()
 
   return (
     <header
@@ -76,15 +78,23 @@ export const Header = async () => {
         <Text className='ui-caption hidden lg:block'>
           {dateLabel} <span className='mx-2 text-grey-400'>/</span> Week {week}
         </Text>
-        <Divider className='hidden lg:flex ml-2' orientation='vertical' />
-        <CalendarAlert
-          className='hidden lg:flex '
-          events={calendarAlertEvents}
-        />
+        {calendarAlert && (
+          <CalendarAlert
+            className='hidden lg:flex'
+            events={calendarAlert.events}
+            calendarHref={calendarAlert.calendarHref}
+          />
+        )}
       </Box>
       <NavLogo className='lg:hidden' />
       <HeaderActions>
-        <CalendarAlert className='lg:hidden' events={calendarAlertEvents} />
+        {calendarAlert && (
+          <CalendarAlert
+            className='lg:hidden'
+            events={calendarAlert.events}
+            calendarHref={calendarAlert.calendarHref}
+          />
+        )}
       </HeaderActions>
     </header>
   )

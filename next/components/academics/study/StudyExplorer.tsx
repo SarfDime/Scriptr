@@ -37,6 +37,7 @@ export const StudyExplorer = ({
                 key={study._id}
                 href={getAcademicPath({
                   type: 'study',
+                  siteSlug: study.siteSlug,
                   universitySlug,
                   facultySlug,
                   studySlug: study.slug,

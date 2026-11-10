@@ -18,6 +18,7 @@ const calendarEventProjection = /* groq */ `
     name,
     "slug": coalesce(slug.current, _id),
     "studySlug": coalesce(study->slug.current, study->_id),
+    "siteSlug": study->siteSlug.current,
     "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),
     "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id)
   },
@@ -30,10 +31,10 @@ const calendarEventProjection = /* groq */ `
 `
 
 /**
- * Every event of every calendar attached to the website, in one read: the ids
- * the attached calendars reference, narrowed to the year around the build
- * (`$from`/`$to` are six months either side). Both `/calendar` and the header
- * alert work from this, so neither queries per date.
+ * Every event of every calendar attached to one study, in one read: the ids the
+ * study's calendars reference, narrowed to the year around the build
+ * (`$from`/`$to` are six months either side). Both the study's calendar page and
+ * its header alert work from this, so neither queries per date.
  *
  * The membership test is `_id in …calendars[]->events[]._ref` rather than
  * dereferencing each calendar's array inline — a dereference of an array of
@@ -41,7 +42,7 @@ const calendarEventProjection = /* groq */ `
  */
 export const calendarEventsQuery = groq`
 *[_type == "calendarEvent"
-  && _id in *[_id == $WEBSITE][0].calendars[]->events[]._ref
+  && _id in *[_type == "study" && siteSlug.current == $siteSlug][0].calendars[]->events[]._ref
   && dateTime(date) >= dateTime($from)
   && dateTime(date) <= dateTime($to)
 ] | order(date asc, _id asc) {

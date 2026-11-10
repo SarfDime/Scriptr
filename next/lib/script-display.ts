@@ -46,6 +46,7 @@ export const toScriptSummaryDetails = (
   scripts.map((script) => ({
     id: script.id,
     slug: script.slug,
+    siteSlug: script.subject?.study?.site_slug ?? null,
     title: script.title,
     description: script.description ?? undefined,
     subject: script.subject?.name ?? '',

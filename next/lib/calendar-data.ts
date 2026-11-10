@@ -5,21 +5,22 @@ import type { CalendarEventRecord } from '@/types/components/Calendar.types'
 import { calendarMarginWindow } from './calendar'
 
 /**
- * Every event of every calendar attached to the website, oldest first. One read,
- * cached until the next build like every other Sanity read, shared by
- * `/calendar` and the header alert. The query keeps it to the year around the
- * build (`calendarMarginWindow`), so the payload never grows past that.
+ * Every event of every calendar attached to one study, oldest first. One read,
+ * cached until the next build like every other Sanity read, shared by the
+ * study's calendar page and its header alert. The query keeps it to the year
+ * around the build (`calendarMarginWindow`), so the payload never grows past
+ * that.
  *
  * A failed read throws; the page reports it through its error boundary, and the
  * header alert contains it (`getCalendarAlertEvents`).
  */
-export const loadCalendarEvents = async (): Promise<
-  Array<CalendarEventRecord>
-> => {
+export const loadCalendarEvents = async (
+  siteSlug: string
+): Promise<Array<CalendarEventRecord>> => {
   const events = await fetchSanityData<Array<CalendarEventRecord>>({
     query: calendarEventsQuery,
-    params: calendarMarginWindow(),
-    fetchOrigin: 'calendar-events',
+    params: { ...calendarMarginWindow(), siteSlug },
+    fetchOrigin: `calendar-events-${siteSlug}`,
     tags: [SANITY_CACHE_TAGS.calendar],
   })
 

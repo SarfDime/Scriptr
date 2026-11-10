@@ -4,7 +4,6 @@ import type { Metadata } from 'next'
 import { NavBar } from '@/components/navigation/Navbar'
 
 import './globals.css'
-import { MainLayout } from '@/components/layout/PageLayout'
 import { NotificationsAside } from '@/components/notifications/NotificationsAside'
 import { OnboardingModal } from '@/components/onboarding/OnboardingModal'
 import { AppBackground } from '@/components/ui/AppBackground'
@@ -73,7 +72,7 @@ export default async function RootLayout({
           <AppBackground sanityData={starCanvasConfig} />
           <NavProvider>
             <NavBar {...navMenu} />
-            <MainLayout>{children}</MainLayout>
+            {children}
           </NavProvider>
           <NotificationsAside />
           <OnboardingModal />

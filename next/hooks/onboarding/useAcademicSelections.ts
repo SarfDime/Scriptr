@@ -4,6 +4,7 @@ import type {
   AcademicSelections,
   OnboardingCatalog,
 } from '@/types/onboarding.types'
+import { useSubjectCompletion } from './useSubjectCompletion'
 
 type CascadeSelections = Pick<
   AcademicSelections,
@@ -116,75 +117,13 @@ export const useAcademicSelections = (
     update({ studyId })
   }
 
-  const completeYear = (year: number) => {
-    const yearSubjectIds = (subjectsByYearMap.get(year) ?? []).map((s) => s._id)
-    update({
-      completedYears: Array.from(new Set([...data.completedYears, year])),
-      completedSubjectIds: Array.from(
-        new Set([...data.completedSubjectIds, ...yearSubjectIds])
-      ),
-    })
-  }
-
-  const uncompleteYear = (year: number) => {
-    const yearSubjectIds = new Set(
-      (subjectsByYearMap.get(year) ?? []).map((s) => s._id)
-    )
-    update({
-      completedYears: data.completedYears.filter((y) => y !== year),
-      completedSubjectIds: data.completedSubjectIds.filter(
-        (id) => !yearSubjectIds.has(id)
-      ),
-    })
-  }
-
-  // Completing every subject in a year individually also marks the year
-  // complete. Uncompleting any one subject clears the year-complete flag
-  // for the year it belongs to. Keeps `completedYears` and
-  // `completedSubjectIds` consistent regardless of which path is used.
-  const completeSubject = (subjectId: string) => {
-    if (data.completedSubjectIds.includes(subjectId)) return
-
-    const subject = subjects.find((s) => s._id === subjectId)
-    if (!subject) return
-
-    const nextCompletedSubjectIds = [...data.completedSubjectIds, subjectId]
-    const yearSubjectIds = (subjectsByYearMap.get(subject.year) ?? []).map(
-      (s) => s._id
-    )
-    const isYearNowComplete = yearSubjectIds.every((id) =>
-      nextCompletedSubjectIds.includes(id)
-    )
-
-    update({
-      completedSubjectIds: nextCompletedSubjectIds,
-      completedYears: isYearNowComplete
-        ? Array.from(new Set([...data.completedYears, subject.year]))
-        : data.completedYears,
-    })
-  }
-
-  const uncompleteSubject = (subjectId: string) => {
-    const subject = subjects.find((s) => s._id === subjectId)
-
-    update({
-      completedSubjectIds: data.completedSubjectIds.filter(
-        (id) => id !== subjectId
-      ),
-      completedYears: subject
-        ? data.completedYears.filter((y) => y !== subject.year)
-        : data.completedYears,
-    })
-  }
+  const completion = useSubjectCompletion(subjectsByYearMap, data, update)
 
   return {
+    ...completion,
     selectUniversity,
     selectFaculty,
     selectStudy,
-    completeYear,
-    uncompleteYear,
-    completeSubject,
-    uncompleteSubject,
     catalog: {
       faculties,
       studies,

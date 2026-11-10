@@ -13,7 +13,6 @@ import { NextLink } from '@/components/common/NextLink'
 import { Text } from '@/components/typography/Text'
 import { cn } from '@/lib/common-utils'
 import { useNotifications } from '@/providers/notification/NotificationProvider'
-import { useOnboarding } from '@/providers/onboarding/OnboardingProvider'
 import {
   type AppNotification,
   NOTIFICATION_PALETTE,
@@ -26,7 +25,6 @@ export const NotificationRow = ({
   notification: AppNotification
 }) => {
   const { dismiss, markRead } = useNotifications()
-  const { open } = useOnboarding()
   const palette = NOTIFICATION_PALETTE[notification.type ?? 'info']
 
   return (
@@ -97,22 +95,6 @@ export const NotificationRow = ({
           >
             {notification.action.label}
           </NextLink>
-        )}
-        {notification.action?.kind === 'open-onboarding' && (
-          <Button
-            onClick={() => {
-              markRead(notification.id)
-              open()
-            }}
-            className={cn(
-              'button button-sm subtle w-fit',
-              `${palette}-int`,
-              'rounded-lg',
-              'py-0.5'
-            )}
-          >
-            {notification.action.label}
-          </Button>
         )}
       </Box>
     </Box>

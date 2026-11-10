@@ -11,7 +11,7 @@ import type {
   CalendarPageViewModel,
   CalendarWeek,
 } from '@/types/components/Calendar.types'
-import { getAcademicPath } from './academic-routes'
+import { getAcademicPath, getStudyPath } from './academic-routes'
 import {
   addCalendarMonths,
   buildCalendarGrid,
@@ -38,8 +38,10 @@ export type CalendarSearchParams = Record<
 const single = (value: string | Array<string> | undefined) =>
   Array.isArray(value) ? undefined : value
 
-const calendarHref = (view: CalendarView, dayKey: string) =>
-  `/calendar?${CALENDAR_VIEW_PARAM}=${view}&${CALENDAR_DATE_PARAM}=${dayKey}`
+/** The study's calendar page, and the only calendar there is: a calendar
+ * belongs to a study, so every navigation link keeps the site in the path. */
+const calendarHref = (siteSlug: string, view: CalendarView, dayKey: string) =>
+  `${getStudyPath(siteSlug)}/calendar?${CALENDAR_VIEW_PARAM}=${view}&${CALENDAR_DATE_PARAM}=${dayKey}`
 
 /** A subject page exists only for a document synced to the database (`dbId`),
  * which is the same filter `subjectStaticParamsQuery` applies. */
@@ -51,6 +53,7 @@ const subjectLink = (subject: CalendarEventRecord['subject']) => {
     name: subject.name,
     href: getAcademicPath({
       type: 'subject',
+      siteSlug: subject.siteSlug,
       universitySlug: subject.universitySlug,
       facultySlug: subject.facultySlug,
       studySlug: subject.studySlug,
@@ -128,6 +131,7 @@ const groupEventsByDay = (records: Array<CalendarEventRecord>) => {
  * "could not load" rather than an empty calendar that reads as "no events".
  */
 export const loadCalendarPage = async (
+  siteSlug: string,
   params: CalendarSearchParams
 ): Promise<CalendarPageViewModel> => {
   const view = parseCalendarView(single(params[CALENDAR_VIEW_PARAM]))
@@ -135,7 +139,7 @@ export const loadCalendarPage = async (
   const requestedDay = single(params[CALENDAR_DATE_PARAM])
   const anchorKey = isValidDayKey(requestedDay) ? requestedDay : todayKey
   const grid = buildCalendarGrid(view, anchorKey)
-  const records = await loadCalendarEvents()
+  const records = await loadCalendarEvents(siteSlug)
   const byDay = groupEventsByDay(records)
   const dataRange = calendarDataRange(records)
   const anchorMonth = anchorKey.slice(0, 7)
@@ -148,7 +152,7 @@ export const loadCalendarPage = async (
     inPeriod: key.slice(0, 7) === anchorMonth,
     isToday: key === todayKey,
     events: byDay.get(key) ?? [],
-    weekHref: calendarHref('week', key),
+    weekHref: calendarHref(siteSlug, 'week', key),
   })
 
   // The notice is about the period on screen, not about the whole grid: a
@@ -189,20 +193,22 @@ export const loadCalendarPage = async (
       !dataRange || periodEnd < dataRange.from || periodStart > dataRange.to,
     links: {
       previous: calendarHref(
+        siteSlug,
         view,
         view === 'month'
           ? addCalendarMonths(anchorKey, -1)
           : shiftDayKey(anchorKey, -7)
       ),
       next: calendarHref(
+        siteSlug,
         view,
         view === 'month'
           ? addCalendarMonths(anchorKey, 1)
           : shiftDayKey(anchorKey, 7)
       ),
-      today: calendarHref(view, todayKey),
-      monthView: calendarHref('month', anchorKey),
-      weekView: calendarHref('week', anchorKey),
+      today: calendarHref(siteSlug, view, todayKey),
+      monthView: calendarHref(siteSlug, 'month', anchorKey),
+      weekView: calendarHref(siteSlug, 'week', anchorKey),
     },
   }
 }

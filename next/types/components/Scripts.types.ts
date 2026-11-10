@@ -58,6 +58,8 @@ export type ScriptDetail = BaseScript & {
   /** Address segment of the script's page, so a card links to the canonical
    * URL instead of redirecting through the id. */
   slug: string
+  /** The study the script belongs to, whose site owns its page. */
+  siteSlug?: string | null
   author: string
   professor?: string
   year?: number
@@ -102,12 +104,16 @@ export type ScriptCommentsLinkProps = BaseScriptAction & {
   comments: number
   /** Link target. The id still resolves, but lands through a redirect. */
   slug: string
+  /** The owning study's site handle, when the caller knows it. */
+  siteSlug?: string | null
 } & Omit<NextLinkBaseProps, 'children' | 'href'>
 
 export type ScriptActionsProps = ScriptMeta &
   ScriptStats & {
     /** The script's address segment, so its links stay canonical. */
     slug: string
+    /** The owning study's site handle, when the caller knows it. */
+    siteSlug?: string | null
     title: PortableTextValue
     description?: PortableTextValue
     files: Array<ScriptFile>
@@ -132,9 +138,7 @@ export type ScriptsSectionProps = {
   title?: string
   subtitle?: string
   parentSubject?: SubjectDetail
-  /** Shows a link to the site-wide `/search` once a query is typed, since the
-   * local filter only covers the scripts already loaded. */
-  showGlobalSearch?: boolean
+
   /** End-aligned header content, e.g. the homepage's feed switch. */
   headerActions?: ReactNode
 } & BoxPropsWithoutChildren

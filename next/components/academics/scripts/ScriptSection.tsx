@@ -1,16 +1,13 @@
 'use client'
 
 import ChevronDownIcon from '@sanity/icons/ChevronDown'
-import SearchIcon from '@sanity/icons/Search'
 import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
-import { NextLink } from '@/components/common/NextLink'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
 import { useScriptExplorer } from '@/hooks/useScriptExplorer'
 import { cn } from '@/lib/common-utils'
-import { buildSearchHref } from '@/lib/script-search'
 import type { ScriptsSectionProps } from '@/types/components/Scripts.types'
 import { SearchBar } from '../../typography/SearchBar'
 import { CreateScriptModal } from './CreateScriptModal'
@@ -26,7 +23,6 @@ export const ScriptsSection = ({
   subtitle = UI_STRINGS.scripts.sectionSubtitle,
   className,
   parentSubject,
-  showGlobalSearch = false,
   scriptsUnavailable = false,
   headerActions,
   ...rest
@@ -43,7 +39,6 @@ export const ScriptsSection = ({
   } = useScriptExplorer(scripts)
 
   const shownScripts = visibleScripts.slice(0, VISIBLE_LIMIT)
-  const trimmedQuery = query.trim()
   const hasMore = visibleScripts.length > VISIBLE_LIMIT
 
   return (
@@ -87,16 +82,6 @@ export const ScriptsSection = ({
           scripts={shownScripts}
           emptyMessage={UI_STRINGS.scripts.emptyState}
         />
-      )}
-
-      {showGlobalSearch && trimmedQuery && (
-        <NextLink
-          href={buildSearchHref(trimmedQuery)}
-          className='button subtle w-full gap-2 py-3 ui-body'
-        >
-          <SearchIcon />
-          <Text>{UI_STRINGS.scripts.search.searchAll(trimmedQuery)}</Text>
-        </NextLink>
       )}
 
       {hasMore && (

@@ -13,6 +13,7 @@ import type { ScriptCommentsLinkProps } from '@/types/components/Scripts.types'
  */
 export const ScriptCommentsLink = ({
   slug,
+  siteSlug,
   scriptTitle,
   comments,
   className,
@@ -23,7 +24,7 @@ export const ScriptCommentsLink = ({
     {...props}
     href={generatePath({
       segments: [
-        getAcademicPath({ scriptSlug: slug, type: 'script' }),
+        getAcademicPath({ type: 'script', scriptSlug: slug, siteSlug }),
         `#${COMMENTS_SECTION_ID}`,
       ],
     })}

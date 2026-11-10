@@ -45,7 +45,10 @@ export const loadMyProfilePage = async (): Promise<MyProfilePageViewModel> => {
  * Suspense boundary above the page would flush a `200` before `notFound()`):
  *
  * - A signed-in viewer opening their own username is redirected to `/user`, the
- *   editable view. If the session can't be read the public view is used.
+ *   editable view (except in a study's own view, where that would drop the
+ *   study context). If the session can't be read the public view is used.
+ * - Given a `studyId`, the page 404s when the person is not a member of it and
+ *   shows only that study's academic profile.
  * - `getPublicProfileByUsername` returns `null` only when the API answered
  *   `404`, which becomes `notFound()`. Any other failure throws, so it reaches
  *   the error boundary instead of showing a false 404.
@@ -55,23 +58,37 @@ export const loadMyProfilePage = async (): Promise<MyProfilePageViewModel> => {
  * skipped rather than showing invented zeros.
  */
 export const loadPublicProfilePage = async (
-  username: string
+  username: string,
+  /** Narrows the page to one study: the academic profile a reader has there,
+   * and nothing about their other studies. Used by the study site's profile
+   * page, which 404s when the person is not a member. */
+  options: { studyId?: string } = {}
 ): Promise<PublicProfilePageViewModel> => {
   const session = await getSession(await getRequestCookieHeader())
-  if (session?.user?.username?.toLowerCase() === username.toLowerCase()) {
+  const isOwnUsername =
+    session?.user?.username?.toLowerCase() === username.toLowerCase()
+  if (isOwnUsername && !options.studyId) {
     redirect('/user')
   }
 
   const profile = await getPublicProfileByUsername(username)
   if (!profile) notFound()
 
-  const studyIds = profile.selected_studies.flatMap(({ study }) =>
+  const memberStudyIds = profile.selected_studies.flatMap(({ study }) =>
     study ? [study.id] : []
   )
+  if (options.studyId && !memberStudyIds.includes(options.studyId)) notFound()
+
+  const studyIds = options.studyId ? [options.studyId] : memberStudyIds
   const [stats, catalog, subjects, studyTip] = await Promise.all([
     getProfileStats(profile.id),
     getOnboardingCatalog(),
-    getProfileSubjectSections(studyIds, profile.subjects),
+    // The catalog profile page lists what someone studies nowhere: their
+    // affiliations are the academic profile, and the subjects belong to the
+    // study site's view of them.
+    options.studyId
+      ? getProfileSubjectSections(studyIds, profile.subjects)
+      : Promise.resolve(undefined),
     getDailyStudyTip(),
   ])
 
@@ -79,8 +96,12 @@ export const loadPublicProfilePage = async (
     profile,
     academics: buildProfileAcademics(
       catalog,
-      profile.selected_faculties,
-      profile.selected_studies
+      options.studyId ? [] : profile.selected_faculties,
+      options.studyId
+        ? profile.selected_studies.filter(
+            ({ study }) => study?.id === options.studyId
+          )
+        : profile.selected_studies
     ),
     subjects,
     studyTip,

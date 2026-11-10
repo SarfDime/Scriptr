@@ -1,14 +1,18 @@
 import BookIcon from '@sanity/icons/Book'
+import { findCalendarPeriod } from '@shared/config/calendar'
+import { API_VERSION } from '@shared/config/sanity-constants'
 import {
   isReservedSiteSlug,
   SITE_SLUG_PATTERN,
 } from '@shared/config/site-slugs'
+import { CALENDAR_STRINGS } from '@shared/strings/calendar-strings'
 import { defineType } from 'sanity'
 import {
   academicFields,
   academicGrouping,
   academicPreview,
 } from '../common/academicFields'
+import { filterExistingReferences } from '../util-functions/schemaFilters'
 import { sanitizeSlug } from '../util-functions/utilFunctions'
 import { validationRules } from '../validation'
 
@@ -101,6 +105,60 @@ export const Study = defineType({
             name: 'r2 bucket name',
           })
           .warning('Should follow S3/R2 bucket naming rules'),
+    },
+    {
+      name: 'calendars',
+      title: 'Calendars',
+      type: 'array',
+      group: 'information',
+      fieldset: 'information',
+      of: [
+        {
+          type: 'reference',
+          to: [{ type: 'calendar' }],
+          options: {
+            disableNew: true,
+            filter: filterExistingReferences,
+          },
+        },
+      ],
+      description:
+        "This study's calendars. Each covers one half-year; two calendars with the same period cannot both be attached. The study site reads them for its calendar page and the header alert.",
+      validation: (rule) =>
+        rule.unique().custom(async (value, context) => {
+          const ids = (Array.isArray(value) ? value : []).flatMap((item) =>
+            typeof item === 'object' &&
+            item !== null &&
+            '_ref' in item &&
+            typeof item._ref === 'string'
+              ? [item._ref]
+              : []
+          )
+          if (ids.length === 0) return true
+
+          const client = context.getClient({ apiVersion: API_VERSION })
+          const periods = await client.fetch<
+            Array<{ _id: string; period: string | null }>
+          >('*[_id in $ids]{_id, period}', { ids })
+          const seen = new Set<string>()
+          const duplicates = periods.filter(({ period }) => {
+            if (!period) return false
+            if (seen.has(period)) return true
+            seen.add(period)
+            return false
+          })
+
+          if (duplicates.length === 0) return true
+
+          const labels = duplicates.map(({ period }) => {
+            const found = findCalendarPeriod(period)
+            return found
+              ? CALENDAR_STRINGS.periodLabel(found)
+              : 'Unknown period'
+          })
+
+          return `Two attached calendars cannot share a period (${[...new Set(labels)].join(', ')}).`
+        }),
     },
     {
       name: 'siteSettings',

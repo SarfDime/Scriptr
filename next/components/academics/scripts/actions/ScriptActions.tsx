@@ -13,6 +13,7 @@ import { ScriptVoteCount } from './ScriptVoteCount'
 export const ScriptActions = ({
   id,
   slug,
+  siteSlug,
   scriptTitle,
   likes,
   comments,
@@ -26,6 +27,7 @@ export const ScriptActions = ({
       <ScriptCommentsLink
         id={id}
         slug={slug}
+        siteSlug={siteSlug}
         scriptTitle={scriptTitle}
         comments={comments}
       />

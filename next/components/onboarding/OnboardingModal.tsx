@@ -81,13 +81,21 @@ const OnboardingWizard = ({ catalog }: { catalog: OnboardingCatalog }) => {
     }
 
     wizard.update({ onboardingDismissedAt: new Date().toISOString() })
+    // A link, not an action that reopens this modal: the place to finish setup
+    // is the chosen study's page, or the study picker when nothing is chosen.
+    const selectedStudy = catalog.studies.find(
+      (study) => study._id === wizard.data.studyId
+    )
     push({
       id: RESUME_ONBOARDING_NOTIFICATION_ID,
       title: UI_STRINGS.onboarding.resumeReminder.title,
       body: UI_STRINGS.onboarding.resumeReminder.body,
       action: {
         label: UI_STRINGS.onboarding.resumeReminder.action,
-        kind: 'open-onboarding',
+        kind: 'link',
+        href: selectedStudy?.siteSlug
+          ? `/study/${selectedStudy.siteSlug}/academic-setup`
+          : '/start',
       },
       type: 'info',
     })

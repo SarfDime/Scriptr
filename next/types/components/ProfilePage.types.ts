@@ -20,7 +20,10 @@ export type ProfileSubjectsSidebarProps = ProfileSubjectSections & {
 export type ProfilePageProps = {
   profile: ProfileCore
   academics: ProfileAcademics
-  subjects: ProfileSubjectSections
+  /** The academic profile's subject list. Omitted on the catalog profile page,
+   * which shows who someone is and what they have done, not what they are
+   * taking — that belongs to the study site's view of the person. */
+  subjects?: ProfileSubjectSections
   /** Omitted when the stats read failed; the activity strip is then skipped
    * rather than rendered with invented zeros. */
   authoredCount?: number

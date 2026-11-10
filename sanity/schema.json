@@ -1100,6 +1100,36 @@
   },
   {
     "type": "type",
+    "name": "calendar.reference",
+    "value": {
+      "type": "object",
+      "attributes": {
+        "_ref": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "string"
+          }
+        },
+        "_type": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "string",
+            "value": "reference"
+          }
+        },
+        "_weak": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "boolean"
+          },
+          "optional": true
+        }
+      },
+      "dereferencesTo": "calendar"
+    }
+  },
+  {
+    "type": "type",
     "name": "navMenu.reference",
     "value": {
       "type": "object",
@@ -1331,6 +1361,28 @@
         "type": "objectAttribute",
         "value": {
           "type": "string"
+        },
+        "optional": true
+      },
+      "calendars": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "array",
+          "of": {
+            "type": "object",
+            "attributes": {
+              "_key": {
+                "type": "objectAttribute",
+                "value": {
+                  "type": "string"
+                }
+              }
+            },
+            "rest": {
+              "type": "inline",
+              "name": "calendar.reference"
+            }
+          }
         },
         "optional": true
       },
@@ -2752,36 +2804,6 @@
     }
   },
   {
-    "type": "type",
-    "name": "calendar.reference",
-    "value": {
-      "type": "object",
-      "attributes": {
-        "_ref": {
-          "type": "objectAttribute",
-          "value": {
-            "type": "string"
-          }
-        },
-        "_type": {
-          "type": "objectAttribute",
-          "value": {
-            "type": "string",
-            "value": "reference"
-          }
-        },
-        "_weak": {
-          "type": "objectAttribute",
-          "value": {
-            "type": "boolean"
-          },
-          "optional": true
-        }
-      },
-      "dereferencesTo": "calendar"
-    }
-  },
-  {
     "name": "website",
     "type": "document",
     "attributes": {
@@ -2874,28 +2896,6 @@
         "value": {
           "type": "inline",
           "name": "starCanvas.reference"
-        },
-        "optional": true
-      },
-      "calendars": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "array",
-          "of": {
-            "type": "object",
-            "attributes": {
-              "_key": {
-                "type": "objectAttribute",
-                "value": {
-                  "type": "string"
-                }
-              }
-            },
-            "rest": {
-              "type": "inline",
-              "name": "calendar.reference"
-            }
-          }
         },
         "optional": true
       },

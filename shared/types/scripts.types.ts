@@ -48,10 +48,12 @@ export type ScriptSubjectRef = {
   sanity_id: string | null
   study: {
     sanity_id: string | null
+    /** The study's site handle: the script's page belongs to that site. */
+    site_slug: string | null
   } | null
 }
 
-/** Matches `subject:subjects(name, study:studies(sanity_id))`. */
+/** Matches `subject:subjects(name, sanity_id, study:studies(sanity_id, site_slug))`. */
 export type ScriptSubjectSummary = {
   name: string
   study: ScriptStudyRef | null
@@ -100,6 +102,8 @@ export type ScriptSummary = {
 export type ScriptSitemapEntry = {
   slug: string
   updated_at: string
+  /** The study's site handle: the script's canonical page lives there. */
+  study_site_slug: string | null
 }
 
 /** One page of the admin-only script listing. */

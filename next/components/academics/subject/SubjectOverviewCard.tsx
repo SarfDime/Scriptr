@@ -42,6 +42,7 @@ export const SubjectOverviewCard = ({
       getHref: () =>
         getAcademicPath({
           type: 'study',
+          siteSlug: study?.siteSlug,
           universitySlug,
           facultySlug,
           studySlug,

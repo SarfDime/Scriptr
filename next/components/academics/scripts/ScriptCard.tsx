@@ -32,7 +32,11 @@ export const ScriptCard = ({
       {...props}
     >
       <NextLink
-        href={getAcademicPath({ type: 'script', scriptSlug: script.slug })}
+        href={getAcademicPath({
+          type: 'script',
+          scriptSlug: script.slug,
+          siteSlug: script.siteSlug,
+        })}
         className='flex items-start gap-3'
         aria-label={UI_STRINGS.scripts.actions.openScript(script.author)}
       >
@@ -67,6 +71,7 @@ export const ScriptCard = ({
         <ScriptActions
           id={script.id}
           slug={script.slug}
+          siteSlug={script.siteSlug}
           scriptTitle={script.title}
           likes={script.likes}
           comments={script.comments}

@@ -24,6 +24,7 @@ const onboardingSidebarSubjectQuery = /* groq */ `
   study->{
     _id,
     "slug": slug.current,
+    "siteSlug": siteSlug.current,
     name,
     dbId,
     faculty->{
@@ -55,6 +56,7 @@ export const onboardingCatalogQuery = groq`
     dbId,
     name,
     "slug": slug.current,
+    "siteSlug": siteSlug.current,
     "facultyId": faculty._ref,
     "subjectsByYear": *[_type == "subject" && study._ref == ^._id && dbId != null
         && _id == (*[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(_id asc)[0]._id)

@@ -36,16 +36,28 @@ export const listStudies = async (): Promise<Array<StudyRouteParams>> => {
   )
 }
 
+/** The studies that own a site: their own section of the sitemap, and the only
+ * ones whose pages are served under `/study/[siteSlug]`. */
+export const listStudySites = async (): Promise<
+  Array<StudyRouteParams & { siteSlug: string }>
+> => {
+  const studies = await listStudies()
+  return studies.filter(
+    (study): study is StudyRouteParams & { siteSlug: string } =>
+      typeof study.siteSlug === 'string' && study.siteSlug.length > 0
+  )
+}
+
 /**
  * The sitemap index, split so no single file approaches the protocol's URL
- * limit and so the catalog, each study's subjects and the scripts are
+ * limit and so the catalog, each study's pages and the scripts are
  * independent: `catalog`, `study-<n>` and `scripts-<n>`.
  */
 export const listSitemapSections = async (): Promise<Array<SitemapSection>> => {
   if (!websiteDomain) return [{ id: CATALOG_SECTION }]
 
   const [studies, scripts] = await Promise.all([
-    listStudies(),
+    listStudySites(),
     getScriptSitemapEntries(),
   ])
 

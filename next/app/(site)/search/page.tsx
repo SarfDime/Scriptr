@@ -19,7 +19,7 @@ export default async function SearchPage({
   searchParams: Promise<{ q?: SearchQueryParam }>
 }) {
   const { q } = await searchParams
-  const { query, scripts, failed } = await loadSearchPage(q)
+  const { query, results, failed } = await loadSearchPage(q)
 
   return (
     <PageLayout>
@@ -30,7 +30,7 @@ export default async function SearchPage({
       {/* Keyed so a header search while already on /search resets the input. */}
       <SearchForm key={query} query={query} />
       <Divider />
-      <SearchResults query={query} scripts={scripts} failed={failed} />
+      <SearchResults query={query} results={results} failed={failed} />
     </PageLayout>
   )
 }

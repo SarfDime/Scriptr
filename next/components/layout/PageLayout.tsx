@@ -1,5 +1,6 @@
 import React, { type ReactNode } from 'react'
 import { cn } from '@/lib/common-utils'
+import type { CalendarAlertEvent } from '@/types/components/Calendar.types'
 import { Box, type BoxProps } from '../common/Box'
 import { Header } from '../navigation/Header'
 import { Divider, type DividerProps } from '../ui/Divider'
@@ -35,7 +36,21 @@ const isHeaderConfig = (
   )
 }
 
-export const MainLayout = ({ children, className, ...rest }: BoxProps) => {
+export type MainLayoutProps = BoxProps & {
+  /** Only the study tree passes these: a calendar belongs to a study, and its
+   * layout is the only place that knows which one on the server. */
+  calendarAlert?: {
+    events: Array<CalendarAlertEvent>
+    calendarHref: string
+  }
+}
+
+export const MainLayout = ({
+  children,
+  className,
+  calendarAlert,
+  ...rest
+}: MainLayoutProps) => {
   return (
     <Box
       as='main'
@@ -43,7 +58,7 @@ export const MainLayout = ({ children, className, ...rest }: BoxProps) => {
       className={cn('ui-container flex flex-col', className)}
       {...rest}
     >
-      <Header />
+      <Header calendarAlert={calendarAlert} />
       {/* The container grows to full width while the navbar is collapsed (so the
           header spans the screen); page content keeps its docked-navbar width
           and is centered. `grow` pushes the footer to the bottom of short pages. */}

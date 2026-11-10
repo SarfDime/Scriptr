@@ -78,6 +78,27 @@ export const getScriptsBySubject = async (subjectId: string) => {
   }
 }
 
+/** A study's scripts, for its site's home. Public and unscoped, so the response
+ * is shared; `null` means the read failed, for the same reason as
+ * `getScriptsBySubject`. */
+export const getScriptsByStudy = async (studyId: string) => {
+  try {
+    return await apiFetch<Array<ScriptSummary>>(
+      withQuery(apiRoutes.scripts.studyByStudyId(studyId), {
+        commentCountVersion: SCRIPT_COMMENT_COUNT_CACHE_VERSION,
+      }),
+      cachedPublicRead([SCRIPT_CACHE_TAGS.list()])
+    )
+  } catch (error) {
+    nextLogs({
+      message: `Scripts for study ${studyId} could not be read.`,
+      logLevel: 'warn',
+      error,
+    })
+    return null
+  }
+}
+
 /** Platform-wide top scripts by vote score. Public and unscoped. `null` means
  * the read failed, for the same reason as `getScriptsBySubject`. */
 export const getTopScripts = async (limit = 10) => {

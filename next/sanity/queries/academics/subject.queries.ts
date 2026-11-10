@@ -41,6 +41,7 @@ syllabus,
 study->{
   _id,
   "slug": slug.current,
+  "siteSlug": siteSlug.current,
   name,
   faculty->{
     _id,
@@ -129,7 +130,8 @@ export const subjectPathQuery = groq`
   "subjectSlug": coalesce(slug.current, _id),
   "studySlug": coalesce(study->slug.current, study->_id),
   "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),
-  "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id)
+  "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id),
+  "siteSlug": study->siteSlug.current
 }
 `
 
@@ -139,6 +141,7 @@ export const subjectStaticParamsQuery = groq`
   "subjectSlug": coalesce(slug.current, _id),
   "studySlug": coalesce(study->slug.current, study->_id),
   "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),
-  "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id)
+  "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id),
+  "siteSlug": study->siteSlug.current
 }
 `

@@ -32,13 +32,15 @@ export const getSubjectPath = async (
     })
     if (!slugs) return null
 
-    const { subjectSlug, studySlug, facultySlug, universitySlug } = slugs
+    const { subjectSlug, studySlug, facultySlug, universitySlug, siteSlug } =
+      slugs
     if (!subjectSlug || !studySlug || !facultySlug || !universitySlug) {
       return null
     }
 
     return getAcademicPath({
       type: 'subject',
+      siteSlug,
       universitySlug,
       facultySlug,
       studySlug,

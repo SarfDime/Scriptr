@@ -43,6 +43,7 @@ export type ApiEndpoint =
   | `/api/file-ops/get-file/${string}`
   | '/api/scripts'
   | `/api/scripts/subject/${string}`
+  | `/api/scripts/study/${string}`
   | '/api/scripts/top'
   | '/api/scripts/popular'
   | '/api/scripts/search'
@@ -213,6 +214,8 @@ export const apiRoutes = {
     index: '/api/scripts',
     subjectBySubjectId: (subjectId: string | number) =>
       `/api/scripts/subject/${subjectId}` as const,
+    studyByStudyId: (studyId: string | number) =>
+      `/api/scripts/study/${studyId}` as const,
     top: (limit?: number) => withQuery('/api/scripts/top', { limit }),
     popular: (limit?: number) => withQuery('/api/scripts/popular', { limit }),
     search: (query: string) => withQuery('/api/scripts/search', { q: query }),
