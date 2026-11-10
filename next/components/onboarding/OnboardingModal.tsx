@@ -17,11 +17,51 @@ import { OnboardingAccountPrompt } from './OnboardingAccountPrompt'
 import { OnboardingProgramFields } from './OnboardingProgramFields'
 import { OnboardingSubjectsStep } from './OnboardingSubjectsStep'
 
-type OnboardingModalProps = { catalog: OnboardingCatalog }
-
 const RESUME_ONBOARDING_NOTIFICATION_ID = 'onboarding:resume-reminder'
 
-export const OnboardingModal = ({ catalog }: OnboardingModalProps) => {
+/**
+ * The catalog is fetched on the client (see `OnboardingProvider`), so this
+ * renders a small placeholder until it arrives and mounts the wizard only with
+ * a complete catalog — the wizard's hooks read the catalog as they initialize.
+ */
+export const OnboardingModal = () => {
+  const { catalog } = useOnboarding()
+
+  return catalog ? (
+    <OnboardingWizard catalog={catalog} />
+  ) : (
+    <OnboardingCatalogPending />
+  )
+}
+
+const OnboardingCatalogPending = () => {
+  const { isOpen, close, catalogError, retryCatalog } = useOnboarding()
+
+  return (
+    <Dialog
+      isOpen={isOpen}
+      title={UI_STRINGS.onboarding.title}
+      hideTrigger
+      onClose={close}
+      dialogProps={{ className: 'md:min-w-xl' }}
+    >
+      <Box className='ui-stack items-start gap-4 p-5'>
+        <Text className='ui-caption'>
+          {catalogError
+            ? UI_STRINGS.onboarding.catalogFailed
+            : UI_STRINGS.onboarding.catalogLoading}
+        </Text>
+        {catalogError && (
+          <Button onClick={retryCatalog} className='button button-sm solid'>
+            {UI_STRINGS.onboarding.retry}
+          </Button>
+        )}
+      </Box>
+    </Dialog>
+  )
+}
+
+const OnboardingWizard = ({ catalog }: { catalog: OnboardingCatalog }) => {
   const { push, dismiss } = useNotifications()
   const { session } = useSession()
   const wizard = useOnboardingWizard(catalog)

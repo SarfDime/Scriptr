@@ -2,7 +2,10 @@
 
 import { UI_STRINGS } from '@shared/config/strings'
 import { useGuestAcademicData } from '@/hooks/onboarding/useGuestAcademicData'
-import { useOnboarding } from '@/providers/onboarding/OnboardingProvider'
+import {
+  EMPTY_ONBOARDING_CATALOG,
+  useOnboardingCatalog,
+} from '@/providers/onboarding/OnboardingProvider'
 import type { StudyTipData } from '@/types/components/StudyTipCard.types'
 import { SubjectsSidebar } from './SubjectsSidebar'
 
@@ -11,8 +14,9 @@ export const GuestSubjectsSidebar = ({
 }: {
   studyTip?: StudyTipData
 }) => {
-  const { catalog } = useOnboarding()
   const { data } = useGuestAcademicData()
+  const catalog =
+    useOnboardingCatalog(Boolean(data.studyId)) ?? EMPTY_ONBOARDING_CATALOG
   const selectedStudy = catalog.studies.find(
     (study) => study._id === data.studyId
   )

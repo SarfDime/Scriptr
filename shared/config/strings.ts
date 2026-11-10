@@ -367,6 +367,9 @@ export const UI_STRINGS = {
     continue: 'Continue',
     saving: 'Saving…',
     saveFailed: 'We could not save your academic profile. Please try again.',
+    catalogLoading: 'Loading your studies…',
+    catalogFailed: `We couldn't load your studies. Please try again.`,
+    retry: 'Try again',
     resumeReminder: {
       title: 'Finish setting up your studies',
       body: 'Pick up where you left off any time.',

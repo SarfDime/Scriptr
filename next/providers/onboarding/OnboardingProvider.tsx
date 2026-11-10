@@ -3,6 +3,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useState,
   useSyncExternalStore,
 } from 'react'
@@ -21,7 +22,22 @@ type OnboardingContextValue = {
   isOpen: boolean
   open: () => void
   close: () => void
-  catalog: OnboardingCatalog
+  /** Null until the client fetch below resolves. */
+  catalog: OnboardingCatalog | null
+  catalogError: boolean
+  retryCatalog: () => void
+  /** Marks the catalog as needed now; the fetch effect below starts then. */
+  requestCatalog: () => void
+}
+
+/** What display-only consumers render before the catalog arrives. It is never
+ * used by the wizard or the academics editor, which must see the real catalog
+ * before they seed their state from it. */
+export const EMPTY_ONBOARDING_CATALOG: OnboardingCatalog = {
+  universities: [],
+  faculties: [],
+  studies: [],
+  subjects: [],
 }
 
 const OnboardingContext = createContext<OnboardingContextValue | null>(null)
@@ -30,10 +46,8 @@ const getServerFlag = () => false
 
 export const OnboardingProvider = ({
   children,
-  catalog,
 }: {
   children: React.ReactNode
-  catalog: OnboardingCatalog
 }) => {
   const { session } = useSession()
   const profile = useMyProfile()
@@ -98,11 +112,89 @@ export const OnboardingProvider = ({
   const open = () => setManualOverride(true)
   const close = () => setManualOverride(false)
 
+  // The catalog is fetched once on the client, not with the page. The root
+  // layout used to read it on the server and hand it to this provider, which
+  // copied it into the RSC payload of every page; the route behind this fetch is
+  // static and cacheable, so repeat visits do not pay for it again.
+  const [catalog, setCatalog] = useState<OnboardingCatalog | null>(null)
+  const [catalogError, setCatalogError] = useState(false)
+  const [catalogRequested, setCatalogRequested] = useState(false)
+  // Bumped by a retry. State is only set from the fetch callbacks, not when the
+  // effect starts, so a failed attempt cannot cascade into a re-render loop.
+  const [catalogAttempt, setCatalogAttempt] = useState(0)
+
+  useEffect(() => {
+    // The wizard opening is itself a demand signal.
+    if (!isOpen && !catalogRequested) return
+    if (catalog) return
+
+    let cancelled = false
+
+    const loadCatalog = async () => {
+      try {
+        // A retry busts the browser's copy of a failed response; the route is
+        // static and ignores the parameter.
+        const response = await fetch(
+          catalogAttempt > 0
+            ? `/api/onboarding-catalog?attempt=${catalogAttempt}`
+            : '/api/onboarding-catalog'
+        )
+        if (!response.ok) throw new Error(`Status ${response.status}`)
+
+        const data = (await response.json()) as OnboardingCatalog
+        if (!cancelled) {
+          setCatalog(data)
+          setCatalogError(false)
+        }
+      } catch {
+        if (!cancelled) setCatalogError(true)
+      }
+    }
+
+    loadCatalog()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isOpen, catalogRequested, catalog, catalogAttempt])
+
+  const retryCatalog = () => {
+    setCatalogError(false)
+    setCatalogAttempt((attempt) => attempt + 1)
+  }
+
   return (
-    <OnboardingContext.Provider value={{ isOpen, open, close, catalog }}>
+    <OnboardingContext.Provider
+      value={{
+        isOpen,
+        open,
+        close,
+        catalog,
+        catalogError,
+        retryCatalog,
+        requestCatalog: () => setCatalogRequested(true),
+      }}
+    >
       {children}
     </OnboardingContext.Provider>
   )
+}
+
+/**
+ * The catalog is fetched on demand rather than with the page. A component that
+ * renders catalog data passes whether it needs it now; the first true value
+ * starts the fetch for the whole app, and the value is null until it arrives.
+ */
+export const useOnboardingCatalog = (
+  enabled = true
+): OnboardingCatalog | null => {
+  const { catalog, requestCatalog } = useOnboarding()
+
+  useEffect(() => {
+    if (enabled) requestCatalog()
+  }, [enabled, requestCatalog])
+
+  return catalog
 }
 
 export const useOnboarding = () => {

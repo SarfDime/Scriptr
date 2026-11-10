@@ -24,7 +24,10 @@ import {
 } from '@/lib/calendar-dismissals'
 import { cn } from '@/lib/common-utils'
 import { deriveIncompleteSubjectDbIds } from '@/lib/study-subjects'
-import { useOnboarding } from '@/providers/onboarding/OnboardingProvider'
+import {
+  EMPTY_ONBOARDING_CATALOG,
+  useOnboardingCatalog,
+} from '@/providers/onboarding/OnboardingProvider'
 import { useSession } from '@/providers/SessionProvider'
 import type { CalendarAlertEvent } from '@/types/components/Calendar.types'
 
@@ -75,9 +78,12 @@ export const CalendarAlert = ({ className, events }: CalendarAlertProps) => {
     getServerCalendarDismissals
   )
   const { session } = useSession()
-  const { catalog } = useOnboarding()
 
   const user = session.status === 'authenticated' ? session.user : null
+  // Only a signed-in reader matches events against their own subjects, so only
+  // they need the catalog; everyone else sees global events without it.
+  const catalog =
+    useOnboardingCatalog(Boolean(user)) ?? EMPTY_ONBOARDING_CATALOG
   const todayKey = currentCalendarDayKey()
   const uncompletedSubjectDbIds = user
     ? new Set(

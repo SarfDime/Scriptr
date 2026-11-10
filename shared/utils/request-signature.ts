@@ -83,3 +83,32 @@ export const verifyRequest = async ({
     signedPayload(timestamp, body)
   )
 }
+
+/**
+ * Compares a presented header value to an expected secret without an early
+ * exit. Web Crypto has no string comparison, so both values are hashed to a
+ * fixed width first: the comparison then runs over the same number of bytes
+ * whatever the input length. Used by callers that receive a plain shared secret
+ * rather than an HMAC — a Sanity webhook, for instance, can only send a header.
+ */
+export const matchesSecret = async (
+  provided: string | null,
+  secret: string
+): Promise<boolean> => {
+  if (!provided) return false
+
+  const encoder = new TextEncoder()
+  const [providedDigest, secretDigest] = await Promise.all([
+    crypto.subtle.digest('SHA-256', encoder.encode(provided)),
+    crypto.subtle.digest('SHA-256', encoder.encode(secret)),
+  ])
+  const left = new Uint8Array(providedDigest)
+  const right = new Uint8Array(secretDigest)
+
+  let difference = 0
+  for (let index = 0; index < left.length; index += 1) {
+    difference |= (left.at(index) ?? 0) ^ (right.at(index) ?? 0)
+  }
+
+  return difference === 0
+}

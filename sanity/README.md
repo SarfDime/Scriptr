@@ -81,6 +81,27 @@ A new academic entity type should extend `getDatabaseAcademicEndpoints`
 (`shared/utils/api.utils.ts`) and `parentFieldFor`/`parentColumnFor`
 exhaustively, with no silent default.
 
+## Publish webhook
+
+A publish on any document type calls the web app's cache revalidation so the
+edit reaches readers without a redeploy. Configure it per dataset in
+**Manage → API → Webhooks**:
+
+- **URL**: `https://<web app>/api/sanity/revalidate`
+- **Method**: `POST`
+- **Trigger on**: create, update and delete
+- **Filter**: `!(_id in path("drafts.**"))` — a draft is not what readers see
+- **HTTP headers**: `x-sanity-webhook-secret` set to `SANITY_REVALIDATE_SECRET`
+  from the web app's environment
+- **Projection**: `{"_id": _id, "_type": _type}` — the route reads nothing else
+
+The route maps `_type` to a cache tag (`SANITY_TYPE_TAGS` in
+`shared/config/cache-tags.ts`), so a subject publish invalidates subject reads
+instead of the whole dataset. A new document type needs an entry there;
+unmapped types are ignored and logged. Types that only exist as objects
+(portable text, localized primitives) ride along with the document that owns
+them.
+
 ## Layout
 
 - `schemas/`: document and object schemas (`academic/`, `navigation/`, `pages/`,

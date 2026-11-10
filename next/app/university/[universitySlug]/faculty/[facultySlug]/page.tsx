@@ -10,6 +10,7 @@ import {
   fetchAcademicDetailOrNotFound,
 } from '@/lib/academic-detail-page'
 import { getAcademicPath } from '@/lib/academic-routes'
+import { ACADEMIC_PAGE_TAGS } from '@/lib/sanity-tags'
 import {
   facultyDetailQuery,
   facultyStaticParamsQuery,
@@ -21,10 +22,11 @@ import type {
 import type { FacultyDetail } from '@/types/academics/faculty.types'
 
 /**
- * Rendered at build time and never regenerated: the URL space is fixed by
- * `generateStaticParams`, and nothing here reads a request-time API. Pinned so a
- * later edit cannot quietly turn the route dynamic — remove these two lines if
- * the page ever needs `cookies()`/`headers()`/search params.
+ * Rendered at build time and never on a clock: the URL space is fixed by
+ * `generateStaticParams` and nothing here reads a request-time API. The publish
+ * webhook invalidates the page through its type tags; otherwise it is rebuilt
+ * with the next deploy. Pinned so a later edit cannot quietly turn the route
+ * dynamic.
  */
 export const dynamic = 'force-static'
 export const revalidate = false
@@ -34,7 +36,8 @@ export const dynamicParams = false
 export const generateStaticParams =
   createAcademicStaticParams<FacultyRouteParams>(
     facultyStaticParamsQuery,
-    'faculties-static-params'
+    'faculties-static-params',
+    ACADEMIC_PAGE_TAGS.faculty
   )
 
 export const generateMetadata = createAcademicMetadata<
@@ -45,6 +48,7 @@ export const generateMetadata = createAcademicMetadata<
   getPath: (p) => getAcademicPath({ type: 'faculty', ...p }),
   entityLabel: UI_STRINGS.academics.entity.faculty,
   fetchOriginPrefix: 'faculty',
+  tags: ACADEMIC_PAGE_TAGS.faculty,
   getOwnSlug: (p) => p.facultySlug,
   getDescription: (faculty) => faculty.description,
   descriptionFallback: (faculty) =>
@@ -60,6 +64,7 @@ export default async function FacultyDetailPage({
     query: facultyDetailQuery,
     params: routeParams,
     fetchOrigin: `faculty-detail-${routeParams.universitySlug}-${routeParams.facultySlug}`,
+    tags: ACADEMIC_PAGE_TAGS.faculty,
   })
 
   return (

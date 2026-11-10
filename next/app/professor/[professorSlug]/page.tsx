@@ -14,6 +14,7 @@ import {
   fetchAcademicDetailOrNotFound,
 } from '@/lib/academic-detail-page'
 import { getAcademicPath } from '@/lib/academic-routes'
+import { ACADEMIC_PAGE_TAGS } from '@/lib/sanity-tags'
 import {
   professorDetailQuery,
   professorStaticParamsQuery,
@@ -26,10 +27,11 @@ import type { ProfessorDetail } from '@/types/academics/professor.types'
 import type { MinimalSubject } from '@/types/academics/subject.types'
 
 /**
- * Rendered at build time and never regenerated: the URL space is fixed by
- * `generateStaticParams`, and nothing here reads a request-time API. Pinned so a
- * later edit cannot quietly turn the route dynamic — remove these two lines if
- * the page ever needs `cookies()`/`headers()`/search params.
+ * Rendered at build time and never on a clock: the URL space is fixed by
+ * `generateStaticParams` and nothing here reads a request-time API. The publish
+ * webhook invalidates the page through its type tags; otherwise it is rebuilt
+ * with the next deploy. Pinned so a later edit cannot quietly turn the route
+ * dynamic.
  */
 export const dynamic = 'force-static'
 export const revalidate = false
@@ -39,7 +41,8 @@ export const dynamicParams = false
 export const generateStaticParams =
   createAcademicStaticParams<ProfessorRouteParams>(
     professorStaticParamsQuery,
-    'professors-static-params'
+    'professors-static-params',
+    ACADEMIC_PAGE_TAGS.professor
   )
 
 export const generateMetadata = createAcademicMetadata<
@@ -51,6 +54,7 @@ export const generateMetadata = createAcademicMetadata<
     getAcademicPath({ type: 'professor', professorSlug: p.professorSlug }),
   entityLabel: UI_STRINGS.academics.entity.professor,
   fetchOriginPrefix: 'professor',
+  tags: ACADEMIC_PAGE_TAGS.professor,
   getOwnSlug: (p) => p.professorSlug,
   getDescription: (professor) => professor.bio,
   descriptionFallback: (professor) =>
@@ -65,6 +69,7 @@ export default async function ProfessorDetailPage({
     query: professorDetailQuery,
     params: routeParams,
     fetchOrigin: `professor-detail-${routeParams.professorSlug}`,
+    tags: ACADEMIC_PAGE_TAGS.professor,
   })
 
   return (

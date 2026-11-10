@@ -61,6 +61,12 @@ const ENV_REQUIREMENTS: Array<EnvVarRequirement> = [
     required: false,
     purpose: "the API's POST /api/revalidate is rejected",
   },
+  {
+    name: 'SANITY_REVALIDATE_SECRET',
+    required: false,
+    purpose:
+      'the Sanity publish webhook is rejected, so edits wait for a deploy',
+  },
 ]
 
 /** Reports the environment once, from `instrumentation.ts` on server start. */

@@ -1,3 +1,4 @@
+import { SANITY_CACHE_TAGS } from '@shared/config/cache-tags'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { calendarEventsQuery } from '@/sanity/queries/calendar.queries'
 import type { CalendarEventRecord } from '@/types/components/Calendar.types'
@@ -19,6 +20,7 @@ export const loadCalendarEvents = async (): Promise<
     query: calendarEventsQuery,
     params: calendarMarginWindow(),
     fetchOrigin: 'calendar-events',
+    tags: [SANITY_CACHE_TAGS.calendar],
   })
 
   // Two attached calendars cannot share a period, but an event can still be

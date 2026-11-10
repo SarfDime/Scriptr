@@ -15,7 +15,8 @@ import { Dialog } from '@/components/ui/Dialog'
 import { DialogFooter } from '@/components/ui/DialogFooter'
 import { useEditAcademicsForm } from '@/hooks/profile/useEditAcademicsForm'
 import { useDeviceType } from '@/hooks/useDeviceType'
-import { useOnboarding } from '@/providers/onboarding/OnboardingProvider'
+import { useOnboardingCatalog } from '@/providers/onboarding/OnboardingProvider'
+import type { OnboardingCatalog } from '@/types/onboarding.types'
 
 /** Trigger plus the academics dialog. Mounted only while open, so every
  * opening is seeded from the saved profile. */
@@ -25,18 +26,21 @@ export function EditAcademicsButton({
   profile: MyProfileResponse
 }) {
   const [isOpen, setIsOpen] = useState(false)
+  const catalog = useOnboardingCatalog(isOpen)
 
   return (
     <>
       <Button
         onClick={() => setIsOpen(true)}
+        disabled={!catalog}
         className='button button-sm subtle ui-cluster gap-1.5'
       >
         <BookIcon />
         {UI_STRINGS.profile.academics.editLabel}
       </Button>
-      {isOpen && (
+      {isOpen && catalog && (
         <EditAcademicsDialog
+          catalog={catalog}
           profile={profile}
           onClose={() => setIsOpen(false)}
         />
@@ -49,14 +53,15 @@ export function EditAcademicsButton({
  * onboarding wizard's selection blocks and catalog. */
 function EditAcademicsDialog({
   profile,
+  catalog,
   onClose,
 }: {
   profile: MyProfileResponse
+  catalog: OnboardingCatalog
   onClose: () => void
 }) {
   const strings = UI_STRINGS.profile.academics
   const isMobile = useDeviceType() === 'mobile'
-  const { catalog } = useOnboarding()
   const {
     data,
     selections,
@@ -65,7 +70,7 @@ function EditAcademicsDialog({
     canSubmit,
     prepareError,
     handleSubmit,
-  } = useEditAcademicsForm({ profile, onSaved: onClose })
+  } = useEditAcademicsForm({ profile, catalog, onSaved: onClose })
 
   return (
     <Dialog

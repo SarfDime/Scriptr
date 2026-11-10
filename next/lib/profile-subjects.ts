@@ -1,3 +1,5 @@
+import { SANITY_CACHE_TAGS } from '@shared/config/cache-tags'
+import { ACADEMIC_CATALOG_TAGS } from '@/lib/sanity-tags'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { subjectByIdQuery } from '@/sanity/queries/academics/subject.queries'
 import type { SubjectById } from '@/types/academics/subject.types'
@@ -18,6 +20,7 @@ export async function getOnboardingCatalog() {
   return fetchSanityData<OnboardingCatalog>({
     query: onboardingCatalogQuery,
     fetchOrigin: 'profile-subject-catalog',
+    tags: ACADEMIC_CATALOG_TAGS,
   })
 }
 
@@ -32,6 +35,7 @@ async function fetchSubjects(
           query: subjectByIdQuery,
           params: { subjectId },
           fetchOrigin: `${fetchOriginPrefix}-${subjectId}`,
+          tags: [SANITY_CACHE_TAGS.subject],
         })
       )
     )

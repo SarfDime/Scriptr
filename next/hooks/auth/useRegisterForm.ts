@@ -19,7 +19,7 @@ import {
   readGuestAcademicData,
 } from '@/lib/onboarding-storage'
 import { getRegistrationAcademicProfile } from '@/lib/profile-sync'
-import { useOnboarding } from '@/providers/onboarding/OnboardingProvider'
+import { useOnboardingCatalog } from '@/providers/onboarding/OnboardingProvider'
 import { useSession } from '@/providers/SessionProvider'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 
@@ -40,7 +40,7 @@ const REGISTER_FIELDS: ReadonlyArray<RegisterField> = [
 
 export function useRegisterForm() {
   const { register } = useSession()
-  const { catalog } = useOnboarding()
+  const catalog = useOnboardingCatalog()
   const { addToast } = useToast()
   const { touch, touchAll, isTouched } = useTouchedFields<RegisterField>()
 
@@ -108,6 +108,22 @@ export function useRegisterForm() {
       addToast({
         title: UI_STRINGS.auth.register.statuses.errorTitle,
         description: message,
+        type: 'error',
+      })
+      return
+    }
+
+    // The catalog seeds the academic profile captured for a guest, so a
+    // registration without it would silently drop what they set up. It is
+    // fetched once on mount, so this only fires on a slow first load.
+    if (!catalog) {
+      setState({
+        status: 'error',
+        message: UI_STRINGS.onboarding.catalogFailed,
+      })
+      addToast({
+        title: UI_STRINGS.auth.register.statuses.errorTitle,
+        description: UI_STRINGS.onboarding.catalogFailed,
         type: 'error',
       })
       return

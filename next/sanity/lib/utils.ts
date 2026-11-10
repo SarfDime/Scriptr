@@ -1,3 +1,4 @@
+import { SANITY_CACHE_TAGS } from '@shared/config/cache-tags'
 import type { QueryParams } from 'next-sanity'
 import type { LivePerspective } from 'next-sanity/live'
 import { isProd, isStaging } from '@/config/env'
@@ -5,15 +6,6 @@ import { nextLogs } from '@/lib/logger'
 import { sanityAuthToken, sanityWebsiteId } from '../env'
 import { sanityFunctionQueries } from '../queries/functions.queries'
 import { client, prodClient } from './client'
-
-/**
- * One tag for the whole dataset. Nothing expires it today: a Sanity edit reaches
- * readers on the next rebuild, which is the intended mechanism (a Studio action
- * fires a deploy hook). It stays as the hook for tag-based expiry, which is
- * deferred — that would need a tag per query, and `sanityFetch`'s per-document
- * sync tags cannot be computed outside this app.
- */
-const SANITY_CACHE_TAG = 'sanity'
 
 /**
  * Drafts are a staging instrument, and getting this wrong is not symmetric:
@@ -34,6 +26,10 @@ export type FetchSanityDataParams = {
   query: string
   params?: QueryParams & { slug?: string | null }
   fetchOrigin: string
+  /** The Sanity document types this query renders, so the publish webhook can
+   * invalidate it without flushing the whole dataset (see `SANITY_TYPE_TAGS`).
+   * Omitted means only `SANITY_CACHE_TAGS.all` — still correct, just coarse. */
+  tags?: ReadonlyArray<string>
 } & FetchSanityLiveProps
 
 /**
@@ -48,6 +44,7 @@ async function fetchSanityData<QueryResponse>({
   fetchOrigin,
   perspective = 'drafts',
   stega = true,
+  tags,
 }: FetchSanityDataParams): Promise<QueryResponse> {
   try {
     const { ...rest } = params
@@ -75,11 +72,11 @@ async function fetchSanityData<QueryResponse>({
       // returns published documents, which dropped every page whose slug only
       // exists in the draft from `generateStaticParams`.
       token: isProductionDeployment ? undefined : sanityAuthToken,
-      // Sanity reads are cached until the next build; the `sanity` tag can
-      // expire them manually.
+      // Sanity reads do not expire on a clock; the publish webhook (or the
+      // `sanity` tag) expires them by tag.
       next: {
         revalidate: false,
-        tags: [SANITY_CACHE_TAG],
+        tags: [SANITY_CACHE_TAGS.all, ...(tags ?? [])],
       },
     })
 

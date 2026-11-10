@@ -1,3 +1,4 @@
+import { SANITY_CACHE_TAGS } from '@shared/config/cache-tags'
 import { UI_STRINGS } from '@shared/config/strings'
 import type { Metadata } from 'next'
 import { NavBar } from '@/components/navigation/Navbar'
@@ -13,10 +14,8 @@ import { fetchWebsiteSeoSettings, toOrigin } from '@/lib/academic-detail-page'
 import { NavProvider } from '@/providers/nav/NavProvider'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { navMenuQuery } from '@/sanity/queries/nav.queries'
-import { onboardingCatalogQuery } from '@/sanity/queries/onboarding.queries'
 import { starCanvasQuery } from '@/sanity/queries/website.queries'
 import type { NavMenuType } from '@/types/components/Nav.types'
-import type { OnboardingCatalog } from '@/types/onboarding.types'
 import { antiqueOlive, antiqueOliveCond, matter } from './fonts/fonts'
 import { Providers } from './providers'
 
@@ -54,15 +53,12 @@ export default async function RootLayout({
   const navMenu = await fetchSanityData<NavMenuType>({
     query: navMenuQuery,
     fetchOrigin: `navMenuQuery`,
+    tags: [SANITY_CACHE_TAGS.navigation],
   })
-  const catalog = await fetchSanityData<OnboardingCatalog>({
-    query: onboardingCatalogQuery,
-    fetchOrigin: `onboardingCatalog(layout)`,
-  })
-
   const starCanvasConfig = await fetchSanityData<StarCanvasSanityData>({
     query: starCanvasQuery,
     fetchOrigin: `starCanvasConfig(layout)`,
+    tags: [SANITY_CACHE_TAGS.website],
   })
 
   return (
@@ -72,7 +68,7 @@ export default async function RootLayout({
       className={`${antiqueOlive.variable} ${antiqueOliveCond.variable} ${matter.variable} antialiased`}
     >
       <body>
-        <Providers catalog={catalog}>
+        <Providers>
           <ToastContainer />
           <AppBackground sanityData={starCanvasConfig} />
           <NavProvider>
@@ -80,7 +76,7 @@ export default async function RootLayout({
             <MainLayout>{children}</MainLayout>
           </NavProvider>
           <NotificationsAside />
-          <OnboardingModal catalog={catalog} />
+          <OnboardingModal />
         </Providers>
       </body>
     </html>

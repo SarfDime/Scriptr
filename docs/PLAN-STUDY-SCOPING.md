@@ -8,7 +8,7 @@ implementation plan: what changes, in which app, and why.
 
 | Phase | Status | Notes |
 |---|---|---|
-| 1. Build and cache hygiene | Not started | Benefits the current setup on its own |
+| 1. Build and cache hygiene | Done | Benefits the current setup on its own |
 | 2. Data model | Not started | Foundation for everything else |
 | 3. Roles and permissions | Not started | Required before any write is scoped |
 | 4. Study routes | Not started | Frontend shell |
@@ -16,7 +16,7 @@ implementation plan: what changes, in which app, and why.
 | 6. Achievements and notifications | Not started | Per study, plus global |
 | 7. Cleanup and docs | Not started | — |
 
-Last reconciled: 2026-11-10.
+Last reconciled: 2026-11-10 (Phase 1 complete).
 
 ## Important points
 
@@ -33,6 +33,10 @@ Last reconciled: 2026-11-10.
   both follow the study.
 * **Profiles are global; academic profiles are per study.** One identity, one
   username across the org, one academic row per (profile, study).
+* **Setup works for guests and is per study.** A signed-in viewer's setup lives
+  in `profile_studies` / `profile_subjects`; a guest's lives in the browser,
+  keyed by study. Dismissing setup is per study and stops the redirect for that
+  study. Either way the study site stays readable without an account.
 * **Restrictions and bans are org-wide.** They never carry a study id.
 * **The API cannot infer the study.** It is served from `api.scriptr.uk`, so the
   caller passes the study id. It is a filter, never an authorization grant —
@@ -54,35 +58,39 @@ Small, independent of scoping, and pays off immediately.
 
 ### Frontend (`next/`)
 
-* [ ] Move the onboarding catalog out of the root layout
-  ([`app/layout.tsx`](../next/app/layout.tsx)). It currently fetches every
-  university, faculty, study and subject and passes it to a client provider, so
-  it is serialised into every prerendered page. Fetch it per study, or on first
-  modal open.
-  *Why:* the payload is duplicated into every page's RSC output; this is the
-  single largest build-time and artifact-size cost, and it grows with subjects.
-* [ ] Split the sitemap into an index with a child sitemap per study plus one
+* [x] Move the onboarding catalog out of the root layout
+  ([`app/layout.tsx`](../next/app/layout.tsx)). It fetches every university,
+  faculty, study and subject, so passing it to a client provider serialised it
+  into every prerendered page. It now comes from a static route
+  (`/api/onboarding-catalog`) fetched on demand.
+  *Why:* the payload was duplicated into every page's RSC output — the largest
+  build-time and artifact-size cost, and one that grows with subjects.
+  This is an interim shape: Phase 4 replaces it with study-scoped server reads,
+  and Phase 5 removes both the route and the client fetch.
+* [x] Split the sitemap into an index with a child sitemap per study plus one
   catalog sitemap ([`app/sitemap.ts`](../next/app/sitemap.ts)).
   *Why:* a single sitemap file is capped at 50,000 URLs, and it currently
   fetches every script at build time.
-* [ ] Give the catalog routes a long `revalidate` instead of `revalidate = false`.
-  *Why:* an ISR catalog can be refreshed by the publish webhook; a fully static
-  one still needs a redeploy for every Sanity edit.
+* [x] Keep the catalog routes at build time (`force-static`,
+  `revalidate = false`) and let the publish webhook invalidate them by tag.
+  *Why:* an editorial edit should not wait for a redeploy, and it should not wait
+  for a clock either — a page only regenerates when a document it renders
+  actually changed.
 
 ### Sanity (`sanity/`)
 
-* [ ] Add a publish webhook that calls a Next route with `_type` and `_id`.
+* [x] Add a publish webhook that calls a Next route with `_type` and `_id`.
   Filter drafts out: `!(_id in path("drafts.**"))`.
   *Why:* editorial changes currently reach readers only on the next rebuild.
 
 ### Frontend (`next/`) + shared
 
-* [ ] Replace the single `sanity` cache tag with per-type tags
+* [x] Replace the single `sanity` cache tag with per-type tags
   ([`sanity/lib/utils.ts`](../next/sanity/lib/utils.ts)): `sanity:university`,
   `sanity:faculty`, `sanity:study`, `sanity:subject`, `sanity:professor`,
   `sanity:website`. Each call site passes the level it reads.
   *Why:* one subject edit should not invalidate every page on the platform.
-* [ ] Server route for the webhook: verify a shared secret, map `_type` to a tag,
+* [x] Server route for the webhook: verify a shared secret, map `_type` to a tag,
   `revalidateTag(tag, { expire: 0 })`, rate-limited like
   [`api/revalidate`](../next/app/api/revalidate/route.ts).
 
@@ -162,9 +170,9 @@ Small, independent of scoping, and pays off immediately.
 
 * [ ] Move the existing pages into a `(site)` route group; URLs do not change.
 * [ ] Add `app/study/[siteSlug]/` with `layout.tsx` (study chrome, theme,
-  `StudyProvider`), `page.tsx` (home), `subject/[subjectSlug]`,
-  `professor/[professorSlug]`, `scripts/[scriptSlug]`, `user/[username]`,
-  `search`.
+  `StudyProvider`), `page.tsx` (home), `academic-setup`,
+  `subject/[subjectSlug]`, `professor/[professorSlug]`,
+  `scripts/[scriptSlug]`, `user/[username]`, `search`.
 * [ ] Study layout resolves the study from `siteSlug` through one cached read,
   and 404s an unknown slug.
 * [ ] `getAcademicPath` emits `/study/[siteSlug]/…` for study and subject paths
@@ -174,6 +182,21 @@ Small, independent of scoping, and pays off immediately.
   the new tree. One canonical URL per entity.
 * [ ] Catalog pages keep `dynamicParams = false`; study content pages drop
   `generateStaticParams` and use `revalidate`.
+* [ ] `academic-setup` is a study page, not a modal: it reads only that study's
+  subjects by year on the server and writes the academic profile directly. No
+  provider, no client catalog.
+* [ ] Add the study-selection page inside the main layout for the initial setup:
+  university → faculty → study, names and slugs only, no subjects. It works for
+  guests and signed-in viewers alike and hands off to that study's
+  `academic-setup`.
+* [ ] Redirect a viewer with no academic profile for the study — and who has not
+  dismissed setup for it — to `academic-setup`. A guest counts as having no
+  profile until they have a browser record for that study.
+* [ ] `academic-setup` writes to `profile_studies` / `profile_subjects` when
+  signed in and to the guest bucket otherwise. "Skip for now" records a
+  per-study dismissal and returns to the study home with a resume link.
+* [ ] Replace the "resume setup" notification action (`open-onboarding`) with a
+  link to the setup page.
 * [ ] Metadata and canonical URLs built from the study path; study home
   breadcrumbs link back to the catalog faculty page.
 
@@ -197,8 +220,22 @@ Small, independent of scoping, and pays off immediately.
 ### Frontend
 
 * [ ] Every study-scoped server and client call passes the resolved `studyId`.
-* [ ] Onboarding runs inside the study: no university/faculty picker, subjects
-  limited to that study, academic profile written to `profile_studies`.
+* [ ] Onboarding becomes `AcademicSetup` and runs inside the study: no
+  university/faculty picker, subjects limited to that study, academic profile
+  written to `profile_studies`.
+* [ ] Retire the onboarding modal and `OnboardingProvider`. The wizard state
+  moves into the two pages, and the resume reminder is a link rather than an
+  action that opens a modal.
+* [ ] Guest academic storage becomes one record per study instead of the single
+  global `scriptr:guest-academic-data`, so completion and dismissal are per
+  study. The study page resolves the study and its subjects server-side, so the
+  record can hold database ids and needs no catalog conversion later.
+* [ ] Keep the guest's setup through registration: once the account exists, the
+  client applies each stored study through the same study-scoped endpoints, so
+  `academicProfile` drops off the register payload and
+  `getRegistrationAcademicProfile` goes away.
+* [ ] Delete `/api/onboarding-catalog` and the demand-based client catalog fetch;
+  the study-selection page is the only place that reads the catalog.
 * [ ] Profile page: study-scoped view shows the study's academic profile and
   404s when the user is not a member; name falls back to the global profile.
 * [ ] Cache tags gain a study dimension (`script:study:<id>`) so a publish in one

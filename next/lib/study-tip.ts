@@ -1,3 +1,4 @@
+import { SANITY_CACHE_TAGS } from '@shared/config/cache-tags'
 import type { StudyTipsQueryResult } from '@shared/types/sanity.types'
 import type { WithResolvedSanityData } from '@shared/types/sanity-transform.types'
 import { fetchSanityData } from '@/sanity/lib/utils'
@@ -26,7 +27,11 @@ export const getDailyStudyTip = async (): Promise<StudyTipData | undefined> => {
   try {
     const tips = await fetchSanityData<
       WithResolvedSanityData<StudyTipsQueryResult>
-    >({ query: studyTipsQuery, fetchOrigin: 'getDailyStudyTip()' })
+    >({
+      query: studyTipsQuery,
+      fetchOrigin: 'getDailyStudyTip()',
+      tags: [SANITY_CACHE_TAGS.studyTip],
+    })
 
     return pickDailyItem(
       tips.flatMap(({ title, content }) =>

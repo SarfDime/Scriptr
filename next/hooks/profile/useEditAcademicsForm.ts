@@ -15,11 +15,13 @@ import {
   planAcademicSave,
 } from '@/lib/profile-academics'
 import { toUserMessage } from '@/lib/user-facing-error'
-import { useOnboarding } from '@/providers/onboarding/OnboardingProvider'
 import { useMyProfileActions } from '@/providers/ProfileProvider'
 import { useSession } from '@/providers/SessionProvider'
 import { useToast } from '@/providers/toaster/ToasterProvider'
-import type { AcademicSelections } from '@/types/onboarding.types'
+import type {
+  AcademicSelections,
+  OnboardingCatalog,
+} from '@/types/onboarding.types'
 
 /**
  * State and submit flow for the edit-academics dialog. The selection
@@ -37,12 +39,13 @@ import type { AcademicSelections } from '@/types/onboarding.types'
  */
 export function useEditAcademicsForm({
   profile,
+  catalog,
   onSaved,
 }: {
   profile: MyProfileResponse
+  catalog: OnboardingCatalog
   onSaved: () => void
 }) {
-  const { catalog } = useOnboarding()
   const router = useRouter()
   const { reload } = useMyProfileActions()
   const { refresh: refreshSession } = useSession()

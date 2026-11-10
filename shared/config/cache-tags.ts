@@ -9,6 +9,43 @@ export const SCRIPT_CACHE_TAGS = {
   detail: (scriptId: string) => `scripts:detail:${scriptId}`,
 }
 
+/** Sanity dataset reads. Each query is tagged with the document types it
+ * renders, so a publish invalidates the pages that read that type instead of
+ * the whole dataset. `all` stays on every read as the manual purge switch. */
+export const SANITY_CACHE_TAGS = {
+  all: 'sanity',
+  website: 'sanity:website',
+  navigation: 'sanity:navigation',
+  university: 'sanity:university',
+  faculty: 'sanity:faculty',
+  study: 'sanity:study',
+  subject: 'sanity:subject',
+  professor: 'sanity:professor',
+  person: 'sanity:person',
+  calendar: 'sanity:calendar',
+  studyTip: 'sanity:study-tip',
+} as const
+
+/** Sanity document type to the cache tag its reads carry. Types that only
+ * exist as objects (portable text, localized primitives, buttons) are set on
+ * the document that owns them, so they need no entry. */
+export const SANITY_TYPE_TAGS: Record<string, string> = {
+  website: SANITY_CACHE_TAGS.website,
+  starCanvas: SANITY_CACHE_TAGS.website,
+  navMenu: SANITY_CACHE_TAGS.navigation,
+  navItem: SANITY_CACHE_TAGS.navigation,
+  subMenuItem: SANITY_CACHE_TAGS.navigation,
+  university: SANITY_CACHE_TAGS.university,
+  faculty: SANITY_CACHE_TAGS.faculty,
+  study: SANITY_CACHE_TAGS.study,
+  subject: SANITY_CACHE_TAGS.subject,
+  professor: SANITY_CACHE_TAGS.professor,
+  person: SANITY_CACHE_TAGS.person,
+  calendar: SANITY_CACHE_TAGS.calendar,
+  calendarEvent: SANITY_CACHE_TAGS.calendar,
+  studyTip: SANITY_CACHE_TAGS.studyTip,
+}
+
 /** Public profile pages share one representation tag because a script can
  * appear on both its author's and any number of users' favorites lists. */
 export const PROFILE_CACHE_TAGS = {

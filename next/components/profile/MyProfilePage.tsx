@@ -9,7 +9,7 @@ import { ProfilePage } from '@/components/profile/ProfilePage'
 import { Text } from '@/components/typography/Text'
 import { useProfileStats } from '@/hooks/useProfileStats'
 import { buildProfileAcademics } from '@/lib/profile-academic-links'
-import { useOnboarding } from '@/providers/onboarding/OnboardingProvider'
+import { useOnboardingCatalog } from '@/providers/onboarding/OnboardingProvider'
 import { useMyProfile, useMyProfileActions } from '@/providers/ProfileProvider'
 import type { MyProfilePageViewModel } from '@/types/components/ProfilePage.types'
 
@@ -22,7 +22,7 @@ import type { MyProfilePageViewModel } from '@/types/components/ProfilePage.type
 export function MyProfilePage({ subjects, studyTip }: MyProfilePageViewModel) {
   const profileState = useMyProfile()
   const { refresh, reload } = useMyProfileActions()
-  const { catalog } = useOnboarding()
+  const catalog = useOnboardingCatalog()
   const statsState = useProfileStats(
     profileState.status === 'loaded' ? profileState.profile.id : null
   )
@@ -36,7 +36,9 @@ export function MyProfilePage({ subjects, studyTip }: MyProfilePageViewModel) {
     reload()
   }, [])
 
-  if (profileState.status !== 'loaded') {
+  // The profile renders study and faculty names from the catalog, so an empty
+  // one would flash "no affiliations" before it arrives.
+  if (profileState.status !== 'loaded' || !catalog) {
     return (
       <PageLayout>
         <Box className='ui-stack items-center gap-3'>

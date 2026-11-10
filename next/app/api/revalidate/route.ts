@@ -6,6 +6,7 @@ import { createRateLimiter } from '@shared/utils/rate-limit'
 import { verifyRequest } from '@shared/utils/request-signature'
 import { revalidateTag } from 'next/cache'
 import { NextResponse } from 'next/server'
+import { clientIp } from '@/lib/client-ip'
 
 /**
  * Called by the Hono API after a script is created, updated, or deleted so the
@@ -35,11 +36,6 @@ const revalidateLimiter = createRateLimiter({
   windowMs: 60 * 1000,
   countBlocked: true,
 })
-
-const clientIp = (request: Request): string =>
-  request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-  request.headers.get('x-real-ip') ??
-  'unknown-ip'
 
 // biome-ignore lint/style/useNamingConvention: Next.js route handlers must be named POST/GET/etc.
 export async function POST(request: Request) {

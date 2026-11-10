@@ -2,11 +2,20 @@ import type { MetadataRoute } from 'next'
 import { createAcademicStaticParams } from '@/lib/academic-detail-page'
 import { getAcademicPath } from '@/lib/academic-routes'
 import { getScriptSitemapEntries } from '@/lib/api/sitemap-api'
-import { nextLogs } from '@/lib/logger'
+import { ACADEMIC_CATALOG_TAGS } from '@/lib/sanity-tags'
+import {
+  CATALOG_SECTION,
+  hasSiteOrigin,
+  listSitemapSections,
+  listStudies,
+  MAX_URLS_PER_SITEMAP,
+  SCRIPT_SECTION_PREFIX,
+  STUDY_SECTION_PREFIX,
+  studyKey,
+} from '@/lib/sitemap-sections'
 import { websiteDomain } from '@/sanity/env'
 import { facultyStaticParamsQuery } from '@/sanity/queries/academics/faculty.queries'
 import { professorStaticParamsQuery } from '@/sanity/queries/academics/professor.queries'
-import { studyStaticParamsQuery } from '@/sanity/queries/academics/study.queries'
 import { subjectStaticParamsQuery } from '@/sanity/queries/academics/subject.queries'
 import { universityStaticParamsQuery } from '@/sanity/queries/academics/university.queries'
 import type {
@@ -20,12 +29,10 @@ import type {
 /**
  * Prerendered at build time and never revalidated.
  *
- * The route is already static by default — the build manifest records
- * `compute: "static"` and `initialRevalidateSeconds: false` — but the configs
- * are pinned rather than inferred. A metadata route re-exports its named
- * exports onto the generated route module, so pinning keeps `/sitemap.xml` a
- * build artefact even if a later change introduces a dynamic API or a different
- * Next default.
+ * One file per section (see `listSitemapSections`) so no single sitemap
+ * approaches the protocol's URL limit, and so the catalog, each study's
+ * subjects and the scripts rebuild independently. `/sitemap.xml` is the index
+ * over them.
  */
 export const dynamic = 'force-static'
 export const revalidate = false
@@ -33,10 +40,11 @@ export const revalidate = false
 type SitemapEntry = MetadataRoute.Sitemap[number]
 
 /** A static-params row with a missing parent slug would build a broken path. */
-const isComplete = (params: Record<string, string>): boolean =>
-  Object.values(params).every(
+function isComplete(params: Record<string, string>): boolean {
+  return Object.values(params).every(
     (value) => typeof value === 'string' && value.length > 0
   )
+}
 
 /** Reads one section's route params with the same `.catch(() => [])`
  * discipline the routes' `generateStaticParams` use, so the sitemap lists
@@ -45,35 +53,34 @@ const readParams = <TParams extends Record<string, string>>(
   query: string,
   fetchOrigin: string
 ) =>
-  createAcademicStaticParams<TParams>(query, fetchOrigin)().then((rows) =>
-    rows.filter(isComplete)
-  )
+  createAcademicStaticParams<TParams>(
+    query,
+    fetchOrigin,
+    ACADEMIC_CATALOG_TAGS
+  )().then((rows) => rows.filter(isComplete))
 
-const getAcademicEntries = async (
+const toCatalogEntries = async (
   toUrl: (path: string) => string
 ): Promise<Array<SitemapEntry>> => {
-  const [universities, faculties, studies, subjects, professors] =
-    await Promise.all([
-      readParams<UniversityRouteParams>(
-        universityStaticParamsQuery,
-        'sitemap-universities'
-      ),
-      readParams<FacultyRouteParams>(
-        facultyStaticParamsQuery,
-        'sitemap-faculties'
-      ),
-      readParams<StudyRouteParams>(studyStaticParamsQuery, 'sitemap-studies'),
-      readParams<SubjectRouteParams>(
-        subjectStaticParamsQuery,
-        'sitemap-subjects'
-      ),
-      readParams<ProfessorRouteParams>(
-        professorStaticParamsQuery,
-        'sitemap-professors'
-      ),
-    ])
+  const [universities, faculties, studies, professors] = await Promise.all([
+    readParams<UniversityRouteParams>(
+      universityStaticParamsQuery,
+      'sitemap-universities'
+    ),
+    readParams<FacultyRouteParams>(
+      facultyStaticParamsQuery,
+      'sitemap-faculties'
+    ),
+    listStudies(),
+    readParams<ProfessorRouteParams>(
+      professorStaticParamsQuery,
+      'sitemap-professors'
+    ),
+  ])
 
   return [
+    { url: toUrl('/') },
+    { url: toUrl('/search') },
     ...universities.map((params) => ({
       url: toUrl(getAcademicPath({ type: 'university', ...params })),
     })),
@@ -83,49 +90,76 @@ const getAcademicEntries = async (
     ...studies.map((params) => ({
       url: toUrl(getAcademicPath({ type: 'study', ...params })),
     })),
-    ...subjects.map((params) => ({
-      url: toUrl(getAcademicPath({ type: 'subject', ...params })),
-    })),
     ...professors.map((params) => ({
       url: toUrl(getAcademicPath({ type: 'professor', ...params })),
     })),
   ]
 }
 
-const getScriptEntries = async (
+const toStudyEntries = async (
+  study: StudyRouteParams,
+  toUrl: (path: string) => string
+): Promise<Array<SitemapEntry>> => {
+  const subjects = await readParams<SubjectRouteParams>(
+    subjectStaticParamsQuery,
+    'sitemap-subjects'
+  )
+  const key = studyKey(study)
+
+  return [
+    { url: toUrl(getAcademicPath({ type: 'study', ...study })) },
+    ...subjects
+      .filter((params) => studyKey(params) === key)
+      .map((params) => ({
+        url: toUrl(getAcademicPath({ type: 'subject', ...params })),
+      })),
+  ]
+}
+
+const toScriptEntries = async (
+  sectionIndex: number,
   toUrl: (path: string) => string
 ): Promise<Array<SitemapEntry>> => {
   const scripts = (await getScriptSitemapEntries()) ?? []
+  const offset = sectionIndex * MAX_URLS_PER_SITEMAP
 
-  return scripts.map((script) => ({
+  return scripts.slice(offset, offset + MAX_URLS_PER_SITEMAP).map((script) => ({
     url: toUrl(getAcademicPath({ type: 'script', scriptSlug: script.slug })),
     lastModified: script.updated_at,
   }))
 }
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Without the site origin every URL would be relative, or built on the wrong
-  // domain, so publish nothing rather than a sitemap crawlers must reject.
-  if (!websiteDomain) {
-    nextLogs({
-      logLevel: 'warn',
-      message:
-        'NEXT_PUBLIC_SITE_URL is not set; /sitemap.xml is empty because its URLs need the site origin.',
-    })
-    return []
-  }
+export async function generateSitemaps() {
+  return listSitemapSections()
+}
 
+export default async function sitemap(props: {
+  id: Promise<string>
+}): Promise<MetadataRoute.Sitemap> {
+  if (!hasSiteOrigin()) return []
+
+  const id = await props.id
   const toUrl = (path: string) => new URL(path, websiteDomain).toString()
 
-  const [academicEntries, scriptEntries] = await Promise.all([
-    getAcademicEntries(toUrl),
-    getScriptEntries(toUrl),
-  ])
+  if (id === CATALOG_SECTION) {
+    return toCatalogEntries(toUrl)
+  }
 
-  return [
-    { url: toUrl('/') },
-    { url: toUrl('/search') },
-    ...academicEntries,
-    ...scriptEntries,
-  ]
+  if (id.startsWith(STUDY_SECTION_PREFIX)) {
+    const index = Number(id.slice(STUDY_SECTION_PREFIX.length))
+    const studies = await listStudies()
+    const study = Number.isInteger(index) ? studies.at(index) : undefined
+
+    return study ? toStudyEntries(study, toUrl) : []
+  }
+
+  if (id.startsWith(SCRIPT_SECTION_PREFIX)) {
+    const index = Number(id.slice(SCRIPT_SECTION_PREFIX.length))
+
+    return Number.isInteger(index) && index >= 0
+      ? toScriptEntries(index, toUrl)
+      : []
+  }
+
+  return []
 }

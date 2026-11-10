@@ -1,3 +1,4 @@
+import { SANITY_CACHE_TAGS } from '@shared/config/cache-tags'
 import { getAcademicPath } from '@/lib/academic-routes'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { subjectPathQuery } from '@/sanity/queries/academics/subject.queries'
@@ -22,6 +23,12 @@ export const getSubjectPath = async (
       query: subjectPathQuery,
       params: { subjectId: subjectSanityId },
       fetchOrigin: `subject-path-${subjectSanityId}`,
+      tags: [
+        SANITY_CACHE_TAGS.subject,
+        SANITY_CACHE_TAGS.study,
+        SANITY_CACHE_TAGS.faculty,
+        SANITY_CACHE_TAGS.university,
+      ],
     })
     if (!slugs) return null
 

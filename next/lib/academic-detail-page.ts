@@ -1,3 +1,4 @@
+import { SANITY_CACHE_TAGS } from '@shared/config/cache-tags'
 import { UI_STRINGS } from '@shared/config/strings'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
 import type { Metadata } from 'next'
@@ -48,6 +49,7 @@ export const fetchWebsiteSeoSettings =
     const settings = await fetchSanityData<WebsiteSeoSettings | null>({
       query: websiteSeoQuery,
       fetchOrigin: 'website-seo',
+      tags: [SANITY_CACHE_TAGS.website],
     }).catch(() => null)
 
     return settings ?? fallbackWebsiteSeo
@@ -62,15 +64,18 @@ export const fetchAcademicDetailOrNotFound = async <TDetail>({
   query,
   params,
   fetchOrigin,
+  tags,
 }: {
   query: string
   params: Record<string, string>
   fetchOrigin: string
+  tags?: ReadonlyArray<string>
 }): Promise<TDetail> => {
   const detail = await fetchSanityData<TDetail | null>({
     query,
     params,
     fetchOrigin,
+    tags,
   })
 
   if (!detail) notFound()
@@ -83,12 +88,14 @@ export const createAcademicStaticParams = <
   TParams extends Record<string, string>,
 >(
   query: string,
-  fetchOrigin: string
+  fetchOrigin: string,
+  tags?: ReadonlyArray<string>
 ) => {
   return async (): Promise<Array<TParams>> => {
     const items = await fetchSanityData<Array<TParams>>({
       query,
       fetchOrigin,
+      tags,
     }).catch(() => [])
 
     return items ?? []
@@ -108,6 +115,7 @@ export const createAcademicMetadata = <
   getOwnSlug,
   getDescription,
   descriptionFallback,
+  tags,
 }: {
   query: string
   seoQuery?: string
@@ -123,6 +131,7 @@ export const createAcademicMetadata = <
   getOwnSlug: (params: TParams) => string
   getDescription: (detail: TDetail) => PortableTextValue
   descriptionFallback: (detail: TDetail) => string
+  tags?: ReadonlyArray<string>
 }) => {
   return async ({
     params,
@@ -137,6 +146,7 @@ export const createAcademicMetadata = <
         query: seoQuery,
         params: routeParams,
         fetchOrigin: `${fetchOriginPrefix}-metadata-${ownSlug}`,
+        tags,
       }).catch(() => null),
       fetchWebsiteSeoSettings(),
     ])

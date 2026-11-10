@@ -9,6 +9,7 @@ import {
   fetchAcademicDetailOrNotFound,
 } from '@/lib/academic-detail-page'
 import { getAcademicPath } from '@/lib/academic-routes'
+import { ACADEMIC_PAGE_TAGS } from '@/lib/sanity-tags'
 import {
   universityDetailQuery,
   universityStaticParamsQuery,
@@ -20,10 +21,11 @@ import type {
 import type { UniversityDetail } from '@/types/academics/university.types'
 
 /**
- * Rendered at build time and never regenerated: the URL space is fixed by
- * `generateStaticParams`, and nothing here reads a request-time API. Pinned so a
- * later edit cannot quietly turn the route dynamic — remove these two lines if
- * the page ever needs `cookies()`/`headers()`/search params.
+ * Rendered at build time and never on a clock: the URL space is fixed by
+ * `generateStaticParams` and nothing here reads a request-time API. The publish
+ * webhook invalidates the page through its type tags; otherwise it is rebuilt
+ * with the next deploy. Pinned so a later edit cannot quietly turn the route
+ * dynamic.
  */
 export const dynamic = 'force-static'
 export const revalidate = false
@@ -33,7 +35,8 @@ export const dynamicParams = false
 export const generateStaticParams =
   createAcademicStaticParams<UniversityRouteParams>(
     universityStaticParamsQuery,
-    'universities-static-params'
+    'universities-static-params',
+    ACADEMIC_PAGE_TAGS.university
   )
 
 export const generateMetadata = createAcademicMetadata<
@@ -45,6 +48,7 @@ export const generateMetadata = createAcademicMetadata<
     getAcademicPath({ type: 'university', universitySlug: p.universitySlug }),
   entityLabel: UI_STRINGS.academics.entity.university,
   fetchOriginPrefix: 'university',
+  tags: ACADEMIC_PAGE_TAGS.university,
   getOwnSlug: (p) => p.universitySlug,
   getDescription: (university) => university.description,
   descriptionFallback: (university) =>
@@ -59,6 +63,7 @@ export default async function UniversityDetailPage({
     query: universityDetailQuery,
     params: routeParams,
     fetchOrigin: `university-detail-${routeParams.universitySlug}`,
+    tags: ACADEMIC_PAGE_TAGS.university,
   })
 
   return (

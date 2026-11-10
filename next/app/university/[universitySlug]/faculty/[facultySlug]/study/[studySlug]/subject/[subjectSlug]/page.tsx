@@ -13,6 +13,7 @@ import {
 } from '@/lib/academic-detail-page'
 import { getAcademicPath } from '@/lib/academic-routes'
 import { getScriptsBySubject } from '@/lib/api/scripts-api'
+import { ACADEMIC_PAGE_TAGS } from '@/lib/sanity-tags'
 import { toScriptSummaryDetails } from '@/lib/script-display'
 import {
   subjectDetailQuery,
@@ -38,7 +39,8 @@ export const dynamicParams = false
 export const generateStaticParams =
   createAcademicStaticParams<SubjectRouteParams>(
     subjectStaticParamsQuery,
-    'subjects-static-params'
+    'subjects-static-params',
+    ACADEMIC_PAGE_TAGS.subject
   )
 
 export const generateMetadata = createAcademicMetadata<
@@ -49,6 +51,7 @@ export const generateMetadata = createAcademicMetadata<
   getPath: (p) => getAcademicPath({ type: 'subject', ...p }),
   entityLabel: UI_STRINGS.academics.entity.subject,
   fetchOriginPrefix: 'subject',
+  tags: ACADEMIC_PAGE_TAGS.subject,
   getOwnSlug: (p) => p.subjectSlug,
   getDescription: (subject) => subject.description,
   descriptionFallback: (subject) =>
@@ -64,6 +67,7 @@ export default async function SubjectDetailPage({
     query: subjectDetailQuery,
     params: routeParams,
     fetchOrigin: `subject-detail-${routeParams.universitySlug}-${routeParams.facultySlug}-${routeParams.studySlug}-${routeParams.subjectSlug}`,
+    tags: ACADEMIC_PAGE_TAGS.subject,
   })
 
   const study = subject.study
