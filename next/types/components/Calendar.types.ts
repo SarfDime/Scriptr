@@ -106,3 +106,18 @@ export type CalendarAlertEvent = {
   importance: CalendarImportance
   subjectDbId: string | null
 }
+
+/** A subject of the study whose header is being rendered: the database id
+ * matches an event's subject, the name labels the preview. */
+export type CalendarAlertSubject = {
+  dbId: string
+  name: string
+}
+
+/** What a study's layout hands the header: the events it can alert on, where
+ * its calendar lives, and the subjects it matches them against. */
+export type CalendarAlertData = {
+  events: Array<CalendarAlertEvent>
+  calendarHref: string
+  subjects: Array<CalendarAlertSubject>
+}

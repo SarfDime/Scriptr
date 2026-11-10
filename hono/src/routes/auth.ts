@@ -11,7 +11,6 @@ import type {
   LogoutResponse,
   RegisterConflictResponse,
   RegisterResponse,
-  RegistrationAcademicProfile,
   SessionResponse,
   SessionUser,
 } from '../../../shared/types/auth.types'
@@ -57,132 +56,6 @@ function applyAuthRateLimit(
     c.req.header('x-real-ip') ||
     'unknown-ip'
   return authRateLimiter(`${route}:${clientIp}`)
-}
-
-const isRegistrationAcademicProfile = (
-  value: unknown
-): value is RegistrationAcademicProfile => {
-  if (!value || typeof value !== 'object') return false
-  const profile = value as Record<string, unknown>
-  return (
-    typeof profile.facultyId === 'string' &&
-    profile.facultyId.length > 0 &&
-    (profile.studyId === null ||
-      (typeof profile.studyId === 'string' && profile.studyId.length > 0)) &&
-    Array.isArray(profile.completedSubjectIds) &&
-    profile.completedSubjectIds.every(
-      (subjectId) => typeof subjectId === 'string' && subjectId.length > 0
-    )
-  )
-}
-
-async function bootstrapAcademicProfile(
-  c: Parameters<typeof createInternalSupabaseClient>[0],
-  profileId: string,
-  academicProfile: RegistrationAcademicProfile
-) {
-  const supabase = createInternalSupabaseClient(c)
-  const { data: faculty, error: facultyError } = await supabase
-    .from('faculties')
-    .select('id')
-    .eq('id', academicProfile.facultyId)
-    .maybeSingle()
-
-  if (facultyError || !faculty) {
-    throw new Error('The selected faculty is invalid')
-  }
-
-  if (academicProfile.studyId) {
-    const { data: study, error: studyError } = await supabase
-      .from('studies')
-      .select('id, faculty_id')
-      .eq('id', academicProfile.studyId)
-      .maybeSingle()
-
-    if (
-      studyError ||
-      !study ||
-      study.faculty_id !== academicProfile.facultyId
-    ) {
-      throw new Error('The selected study is invalid')
-    }
-  }
-
-  if (academicProfile.completedSubjectIds.length > 0) {
-    if (!academicProfile.studyId) {
-      throw new Error('Completed subjects require a selected study')
-    }
-
-    const { data: subjects, error: subjectsError } = await supabase
-      .from('subjects')
-      .select('id, study_id')
-      .in('id', academicProfile.completedSubjectIds)
-
-    if (
-      subjectsError ||
-      subjects.length !== academicProfile.completedSubjectIds.length ||
-      subjects.some((subject) => subject.study_id !== academicProfile.studyId)
-    ) {
-      throw new Error('One or more selected subjects are invalid')
-    }
-  }
-
-  const { data: studySubjects, error: studySubjectsError } =
-    academicProfile.studyId
-      ? await supabase
-          .from('subjects')
-          .select('id')
-          .eq('study_id', academicProfile.studyId)
-      : { data: [], error: null }
-
-  if (studySubjectsError) {
-    throw studySubjectsError
-  }
-
-  const { error: facultyInsertError } = await supabase
-    .from('profile_faculties')
-    .upsert(
-      { profile_id: profileId, faculty_id: academicProfile.facultyId },
-      { onConflict: 'profile_id,faculty_id' }
-    )
-
-  if (facultyInsertError) throw facultyInsertError
-
-  if (academicProfile.studyId) {
-    const { error: studyInsertError } = await supabase
-      .from('profile_studies')
-      .upsert(
-        { profile_id: profileId, study_id: academicProfile.studyId },
-        { onConflict: 'profile_id,study_id' }
-      )
-
-    if (studyInsertError) throw studyInsertError
-  }
-
-  const subjectStatusById = new Map<string, 'currently_taking' | 'completed'>()
-  for (const subject of studySubjects ?? []) {
-    subjectStatusById.set(subject.id, 'currently_taking')
-  }
-
-  for (const subjectId of academicProfile.completedSubjectIds) {
-    subjectStatusById.set(subjectId, 'completed')
-  }
-
-  const subjectRows = Array.from(subjectStatusById.entries()).map(
-    ([subjectId, status]) => ({
-      profile_id: profileId,
-      subject_id: subjectId,
-      status,
-    })
-  )
-
-  if (subjectRows.length > 0) {
-    const { error: subjectsInsertError } = await supabase
-      .from('profile_subjects')
-      .upsert(subjectRows, { onConflict: 'profile_id,subject_id' })
-
-    if (subjectsInsertError) throw subjectsInsertError
-  }
 }
 
 async function ensureProfile(
@@ -285,9 +158,8 @@ auth.post('/register', async (c) => {
     password?: unknown
     username?: unknown
     full_name?: unknown
-    academicProfile?: unknown
   }>()
-  const { email, password, username, full_name, academicProfile } = body
+  const { email, password, username, full_name } = body
 
   if (applyAuthRateLimit(c, 'register')) {
     return c.json(
@@ -327,13 +199,6 @@ auth.post('/register', async (c) => {
 
   if (!normalizedFullName) {
     return c.json({ error: 'Full name is required' }, 400)
-  }
-
-  if (
-    academicProfile !== undefined &&
-    !isRegistrationAcademicProfile(academicProfile)
-  ) {
-    return c.json({ error: 'Invalid academic profile' }, 400)
   }
 
   const supabase = createSupabaseClient(c)
@@ -384,33 +249,10 @@ auth.post('/register', async (c) => {
     return c.json<RegisterConflictResponse>(emailTaken, 409)
   }
 
-  if (data.user?.id && academicProfile) {
-    try {
-      await ensureProfile(
-        c,
-        data.user.id,
-        normalizedUsername,
-        normalizedFullName
-      )
-      await bootstrapAcademicProfile(c, data.user.id, academicProfile)
-    } catch (bootstrapError) {
-      honoLog({
-        message: 'Registration academic profile bootstrap failed',
-        logLevel: 'error',
-        error: bootstrapError,
-      })
-      await rollbackRegistrationUser(c, data.user.id)
-
-      return c.json(
-        {
-          error: 'We could not complete your registration. Please try again.',
-        },
-        500
-      )
-    }
-  }
-
-  if (data.user?.id && !academicProfile) {
+  // The academic profile is no longer part of registration: it is per study,
+  // written once the account exists through the study-scoped endpoints (see
+  // `PLAN-STUDY-SCOPING.md`, Phase 5).
+  if (data.user?.id) {
     try {
       await ensureProfile(
         c,

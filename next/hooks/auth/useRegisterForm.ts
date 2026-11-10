@@ -14,12 +14,7 @@ import {
   getFieldFeedback,
   useTouchedFields,
 } from '@/hooks/auth/useTouchedFields'
-import {
-  clearGuestAcademicData,
-  readGuestAcademicData,
-} from '@/lib/onboarding-storage'
-import { getRegistrationAcademicProfile } from '@/lib/profile-sync'
-import { useOnboardingCatalog } from '@/providers/onboarding/OnboardingProvider'
+import { applyStoredStudySetup } from '@/lib/study-setup-sync'
 import { useSession } from '@/providers/SessionProvider'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 
@@ -39,8 +34,7 @@ const REGISTER_FIELDS: ReadonlyArray<RegisterField> = [
 ]
 
 export function useRegisterForm() {
-  const { register } = useSession()
-  const catalog = useOnboardingCatalog()
+  const { register, refresh } = useSession()
   const { addToast } = useToast()
   const { touch, touchAll, isTouched } = useTouchedFields<RegisterField>()
 
@@ -113,44 +107,12 @@ export function useRegisterForm() {
       return
     }
 
-    // The catalog seeds the academic profile captured for a guest, so a
-    // registration without it would silently drop what they set up. It is
-    // fetched once on mount, so this only fires on a slow first load.
-    if (!catalog) {
-      setState({
-        status: 'error',
-        message: UI_STRINGS.onboarding.catalogFailed,
-      })
-      addToast({
-        title: UI_STRINGS.auth.register.statuses.errorTitle,
-        description: UI_STRINGS.onboarding.catalogFailed,
-        type: 'error',
-      })
-      return
-    }
-
     setState({ status: 'submitting' })
-    const guestData = readGuestAcademicData()
-    const academicProfile = getRegistrationAcademicProfile(catalog, guestData)
-    if (guestData.onboardingCompletedAt && !academicProfile) {
-      setState({
-        status: 'error',
-        message: UI_STRINGS.auth.register.statuses.academicProfileUnavailable,
-      })
-      addToast({
-        title: UI_STRINGS.auth.register.statuses.errorTitle,
-        description:
-          UI_STRINGS.auth.register.statuses.academicProfileUnavailable,
-        type: 'error',
-      })
-      return
-    }
     const result = await register({
       email: values.email.trim(),
       password: values.password,
       username: values.username.trim(),
       full_name: values.fullName.trim(),
-      academicProfile: academicProfile ?? undefined,
     })
 
     // A register 409 names the field (username or email) that is taken.
@@ -188,7 +150,13 @@ export function useRegisterForm() {
       return
     }
 
-    clearGuestAcademicData()
+    // The study setup a guest did in this browser is applied to the account
+    // here, through the study-scoped endpoints — registration itself carries no
+    // academic profile. With confirmation pending there is no session to write
+    // with yet, so the records stay and the next sign-in applies them.
+    await applyStoredStudySetup()
+    await refresh()
+
     addToast({
       title: UI_STRINGS.auth.register.statuses.successTitle,
       description: UI_STRINGS.auth.register.statuses.successDescription,

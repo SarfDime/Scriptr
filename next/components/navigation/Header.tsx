@@ -1,7 +1,7 @@
 import Menu from '@sanity/icons/Menu'
 import { UI_STRINGS } from '@shared/config/strings'
 import { cn } from '@/lib/common-utils'
-import type { CalendarAlertEvent } from '@/types/components/Calendar.types'
+import type { CalendarAlertData } from '@/types/components/Calendar.types'
 import { Box } from '../common/Box'
 import { Text } from '../typography/Text'
 import { CalendarAlert } from './CalendarAlert'
@@ -36,7 +36,7 @@ const getHeaderDateLabel = (date: Date) => {
 export const Header = async ({
   calendarAlert,
 }: {
-  calendarAlert?: { events: Array<CalendarAlertEvent>; calendarHref: string }
+  calendarAlert?: CalendarAlertData
 }) => {
   const { dateLabel, week } = getHeaderDateLabel(new Date())
 
@@ -83,6 +83,7 @@ export const Header = async ({
             className='hidden lg:flex'
             events={calendarAlert.events}
             calendarHref={calendarAlert.calendarHref}
+            subjects={calendarAlert.subjects}
           />
         )}
       </Box>
@@ -93,6 +94,7 @@ export const Header = async ({
             className='lg:hidden'
             events={calendarAlert.events}
             calendarHref={calendarAlert.calendarHref}
+            subjects={calendarAlert.subjects}
           />
         )}
       </HeaderActions>

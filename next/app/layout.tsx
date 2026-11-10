@@ -5,7 +5,6 @@ import { NavBar } from '@/components/navigation/Navbar'
 
 import './globals.css'
 import { NotificationsAside } from '@/components/notifications/NotificationsAside'
-import { OnboardingModal } from '@/components/onboarding/OnboardingModal'
 import { AppBackground } from '@/components/ui/AppBackground'
 import type { StarCanvasSanityData } from '@/components/ui/StarCanvas'
 import { ToastContainer } from '@/components/ui/toast/ToastContainer'
@@ -75,7 +74,6 @@ export default async function RootLayout({
             {children}
           </NavProvider>
           <NotificationsAside />
-          <OnboardingModal />
         </Providers>
       </body>
     </html>

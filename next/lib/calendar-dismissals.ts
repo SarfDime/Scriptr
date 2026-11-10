@@ -6,7 +6,7 @@ import { calendarDayKey } from './calendar'
  * `scriptr:calendar-dismissed` as `{ [eventId]: eventDateISO }`, so a dismissal
  * only hides the preview in this browser, and the badge keeps its count.
  *
- * Follows `onboarding-storage.ts`: a module-level subscriber list for changes
+ * Follows `study-setup-storage.ts`: a module-level subscriber list for changes
  * made in this tab, a `storage` listener for other tabs, and a snapshot cached
  * by the raw stored string so `useSyncExternalStore` gets one stable reference
  * per value.

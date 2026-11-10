@@ -6,18 +6,13 @@ import type {
 
 // ── Requests ────────────────────────────────────────────────────────────
 
+/** The academic profile is not part of registration: it is per study and is
+ * written after the account exists, through the study-scoped endpoints. */
 export type RegisterRequest = {
   email: string
   password: string
   username: string
   full_name: string
-  academicProfile?: RegistrationAcademicProfile
-}
-
-export type RegistrationAcademicProfile = {
-  facultyId: string
-  studyId: string | null
-  completedSubjectIds: Array<string>
 }
 
 export type LoginRequest = {

@@ -39,22 +39,15 @@ import {
   subscribeToLocalNotifications,
   writeLocalNotifications,
 } from '@/lib/notifications-storage'
-import {
-  hasCompletedOnboarding,
-  subscribeToGuestAcademicData,
-} from '@/lib/onboarding-storage'
-import { accountHasAcademicData } from '@/lib/profile-sync'
 import type {
   AppNotification,
   NotificationsContextValue,
   PushInput,
 } from '@/types/notifications.types'
-import { useMyProfile } from '../ProfileProvider'
 import { useSession } from '../SessionProvider'
 import { useToast } from '../toaster/ToasterProvider'
 
 const ACCOUNT_REMINDER_ID = 'persistent:create-account'
-const RESUME_ONBOARDING_NOTIFICATION_ID = 'onboarding:resume-reminder'
 const EMPTY_NOTIFICATIONS: Array<AppNotification> = []
 const MAX_TRAY_NOTIFICATIONS = 100
 const MODERATION_TYPES = new Set([
@@ -147,7 +140,6 @@ export const NotificationsProvider = ({
   const { addToast } = useToast()
   const { session } = useSession()
   const lastTrayRefreshRef = useRef(0)
-  const profile = useMyProfile()
   const currentUserId =
     session.status === 'authenticated' ? session.user.id : null
   const localNotifications = useSyncExternalStore(
@@ -156,15 +148,6 @@ export const NotificationsProvider = ({
     () => readLocalNotifications(currentUserId ?? undefined),
     () => EMPTY_NOTIFICATIONS
   )
-  const onboardingCompleted = useSyncExternalStore(
-    subscribeToGuestAcademicData,
-    hasCompletedOnboarding,
-    () => false
-  )
-  const accountOnboardingCompleted =
-    session.status === 'authenticated' &&
-    profile.status === 'loaded' &&
-    accountHasAcademicData(profile.profile)
   const activePreferences =
     preferencesOwnerId === currentUserId
       ? preferences
@@ -316,9 +299,9 @@ export const NotificationsProvider = ({
   useEffect(() => {
     if (session.status === 'loading') return
     let current = readLocalNotifications(currentUserId ?? undefined)
-    const onboardingDone = onboardingCompleted || accountOnboardingCompleted
-    const shouldShowAccountReminder =
-      session.status === 'unauthenticated' && !onboardingDone
+    // A guest is always offered an account: their study setup lives in this
+    // browser only, and creating one is what keeps it.
+    const shouldShowAccountReminder = session.status === 'unauthenticated'
 
     if (shouldShowAccountReminder) {
       if (
@@ -346,22 +329,14 @@ export const NotificationsProvider = ({
       }
     } else {
       const next = current.filter(
-        (notification) =>
-          notification.id !== ACCOUNT_REMINDER_ID &&
-          (!onboardingDone ||
-            notification.id !== RESUME_ONBOARDING_NOTIFICATION_ID)
+        (notification) => notification.id !== ACCOUNT_REMINDER_ID
       )
       if (next.length !== current.length) {
         current = next
         writeLocalNotifications(current, currentUserId ?? undefined)
       }
     }
-  }, [
-    accountOnboardingCompleted,
-    currentUserId,
-    onboardingCompleted,
-    session.status,
-  ])
+  }, [currentUserId, session.status])
 
   const activeRestrictionNotice =
     restrictionOwnerId === currentUserId ? persistentRestriction : null

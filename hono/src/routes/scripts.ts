@@ -50,6 +50,10 @@ import {
 import { verifyReportedFiles } from '../lib/script-files'
 import { isOwnUploadKey } from '../lib/storage-scope'
 import {
+  canWriteInStudy,
+  STUDY_WRITE_DENIED_MESSAGE,
+} from '../lib/study-access'
+import {
   authMiddleware,
   createInternalSupabaseClient,
   createSupabaseClient,
@@ -279,6 +283,16 @@ const createScriptSchema = z
     { message: UNSUPPORTED_SCRIPT_MESSAGE, path: ['description'] }
   )
 
+/** The optional `?study=` narrowing the public feeds accept: absent means the
+ * catalog sees every study, and a value that is not an id is a caller mistake
+ * the routes answer with a 400 rather than silently widening the read. */
+const readStudyFilter = (
+  value: string | undefined
+): { studyId: string | null } | { invalid: true } => {
+  if (!value) return { studyId: null }
+  return isUuid(value) ? { studyId: value } : { invalid: true }
+}
+
 const scripts = new Hono<HonoEnv>()
 
 /** One page of every script, newest first. Admin-only: the response carries
@@ -305,12 +319,20 @@ scripts.get('/', authMiddleware, requireAdminAccess, async (c) => {
     return c.json({ error: 'Invalid pagination parameters' }, 400)
   }
 
-  const { data, error, count } = await supabase
+  const scope = readStudyFilter(c.req.query('study'))
+  if ('invalid' in scope) {
+    return c.json({ error: 'Invalid study filter' }, 400)
+  }
+
+  let query = supabase
     .from('scripts')
     .select(SCRIPT_SUMMARY_SELECT, { count: 'exact' })
     .order('created_at', { ascending: false })
     .order('id', { ascending: false })
-    .range(offset, offset + limit - 1)
+
+  if (scope.studyId) query = query.eq('study_id', scope.studyId)
+
+  const { data, error, count } = await query.range(offset, offset + limit - 1)
 
   if (error) return databaseErrorResponse(c, error)
   const scriptsWithCounts = await attachCommentCounts(supabase, data)
@@ -371,13 +393,20 @@ scripts.get('/study/:studyId', async (c) => {
 /** Get top scripts (by vote score) */
 scripts.get('/top', async (c) => {
   const limit = parseInt(c.req.query('limit') || '10', 10)
+  const scope = readStudyFilter(c.req.query('study'))
+  if ('invalid' in scope) {
+    return c.json({ error: 'Invalid study filter' }, 400)
+  }
   const supabase = createSupabaseClient(c)
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('scripts')
     .select(SCRIPT_SUMMARY_SELECT)
     .order('vote_score', { ascending: false })
-    .limit(limit)
+
+  if (scope.studyId) query = query.eq('study_id', scope.studyId)
+
+  const { data, error } = await query.limit(limit)
 
   if (error) return databaseErrorResponse(c, error)
   const scriptsWithCounts = await attachCommentCounts(supabase, data)
@@ -390,13 +419,20 @@ scripts.get('/top', async (c) => {
 /** Get most downloaded scripts */
 scripts.get('/popular', async (c) => {
   const limit = parseInt(c.req.query('limit') || '10', 10)
+  const scope = readStudyFilter(c.req.query('study'))
+  if ('invalid' in scope) {
+    return c.json({ error: 'Invalid study filter' }, 400)
+  }
   const supabase = createSupabaseClient(c)
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('scripts')
     .select(SCRIPT_SUMMARY_SELECT)
     .order('download_count', { ascending: false })
-    .limit(limit)
+
+  if (scope.studyId) query = query.eq('study_id', scope.studyId)
+
+  const { data, error } = await query.limit(limit)
 
   if (error) return databaseErrorResponse(c, error)
   const scriptsWithCounts = await attachCommentCounts(supabase, data)
@@ -414,11 +450,16 @@ scripts.get('/search', async (c) => {
     return c.json({ error: 'Search query is required' }, 400)
   }
 
+  const scope = readStudyFilter(c.req.query('study'))
+  if ('invalid' in scope) {
+    return c.json({ error: 'Invalid study filter' }, 400)
+  }
   const supabase = createSupabaseClient(c)
 
-  const { data, error } = await supabase
-    .from('scripts')
-    .select(SCRIPT_SUMMARY_SELECT)
+  let query = supabase.from('scripts').select(SCRIPT_SUMMARY_SELECT)
+  if (scope.studyId) query = query.eq('study_id', scope.studyId)
+
+  const { data, error } = await query
 
   if (error) return databaseErrorResponse(c, error)
 
@@ -590,6 +631,7 @@ scripts.delete('/:scriptId/files/:fileId', authMiddleware, async (c) => {
         id: scriptId,
         subject_id: script.subject_id,
         author_id: script.author_id,
+        study_id: script.study_id,
       })
     )
   }
@@ -664,19 +706,6 @@ scripts.post(
       files: reportedFiles,
     } = c.req.valid('json')
 
-    // The client's file list is verified, not trusted: in the caller's own
-    // scope, really in R2, and stored with the size R2 reports.
-    const verified = await verifyReportedFiles(
-      c,
-      user.id,
-      subjectId,
-      reportedFiles
-    )
-    if (!verified.ok) {
-      return c.json({ error: verified.error }, verified.status)
-    }
-    const files = verified.files
-
     // The study is denormalised onto the script for feeds, search and RLS, and
     // the composite key checks it against the subject. A trigger keeps it right
     // for every other writer; this path states it because the column is `not
@@ -689,6 +718,25 @@ scripts.post(
 
     if (subjectError) return databaseErrorResponse(c, subjectError)
     if (!subject) return c.json({ error: 'Subject not found' }, 400)
+
+    // Resolved before the file check so a caller with no relationship to the
+    // study is turned away without an R2 round trip.
+    if (!(await canWriteInStudy(supabase, user.id, subject.study_id))) {
+      return c.json({ error: STUDY_WRITE_DENIED_MESSAGE }, 403)
+    }
+
+    // The client's file list is verified, not trusted: in the caller's own
+    // scope, really in R2, and stored with the size R2 reports.
+    const verified = await verifyReportedFiles(
+      c,
+      user.id,
+      subjectId,
+      reportedFiles
+    )
+    if (!verified.ok) {
+      return c.json({ error: verified.error }, verified.status)
+    }
+    const files = verified.files
 
     // The id is minted here rather than by the column default so the slug can
     // be derived from it in the same insert: the suffix is what makes two
@@ -804,6 +852,7 @@ scripts.post(
         id: data.id,
         subject_id: subjectId,
         author_id: user.id,
+        study_id: subject.study_id,
       })
     )
 
@@ -962,6 +1011,7 @@ scripts.post(
         id: scriptId,
         subject_id: script.subject_id,
         author_id: script.author_id,
+        study_id: script.study_id,
       })
     )
 
@@ -1169,6 +1219,7 @@ scripts.delete('/:id', authMiddleware, async (c) => {
         id: scriptId,
         subject_id: script.subject_id,
         author_id: script.author_id,
+        study_id: script.study_id,
       })
     )
   }
@@ -1238,7 +1289,7 @@ scripts.post('/:id/download', async (c) => {
 
   const { data: script } = await supabase
     .from('scripts')
-    .select('author_id, subject_id')
+    .select('author_id, subject_id, study_id')
     .eq('id', scriptId)
     .single()
 

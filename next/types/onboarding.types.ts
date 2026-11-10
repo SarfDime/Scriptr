@@ -55,36 +55,22 @@ export type OnboardingCatalog = {
   subjects: ResolvedOnboardingCatalog['subjects']
 }
 
-export type GuestAcademicData = {
+/** The academic profile pickers' state for one study: what an academic setup
+ * form edits, in Sanity ids (the shape the pickers render). */
+export type AcademicSelections = {
   universityId: string | null
   facultyId: string | null
   studyId: string | null
   completedSubjectIds: Array<string>
   completedYears: Array<number>
-  onboardingCompletedAt: string | null
-  onboardingDismissedAt: string | null
 }
 
-/** The part of `GuestAcademicData` that describes what someone studies —
- * what the onboarding wizard (guest storage) and the profile academics
- * editor (seeded from the account) both edit. */
-export type AcademicSelections = Pick<
-  GuestAcademicData,
-  | 'universityId'
-  | 'facultyId'
-  | 'studyId'
-  | 'completedSubjectIds'
-  | 'completedYears'
->
-
-export const EMPTY_GUEST_ACADEMIC_DATA: GuestAcademicData = {
-  universityId: null,
-  facultyId: null,
-  studyId: null,
-  completedSubjectIds: [],
-  completedYears: [],
-  onboardingCompletedAt: null,
-  onboardingDismissedAt: null,
+/** What a display-only consumer renders before (or without) the catalog. */
+export const EMPTY_ONBOARDING_CATALOG: OnboardingCatalog = {
+  universities: [],
+  faculties: [],
+  studies: [],
+  subjects: [],
 }
 
 export type OnboardingSelectStepProps = {

@@ -60,12 +60,12 @@ async function reloadProfile(
 /**
  * Fetches GET /profiles/me exactly once per session and shares it via
  * context. Previously (useMyProfile as a plain fetch-on-mount hook) each
- * call site ran its own independent fetch — Navbar, the profile page,
- * OnboardingProvider, and useAccountOnboardingSync were all separately
- * calling GET /me, multiplying the real request count by however many of
- * them happened to be mounted at once. Must sit inside SessionProvider
- * (needs session.status) and wrap anything that calls useMyProfile —
- * currently OnboardingProvider and, through it, OnboardingModal.
+ * call site ran its own independent fetch — Navbar, the profile page and the
+ * notifications provider were all separately calling GET /me, multiplying the
+ * real request count by however many of them happened to be mounted at once.
+ * Must sit inside SessionProvider (needs session.status) and wrap anything that
+ * calls useMyProfile — the navbar, the profile pages and the notifications
+ * provider.
  *
  * 'idle' (not authenticated, nothing to fetch) is derived from
  * session.status at render rather than set via the effect — see

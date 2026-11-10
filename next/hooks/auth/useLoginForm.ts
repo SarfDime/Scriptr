@@ -8,6 +8,7 @@ import {
   getFieldFeedback,
   useTouchedFields,
 } from '@/hooks/auth/useTouchedFields'
+import { applyStoredStudySetup } from '@/lib/study-setup-sync'
 import { useSession } from '@/providers/SessionProvider'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 
@@ -25,7 +26,7 @@ const LOGIN_FIELDS: ReadonlyArray<LoginField> = ['email', 'password']
  * session update — mirrors useCreateScriptForm's split (form state here,
  * the actual mutation delegated elsewhere). */
 export function useLoginForm() {
-  const { login } = useSession()
+  const { login, refresh } = useSession()
   const { addToast } = useToast()
   const { touch, touchAll, isTouched } = useTouchedFields<LoginField>()
 
@@ -77,6 +78,11 @@ export function useLoginForm() {
       })
       return
     }
+
+    // A guest's study setup survives email confirmation: the account only
+    // exists after the first sign-in, so that is where it is applied.
+    await applyStoredStudySetup()
+    await refresh()
 
     addToast({
       title: UI_STRINGS.auth.login.statuses.successTitle,

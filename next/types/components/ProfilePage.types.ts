@@ -1,6 +1,7 @@
 import type { ProfileCore } from '@shared/types/profile.types'
 import type { SubjectById } from '@/types/academics/subject.types'
 import type { StudyTipData } from '@/types/components/StudyTipCard.types'
+import type { OnboardingCatalog } from '@/types/onboarding.types'
 import type { ProfileAcademics } from './ProfileCard.types'
 
 /** The two lists behind a profile's subjects section. */
@@ -40,9 +41,12 @@ export type ProfilePageProps = {
 export type PublicProfilePageViewModel = Omit<ProfilePageProps, 'isOwner'>
 
 /** What `loadMyProfilePage` hands the `/user` page. The profile itself is not
- * here: that page reads the shared profile state so an edit shows up in place. */
+ * here: that page reads the shared profile state so an edit shows up in place.
+ * The catalog is, because the affiliations' names and links resolve through it
+ * (Postgres holds ids and names, not slugs) and reading it on the server keeps
+ * the catalog out of the client bundle's data fetches. */
 export type MyProfilePageViewModel = {
-  subjects: ProfileSubjectSections
+  catalog: OnboardingCatalog | null
   /** Today's study tip; the card is omitted without it. */
   studyTip?: StudyTipData
 }

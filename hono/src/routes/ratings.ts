@@ -14,6 +14,11 @@ import {
   requiredParam,
 } from '../lib/request'
 import { requireOwner } from '../lib/require-admin'
+import {
+  canWriteInStudy,
+  STUDY_WRITE_DENIED_MESSAGE,
+  studyIdForSubject,
+} from '../lib/study-access'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
@@ -385,6 +390,13 @@ ratings.post('/subject/:subjectId', authMiddleware, async (c) => {
   const user = c.get('user')
   const subjectId = requiredParam(c, 'subjectId')
   const supabase = createSupabaseClient(c)
+
+  // A subject belongs to one study, so rating it is a write on that study.
+  const studyId = await studyIdForSubject(supabase, subjectId)
+  if (!studyId) return c.json({ error: 'Subject not found' }, 404)
+  if (!(await canWriteInStudy(supabase, user.id, studyId))) {
+    return c.json({ error: STUDY_WRITE_DENIED_MESSAGE }, 403)
+  }
 
   const { rating_type_id, score } = await readJsonBody(c)
 

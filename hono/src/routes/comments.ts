@@ -39,6 +39,10 @@ import { notifyProfileBestEffort } from '../lib/notifications'
 import { requiredParam } from '../lib/request'
 import { requireStudyRole, studyIdForScript } from '../lib/require-admin'
 import {
+  canWriteInStudy,
+  STUDY_WRITE_DENIED_MESSAGE,
+} from '../lib/study-access'
+import {
   authMiddleware,
   createInternalSupabaseClient,
   createSupabaseClient,
@@ -78,6 +82,13 @@ const isCommentPostLimited = createRateLimiter({
 const isEngagementLimited = createRateLimiter({
   limit: COMMENT_ENGAGEMENT_LIMIT,
   windowMs: COMMENT_ENGAGEMENT_WINDOW_MS,
+})
+/** One study's write path is also limited as a whole, so a crowd cannot flood
+ * a study's comments while every individual stays under their own limit. */
+const STUDY_COMMENT_POST_LIMIT = 60
+const isStudyCommentLimited = createRateLimiter({
+  limit: STUDY_COMMENT_POST_LIMIT,
+  windowMs: COMMENT_POST_WINDOW_MS,
 })
 
 function parsePage(
@@ -138,8 +149,17 @@ function databaseErrorResponse(
   }
 }
 
-function isCommentRateLimited(userId: string, action: 'comment' | 'reply') {
-  return isCommentPostLimited(`${action}:${userId}`)
+/** Commenting is limited per caller and, on a study's content, per study — the
+ * second key lets the limit follow the tenant the write lands in. */
+function isCommentRateLimited(
+  userId: string,
+  action: 'comment' | 'reply',
+  studyId: string | null
+) {
+  return (
+    isCommentPostLimited(`${action}:${userId}`) ||
+    (studyId !== null && isStudyCommentLimited(studyId))
+  )
 }
 
 function isEngagementRateLimited(userId: string) {
@@ -868,9 +888,6 @@ comments.get('/:commentId/reactions', async (c) => {
 comments.post('/:commentId/replies', authMiddleware, async (c) => {
   const user = c.get('user')
   const commentId = requiredParam(c, 'commentId')
-  if (isCommentRateLimited(user.id, 'reply')) {
-    return c.json({ error: 'Too many replies. Please try again later.' }, 429)
-  }
   const supabase = createSupabaseClient(c)
   const { content } = await c.req.json<{
     content?: unknown
@@ -916,6 +933,24 @@ comments.post('/:commentId/replies', authMiddleware, async (c) => {
     return databaseErrorResponse(c, parentError, 'Failed to fetch reply parent')
   }
   if (!parentComment) return c.json({ error: 'Comment not found' }, 404)
+
+  // A reply inherits its parent's target, so it inherits the study gate too.
+  const studyId = parentComment.script_id
+    ? await studyIdForScript(supabase, parentComment.script_id)
+    : null
+  if (parentComment.script_id && !studyId) {
+    return c.json({ error: 'Script not found' }, 404)
+  }
+  if (
+    parentComment.script_id &&
+    !(await canWriteInStudy(supabase, user.id, studyId))
+  ) {
+    return c.json({ error: STUDY_WRITE_DENIED_MESSAGE }, 403)
+  }
+
+  if (isCommentRateLimited(user.id, 'reply', studyId)) {
+    return c.json({ error: 'Too many replies. Please try again later.' }, 429)
+  }
 
   const { data, error } = await supabase
     .from('comments')
@@ -1099,9 +1134,6 @@ comments.post('/:commentId/like', authMiddleware, async (c) => {
 /** Create a new comment */
 comments.post('/', authMiddleware, async (c) => {
   const user = c.get('user')
-  if (isCommentRateLimited(user.id, 'comment')) {
-    return c.json({ error: 'Too many comments. Please try again later.' }, 429)
-  }
   const supabase = createSupabaseClient(c)
 
   const { content, professor_id, script_id } = await c.req.json<{
@@ -1149,6 +1181,20 @@ comments.post('/', authMiddleware, async (c) => {
       },
       400
     )
+  }
+
+  // A comment on a script belongs to that script's study, so the writer has to
+  // belong there too. A professor comment has no study and keeps the older rule.
+  const studyId = script_id ? await studyIdForScript(supabase, script_id) : null
+  if (script_id && !studyId) {
+    return c.json({ error: 'Script not found' }, 404)
+  }
+  if (script_id && !(await canWriteInStudy(supabase, user.id, studyId))) {
+    return c.json({ error: STUDY_WRITE_DENIED_MESSAGE }, 403)
+  }
+
+  if (isCommentRateLimited(user.id, 'comment', studyId)) {
+    return c.json({ error: 'Too many comments. Please try again later.' }, 429)
   }
 
   const { data, error } = await supabase

@@ -6,7 +6,7 @@ import { sanitizeCalendarNotes } from '@shared/utils/calendar-notes.utils'
  * this store is the source of truth between syncs; the profile's copy only
  * arrives on login or when the reader syncs.
  *
- * Follows `onboarding-storage.ts`: one module-level subscriber list for changes
+ * Follows `study-setup-storage.ts`: one module-level subscriber list for changes
  * made in this tab, a `storage` listener for other tabs, and a snapshot cached
  * by the raw stored string so `useSyncExternalStore` gets one stable reference.
  *

@@ -10,6 +10,11 @@ import { checkTotalScriptVotes } from '../lib/achievements'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
 import { honoLog } from '../lib/logger'
 import { databaseErrorResponse, requiredParam } from '../lib/request'
+import { studyIdForScript } from '../lib/require-admin'
+import {
+  canWriteInStudy,
+  STUDY_WRITE_DENIED_MESSAGE,
+} from '../lib/study-access'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
@@ -113,8 +118,16 @@ votes.get('/script/:scriptId/stats', async (c) => {
 
 /** Toggle the current user's +1 vote for a script. */
 votes.post('/:scriptId', authMiddleware, async (c) => {
+  const user = c.get('user')
   const scriptId = requiredParam(c, 'scriptId')
   const supabase = createSupabaseClient(c)
+
+  // Voting is a write on the script's study, so it needs a relationship to it.
+  const studyId = await studyIdForScript(supabase, scriptId)
+  if (!studyId) return c.json({ error: 'Script not found' }, 404)
+  if (!(await canWriteInStudy(supabase, user.id, studyId))) {
+    return c.json({ error: STUDY_WRITE_DENIED_MESSAGE }, 403)
+  }
 
   // Already strongly typed from the generated `toggle_vote` RPC signature
   // in shared/types/database.types.ts — no overrideTypes needed here.
@@ -142,7 +155,7 @@ votes.post('/:scriptId', authMiddleware, async (c) => {
 
   const { data: script } = await supabase
     .from('scripts')
-    .select('author_id, subject_id')
+    .select('author_id, subject_id, study_id')
     .eq('id', scriptId)
     .single()
 

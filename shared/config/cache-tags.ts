@@ -4,6 +4,9 @@
 export const SCRIPT_CACHE_TAGS = {
   list: () => 'scripts:list',
   subject: (subjectId: string) => `scripts:subject:${subjectId}`,
+  /** One study's own feeds. Kept apart from `list` so a publish in one study
+   * does not flush every other study's pages. */
+  study: (studyId: string) => `scripts:study:${studyId}`,
   top: () => 'scripts:top',
   popular: () => 'scripts:popular',
   detail: (scriptId: string) => `scripts:detail:${scriptId}`,
@@ -61,16 +64,20 @@ export const RATING_CACHE_TAGS = {
   subject: (subjectId: string) => `ratings:subject:${subjectId}`,
 }
 
-/** Tags to revalidate whenever a script is created, updated, or deleted. */
+/** Tags to revalidate whenever a script is created, updated, or deleted.
+ * `study_id` is optional because a few call sites only carry the fields they
+ * need; when it is present, the script's own study feed is invalidated too. */
 export function scriptMutationTags(script: {
   id: string
   subject_id: string
   author_id: string
+  study_id?: string | null
 }) {
   return [
     SCRIPT_CACHE_TAGS.list(),
     SCRIPT_CACHE_TAGS.detail(script.id),
     SCRIPT_CACHE_TAGS.subject(script.subject_id),
+    ...(script.study_id ? [SCRIPT_CACHE_TAGS.study(script.study_id)] : []),
     SCRIPT_CACHE_TAGS.top(),
     SCRIPT_CACHE_TAGS.popular(),
     PROFILE_CACHE_TAGS.public(),

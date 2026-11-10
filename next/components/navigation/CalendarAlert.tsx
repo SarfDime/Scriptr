@@ -23,13 +23,11 @@ import {
   subscribeToCalendarDismissals,
 } from '@/lib/calendar-dismissals'
 import { cn } from '@/lib/common-utils'
-import { deriveIncompleteSubjectDbIds } from '@/lib/study-subjects'
-import {
-  EMPTY_ONBOARDING_CATALOG,
-  useOnboardingCatalog,
-} from '@/providers/onboarding/OnboardingProvider'
 import { useSession } from '@/providers/SessionProvider'
-import type { CalendarAlertEvent } from '@/types/components/Calendar.types'
+import type {
+  CalendarAlertEvent,
+  CalendarAlertSubject,
+} from '@/types/components/Calendar.types'
 
 const subscribeToMount = () => () => {
   // Mounting is a one-way trip; there is nothing to unsubscribe from.
@@ -61,6 +59,9 @@ type CalendarAlertProps = {
   events: Array<CalendarAlertEvent>
   /** That study's `/calendar`. */
   calendarHref: string
+  /** The study's subjects, read on the server with the events: the alert needs
+   * no catalog of its own to match an event or to name it. */
+  subjects: Array<CalendarAlertSubject>
 }
 
 /**
@@ -68,14 +69,15 @@ type CalendarAlertProps = {
  *
  * Matching happens here because it needs the session: an event counts when it
  * has no subject and is high importance (every signed-in reader, and every
- * signed-out one), or when its subject is one of the subjects the reader's
- * studies include and has not completed. While the session is still loading
- * only the global branch applies, which is also what the server rendered.
+ * signed-out one), or when its subject is one of this study's subjects the
+ * reader has not completed. While the session is still loading only the global
+ * branch applies, which is also what the server rendered.
  */
 export const CalendarAlert = ({
   className,
   events,
   calendarHref,
+  subjects,
 }: CalendarAlertProps) => {
   const mounted = useMounted()
   const dismissals = useSyncExternalStore(
@@ -86,18 +88,19 @@ export const CalendarAlert = ({
   const { session } = useSession()
 
   const user = session.status === 'authenticated' ? session.user : null
-  // Only a signed-in reader matches events against their own subjects, so only
-  // they need the catalog; everyone else sees global events without it.
-  const catalog =
-    useOnboardingCatalog(Boolean(user)) ?? EMPTY_ONBOARDING_CATALOG
 
   const todayKey = currentCalendarDayKey()
+  // The study's subjects minus the ones this reader has finished: the session
+  // carries the reader's own statuses, the server the study's subject list.
   const uncompletedSubjectDbIds = user
     ? new Set(
-        deriveIncompleteSubjectDbIds(
-          catalog,
-          user.selected_study_ids,
-          user.subjects
+        subjects.flatMap(({ dbId }) =>
+          user.subjects.some(
+            (subject) =>
+              subject.subject_id === dbId && subject.status === 'completed'
+          )
+            ? []
+            : [dbId]
         )
       )
     : null
@@ -112,8 +115,7 @@ export const CalendarAlert = ({
   const count = mounted ? matching.length : 0
 
   const subjectName = next?.subjectDbId
-    ? catalog.subjects.find((subject) => subject.dbId === next.subjectDbId)
-        ?.name
+    ? subjects.find((subject) => subject.dbId === next.subjectDbId)?.name
     : undefined
   const previewLabel =
     next &&

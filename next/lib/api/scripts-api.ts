@@ -80,14 +80,15 @@ export const getScriptsBySubject = async (subjectId: string) => {
 
 /** A study's scripts, for its site's home. Public and unscoped, so the response
  * is shared; `null` means the read failed, for the same reason as
- * `getScriptsBySubject`. */
+ * `getScriptsBySubject`. Tagged by study rather than by `list`, so a script
+ * published in another study leaves this page cached. */
 export const getScriptsByStudy = async (studyId: string) => {
   try {
     return await apiFetch<Array<ScriptSummary>>(
       withQuery(apiRoutes.scripts.studyByStudyId(studyId), {
         commentCountVersion: SCRIPT_COMMENT_COUNT_CACHE_VERSION,
       }),
-      cachedPublicRead([SCRIPT_CACHE_TAGS.list()])
+      cachedPublicRead([SCRIPT_CACHE_TAGS.study(studyId)])
     )
   } catch (error) {
     nextLogs({

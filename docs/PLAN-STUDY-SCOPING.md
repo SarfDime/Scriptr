@@ -12,11 +12,11 @@ implementation plan: what changes, in which app, and why.
 | 2. Data model | Done | Foundation for everything else |
 | 3. Roles and permissions | Done | Owner and per-study admin/moderator roles, study-scoped policies, switcher-driven queues |
 | 4. Study routes | Done | Shell, chrome per tree, setup and selection pages, study-scoped calendar and scripts |
-| 5. Study-scoped API | Not started | Writes scoped, reads open |
+| 5. Study-scoped API | Done | Reads open with an optional `?study=`, writes gated on membership/role, per-study cache tags, onboarding modal retired |
 | 6. Achievements and notifications | Not started | Per study, plus global |
 | 7. Cleanup and docs | Not started | — |
 
-Last reconciled: 2026-11-10 (Phases 1–4 complete).
+Last reconciled: 2026-11-10 (Phases 1–5 complete).
 
 ## Important points
 
@@ -74,12 +74,11 @@ Small, independent of scoping, and pays off immediately.
 * [x] Move the onboarding catalog out of the root layout
   ([`app/layout.tsx`](../next/app/layout.tsx)). It fetches every university,
   faculty, study and subject, so passing it to a client provider serialised it
-  into every prerendered page. It now comes from a static route
-  (`/api/onboarding-catalog`) fetched on demand.
+  into every prerendered page. It moved to a static route fetched on demand, and
+  Phase 5 deleted that route: study pages read the study they render, and the
+  only other readers take the catalog as a server prop.
   *Why:* the payload was duplicated into every page's RSC output — the largest
   build-time and artifact-size cost, and one that grows with subjects.
-  This is an interim shape: Phase 4 replaces it with study-scoped server reads,
-  and Phase 5 removes both the route and the client fetch.
 * [x] Split the sitemap into an index with a child sitemap per study plus one
   catalog sitemap ([`lib/sitemap-entries.ts`](../next/lib/sitemap-entries.ts)).
   *Why:* a single sitemap file is capped at 50,000 URLs, and it currently
@@ -275,10 +274,9 @@ Small, independent of scoping, and pays off immediately.
 * [x] The "resume setup" notification is a link to the chosen study's
   `academic-setup` (or `/start` when nothing is chosen); the `open-onboarding`
   action kind is gone.
-* [ ] Retire the onboarding modal and `OnboardingProvider` — Phase 5: the modal
-  no longer auto-opens on study sites and no longer owns the resume action, but
-  it still serves the pages outside the study tree, and its catalog read is
-  still used by the header alert's subject matching.
+* [x] Retire the onboarding modal and `OnboardingProvider` — done in Phase 5:
+  the study's setup page and `/start` own the flow, and the header alert takes
+  its subjects from the study layout instead of the catalog.
 
 ### Sanity
 
@@ -290,40 +288,52 @@ Small, independent of scoping, and pays off immediately.
 
 ### Hono
 
-* [ ] List endpoints accept an optional `study` filter: `/scripts`, `/scripts/top`,
-  `/scripts/popular`, `/scripts/search`, `/professors`.
-* [ ] Writes verify membership or a study role on the target study before
-  writing — scripts, comments, votes, ratings, favorites.
-* [ ] Reads stay unscoped by default so the catalog and cross-study pages work.
-* [ ] Rate limits keyed by study where the endpoint is study-scoped.
+* [x] List endpoints accept an optional `study` filter: `/scripts`,
+  `/scripts/top`, `/scripts/popular`, `/scripts/search`. `/scripts/study/:id`
+  and `/scripts/subject/:id` already were scoped. No `/professors` filter:
+  professors are university-scoped, so a study never narrows them.
+* [x] Writes verify membership or a study role on the target study before
+  writing — scripts, comments (and replies), votes, subject ratings, favorites
+  (`hono/src/lib/study-access.ts`). Professor ratings and comments carry no
+  study and keep their older rule.
+* [x] Reads stay unscoped by default so the catalog and cross-study pages work.
+* [x] Rate limits keyed by study where the endpoint is study-scoped: comments
+  keep the per-caller bucket and gain a per-study one.
 
 ### Frontend
 
-* [ ] Every study-scoped server and client call passes the resolved `studyId`.
-* [ ] Onboarding becomes `AcademicSetup` and runs inside the study: no
+* [x] Every study-scoped server and client call passes the resolved `studyId`.
+  The study home reads `GET /scripts/study/:studyId`; the catalog's own feeds
+  stay unscoped on purpose.
+* [x] Onboarding becomes `AcademicSetup` and runs inside the study: no
   university/faculty picker, subjects limited to that study, academic profile
   written to `profile_studies`.
-* [ ] Retire the onboarding modal and `OnboardingProvider`. The wizard state
-  moves into the two pages, and the resume reminder is a link rather than an
-  action that opens a modal.
-* [ ] Guest academic storage becomes one record per study instead of the single
-  global `scriptr:guest-academic-data`, so completion and dismissal are per
-  study. The study page resolves the study and its subjects server-side, so the
-  record can hold database ids and needs no catalog conversion later.
-* [ ] Keep the guest's setup through registration: once the account exists, the
-  client applies each stored study through the same study-scoped endpoints, so
-  `academicProfile` drops off the register payload and
-  `getRegistrationAcademicProfile` goes away.
-* [ ] Delete `/api/onboarding-catalog` and the demand-based client catalog fetch;
-  the study-selection page is the only place that reads the catalog.
-* [ ] Profile page: study-scoped view shows the study's academic profile and
+* [x] Retire the onboarding modal and `OnboardingProvider`. The wizard state
+  moved into the two pages; the deleted notification reminder's job is done by
+  the study's own setup gate.
+* [x] Guest academic storage is one record per study
+  (`lib/study-setup-storage.ts`) instead of the single global
+  `scriptr:guest-academic-data`, so completion and dismissal are per study, and
+  it holds database ids.
+* [x] Keep the guest's setup through registration: `lib/study-setup-sync.ts`
+  applies each stored study through the study-scoped endpoints right after
+  register or sign-in, so `academicProfile` dropped off the register payload and
+  `getRegistrationAcademicProfile` is gone (it also dropped from the API).
+* [x] Delete `/api/onboarding-catalog` and the demand-based client catalog fetch.
+  `/start` reads the catalog in its own server query, and `/user` gets it as a
+  server prop for the affiliations' links.
+* [x] Profile page: study-scoped view shows the study's academic profile and
   404s when the user is not a member; name falls back to the global profile.
-* [ ] Cache tags gain a study dimension (`script:study:<id>`) so a publish in one
-  study does not flush the others.
+* [x] Cache tags gain a study dimension (`scripts:study:<id>`) so a publish in
+  one study does not flush the others; the study home is tagged with it instead
+  of `scripts:list`.
 
 ### Shared
 
-* [ ] Types for the study context, scoped profile and study roles.
+* [x] Types for the study context, scoped profile and study roles: `StudyRole` /
+  `StudyRoleAssignment`, `SessionUserSubject`, `ScriptSummary.study_id` and the
+  role helpers in `shared/utils/api.utils.ts` already cover it, and the catalog
+  types were trimmed to what the setup pages use.
 
 ---
 

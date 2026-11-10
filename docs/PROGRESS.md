@@ -235,12 +235,20 @@ described in
     policies did not have to be rewritten; rename those policies and drop it.
     `is_moderator()` is already unread by any policy; the moderator narrowing
     above decides whether it survives at all.
-  - The global guest record (`scriptr:guest-academic-data`), `lib/onboarding-storage.ts`
-    and `getRegistrationAcademicProfile` — dead once registration applies the
-    per-study browser records (Phase 5) and the onboarding modal is retired.
   - The Studio navigation document still points at the nested study URL
     (`…/faculty/faculty-of-pharmacy/study/laboratory-biomedical-engineering`);
     it 308s correctly but should become `/study/lbe`.
+- **Write scoping is enforced in the API, not in RLS.** Phase 5 gates script,
+  comment, vote, subject-rating and favorite writes on membership in (or a role
+  on) the target study, but the RLS policies behind them still accept any
+  authenticated, unrestricted caller. Anything written straight to Supabase with
+  a user's token — outside these routes — would bypass the rule. Add the same
+  predicate to the insert policies (a `has_study_membership(uid, study)` helper
+  next to `has_study_role`) before any second writer exists.
+- **The "create an account" reminder now shows for every signed-out reader** —
+  it used to depend on a guest having saved onboarding data. Decide whether it
+  should key off "this browser has a study setup" instead of "nobody is signed
+  in", now that setup is per study.
 - **Calendar notes are not study-scoped:** the calendar is per study now, but a
   note (`calendar-notes`, keyed by profile and day) carries no study, so the same
   note shows on every study's calendar for that day. Decide whether a note

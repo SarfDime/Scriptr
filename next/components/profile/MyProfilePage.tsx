@@ -9,20 +9,18 @@ import { ProfilePage } from '@/components/profile/ProfilePage'
 import { Text } from '@/components/typography/Text'
 import { useProfileStats } from '@/hooks/useProfileStats'
 import { buildProfileAcademics } from '@/lib/profile-academic-links'
-import { useOnboardingCatalog } from '@/providers/onboarding/OnboardingProvider'
 import { useMyProfile, useMyProfileActions } from '@/providers/ProfileProvider'
 import type { MyProfilePageViewModel } from '@/types/components/ProfilePage.types'
 
 /**
  * `/user`: the signed-in user's profile. Reads the shared profile state (so
- * edits show up in place) and handles its loading and error states, then
- * hands the loaded profile to the shared `ProfilePage`. The subjects are
- * resolved by the server page, which re-runs after an academics edit.
+ * edits show up in place) and handles its loading and error states, then hands
+ * the loaded profile to the shared `ProfilePage`, with the affiliations'
+ * names and links resolved from the server-read catalog.
  */
-export function MyProfilePage({ subjects, studyTip }: MyProfilePageViewModel) {
+export function MyProfilePage({ catalog, studyTip }: MyProfilePageViewModel) {
   const profileState = useMyProfile()
   const { refresh, reload } = useMyProfileActions()
-  const catalog = useOnboardingCatalog()
   const statsState = useProfileStats(
     profileState.status === 'loaded' ? profileState.profile.id : null
   )
@@ -36,9 +34,7 @@ export function MyProfilePage({ subjects, studyTip }: MyProfilePageViewModel) {
     reload()
   }, [])
 
-  // The profile renders study and faculty names from the catalog, so an empty
-  // one would flash "no affiliations" before it arrives.
-  if (profileState.status !== 'loaded' || !catalog) {
+  if (profileState.status !== 'loaded') {
     return (
       <PageLayout>
         <Box className='ui-stack items-center gap-3'>
@@ -58,16 +54,20 @@ export function MyProfilePage({ subjects, studyTip }: MyProfilePageViewModel) {
   }
 
   const { profile } = profileState
+  // A failed catalog read costs the affiliation links and leaves the names,
+  // which come from the profile rows themselves.
+  const academics = catalog
+    ? buildProfileAcademics(
+        catalog,
+        profile.selected_faculties,
+        profile.selected_studies
+      )
+    : { universities: [], faculties: [], studies: [] }
 
   return (
     <ProfilePage
       profile={profile}
-      academics={buildProfileAcademics(
-        catalog,
-        profile.selected_faculties,
-        profile.selected_studies
-      )}
-      subjects={subjects}
+      academics={academics}
       studyTip={studyTip}
       authoredCount={profile.scripts.length}
       commentCount={

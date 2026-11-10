@@ -136,3 +136,16 @@ export const studySiteQuery = groq`
   dbId
 }[0]
 `
+
+/** The subjects of one study, for the site header's calendar alert: a database
+ * id to match an event against and a name to label the preview. Deliberately
+ * its own small read — the alert needs nothing else about them. */
+export const studyAlertSubjectsQuery = groq`
+*[_type == "subject"
+  && dbId != null
+  && study._ref == *[_type == "study" && siteSlug.current == $siteSlug][0]._id
+] | order(name asc){
+  dbId,
+  name
+}
+`

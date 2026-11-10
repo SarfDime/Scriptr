@@ -26,15 +26,14 @@ export const loadMyProfilePage = async (): Promise<MyProfilePageViewModel> => {
   const session = await getSessionRequired(await getRequestCookieHeader())
   if (!session?.user) redirect('/auth')
 
-  const [subjects, studyTip] = await Promise.all([
-    getProfileSubjectSections(
-      session.user.selected_study_ids,
-      session.user.subjects
-    ),
+  // No subjects here: the global profile shows who someone is and what they
+  // have done. What they are taking belongs to a study's view of them.
+  const [catalog, studyTip] = await Promise.all([
+    getOnboardingCatalog(),
     getDailyStudyTip(),
   ])
 
-  return { subjects, studyTip }
+  return { catalog, studyTip }
 }
 
 /**

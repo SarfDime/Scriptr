@@ -1,10 +1,11 @@
+import BookIcon from '@sanity/icons/Book'
 import { UI_STRINGS } from '@shared/config/strings'
 import { ScriptsSection } from '@/components/academics/scripts/ScriptSection'
 import { ActivityStats } from '@/components/common/ActivityStats'
 import { Box } from '@/components/common/Box'
+import { NextLink } from '@/components/common/NextLink'
 import { PageLayout } from '@/components/layout/PageLayout'
 import { AchievementBadges } from '@/components/profile/AchievementBadges'
-import { EditAcademicsButton } from '@/components/profile/EditAcademicsDialog'
 import { EditProfileButton } from '@/components/profile/EditProfileDialog'
 import { PreferencesButton } from '@/components/profile/PreferencesDialog'
 import { ProfileCard } from '@/components/profile/ProfileCard'
@@ -58,7 +59,13 @@ export const ProfilePage = ({
             <PreferencesButton />
             <Divider orientation='vertical' className='h-4' />
             <EditProfileButton profile={profile} />
-            <EditAcademicsButton profile={profile} />
+            <NextLink
+              href='/start'
+              className='button button-sm subtle ui-cluster gap-1.5'
+            >
+              <BookIcon />
+              {UI_STRINGS.profile.academics.editLabel}
+            </NextLink>
           </Box>
         ) : (
           reportButton

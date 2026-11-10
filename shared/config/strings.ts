@@ -260,7 +260,8 @@ export const UI_STRINGS = {
     showAll: 'Show all',
     emptyState: 'Complete your study setup to see your current subjects here.',
     guestStudyPrompt:
-      'Choose a study during onboarding to see your subjects here.',
+      'Choose a study to see your subjects and the scripts for them.',
+    chooseStudy: 'Choose a study',
     guestNoIncompleteSubjects:
       'All subjects in your selected study are marked complete.',
     electiveLabel: 'Elective',
@@ -527,8 +528,6 @@ export const UI_STRINGS = {
         successTitle: 'Account created',
         successDescription: 'Welcome to Scriptr.',
         incompleteForm: 'Please complete the form correctly.',
-        academicProfileUnavailable:
-          'Your academic selections could not be prepared. Please reopen onboarding and try again.',
       },
     },
     callback: {

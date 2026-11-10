@@ -71,6 +71,42 @@ export const writeStudySetup = (
   notify(studyId)
 }
 
+/** Every study this browser has a record for. The registration hand-off needs
+ * the whole set, not one study at a time: each completed record is applied to
+ * the new account. */
+export const listStudySetups = (): Array<{
+  studyId: string
+  record: StudySetupRecord
+}> => {
+  if (typeof window === 'undefined') return []
+
+  const entries: Array<{ studyId: string; record: StudySetupRecord }> = []
+  for (let index = 0; index < window.localStorage.length; index += 1) {
+    const key = window.localStorage.key(index)
+    if (!key?.startsWith(KEY_PREFIX)) continue
+    const studyId = key.slice(KEY_PREFIX.length)
+    if (!studyId) continue
+    entries.push({ studyId, record: readStudySetup(studyId) })
+  }
+  return entries
+}
+
+/** Forgets every study's record. Called once they have been applied to an
+ * account, so a shared browser does not hand them to the next person. */
+export const clearStudySetups = () => {
+  if (typeof window === 'undefined') return
+
+  for (const { studyId } of listStudySetups()) {
+    cacheByStudy.delete(studyId)
+    try {
+      window.localStorage.removeItem(storageKey(studyId))
+    } catch {
+      // Storage unavailable — nothing was stored to begin with.
+    }
+    notify(studyId)
+  }
+}
+
 export const hasCompletedStudySetup = (studyId: string): boolean =>
   readStudySetup(studyId).completedAt !== null
 

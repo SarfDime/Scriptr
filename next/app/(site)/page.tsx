@@ -1,11 +1,12 @@
 import { UI_STRINGS } from '@shared/config/strings'
 import { ScriptFeedToggle } from '@/components/academics/scripts/ScriptFeedToggle'
 import { ScriptsSection } from '@/components/academics/scripts/ScriptSection'
-import { GuestSubjectsSidebar } from '@/components/academics/subject/GuestSubjectsSidebar'
 import { SubjectsSidebar } from '@/components/academics/subject/SubjectsSidebar'
 import { Box } from '@/components/common/Box'
+import { NextLink } from '@/components/common/NextLink'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { PageLayout } from '@/components/layout/PageLayout'
+import { Text } from '@/components/typography/Text'
 import { Divider } from '@/components/ui/Divider'
 import { getSession } from '@/lib/api/auth-api'
 import { getRequestCookieHeader } from '@/lib/api/next-api'
@@ -90,7 +91,14 @@ const Page = async ({
             studyTip={studyTip}
           />
         ) : (
-          <GuestSubjectsSidebar studyTip={studyTip} />
+          <Box className='ui-stack h-fit gap-3 rounded-2xl border border-grey-200 p-5'>
+            <Text className='ui-body'>
+              {UI_STRINGS.subjects.guestStudyPrompt}
+            </Text>
+            <NextLink href='/start' className='button button-sm solid w-fit'>
+              {UI_STRINGS.subjects.chooseStudy}
+            </NextLink>
+          </Box>
         )}
       </Box>
     </PageLayout>

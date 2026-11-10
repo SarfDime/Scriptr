@@ -1,7 +1,10 @@
 import type { ReactNode } from 'react'
 import { MainLayout } from '@/components/layout/PageLayout'
 import { getStudyPath } from '@/lib/academic-routes'
-import { getCalendarAlertEvents } from '@/lib/calendar-alert'
+import {
+  getCalendarAlertEvents,
+  getCalendarAlertSubjects,
+} from '@/lib/calendar-alert'
 import { getStudySiteOrNotFound } from '@/lib/study-site'
 
 /**
@@ -26,12 +29,16 @@ export default async function StudySiteLayout({
   const { siteSlug } = await params
   await getStudySiteOrNotFound(siteSlug)
 
-  const calendarAlertEvents = await getCalendarAlertEvents(siteSlug)
+  const [calendarAlertEvents, calendarAlertSubjects] = await Promise.all([
+    getCalendarAlertEvents(siteSlug),
+    getCalendarAlertSubjects(siteSlug),
+  ])
 
   return (
     <MainLayout
       calendarAlert={{
         events: calendarAlertEvents,
+        subjects: calendarAlertSubjects,
         calendarHref: `${getStudyPath(siteSlug)}/calendar`,
       }}
     >
