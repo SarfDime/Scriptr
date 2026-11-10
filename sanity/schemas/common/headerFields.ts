@@ -4,6 +4,9 @@ import {
   stringValidation,
   validationRules,
 } from '../validation'
+import { localizedField } from './localeFields'
+
+type TextFieldType = 'string' | 'richText' | 'richTextLite'
 
 type TitleAndDescription = {
   title?: string
@@ -11,7 +14,7 @@ type TitleAndDescription = {
   description?: string
   group?: string
   fieldset?: string
-  type?: 'string' | 'richText' | 'richTextLite'
+  type?: TextFieldType
   isRequired?: boolean
 }
 
@@ -20,29 +23,49 @@ type HeaderFieldsProps = {
   icon?: { showIcon?: boolean } & TitleAndDescription
 } & TitleAndDescription
 
-const createTextField = (
+/**
+ * Creates the legacy single-language text field next to a localized duplicate.
+ * The legacy field stays until the frontend reads localized values, so both are
+ * edited side by side in the meantime.
+ */
+const createTextFieldPair = (
   baseName: 'title' | 'subtitle',
-  config: TitleAndDescription
-): FieldDefinition => {
-  const { type = 'richText', isRequired, ...rest } = config
-  const name =
-    type === 'string'
-      ? `string${baseName === 'title' ? 'Title' : 'Subtitle'}`
-      : baseName
+  { title, type = 'richText', isRequired, ...rest }: TitleAndDescription
+): Array<FieldDefinition> => {
+  const suffix = baseName === 'title' ? 'Title' : 'Subtitle'
+  const fieldTitle =
+    title ?? (baseName === 'title' ? 'Section title' : 'Section subtitle')
+  const name = type === 'string' ? `string${suffix}` : baseName
 
-  return type === 'string'
-    ? defineField({
-        ...rest,
-        name,
-        type: 'string',
-        validation: isRequired ? stringValidation : undefined,
-      })
-    : defineField({
-        ...rest,
-        name,
-        type,
-        validation: isRequired ? validationRules.isRequired : undefined,
-      })
+  const legacyField =
+    type === 'string'
+      ? defineField({
+          ...rest,
+          title: fieldTitle,
+          name,
+          type: 'string',
+          validation: isRequired ? stringValidation : undefined,
+        })
+      : defineField({
+          ...rest,
+          title: fieldTitle,
+          name,
+          type,
+          validation: isRequired ? validationRules.isRequired : undefined,
+        })
+
+  return [
+    legacyField,
+    localizedField({
+      name: `localized${suffix}`,
+      title: `${fieldTitle} (localized)`,
+      valueType: type,
+      description: rest.description,
+      group: rest.group,
+      fieldset: rest.fieldset,
+      isRequired,
+    }),
+  ]
 }
 
 export function headerSchemaFields({
@@ -57,19 +80,20 @@ export function headerSchemaFields({
 
   if (title) {
     headerInfo.push(
-      createTextField('title', {
-        title,
-        type,
-        isRequired,
-        ...rest,
-      })
+      ...createTextFieldPair('title', { title, type, isRequired, ...rest })
     )
   }
 
   if (subtitle?.showSubtitle) {
     headerInfo.push(
-      createTextField('subtitle', {
-        ...subtitle,
+      ...createTextFieldPair('subtitle', {
+        title: subtitle.title,
+        options: subtitle.options,
+        description: subtitle.description,
+        group: subtitle.group,
+        fieldset: subtitle.fieldset,
+        type: subtitle.type,
+        isRequired: subtitle.isRequired,
       })
     )
   }
@@ -78,13 +102,13 @@ export function headerSchemaFields({
     headerInfo.push(
       defineField({
         name: 'icon',
-        title: icon?.title ?? 'Section icon',
+        title: icon.title ?? 'Section icon',
         type: 'image',
-        group: icon?.group,
-        fieldset: icon?.fieldset,
-        validation: icon?.isRequired ? imageValidation : undefined,
-        description: icon?.description,
-        options: { ...icon?.options, hotspot: true },
+        group: icon.group,
+        fieldset: icon.fieldset,
+        description: icon.description,
+        options: { ...icon.options, hotspot: true },
+        validation: icon.isRequired ? imageValidation : undefined,
       })
     )
   }

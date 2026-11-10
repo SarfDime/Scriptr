@@ -1,19 +1,14 @@
-import BlockElementIcon from '@sanity/icons/BlockElement'
-import BookIcon from '@sanity/icons/Book'
 import BulbOutlineIcon from '@sanity/icons/BulbOutline'
 import CalendarIcon from '@sanity/icons/Calendar'
 import EarthGlobeIcon from '@sanity/icons/EarthGlobe'
 import MasterDetailIcon from '@sanity/icons/MasterDetail'
 import MenuIcon from '@sanity/icons/Menu'
-
 import type { StructureToolTypes } from '../types/common.types'
 import { buildAcademicStructure } from './academic-structure'
 import { buildCalendarStructure } from './calendar-structure'
 import { createColoredIcon } from './icon-helpers'
 import { buildMiscellaneousStructure } from './misc-structure'
 import { buildNavigationStructure } from './nav-structure'
-import { buildPageStructure } from './page-structure'
-import { buildSectionsStructure } from './sections-structure'
 
 /**
  * Custom structure tool for the Scriptr CMS.
@@ -21,13 +16,11 @@ import { buildSectionsStructure } from './sections-structure'
  * This structure tool creates a custom menu with the following items:
  *
  * - Website: A list of all websites
- * - Pages: A list of all pages. Pages are categorized based on usage.
  * - Navigation Menu: A list of all navigation menus
- * - Sections: A list of all content sections
- * - Footer: A list of all footers
  * - Study tips: A list of all study tips (Sanity-only content)
- * - Content Sections: A list of all content sections and separate Lists for all content post types
- * - Miscellaneous: A list of all miscellaneous documents alongside webschemas for website
+ * - Calendar: Calendars and their events
+ * - Miscellaneous: Miscellaneous documents alongside the website's schemas
+ * - Academic: The academic catalogue entities
  */
 export const customStructureTool = (build: StructureToolTypes['Build']) =>
   build
@@ -40,12 +33,6 @@ export const customStructureTool = (build: StructureToolTypes['Build']) =>
         .title('Website')
         .child(build.documentTypeList('website')),
 
-      build
-        .listItem()
-        .icon(createColoredIcon(BookIcon, 'pages'))
-        .title('Pages')
-        .child(() => buildPageStructure(build)),
-
       build.divider().title('Navigation & Layout'),
 
       build
@@ -53,18 +40,6 @@ export const customStructureTool = (build: StructureToolTypes['Build']) =>
         .icon(createColoredIcon(MenuIcon, 'navigationMenu'))
         .title('Navigation')
         .child(buildNavigationStructure(build)),
-
-      build
-        .listItem()
-        .icon(createColoredIcon(BlockElementIcon, 'sections'))
-        .title('Sections')
-        .child(buildSectionsStructure(build)),
-
-      build
-        .listItem()
-        .icon(createColoredIcon(MenuIcon, 'footer'))
-        .title('Footer')
-        .child(build.documentTypeList('footer')),
 
       build
         .listItem()
@@ -88,10 +63,5 @@ export const customStructureTool = (build: StructureToolTypes['Build']) =>
 
       build.divider().title('Academic Sections'),
 
-      // build
-      //   .listItem()
-      //   .icon(createColoredIcon(BlockElementIcon, 'sections'))
-      //   .title('Academic')
-      //   .child(buildAcademicStructure(build)),
       ...buildAcademicStructure(build),
     ])

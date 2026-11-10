@@ -26,6 +26,7 @@ import {
   isRetryPointless,
   retrySizeCeiling,
 } from '@shared/utils/optimizer-retry'
+import { getDeviceId } from '@/lib/device-id'
 import { nextLogs } from '@/lib/logger'
 import {
   findOptimizerFailure,
@@ -195,11 +196,14 @@ export const removeScriptFile = (scriptId: string, fileId: string) =>
   )
 
 export const downloadScript = async (scriptId: string, file: ScriptFile) => {
+  const deviceId = getDeviceId()
   const [, { url }] = await Promise.all([
     apiFetchRequired<DownloadResponse>(
       apiRoutes.scripts.downloadById(scriptId),
       {
         method: 'POST',
+        // The API dedupes a download by account, then address, then this.
+        ...(deviceId ? { headers: { 'x-device-id': deviceId } } : {}),
       }
     ),
     getScriptFileUrl(file.file_url, { download: true }),

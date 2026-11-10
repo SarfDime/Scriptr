@@ -3,15 +3,9 @@ import type { ButtonVariantType } from '../config/shared-pt-config'
 import type { PortableTextValue } from './portable-text.types'
 import type { SanityImageType } from './sanity-transform.types'
 
-type SlugType = {
-  _type: string
-  current: string
-}
-
+// TODO: add academic/page link targets once the Sanity link selector supports
+// them again. Custom paths are the only destination for now.
 type LinkSelectorProps = {
-  pageSlug: SlugType
-  sectionSlug: SlugType
-  linkType: 'internal' | 'custom'
   customLink: string
 }
 
@@ -40,12 +34,9 @@ type ButtonType = 'button' | 'submit' | 'reset'
 
 type BreakpointsType = (typeof BREAKPOINTS)[number]
 
-type SharedSectionDataType = {
-  title: PortableTextValue
-  subtitle: PortableTextValue
+type NavItemPresentationType = {
   stringTitle: string
-  stringSubtitle: string
-  slug: SlugType
+  stringSubtitle?: string
   icon: SanityImageType
 }
 
@@ -61,9 +52,9 @@ export type {
   ImageObjectFitType,
   ImageObjectPositionType,
   LinkSelectorProps,
+  NavItemPresentationType,
   SanityButton,
   SanityImageSrcType,
   SanityImageType,
-  SharedSectionDataType,
   Summarizable,
 }

@@ -19,25 +19,18 @@ type CommonPreviewProps = {
 }
 
 type LinkSelectorPreviewProps = {
-  pageSlug?: { _type: 'slug'; current: string } | null
-  slug?: { _type: 'slug'; current: string } | null
-  pageRef?: string | null
   customLink?: string
-  sectionSlug?: string
-  linkType?: 'internal' | 'custom'
   variant?: ButtonVariantType
 } & Pick<CommonPreviewProps, 'title' | 'media'>
 
 /**
  * Represents properties commonly used for schema previews.
  * - 'title': The title of the schema.
- * - 'slug': The path to the schema.
+ * - 'subtitle': The path or short description shown under the title.
  */
 type PreviewPrepareProps = {
-  sectionImage?: string
   variant?: ButtonVariantType
-} & CommonPreviewProps &
-  Pick<LinkSelectorPreviewProps, 'pageSlug' | 'slug' | 'pageRef'>
+} & CommonPreviewProps
 
 type StructureToolTypes = {
   // biome-ignore lint/style/useNamingConvention: <Exception>

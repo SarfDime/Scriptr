@@ -93,7 +93,7 @@ export const AchievementDefinitionFields = ({
 
   return (
     <>
-      <Field label={ADMIN_STRINGS.achievementCopyField}>
+      <Field label={ADMIN_STRINGS.achievementCopyField} grouped>
         {copy ? (
           <>
             <Text className='ui-body-strong'>{copy.title}</Text>

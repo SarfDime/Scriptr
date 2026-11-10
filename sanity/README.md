@@ -71,7 +71,11 @@ Hono `/api/sanity/*` routes:
   code before it runs.
 - **Sync with Database** pushes later edits.
 - Publishing is blocked until a document has a `dbId`.
-- Deleting is blocked by the API's dependency check (`409`).
+- Deleting is blocked by the API's dependency check (`409`) when content still
+  points at the row (scripts, comments, a user's subject statuses). The row's own
+  assignment rows — `subject_professors`, `professor_faculties`,
+  `professor_studies` — are deleted with it rather than blocking, since nothing
+  in the app can unassign them.
 
 A new academic entity type should extend `getDatabaseAcademicEndpoints`
 (`shared/utils/api.utils.ts`) and `parentFieldFor`/`parentColumnFor`
@@ -83,7 +87,10 @@ exhaustively, with no silent default.
   `section/`, `common/`, `misc/`).
 - `actions/`: custom document actions, including the database sync.
 - `structure-tool/`: Studio structure (desk) configuration.
-- `migrations/`: content migrations, including the academics seed.
+- `migrations/`: content migrations, including the academics seed. It patches
+  by subject `code` instead of replacing documents, and mirrors the patch onto
+  a matching draft when one exists (a draft shadows its published document in
+  the Studio, and publishing a stale draft would revert the seed).
 - `styles/`: Studio styling.
 
 The production Studio is deployed at https://scriptr.sanity.studio; the deploy

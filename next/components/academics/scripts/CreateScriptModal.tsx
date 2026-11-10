@@ -105,6 +105,7 @@ export function CreateScriptModal({
           {/* Fixed by the page, nothing to validate. */}
           <Field
             className='min-w-0'
+            grouped
             label={UI_STRINGS.scripts.uploadModal.subjectLabel}
             labelProps={SCRIPT_FIELD_LABEL_PROPS}
           >

@@ -3,6 +3,7 @@ import type { AdditionalComponentAttributes } from '@/types/component.types'
 import { cn } from '../../lib/common-utils'
 import type { FieldProps } from '../ui/field/Field'
 import { Field } from '../ui/field/Field'
+import { FieldTextArea } from '../ui/field/FieldControl'
 
 type TextareaWrapperProps = {
   fieldProps?: FieldProps
@@ -23,7 +24,7 @@ export function TextArea({
 }: TextareaWrapperProps) {
   return (
     <Field {...fieldProps}>
-      <textarea
+      <FieldTextArea
         {...rest}
         className={cn(
           'focus-visible:outline-none focus-visible:ring-brand ui-above-inside',

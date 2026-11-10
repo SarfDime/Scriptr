@@ -14,29 +14,10 @@ not queued).
 
 ## Next
 
-1. **Gate deploys on the API tests.** [`hono/vercel.json`](../hono/vercel.json)
-   builds with `corepack pnpm --filter @scriptr/api check-types` only, so a
-   failing test never blocks a deploy. Add
-   `corepack pnpm --filter @scriptr/api test` to that `buildCommand`.
-2. **Suspicious-download review.** The last admin page that needs building, and
-   what the download-achievement thresholds in [Deferred](#deferred) are
-   waiting on.
-
-Then, in roughly this order: the accessibility items (each independent), the
-weekly note sync, the comment and doc cleanup, and the remaining work below by
-area.
+In roughly this order: the weekly note sync, the comment and doc cleanup, and
+the remaining work below by area.
 
 ## Features
-
-### Administration and moderation
-
-- **Suspicious-download review:** counted downloads are recorded in
-  `download_events` (append-only, service-role only, account → IP → device) and
-  nothing surfaces them. Needs an admin page over a script's or an account's
-  download pattern — a list of the accounts and scripts worth looking at, with
-  the events behind each, following the `/admin/restrictions` shape (thin Server
-  Component, `admin-*-page` loader, gated by the page's `requireAdminUnlock`
-  plus `requireAdminAccess` on the route).
 
 ### Profile and academics
 
@@ -78,25 +59,6 @@ area.
   name rule and the a11y lint rules cover what a compiler and a parser can see.
   These need a design pass each, so they are listed instead of done — split so
   each ships on its own:
-  - **No skip link** past the navbar to `main`.
-  - **Field errors are announced but not associated.** `FieldContent` renders
-    the label as a `<label>` with no `htmlFor` and the error as a
-    `role='alert'` paragraph with no id, so the message is read but cannot be
-    linked to its control, and clicking the label does not focus the field.
-    Fixing it means generating ids in `Field` and threading `aria-describedby`
-    into every consumer — an API change, not a patch.
-  - **The nav toggle has no `aria-expanded`**, so the off-canvas state is only
-    visual. `aria-controls` is set on the header's open button (and the
-    collapse trigger), but the toggle itself never reports whether the nav is
-    open.
-  - **Icon-only content is still invisible to both.** `<Button><CloseIcon /></Button>`
-    has children, so it satisfies `AccessibleNameProps`, and lint sees an
-    element with content. One such button shipped unnamed (`LogoutButton`, since
-    fixed); the honest limit is that a scan for `<Button>`/`<NextLink>` whose
-    only child is an element has to be a review pass, not a rule.
-  - **Toast severity:** the stack is one polite live region, so a failed save
-    and a successful one are announced with the same urgency. Deciding which
-    toasts are assertive means deciding which failures interrupt.
 - **UI polish:** take z-index values from `Z_INDEX` rather than inline classes
   (the select list uses `z-90`), modal lifecycle (don't render closed dialogs),
   image sizing, a mobile layout pass, production CSS obfuscation, and more
@@ -134,32 +96,40 @@ area.
 
 - **Studio cleanup:** remove the exports nothing imports — `AccessCodeRequiredError`
   and `clearAccessToken` ([`api-access.ts`](../sanity/lib/api-access.ts)),
-  `filterExcludeSchemas` and `createExcludeSchemaFilter`
-  ([`schemaFilters.ts`](../sanity/schemas/util-functions/schemaFilters.ts)),
   `flattenFirstRichTextBlock`, `formatMinutesSeconds`,
-  `convertTimeToMinutesSeconds` and `sectionPreview`
+  `convertTimeToMinutesSeconds`
   ([`utilFunctions.ts`](../sanity/schemas/util-functions/utilFunctions.ts)),
   and `structureToolIconColors`
   ([`icon-helpers.tsx`](../sanity/structure-tool/icon-helpers.tsx)) — and
   verify the live hook in
   [`useSanityFetch.ts`](../sanity/sanity-hooks/useSanityFetch.ts) against the
-  production fetch flow. Every schema type is registered; the unused surface is
-  helpers, not documents.
+  production fetch flow.
+- **Localized content:** the `localizedString`, `localizedRichText`,
+  `localizedRichTextLite` and `localizedStringArray` object types are registered.
+  Header fields carry a `localizedTitle`/`localizedSubtitle` duplicate next to
+  their legacy field ([`headerFields.ts`](../sanity/schemas/common/headerFields.ts)),
+  and the academic entities carry `localizedName`, `localizedTitle`,
+  `localizedDescription`, `localizedKeywords` and `localizedBio`
+  ([`academicFields.tsx`](../sanity/schemas/common/academicFields.tsx)).
+  Nothing reads the localized values yet — the frontend and the database sync
+  still consume the legacy fields, and hand-written fields such as
+  `subject.code` have no localized duplicate. Switch the queries, sync and
+  components over, then delete the legacy fields and the duplication.
 - **Shared field builders:** decide whether the string `bio` variant stays in
   [`academicFields.tsx`](../sanity/schemas/common/academicFields.tsx)
   (`AcademicBioOptions`). `academicGrouping` already takes the grouping keys as
   an argument, so the override path exists.
-- **Link selector:** list pages and academic entities dynamically in
-  [`link-selector.ts`](../sanity/schemas/common/link-selector.ts) (it maps page
-  sections today), then use it for the plain `url` website field in
-  [`person.ts`](../sanity/schemas/misc/person.ts).
+- **Link selector targets:** it only offers a custom path/URL today
+  ([`link-selector.ts`](../sanity/schemas/common/link-selector.ts)). Add academic
+  entities and database pages back as internal targets — the removed `page` and
+  `section` document types are not coming back — then use it for the plain `url`
+  website field in [`person.ts`](../sanity/schemas/misc/person.ts).
 - **Validation:** add `min` for string fields in `buildLengthRules`
   ([`validation.ts`](../sanity/schemas/validation.ts)) once the validation revamp
   lands (a `min` rule currently breaks rich text validation).
 - **Studio styles:** add the remaining variants and nest the styles in
   [`button-color-variants.css`](../sanity/styles/components/button-color-variants.css).
-- **Structure tool [decision]:** decide how page data is represented, and sort
-  people by academic field in
+- **Structure tool:** sort people by academic field in
   [`misc-structure.ts`](../sanity/structure-tool/misc-structure.ts).
 
 ## Visual fidelity
@@ -187,15 +157,6 @@ described in
   in Search Console and Bing first, then only build a route if a crawler
   directive is genuinely needed (that would mean turning the platform's
   injection off first).
-- **Sitemap freshness:** `/sitemap.xml` is prerendered at build time and has no
-  revalidation window (confirmed in `next/.next/prerender-manifest.json`:
-  `compute: "static"`, `initialRevalidateSeconds: false`), so it lists the
-  scripts and Sanity entities that existed when the deployment was built; a new
-  or deleted script reaches it only on the next rebuild. `app/sitemap.ts` pins
-  `dynamic = 'force-static'` and `revalidate = false` so a later change cannot
-  quietly turn it into a per-request route. That also means a full rewrite of
-  the file per deploy, relevant if the script count ever makes the cost
-  noticeable.
 - **Cache Components:** investigate the `use cache` directive and partial
   prerendering.
 - **Font weights:** the declarations and the preload links are settled — the
@@ -297,8 +258,9 @@ described in
 - **Download achievement thresholds:** `total_script_downloads` is seeded now,
   but anonymous self-downloads cannot be detected and IP/device rotation can
   inflate the count, so its thresholds are softer evidence than the other
-  metrics. The suspicious-download review above is the longer-term answer, and
-  thresholds may need raising once it exists.
+  metrics. The download review (`/admin/download-review`) is where that
+  evidence is checked now; the thresholds may need raising once it has been
+  used.
 
 ## Exploratory ideas
 

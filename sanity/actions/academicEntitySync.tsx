@@ -54,6 +54,23 @@ function confirmAction(
   })
 }
 
+/**
+ * The studio only renders an action's `dialog` while `onHandle` is still
+ * running, so a failure that arrives after the confirm dialog has closed — a
+ * 409 from the API, for instance — would otherwise look like nothing happened.
+ * Every async failure also gets a toast.
+ */
+function reportActionError(
+  toast: ReturnType<typeof useToast>,
+  title: string,
+  error: unknown,
+  fallback: string
+) {
+  const message = error instanceof Error ? error.message : fallback
+  toast.push({ status: 'error', title, description: message })
+  return message
+}
+
 function refId(value: unknown): string | undefined {
   return value &&
     typeof value === 'object' &&
@@ -239,10 +256,12 @@ export function createInDatabaseAction(entityType: AcademicEntityType) {
       } catch (error) {
         setDialogState({
           type: 'error',
-          message:
-            error instanceof Error
-              ? error.message
-              : 'Network error while linking.',
+          message: reportActionError(
+            toast,
+            'Could not create in the database',
+            error,
+            'Network error while linking.'
+          ),
         })
       }
     }
@@ -312,10 +331,12 @@ export function syncWithDatabaseAction(entityType: AcademicEntityType) {
       } catch (error) {
         setDialogState({
           type: 'error',
-          message:
-            error instanceof Error
-              ? error.message
-              : 'Network error while syncing.',
+          message: reportActionError(
+            toast,
+            'Could not sync with the database',
+            error,
+            'Network error while syncing.'
+          ),
         })
       }
     }
@@ -344,6 +365,7 @@ export function createCheckedDeleteAction(entityType: AcademicEntityType) {
     props: AcademicDocumentActionProps
   ): DocumentActionDescription {
     const { delete: deleteOp } = useDocumentOperation(props.id, props.type)
+    const client = useClient({ apiVersion: '2024-01-01' })
     const toast = useToast()
     const [dialogState, setDialogState] = useState<DialogState>({
       type: 'none',
@@ -351,49 +373,64 @@ export function createCheckedDeleteAction(entityType: AcademicEntityType) {
     const doc = props.draft ?? props.published
     const dbId = doc?.dbId
 
+    /** The studio's own delete operation refuses to delete a published document
+     * while a draft of it exists, so both versions go in one transaction. */
+    const deleteDocument = async () => {
+      const versionIds = [
+        props.draft ? `drafts.${props.id}` : null,
+        props.published ? props.id : null,
+      ].filter((id): id is string => Boolean(id))
+
+      if (versionIds.length === 0) return
+
+      const transaction = client.transaction()
+      for (const versionId of versionIds) transaction.delete(versionId)
+      await transaction.commit()
+      props.onComplete()
+    }
+
     const handleConfirm = async () => {
       setDialogState({ type: 'none' })
 
-      if (!dbId) {
-        deleteOp.execute()
-        props.onComplete()
-        return
-      }
-
-      const endpoints = getDatabaseAcademicEndpoints(entityType)
-      const endpoint = apiUrl(endpoints.byId(String(dbId)), STUDIO_API_URL)
-
       try {
-        const response = await adminFetch(endpoint, { method: 'DELETE' })
+        if (dbId) {
+          const endpoints = getDatabaseAcademicEndpoints(entityType)
+          const endpoint = apiUrl(endpoints.byId(String(dbId)), STUDIO_API_URL)
+          const response = await adminFetch(endpoint, { method: 'DELETE' })
 
-        if (response.status === 409) {
-          const result = await response.json()
-          throw new Error(
-            result.error ??
-              'This record still has dependents and cannot be deleted.'
-          )
+          if (response.status === 409) {
+            const result = await response.json()
+            throw new Error(
+              result.error ??
+                'This record still has dependents and cannot be deleted.'
+            )
+          }
+
+          if (!response.ok) {
+            const result = await response.json().catch(() => ({}))
+            throw new Error(
+              result.error ?? 'Failed to delete the database record.'
+            )
+          }
         }
 
-        if (!response.ok) {
-          const result = await response.json().catch(() => ({}))
-          throw new Error(
-            result.error ?? 'Failed to delete the database record.'
-          )
-        }
+        await deleteDocument()
 
-        deleteOp.execute()
         toast.push({
           status: 'success',
-          title: 'Successfully deleted from Sanity and the database.',
+          title: dbId
+            ? 'Successfully deleted from Sanity and the database.'
+            : 'Successfully deleted from Sanity.',
         })
-        props.onComplete()
       } catch (error) {
         setDialogState({
           type: 'error',
-          message:
-            error instanceof Error
-              ? error.message
-              : 'Network error while deleting.',
+          message: reportActionError(
+            toast,
+            'Could not delete',
+            error,
+            'Network error while deleting.'
+          ),
         })
       }
     }
@@ -482,10 +519,12 @@ export function createDeleteInDatabaseAction(
       } catch (error) {
         setDialogState({
           type: 'error',
-          message:
-            error instanceof Error
-              ? error.message
-              : 'Network error while deleting.',
+          message: reportActionError(
+            toast,
+            'Could not delete from the database',
+            error,
+            'Network error while deleting.'
+          ),
         })
       }
     }

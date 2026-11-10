@@ -11,6 +11,7 @@ import { Box, type BoxPropsWithoutChildren } from '../common/Box'
 import { Button } from '../common/Button'
 import type { FieldProps } from '../ui/field/Field'
 import { Field } from '../ui/field/Field'
+import { FieldInput } from '../ui/field/FieldControl'
 
 export type InputWrapperProps = {
   inputProps?: DetailedHTMLProps<
@@ -52,7 +53,7 @@ export function InputWrapper({
         )}
       >
         {children}
-        <input
+        <FieldInput
           {...inputProps}
           value={inputVal}
           onChange={inputOnChange}

@@ -1,13 +1,13 @@
 import type {
   LinkSelectorProps,
-  SharedSectionDataType,
+  NavItemPresentationType,
 } from '@shared/types/common.types'
 import type { SanityImageType } from '@shared/types/sanity-transform.types'
 
 type NavItemType = {
   navItemSlug: string
 } & LinkSelectorProps &
-  SharedSectionDataType
+  NavItemPresentationType
 
 interface NavMenuType {
   stringTitle: string

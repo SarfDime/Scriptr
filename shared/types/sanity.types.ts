@@ -14,12 +14,6 @@
 
 export declare const internalGroqTypeReferenceTo: unique symbol
 
-type ArrayOf<T> = Array<
-  T & {
-    _key: string
-  }
->
-
 // Source: schema.json
 export type CalendarEventReference = {
   _ref: string
@@ -75,7 +69,9 @@ export type CalendarEvent = {
   _updatedAt: string
   _rev: string
   stringTitle: string
+  localizedTitle?: LocalizedString
   stringSubtitle?: string
+  localizedSubtitle?: LocalizedString
   date: string
   type: 'exam' | 'preliminary_exam' | 'reminder' | 'info' | 'announcement'
   importance: 'low' | 'normal' | 'high'
@@ -87,6 +83,12 @@ export type CalendarEvent = {
   >
 }
 
+export type LocalizedString = {
+  _type: 'localizedString'
+  en?: string
+  mk?: string
+}
+
 export type StudyTip = {
   _id: string
   _type: 'studyTip'
@@ -94,6 +96,7 @@ export type StudyTip = {
   _updatedAt: string
   _rev: string
   title: RichTextLite
+  localizedTitle?: LocalizedRichTextLite
   content?: RichTextLite
 }
 
@@ -148,6 +151,12 @@ export type RichTextLite = Array<{
   _key: string
 }>
 
+export type LocalizedRichTextLite = {
+  _type: 'localizedRichTextLite'
+  en?: RichTextLite
+  mk?: RichTextLite
+}
+
 export type StudyReference = {
   _ref: string
   _type: 'reference'
@@ -162,10 +171,14 @@ export type Subject = {
   _updatedAt: string
   _rev: string
   name: string
+  localizedName?: LocalizedString
   slug?: Slug
   code: string
+  localizedCode?: LocalizedString
   description?: RichTextLite
+  localizedDescription?: LocalizedRichTextLite
   keywords?: Array<string>
+  localizedKeywords?: LocalizedStringArray
   credits: number
   year: number
   elective?: boolean
@@ -202,6 +215,7 @@ export type Study = {
   _updatedAt: string
   _rev: string
   name: string
+  localizedName?: LocalizedString
   slug?: Slug
   logo?: {
     asset?: SanityImageAssetReference
@@ -218,6 +232,7 @@ export type Study = {
     _type: 'image'
   }
   description?: RichTextLite
+  localizedDescription?: LocalizedRichTextLite
   studentCount?: number
   assistant?: PersonReference
   faculty: FacultyReference
@@ -246,6 +261,12 @@ export type Slug = {
   source?: string
 }
 
+export type LocalizedStringArray = {
+  _type: 'localizedStringArray'
+  en?: Array<string>
+  mk?: Array<string>
+}
+
 export type Professor = {
   _id: string
   _type: 'professor'
@@ -253,9 +274,12 @@ export type Professor = {
   _updatedAt: string
   _rev: string
   name: string
+  localizedName?: LocalizedString
   slug?: Slug
   title?: string
+  localizedTitle?: LocalizedString
   description?: RichTextLite
+  localizedDescription?: LocalizedRichTextLite
   picture?: {
     asset?: SanityImageAssetReference
     media?: unknown
@@ -264,6 +288,7 @@ export type Professor = {
     _type: 'image'
   }
   bio?: RichTextLite
+  localizedBio?: LocalizedRichTextLite
   officeLocation?: string
   telephone?: string
   email?: string
@@ -295,10 +320,13 @@ export type Faculty = {
   _updatedAt: string
   _rev: string
   name: string
+  localizedName?: LocalizedString
   slug?: Slug
   description?: RichTextLite
+  localizedDescription?: LocalizedRichTextLite
   studentCount?: number
-  bio: string
+  bio?: string
+  localizedBio?: LocalizedString
   logo?: {
     asset?: SanityImageAssetReference
     media?: unknown
@@ -349,8 +377,10 @@ export type University = {
     _type: 'image'
   }
   name: string
+  localizedName?: LocalizedString
   slug?: Slug
   description?: RichTextLite
+  localizedDescription?: LocalizedRichTextLite
   rector?: PersonReference
   viceRectors?: Array<
     {
@@ -363,6 +393,12 @@ export type University = {
   website?: string
   r2BucketId?: string
   dbId?: string
+}
+
+export type LocalizedRichText = {
+  _type: 'localizedRichText'
+  en?: RichText
+  mk?: RichText
 }
 
 export type RichText = Array<{
@@ -402,41 +438,6 @@ export type RichText = Array<{
   _key: string
 }>
 
-export type PageReference = {
-  _ref: string
-  _type: 'reference'
-  _weak?: boolean
-  [internalGroqTypeReferenceTo]?: 'page'
-}
-
-export type InfoBlockSectionReference = {
-  _ref: string
-  _type: 'reference'
-  _weak?: boolean
-  [internalGroqTypeReferenceTo]?: 'infoBlockSection'
-}
-
-export type InfoHubSectionReference = {
-  _ref: string
-  _type: 'reference'
-  _weak?: boolean
-  [internalGroqTypeReferenceTo]?: 'infoHubSection'
-}
-
-export type MarkdownSectionReference = {
-  _ref: string
-  _type: 'reference'
-  _weak?: boolean
-  [internalGroqTypeReferenceTo]?: 'markdownSection'
-}
-
-export type FooterReference = {
-  _ref: string
-  _type: 'reference'
-  _weak?: boolean
-  [internalGroqTypeReferenceTo]?: 'footer'
-}
-
 export type Button = {
   _id: string
   _type: 'button'
@@ -444,14 +445,8 @@ export type Button = {
   _updatedAt: string
   _rev: string
   stringTitle?: string
-  linkType?: 'internal' | 'custom'
-  page?: PageReference
-  section?:
-    | InfoBlockSectionReference
-    | InfoHubSectionReference
-    | MarkdownSectionReference
-    | FooterReference
-  customLink?: string
+  localizedTitle?: LocalizedString
+  customLink: string
   buttonColorVariant?:
     | string
     | 'transparent'
@@ -462,29 +457,6 @@ export type Button = {
     | 'golden'
     | 'success'
     | 'error'
-}
-
-export type InfoBlock = {
-  _id: string
-  _type: 'infoBlock'
-  _createdAt: string
-  _updatedAt: string
-  _rev: string
-  title?: RichText
-  icon: {
-    asset?: SanityImageAssetReference
-    media?: unknown
-    hotspot?: SanityImageHotspot
-    crop?: SanityImageCrop
-    _type: 'image'
-  }
-  infoBadge?: 'new' | 'comingSoon'
-  slug?: Slug
-  infoBlockButtons?: Array<
-    {
-      _key: string
-    } & ButtonReference
-  >
 }
 
 export type StarCanvasReference = {
@@ -530,11 +502,6 @@ export type Website = {
   navAndFooterFields?: string
   navMenu: NavMenuReference
   pagesFields?: string
-  pagesOnWebsite?: Array<
-    {
-      _key: string
-    } & PageReference
-  >
   universities?: Array<
     {
       _key: string
@@ -901,7 +868,9 @@ export type SubMenuItem = {
   _updatedAt: string
   _rev: string
   title?: RichText
+  localizedTitle?: LocalizedRichText
   subtitle?: RichTextLite
+  localizedSubtitle?: LocalizedRichTextLite
   icon: {
     asset?: SanityImageAssetReference
     media?: unknown
@@ -909,14 +878,7 @@ export type SubMenuItem = {
     crop?: SanityImageCrop
     _type: 'image'
   }
-  linkType?: 'internal' | 'custom'
-  page?: PageReference
-  section?:
-    | InfoBlockSectionReference
-    | InfoHubSectionReference
-    | MarkdownSectionReference
-    | FooterReference
-  customLink?: string
+  customLink: string
 }
 
 export type NavItem = {
@@ -926,6 +888,7 @@ export type NavItem = {
   _updatedAt: string
   _rev: string
   stringTitle?: string
+  localizedTitle?: LocalizedString
   icon?: {
     asset?: SanityImageAssetReference
     media?: unknown
@@ -933,121 +896,7 @@ export type NavItem = {
     crop?: SanityImageCrop
     _type: 'image'
   }
-  linkType?: 'internal' | 'custom'
-  page?: PageReference
-  section?:
-    | InfoBlockSectionReference
-    | InfoHubSectionReference
-    | MarkdownSectionReference
-    | FooterReference
-  customLink?: string
-}
-
-export type Footer = {
-  _id: string
-  _type: 'footer'
-  _createdAt: string
-  _updatedAt: string
-  _rev: string
-  title?: string
-  slug?: Slug
-  footerWebsiteLogo?: {
-    asset?: SanityImageAssetReference
-    media?: unknown
-    hotspot?: SanityImageHotspot
-    crop?: SanityImageCrop
-    _type: 'image'
-  }
-  footerNavigationMenu?: Array<
-    {
-      _key: string
-    } & NavMenuReference
-  >
-  copyrightContent?: RichText
-}
-
-export type MarkdownSection = {
-  _id: string
-  _type: 'markdownSection'
-  _createdAt: string
-  _updatedAt: string
-  _rev: string
-  position: 'left' | 'center' | 'right'
-  backgroundColor?: 'white' | 'brand-light' | 'brand' | 'muted'
-  title?: RichText
-  slug?: Slug
-}
-
-export type InfoBlockReference = {
-  _ref: string
-  _type: 'reference'
-  _weak?: boolean
-  [internalGroqTypeReferenceTo]?: 'infoBlock'
-}
-
-export type InfoHubSection = {
-  _id: string
-  _type: 'infoHubSection'
-  _createdAt: string
-  _updatedAt: string
-  _rev: string
-  title?: RichText
-  subtitle?: RichText
-  slug?: Slug
-  layout: 'horizontal' | 'vertical'
-  infoHubCardList?: Array<
-    {
-      _key: string
-    } & InfoBlockReference
-  >
-  infoHubAdditionalInfo?: RichTextLite
-  sectionImage?: {
-    asset?: SanityImageAssetReference
-    media?: unknown
-    hotspot?: SanityImageHotspot
-    crop?: SanityImageCrop
-    _type: 'image'
-  }
-}
-
-export type InfoBlockSection = {
-  _id: string
-  _type: 'infoBlockSection'
-  _createdAt: string
-  _updatedAt: string
-  _rev: string
-  title?: RichText
-  slug?: Slug
-  infoBlockSectionList?: Array<
-    {
-      _key: string
-    } & InfoBlockReference
-  >
-}
-
-export type Page = {
-  _id: string
-  _type: 'page'
-  _createdAt: string
-  _updatedAt: string
-  _rev: string
-  stringTitle: string
-  stringSubtitle: string
-  seoKeywords: Array<string>
-  seoImage: {
-    asset?: SanityImageAssetReference
-    media?: unknown
-    hotspot?: SanityImageHotspot
-    crop?: SanityImageCrop
-    _type: 'image'
-  }
-  pageSlug?: Slug
-  pageSections: ArrayOf<
-    | InfoBlockSectionReference
-    | InfoHubSectionReference
-    | MarkdownSectionReference
-    | FooterReference
-  >
+  customLink: string
 }
 
 export type NavItemReference = {
@@ -1207,10 +1056,12 @@ export type AllSanitySchemaTypes =
   | SubjectReference
   | ProfessorReference
   | CalendarEvent
+  | LocalizedString
   | StudyTip
   | SanityImageAssetReference
   | ButtonReference
   | RichTextLite
+  | LocalizedRichTextLite
   | StudyReference
   | Subject
   | PersonReference
@@ -1219,18 +1070,14 @@ export type AllSanitySchemaTypes =
   | SanityImageCrop
   | SanityImageHotspot
   | Slug
+  | LocalizedStringArray
   | Professor
   | UniversityReference
   | Faculty
   | University
+  | LocalizedRichText
   | RichText
-  | PageReference
-  | InfoBlockSectionReference
-  | InfoHubSectionReference
-  | MarkdownSectionReference
-  | FooterReference
   | Button
-  | InfoBlock
   | StarCanvasReference
   | CalendarReference
   | NavMenuReference
@@ -1239,12 +1086,6 @@ export type AllSanitySchemaTypes =
   | Person
   | SubMenuItem
   | NavItem
-  | Footer
-  | MarkdownSection
-  | InfoBlockReference
-  | InfoHubSection
-  | InfoBlockSection
-  | Page
   | NavItemReference
   | NavMenu
   | MediaFolderReference
@@ -1261,7 +1102,7 @@ export type AllSanitySchemaTypes =
 
 // Source: ../next/sanity/queries/academics/faculty.queries.ts
 // Variable: facultySeoQuery
-// Query: fn linkSelector::full($link) = $link{    defined(linkType) => {linkType},    defined(page) => {    "pageSlug": select(            page->._type == "page" => page->.pageSlug,            page->.slug        )    },    defined(section) => {"sectionSlug": section->.slug},    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "faculty"  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)  && university->slug.current == $universitySlug][0] {  _id,  "slug": slug.current,  name,  description,}
+// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "faculty"  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)  && university->slug.current == $universitySlug][0] {  _id,  "slug": slug.current,  name,  description,}
 export type FacultySeoQueryResult = {
   _id: string
   slug: string | null
@@ -1271,7 +1112,7 @@ export type FacultySeoQueryResult = {
 
 // Source: ../next/sanity/queries/academics/faculty.queries.ts
 // Variable: minimalFacultyTypedQuery
-// Query: fn linkSelector::full($link) = $link{    defined(linkType) => {linkType},    defined(page) => {    "pageSlug": select(            page->._type == "page" => page->.pageSlug,            page->.slug        )    },    defined(section) => {"sectionSlug": section->.slug},    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "faculty"  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)  && university->slug.current == $universitySlug][0]{_id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),dean->{  _id,  name,  title,  "picture": sanityImage::full(picture)},secretary->{  _id,  name,  title,  "picture": sanityImage::full(picture)},viceDeans[]->{  _id,  name,  title,  "picture": sanityImage::full(picture)},university->{  _id,  "slug": slug.current,  name},"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  name,  title,  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},},},}
+// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "faculty"  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)  && university->slug.current == $universitySlug][0]{_id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),dean->{  _id,  name,  title,  "picture": sanityImage::full(picture)},secretary->{  _id,  name,  title,  "picture": sanityImage::full(picture)},viceDeans[]->{  _id,  name,  title,  "picture": sanityImage::full(picture)},university->{  _id,  "slug": slug.current,  name},"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  name,  title,  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},},},}
 export type MinimalFacultyTypedQueryResult = {
   _id: string
   slug: string | null
@@ -1487,7 +1328,7 @@ export type MinimalFacultyTypedQueryResult = {
 
 // Source: ../next/sanity/queries/academics/faculty.queries.ts
 // Variable: facultyDetailQuery
-// Query: fn linkSelector::full($link) = $link{    defined(linkType) => {linkType},    defined(page) => {    "pageSlug": select(            page->._type == "page" => page->.pageSlug,            page->.slug        )    },    defined(section) => {"sectionSlug": section->.slug},    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "faculty"  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)  && university->slug.current == $universitySlug][0] {  _id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),dean->{  _id,  name,  title,  "picture": sanityImage::full(picture)},secretary->{  _id,  name,  title,  "picture": sanityImage::full(picture)},viceDeans[]->{  _id,  name,  title,  "picture": sanityImage::full(picture)},university->{  _id,  "slug": slug.current,  name},"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  name,  title,  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},},},  _type,  description,  streetAddress,  telephone,  email,  website,}
+// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "faculty"  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)  && university->slug.current == $universitySlug][0] {  _id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),dean->{  _id,  name,  title,  "picture": sanityImage::full(picture)},secretary->{  _id,  name,  title,  "picture": sanityImage::full(picture)},viceDeans[]->{  _id,  name,  title,  "picture": sanityImage::full(picture)},university->{  _id,  "slug": slug.current,  name},"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  name,  title,  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},},},  _type,  description,  streetAddress,  telephone,  email,  website,}
 export type FacultyDetailQueryResult = {
   _id: string
   slug: string | null
@@ -1727,7 +1568,7 @@ export type ProfessorSeoQueryResult = {
 
 // Source: ../next/sanity/queries/academics/professor.queries.ts
 // Variable: minimalProfessorTypedQuery
-// Query: fn linkSelector::full($link) = $link{    defined(linkType) => {linkType},    defined(page) => {    "pageSlug": select(            page->._type == "page" => page->.pageSlug,            page->.slug        )    },    defined(section) => {"sectionSlug": section->.slug},    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {_id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},}
+// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {_id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},}
 export type MinimalProfessorTypedQueryResult = {
   _id: string
   slug: string | null
@@ -1765,7 +1606,7 @@ export type MinimalProfessorTypedQueryResult = {
 
 // Source: ../next/sanity/queries/academics/professor.queries.ts
 // Variable: professorDetailQuery
-// Query: fn linkSelector::full($link) = $link{    defined(linkType) => {linkType},    defined(page) => {    "pageSlug": select(            page->._type == "page" => page->.pageSlug,            page->.slug        )    },    defined(section) => {"sectionSlug": section->.slug},    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},  _type,  bio,  office,  telephone,  email,  website,  faculties[]->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    }  },  "subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {    _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},  }}
+// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},  _type,  bio,  office,  telephone,  email,  website,  faculties[]->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    }  },  "subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {    _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},  }}
 export type ProfessorDetailQueryResult = {
   _id: string
   slug: string | null
@@ -1865,7 +1706,7 @@ export type StudySeoQueryResult = {
 
 // Source: ../next/sanity/queries/academics/study.queries.ts
 // Variable: minimalStudyTypedQuery
-// Query: fn linkSelector::full($link) = $link{    defined(linkType) => {linkType},    defined(page) => {    "pageSlug": select(            page->._type == "page" => page->.pageSlug,            page->.slug        )    },    defined(section) => {"sectionSlug": section->.slug},    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "study"  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)  && faculty->slug.current == $facultySlug  && faculty->university->slug.current == $universitySlug][0] {_id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  name,  title,  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},},}
+// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "study"  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)  && faculty->slug.current == $facultySlug  && faculty->university->slug.current == $universitySlug][0] {_id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  name,  title,  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},},}
 export type MinimalStudyTypedQueryResult = {
   _id: string
   slug: string | null
@@ -1989,7 +1830,7 @@ export type MinimalStudyTypedQueryResult = {
 
 // Source: ../next/sanity/queries/academics/study.queries.ts
 // Variable: studyDetailQuery
-// Query: fn linkSelector::full($link) = $link{    defined(linkType) => {linkType},    defined(page) => {    "pageSlug": select(            page->._type == "page" => page->.pageSlug,            page->.slug        )    },    defined(section) => {"sectionSlug": section->.slug},    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "study"  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)  && faculty->slug.current == $facultySlug  && faculty->university->slug.current == $universitySlug][0] {  _id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  name,  title,  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},},  _type,  description,  streetAddress,  telephone,  email,  website,}
+// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "study"  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)  && faculty->slug.current == $facultySlug  && faculty->university->slug.current == $universitySlug][0] {  _id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  name,  title,  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},},  _type,  description,  streetAddress,  telephone,  email,  website,}
 export type StudyDetailQueryResult = {
   _id: string
   slug: string | null
@@ -2138,7 +1979,7 @@ export type SubjectSeoQueryResult = {
 
 // Source: ../next/sanity/queries/academics/subject.queries.ts
 // Variable: minimalSubjectQueryTyped
-// Query: fn linkSelector::full($link) = $link{    defined(linkType) => {linkType},    defined(page) => {    "pageSlug": select(            page->._type == "page" => page->.pageSlug,            page->.slug        )    },    defined(section) => {"sectionSlug": section->.slug},    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "subject"  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)  && study->slug.current == $studySlug  && study->faculty->slug.current == $facultySlug  && study->faculty->university->slug.current == $universitySlug][0]{  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},}
+// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "subject"  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)  && study->slug.current == $studySlug  && study->faculty->slug.current == $facultySlug  && study->faculty->university->slug.current == $universitySlug][0]{  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},}
 export type MinimalSubjectQueryTypedResult = {
   _id: string
   dbId: string | null
@@ -2187,7 +2028,7 @@ export type MinimalSubjectQueryTypedResult = {
 
 // Source: ../next/sanity/queries/academics/subject.queries.ts
 // Variable: subjectDetailQuery
-// Query: fn linkSelector::full($link) = $link{    defined(linkType) => {linkType},    defined(page) => {    "pageSlug": select(            page->._type == "page" => page->.pageSlug,            page->.slug        )    },    defined(section) => {"sectionSlug": section->.slug},    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "subject"  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)  && study->slug.current == $studySlug  && study->faculty->slug.current == $facultySlug  && study->faculty->university->slug.current == $universitySlug][0] {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},  _type,  professors[]->{    _id,    "slug": slug.current,    name,    dbId,    title,    picture,    email  }}
+// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "subject"  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)  && study->slug.current == $studySlug  && study->faculty->slug.current == $facultySlug  && study->faculty->university->slug.current == $universitySlug][0] {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},  _type,  professors[]->{    _id,    "slug": slug.current,    name,    dbId,    title,    picture,    email  }}
 export type SubjectDetailQueryResult = {
   _id: string
   dbId: string | null
@@ -2245,7 +2086,7 @@ export type SubjectDetailQueryResult = {
 
 // Source: ../next/sanity/queries/academics/subject.queries.ts
 // Variable: subjectByIdQuery
-// Query: fn linkSelector::full($link) = $link{    defined(linkType) => {linkType},    defined(page) => {    "pageSlug": select(            page->._type == "page" => page->.pageSlug,            page->.slug        )    },    defined(section) => {"sectionSlug": section->.slug},    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "subject" && (_id == $subjectId || _id == "drafts." + $subjectId || dbId == $subjectId)][0] {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},  _type,  professors[]->{    _id,    "slug": slug.current,    name,    dbId,    title,    picture,    email  }}
+// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "subject" && (_id == $subjectId || _id == "drafts." + $subjectId || dbId == $subjectId)][0] {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},  _type,  professors[]->{    _id,    "slug": slug.current,    name,    dbId,    title,    picture,    email  }}
 export type SubjectByIdQueryResult = {
   _id: string
   dbId: string | null
@@ -2347,7 +2188,7 @@ export type UniversitySeoQueryResult = {
 
 // Source: ../next/sanity/queries/academics/university.queries.ts
 // Variable: universityDetailQuery
-// Query: fn linkSelector::full($link) = $link{    defined(linkType) => {linkType},    defined(page) => {    "pageSlug": select(            page->._type == "page" => page->.pageSlug,            page->.slug        )    },    defined(section) => {"sectionSlug": section->.slug},    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {  _id,  "slug": slug.current,  _type,  name,  description,  "picture": sanityImage::full(picture),  "logo": sanityImage::full(logo),  streetAddress,  telephone,  email,  website,  rector->{    _id,    name,    title,    "picture": sanityImage::full(picture)  },  viceRectors[]->{    _id,    name,    title,    "picture": sanityImage::full(picture)  },  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {    _id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),dean->{  _id,  name,  title,  "picture": sanityImage::full(picture)},secretary->{  _id,  name,  title,  "picture": sanityImage::full(picture)},viceDeans[]->{  _id,  name,  title,  "picture": sanityImage::full(picture)},university->{  _id,  "slug": slug.current,  name},"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  name,  title,  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},},},  }}
+// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {  _id,  "slug": slug.current,  _type,  name,  description,  "picture": sanityImage::full(picture),  "logo": sanityImage::full(logo),  streetAddress,  telephone,  email,  website,  rector->{    _id,    name,    title,    "picture": sanityImage::full(picture)  },  viceRectors[]->{    _id,    name,    title,    "picture": sanityImage::full(picture)  },  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {    _id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),dean->{  _id,  name,  title,  "picture": sanityImage::full(picture)},secretary->{  _id,  name,  title,  "picture": sanityImage::full(picture)},viceDeans[]->{  _id,  name,  title,  "picture": sanityImage::full(picture)},university->{  _id,  "slug": slug.current,  name},"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  name,  title,  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},},},  }}
 export type UniversityDetailQueryResult = {
   _id: string
   slug: string | null
@@ -2642,7 +2483,7 @@ export type CalendarEventsQueryResult = Array<{
 
 // Source: ../next/sanity/queries/nav.queries.ts
 // Variable: navMenuQuery
-// Query: fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn linkSelector::full($link) = $link{    defined(linkType) => {linkType},    defined(page) => {    "pageSlug": select(            page->._type == "page" => page->.pageSlug,            page->.slug        )    },    defined(section) => {"sectionSlug": section->.slug},    defined(customLink) => {customLink},};*[_id == $WEBSITE][0]{  "navMenu": navMenu->{    defined(title) => {title},    defined(websiteLogo)=>{ "websiteLogo": sanityImage::full(websiteLogo) },    navItems[]->{      stringTitle,      stringSubtitle,      ...linkSelector::full(@),      defined(new) => {new},      defined(comingSoon) => {comingSoon},      defined(disabled) => {disabled},      defined(icon) => { "icon": sanityImage::full(icon) },    },  }}.navMenu
+// Query: fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};*[_id == $WEBSITE][0]{  "navMenu": navMenu->{    defined(title) => {title},    defined(websiteLogo)=>{ "websiteLogo": sanityImage::full(websiteLogo) },    navItems[]->{      stringTitle,      stringSubtitle,      ...linkSelector::full(@),      defined(new) => {new},      defined(comingSoon) => {comingSoon},      defined(disabled) => {disabled},      defined(icon) => { "icon": sanityImage::full(icon) },    },  }}.navMenu
 export type NavMenuQueryResult =
   | null
   | {
@@ -2657,9 +2498,7 @@ export type NavMenuQueryResult =
         | {
             stringTitle: string | null
             stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-            customLink: string | null
+            customLink: string
             icon: {
               asset: SanityImageAssetReference | null
               crop: SanityImageCrop | null
@@ -2670,255 +2509,7 @@ export type NavMenuQueryResult =
         | {
             stringTitle: string | null
             stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            sectionSlug: Slug | null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            sectionSlug: Slug | null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            sectionSlug: Slug | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            sectionSlug: Slug | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            sectionSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            sectionSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            sectionSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            sectionSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
+            customLink: string
           }
       > | null
     }
@@ -2928,9 +2519,7 @@ export type NavMenuQueryResult =
         | {
             stringTitle: string | null
             stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-            customLink: string | null
+            customLink: string
             icon: {
               asset: SanityImageAssetReference | null
               crop: SanityImageCrop | null
@@ -2941,255 +2530,7 @@ export type NavMenuQueryResult =
         | {
             stringTitle: string | null
             stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            sectionSlug: Slug | null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            sectionSlug: Slug | null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            sectionSlug: Slug | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            sectionSlug: Slug | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            sectionSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            sectionSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            sectionSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            sectionSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
+            customLink: string
           }
       > | null
     }
@@ -3204,9 +2545,7 @@ export type NavMenuQueryResult =
         | {
             stringTitle: string | null
             stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-            customLink: string | null
+            customLink: string
             icon: {
               asset: SanityImageAssetReference | null
               crop: SanityImageCrop | null
@@ -3217,255 +2556,7 @@ export type NavMenuQueryResult =
         | {
             stringTitle: string | null
             stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            sectionSlug: Slug | null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            sectionSlug: Slug | null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            sectionSlug: Slug | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            sectionSlug: Slug | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            sectionSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            sectionSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            sectionSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            sectionSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
+            customLink: string
           }
       > | null
     }
@@ -3474,9 +2565,7 @@ export type NavMenuQueryResult =
         | {
             stringTitle: string | null
             stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-            customLink: string | null
+            customLink: string
             icon: {
               asset: SanityImageAssetReference | null
               crop: SanityImageCrop | null
@@ -3487,255 +2576,7 @@ export type NavMenuQueryResult =
         | {
             stringTitle: string | null
             stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            sectionSlug: Slug | null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            sectionSlug: Slug | null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            customLink: string | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            sectionSlug: Slug | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            sectionSlug: Slug | null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            customLink: string | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            sectionSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            sectionSlug: Slug | null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            icon: {
-              asset: SanityImageAssetReference | null
-              crop: SanityImageCrop | null
-              hotspot: SanityImageHotspot | null
-              alt: string | null
-            } | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            pageSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-            sectionSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            linkType: 'custom' | 'internal' | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-            sectionSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            pageSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
-            sectionSlug: Slug | null
-          }
-        | {
-            stringTitle: string | null
-            stringSubtitle: null
+            customLink: string
           }
       > | null
     }
@@ -4187,30 +3028,30 @@ export type StarCanvasQueryResult = null | {
 // Query TypeMap
 declare global {
   interface SanityQueries {
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "faculty"\n  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)\n  && university->slug.current == $universitySlug\n][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  description,\n}\n': FacultySeoQueryResult
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "faculty"\n  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)\n  && university->slug.current == $universitySlug\n][0]{\n\n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\ndean->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nsecretary->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nviceDeans[]->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nuniversity->{\n  _id,\n  "slug": slug.current,\n  name\n},\n"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n},\n\n}\n': MinimalFacultyTypedQueryResult
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "faculty"\n  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)\n  && university->slug.current == $universitySlug\n][0] {\n  \n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\ndean->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nsecretary->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nviceDeans[]->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nuniversity->{\n  _id,\n  "slug": slug.current,\n  name\n},\n"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n},\n\n  _type,\n  description,\n  streetAddress,\n  telephone,\n  email,\n  website,\n}\n': FacultyDetailQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "faculty"\n  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)\n  && university->slug.current == $universitySlug\n][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  description,\n}\n': FacultySeoQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "faculty"\n  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)\n  && university->slug.current == $universitySlug\n][0]{\n\n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\ndean->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nsecretary->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nviceDeans[]->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nuniversity->{\n  _id,\n  "slug": slug.current,\n  name\n},\n"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n},\n\n}\n': MinimalFacultyTypedQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "faculty"\n  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)\n  && university->slug.current == $universitySlug\n][0] {\n  \n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\ndean->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nsecretary->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nviceDeans[]->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nuniversity->{\n  _id,\n  "slug": slug.current,\n  name\n},\n"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n},\n\n  _type,\n  description,\n  streetAddress,\n  telephone,\n  email,\n  website,\n}\n': FacultyDetailQueryResult
     '\n*[_type == "faculty" && !(_id in path("drafts.**")) && dbId != null] {\n  "facultySlug": coalesce(slug.current, _id),\n  "universitySlug": coalesce(university->slug.current, university->_id)\n}\n': FacultyStaticParamsQueryResult
     '\n*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  bio\n}\n': ProfessorSeoQueryResult
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {\n\n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n}\n': MinimalProfessorTypedQueryResult
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n  _type,\n  bio,\n  office,\n  telephone,\n  email,\n  website,\n  faculties[]->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    }\n  },\n  "subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n    \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n  }\n}\n': ProfessorDetailQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {\n\n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n}\n': MinimalProfessorTypedQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n  _type,\n  bio,\n  office,\n  telephone,\n  email,\n  website,\n  faculties[]->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    }\n  },\n  "subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n    \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n  }\n}\n': ProfessorDetailQueryResult
     '\n*[_type == "professor" && !(_id in path("drafts.**")) && dbId != null] {\n  "professorSlug": coalesce(slug.current, _id)\n}\n': ProfessorStaticParamsQueryResult
     '\n*[_type == "study"\n  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)\n  && faculty->slug.current == $facultySlug\n  && faculty->university->slug.current == $universitySlug\n][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  description,\n}\n': StudySeoQueryResult
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "study"\n  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)\n  && faculty->slug.current == $facultySlug\n  && faculty->university->slug.current == $universitySlug\n][0] {\n\n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n}\n': MinimalStudyTypedQueryResult
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "study"\n  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)\n  && faculty->slug.current == $facultySlug\n  && faculty->university->slug.current == $universitySlug\n][0] {\n  \n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n  _type,\n  description,\n  streetAddress,\n  telephone,\n  email,\n  website,\n}\n': StudyDetailQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "study"\n  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)\n  && faculty->slug.current == $facultySlug\n  && faculty->university->slug.current == $universitySlug\n][0] {\n\n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n}\n': MinimalStudyTypedQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "study"\n  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)\n  && faculty->slug.current == $facultySlug\n  && faculty->university->slug.current == $universitySlug\n][0] {\n  \n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n  _type,\n  description,\n  streetAddress,\n  telephone,\n  email,\n  website,\n}\n': StudyDetailQueryResult
     '\n*[_type == "study" && !(_id in path("drafts.**")) && dbId != null] {\n  "studySlug": coalesce(slug.current, _id),\n  "facultySlug": coalesce(faculty->slug.current, faculty->_id),\n  "universitySlug": coalesce(faculty->university->slug.current, faculty->university->_id)\n}\n': StudyStaticParamsQueryResult
     '\n*[_type == "subject"\n  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)\n  && study->slug.current == $studySlug\n  && study->faculty->slug.current == $facultySlug\n  && study->faculty->university->slug.current == $universitySlug\n][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  description,\n}\n': SubjectSeoQueryResult
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "subject"\n  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)\n  && study->slug.current == $studySlug\n  && study->faculty->slug.current == $facultySlug\n  && study->faculty->university->slug.current == $universitySlug\n][0]{\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n}\n': MinimalSubjectQueryTypedResult
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "subject"\n  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)\n  && study->slug.current == $studySlug\n  && study->faculty->slug.current == $facultySlug\n  && study->faculty->university->slug.current == $universitySlug\n][0] {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n  _type,\n  professors[]->{\n    _id,\n    "slug": slug.current,\n    name,\n    dbId,\n    title,\n    picture,\n    email\n  }\n}\n': SubjectDetailQueryResult
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "subject" && (_id == $subjectId || _id == "drafts." + $subjectId || dbId == $subjectId)][0] {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n  _type,\n  professors[]->{\n    _id,\n    "slug": slug.current,\n    name,\n    dbId,\n    title,\n    picture,\n    email\n  }\n}\n': SubjectByIdQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "subject"\n  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)\n  && study->slug.current == $studySlug\n  && study->faculty->slug.current == $facultySlug\n  && study->faculty->university->slug.current == $universitySlug\n][0]{\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n}\n': MinimalSubjectQueryTypedResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "subject"\n  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)\n  && study->slug.current == $studySlug\n  && study->faculty->slug.current == $facultySlug\n  && study->faculty->university->slug.current == $universitySlug\n][0] {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n  _type,\n  professors[]->{\n    _id,\n    "slug": slug.current,\n    name,\n    dbId,\n    title,\n    picture,\n    email\n  }\n}\n': SubjectDetailQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "subject" && (_id == $subjectId || _id == "drafts." + $subjectId || dbId == $subjectId)][0] {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n  _type,\n  professors[]->{\n    _id,\n    "slug": slug.current,\n    name,\n    dbId,\n    title,\n    picture,\n    email\n  }\n}\n': SubjectByIdQueryResult
     '\n*[_type == "subject" && (_id == $subjectId || _id == "drafts." + $subjectId || dbId == $subjectId)][0] {\n  "subjectSlug": coalesce(slug.current, _id),\n  "studySlug": coalesce(study->slug.current, study->_id),\n  "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),\n  "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id)\n}\n': SubjectPathQueryResult
     '\n*[_type == "subject" && !(_id in path("drafts.**")) && dbId != null] {\n  "subjectSlug": coalesce(slug.current, _id),\n  "studySlug": coalesce(study->slug.current, study->_id),\n  "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),\n  "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id)\n}\n': SubjectStaticParamsQueryResult
     '\n*[_type == "university" && dbId != null] | order(name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {\n    _id,\n    "slug": slug.current,\n    name,\n  }\n}\n': UniversityGalleryQueryResult
     '\n*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  description,\n}\n': UniversitySeoQueryResult
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {\n  _id,\n  "slug": slug.current,\n  _type,\n  name,\n  description,\n  "picture": sanityImage::full(picture),\n  "logo": sanityImage::full(logo),\n  streetAddress,\n  telephone,\n  email,\n  website,\n  rector->{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n  },\n  viceRectors[]->{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n  },\n  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {\n    \n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\ndean->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nsecretary->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nviceDeans[]->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nuniversity->{\n  _id,\n  "slug": slug.current,\n  name\n},\n"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n},\n\n  }\n}\n': UniversityDetailQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {\n  _id,\n  "slug": slug.current,\n  _type,\n  name,\n  description,\n  "picture": sanityImage::full(picture),\n  "logo": sanityImage::full(logo),\n  streetAddress,\n  telephone,\n  email,\n  website,\n  rector->{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n  },\n  viceRectors[]->{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n  },\n  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {\n    \n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\ndean->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nsecretary->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nviceDeans[]->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nuniversity->{\n  _id,\n  "slug": slug.current,\n  name\n},\n"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n},\n\n  }\n}\n': UniversityDetailQueryResult
     '\n*[_type == "university" && !(_id in path("drafts.**")) && dbId != null] {\n  "universitySlug": coalesce(slug.current, _id)\n}\n': UniversityStaticParamsQueryResult
     '\n*[_type == "calendarEvent"\n  && _id in *[_id == $WEBSITE][0].calendars[]->events[]._ref\n  && dateTime(date) >= dateTime($from)\n  && dateTime(date) <= dateTime($to)\n] | order(date asc, _id asc) {\n  \n  _id,\n  "title": stringTitle,\n  "description": stringSubtitle,\n  date,\n  type,\n  importance,\n  "subject": subject->{\n    _id,\n    dbId,\n    name,\n    "slug": coalesce(slug.current, _id),\n    "studySlug": coalesce(study->slug.current, study->_id),\n    "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),\n    "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id)\n  },\n  "professors": professors[]->{\n    _id,\n    dbId,\n    name,\n    "slug": coalesce(slug.current, _id)\n  }\n\n}\n': CalendarEventsQueryResult
-    '\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn linkSelector::full($link) = $link{\n    defined(linkType) => {linkType},\n    defined(page) => {\n    "pageSlug": select(\n            page->._type == "page" => page->.pageSlug,\n            page->.slug\n        )\n    },\n    defined(section) => {"sectionSlug": section->.slug},\n    defined(customLink) => {customLink},\n};\n\n\n*[_id == $WEBSITE][0]{\n  "navMenu": navMenu->{\n    defined(title) => {title},\n    defined(websiteLogo)=>{ "websiteLogo": sanityImage::full(websiteLogo) },\n    navItems[]->{\n      stringTitle,\n      stringSubtitle,\n      ...linkSelector::full(@),\n      defined(new) => {new},\n      defined(comingSoon) => {comingSoon},\n      defined(disabled) => {disabled},\n      defined(icon) => { "icon": sanityImage::full(icon) },\n    },\n  }\n}.navMenu': NavMenuQueryResult
+    '\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\n*[_id == $WEBSITE][0]{\n  "navMenu": navMenu->{\n    defined(title) => {title},\n    defined(websiteLogo)=>{ "websiteLogo": sanityImage::full(websiteLogo) },\n    navItems[]->{\n      stringTitle,\n      stringSubtitle,\n      ...linkSelector::full(@),\n      defined(new) => {new},\n      defined(comingSoon) => {comingSoon},\n      defined(disabled) => {disabled},\n      defined(icon) => { "icon": sanityImage::full(icon) },\n    },\n  }\n}.navMenu': NavMenuQueryResult
     '\n{\n  "universities": *[_type == "university" && dbId != null]{ _id, dbId, name, "slug": slug.current },\n  "faculties": *[_type == "faculty" && university._ref != null && dbId != null]{ _id, dbId, name, "slug": slug.current, "universityId": university._ref },\n  "studies": *[_type == "study" && faculty._ref != null && dbId != null]{\n    _id,\n    dbId,\n    name,\n    "slug": slug.current,\n    "facultyId": faculty._ref,\n    "subjectsByYear": *[_type == "subject" && study._ref == ^._id && dbId != null\n        && _id == (*[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(_id asc)[0]._id)\n      ] | order(year asc){\n      year,\n      "subjects": *[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(name asc){\n        _id, dbId, name, year, elective, "studyId": study._ref\n      }\n    },\n  },\n  "subjects": *[_type == "subject" && study._ref != null && dbId != null] | order(year asc){\n    \n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  code,\n  credits,\n  year,\n  semester,\n  elective,\n  "faculty": study->faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    dbId,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n  study->{\n    _id,\n    "slug": slug.current,\n    name,\n    dbId,\n    faculty->{\n      _id,\n      "slug": slug.current,\n      name,\n      university->{\n        _id,\n        "slug": slug.current,\n        name,\n      },\n    },\n  },\n  professors[]->{\n    _id,\n    dbId,\n    "slug": slug.current,\n    name,\n    title,\n  },\n\n  }\n}': OnboardingCatalogQueryResult
     '\n*[_type == "studyTip" && length(title) > 0 && length(content) > 0] | order(_createdAt asc, _id asc) {\n  _id,\n  title,\n  content\n}\n': StudyTipsQueryResult
     '\n*[_id == $WEBSITE][0]{\n  "siteName": coalesce(siteName, websiteTitle, "Scriptr"),\n  "siteUrl": coalesce(siteUrl, ""),\n  "defaultSeoTitle": coalesce(defaultSeoTitle, websiteTitle, "Scriptr"),\n  "defaultSeoDescription": coalesce(defaultSeoDescription, ""),\n  "defaultKeywords": defaultKeywords[]\n}\n': WebsiteSeoQueryResult

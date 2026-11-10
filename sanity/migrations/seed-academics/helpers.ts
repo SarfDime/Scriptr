@@ -51,3 +51,42 @@ export const uploadImage = async <Client extends AssetUploadClient>(
     return undefined
   }
 }
+
+type LocalizedStringValue = { en?: string; mk?: string }
+
+/** Builds the localized string object used by the duplicated text fields. */
+export const localizedString = (value?: LocalizedStringValue) => {
+  if (!value?.en && !value?.mk) return undefined
+  return {
+    _type: 'localizedString' as const,
+    ...(value.en ? { en: value.en } : {}),
+    ...(value.mk ? { mk: value.mk } : {}),
+  }
+}
+
+/** Builds the localized lite rich-text object used by description fields. */
+export const localizedPortableText = (value?: LocalizedStringValue) => {
+  const en = toPortableText(value?.en)
+  const mk = toPortableText(value?.mk)
+  if (!en && !mk) return undefined
+  return {
+    _type: 'localizedRichTextLite' as const,
+    ...(en ? { en } : {}),
+    ...(mk ? { mk } : {}),
+  }
+}
+
+/** Builds the localized string-list object used by keyword fields. */
+export const localizedStringList = (value?: {
+  en?: Array<string>
+  mk?: Array<string>
+}) => {
+  const en = value?.en?.length ? value.en : undefined
+  const mk = value?.mk?.length ? value.mk : undefined
+  if (!en && !mk) return undefined
+  return {
+    _type: 'localizedStringArray' as const,
+    ...(en ? { en } : {}),
+    ...(mk ? { mk } : {}),
+  }
+}

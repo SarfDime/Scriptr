@@ -6,7 +6,8 @@
 /* Per component overrides */
 @import "./components/disclaimer.module.css";
 @import "./components/fieldsets.module.css";
-@import "./components/pages-array.module.css";
+@import "./components/locale-fields.module.css";
+@import "./components/array-input.module.css";
 @import "./components/custom-button.module.css";
 @import "./components/button-color-variants.css";
 

@@ -22,6 +22,7 @@ REST API reference for Scriptr. All paths are relative to `/api`
   - [Authenticated](#authenticated-1)
 - [Flags](#flags)
 - [Restrictions](#restrictions)
+- [Download review](#download-review)
 - [Profiles](#profiles)
   - [Public](#public-2)
   - [Authenticated](#authenticated-2)
@@ -469,6 +470,38 @@ one calendar month, third and later = permanent.
 
 ---
 
+## Download review
+
+Admin-only reads over `download_events`, the append-only table every counted
+download writes: one row per identity per script, the identity being the
+account, else the IP address, else the device (`x-device-id`, which the web app
+sends from `next/lib/device-id.ts`). RLS shows a user only their own rows, so
+these routes read with the service-role client and check the session's role
+explicitly. The gate is the same as [Restrictions](#restrictions) —
+`requireAdminAccess` (origin plus the twenty-minute unlock) and an admin
+session.
+
+The accounts and scripts lists are one aggregate pass over the newest 2,000
+events, so both are bounded by that window rather than by the table. Each
+response repeats `scanned` (events aggregated), `total_events` (rows in the
+table) and `window`, so a list can say what its counts covered: `scanned` is
+below `total_events` once the window fills, and older events are then not
+counted at all. Both lists take `limit` (default 10, max 50), `offset`,
+`sort`, `order` (`asc`/`desc`, default `desc`) and `search`, and answer
+`{ items, total, offset, limit, scanned, total_events, window }` where `total`
+counts the rows matching the search, before paging.
+
+| Route                             | Access                                                                                                                                              |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /download-review/accounts`   | Admin only. Accounts by counted downloads. `sort`: `events`, `scripts`, `ip_addresses`, `devices`, `last_download_at`. `search` matches the username or full name, case-insensitively. Each item carries its events, distinct scripts, addresses and devices, and first/last download. |
+| `GET /download-review/scripts`    | Admin only. Scripts by counted downloads. `sort`: `events`, `accounts`, `anonymous`, `ip_addresses`, `devices`, `last_download_at`. `search` matches the title or slug. Each item splits its volume between distinct signed-in accounts and anonymous rows, and carries addresses, devices, and first/last download. |
+| `GET /download-review/events?script_id=...` or `?user_id=...` | Admin only. The events behind one script or one account, newest first. Exactly one target, anything else is `400`; `limit` defaults to 20 (max 100) with `offset`. Each row carries its account, its script (slug plus plain-text title) and the identity it was counted under. Answers `{ events, total, offset, limit }`. |
+
+`400` on any of them means the paging, sort column, order or target was not one
+this route honours — nothing is silently defaulted.
+
+---
+
 ## Profiles
 
 ### Public
@@ -827,6 +860,9 @@ admin-accessible through its admin RLS policies.
   only write path.
 - `POST /scripts/:id/download` — `download_events` has zero client-facing
   `INSERT` policy for any role.
+- `GET /download-review/{accounts,scripts,events}` — RLS shows a caller only
+  their **own** `download_events` rows, so the review reads with the service
+  role and checks the session's role explicitly.
 - Awarding achievements and creating flag-threshold alerts (`INSERT` is not
   granted to non-admin clients). Admin-triggered moderation notifications use
   the session client under the admin INSERT policy.
@@ -871,8 +907,8 @@ any elevated database privilege today.**
 2. Authenticated routes generally operate on the caller's own resources.
 3. Admin-only actions: full CRUD on any `scripts`/`comments`/`profiles` row,
    flag resolution, flag listing, rating-type management, user restrictions,
-   user management and announcements — all `is_admin()`-gated in RLS **and**
-   behind the twenty-minute admin unlock
+   the download review, user management and announcements — all
+   `is_admin()`-gated in RLS **and** behind the twenty-minute admin unlock
    (see [Website admin access](#website-admin-access)), so the session alone is
    not enough.
 4. **Moderators have zero elevated access anywhere in this API.** The role is

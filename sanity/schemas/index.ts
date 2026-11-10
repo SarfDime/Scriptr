@@ -4,24 +4,24 @@ import { Professor } from './academic/professor'
 import { Study } from './academic/study'
 import { Subject } from './academic/subject'
 import { University } from './academic/university'
+// Localized primitives
+import {
+  LocalizedRichText,
+  LocalizedRichTextLite,
+  LocalizedString,
+  LocalizedStringArray,
+} from './common/localeFields'
+// Misc
 import { Button } from './misc/button'
 import { Calendar } from './misc/calendar'
 import { CalendarEvent } from './misc/calendar-event'
 import { Person } from './misc/person'
-// Misc
 import { StarCanvas } from './misc/star-canvas'
 import { StudyTip } from './misc/study-tip'
 import { NavItem } from './navigation/nav-item'
 import { NavMenu } from './navigation/nav-menu'
 import { SubMenuItem } from './navigation/subMenuItem'
-import { Page } from './pages/page'
 import { RichText, RichTextLite } from './portable-text/portableText'
-// Sections
-import { FooterSection } from './section/footer-section'
-import { InfoBlockSection } from './section/info-hub/info-block-section'
-import { InfoHubSection } from './section/info-hub/info-hub-section'
-import { InfoBlock } from './section/info-hub/infoBlock'
-import { MarkdownSection } from './section/markdown-section'
 // Website
 import { Website } from './website'
 
@@ -29,17 +29,15 @@ export const schemaTypes = [
   NavMenu,
   NavItem,
   SubMenuItem,
-  FooterSection,
   Person,
-  Page,
-  MarkdownSection,
   Website,
-  InfoBlock,
-  InfoBlockSection,
   Button,
-  InfoHubSection,
   RichText,
   RichTextLite,
+  LocalizedString,
+  LocalizedRichText,
+  LocalizedRichTextLite,
+  LocalizedStringArray,
   University,
   Faculty,
   Professor,

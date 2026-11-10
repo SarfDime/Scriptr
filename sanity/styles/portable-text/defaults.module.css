@@ -3,14 +3,14 @@
 }
 
 .rich-text-lite {
-  height: 15rem;
+  height: 8rem;
   position: relative;
   overflow: hidden;
   width: 100%;
 
   span,
   div {
-    max-height: 15rem;
+    max-height: 8rem;
   }
 }
 

@@ -10,6 +10,7 @@ import { useState, useTransition } from 'react'
 import { Box } from '@/components/common/Box'
 import { PortableTextContent } from '@/components/typography/PortableTextContent'
 import { Text } from '@/components/typography/Text'
+import { useFieldControl } from '@/components/ui/field/field-context'
 import { cn } from '@/lib/common-utils'
 import { toUserMessage } from '@/lib/user-facing-error'
 import { useToast } from '@/providers/toaster/ToasterProvider'
@@ -47,6 +48,7 @@ export const PortableTextEditorSection = ({
   editorContainerClassName,
   singleLine = false,
 }: PortableTextEditorSectionProps) => {
+  const control = useFieldControl()
   const [draftValue, setDraftValue] = useState<PortableTextValue>(
     () => initialContent ?? createEmptyContent()
   )
@@ -126,6 +128,7 @@ export const PortableTextEditorSection = ({
         // Needed for overflow handling of the editor content and toolbar panels.
         >
           <PortableTextEditable
+            {...control}
             aria-label={ariaLabel}
             autoFocus={autoFocus}
             onKeyDown={(event) => {

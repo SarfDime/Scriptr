@@ -39,6 +39,7 @@ export const MainLayout = ({ children, className, ...rest }: BoxProps) => {
   return (
     <Box
       as='main'
+      id='main'
       className={cn('ui-container flex flex-col', className)}
       {...rest}
     >

@@ -27,7 +27,7 @@ export const Faculty = defineType({
       {
         overrides: {
           description: { required: true },
-          bio: { required: true, type: 'string' },
+          bio: { required: false, type: 'string' },
         },
       }
     ),

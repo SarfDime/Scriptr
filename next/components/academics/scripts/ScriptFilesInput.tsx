@@ -38,6 +38,7 @@ export function ScriptFilesInput({
     // No label on the Field: the dropzone carries its own title and help.
     <Field
       {...fieldProps}
+      grouped
       className={cn('min-w-0', fieldProps?.className)}
       errorText={
         hasFileErrors

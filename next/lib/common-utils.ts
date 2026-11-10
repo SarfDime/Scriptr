@@ -7,7 +7,6 @@ import type {
   Summarizable,
 } from '@shared/types/common.types'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
-import { generatePath } from '@shared/utils/common-utils'
 import { type ClassValue, clsx } from 'clsx'
 import { toPlainText } from 'next-sanity'
 import { twMerge } from 'tailwind-merge'
@@ -165,17 +164,14 @@ export function replaceString({
   return str
 }
 
-/** Generates a slug based on the provided slug data. */
-export const generateSlug = (slugData: LinkSelectorProps) => {
-  if (slugData?.linkType === 'custom') return slugData?.customLink
-
-  return generatePath({
-    segments: [
-      slugData?.pageSlug?.current,
-      slugData?.sectionSlug?.current && `#${slugData?.sectionSlug?.current}`,
-    ],
-  })
-}
+/**
+ * Resolves the destination of a nav item or button.
+ *
+ * TODO: resolve academic/page links here once the Sanity link selector supports
+ * them again. Custom paths are the only destination for now.
+ */
+export const generateSlug = (slugData: LinkSelectorProps) =>
+  slugData?.customLink ?? '/'
 
 // Create an image URL builder using the client
 const builder = createImageUrlBuilder(client)

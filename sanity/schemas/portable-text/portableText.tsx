@@ -38,6 +38,17 @@ const RichTextCustomBlocks = {
   ],
 }
 
+export const RichTextInput = (props: unknown) => (
+  <CustomPortableTextInput {...(props as PortableTextInputProps)} />
+)
+
+export const RichTextLiteInput = (props: unknown) => (
+  <CustomPortableTextInput
+    {...(props as PortableTextInputProps)}
+    customClassName='rich-text-lite'
+  />
+)
+
 /* Standard richText schema, 
   ^ all options included, 
   ? standard height */
@@ -47,9 +58,7 @@ export const RichText = defineType({
   type: 'array',
 
   components: {
-    input: (props: unknown) => (
-      <CustomPortableTextInput {...(props as PortableTextInputProps)} />
-    ),
+    input: RichTextInput,
   },
 
   of: [
@@ -74,12 +83,7 @@ export const RichTextLite = defineType({
   type: 'array',
 
   components: {
-    input: (props: unknown) => (
-      <CustomPortableTextInput
-        {...(props as PortableTextInputProps)}
-        customClassName='rich-text-lite'
-      />
-    ),
+    input: RichTextLiteInput,
   },
 
   of: [

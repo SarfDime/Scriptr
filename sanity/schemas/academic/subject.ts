@@ -7,6 +7,7 @@ import {
   academicPreview,
 } from '../common/academicFields'
 import { customLinkField } from '../common/customLink'
+import { localizedField } from '../common/localeFields'
 import { validationRules } from '../validation'
 
 const ENTITY = 'subject'
@@ -52,6 +53,11 @@ export const Subject = defineType({
       name: 'yearAsc',
       by: [{ field: 'year', direction: 'asc' }],
     },
+    {
+      title: 'Course Code',
+      name: 'codeAsc',
+      by: [{ field: 'code', direction: 'asc' }],
+    },
   ],
   fields: [
     ...academicFields(ENTITY, ['name', 'slug']),
@@ -64,6 +70,14 @@ export const Subject = defineType({
       group: 'information',
       validation: validationRules.isRequired,
     },
+    localizedField({
+      name: 'localizedCode',
+      title: 'Course Code (localized)',
+      valueType: 'string',
+      fieldset: 'information',
+      group: 'information',
+      isRequired: true,
+    }),
     ...academicFields(ENTITY, ['description', 'keywords'], {
       overrides: { description: { required: true } },
     }),

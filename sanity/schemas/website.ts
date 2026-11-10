@@ -28,18 +28,6 @@ const WebsiteContent = [
     to: [{ type: 'navMenu' }],
   },
 
-  // {
-  //   type: 'reference',
-  //   name: 'footer',
-  //   title: 'Footer on website',
-  //   fieldset: 'navAndFooter',
-  //   validation: validationRules.isRequired,
-  //   options: {
-  //     disableNew: true,
-  //   },
-  //   to: [{ type: 'footer' }],
-  // },
-
   {
     name: 'pagesFields',
     type: 'string',
@@ -47,25 +35,6 @@ const WebsiteContent = [
     components: {
       field: FieldsetWithClass,
     },
-  },
-
-  {
-    type: 'array',
-    name: 'pagesOnWebsite',
-    title: 'Pages on Website',
-    group: 'websitePagesMenu',
-    fieldset: 'pages',
-    description: 'Pages that will be added to the website.',
-    of: [
-      {
-        type: 'reference',
-        options: {
-          filter: filterExistingReferences,
-          disableNew: true,
-        },
-        to: [{ type: 'page' }],
-      },
-    ],
   },
 
   {

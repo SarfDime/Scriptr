@@ -863,21 +863,6 @@ academic.delete('/professors/:id', async (c) => {
   const supabase = createInternalSupabaseClient(c)
 
   const blockers = await findBlockingDependents(supabase, professorId, [
-    {
-      table: 'subject_professors',
-      column: 'professor_id',
-      label: 'subject assignments',
-    },
-    {
-      table: 'professor_faculties',
-      column: 'professor_id',
-      label: 'faculty assignments',
-    },
-    {
-      table: 'professor_studies',
-      column: 'professor_id',
-      label: 'study assignments',
-    },
     { table: 'scripts', column: 'professor_id', label: 'scripts' },
     { table: 'comments', column: 'professor_id', label: 'comments' },
   ])
@@ -887,6 +872,21 @@ academic.delete('/professors/:id', async (c) => {
       { error: `Cannot delete: still referenced by ${blockers.join(', ')}` },
       409
     )
+  }
+
+  // Faculty, study and subject assignments belong to the professor row itself,
+  // so they are removed with it instead of blocking the delete.
+  for (const table of [
+    'subject_professors',
+    'professor_faculties',
+    'professor_studies',
+  ] as const) {
+    const { error: assignmentError } = await supabase
+      .from(table)
+      .delete()
+      .eq('professor_id', professorId)
+
+    if (assignmentError) return databaseErrorResponse(c, assignmentError)
   }
 
   const { error } = await supabase
@@ -1082,11 +1082,6 @@ academic.delete('/subjects/:id', async (c) => {
 
   const blockers = await findBlockingDependents(supabase, subjectId, [
     {
-      table: 'subject_professors',
-      column: 'subject_id',
-      label: 'professor assignments',
-    },
-    {
       table: 'profile_subjects',
       column: 'subject_id',
       label: 'user subject statuses',
@@ -1100,6 +1095,15 @@ academic.delete('/subjects/:id', async (c) => {
       409
     )
   }
+
+  // Professor assignments belong to the subject row, so they are removed with
+  // it instead of blocking the delete.
+  const { error: assignmentError } = await supabase
+    .from('subject_professors')
+    .delete()
+    .eq('subject_id', subjectId)
+
+  if (assignmentError) return databaseErrorResponse(c, assignmentError)
 
   const { error } = await supabase.from('subjects').delete().eq('id', subjectId)
 

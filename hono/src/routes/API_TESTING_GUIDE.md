@@ -938,6 +938,53 @@ is excluded from the count. The admin list keeps lapsed rows until removed.
 
 ---
 
+## Phase 10d — Download review
+
+Admin-only reads over `download_events`, the table every counted download
+writes. The rows already exist from the runs above; a fresh database simply
+shows fewer of them.
+
+```bash
+# Student cannot read the review — expect 403
+curl -s -b cookies-student.txt $BASE/download-review/accounts | jq .
+
+# The accounts list: coverage first, then the busiest account
+curl -s -b cookies-admin.txt $BASE/download-review/accounts | jq '{total, scanned, total_events, window, first: .items[0]}'
+
+# Paging, sorting, both directions, and a search that matches nothing
+curl -s -b cookies-admin.txt "$BASE/download-review/accounts?limit=1&offset=0" | jq '{total, limit, offset, items: [.items[].profile_id]}'
+curl -s -b cookies-admin.txt "$BASE/download-review/accounts?limit=1&offset=1" | jq '[.items[].profile_id]'
+curl -s -b cookies-admin.txt "$BASE/download-review/accounts?sort=last_download_at&order=asc" | jq '[.items[].last_download_at]'
+curl -s -b cookies-admin.txt "$BASE/download-review/accounts?search=no-such-user" | jq '{total, items}'
+
+# The scripts list sorts and searches on its own columns
+curl -s -b cookies-admin.txt $BASE/download-review/scripts | jq '{total, first: .items[0]}'
+curl -s -b cookies-admin.txt "$BASE/download-review/scripts?sort=anonymous" | jq '[.items[] | {slug, accounts, anonymous}]'
+
+# Invalid paging or sort — each expect 400
+curl -s -b cookies-admin.txt "$BASE/download-review/accounts?limit=0" | jq .
+curl -s -b cookies-admin.txt "$BASE/download-review/scripts?sort=username" | jq .
+
+# The events behind one of each — capture the ids from the responses above
+REVIEW_SCRIPT=$(curl -s -b cookies-admin.txt $BASE/download-review/scripts | jq -r '.items[0].script_id')
+REVIEW_ACCOUNT=$(curl -s -b cookies-admin.txt $BASE/download-review/accounts | jq -r '.items[0].profile_id')
+curl -s -b cookies-admin.txt "$BASE/download-review/events?script_id=$REVIEW_SCRIPT" | jq '{total, limit, first: .events[0]}'
+curl -s -b cookies-admin.txt "$BASE/download-review/events?user_id=$REVIEW_ACCOUNT&limit=1&offset=0" | jq '{total, offset, events: (.events | length)}'
+
+# Exactly one target, and a real id — each expect 400
+curl -s -b cookies-admin.txt "$BASE/download-review/events" | jq .
+curl -s -b cookies-admin.txt "$BASE/download-review/events?script_id=$REVIEW_SCRIPT&user_id=$REVIEW_ACCOUNT" | jq .
+curl -s -b cookies-admin.txt "$BASE/download-review/events?script_id=not-a-uuid" | jq .
+```
+
+`scanned` stays below `total_events` once `download_events` grows past the
+2,000-event window, and older rows are then not part of either list. The
+grouping, sorting, searching and paging are unit-tested in
+`corepack pnpm --filter @scriptr/api test`
+(`src/lib/download-review.test.ts`, `src/lib/download-review-query.test.ts`).
+
+---
+
 ## Teardown
 
 Delete in reverse dependency order — children before parents — so nothing

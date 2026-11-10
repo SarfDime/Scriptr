@@ -3,10 +3,7 @@ import {
   SANITY_PROJECT_ID,
 } from '@shared/config/sanity-constants'
 import type { PortableTextBlock } from 'sanity'
-import type {
-  LinkSelectorPreviewProps,
-  PreviewPrepareProps,
-} from '../../types/common.types'
+import type { LinkSelectorPreviewProps } from '../../types/common.types'
 
 /**
  * Flatten a Portable Text block array into a plain string,
@@ -112,121 +109,28 @@ export const LinkSelectorPreviewSelect: Record<
   string
 > = {
   title: 'title',
-  pageSlug: 'allPages.pageSlug.current',
-  pageRef: 'allPages._id',
-  slug: 'allPages.slug.current',
-  sectionSlug: 'allPageSections.slug.current',
   customLink: 'customLink',
   variant: 'buttonColorVariant',
-  linkType: 'linkType',
   media: 'icon',
 } as const
 
 /**
  * Generates a preview object for the Link Selector schema type.
  *
- * The object contains the title of the link, a subtitle that is a path to the link, and an optional media object.
- *
- * The path is determined as follows:
- *   - If customLink is set, it is used as the path.
- *   - If pageSlug is set, it is used as the path (optionally preceded by pageType), optionally followed by a section anchor.
- *   - If pageRef is set, the path is set to '/'.
- *   - Otherwise, the path is set to 'not defined'.
+ * `customLink` is currently the only way to point a nav item or button at a
+ * destination, so the subtitle is the link itself (or "not defined").
  */
 export function generateLinkSelectorPreview({
   title,
-  pageSlug,
-  slug,
-  pageRef,
-  sectionSlug,
   customLink,
   media,
 }: LinkSelectorPreviewProps) {
-  const getSubtitlePath = (): string => {
-    if (customLink) {
-      return customLink
-    }
-
-    const getSlugString = (val: typeof pageSlug) =>
-      val && typeof val === 'object' && 'current' in val ? val.current : val
-
-    const resolvedSlug = getSlugString(pageSlug) || getSlugString(slug)
-
-    if (resolvedSlug || sectionSlug) {
-      const pathParts = [resolvedSlug].filter(Boolean)
-
-      let path = pathParts.length > 0 ? `/${pathParts.join('/')}/` : '/'
-
-      if (sectionSlug) {
-        path += `#${sectionSlug}`
-      }
-
-      return path
-    }
-
-    if (pageRef) {
-      return '/'
-    }
-
-    return 'not defined'
-  }
-
   return {
     title: Array.isArray(title) ? flattenRichText(title) : title,
-    subtitle: getSubtitlePath(),
+    subtitle: customLink || 'not defined',
     media,
   }
 }
-/** Generates a preview object for a section. */
-export function sectionPreview({
-  title,
-  fallbackTitle,
-  subtitle,
-  media,
-  sectionImage,
-}: PreviewPrepareProps) {
-  const getFirstLine = (
-    value: string | Array<PortableTextBlock> | undefined
-  ) => {
-    if (!Array.isArray(value)) return value
-
-    return flattenFirstRichTextBlock(value)
-  }
-  const flattenedTitle = getFirstLine(title)
-  const flattenedFallbackTitle = getFirstLine(fallbackTitle)
-
-  const flattenedSubtitle = getFirstLine(subtitle)
-
-  const combinedTitle = flattenedTitle ?? flattenedFallbackTitle
-
-  return {
-    title: combinedTitle,
-    subtitle: flattenedSubtitle,
-    media: media ?? sectionImage,
-  }
-}
-
-// More flexible version with default values
-export const createSectionPreview = ({
-  title = 'title',
-  fallbackTitle = 'stringTitle',
-  subtitle = 'slug.current',
-  media = 'icon',
-  videoThumbnail = 'videoThumbnail',
-  sectionImage = 'sectionImage',
-  sectionVideoPlayBackId = 'sectionVideo.asset.playbackId',
-} = {}) => ({
-  select: {
-    title,
-    fallbackTitle,
-    subtitle,
-    media,
-    sectionImage,
-    videoThumbnail,
-    sectionVideoPlayBackId,
-  },
-  prepare: sectionPreview,
-})
 
 /**
  * Checks if a given link is an external or mailto link

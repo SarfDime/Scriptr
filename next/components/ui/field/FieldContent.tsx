@@ -4,6 +4,7 @@ import { cn } from '../../../lib/common-utils'
 import { Text } from '../../typography/Text'
 import { Badge } from '../Badge'
 import type { FieldProps } from './Field'
+import type { FieldIds } from './field-context'
 
 /** Palette for the label badge: invalid wins over valid, neutral otherwise. */
 const getLabelPalette = ({
@@ -26,6 +27,7 @@ const getLabelPalette = ({
  * main content with an error color.
  */
 export const FieldContent = ({
+  ids,
   label,
   children,
   helperText,
@@ -38,7 +40,10 @@ export const FieldContent = ({
   valid,
   invalid,
   required,
-}: Omit<FieldProps, 'showSkeleton' | 'loading' | 'rest'>) => {
+  grouped,
+}: Omit<FieldProps, 'showSkeleton' | 'loading' | 'rest'> & {
+  ids: FieldIds
+}) => {
   return (
     <>
       {(label || helperText) && (
@@ -47,7 +52,14 @@ export const FieldContent = ({
           className={cn('ui-cluster gap-1', labelWrapperProps?.className)}
         >
           {label && (
-            <Text as='label' {...labelProps}>
+            <Text
+              as='label'
+              id={ids.label}
+              // A grouped field has no single control to point at; the
+              // container's `aria-labelledby` names the group instead.
+              htmlFor={grouped ? undefined : ids.control}
+              {...labelProps}
+            >
               <Badge
                 {...badgeProps}
                 variant='outline'
@@ -71,6 +83,7 @@ export const FieldContent = ({
           )}
           {helperText && (
             <Text
+              id={ids.helper}
               {...helperProps}
               className={cn(
                 'text-fg-400 text-xs pl-0.5',
@@ -85,9 +98,8 @@ export const FieldContent = ({
 
       {children}
       {invalid && errorText && (
-        // `role='alert'` announces the message as it appears; the field's own
-        // control is not linked to it yet (see docs/PROGRESS.md).
         <Text
+          id={ids.error}
           {...errorProps}
           role='alert'
           className={cn('text-error-red ui-caption', errorProps?.className)}

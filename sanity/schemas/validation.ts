@@ -16,7 +16,7 @@ import { flattenRichText, isExternalLink } from './util-functions/utilFunctions'
 
 export const DEFAULT_VALIDATION_RULES = {
   title: { min: 1, max: 100, maxWarning: 70 },
-  description: { max: 250, maxWarning: 200 },
+  description: { max: 305, maxWarning: 200 },
   subtitle: { min: 5, max: 80, maxWarning: 60 },
   content: { max: 1000, maxWarning: 400 },
 
@@ -239,44 +239,6 @@ export const validationRules = {
 
     return isRequired ? urlRule.required() : urlRule
   },
-
-  linkSelectorInternalFieldsValidation: (rule: Rule) =>
-    rule.custom((value, context) => {
-      const { customLink } = context.document as SanityDocument
-      if (customLink && value !== undefined) {
-        return 'Cannot set both page and custom path or link. Please delete the custom path/link.'
-      }
-      return true
-    }),
-
-  linkSelectorCustomLinkValidation: (rule: Rule) =>
-    rule.custom((value: string, context) => {
-      const { allPages, linkType } = context.document as SanityDocument
-      const validationFieldTitle = context?.type?.title
-
-      if (allPages?._ref && value !== undefined) {
-        return 'Cannot set both page or modal and custom path or link. Please delete the page reference.'
-      }
-      if (linkType !== 'custom') return true
-      if (!value) return `${validationFieldTitle ?? 'Field'} cannot be empty`
-
-      return validateLinkFormat(value)
-    }),
-
-  customParamsValidation: (rule: Rule) =>
-    rule.custom((value: string, context) => {
-      const { linkType, customParamsButton } =
-        context.document as SanityDocument
-
-      if (linkType !== 'custom' || !customParamsButton || !value) return true
-
-      if (value.startsWith('/')) return `A path should not start with '/'`
-      if (value.startsWith('http'))
-        return 'Only use https urls or internal paths starting with /'
-      if (value.endsWith('/')) return `A path should not end with '/'`
-
-      return true
-    }),
 
   // -- Slugs / identifiers --
   slugValidation: (rule: SlugRule, isRequired = true) => [

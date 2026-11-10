@@ -1,0 +1,90 @@
+/* Localized fields use plain markup so Sanity UI's wrappers don't add chrome. */
+
+/* Keep the default-language field close to its translations. */
+.locale-object {
+  padding: 0.6rem;
+  border: 1px solid var(--card-border-color);
+  border-radius: 6px;
+  background-color: color-mix(
+    in srgb,
+    var(--card-border-color) 14%,
+    var(--card-bg-color)
+  );
+
+  > div {
+    gap: 1rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+    flex: 1;
+    > div {
+      flex-grow: 1;
+    }
+  }
+
+  .locale-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    fieldset {
+      > div:first-child {
+        display: none;
+      }
+      > div:nth-child(2) {
+        margin-top: 0.25rem;
+      }
+    }
+  }
+}
+
+/* Every translation is its own card, so no Sanity fieldset is involved. */
+/* .locale-field--translation {
+} */
+
+.locale-field__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.locale-field__flag {
+  flex: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.locale-field__language {
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.locale-field__badge {
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.locale-field__badge--default {
+  background-color: var(--card-badge-primary-bg-color);
+  color: var(--card-badge-primary-fg-color);
+}
+
+.locale-field__badge--translation {
+  background-color: var(--card-badge-default-bg-color);
+  color: var(--card-badge-default-fg-color);
+}
+
+[data-testid^="field-localized"] {
+  [data-ui="Box"]:nth-of-type(2) {
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+  }
+}

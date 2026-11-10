@@ -6,7 +6,6 @@ import Controls from '@sanity/icons/Controls'
 import Documents from '@sanity/icons/Documents'
 import EarthAmericas from '@sanity/icons/EarthAmericas'
 import Users from '@sanity/icons/Users'
-
 import type { StructureToolTypes } from '../types/common.types'
 import type { ChildSchemaType } from '../types/schema-prop.types'
 import { createColoredIcon } from './icon-helpers'
@@ -101,6 +100,17 @@ const academicSections: Array<SectionConfig> = [
         icon: createColoredIcon(Clock, 'utility'),
         params: { semester },
       })),
+      { type: 'divider', title: 'DB' },
+      {
+        title: 'Connected',
+        filter: '_type == "subject" && dbId != null',
+        icon: createColoredIcon(Documents, 'info'),
+      },
+      {
+        title: 'Not Connected',
+        filter: '_type == "subject" && dbId == null',
+        icon: createColoredIcon(Controls, 'interactive'),
+      },
     ],
   },
   {
@@ -139,7 +149,8 @@ export const buildAcademicStructure = (build: StructureToolTypes['Build']) =>
                   return build.divider().title(filterItem?.title ?? '')
                 }
 
-                // Normal list item logic
+                // Normal list item logic. The schema type is set so the pane can
+                // offer that type's `orderings` plus a working default sort.
                 return build
                   .listItem()
                   .title(filterItem.title)
@@ -148,8 +159,13 @@ export const buildAcademicStructure = (build: StructureToolTypes['Build']) =>
                     build
                       .documentList()
                       .title(filterItem.title)
+                      .schemaType(item.schemaType)
                       .filter(filterItem.filter)
                       .params(filterItem.params || {})
+                      .menuItemGroups([{ id: 'sorting', title: 'Sort' }])
+                      .menuItems(
+                        build.orderingMenuItemsForType(item.schemaType)
+                      )
                   )
               })
             )

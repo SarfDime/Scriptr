@@ -1,4 +1,9 @@
 import type { AchievementDefinition } from '@shared/types/achievements.types'
+import type {
+  DownloadReviewAccount,
+  DownloadReviewListResponse,
+  DownloadReviewScript,
+} from '@shared/types/download-review.types'
 import type { FlagListResponse, FlagStatus } from '@shared/types/flags.types'
 import type {
   AdminProfilesListResponse,
@@ -33,4 +38,11 @@ export type AdminAchievementDefinitionsViewModel = {
 export type AdminUsersViewModel = {
   page: AdminProfilesListResponse
   query: AdminProfilesQuery
+}
+
+/** The suspicious-download review: the first page of each list, both read from
+ * the same aggregate pass over the newest events. */
+export type AdminDownloadReviewViewModel = {
+  accounts: DownloadReviewListResponse<DownloadReviewAccount>
+  scripts: DownloadReviewListResponse<DownloadReviewScript>
 }

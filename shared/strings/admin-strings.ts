@@ -3,7 +3,10 @@ import {
   type AdminProfileSortField,
   ANNOUNCEMENT_BODY_MAX_LENGTH,
   ANNOUNCEMENT_TITLE_MAX_LENGTH,
+  type DownloadReviewAccountSortField,
+  type DownloadReviewScriptSortField,
 } from '../config/shared-constants'
+import type { DownloadReviewIdentityType } from '../types/download-review.types'
 import type { FlagStatus } from '../types/flags.types'
 import type { UserRole } from '../types/profile.types'
 import type { SortDirection } from '../utils/array-utils/sort'
@@ -218,4 +221,60 @@ export const ADMIN_STRINGS = {
     `Announcement sent to ${recipients} ${recipients === 1 ? 'user' : 'users'}.`,
   announcementTitleValidation: `Enter a title of at most ${ANNOUNCEMENT_TITLE_MAX_LENGTH} characters.`,
   announcementBodyValidation: `Keep the message under ${ANNOUNCEMENT_BODY_MAX_LENGTH} characters.`,
+  /** Suspicious-download review. */
+  downloadReviewTitle: 'Downloads',
+  downloadReviewIntro:
+    'Counted downloads from the newest events, grouped by account and by script. One event is one counted download: an account, an address or a device, deduplicated per script.',
+  downloadReviewWindow: (scanned: number, total: number) =>
+    scanned < total
+      ? `Showing the newest ${scanned} of ${total} events. Older events are not included.`
+      : `Based on all ${total} recorded ${total === 1 ? 'event' : 'events'}.`,
+  downloadReviewAccountsTitle: 'Accounts',
+  downloadReviewScriptsTitle: 'Scripts',
+  downloadReviewAccountSearchLabel: 'Search accounts',
+  downloadReviewAccountSearchPlaceholder: 'Username or full name',
+  downloadReviewScriptSearchLabel: 'Search scripts',
+  downloadReviewScriptSearchPlaceholder: 'Title or slug',
+  downloadReviewSearchSubmit: 'Search',
+  downloadReviewSortLabel: 'Sort by',
+  downloadReviewOrderLabel: 'Direction',
+  downloadReviewAccountSortNames: {
+    events: 'Downloads',
+    scripts: 'Scripts',
+    ip_addresses: 'IP addresses',
+    devices: 'Devices',
+    last_download_at: 'Last download',
+  } satisfies Record<DownloadReviewAccountSortField, string>,
+  downloadReviewScriptSortNames: {
+    events: 'Downloads',
+    accounts: 'Accounts',
+    anonymous: 'Anonymous',
+    ip_addresses: 'IP addresses',
+    devices: 'Devices',
+    last_download_at: 'Last download',
+  } satisfies Record<DownloadReviewScriptSortField, string>,
+  downloadReviewAccountsLoadError: "Couldn't load accounts.",
+  downloadReviewScriptsLoadError: "Couldn't load scripts.",
+  downloadReviewEmptyAccounts: 'No account downloads recorded.',
+  downloadReviewEmptyScripts: 'No script downloads recorded.',
+  downloadReviewNoMatches: 'Nothing matches this search.',
+  downloadReviewEvents: 'Downloads',
+  downloadReviewScriptCount: 'Scripts',
+  downloadReviewAccountCount: 'Accounts',
+  downloadReviewAnonymous: 'Anonymous',
+  downloadReviewAddresses: 'IP addresses',
+  downloadReviewDevices: 'Devices',
+  downloadReviewLastDownload: 'Last download',
+  downloadReviewShowEvents: 'View events',
+  downloadReviewHideEvents: 'Hide events',
+  downloadReviewLoadingEvents: 'Loading events…',
+  downloadReviewEventsError: "Couldn't load these events.",
+  downloadReviewNoEvents: 'No events for this target.',
+  downloadReviewUnknownScript: 'Script unavailable',
+  downloadReviewAnonymousAccount: 'Anonymous',
+  downloadReviewIdentityNames: {
+    account: 'Account',
+    ip: 'IP address',
+    device: 'Device',
+  } satisfies Record<DownloadReviewIdentityType, string>,
 } as const

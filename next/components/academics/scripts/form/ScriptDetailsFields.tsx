@@ -86,6 +86,7 @@ export function ScriptDetailsFields({
       <Field
         // `h-10` on the one-line editor: the placeholder is that tall too.
         className='min-w-0 [--pt-editor-height:2.5rem]'
+        grouped
         label={UI_STRINGS.scripts.uploadModal.formTitle}
         labelProps={SCRIPT_FIELD_LABEL_PROPS}
         helperText={UI_STRINGS.scripts.uploadModal.formTitleHelp}
@@ -125,6 +126,7 @@ export function ScriptDetailsFields({
 
       <Field
         className='min-w-0'
+        grouped
         label={UI_STRINGS.scripts.uploadModal.formDescription}
         labelProps={SCRIPT_FIELD_LABEL_PROPS}
         helperText={UI_STRINGS.scripts.uploadModal.formDescriptionHelp}

@@ -14,12 +14,6 @@ const contentSchemas: Array<ChildSchemaType> = [
     icon: ButtonIcon,
   },
   {
-    title: 'Info Block',
-    schemaType: 'infoBlock',
-    category: 'content',
-    icon: InfoOutlineIcon,
-  },
-  {
     title: 'Star Canvas',
     schemaType: 'starCanvas',
     category: 'content',

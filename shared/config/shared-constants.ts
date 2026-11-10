@@ -131,6 +131,33 @@ export const ADMIN_PROFILE_SORT_OPTIONS = [
 ] as const
 export type AdminProfileSortField = (typeof ADMIN_PROFILE_SORT_OPTIONS)[number]
 
+/** Admin download review: the page sizes each list defaults to, the most a
+ * caller may ask for, and the columns `sort` accepts. The accounts and scripts
+ * lists page over one aggregate pass; the events list pages over the table. */
+export const DOWNLOAD_REVIEW_PAGE_SIZE = 10
+export const DOWNLOAD_REVIEW_MAX_PAGE_SIZE = 50
+export const DOWNLOAD_REVIEW_ACCOUNT_SORT_OPTIONS = [
+  'events',
+  'scripts',
+  'ip_addresses',
+  'devices',
+  'last_download_at',
+] as const
+export type DownloadReviewAccountSortField =
+  (typeof DOWNLOAD_REVIEW_ACCOUNT_SORT_OPTIONS)[number]
+export const DOWNLOAD_REVIEW_SCRIPT_SORT_OPTIONS = [
+  'events',
+  'accounts',
+  'anonymous',
+  'ip_addresses',
+  'devices',
+  'last_download_at',
+] as const
+export type DownloadReviewScriptSortField =
+  (typeof DOWNLOAD_REVIEW_SCRIPT_SORT_OPTIONS)[number]
+export const DOWNLOAD_REVIEW_EVENT_PAGE_SIZE = 20
+export const DOWNLOAD_REVIEW_MAX_EVENT_PAGE_SIZE = 100
+
 /** Limits `POST /api/admin/notifications` and the `notifications` table's own
  * CHECK constraints: a title of 1–200 characters and a body of at most 1000. */
 export const ANNOUNCEMENT_TITLE_MAX_LENGTH = 200

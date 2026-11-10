@@ -10,6 +10,10 @@ export const ADMIN_SECTIONS = {
     href: '/admin/restrictions',
     label: ADMIN_STRINGS.restrictionsTitle,
   },
+  'download-review': {
+    href: '/admin/download-review',
+    label: ADMIN_STRINGS.downloadReviewTitle,
+  },
   'rating-types': {
     href: '/admin/rating-types',
     label: ADMIN_STRINGS.ratingTypesTitle,

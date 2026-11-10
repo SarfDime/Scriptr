@@ -12,6 +12,7 @@ import type {
 import { Box } from '../../common/Box'
 import { Button } from '../../common/Button'
 import { CloseButton } from '../CloseButton'
+import { useFieldControl } from '../field/field-context'
 import { SelectOptionList } from './SelectOptionList'
 
 /** Gap between the trigger and the open list. */
@@ -81,6 +82,10 @@ export const Select = <T = string>({
   disabled = false,
   ...rest
 }: SelectProps<T>) => {
+  const control = useFieldControl(
+    triggerProps?.id,
+    triggerProps?.['aria-describedby']
+  )
   const [selectedOption, setSelectedOption] =
     useState<SelectOptionType<T> | null>(defaultOption ?? null)
   const [listOpen, setListOpen] = useState(false)
@@ -124,6 +129,7 @@ export const Select = <T = string>({
       data-valid={Boolean(selectedOption)}
     >
       <Button
+        {...control}
         onClick={handleToggle}
         aria-expanded={listOpen}
         {...triggerProps}

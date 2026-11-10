@@ -19,6 +19,7 @@ import {
 } from '../util-functions/utilFunctions'
 import { stringValidation, validationRules } from '../validation'
 import { type CustomLinkFieldOptions, customLinkField } from './customLink'
+import { localizedField } from './localeFields'
 
 const GROUPING_PRESETS: Record<
   GroupingKeys,
@@ -420,7 +421,7 @@ export type AcademicFieldsOverrides = Partial<{
   slug: AcademicFieldOptions & { required?: boolean }
   title: AcademicFieldOptions
   description: AcademicFieldOptions & { required?: boolean }
-  keywords: AcademicFieldOptions
+  keywords: AcademicFieldOptions & { required?: boolean }
   bio: AcademicBioOptions
   logo: AcademicFieldOptions
   picture: AcademicFieldOptions
@@ -491,6 +492,65 @@ const FIELD_BUILDERS: Record<
     databaseIdField({ grouping, ...overrides.dbId }),
 }
 
+/**
+ * Localized duplicates for the text fields that have one value per language.
+ * They render next to the legacy single-language field until the frontend is
+ * switched over, then the legacy entry here is deleted.
+ */
+const LOCALIZED_FIELD_BUILDERS: Partial<
+  Record<AcademicFieldKey, (context: AcademicFieldContext) => FieldDefinition>
+> = {
+  name: ({ grouping, overrides }) =>
+    localizedField({
+      name: 'localizedName',
+      title: 'Name (localized)',
+      valueType: 'string',
+      group: overrides.name?.grouping ?? grouping ?? 'information',
+      fieldset: overrides.name?.grouping ?? grouping ?? 'information',
+      isRequired: true,
+    }),
+  title: ({ grouping, overrides }) =>
+    localizedField({
+      name: 'localizedTitle',
+      title: 'Academic Title (localized)',
+      valueType: 'string',
+      group: overrides.title?.grouping ?? grouping ?? 'information',
+      fieldset: overrides.title?.grouping ?? grouping ?? 'information',
+    }),
+  description: ({ grouping, overrides }) =>
+    localizedField({
+      name: 'localizedDescription',
+      title: 'Description (localized)',
+      valueType: 'richTextLite',
+      group: overrides.description?.grouping ?? grouping ?? 'information',
+      fieldset: overrides.description?.grouping ?? grouping ?? 'information',
+      isRequired: overrides.description?.required,
+    }),
+  keywords: ({ grouping, overrides }) =>
+    localizedField({
+      name: 'localizedKeywords',
+      title: 'Keywords (localized)',
+      description: 'Keywords or tags associated with the subject.',
+      valueType: 'stringArray',
+      group: overrides.keywords?.grouping ?? grouping ?? 'information',
+      fieldset: overrides.keywords?.grouping ?? grouping ?? 'information',
+      isRequired: overrides.keywords?.required,
+    }),
+  bio: ({ grouping, overrides }) => {
+    const type = overrides.bio?.type ?? 'richTextLite'
+
+    return localizedField({
+      name: 'localizedBio',
+      title:
+        type === 'string' ? 'Short Biography (localized)' : 'Bio (localized)',
+      valueType: type,
+      group: overrides.bio?.grouping ?? grouping ?? 'information',
+      fieldset: overrides.bio?.grouping ?? grouping ?? 'information',
+      isRequired: overrides.bio?.required,
+    })
+  },
+}
+
 export function academicFields(
   entity: AcademicEntityType,
   keys: Array<AcademicFieldKey>,
@@ -502,11 +562,11 @@ export function academicFields(
     overrides?: AcademicFieldsOverrides
   } = {}
 ): Array<FieldDefinition> {
-  return keys.map((key) =>
-    FIELD_BUILDERS[key]({
-      entity,
-      grouping,
-      overrides,
-    })
-  )
+  return keys.flatMap((key) => {
+    const context = { entity, grouping, overrides }
+    const legacyField = FIELD_BUILDERS[key](context)
+    const localized = LOCALIZED_FIELD_BUILDERS[key]?.(context)
+
+    return localized ? [legacyField, localized] : [legacyField]
+  })
 }

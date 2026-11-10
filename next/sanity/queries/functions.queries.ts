@@ -11,16 +11,10 @@ fn person::full($person) = $person{
 };
 `
 
+// TODO: expand this once nav/button links can target academic entities and the
+// website's database pages again. For now the only destination is customLink.
 const linkSelectorFunction = /* groq */ `
 fn linkSelector::full($link) = $link{
-    defined(linkType) => {linkType},
-    defined(page) => {
-    "pageSlug": select(
-            page->._type == "page" => page->.pageSlug,
-            page->.slug
-        )
-    },
-    defined(section) => {"sectionSlug": section->.slug},
     defined(customLink) => {customLink},
 };
 `

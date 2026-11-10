@@ -9,7 +9,7 @@ const Z_INDEX = {
   SKELETON: 'z-20',
   LANGUAGE_PICKER: 'z-19',
   COMING_SOON_BADGE: 'z-2',
-}
+} as const
 /** Image `sizes` values must be selected from this app-specific registry. */
 const IMAGE_SIZES = {
   UNIVERSITY_HERO: '(min-width: 640px) 50vw, 100vw',

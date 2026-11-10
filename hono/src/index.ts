@@ -14,6 +14,7 @@ import admin from './routes/admin'
 import auth from './routes/auth'
 import calendarNotes from './routes/calendar-notes'
 import comments from './routes/comments'
+import downloadReview from './routes/download-review'
 import favorites from './routes/favorites'
 import fileOps from './routes/file-ops'
 import flags from './routes/flags'
@@ -87,6 +88,7 @@ app.route('/notifications', notifications)
 app.route('/ratings', ratings)
 app.route('/achievement-definitions', achievementDefinitions)
 app.route('/restrictions', restrictions)
+app.route('/download-review', downloadReview)
 
 app.get('/', (c) =>
   c.json({

@@ -37,6 +37,7 @@ export function ReadingLinksField({
   return (
     <Field
       className='min-w-0'
+      grouped
       label={UI_STRINGS.scripts.uploadModal.additionalReadingLabel}
       labelProps={FIELD_LABEL_PROPS}
       helperText={UI_STRINGS.scripts.uploadModal.additionalReadingHelp}

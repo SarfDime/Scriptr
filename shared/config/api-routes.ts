@@ -110,6 +110,9 @@ export type ApiEndpoint =
   | '/api/restrictions/me'
   | '/api/restrictions/lookup'
   | `/api/restrictions/${string}`
+  | '/api/download-review/accounts'
+  | '/api/download-review/scripts'
+  | '/api/download-review/events'
   | '/api'
 
 export function withQuery(
@@ -332,6 +335,11 @@ export const apiRoutes = {
     lookup: '/api/restrictions/lookup',
     byProfileId: (profileId: string | number) =>
       `/api/restrictions/${profileId}` as const,
+  },
+  downloadReview: {
+    accounts: '/api/download-review/accounts',
+    scripts: '/api/download-review/scripts',
+    events: '/api/download-review/events',
   },
 } as const
 
