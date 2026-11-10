@@ -13,6 +13,10 @@ type NotificationInput = {
   title: string
   body: string | null
   data: Json | null
+  /** The study the notification's content belongs to. Null (or omitted) for
+   * account-wide notifications — announcements, restrictions, and achievements
+   * that are not study-scoped. */
+  studyId?: string | null
 }
 
 type NotificationClient =
@@ -25,9 +29,14 @@ export const insertNotificationBestEffort = async (
   notification: NotificationInput
 ) => {
   try {
+    const { type, title, body, data, studyId } = notification
     const { error } = await client.from('notifications').insert({
       profile_id: profileId,
-      ...notification,
+      type,
+      title,
+      body,
+      data,
+      study_id: studyId ?? null,
     })
     if (error) {
       honoLog({
@@ -151,6 +160,7 @@ export const notifyAdminsAtFlagThreshold = async (
             type: 'flag_threshold',
             title,
             body,
+            studyId,
             data: {
               target_type: targetType,
               target_id: targetId,

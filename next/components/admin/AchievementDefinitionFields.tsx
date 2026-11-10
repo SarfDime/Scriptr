@@ -10,6 +10,7 @@ import {
 import { ACHIEVEMENTS_STRINGS } from '@shared/strings/achievements-strings'
 import { ADMIN_STRINGS } from '@shared/strings/admin-strings'
 import type { AchievementDefinitionPatch } from '@shared/types/achievements.types'
+import type { AdminStudyOption } from '@shared/types/admin.types'
 import { Box } from '@/components/common/Box'
 import { InputWrapper } from '@/components/typography/InputWrapper'
 import { Text } from '@/components/typography/Text'
@@ -24,6 +25,8 @@ export type AchievementDefinitionValues = {
   threshold: string
   metric: AchievementMetric
   rarity: AchievementRarity
+  /** The study it counts in; null for a platform-wide definition. */
+  studyId: string | null
 }
 
 export type AchievementDefinitionField = 'threshold'
@@ -58,7 +61,11 @@ export const toAchievementDefinitionPatch = (
   metric: values.metric,
   rarity: values.rarity,
   threshold: Number(values.threshold.trim()),
+  studyId: values.studyId,
 })
+
+/** The scope select's value: a study id, or '' for platform-wide. */
+export const PLATFORM_SCOPE = ''
 
 type AchievementDefinitionFieldsProps = {
   /** Prefix that keeps the input ids unique when several forms are on screen. */
@@ -67,6 +74,8 @@ type AchievementDefinitionFieldsProps = {
   previewId: string
   values: AchievementDefinitionValues
   onChange: (patch: Partial<AchievementDefinitionValues>) => void
+  /** Studies the definition can be scoped to; empty until they load. */
+  studies: Array<AdminStudyOption>
   saving: boolean
   isTouched: (field: AchievementDefinitionField) => boolean
   touch: (field: AchievementDefinitionField) => void
@@ -82,11 +91,24 @@ export const AchievementDefinitionFields = ({
   previewId,
   values,
   onChange,
+  studies,
   saving,
   isTouched,
   touch,
 }: AchievementDefinitionFieldsProps) => {
   const errors = getAchievementDefinitionErrors(values)
+  const scopeOptions: Array<SelectOptionType<string>> = [
+    {
+      id: 'platform',
+      value: PLATFORM_SCOPE,
+      label: ADMIN_STRINGS.achievementScopePlatform,
+    },
+    ...studies.map((study) => ({
+      id: study.id,
+      value: study.id,
+      label: study.name,
+    })),
+  ]
   // Wording is code-owned; show what the badge will read, or why it cannot be
   // created yet.
   const copy = ACHIEVEMENT_COPY[previewId]
@@ -141,6 +163,24 @@ export const AchievementDefinitionFields = ({
           disabled={saving}
           triggerProps={{ 'aria-label': ADMIN_STRINGS.achievementMetric }}
         />
+      </Field>
+      <Field label={ADMIN_STRINGS.achievementScope}>
+        <Select<string>
+          defaultOption={
+            scopeOptions.find(
+              (option) => option.value === (values.studyId ?? PLATFORM_SCOPE)
+            ) ?? scopeOptions[0]
+          }
+          options={scopeOptions}
+          setSelectedValue={(studyId) => onChange({ studyId: studyId || null })}
+          disabled={saving}
+          triggerProps={{ 'aria-label': ADMIN_STRINGS.achievementScope }}
+        />
+        <Text className='ui-caption'>
+          {values.studyId
+            ? ADMIN_STRINGS.achievementScopeStudyHint
+            : ADMIN_STRINGS.achievementScopePlatformHint}
+        </Text>
       </Field>
       <Field label={ADMIN_STRINGS.achievementRarity}>
         <Select<AchievementRarity>

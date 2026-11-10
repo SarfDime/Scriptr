@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import type { NotificationRecord } from '../../../shared/types/api.types'
+import type { NotificationWithStudy } from '../../../shared/types/notifications.types'
 import { createRateLimiter } from '../../../shared/utils/rate-limit'
 import {
   databaseErrorResponse,
@@ -34,7 +35,7 @@ notifications.get('/', async (c) => {
 
   let query = supabase
     .from('notifications')
-    .select('*')
+    .select('*, study:studies(site_slug)')
     .eq('profile_id', user.id)
     .order('created_at', { ascending: false })
 
@@ -43,7 +44,7 @@ notifications.get('/', async (c) => {
 
   const { data, error } = await query
   if (error) return databaseErrorResponse(c, error)
-  return c.json<Array<NotificationRecord>>(data ?? [])
+  return c.json<Array<NotificationWithStudy>>(data ?? [])
 })
 /** Get the current user's unread notification count */
 notifications.get('/unread-count', async (c) => {

@@ -38,6 +38,8 @@ type BadgeModel = {
   rarity: ReturnType<typeof resolveAchievementRarity>
   rarityLabel: string
   icon: AchievementIcon
+  /** The study it was earned in; null for a platform-wide achievement. */
+  studyName: string | null
 }
 
 const toBadge = (entry: ProfileAchievement): BadgeModel | null => {
@@ -56,6 +58,7 @@ const toBadge = (entry: ProfileAchievement): BadgeModel | null => {
     rarity,
     rarityLabel: ACHIEVEMENTS_STRINGS.rarity[rarity],
     icon: getAchievementIcon(entry.achievement_id, achievement.metric),
+    studyName: achievement.study?.name ?? null,
   }
 }
 
@@ -111,6 +114,11 @@ const AchievementBadge = ({ badge }: { badge: BadgeModel }) => (
       <Text className='ui-caption'>
         {ACHIEVEMENTS_STRINGS.earnedOn(formatEarnedDate(badge.earnedAt))}
       </Text>
+      {badge.studyName && (
+        <Text className='ui-caption'>
+          {ACHIEVEMENTS_STRINGS.earnedIn(badge.studyName)}
+        </Text>
+      )}
       <Text className='ui-caption ui-cluster gap-1'>
         {ACHIEVEMENTS_STRINGS.rarityLabel}
         <Badge
@@ -166,11 +174,98 @@ const AchievementStack = ({ badges }: { badges: Array<BadgeModel> }) => {
   )
 }
 
+/** One scope's badges: stacked by type past four, each on its own tile below
+ * that. `label` is the list's accessible name. */
+const BadgeList = ({
+  badges,
+  label,
+}: {
+  badges: Array<BadgeModel>
+  label: string
+}) => {
+  const groups = new Map<string, Array<BadgeModel>>()
+  if (badges.length > MAX_FLAT_BADGES) {
+    for (const badge of badges) {
+      const group = groups.get(badge.group)
+      if (group) group.push(badge)
+      else groups.set(badge.group, [badge])
+    }
+  } else {
+    for (const badge of badges) groups.set(badge.id, [badge])
+  }
+
+  return (
+    <Box as='ul' aria-label={label} className='flex min-w-0 flex-wrap gap-1.5'>
+      {[...groups].map(([key, group]) => {
+        const single = group.length === 1 ? group[0] : null
+
+        return (
+          <Box as='li' key={key}>
+            {single ? (
+              <AchievementBadge badge={single} />
+            ) : (
+              <AchievementStack badges={group} />
+            )}
+          </Box>
+        )
+      })}
+    </Box>
+  )
+}
+
+type BadgeScope = {
+  key: string
+  /** Null when every badge is platform-wide: one unlabelled list reads better
+   * than a heading above the only list there is. */
+  label: string | null
+  badges: Array<BadgeModel>
+}
+
+/** Platform-wide achievements first, then one scope per study, each keeping the
+ * order `sortAchievements` gave it. */
+const groupByScope = (badges: Array<BadgeModel>): Array<BadgeScope> => {
+  const byStudy = new Map<string, Array<BadgeModel>>()
+  const global: Array<BadgeModel> = []
+  for (const badge of badges) {
+    if (!badge.studyName) {
+      global.push(badge)
+      continue
+    }
+    const group = byStudy.get(badge.studyName) ?? []
+    group.push(badge)
+    byStudy.set(badge.studyName, group)
+  }
+
+  const onlyGlobal = byStudy.size === 0
+  const scopes: Array<BadgeScope> = []
+  if (global.length > 0) {
+    scopes.push({
+      key: 'global',
+      label: onlyGlobal ? null : ACHIEVEMENTS_STRINGS.scopeGlobal,
+      badges: global,
+    })
+  }
+  for (const [studyName, studyBadges] of [...byStudy].sort(([a], [b]) =>
+    a.localeCompare(b)
+  )) {
+    scopes.push({
+      key: `study:${studyName}`,
+      label: studyName,
+      badges: studyBadges,
+    })
+  }
+  return scopes
+}
+
 /**
  * A profile's earned achievements, as badges with a hover/focus popover.
  * Renders nothing when there are none. Callers pass them already ordered (see
  * `sortAchievements`), so the first badge of a type is its rarest. A client
  * leaf only because the popover tracks hover and focus.
+ *
+ * Achievements are earned either platform-wide or inside one study, and the two
+ * are shown apart — a study's badge is not the platform's, and a reader should
+ * be able to tell which is which without opening every popover.
  */
 export const AchievementBadges = ({
   achievements,
@@ -186,36 +281,29 @@ export const AchievementBadges = ({
 
   if (badges.length === 0) return null
 
-  const groups = new Map<string, Array<BadgeModel>>()
-  if (badges.length > MAX_FLAT_BADGES) {
-    for (const badge of badges) {
-      const group = groups.get(badge.group)
-      if (group) group.push(badge)
-      else groups.set(badge.group, [badge])
-    }
-  } else {
-    for (const badge of badges) groups.set(badge.id, [badge])
+  const scopes = groupByScope(badges)
+  const single = scopes.length === 1 ? scopes[0] : null
+
+  if (single?.label === null) {
+    return (
+      <BadgeList
+        badges={single.badges}
+        label={ACHIEVEMENTS_STRINGS.groupLabel}
+      />
+    )
   }
 
   return (
-    <Box
-      as='ul'
-      aria-label={ACHIEVEMENTS_STRINGS.groupLabel}
-      className='flex min-w-0 flex-wrap gap-1.5'
-    >
-      {[...groups].map(([key, group]) => {
-        const single = group.length === 1 ? group[0] : null
-
-        return (
-          <Box as='li' key={key}>
-            {single ? (
-              <AchievementBadge badge={single} />
-            ) : (
-              <AchievementStack badges={group} />
-            )}
-          </Box>
-        )
-      })}
+    <Box className='ui-stack gap-2'>
+      {scopes.map((scope) => (
+        <Box key={scope.key} className='ui-stack gap-1'>
+          <Text className='ui-caption font-semibold'>{scope.label}</Text>
+          <BadgeList
+            badges={scope.badges}
+            label={`${ACHIEVEMENTS_STRINGS.groupLabel} — ${scope.label}`}
+          />
+        </Box>
+      ))}
     </Box>
   )
 }

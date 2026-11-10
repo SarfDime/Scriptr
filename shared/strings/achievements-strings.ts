@@ -16,5 +16,9 @@ export const ACHIEVEMENTS_STRINGS = {
   stackLabel: (title: string, hidden: number) =>
     `${title}, ${hidden} more like it` as const,
   earnedOn: (date: string) => `Earned on ${date}` as const,
+  /** The heading above platform-wide badges, when a study's badges sit beside
+   * them. A study scope is headed by the study's own name. */
+  scopeGlobal: 'Platform-wide' as const,
+  earnedIn: (studyName: string) => `Earned in ${studyName}` as const,
   rarityLabel: `Rarity: ` as const,
 } as const

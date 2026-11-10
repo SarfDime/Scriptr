@@ -19,6 +19,7 @@ import {
   isUserRole,
 } from '../../../shared/utils/api.utils'
 import { createRateLimiter } from '../../../shared/utils/rate-limit'
+import { isUuid } from '../../../shared/utils/slug.utils'
 import { requireAdminAccess } from '../lib/admin-access'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
 import { honoLog } from '../lib/logger'
@@ -29,7 +30,8 @@ import {
   readJsonBody,
   requiredParam,
 } from '../lib/request'
-import { requireOwner } from '../lib/require-admin'
+import { requireOwner, requireStudyRole } from '../lib/require-admin'
+import { studyExists } from '../lib/study-access'
 import {
   authMiddleware,
   createInternalSupabaseClient,
@@ -110,19 +112,24 @@ const isBroadcastLimited = createRateLimiter({
 const RECIPIENT_PAGE_SIZE = 1000
 const NOTIFICATION_INSERT_SIZE = 500
 
-/** Send one `announcement` notification to every profile.
+/** Send one `announcement` notification to every profile, or to one study's
+ * people when `studyId` names a study.
  *
  * The recipient ids are read with the service-role client (a plain read of a
  * publicly readable table, done in pages), and the rows are written with the
  * caller's session client, so the `admins can create notifications` INSERT
- * policy stays the boundary on every row. */
+ * policy stays the boundary on every row.
+ *
+ * A study announcement goes to everyone enrolled in it, everyone holding a role
+ * on it, and every owner — an owner answers for every study, so leaving them out
+ * would hide the one thing they are meant to see. The rows carry `study_id`, so
+ * that study's site shows them and the other studies' sites do not.
+ *
+ * An owner may address everyone or any study; a study admin only a study they
+ * administer, which the insert policy enforces as well. */
 protectedAdmin.post('/notifications', authMiddleware, async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)
-
-  if (!(await requireOwner(supabase, user.id))) {
-    return c.json({ error: 'Unauthorized: Admin access required' }, 403)
-  }
 
   if (await exceedsBodyLimit(c, MAX_JSON_BODY_BYTES)) {
     return c.json({ error: 'Request body is too large' }, 413)
@@ -139,6 +146,17 @@ protectedAdmin.post('/notifications', authMiddleware, async (c) => {
     )
   }
 
+  let studyId: string | null = null
+  if (body.studyId !== undefined && body.studyId !== null) {
+    if (typeof body.studyId !== 'string' || !isUuid(body.studyId)) {
+      return c.json({ error: 'studyId must be a study id, or null' }, 400)
+    }
+    if (!(await studyExists(supabase, body.studyId))) {
+      return c.json({ error: 'That study was not found' }, 400)
+    }
+    studyId = body.studyId
+  }
+
   const rawBody = typeof body.body === 'string' ? body.body.trim() : ''
   if (rawBody.length > ANNOUNCEMENT_BODY_MAX_LENGTH) {
     return c.json(
@@ -147,6 +165,22 @@ protectedAdmin.post('/notifications', authMiddleware, async (c) => {
       },
       400
     )
+  }
+
+  // Who may address whom: an owner to everyone or any study, a study admin to
+  // their own study only. The insert policy applies the same rule, so this only
+  // turns a database rejection into a clear 403.
+  const isOwnerUser = await requireOwner(supabase, user.id)
+  if (!isOwnerUser) {
+    if (!studyId) {
+      return c.json({ error: 'Only an owner can announce to everyone' }, 403)
+    }
+    if (!(await requireStudyRole(supabase, user.id, studyId, 'admin'))) {
+      return c.json(
+        { error: 'Unauthorized: You do not administer that study' },
+        403
+      )
+    }
   }
 
   // Checked after validation: a rejected form should not use up one of the
@@ -162,55 +196,95 @@ protectedAdmin.post('/notifications', authMiddleware, async (c) => {
     type: 'announcement',
     title,
     body: rawBody || null,
+    study_id: studyId,
   }
   const internal = createInternalSupabaseClient(c)
   let recipients = 0
-  let offset = 0
 
-  for (;;) {
-    const { data: page, error } = await internal
-      .from('profiles')
-      .select('id')
-      .order('id', { ascending: true })
-      .range(offset, offset + RECIPIENT_PAGE_SIZE - 1)
-
-    if (error) return databaseErrorResponse(c, error)
-    if (!page || page.length === 0) break
-
+  const deliver = async (profileIds: Array<string>) => {
     for (
       let index = 0;
-      index < page.length;
+      index < profileIds.length;
       index += NOTIFICATION_INSERT_SIZE
     ) {
-      const chunk = page.slice(index, index + NOTIFICATION_INSERT_SIZE)
+      const chunk = profileIds.slice(index, index + NOTIFICATION_INSERT_SIZE)
       const { error: insertError } = await supabase
         .from('notifications')
         .insert(
-          chunk.map((profile) => ({
-            profile_id: profile.id,
+          chunk.map((profileId) => ({
+            profile_id: profileId,
             ...announcement,
           }))
         )
 
-      if (insertError) {
-        honoLog({
-          logLevel: 'error',
-          message: `Announcement delivery stopped after ${recipients} recipients`,
-          error: insertError,
-        })
-        return databaseErrorResponse(c, insertError)
-      }
-
+      if (insertError) throw insertError
       recipients += chunk.length
     }
+  }
 
-    offset += page.length
-    if (page.length < RECIPIENT_PAGE_SIZE) break
+  const failDelivery = (error: { code?: string; message: string }) => {
+    honoLog({
+      logLevel: 'error',
+      message: `Announcement delivery stopped after ${recipients} recipients`,
+      error,
+    })
+    return databaseErrorResponse(c, error)
+  }
+
+  if (studyId) {
+    const [members, staff, owners] = await Promise.all([
+      internal
+        .from('profile_studies')
+        .select('profile_id')
+        .eq('study_id', studyId),
+      internal.from('study_roles').select('profile_id').eq('study_id', studyId),
+      internal.from('profiles').select('id').eq('role', 'owner'),
+    ])
+    const readError = members.error ?? staff.error ?? owners.error
+    if (readError) return failDelivery(readError)
+
+    const recipientIds = [
+      ...new Set([
+        ...(members.data ?? []).map((row) => row.profile_id),
+        ...(staff.data ?? []).map((row) => row.profile_id),
+        ...(owners.data ?? []).map((row) => row.id),
+      ]),
+    ]
+
+    try {
+      await deliver(recipientIds)
+    } catch (error) {
+      return failDelivery(error as { code?: string; message: string })
+    }
+  } else {
+    let offset = 0
+
+    for (;;) {
+      const { data: page, error } = await internal
+        .from('profiles')
+        .select('id')
+        .order('id', { ascending: true })
+        .range(offset, offset + RECIPIENT_PAGE_SIZE - 1)
+
+      if (error) return databaseErrorResponse(c, error)
+      if (!page || page.length === 0) break
+
+      try {
+        await deliver(page.map((profile) => profile.id))
+      } catch (error) {
+        return failDelivery(error as { code?: string; message: string })
+      }
+
+      offset += page.length
+      if (page.length < RECIPIENT_PAGE_SIZE) break
+    }
   }
 
   honoLog({
     logLevel: 'info',
-    message: `Admin ${user.id} announced to ${recipients} profiles`,
+    message: `Admin ${user.id} announced to ${recipients} profiles${
+      studyId ? ` in study ${studyId}` : ''
+    }`,
   })
 
   return c.json<BroadcastNotificationResponse>({ success: true, recipients })

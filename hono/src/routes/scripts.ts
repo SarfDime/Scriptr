@@ -845,7 +845,7 @@ scripts.post(
 
     // Award before invalidating: an award created after the revalidation can
     // leave the force-cached public profile (tag `profiles:public`) stale.
-    await checkScriptsUploaded(c, user.id)
+    await checkScriptsUploaded(c, user.id, subject.study_id)
     await revalidateCacheTags(
       c.env,
       scriptMutationTags({
@@ -1233,6 +1233,7 @@ scripts.delete('/:id', authMiddleware, async (c) => {
       title: NOTIFICATIONS_STRINGS.contentRemovedTitle(title),
       body: NOTIFICATIONS_STRINGS.contentRemovedBody('script'),
       data: { target_kind: 'script', title },
+      studyId: script.study_id,
     })
   }
 
@@ -1277,7 +1278,7 @@ async function finishCountedDownload(
     return databaseErrorResponse(c, error)
   }
 
-  await checkTotalScriptDownloads(c, script.author_id)
+  await checkTotalScriptDownloads(c, script.author_id, script.study_id ?? null)
   await revalidateCacheTags(c.env, scriptMutationTags(script))
   return c.json<DownloadResponse>({ success: true, counted: true })
 }

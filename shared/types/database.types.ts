@@ -368,6 +368,7 @@ export type Database = {
           id: string
           is_read: boolean
           profile_id: string
+          study_id: string | null
           title: string
           type: string
         }
@@ -378,6 +379,7 @@ export type Database = {
           id?: string
           is_read?: boolean
           profile_id: string
+          study_id?: string | null
           title: string
           type: string
         }
@@ -388,6 +390,7 @@ export type Database = {
           id?: string
           is_read?: boolean
           profile_id?: string
+          study_id?: string | null
           title?: string
           type?: string
         }
@@ -397,6 +400,13 @@ export type Database = {
             columns: ['profile_id']
             isOneToOne: false
             referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'notifications_study_id_fkey'
+            columns: ['study_id']
+            isOneToOne: false
+            referencedRelation: 'studies'
             referencedColumns: ['id']
           },
         ]
@@ -1039,6 +1049,13 @@ export type Database = {
             columns: ['author_id']
             isOneToOne: false
             referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'scripts_study_id_fkey'
+            columns: ['study_id']
+            isOneToOne: false
+            referencedRelation: 'studies'
             referencedColumns: ['id']
           },
           {

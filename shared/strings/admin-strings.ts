@@ -135,7 +135,7 @@ export const ADMIN_STRINGS = {
   emptyAchievementDefinitions: 'No achievements have been created.',
   createAchievementDefinition: 'Create achievement',
   achievementNotice:
-    'Users receive a new or lowered-threshold achievement the next time they take a qualifying action. Achievements are never revoked.',
+    'Users receive a new or lowered-threshold achievement the next time they take a qualifying action in its scope. Achievements are never revoked.',
   achievementId: 'ID (lowercase snake_case)',
   achievementIdValidation:
     'Use 2 to 60 lowercase letters, numbers or underscores.',
@@ -151,6 +151,13 @@ export const ADMIN_STRINGS = {
     total_script_votes: 'Votes on your scripts',
     total_script_downloads: 'Downloads of your scripts',
   } satisfies Record<AchievementMetric, string>,
+  achievementScope: 'Scope',
+  achievementScopePlatform: 'Platform-wide',
+  achievementScopePlatformHint:
+    'Counts across every study: "10 scripts uploaded" means ten anywhere.',
+  achievementScopeStudyHint:
+    'Counts inside this study only: "5 scripts in this study" means five here.',
+  achievementScopeUnknownStudy: 'Study (not in your list)',
   achievementThreshold: 'Threshold',
   achievementThresholdValidation: 'Enter a whole number greater than 0.',
   achievementThresholdValue: (threshold: number) => `Threshold: ${threshold}`,
@@ -223,13 +230,19 @@ export const ADMIN_STRINGS = {
   usersDeleteSelf: 'You cannot delete your own account.',
   /** Announcement broadcast. */
   announcementIntro:
-    'Sends one notification to every account. It appears in each notification tray on its next refresh.',
+    'Sends one notification per account. It appears in each notification tray on its next refresh.',
+  announcementScope: 'Audience',
+  announcementScopeEveryone: 'Everyone on Scriptr',
+  announcementScopeEveryoneHint:
+    'Delivered to every account, and shown on every page.',
+  announcementScopeStudyHint:
+    "Delivered to that study's students, its admins and moderators, and owners. It only shows on that study's site.",
   announcementTitleLabel: 'Title',
   announcementBodyLabel: 'Message (optional)',
-  announcementSend: 'Send to everyone',
-  announcementConfirmTitle: 'Send this to every user?',
-  announcementConfirm: (title: string) =>
-    `“${title}” is delivered to every account and cannot be recalled.`,
+  announcementSend: 'Send announcement',
+  announcementConfirmTitle: 'Send this announcement?',
+  announcementConfirm: (title: string, audience: string) =>
+    `“${title}” is delivered to ${audience} and cannot be recalled.`,
   announcementSent: (recipients: number) =>
     `Announcement sent to ${recipients} ${recipients === 1 ? 'user' : 'users'}.`,
   announcementTitleValidation: `Enter a title of at most ${ANNOUNCEMENT_TITLE_MAX_LENGTH} characters.`,

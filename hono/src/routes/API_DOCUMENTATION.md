@@ -815,6 +815,15 @@ alert, and the admin announcement below. Onboarding and account creation
 notifications remain supported. The `type` column is open-ended, so new kinds
 need no migration; type-specific payload lives in `data`.
 
+`notifications.study_id` (nullable) names the study a content notification
+belongs to — an achievement earned in a study, a removed script or comment, a
+flag alert, a study announcement. It is not a permission key (a notification is
+always the reader's own); it is what a notification link and the tray's scope
+read from. Account-wide notifications (announcements sent to everyone,
+restrictions, global achievements) leave it null. Hrefs minted for notifications
+point at the study site (`/study/<site_slug>/scripts/<slug>`) — see
+`shared/utils/site-paths.ts`.
+
 The frontend merges server rows with per-user local notifications. It refreshes
 on mount, tray open, and window focus/visibility change; it does not poll or use
 realtime. The persistent restriction notice is derived from
@@ -822,7 +831,7 @@ realtime. The persistent restriction notice is derived from
 
 | Route                             | Notes                                                                                                 |
 | --------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `GET /notifications`              | List own notifications. Query: `is_read` (`true`/`false`)                                             |
+| `GET /notifications`              | List own notifications. Query: `is_read` (`true`/`false`). Each row carries its study's site handle (`study: { site_slug }`), which the tray uses to narrow itself to the study site in view |
 | `GET /notifications/unread-count` | `{ count }`                                                                                           |
 | `PATCH /notifications/read-all`   | Marks all unread as read                                                                              |
 | `PATCH /notifications/:id`        | `{ is_read }` (boolean, else `400`) — update one notification's read state; `404` if not the caller's |
@@ -831,23 +840,41 @@ realtime. The persistent restriction notice is derived from
 
 **Announcements** (`POST /admin/notifications`) are the one create path, and it
 is on the [website admin surface](#website-admin-access): an admin session plus
-the unlock. The body is `{ title, body? }`, with `title` 1–200 characters and
-`body` at most 1000, the same limits as the table's CHECK constraints; `400`
-otherwise, `413` over the 4 KiB request cap, `429` after ten broadcasts per
-admin per hour. Recipient ids are read in pages with the service-role client
-and the rows are written in chunks with the caller's session client, so the
-`admins can create notifications` INSERT policy stays the boundary on every
-row. The response is `{ success: true, recipients }`. A broadcast cannot be
-recalled — deleting the rows afterwards is the only undo, and each recipient
-can dismiss their own.
+the unlock. The body is `{ title, body?, studyId? }`, with `title` 1–200
+characters and `body` at most 1000, the same limits as the table's CHECK
+constraints; `400` otherwise, `413` over the 4 KiB request cap, `429` after ten
+broadcasts per admin per hour. `studyId` picks the audience: omitted or `null`
+sends it to every profile, a study id sends it to that study's students
+(`profile_studies`), its admins and moderators (`study_roles`) and every owner,
+and stamps the rows with that study so only its site shows them. An owner may
+address everyone or any study; a study admin only a study they administer, which
+the `study admins can announce in their study` INSERT policy enforces as well as
+the route. Recipient ids are read in pages with the service-role client and the
+rows are written in chunks with the caller's session client, so RLS stays the
+boundary on every row. The response is `{ success: true, recipients }`. A
+broadcast cannot be recalled — deleting the rows afterwards is the only undo,
+and each recipient can dismiss their own.
 
 ### Achievements
 
 `achievement_definitions` (public read) define a `metric` + `threshold` on the
-`profile` entity type. After a relevant mutation, the backend recomputes that
-profile's current value for the metric and awards (`profile_achievements`) +
-notifies (`type: 'achievement_earned'`) for any newly-crossed threshold —
-idempotent, service-role, never fails the triggering request.
+`profile` entity type, optionally scoped to one study (`study_id`). After a
+relevant mutation, the backend recomputes that profile's current value for the
+metric and awards (`profile_achievements`) + notifies
+(`type: 'achievement_earned'`) for any newly-crossed threshold — idempotent,
+service-role, never fails the triggering request.
+
+`POST`/`PATCH /achievement-definitions` take `studyId` (a study id, or `null`
+for platform-wide) beside `metric`, `threshold` and `rarity`; an unknown study is
+a `400`. Definitions are owner-authored; a study admin sees them in the list but
+does not write them.
+
+A global definition (`study_id` null) is measured across every study, so "10
+scripts uploaded" still means ten anywhere. A study definition is measured
+inside that study, so "5 scripts in this study" means five here. A mutation
+inside a study evaluates both groups; a mutation outside one (a professor
+comment) evaluates only the global ones. The award notification carries the
+definition's `study_id`.
 
 | Metric                   | Recomputed after                               | Credited to                                               |
 | ------------------------ | ---------------------------------------------- | --------------------------------------------------------- |

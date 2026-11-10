@@ -29,6 +29,9 @@ export type AppNotification = {
    * wherever it's omitted (see `NOTIFICATION_PALETTE`). */
   type?: NotificationDisplayType
   sourceType?: NotificationKind
+  /** The study site this notification belongs to; null or absent for a
+   * platform-wide notification (and for local-only ones). */
+  studySiteSlug?: string | null
 }
 
 /** Single source of truth for semantic and server-kind notification palettes. */

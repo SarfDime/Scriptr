@@ -7,7 +7,8 @@ import type {
   AchievementDefinitionInput,
   AchievementDefinitionPatch,
 } from '@shared/types/achievements.types'
-import { useState } from 'react'
+import type { AdminStudyOption } from '@shared/types/admin.types'
+import { useEffect, useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { useAdminErrorToast } from '@/hooks/admin/useAdminErrorToast'
@@ -18,6 +19,7 @@ import {
   removeAchievementDefinition,
   updateAchievementDefinition,
 } from '@/lib/api/achievement-definitions-api'
+import { getAdminStudyOptions } from '@/lib/api/admin-study-roles-api'
 import { ApiError } from '@/lib/api/next-api'
 import type { AdminAchievementDefinitionsViewModel } from '@/types/components/Admin.types'
 import { AchievementDefinitionForm } from './AchievementDefinitionForm'
@@ -39,7 +41,25 @@ export const AchievementDefinitionsPanel = ({
       initialData?.achievementDefinitions ?? null
     )
   const [saving, setSaving] = useState(false)
+  // The scope of a definition is one of the studies the operator can see. A
+  // failed read leaves the select empty (create is then blocked) rather than
+  // guessing a scope.
+  const [studies, setStudies] = useState<Array<AdminStudyOption>>([])
   const reportError = useAdminErrorToast()
+
+  useEffect(() => {
+    let active = true
+    getAdminStudyOptions()
+      .then((result) => {
+        if (active) setStudies(result?.studies ?? [])
+      })
+      .catch(() => {
+        if (active) setStudies([])
+      })
+    return () => {
+      active = false
+    }
+  }, [])
 
   // Runs one mutation and resolves to whether it succeeded, so the forms know
   // whether to clear themselves.
@@ -93,7 +113,11 @@ export const AchievementDefinitionsPanel = ({
 
   return (
     <>
-      <AchievementDefinitionForm saving={saving} onCreate={create} />
+      <AchievementDefinitionForm
+        studies={studies}
+        saving={saving}
+        onCreate={create}
+      />
 
       <AdminListStatus
         loading={loading}
@@ -119,6 +143,7 @@ export const AchievementDefinitionsPanel = ({
                   <AchievementDefinitionItem
                     key={definition.id}
                     definition={definition}
+                    studies={studies}
                     saving={saving}
                     onUpdate={(patch) => update(definition.id, patch)}
                     onDelete={() => remove(definition.id)}

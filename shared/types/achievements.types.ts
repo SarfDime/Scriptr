@@ -11,6 +11,9 @@ export type AchievementDefinition = Tables<'achievement_definitions'>
  * Body of `POST /api/achievement-definitions`. There is deliberately no
  * `entity_type`: only profiles earn achievements, so the API sets 'profile'.
  *
+ * `studyId` is the definition's scope: a study id makes it count inside that
+ * study, `null` (the default) makes it platform-wide.
+ *
  * Title and description are not client input: the id has to have an entry in
  * `ACHIEVEMENT_COPY` (`shared/config/achievements.ts`), and the API stores that
  * copy on the row as the fallback snapshot.
@@ -20,6 +23,8 @@ export type AchievementDefinitionInput = {
   metric: AchievementMetric
   threshold: number
   rarity: AchievementRarity
+  /** The study it counts in, or `null`/omitted for a platform-wide definition. */
+  studyId?: string | null
 }
 
 /** Body of `PATCH /api/achievement-definitions/:id`. The id is immutable. */

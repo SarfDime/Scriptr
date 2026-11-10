@@ -18,6 +18,7 @@ import {
   isValidAchievementId,
   isValidAchievementThreshold,
 } from '../../../shared/utils/achievement-definition.utils'
+import { isUuid } from '../../../shared/utils/slug.utils'
 import { requireAdminAccess } from '../lib/admin-access'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
 import {
@@ -26,8 +27,18 @@ import {
   requiredParam,
 } from '../lib/request'
 import { requireOwner } from '../lib/require-admin'
+import { studyExists } from '../lib/study-access'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
+
+/** The column-shaped subset a body describes; `studyId` is the API's name for
+ * the scope, `study_id` is what the row stores. */
+type DefinitionWrite = {
+  metric?: AchievementDefinitionPatch['metric']
+  rarity?: AchievementDefinitionPatch['rarity']
+  threshold?: number
+  study_id?: string | null
+}
 
 /**
  * Validates the editable fields present in a body. Absent fields are left out
@@ -36,8 +47,8 @@ import type { HonoEnv } from '../types/env.types'
  */
 function parseDefinitionFields(
   body: Record<string, unknown>
-): { fields: AchievementDefinitionPatch } | { error: string } {
-  const fields: AchievementDefinitionPatch = {}
+): { fields: DefinitionWrite } | { error: string } {
+  const fields: DefinitionWrite = {}
 
   if ('metric' in body) {
     if (typeof body.metric !== 'string' || !isAchievementMetric(body.metric)) {
@@ -62,6 +73,16 @@ function parseDefinitionFields(
       return { error: 'threshold must be a whole number greater than 0' }
     }
     fields.threshold = body.threshold
+  }
+
+  if ('studyId' in body) {
+    if (body.studyId === null) {
+      fields.study_id = null
+    } else if (typeof body.studyId === 'string' && isUuid(body.studyId)) {
+      fields.study_id = body.studyId
+    } else {
+      return { error: 'studyId must be a study id, or null for platform-wide' }
+    }
   }
 
   return { fields }
@@ -151,12 +172,15 @@ achievementDefinitions.post(
     const parsed = parseDefinitionFields(body)
     if ('error' in parsed) return c.json({ error: parsed.error }, 400)
 
-    const { metric, rarity, threshold } = parsed.fields
+    const { metric, rarity, threshold, study_id: studyId } = parsed.fields
     if (!metric || !rarity || threshold === undefined) {
       return c.json(
         { error: 'id, metric, threshold and rarity are required' },
         400
       )
+    }
+    if (studyId && !(await studyExists(supabase, studyId))) {
+      return c.json({ error: 'That study was not found' }, 400)
     }
 
     const { title, description } = getAchievementCopy(body.id)
@@ -171,6 +195,7 @@ achievementDefinitions.post(
         title,
         description: description ?? null,
         rarity,
+        study_id: studyId ?? null,
       })
       .select()
       .single()
@@ -208,9 +233,15 @@ achievementDefinitions.patch(
     if ('error' in parsed) return c.json({ error: parsed.error }, 400)
     if (Object.keys(parsed.fields).length === 0) {
       return c.json(
-        { error: 'Send at least one of metric, threshold or rarity' },
+        { error: 'Send at least one of metric, threshold, rarity or studyId' },
         400
       )
+    }
+    if (
+      parsed.fields.study_id &&
+      !(await studyExists(supabase, parsed.fields.study_id))
+    ) {
+      return c.json({ error: 'That study was not found' }, 400)
     }
 
     const copy = ACHIEVEMENT_COPY[id]

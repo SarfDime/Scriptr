@@ -968,7 +968,7 @@ comments.post('/:commentId/replies', authMiddleware, async (c) => {
     return databaseErrorResponse(c, error, 'Failed to create comment reply')
   }
 
-  await checkCommentsPosted(c, user.id)
+  await checkCommentsPosted(c, user.id, studyId)
   await revalidateCacheTags(c.env, commentMutationTags(data))
 
   const verified = withVerifiedScriptTitle(data)
@@ -1212,7 +1212,7 @@ comments.post('/', authMiddleware, async (c) => {
     return databaseErrorResponse(c, error, 'Failed to create comment')
   }
 
-  await checkCommentsPosted(c, user.id)
+  await checkCommentsPosted(c, user.id, studyId)
   await revalidateCacheTags(c.env, commentMutationTags(data))
 
   const verified = withVerifiedScriptTitle(data)
@@ -1377,15 +1377,13 @@ comments.delete('/:id', authMiddleware, async (c) => {
   }
   if (!comment) return c.json({ error: 'Comment not found' }, 404)
 
+  // The comment's study comes from its script; a comment on a professor has none.
+  const commentStudyId = await studyIdForScript(supabase, comment.script_id)
+
   // Check if user is author or admin
   const canModerate =
     isOwner(profile.role) ||
-    (await requireStudyRole(
-      supabase,
-      user.id,
-      await studyIdForScript(supabase, comment.script_id),
-      'moderator'
-    ))
+    (await requireStudyRole(supabase, user.id, commentStudyId, 'moderator'))
 
   if (comment.author_id !== user.id && !canModerate) {
     return c.json(
@@ -1416,6 +1414,7 @@ comments.delete('/:id', authMiddleware, async (c) => {
       title: NOTIFICATIONS_STRINGS.contentRemovedTitle(title),
       body: NOTIFICATIONS_STRINGS.contentRemovedBody('comment'),
       data: { target_kind: 'comment', title },
+      studyId: commentStudyId,
     })
   }
 

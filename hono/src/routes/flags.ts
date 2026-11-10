@@ -15,6 +15,7 @@ import type {
   FlagListResponse,
   FlagMutationResponse,
 } from '../../../shared/types/flags.types'
+import { getScriptSitePath } from '../../../shared/utils/site-paths'
 import { requireAdminAccess } from '../lib/admin-access'
 import { honoLog } from '../lib/logger'
 import { notifyAdminsAtFlagThreshold } from '../lib/notifications'
@@ -91,7 +92,7 @@ const resolveAdminFlags = async (
     scriptIds.length
       ? supabase
           .from('scripts')
-          .select('id, title, author_id')
+          .select('id, title, author_id, slug, study:studies(site_slug)')
           .in('id', scriptIds)
       : Promise.resolve({ data: [], error: null }),
     commentIds.length
@@ -154,7 +155,10 @@ const resolveAdminFlags = async (
   ]
   const [contextScripts, professors] = await Promise.all([
     contextScriptIds.length
-      ? supabase.from('scripts').select('id, title').in('id', contextScriptIds)
+      ? supabase
+          .from('scripts')
+          .select('id, title, slug, study:studies(site_slug)')
+          .in('id', contextScriptIds)
       : Promise.resolve({ data: [], error: null }),
     contextProfessorIds.length
       ? supabase
@@ -181,7 +185,10 @@ const resolveAdminFlags = async (
           kind: 'script',
           id: script.id,
           label: plainText(script.title, 'Untitled script'),
-          href: `/scripts/${script.id}`,
+          href: getScriptSitePath({
+            siteSlug: script.study?.site_slug,
+            slug: script.slug,
+          }),
           author_id: script.author_id,
         }
       }
@@ -200,8 +207,12 @@ const resolveAdminFlags = async (
           ? professorsById.get(context.professor_id)
           : undefined
         let href = '/admin/flags'
-        if (script) href = `/scripts/${script.id}`
-        else if (professor) href = `/professor/${professor.id}`
+        if (script) {
+          href = getScriptSitePath({
+            siteSlug: script.study?.site_slug,
+            slug: script.slug,
+          })
+        } else if (professor) href = `/professor/${professor.id}`
         const contextLabel = script
           ? plainText(script.title, 'script')
           : (professor?.name ?? 'professor')
@@ -355,7 +366,7 @@ flags.post('/', authMiddleware, async (c) => {
     if (target_type === 'script') {
       const { data: target, error: targetError } = await supabase
         .from('scripts')
-        .select('author_id')
+        .select('author_id, slug, study:studies(site_slug)')
         .eq('id', target_id)
         .maybeSingle()
       if (targetError) return databaseErrorResponse(c, targetError)
@@ -363,11 +374,16 @@ flags.post('/', authMiddleware, async (c) => {
       if (target.author_id === user.id) {
         return c.json({ error: 'You cannot report your own script' }, 403)
       }
-      targetHref = `/scripts/${target_id}`
+      targetHref = getScriptSitePath({
+        siteSlug: target.study?.site_slug,
+        slug: target.slug,
+      })
     } else {
       const { data: target, error: targetError } = await supabase
         .from('comments')
-        .select('author_id, script_id, professor_id')
+        .select(
+          'author_id, script_id, professor_id, script:scripts(slug, study:studies(site_slug))'
+        )
         .eq('id', target_id)
         .maybeSingle()
       if (targetError) return databaseErrorResponse(c, targetError)
@@ -375,8 +391,11 @@ flags.post('/', authMiddleware, async (c) => {
       if (target.author_id === user.id) {
         return c.json({ error: 'You cannot report your own comment' }, 403)
       }
-      if (target.script_id) {
-        targetHref = `/scripts/${target.script_id}`
+      if (target.script) {
+        targetHref = getScriptSitePath({
+          siteSlug: target.script.study?.site_slug,
+          slug: target.script.slug,
+        })
       } else if (target.professor_id) {
         targetHref = `/professor/${target.professor_id}`
       } else {

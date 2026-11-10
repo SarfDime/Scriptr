@@ -68,8 +68,10 @@ import { isUsernameTaken } from '../lib/username'
 import type { HonoEnv } from '../types/env.types'
 
 // profile_achievements replaced the old profiles.achievements jsonb column.
+// The definition's study rides along (null for a global one) so the badge UI can
+// tell a study achievement from a platform-wide one and name the study.
 const PROFILE_ACHIEVEMENTS_SELECT =
-  'achievements:profile_achievements(achievement_id, earned_at, achievement:achievement_definitions(title, description, metric, threshold, rarity))'
+  'achievements:profile_achievements(achievement_id, earned_at, achievement:achievement_definitions(title, description, metric, threshold, rarity, study:studies(id, name, site_slug)))'
 
 /**
  * Shared by /me, /:id, and /username/:username — a viewer can render any

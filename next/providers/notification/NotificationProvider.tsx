@@ -10,6 +10,8 @@ import type {
   ProfilePreferencesResponse,
 } from '@shared/types/profile-preferences.types'
 import type { MyRestriction } from '@shared/types/restrictions.types'
+import { getSiteSlugFromPath } from '@shared/utils/site-paths'
+import { usePathname } from 'next/navigation'
 import {
   createContext,
   useContext,
@@ -139,6 +141,11 @@ export const NotificationsProvider = ({
   const seenServerIdsRef = useRef(new Set<string>())
   const { addToast } = useToast()
   const { session } = useSession()
+  const pathname = usePathname()
+  // On a study site the tray shows that study's notifications and the
+  // platform-wide ones; elsewhere it shows everything, so nothing is ever
+  // unreachable.
+  const studySiteSlug = getSiteSlugFromPath(pathname ?? '')
   const lastTrayRefreshRef = useRef(0)
   const currentUserId =
     session.status === 'authenticated' ? session.user.id : null
@@ -351,7 +358,10 @@ export const NotificationsProvider = ({
             !(
               activeRestrictionNotice &&
               notification.sourceType === 'restriction_applied'
-            )
+            ) &&
+            (!studySiteSlug ||
+              !notification.studySiteSlug ||
+              notification.studySiteSlug === studySiteSlug)
         )
       : EMPTY_NOTIFICATIONS
   const sortedNotifications = sortNotifications([

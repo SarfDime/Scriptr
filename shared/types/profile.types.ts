@@ -109,6 +109,14 @@ export type ProfileScriptSummary = {
  * `shared/config/achievements.ts`. `achievement` is nullable because it comes
  * from an embedded relationship.
  */
+/** A definition's study, when it has one: a study achievement is earned inside
+ * that study, a global one (`study: null`) anywhere. */
+export type AchievementStudy = {
+  id: string
+  name: string
+  site_slug: string | null
+}
+
 export type ProfileAchievement = {
   achievement_id: string
   earned_at: string
@@ -118,6 +126,7 @@ export type ProfileAchievement = {
     metric: string
     threshold: number
     rarity: string
+    study: AchievementStudy | null
   } | null
 }
 

@@ -1,3 +1,4 @@
+import { getScriptSitePath } from '@shared/utils/site-paths'
 import type {
   FacultyRouteParams,
   ProfessorRouteParams,
@@ -71,12 +72,11 @@ const buildAcademicPath = (input: AcademicPathInput): string => {
     }
     case 'professor':
       return `/professor/${cleanEntityId(input.professorSlug)}`
-    case 'script': {
-      const site = cleanEntityId(input.siteSlug)
-      const slug = cleanEntityId(input.scriptSlug)
-      if (site) return `${getStudyPath(site)}/scripts/${slug}`
-      return `/scripts/${slug}`
-    }
+    case 'script':
+      return getScriptSitePath({
+        siteSlug: input.siteSlug,
+        slug: input.scriptSlug,
+      })
     default:
       return '/'
   }

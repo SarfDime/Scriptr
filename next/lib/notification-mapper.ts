@@ -1,6 +1,8 @@
 import { NOTIFICATIONS_STRINGS } from '@shared/strings/notifications-strings'
-import type { NotificationRecord } from '@shared/types/api.types'
-import type { NotificationKind } from '@shared/types/notifications.types'
+import type {
+  NotificationKind,
+  NotificationWithStudy,
+} from '@shared/types/notifications.types'
 import type { AppNotification } from '@/types/notifications.types'
 
 const isNotificationKind = (value: string): value is NotificationKind =>
@@ -11,7 +13,7 @@ const isNotificationKind = (value: string): value is NotificationKind =>
   value === 'flag_threshold' ||
   value === 'announcement'
 
-const getHref = (record: NotificationRecord) => {
+const getHref = (record: NotificationWithStudy) => {
   const data = record.data
   if (
     typeof data === 'object' &&
@@ -26,7 +28,7 @@ const getHref = (record: NotificationRecord) => {
 }
 
 export const mapNotificationRecord = (
-  record: NotificationRecord
+  record: NotificationWithStudy
 ): AppNotification => {
   const type = isNotificationKind(record.type) ? record.type : 'info'
   const sourceType = isNotificationKind(record.type) ? record.type : undefined
@@ -41,6 +43,7 @@ export const mapNotificationRecord = (
     dismissed: false,
     type,
     sourceType,
+    studySiteSlug: record.study?.site_slug ?? null,
     ...(href
       ? {
           action: {

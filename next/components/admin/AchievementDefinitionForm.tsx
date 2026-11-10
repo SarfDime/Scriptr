@@ -2,6 +2,7 @@
 
 import { ADMIN_STRINGS } from '@shared/strings/admin-strings'
 import type { AchievementDefinitionInput } from '@shared/types/achievements.types'
+import type { AdminStudyOption } from '@shared/types/admin.types'
 import { type SubmitEvent, useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
@@ -28,14 +29,17 @@ const EMPTY_VALUES: AchievementDefinitionValues = {
   threshold: '',
   metric: 'scripts_uploaded',
   rarity: 'common',
+  studyId: null,
 }
 
 /** `onCreate` resolves to whether the achievement was saved; the form clears
  * itself only then, so a failed attempt keeps what was typed. */
 export const AchievementDefinitionForm = ({
+  studies,
   saving,
   onCreate,
 }: {
+  studies: Array<AdminStudyOption>
   saving: boolean
   onCreate: (input: AchievementDefinitionInput) => Promise<boolean>
 }) => {
@@ -54,12 +58,14 @@ export const AchievementDefinitionForm = ({
     onCreate({ id, ...toAchievementDefinitionPatch(values) }).then(
       (created) => {
         if (!created) return
-        // Metric and rarity stay as chosen, so a run of similar achievements is quick to add.
+        // Metric, rarity and scope stay as chosen, so a run of similar
+        // achievements is quick to add.
         setId('')
         setValues((current) => ({
           ...EMPTY_VALUES,
           metric: current.metric,
           rarity: current.rarity,
+          studyId: current.studyId,
         }))
       }
     )
@@ -92,6 +98,7 @@ export const AchievementDefinitionForm = ({
           idPrefix='achievement-definition'
           previewId={id}
           values={values}
+          studies={studies}
           onChange={(patch) =>
             setValues((current) => ({ ...current, ...patch }))
           }

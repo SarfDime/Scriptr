@@ -66,3 +66,18 @@ export async function studyIdForSubject(
 
   return data?.study_id ?? null
 }
+
+/** Whether a study id names a real study, so a caller's scope is rejected as a
+ * `400` instead of surfacing as a foreign-key error. */
+export async function studyExists(
+  supabase: ReturnType<typeof createSupabaseClient>,
+  studyId: string
+): Promise<boolean> {
+  const { data } = await supabase
+    .from('studies')
+    .select('id')
+    .eq('id', studyId)
+    .maybeSingle()
+
+  return Boolean(data)
+}

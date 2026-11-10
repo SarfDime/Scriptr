@@ -7,6 +7,7 @@ import type {
   AchievementDefinition,
   AchievementDefinitionPatch,
 } from '@shared/types/achievements.types'
+import type { AdminStudyOption } from '@shared/types/admin.types'
 import { type SubmitEvent, useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
@@ -24,6 +25,8 @@ import {
 
 type AchievementDefinitionItemProps = {
   definition: AchievementDefinition
+  /** The studies a definition can be scoped to, for the editor and the label. */
+  studies: Array<AdminStudyOption>
   saving: boolean
   /** Resolves to whether the changes were saved. */
   onUpdate: (patch: AchievementDefinitionPatch) => Promise<boolean>
@@ -42,11 +45,13 @@ const valuesOf = (
         ? (definition.metric as AchievementDefinitionValues['metric'])
         : 'scripts_uploaded',
     rarity: resolveAchievementRarity(definition.rarity),
+    studyId: definition.study_id,
   }
 }
 
 export const AchievementDefinitionItem = ({
   definition,
+  studies,
   saving,
   onUpdate,
   onDelete,
@@ -58,6 +63,10 @@ export const AchievementDefinitionItem = ({
   )
   const rarity = resolveAchievementRarity(definition.rarity)
   const copy = getAchievementCopy(definition.id, definition)
+  const scopeName = definition.study_id
+    ? (studies.find((study) => study.id === definition.study_id)?.name ??
+      ADMIN_STRINGS.achievementScopeUnknownStudy)
+    : ADMIN_STRINGS.achievementScopePlatform
 
   const startEditing = () => {
     setValues(valuesOf(definition))
@@ -84,6 +93,7 @@ export const AchievementDefinitionItem = ({
             idPrefix={`achievement-definition-${definition.id}`}
             previewId={definition.id}
             values={values}
+            studies={studies}
             onChange={(patch) =>
               setValues((current) => ({ ...current, ...patch }))
             }
@@ -121,7 +131,8 @@ export const AchievementDefinitionItem = ({
             <Text className='ui-body-strong'>{copy.title}</Text>
             <Text className='ui-caption'>
               {definition.id} · {ACHIEVEMENTS_STRINGS.rarity[rarity]} ·{' '}
-              {ADMIN_STRINGS.achievementThresholdValue(definition.threshold)}
+              {ADMIN_STRINGS.achievementThresholdValue(definition.threshold)} ·{' '}
+              {scopeName}
             </Text>
             {copy.description && (
               <Text className='ui-body'>{copy.description}</Text>

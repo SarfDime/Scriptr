@@ -13,10 +13,10 @@ implementation plan: what changes, in which app, and why.
 | 3. Roles and permissions | Done | Owner and per-study admin/moderator roles, study-scoped policies, switcher-driven queues |
 | 4. Study routes | Done | Shell, chrome per tree, setup and selection pages, study-scoped calendar and scripts |
 | 5. Study-scoped API | Done | Reads open with an optional `?study=`, writes gated on membership/role, per-study cache tags, onboarding modal retired |
-| 6. Achievements and notifications | Not started | Per study, plus global |
+| 6. Achievements and notifications | Done | Study definitions measured in their study, `notifications.study_id`, badges grouped by scope, study-aware links |
 | 7. Cleanup and docs | Not started | — |
 
-Last reconciled: 2026-11-10 (Phases 1–5 complete).
+Last reconciled: 2026-11-10 (Phases 1–6 complete).
 
 ## Important points
 
@@ -341,14 +341,37 @@ Small, independent of scoping, and pays off immediately.
 
 ### Hono
 
-* [ ] Achievement triggers evaluate against the script's study; global
-  definitions (`study_id is null`) still apply everywhere.
-* [ ] `notifications.study_id` (nullable), set on every content notification.
+* [x] Achievement triggers evaluate against the script's study; global
+  definitions (`study_id is null`) still apply everywhere. The value is computed
+  per scope, so a global threshold means "anywhere" and a study threshold means
+  "here"; a mutation outside any study (a professor comment) evaluates only the
+  global group.
+* [x] `notifications.study_id` (nullable), set on every content notification:
+  achievements (the definition's study), removed scripts and comments, and flag
+  alerts (backfilled for stored rows).
+* [x] Script hrefs in admin and notification payloads come from a shared builder
+  (`shared/utils/site-paths.ts`), so a link points at the study site. The direct
+  `scripts.study_id → studies` FK was added: without it PostgREST cannot join a
+  script to its study.
+* [x] Definitions are created and edited with a scope: platform-wide or one
+  study, chosen in the admin editor (whose study list is the operator's own) and
+  shown on every definition. Every definition that existed before the scope was
+  moved onto LBE, the one study with content; platform-wide ones come later.
+* [x] Announcements pick their audience: everyone, or one study. A study
+  announcement is delivered to that study's students, its admins and moderators,
+  and owners, carries `study_id`, and only that study's site shows it. An owner
+  may address everyone or any study; a study admin only a study they administer,
+  enforced by the insert policy as well as the route.
 
 ### Frontend
 
-* [ ] Achievement UI separates study achievements from global ones.
-* [ ] Notification links resolve to `/study/[siteSlug]/…`.
+* [x] Achievement UI separates study achievements from global ones: platform
+  badges first, then one group per study headed by its name, and the popover
+  says which study a badge came from.
+* [x] Notification links resolve to `/study/[siteSlug]/…`.
+* [x] The tray reads the site it is on: a study site shows that study's
+  notifications plus the platform-wide ones, and any other page shows everything,
+  so a notification is never unreachable.
 
 ---
 
