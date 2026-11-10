@@ -26,4 +26,7 @@ export type CommentSectionProps = {
   target: CommentTarget
   initialComments: CommentPage<CommentEntity>
   initialLoadFailed?: boolean
+  /** The study the target lives in; moderation is scoped to it. Professor
+   * threads are not study-scoped, so they omit it and only owners moderate. */
+  studyId?: string | null
 }

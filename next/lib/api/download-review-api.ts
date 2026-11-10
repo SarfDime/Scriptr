@@ -18,7 +18,8 @@ const withCookie = (cookie?: string) => (cookie ? { headers: { cookie } } : {})
 
 export const getDownloadReviewAccounts = (
   query: DownloadReviewListQuery<DownloadReviewAccountSortField>,
-  cookie?: string
+  cookie?: string,
+  study?: string | null
 ) =>
   apiFetchRequired<DownloadReviewListResponse<DownloadReviewAccount>>(
     withQuery(apiRoutes.downloadReview.accounts, {
@@ -27,13 +28,15 @@ export const getDownloadReviewAccounts = (
       sort: query.sort,
       order: query.order,
       search: query.search,
+      study: study ?? undefined,
     }),
     { ...noStore, ...withCookie(cookie) }
   )
 
 export const getDownloadReviewScripts = (
   query: DownloadReviewListQuery<DownloadReviewScriptSortField>,
-  cookie?: string
+  cookie?: string,
+  study?: string | null
 ) =>
   apiFetchRequired<DownloadReviewListResponse<DownloadReviewScript>>(
     withQuery(apiRoutes.downloadReview.scripts, {
@@ -42,6 +45,7 @@ export const getDownloadReviewScripts = (
       sort: query.sort,
       order: query.order,
       search: query.search,
+      study: study ?? undefined,
     }),
     { ...noStore, ...withCookie(cookie) }
   )
@@ -53,10 +57,14 @@ export const getDownloadReviewEvents = (
     user_id?: string
     limit?: number
     offset?: number
+    study?: string | null
   },
   cookie?: string
 ) =>
   apiFetchRequired<DownloadReviewEventsResponse>(
-    withQuery(apiRoutes.downloadReview.events, query),
+    withQuery(apiRoutes.downloadReview.events, {
+      ...query,
+      study: query.study ?? undefined,
+    }),
     { ...noStore, ...withCookie(cookie) }
   )

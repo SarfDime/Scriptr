@@ -12,6 +12,7 @@ const event = (
   overrides: Partial<DownloadReviewEventRow> = {}
 ): DownloadReviewEventRow => ({
   script_id: 'script-1',
+  study_id: 'study-1',
   user_id: 'user-1',
   ip_address: '203.0.113.7',
   device_id: 'device-1',

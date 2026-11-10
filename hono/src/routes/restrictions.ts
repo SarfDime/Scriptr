@@ -1,4 +1,4 @@
-import { isAdmin } from '@shared/utils/api.utils'
+import { isOwner } from '@shared/utils/api.utils'
 import { Hono } from 'hono'
 import { NOTIFICATIONS_STRINGS } from '../../../shared/strings/notifications-strings'
 import type {
@@ -50,7 +50,7 @@ const requireAdmin = async (c: Parameters<typeof createSupabaseClient>[0]) => {
 
   if (error)
     return { supabase, user, response: databaseErrorResponse(c, error) }
-  if (!isAdmin(profile?.role)) {
+  if (!isOwner(profile?.role)) {
     return {
       supabase,
       user,
@@ -144,7 +144,7 @@ restrictions.get('/lookup', requireAdminAccess, async (c) => {
     await profileQuery.maybeSingle()
   if (profileError) return databaseErrorResponse(c, profileError)
   if (!profile) return c.json({ error: 'Profile not found' }, 404)
-  if (isAdmin(profile.role)) {
+  if (isOwner(profile.role)) {
     return c.json({ error: 'Admin accounts cannot be restricted' }, 400)
   }
 
@@ -217,7 +217,7 @@ restrictions.put('/:profileId', requireAdminAccess, async (c) => {
     .maybeSingle()
   if (targetError) return databaseErrorResponse(c, targetError)
   if (!targetProfile) return c.json({ error: 'Profile not found' }, 404)
-  if (isAdmin(targetProfile.role)) {
+  if (isOwner(targetProfile.role)) {
     return c.json({ error: 'Admin accounts cannot be restricted' }, 400)
   }
 

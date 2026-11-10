@@ -1,4 +1,8 @@
-import type { ProfileSubjectStatus, UserRole } from './profile.types'
+import type {
+  ProfileSubjectStatus,
+  StudyRoleAssignment,
+  UserRole,
+} from './profile.types'
 
 // ── Requests ────────────────────────────────────────────────────────────
 
@@ -80,6 +84,8 @@ export type SessionUser = {
   email: string | undefined
   username: string | undefined
   role: UserRole
+  /** Roles held per study. Empty for a student with no moderation duties. */
+  study_roles: Array<StudyRoleAssignment>
   subjects: Array<SessionUserSubject>
   selected_faculty_ids: Array<string>
   selected_study_ids: Array<string>

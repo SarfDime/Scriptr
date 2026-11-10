@@ -41,6 +41,9 @@ export type CommentsServicesValue = {
   api: CommentsApi
   currentUserId?: string
   currentUserRole?: SessionUser['role']
+  /** Owner, or admin/moderator of this thread's study — the same rule the
+   * comment RLS policies apply. */
+  canModerate: boolean
   addComment: (comment: CommentEntity) => void
   addReply: (parentId: string, reply: CommentEntity) => void
   updateComment: (comment: CommentEntity) => void

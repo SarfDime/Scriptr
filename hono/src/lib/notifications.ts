@@ -68,7 +68,7 @@ export const notifyAdminsAtFlagThreshold = async (
 
     const { data: flags, error: flagsError } = await supabase
       .from('flags')
-      .select('reporter_id')
+      .select('reporter_id, study_id')
       .eq(targetColumn, targetId)
       .neq('status', 'dismissed')
     if (flagsError) {
@@ -84,9 +84,13 @@ export const notifyAdminsAtFlagThreshold = async (
       .size
     if (!shouldAlertAtThreshold(reporterCount)) return
 
-    const [{ data: admins, error: adminsError }, { data: existing, error }] =
+    // A flag on a user has no study, so it alerts owners only.
+    const studyId =
+      (flags ?? []).find((flag) => flag.study_id)?.study_id ?? null
+
+    const [{ data: owners, error: ownersError }, { data: existing, error }] =
       await Promise.all([
-        supabase.from('profiles').select('id').eq('role', 'admin'),
+        supabase.from('profiles').select('id').eq('role', 'owner'),
         supabase
           .from('notifications')
           .select('profile_id')
@@ -97,14 +101,38 @@ export const notifyAdminsAtFlagThreshold = async (
           }),
       ])
 
-    if (adminsError || error) {
+    if (ownersError || error) {
       honoLog({
         logLevel: 'error',
         message: 'Failed to check admins or existing flag alerts',
-        error: adminsError ?? error,
+        error: ownersError ?? error,
       })
       return
     }
+
+    const { data: studyStaff, error: studyStaffError } = studyId
+      ? await supabase
+          .from('study_roles')
+          .select('profile_id')
+          .eq('study_id', studyId)
+      : { data: [], error: null }
+
+    if (studyStaffError) {
+      honoLog({
+        logLevel: 'error',
+        message: 'Failed to read the study roles for a flag alert',
+        error: studyStaffError,
+      })
+      return
+    }
+
+    // The owner sees every study; a study admin or moderator sees their own.
+    const admins = [
+      ...new Set([
+        ...(owners ?? []).map((owner) => owner.id),
+        ...(studyStaff ?? []).map((staff) => staff.profile_id),
+      ]),
+    ]
 
     const alreadyNotified = new Set(
       (existing ?? []).map((notification) => notification.profile_id)
@@ -116,10 +144,10 @@ export const notifyAdminsAtFlagThreshold = async (
     )
 
     await Promise.all(
-      (admins ?? [])
-        .filter((admin) => !alreadyNotified.has(admin.id))
-        .map((admin) =>
-          insertNotificationBestEffort(supabase, admin.id, {
+      admins
+        .filter((adminId) => !alreadyNotified.has(adminId))
+        .map((adminId) =>
+          insertNotificationBestEffort(supabase, adminId, {
             type: 'flag_threshold',
             title,
             body,

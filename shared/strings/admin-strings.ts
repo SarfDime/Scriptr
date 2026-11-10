@@ -29,6 +29,14 @@ export const ADMIN_STRINGS = {
   ratingTypesTitle: 'Rating types',
   achievementDefinitionsTitle: 'Achievements',
   usersTitle: 'Users',
+  studySwitcherLabel: 'Managing',
+  studySwitcherAll: 'All studies',
+  studySwitcherAria: 'Study the admin pages act on',
+  studyRoleNames: {
+    owner: 'Owner',
+    admin: 'Study admin',
+    moderator: 'Study moderator',
+  },
   announcementsTitle: 'Announcements',
   accessTitle: 'Admin access',
   accessHint:
@@ -179,8 +187,7 @@ export const ADMIN_STRINGS = {
   } satisfies Record<SortDirection, string>,
   usersRoleNames: {
     student: 'Student',
-    moderator: 'Moderator',
-    admin: 'Admin',
+    owner: 'Owner',
   } satisfies Record<UserRole, string>,
   usersPageRange: (from: number, to: number, total: number) =>
     `Showing ${from}–${to} of ${total}`,
@@ -195,6 +202,12 @@ export const ADMIN_STRINGS = {
   usersDetailFaculties: 'Faculties',
   usersDetailStudies: 'Studies',
   usersDetailNone: 'None selected',
+  usersDetailStudyRoles: 'Study roles',
+  usersStudyRoleNone: 'No study roles.',
+  usersStudyRoleAdd: 'Give a role on a study',
+  usersStudyRoleAddAction: 'Add',
+  usersStudyRoleRemove: 'Remove',
+  usersStudyRoleSaveFailed: `Couldn't update the study roles.`,
   usersEditTitle: 'Edit user',
   usersEditUsername: 'Username',
   usersEditFullName: 'Full name',

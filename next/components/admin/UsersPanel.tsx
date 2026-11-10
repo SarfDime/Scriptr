@@ -41,7 +41,7 @@ type RoleFilter = 'all' | UserRole
 
 const ROLE_FILTER_OPTIONS: Array<SelectOptionType<RoleFilter>> = [
   { id: 'all', value: 'all', label: ADMIN_STRINGS.usersAllRoles },
-  ...(['student', 'moderator', 'admin'] as const).map((role) => ({
+  ...(['student', 'owner'] as const).map((role) => ({
     id: role,
     value: role,
     label: ADMIN_STRINGS.usersRoleNames[role],

@@ -34,6 +34,9 @@ export type ApiEndpoint =
   | '/api/admin/access'
   | `/api/admin/profiles/${string}/role`
   | '/api/admin/notifications'
+  | '/api/admin/studies'
+  | `/api/admin/profiles/${string}/study-roles`
+  | `/api/admin/profiles/${string}/study-roles/${string}`
   | '/api/sitemap/scripts'
   | '/api/file-ops/upload-urls'
   | '/api/file-ops/finalize'
@@ -189,6 +192,13 @@ export const apiRoutes = {
     profilesRoleById: (id: string | number) =>
       `/api/admin/profiles/${id}/role` as const,
     notifications: '/api/admin/notifications',
+    studies: '/api/admin/studies',
+    profilesStudyRolesById: (id: string | number) =>
+      `/api/admin/profiles/${id}/study-roles` as const,
+    profilesStudyRolesByIdAndStudyId: (
+      id: string | number,
+      studyId: string | number
+    ) => `/api/admin/profiles/${id}/study-roles/${studyId}` as const,
   },
   sitemap: {
     scripts: '/api/sitemap/scripts',

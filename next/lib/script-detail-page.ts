@@ -1,4 +1,5 @@
 import type { ScriptSummary } from '@shared/types/scripts.types'
+import { canModerateStudy } from '@shared/utils/api.utils'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { getSessionRequired } from '@/lib/api/auth-api'
@@ -150,7 +151,7 @@ export const loadScriptDetailPage = async (
       isAuthor: session.value?.user?.id === script.author_id,
       canManage:
         session.value?.user?.id === script.author_id ||
-        session.value?.user?.role === 'admin',
+        canModerateStudy(session.value?.user, script.study_id),
       isSaved: myFavorite.value !== null,
       viewerDataFailed,
       subjectHref,

@@ -78,6 +78,8 @@ export type ScriptSummary = {
   subject_id: string
   professor_id: string
   author_id: string
+  /** The study the subject belongs to; what moderation is scoped to. */
+  study_id: string
   exam_session: string | null
   /** Year the exam session sits in; `null` for "general (all years)". */
   exam_year: number | null

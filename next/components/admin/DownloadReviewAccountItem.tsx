@@ -14,8 +14,10 @@ import { DownloadReviewEvents } from './DownloadReviewEvents'
  * addresses and devices that came from, with its events one click away. */
 export const DownloadReviewAccountItem = ({
   account,
+  study,
 }: {
   account: DownloadReviewAccount
+  study: string | null
 }) => {
   const [open, setOpen] = useState(false)
   const name =
@@ -63,7 +65,9 @@ export const DownloadReviewAccountItem = ({
           : ADMIN_STRINGS.downloadReviewShowEvents}
       </Button>
 
-      {open && <DownloadReviewEvents profileId={account.profile_id} />}
+      {open && (
+        <DownloadReviewEvents profileId={account.profile_id} study={study} />
+      )}
     </Box>
   )
 }

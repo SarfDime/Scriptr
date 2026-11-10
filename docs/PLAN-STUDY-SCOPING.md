@@ -10,13 +10,13 @@ implementation plan: what changes, in which app, and why.
 |---|---|---|
 | 1. Build and cache hygiene | Done | Benefits the current setup on its own |
 | 2. Data model | Done | Foundation for everything else |
-| 3. Roles and permissions | Not started | Required before any write is scoped |
+| 3. Roles and permissions | Done | Owner and per-study admin/moderator roles, study-scoped policies, switcher-driven queues |
 | 4. Study routes | Not started | Frontend shell |
 | 5. Study-scoped API | Not started | Writes scoped, reads open |
 | 6. Achievements and notifications | Not started | Per study, plus global |
 | 7. Cleanup and docs | Not started | — |
 
-Last reconciled: 2026-11-10 (Phases 1–2 complete).
+Last reconciled: 2026-11-10 (Phases 1–3 complete).
 
 ## Important points
 
@@ -68,7 +68,7 @@ Small, independent of scoping, and pays off immediately.
   This is an interim shape: Phase 4 replaces it with study-scoped server reads,
   and Phase 5 removes both the route and the client fetch.
 * [x] Split the sitemap into an index with a child sitemap per study plus one
-  catalog sitemap ([`app/sitemap.ts`](../next/app/sitemap.ts)).
+  catalog sitemap ([`lib/sitemap-entries.ts`](../next/lib/sitemap-entries.ts)).
   *Why:* a single sitemap file is capped at 50,000 URLs, and it currently
   fetches every script at build time.
 * [x] Keep the catalog routes at build time (`force-static`,
@@ -150,24 +150,44 @@ Small, independent of scoping, and pays off immediately.
 
 ### Hono (`hono/supabase/migrations/`)
 
-* [ ] `profiles.role` becomes `student | owner`; add `study_roles(profile_id,
-  study_id, role)` with `role in ('admin','moderator')`.
-* [ ] `has_study_role(uid, study_id, need)` — `security definer`, used by RLS.
-* [ ] Rewrite content policies to `is_owner(uid) or has_study_role(uid, row.study_id, …)`:
-  `scripts`, `comments`, `flags`, `ratings`, `subject_professors`, and the
-  moderation routes. *Why:* admin and moderator must not act outside their study.
-* [ ] Leave `profile_restrictions` and `is_restricted()` org-wide, unchanged.
+* [x] `profiles.role` becomes `student | owner`; add `study_roles(profile_id,
+  study_id, role)` with `role in ('admin','moderator')`. One role per person per
+  study, so an admin can hold any number of studies.
+* [x] `has_study_role(uid, study_id, need)` plus `is_owner`, and `is_admin`
+  kept as its alias so the policies that still call it moved meaning in one
+  place.
+* [x] Rewrite content policies to `is_owner(uid) or has_study_role(uid, row.study_id, …)`:
+  `scripts`, `comments`, `flags`, `script_files` and `professor_studies`.
+  *Why:* admin and moderator must not act outside their study. Ratings and
+  achievement definitions stay owner-only: they are not per-study content.
+* [x] Leave `profile_restrictions` and `is_restricted()` org-wide, unchanged.
 
 ### Hono (routes)
 
-* [ ] `requireAdmin` becomes `requireOwner` for org endpoints (admin, restriction
-  management, achievement definitions); add `requireStudyRole` for study
-  endpoints ([`lib/require-admin.ts`](../hono/src/lib/require-admin.ts)).
-* [ ] `GET /session` returns org role plus the caller's `study_roles`.
+* [x] `requireAdmin` becomes `requireOwner` for org endpoints (admin, restriction
+  management, achievement definitions); add `requireStudyRole`,
+  `requireAnyStudyRole` for the moderation queues
+  ([`lib/require-admin.ts`](../hono/src/lib/require-admin.ts)).
+* [x] `GET /session` returns org role plus the caller's `study_roles`.
+* [x] `GET /api/admin/studies` lists the studies the caller may act on; study
+  roles are granted and revoked by owners at
+  `PUT`/`DELETE /api/admin/profiles/:id/study-roles`.
 
 ### Frontend
 
-* [ ] Gate admin UI by org role, moderation UI by study role.
+* [x] Gate admin UI by org role, moderation UI by study role.
+* [x] Master study switcher in the admin frame, persisted as the
+  `scriptr-admin-study` cookie, listing only the caller's studies.
+* [x] Consume the switcher's selection in the admin loaders and queues: the flag
+  queue and the download review narrow to the selected study. Users,
+  restrictions, rating types and announcements are org-wide by nature.
+* [x] Show and edit a user's study roles in the admin user detail.
+* [x] Convert the route-level moderation checks to the study-aware predicate.
+  Scripts read `study_id` from the row they already load, comments resolve it
+  from their script, and flags from their target; only the queues keep the
+  coarse "any study role" check, because RLS decides which rows they return.
+  `is_admin()` remains as the legacy alias of `is_owner` for the org-level
+  policies that still spell it that way.
 
 ---
 

@@ -13,7 +13,7 @@ import {
   readJsonBody,
   requiredParam,
 } from '../lib/request'
-import { requireAdmin } from '../lib/require-admin'
+import { requireOwner } from '../lib/require-admin'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
@@ -121,7 +121,7 @@ ratings.post('/types', authMiddleware, requireAdminAccess, async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)
 
-  if (!(await requireAdmin(supabase, user.id))) {
+  if (!(await requireOwner(supabase, user.id))) {
     return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 
@@ -168,7 +168,7 @@ ratings.patch('/types/:id', authMiddleware, requireAdminAccess, async (c) => {
   const id = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)
 
-  if (!(await requireAdmin(supabase, user.id))) {
+  if (!(await requireOwner(supabase, user.id))) {
     return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 
@@ -199,7 +199,7 @@ ratings.delete('/types/:id', authMiddleware, requireAdminAccess, async (c) => {
   const id = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)
 
-  if (!(await requireAdmin(supabase, user.id))) {
+  if (!(await requireOwner(supabase, user.id))) {
     return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 

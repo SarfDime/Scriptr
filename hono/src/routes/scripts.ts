@@ -16,7 +16,7 @@ import type {
   ScriptSummary,
   ScriptsListResponse,
 } from '../../../shared/types/scripts.types'
-import { isAdmin, isScriptFileInput } from '../../../shared/utils/api.utils'
+import { isOwner, isScriptFileInput } from '../../../shared/utils/api.utils'
 import {
   isPortableTextValue,
   isScriptDescriptionPortableTextValue,
@@ -42,7 +42,11 @@ import { honoLog } from '../lib/logger'
 import { notifyProfileBestEffort } from '../lib/notifications'
 import { deleteR2Files } from '../lib/r2'
 import { databaseErrorResponse, requiredParam } from '../lib/request'
-import { requireAdmin } from '../lib/require-admin'
+import {
+  hasAnyStudyRole,
+  requireOwner,
+  requireStudyRole,
+} from '../lib/require-admin'
 import { verifyReportedFiles } from '../lib/script-files'
 import { isOwnUploadKey } from '../lib/storage-scope'
 import {
@@ -55,7 +59,7 @@ import type { HonoEnv } from '../types/env.types'
 // Excludes is_flagged and the comments aggregate, which uses the separately
 // permissioned get_script_comment_counts RPC.
 const PUBLIC_SCRIPT_COLUMNS =
-  'id, slug, title, description, subject_id, professor_id, author_id, exam_session, exam_year, additional_reading, vote_score, download_count, created_at, updated_at, files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, file_name, created_at)'
+  'id, slug, title, description, subject_id, professor_id, author_id, study_id, exam_session, exam_year, additional_reading, vote_score, download_count, created_at, updated_at, files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, file_name, created_at)'
 
 /**
  * Reused by every list/detail endpoint below (`/`, `/subject/:subjectId`,
@@ -285,7 +289,7 @@ scripts.get('/', authMiddleware, requireAdminAccess, async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)
 
-  if (!(await requireAdmin(supabase, user.id))) {
+  if (!(await requireOwner(supabase, user.id))) {
     return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 
@@ -508,7 +512,7 @@ scripts.delete('/:scriptId/files/:fileId', authMiddleware, async (c) => {
       .single(),
     supabase
       .from('scripts')
-      .select('author_id, subject_id')
+      .select('author_id, subject_id, study_id')
       .eq('id', scriptId)
       .single(),
     supabase.from('profiles').select('role').eq('id', user.id).single(),
@@ -518,7 +522,16 @@ scripts.delete('/:scriptId/files/:fileId', authMiddleware, async (c) => {
     return c.json({ error: 'Script file not found' }, 404)
   }
 
-  if (script?.author_id !== user.id && !isAdmin(profile?.role)) {
+  if (
+    script?.author_id !== user.id &&
+    !isOwner(profile?.role) &&
+    !(await requireStudyRole(
+      supabase,
+      user.id,
+      script?.study_id ?? null,
+      'moderator'
+    ))
+  ) {
     return c.json(
       {
         error: 'Unauthorized: You can only remove files from your own scripts',
@@ -834,7 +847,7 @@ scripts.post(
     const [{ data: script }, { data: profile }] = await Promise.all([
       supabase
         .from('scripts')
-        .select('author_id, subject_id')
+        .select('author_id, subject_id, study_id')
         .eq('id', scriptId)
         .single(),
       supabase.from('profiles').select('role').eq('id', user.id).single(),
@@ -845,7 +858,11 @@ scripts.post(
       return c.json({ error: 'Script not found' }, 404)
     }
 
-    if (script.author_id !== user.id && !isAdmin(profile?.role)) {
+    if (
+      script.author_id !== user.id &&
+      !isOwner(profile?.role) &&
+      !(await requireStudyRole(supabase, user.id, script.study_id, 'moderator'))
+    ) {
       await discardUploads()
       return c.json(
         { error: 'Unauthorized: You can only add files to your own scripts' },
@@ -974,14 +991,23 @@ scripts.patch('/:id', authMiddleware, async (c) => {
   const [{ data: script }, { data: profile }] = await Promise.all([
     supabase
       .from('scripts')
-      .select('author_id, exam_session, exam_year')
+      .select('author_id, exam_session, exam_year, study_id')
       .eq('id', scriptId)
       .single(),
     supabase.from('profiles').select('role').eq('id', user.id).single(),
   ])
 
   // Check if user is author or admin
-  if (script?.author_id !== user.id && !isAdmin(profile?.role)) {
+  if (
+    script?.author_id !== user.id &&
+    !isOwner(profile?.role) &&
+    !(await requireStudyRole(
+      supabase,
+      user.id,
+      script?.study_id ?? null,
+      'moderator'
+    ))
+  ) {
     return c.json(
       { error: 'Unauthorized: You can only edit your own scripts' },
       403
@@ -1069,7 +1095,7 @@ scripts.delete('/:id', authMiddleware, async (c) => {
   const [{ data: script }, { data: profile }] = await Promise.all([
     supabase
       .from('scripts')
-      .select('author_id, subject_id, title')
+      .select('author_id, subject_id, title, study_id')
       .eq('id', scriptId)
       .single(),
     supabase.from('profiles').select('role').eq('id', user.id).single(),
@@ -1077,9 +1103,11 @@ scripts.delete('/:id', authMiddleware, async (c) => {
 
   if (!script) return c.json({ error: 'Script not found' }, 404)
 
-  // Check if user is author or admin
-  const isAdminCaller = isAdmin(profile?.role)
-  if (script.author_id !== user.id && !isAdminCaller) {
+  // Author, owner, or a moderator of the study this script belongs to.
+  const canModerate =
+    isOwner(profile?.role) ||
+    (await requireStudyRole(supabase, user.id, script.study_id, 'moderator'))
+  if (script.author_id !== user.id && !canModerate) {
     return c.json(
       { error: 'Unauthorized: You can only delete your own scripts' },
       403
@@ -1122,7 +1150,7 @@ scripts.delete('/:id', authMiddleware, async (c) => {
     )
   }
 
-  if (isAdminCaller && script.author_id !== user.id) {
+  if (canModerate && script.author_id !== user.id) {
     const title = isPortableTextValue(script.title)
       ? portableTextToPlainText(script.title).trim() || 'Script'
       : 'Script'
@@ -1242,7 +1270,7 @@ scripts.get('/flagged/all', authMiddleware, requireAdminAccess, async (c) => {
     .eq('id', user.id)
     .single()
 
-  if (!isAdmin(profile?.role)) {
+  if (!isOwner(profile?.role) && !(await hasAnyStudyRole(supabase, user.id))) {
     return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 

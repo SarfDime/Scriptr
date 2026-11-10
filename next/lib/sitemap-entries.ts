@@ -1,4 +1,3 @@
-import type { MetadataRoute } from 'next'
 import { createAcademicStaticParams } from '@/lib/academic-detail-page'
 import { getAcademicPath } from '@/lib/academic-routes'
 import { getScriptSitemapEntries } from '@/lib/api/sitemap-api'
@@ -6,7 +5,6 @@ import { ACADEMIC_CATALOG_TAGS } from '@/lib/sanity-tags'
 import {
   CATALOG_SECTION,
   hasSiteOrigin,
-  listSitemapSections,
   listStudies,
   MAX_URLS_PER_SITEMAP,
   SCRIPT_SECTION_PREFIX,
@@ -26,18 +24,11 @@ import type {
   UniversityRouteParams,
 } from '@/types/academics/academics.types'
 
-/**
- * Prerendered at build time and never revalidated.
- *
- * One file per section (see `listSitemapSections`) so no single sitemap
- * approaches the protocol's URL limit, and so the catalog, each study's
- * subjects and the scripts rebuild independently. `/sitemap.xml` is the index
- * over them.
- */
-export const dynamic = 'force-static'
-export const revalidate = false
-
-type SitemapEntry = MetadataRoute.Sitemap[number]
+/** One address in a section. */
+export type SitemapEntry = {
+  url: string
+  lastModified?: string | Date
+}
 
 /** A static-params row with a missing parent slug would build a broken path. */
 function isComplete(params: Record<string, string>): boolean {
@@ -129,16 +120,18 @@ const toScriptEntries = async (
   }))
 }
 
-export async function generateSitemaps() {
-  return listSitemapSections()
-}
-
-export default async function sitemap(props: {
-  id: Promise<string>
-}): Promise<MetadataRoute.Sitemap> {
+/**
+ * The entries of one sitemap section (see `listSitemapSections`), built once at
+ * build time: `app/sitemap/[section]/route.ts` prunes them, and
+ * `app/sitemap.xml/route.ts` is the index over them. Splitting this way keeps
+ * no single file near the protocol's URL limit and lets the catalog, each
+ * study's subjects and the scripts rebuild independently.
+ */
+export const buildSitemapSection = async (
+  id: string
+): Promise<Array<SitemapEntry>> => {
   if (!hasSiteOrigin()) return []
 
-  const id = await props.id
   const toUrl = (path: string) => new URL(path, websiteDomain).toString()
 
   if (id === CATALOG_SECTION) {

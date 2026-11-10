@@ -23,7 +23,7 @@ import type {
   ReactionType,
 } from '@shared/types/comments.types'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
-import { isAdmin } from '@shared/utils/api.utils'
+import { isOwner } from '@shared/utils/api.utils'
 import {
   isCommentPortableTextValue,
   portableTextJsonByteLength,
@@ -37,6 +37,7 @@ import { revalidateCacheTags } from '../lib/cache-revalidate'
 import { honoLog } from '../lib/logger'
 import { notifyProfileBestEffort } from '../lib/notifications'
 import { requiredParam } from '../lib/request'
+import { requireStudyRole, studyIdForScript } from '../lib/require-admin'
 import {
   authMiddleware,
   createInternalSupabaseClient,
@@ -1229,7 +1230,7 @@ comments.patch('/:id', authMiddleware, async (c) => {
     supabase.from('profiles').select('role').eq('id', user.id).single(),
     supabase
       .from('comments')
-      .select('author_id')
+      .select('author_id, script_id')
       .eq('id', commentId)
       .maybeSingle(),
   ])
@@ -1245,7 +1246,16 @@ comments.patch('/:id', authMiddleware, async (c) => {
   }
   if (!existingComment) return c.json({ error: 'Comment not found' }, 404)
 
-  if (existingComment.author_id !== user.id && !isAdmin(profile.role)) {
+  if (
+    existingComment.author_id !== user.id &&
+    !isOwner(profile.role) &&
+    !(await requireStudyRole(
+      supabase,
+      user.id,
+      await studyIdForScript(supabase, existingComment.script_id),
+      'moderator'
+    ))
+  ) {
     return c.json(
       { error: 'Unauthorized: You can only edit your own comments' },
       403
@@ -1322,7 +1332,16 @@ comments.delete('/:id', authMiddleware, async (c) => {
   if (!comment) return c.json({ error: 'Comment not found' }, 404)
 
   // Check if user is author or admin
-  if (comment.author_id !== user.id && !isAdmin(profile.role)) {
+  const canModerate =
+    isOwner(profile.role) ||
+    (await requireStudyRole(
+      supabase,
+      user.id,
+      await studyIdForScript(supabase, comment.script_id),
+      'moderator'
+    ))
+
+  if (comment.author_id !== user.id && !canModerate) {
     return c.json(
       {
         error: 'Unauthorized: You can only delete your own comments',
@@ -1330,7 +1349,6 @@ comments.delete('/:id', authMiddleware, async (c) => {
       403
     )
   }
-  const isAdminCaller = isAdmin(profile.role)
 
   const { data: deletedComment, error } = await supabase
     .from('comments')
@@ -1342,7 +1360,7 @@ comments.delete('/:id', authMiddleware, async (c) => {
   if (error) return databaseErrorResponse(c, error, 'Failed to delete comment')
   if (!deletedComment) return c.json({ error: 'Comment not found' }, 404)
 
-  if (isAdminCaller && comment.author_id !== user.id) {
+  if (canModerate && comment.author_id !== user.id) {
     const title = isCommentPortableTextValue(comment.content)
       ? portableTextToPlainText(comment.content).trim().slice(0, 120) ||
         'Comment'
@@ -1396,7 +1414,7 @@ comments.get('/flagged/all', authMiddleware, requireAdminAccess, async (c) => {
   if (profileError) {
     return databaseErrorResponse(c, profileError, 'Failed to verify admin role')
   }
-  if (!isAdmin(profile?.role)) {
+  if (!isOwner(profile?.role)) {
     return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 

@@ -21,7 +21,11 @@ export default async function AdminLayout({
 }) {
   const cookieHeader = (await cookies()).toString()
   const session = await getSessionRequired(cookieHeader)
-  if (session.user?.role !== 'admin') notFound()
+  const user = session.user
+  // An owner sees every study; a study admin or moderator sees the admin
+  // surface restricted to their studies.
+  const canEnter = user?.role === 'owner' || (user?.study_roles.length ?? 0) > 0
+  if (!canEnter) notFound()
 
   if (!(await isAdminUnlocked(cookieHeader))) return <AdminAccessGate />
 

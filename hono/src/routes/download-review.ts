@@ -26,7 +26,7 @@ import {
   parseDownloadReviewListQuery,
 } from '../lib/download-review-query'
 import { databaseErrorResponse } from '../lib/request'
-import { requireAdmin } from '../lib/require-admin'
+import { requireStudyRole, studyIdForScript } from '../lib/require-admin'
 import {
   authMiddleware,
   createInternalSupabaseClient,
@@ -39,7 +39,7 @@ import type { HonoEnv } from '../types/env.types'
 const WINDOW_PAGE_SIZE = 500
 
 const WINDOW_SELECT = `script_id, user_id, ip_address, device_id, identity_key, created_at,
-  script:scripts(slug, title), profile:profiles(username, full_name)`
+  script:scripts(slug, title, study_id), profile:profiles(username, full_name)`
 
 /**
  * Suspicious-download review: what the counted downloads in `download_events`
@@ -54,20 +54,36 @@ const downloadReview = new Hono<HonoEnv>()
 
 downloadReview.use('*', authMiddleware)
 
+/**
+ * Owner anywhere, study admin on the study being reviewed. Without a study a
+ * non-owner has no scope to review, so the pass fails closed.
+ */
 const requireAdminSession = async (
-  c: Parameters<typeof createSupabaseClient>[0]
+  c: Parameters<typeof createSupabaseClient>[0],
+  studyId: string | null
 ) => {
   const user = c.get('user')
-  if (!(await requireAdmin(createSupabaseClient(c), user.id))) {
-    return c.json({ error: 'Unauthorized: Admin access required' }, 403)
+  if (
+    await requireStudyRole(createSupabaseClient(c), user.id, studyId, 'admin')
+  ) {
+    return null
   }
-  return null
+  return c.json({ error: 'Unauthorized: Admin access required' }, 403)
+}
+
+/** The `?study=` filter, validated; `null` means every study (owners only). */
+const readStudyFilter = (c: Parameters<typeof createSupabaseClient>[0]) => {
+  const study = c.req.query('study')?.trim()
+  if (!study) return { studyId: null }
+  if (!isUuid(study)) return { invalid: true as const }
+  return { studyId: study }
 }
 
 /** Newest events first, up to the window, plus the table's total so the lists
  * can say how much of the history the pass did not see. */
 const readWindow = async (
-  supabase: ReturnType<typeof createInternalSupabaseClient>
+  supabase: ReturnType<typeof createInternalSupabaseClient>,
+  studyId: string | null
 ) => {
   const { count, error: countError } = await supabase
     .from('download_events')
@@ -99,12 +115,17 @@ const readWindow = async (
         script_title: row.script
           ? portableTextToPlainText(row.script.title)
           : null,
+        study_id: row.script?.study_id ?? null,
       }))
     )
     if (data.length < to - from + 1) break
   }
 
-  return { error: null, rows, total: count ?? 0 }
+  return {
+    error: null,
+    rows: studyId ? rows.filter((row) => row.study_id === studyId) : rows,
+    total: count ?? 0,
+  }
 }
 
 type WindowMeta = {
@@ -121,7 +142,10 @@ const windowMeta = (scanned: number, total: number): WindowMeta => ({
 
 /** The accounts with the most counted downloads in the window. */
 downloadReview.get('/accounts', requireAdminAccess, async (c) => {
-  const denied = await requireAdminSession(c)
+  const filter = readStudyFilter(c)
+  if ('invalid' in filter) return c.json({ error: 'Invalid study id' }, 400)
+
+  const denied = await requireAdminSession(c, filter.studyId)
   if (denied) return denied
 
   const query = parseDownloadReviewListQuery((name) => c.req.query(name), {
@@ -133,7 +157,8 @@ downloadReview.get('/accounts', requireAdminAccess, async (c) => {
   }
 
   const { error, rows, total } = await readWindow(
-    createInternalSupabaseClient(c)
+    createInternalSupabaseClient(c),
+    filter.studyId
   )
   if (error) return databaseErrorResponse(c, error)
 
@@ -152,7 +177,10 @@ downloadReview.get('/accounts', requireAdminAccess, async (c) => {
 
 /** The scripts with the most counted downloads in the window. */
 downloadReview.get('/scripts', requireAdminAccess, async (c) => {
-  const denied = await requireAdminSession(c)
+  const filter = readStudyFilter(c)
+  if ('invalid' in filter) return c.json({ error: 'Invalid study id' }, 400)
+
+  const denied = await requireAdminSession(c, filter.studyId)
   if (denied) return denied
 
   const query = parseDownloadReviewListQuery((name) => c.req.query(name), {
@@ -164,7 +192,8 @@ downloadReview.get('/scripts', requireAdminAccess, async (c) => {
   }
 
   const { error, rows, total } = await readWindow(
-    createInternalSupabaseClient(c)
+    createInternalSupabaseClient(c),
+    filter.studyId
   )
   if (error) return databaseErrorResponse(c, error)
 
@@ -183,8 +212,8 @@ downloadReview.get('/scripts', requireAdminAccess, async (c) => {
 
 /** The events behind one account or one script, newest first. */
 downloadReview.get('/events', requireAdminAccess, async (c) => {
-  const denied = await requireAdminSession(c)
-  if (denied) return denied
+  const filter = readStudyFilter(c)
+  if ('invalid' in filter) return c.json({ error: 'Invalid study id' }, 400)
 
   const scriptId = c.req.query('script_id')?.trim() || null
   const profileId = c.req.query('user_id')?.trim() || null
@@ -200,6 +229,16 @@ downloadReview.get('/events', requireAdminAccess, async (c) => {
   }
 
   const supabase = createInternalSupabaseClient(c)
+
+  // A script's events belong to its study, so the role check needs no filter
+  // from the caller. An account's events span studies, so the caller has to
+  // name the one it is reviewing.
+  const targetStudyId = scriptId
+    ? await studyIdForScript(supabase, scriptId)
+    : filter.studyId
+
+  const denied = await requireAdminSession(c, targetStudyId)
+  if (denied) return denied
   let query = supabase
     .from('download_events')
     .select(
@@ -212,6 +251,26 @@ downloadReview.get('/events', requireAdminAccess, async (c) => {
 
   if (scriptId) query = query.eq('script_id', scriptId)
   else if (profileId) query = query.eq('user_id', profileId)
+
+  if (profileId && targetStudyId) {
+    const { data: studyScripts, error: studyScriptsError } = await supabase
+      .from('scripts')
+      .select('id')
+      .eq('study_id', targetStudyId)
+
+    if (studyScriptsError) return databaseErrorResponse(c, studyScriptsError)
+
+    const scriptIds = (studyScripts ?? []).map((script) => script.id)
+    if (scriptIds.length === 0) {
+      return c.json<DownloadReviewEventsResponse>({
+        events: [],
+        total: 0,
+        offset: page.offset,
+        limit: page.limit,
+      })
+    }
+    query = query.in('script_id', scriptIds)
+  }
 
   const { data, error, count } = await query
   if (error) return databaseErrorResponse(c, error)

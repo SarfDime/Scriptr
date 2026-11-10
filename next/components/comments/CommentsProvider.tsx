@@ -3,6 +3,7 @@
 import type { CommentSort } from '@shared/config/shared-constants'
 import { COMMENT_STRINGS } from '@shared/strings/comments-strings'
 import type { CommentPage } from '@shared/types/comments.types'
+import { canModerateStudy } from '@shared/utils/api.utils'
 import { createContext, useContext, useState } from 'react'
 import * as defaultCommentsApi from '@/lib/api/comments-api'
 import { countComments, removeComment } from '@/lib/comments/comment-tree'
@@ -126,6 +127,7 @@ const CommentsServicesContext = createContext<CommentsServicesValue | null>(
 export function CommentsProvider({
   target,
   initialComments,
+  studyId = null,
   api = defaultCommentsApi,
   children,
 }: CommentsProviderProps) {
@@ -313,6 +315,10 @@ export function CommentsProvider({
       session.status === 'authenticated' ? session.user.id : undefined,
     currentUserRole:
       session.status === 'authenticated' ? session.user.role : undefined,
+    canModerate: canModerateStudy(
+      session.status === 'authenticated' ? session.user : null,
+      studyId
+    ),
     addComment: (comment) =>
       setPages((current) => {
         const page = current[sort]

@@ -3,9 +3,11 @@ import { hasSiteOrigin, listSitemapSections } from '@/lib/sitemap-sections'
 import { websiteDomain } from '@/sanity/env'
 
 /**
- * The index over `app/sitemap.ts`'s sections. `generateSitemaps` only produces
- * `/sitemap/<id>.xml`; the protocol wants one entry point a crawler can submit,
- * so this lists each section.
+ * The index over the sections in `app/sitemap/[section]`; the protocol wants one
+ * entry point a crawler can submit, so this lists each section. It owns
+ * `/sitemap.xml` outright — the sections are route handlers rather than a
+ * `sitemap.ts` metadata route because Next refuses to serve a route and a
+ * metadata file at the same path.
  */
 export const dynamic = 'force-static'
 export const revalidate = false

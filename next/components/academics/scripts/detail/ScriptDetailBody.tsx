@@ -35,6 +35,7 @@ export async function ScriptDetailBody({
         target={{ scriptId }}
         initialComments={comments}
         initialLoadFailed={commentsUnavailable}
+        studyId={script.study_id}
       />
     </>
   )

@@ -4,7 +4,15 @@ import type { Tables } from './database.types'
 import type { PortableTextValue } from './portable-text.types'
 import type { ScriptFile } from './scripts.types'
 
-export type UserRole = 'student' | 'moderator' | 'admin'
+export type UserRole = 'student' | 'owner'
+
+/** A role held on one study. An admin satisfies every moderator check. */
+export type StudyRole = 'admin' | 'moderator'
+
+export type StudyRoleAssignment = {
+  study_id: string
+  role: StudyRole
+}
 export type ProfileSubjectStatus = 'completed' | 'currently_taking'
 
 export type ProfileSubjectRow = {
@@ -193,6 +201,8 @@ export type AdminProfileDetail = {
   counts: { scripts: number; comments: number }
   faculties: Array<{ id: string; name: string }>
   studies: Array<{ id: string; name: string }>
+  /** Roles this person holds per study; empty for a plain student. */
+  studyRoles: Array<{ studyId: string; studyName: string; role: StudyRole }>
 }
 
 /** `DELETE /api/profiles/:id`'s body. `auth_user_deleted` is false when the

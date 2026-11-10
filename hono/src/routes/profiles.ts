@@ -23,7 +23,8 @@ import type {
 } from '../../../shared/types/profile.types'
 import type { ProfilePreferencesResponse } from '../../../shared/types/profile-preferences.types'
 import {
-  isAdmin,
+  isOwner,
+  isStudyRole,
   validateFullName,
   validateUsername,
 } from '../../../shared/utils/api.utils'
@@ -52,7 +53,7 @@ import {
   readJsonBody,
   requiredParam,
 } from '../lib/request'
-import { requireAdmin } from '../lib/require-admin'
+import { requireOwner } from '../lib/require-admin'
 import {
   createStagedUpload,
   failureResponse,
@@ -499,7 +500,7 @@ profiles.get('/', authMiddleware, requireAdminAccess, async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)
 
-  if (!(await requireAdmin(supabase, user.id))) {
+  if (!(await requireOwner(supabase, user.id))) {
     return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 
@@ -912,7 +913,7 @@ profiles.patch('/:id', authMiddleware, requireAdminAccess, async (c) => {
     .eq('id', user.id)
     .single()
 
-  if (!isAdmin(profile?.role)) {
+  if (!isOwner(profile?.role)) {
     return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 
@@ -938,7 +939,7 @@ profiles.delete('/:id', authMiddleware, requireAdminAccess, async (c) => {
     .eq('id', user.id)
     .single()
 
-  if (!isAdmin(profile?.role)) {
+  if (!isOwner(profile?.role)) {
     return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 
@@ -992,7 +993,7 @@ profiles.get('/:id/admin', authMiddleware, requireAdminAccess, async (c) => {
     .eq('id', user.id)
     .single()
 
-  if (!isAdmin(caller?.role)) {
+  if (!isOwner(caller?.role)) {
     return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 
@@ -1005,27 +1006,37 @@ profiles.get('/:id/admin', authMiddleware, requireAdminAccess, async (c) => {
   if (error) return databaseErrorResponse(c, error)
   if (!profile) return c.json({ error: 'Profile not found' }, 404)
 
-  const [scripts, comments, faculties, studies] = await Promise.all([
-    supabase
-      .from('scripts')
-      .select('id', { count: 'exact', head: true })
-      .eq('author_id', targetId),
-    supabase
-      .from('comments')
-      .select('id', { count: 'exact', head: true })
-      .eq('author_id', targetId),
-    supabase
-      .from('profile_faculties')
-      .select('faculty:faculties(id, name)')
-      .eq('profile_id', targetId),
-    supabase
-      .from('profile_studies')
-      .select('study:studies(id, name)')
-      .eq('profile_id', targetId),
-  ])
+  const [scripts, comments, faculties, studies, studyRoles] = await Promise.all(
+    [
+      supabase
+        .from('scripts')
+        .select('id', { count: 'exact', head: true })
+        .eq('author_id', targetId),
+      supabase
+        .from('comments')
+        .select('id', { count: 'exact', head: true })
+        .eq('author_id', targetId),
+      supabase
+        .from('profile_faculties')
+        .select('faculty:faculties(id, name)')
+        .eq('profile_id', targetId),
+      supabase
+        .from('profile_studies')
+        .select('study:studies(id, name)')
+        .eq('profile_id', targetId),
+      supabase
+        .from('study_roles')
+        .select('role, study:studies(id, name)')
+        .eq('profile_id', targetId),
+    ]
+  )
 
   const failure =
-    scripts.error ?? comments.error ?? faculties.error ?? studies.error
+    scripts.error ??
+    comments.error ??
+    faculties.error ??
+    studies.error ??
+    studyRoles.error
   if (failure) return databaseErrorResponse(c, failure)
 
   return c.json<AdminProfileDetail>({
@@ -1036,6 +1047,11 @@ profiles.get('/:id/admin', authMiddleware, requireAdminAccess, async (c) => {
     ),
     studies: (studies.data ?? []).flatMap((row) =>
       row.study ? [row.study] : []
+    ),
+    studyRoles: (studyRoles.data ?? []).flatMap((row) =>
+      row.study && isStudyRole(row.role)
+        ? [{ studyId: row.study.id, studyName: row.study.name, role: row.role }]
+        : []
     ),
   })
 })

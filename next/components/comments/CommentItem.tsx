@@ -36,7 +36,7 @@ export function CommentItem({
   const [isReplyOpen, setIsReplyOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [areRepliesExpanded, setAreRepliesExpanded] = useState(false)
-  const { currentUserId, currentUserRole } = useCommentsServices()
+  const { currentUserId, canModerate } = useCommentsServices()
   const { loadMoreThreadReplies, loadingReplyIds, replyErrors } =
     useCommentsState()
   const requireSignIn = useRequireSignIn()
@@ -106,10 +106,7 @@ export function CommentItem({
             isReplyOpen={isReplyOpen}
             onToggleReply={handleToggleReply}
             onEdit={() => {
-              if (
-                currentUserId === comment.author_id ||
-                currentUserRole === 'admin'
-              ) {
+              if (currentUserId === comment.author_id || canModerate) {
                 setIsReplyOpen(false)
                 setIsEditing(true)
               }

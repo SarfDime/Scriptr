@@ -15,8 +15,7 @@ import type { ComponentColorPalettes } from '@/types/components/ColorPalettes.ty
 
 const ROLE_PALETTE: Record<UserRole, ComponentColorPalettes> = {
   student: 'cp-gray',
-  moderator: 'cp-sky',
-  admin: 'cp-warning',
+  owner: 'cp-warning',
 }
 
 const selectionNames = (names: Array<string | null>) =>

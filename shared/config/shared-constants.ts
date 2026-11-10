@@ -1,5 +1,6 @@
 import type { ExamSession } from '../types/academic.types'
 import type { FileType } from '../types/api.types'
+import type { DownloadReviewListQuery } from '../types/download-review.types'
 
 // Per docs/ARCHITECTURE-SCRIPTS-UPLOADS.md: supported file types and upload
 // size limits. Keep this the single source of truth rather than repeating
@@ -157,6 +158,12 @@ export type DownloadReviewScriptSortField =
   (typeof DOWNLOAD_REVIEW_SCRIPT_SORT_OPTIONS)[number]
 export const DOWNLOAD_REVIEW_EVENT_PAGE_SIZE = 20
 export const DOWNLOAD_REVIEW_MAX_EVENT_PAGE_SIZE = 100
+/** What both lists open on: one page, busiest first. Client-safe, unlike the
+ * loader that uses it, so the panel and the page share one definition. */
+export const DEFAULT_DOWNLOAD_REVIEW_ACCOUNT_QUERY: DownloadReviewListQuery<DownloadReviewAccountSortField> =
+  { limit: DOWNLOAD_REVIEW_PAGE_SIZE, offset: 0, sort: 'events', order: 'desc' }
+export const DEFAULT_DOWNLOAD_REVIEW_SCRIPT_QUERY: DownloadReviewListQuery<DownloadReviewScriptSortField> =
+  { limit: DOWNLOAD_REVIEW_PAGE_SIZE, offset: 0, sort: 'events', order: 'desc' }
 
 /** Limits `POST /api/admin/notifications` and the `notifications` table's own
  * CHECK constraints: a title of 1–200 characters and a body of at most 1000. */

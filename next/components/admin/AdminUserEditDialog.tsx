@@ -16,7 +16,7 @@ import { useAdminUserForm } from '@/hooks/admin/useAdminUserForm'
 import type { SelectOptionType } from '@/types/components/Select.types'
 
 const ROLE_OPTIONS: Array<SelectOptionType<UserRole>> = (
-  ['student', 'moderator', 'admin'] as const
+  ['student', 'owner'] as const
 ).map((role) => ({
   id: role,
   value: role,

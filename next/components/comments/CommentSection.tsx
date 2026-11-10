@@ -24,6 +24,7 @@ export function CommentSection({
   target,
   initialComments,
   initialLoadFailed = false,
+  studyId = null,
 }: CommentSectionProps) {
   const [comments, setComments] = useState(initialComments)
   const [loadFailed, setLoadFailed] = useState(initialLoadFailed)
@@ -87,7 +88,11 @@ export function CommentSection({
   }
 
   return (
-    <CommentsProvider target={target} initialComments={comments}>
+    <CommentsProvider
+      target={target}
+      initialComments={comments}
+      studyId={studyId}
+    >
       <CommentSectionBody />
     </CommentsProvider>
   )

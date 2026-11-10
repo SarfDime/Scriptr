@@ -7,9 +7,11 @@ import { useSession } from '@/providers/SessionProvider'
 
 export const AdminNavLink = () => {
   const { session } = useSession()
-  if (session.status !== 'authenticated' || session.user.role !== 'admin') {
-    return null
-  }
+  if (session.status !== 'authenticated') return null
+
+  const canEnter =
+    session.user.role === 'owner' || session.user.study_roles.length > 0
+  if (!canEnter) return null
   return (
     <NextLink
       href='/admin'

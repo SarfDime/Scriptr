@@ -1,7 +1,7 @@
 import {
-  isAdmin,
   isFlagStatus,
   isFlagTargetType,
+  isOwner,
 } from '@shared/utils/api.utils'
 import {
   isPortableTextValue,
@@ -23,6 +23,11 @@ import {
   readJsonBody,
   requiredParam,
 } from '../lib/request'
+import {
+  hasAnyStudyRole,
+  requireStudyRole,
+  studyIdForFlag,
+} from '../lib/require-admin'
 import {
   authMiddleware,
   createInternalSupabaseClient,
@@ -239,14 +244,20 @@ const listAdminFlags = async (c: Context<HonoEnv>, status?: string) => {
     .single()
 
   if (profileError) return databaseErrorResponse(c, profileError)
-  if (!isAdmin(profile?.role)) {
+  if (!isOwner(profile?.role) && !(await hasAnyStudyRole(supabase, user.id))) {
     return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
+
+  // The admin switcher sends the study it is acting on. RLS already hides other
+  // studies' flags from a moderator; this narrows an owner's view too.
+  const studyId = c.req.query('study')
 
   let query = supabase
     .from('flags')
     .select(`*, reporter:profiles!reporter_id(username, full_name)`)
     .order('created_at', { ascending: false })
+
+  if (studyId) query = query.eq('study_id', studyId)
 
   if (status) query = query.eq('status', status)
   const { data, error } = await query
@@ -455,11 +466,11 @@ flags.patch('/:id', authMiddleware, requireAdminAccess, async (c) => {
     .eq('id', user.id)
     .single()
 
-  if (!isAdmin(profile?.role)) {
+  if (!isOwner(profile?.role) && !(await hasAnyStudyRole(supabase, user.id))) {
     return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 
-  // Admins now have SELECT RLS on flags, so the session client can read any row.
+  // Owners and study moderators have SELECT RLS on flags, so the session client can read any row.
   const { data: existingFlag, error: existingFlagError } = await supabase
     .from('flags')
     .select('reporter_id, target_script_id, target_comment_id, status')
@@ -553,7 +564,7 @@ flags.delete('/:id', authMiddleware, requireAdminAccess, async (c) => {
 
   const { data: existingFlag, error: existingFlagError } = await supabase
     .from('flags')
-    .select('reporter_id')
+    .select('reporter_id, target_script_id, target_comment_id')
     .eq('id', flagId)
     .single()
 
@@ -562,13 +573,13 @@ flags.delete('/:id', authMiddleware, requireAdminAccess, async (c) => {
   }
 
   if (existingFlag.reporter_id !== user.id) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (!isAdmin(profile?.role)) {
+    const canModerate = await requireStudyRole(
+      supabase,
+      user.id,
+      await studyIdForFlag(supabase, existingFlag),
+      'moderator'
+    )
+    if (!canModerate) {
       return c.json(
         { error: 'Forbidden: You can only delete your own flags' },
         403

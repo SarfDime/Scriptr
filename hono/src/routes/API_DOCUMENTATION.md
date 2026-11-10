@@ -439,7 +439,7 @@ Single `flags` table for scripts, users, and comments
 
 | Route                                                   | Access                                                                                                                                         |
 | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /flags`                                           | Any authenticated, non-restricted user. `{ target_type: 'user'\|'script'\|'comment', target_id, reason (≥10 chars) }`. Authors cannot report their own scripts or comments (`403`); each reporter can have only one pending flag per target (`400` for a duplicate). At five distinct reporters with non-dismissed flags on the same target, each admin receives a `flag_threshold` notification. |
+| `POST /flags`                                           | Any authenticated, non-restricted user. `{ target_type: 'user'\|'script'\|'comment', target_id, reason (≥10 chars) }`. Authors cannot report their own scripts or comments (`403`); each reporter can have only one pending flag per target (`400` for a duplicate). At five distinct reporters with non-dismissed flags on the same target, every owner receives a `flag_threshold` notification, plus the admins and moderators of the study the flagged script or comment belongs to (a flag on a user alerts owners only). |
 | `GET /flags/my-flags`                                   | Reporter, own flags only                                                                                                                       |
 | `DELETE /flags/:id`                                     | Reporter (own flag) **or** admin (any flag). Not restriction-checked.                                                                          |
 | `GET /flags`, `/flags/pending`, `/flags/status/:status` | Admin only — RLS grants admins direct `SELECT`                                                                                                 |
@@ -496,6 +496,12 @@ counted at all. Both lists take `limit` (default 10, max 50), `offset`,
 `sort`, `order` (`asc`/`desc`, default `desc`) and `search`, and answer
 `{ items, total, offset, limit, scanned, total_events, window }` where `total`
 counts the rows matching the search, before paging.
+
+An optional `?study=<id>` scopes all three routes to one study: the lists keep
+only events whose script belongs to it, and the account drill-down narrows the
+same way. Without it a non-owner has no scope to review and gets `403`; an owner
+sees every study. The script drill-down derives the study from the script, so it
+needs no parameter.
 
 | Route                             | Access                                                                                                                                              |
 | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -904,32 +910,59 @@ after signing in. Responses are typed `RegisterResponse`, `LoginResponse`,
 
 ## Role-Based Access Control
 
-`profiles.role` is `student` / `moderator` / `admin` — **only `admin` carries
-any elevated database privilege today.**
+Two scopes, one account.
 
-1. Catalog routes require a short-lived admin access token on every request,
+- `profiles.role` is `student` | `owner`. An **owner** is org-level: every study,
+  every catalog table, every moderation queue.
+- `study_roles` (`profile_id`, `study_id`, `role`) holds `admin` | `moderator`
+  **per study**, so one person can administer several studies. A study admin
+  passes every moderator check for that study; a moderator does not pass admin
+  checks (professor assignments).
+- Usernames stay unique across the org, and **bans stay org-wide**
+  (`profile_restrictions` and `is_restricted()` carry no study).
+
+Database predicates:
+
+| Predicate | Meaning |
+| --- | --- |
+| `is_owner(uid)` | the org role |
+| `is_admin(uid)` | legacy alias of `is_owner` — 19 older policies still call it |
+| `has_study_role(uid, study_id, need)` | `need` is `admin` or `moderator`; an admin satisfies `moderator` |
+| `is_moderator(uid)` | holds any study role, used only where a row has no study |
+
+Study-scoped policies (`scripts`, `comments`, `flags`, `script_files`,
+`professor_studies`) read
+`is_owner(auth.uid()) or has_study_role(auth.uid(), <study of the row>, …)`.
+The study comes from the row itself for scripts and professor assignments, from
+the script for comments and script files, and from `flag_study_id(...)` for
+flags; a flag or comment with no script belongs to no study, so only an owner
+moderates it. Achievement definitions, rating types, restrictions, the profile
+admin branch and notification broadcast remain owner-only.
+
+Gates:
+
+1. Catalog routes require a short-lived access token on every request,
    independent of Supabase role — RLS closes these tables to everyone
    regardless. See [Admin access](#admin-access).
-2. Authenticated routes generally operate on the caller's own resources.
-3. Admin-only actions: full CRUD on any `scripts`/`comments`/`profiles` row,
-   flag resolution, flag listing, rating-type management, user restrictions,
-   the download review, user management and announcements — all
-   `is_admin()`-gated in RLS **and** behind the twenty-minute admin unlock
-   (see [Website admin access](#website-admin-access)), so the session alone is
-   not enough.
-4. **Moderators have zero elevated access anywhere in this API.** The role is
-   reserved for a planned notification-trigger feature (see
-   [Achievement definitions](#achievement-definitions)), not direct
-   write access. Any code still branching on `role === 'moderator'` for
-   elevated behavior is stale and should check `admin`.
-5. Catalog writes require the admin access token; role changes are admin-session
-   routes (`PATCH /admin/profiles/:id/role`, which also needs the unlocked
-   admin access cookie).
-6. **Restricted users** (`profile_restrictions`, admin-managed, enforced via
-   `is_restricted()` in RLS) are blocked from *creating or updating* scripts,
-   comments, comment reactions/likes, flags, votes, and ratings — but can
-   still remove their own existing content or interactions. Only favoriting
-   is exempt entirely (`script_favorites` has no restriction check in RLS).
+2. The website admin surface (`/api/admin/*`) requires the session **and** the
+   twenty-minute unlock cookie. `GET /admin/studies` lists the studies the
+   caller may act on; `PUT`/`DELETE /admin/profiles/:id/study-roles[/:studyId]`
+   grant and revoke a study role and are owner-only.
+3. Routes check roles for a clean `403`, but RLS is the boundary: a moderator's
+   queue only contains their study's rows because the policy says so.
+4. **Restricted users** are blocked from *creating or updating* scripts,
+   comments, comment reactions/likes, flags, votes and ratings, but can still
+   remove their own content. Favoriting is exempt (`script_favorites` has no
+   restriction check).
+
+The flag queue accepts `?study=<id>` and narrows to that study; a flag with no
+study (a user or professor flag) only appears without the filter.
+
+`GET /session` returns `role` and `study_roles: [{ study_id, role }]`, which is
+what the web app uses to decide whether the admin surface is reachable and which
+studies the switcher offers. The study the admin pages act on is a cookie
+(`scriptr-admin-study`), not a credential: the API authorizes every request on
+its own.
 
 Violations return `403` with an error payload.
 

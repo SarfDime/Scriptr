@@ -23,8 +23,8 @@ const SITEMAP_SECRET = process.env.SITEMAP_SECRET ?? ''
  * Every script's address, for the sitemap. `GET /api/scripts` is admin-only and
  * paginated, and a crawler list only needs the slug and the update time.
  *
- * `/sitemap.xml` is prerendered at build time and never revalidated (see
- * `app/sitemap.ts`), so this runs once per deployment — which is why the route's
+ * The sitemaps are prerendered at build time and never revalidated (see
+ * `lib/sitemap-entries.ts`), so this runs once per deployment — which is why the route's
  * daily limit can be as low as it is.
  *
  * `null` when the read fails or the secret is missing — the sitemap then leaves

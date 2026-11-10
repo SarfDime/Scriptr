@@ -18,6 +18,8 @@ export const DOWNLOAD_REVIEW_WINDOW = 2000
  * plus the account and script names the lists show. */
 export type DownloadReviewEventRow = {
   script_id: string
+  /** The study of the downloaded script; null when the embed is missing. */
+  study_id: string | null
   user_id: string | null
   ip_address: string | null
   device_id: string | null

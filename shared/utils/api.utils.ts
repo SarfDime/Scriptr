@@ -12,7 +12,12 @@ import type {
   ScriptFileInput,
 } from '../types/api.types'
 import type { FlagStatus } from '../types/flags.types'
-import type { ProfileSubjectStatus, UserRole } from '../types/profile.types'
+import type {
+  ProfileSubjectStatus,
+  StudyRole,
+  StudyRoleAssignment,
+  UserRole,
+} from '../types/profile.types'
 import { generatePath } from './common-utils'
 import { isStoredFileName } from './file-name.utils'
 
@@ -47,10 +52,32 @@ const DISPOSABLE_EMAIL_DOMAINS = new Set([
 ])
 
 const isUserRole = (value: unknown): value is UserRole =>
-  value === 'student' || value === 'moderator' || value === 'admin'
+  value === 'student' || value === 'owner'
 
-function isAdmin(role: unknown): boolean {
-  return role === 'admin'
+const isStudyRole = (value: unknown): value is StudyRole =>
+  value === 'admin' || value === 'moderator'
+
+/** The org-level role: everything scoped to the whole platform. */
+function isOwner(role: unknown): boolean {
+  return role === 'owner'
+}
+
+/**
+ * Whether this viewer may moderate one study: an owner anywhere, a study admin
+ * or moderator on their own. Mirrors `has_study_role` in the database, so the
+ * buttons a page offers match what the policies will allow.
+ */
+function canModerateStudy(
+  user:
+    | { role: UserRole; study_roles: Array<StudyRoleAssignment> }
+    | null
+    | undefined,
+  studyId: string | null | undefined
+): boolean {
+  if (!user) return false
+  if (isOwner(user.role)) return true
+  if (!studyId) return false
+  return user.study_roles.some((assignment) => assignment.study_id === studyId)
 }
 
 function validateUsername(username: unknown): string | null {
@@ -250,16 +277,18 @@ const apiUrl = (path: ApiEndpoint, base: string = 'http://localhost:8787') => {
 
 export {
   apiUrl,
+  canModerateStudy,
   getDatabaseAcademicEndpoints,
   getFileExtension,
   getMaxUploadBytes,
-  isAdmin,
   isDisposableEmail,
   isFileType,
   isFlagStatus,
   isFlagTargetType,
+  isOwner,
   isProfileSubjectStatus,
   isScriptFileInput,
+  isStudyRole,
   isUserRole,
   validateEmailAddress,
   validateFullName,

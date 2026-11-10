@@ -15,8 +15,10 @@ import { DownloadReviewEvents } from './DownloadReviewEvents'
  * anonymous downloads, which is where inflation shows up. */
 export const DownloadReviewScriptItem = ({
   script,
+  study,
 }: {
   script: DownloadReviewScript
+  study: string | null
 }) => {
   const [open, setOpen] = useState(false)
   const name =
@@ -70,7 +72,9 @@ export const DownloadReviewScriptItem = ({
           : ADMIN_STRINGS.downloadReviewShowEvents}
       </Button>
 
-      {open && <DownloadReviewEvents scriptId={script.script_id} />}
+      {open && (
+        <DownloadReviewEvents scriptId={script.script_id} study={study} />
+      )}
     </Box>
   )
 }

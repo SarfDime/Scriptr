@@ -284,6 +284,7 @@ export type Database = {
           reviewed_at: string | null
           reviewed_by: string | null
           status: string
+          study_id: string | null
           target_comment_id: string | null
           target_script_id: string | null
           target_user_id: string | null
@@ -296,6 +297,7 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
+          study_id?: string | null
           target_comment_id?: string | null
           target_script_id?: string | null
           target_user_id?: string | null
@@ -308,6 +310,7 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
+          study_id?: string | null
           target_comment_id?: string | null
           target_script_id?: string | null
           target_user_id?: string | null
@@ -325,6 +328,13 @@ export type Database = {
             columns: ['reviewed_by']
             isOneToOne: false
             referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'flags_study_id_fkey'
+            columns: ['study_id']
+            isOneToOne: false
+            referencedRelation: 'studies'
             referencedColumns: ['id']
           },
           {
@@ -1085,6 +1095,52 @@ export type Database = {
           },
         ]
       }
+      study_roles: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          profile_id: string
+          role: string
+          study_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          profile_id: string
+          role: string
+          study_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          profile_id?: string
+          role?: string
+          study_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'study_roles_granted_by_fkey'
+            columns: ['granted_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'study_roles_profile_id_fkey'
+            columns: ['profile_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'study_roles_study_id_fkey'
+            columns: ['study_id']
+            isOneToOne: false
+            referencedRelation: 'studies'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       subject_professors: {
         Row: {
           professor_id: string
@@ -1267,6 +1323,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      flag_study_id: {
+        Args: { target_comment: string; target_script: string }
+        Returns: string
+      }
       get_script_comment_counts: {
         Args: { p_script_ids: string[] }
         Returns: {
@@ -1286,12 +1346,17 @@ export type Database = {
           comment_id: string
         }[]
       }
+      has_study_role: {
+        Args: { need: string; study: string; uid: string }
+        Returns: boolean
+      }
       increment_script_download_count: {
         Args: { p_script_id: string }
         Returns: number
       }
       is_admin: { Args: { uid: string }; Returns: boolean }
       is_moderator: { Args: { uid: string }; Returns: boolean }
+      is_owner: { Args: { uid: string }; Returns: boolean }
       is_restricted: { Args: { uid: string }; Returns: boolean }
       toggle_vote: {
         Args: { p_script_id: string }

@@ -17,6 +17,7 @@ import type {
 } from '../../../shared/types/auth.types'
 import {
   isProfileSubjectStatus,
+  isStudyRole,
   isUserRole,
   validateEmailAddress,
   validateUsername,
@@ -233,6 +234,7 @@ async function buildSessionUser(
     { data: profileSubjects },
     { data: facultySelections },
     { data: studySelections },
+    { data: studyRoles },
   ] = await Promise.all([
     supabase
       .from('profiles')
@@ -251,6 +253,10 @@ async function buildSessionUser(
       .from('profile_studies')
       .select('study_id')
       .eq('profile_id', user.id),
+    supabase
+      .from('study_roles')
+      .select('study_id, role')
+      .eq('profile_id', user.id),
   ])
 
   return {
@@ -258,6 +264,10 @@ async function buildSessionUser(
     email: user.email,
     username: profile?.username || user.user_metadata?.username,
     role: isUserRole(profile?.role) ? profile.role : 'student',
+    study_roles:
+      studyRoles?.flatMap(({ study_id, role }) =>
+        isStudyRole(role) ? [{ study_id, role }] : []
+      ) || [],
     subjects:
       profileSubjects?.flatMap(({ subject_id, status }) =>
         isProfileSubjectStatus(status) ? [{ subject_id, status }] : []

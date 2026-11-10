@@ -1,6 +1,8 @@
 'use client'
 
 import {
+  DEFAULT_DOWNLOAD_REVIEW_ACCOUNT_QUERY,
+  DEFAULT_DOWNLOAD_REVIEW_SCRIPT_QUERY,
   DOWNLOAD_REVIEW_ACCOUNT_SORT_OPTIONS,
   DOWNLOAD_REVIEW_SCRIPT_SORT_OPTIONS,
   type DownloadReviewAccountSortField,
@@ -14,10 +16,6 @@ import type {
 import { Box } from '@/components/common/Box'
 import { Text } from '@/components/typography/Text'
 import { useDownloadReviewList } from '@/hooks/admin/useDownloadReviewList'
-import {
-  DEFAULT_DOWNLOAD_REVIEW_ACCOUNT_QUERY,
-  DEFAULT_DOWNLOAD_REVIEW_SCRIPT_QUERY,
-} from '@/lib/admin-download-review-page'
 import {
   getDownloadReviewAccounts,
   getDownloadReviewScripts,
@@ -52,13 +50,15 @@ export const DownloadReviewPanel = ({
 }: {
   initialData: AdminDownloadReviewViewModel | null
 }) => {
+  const study = initialData?.study ?? null
+
   const accounts = useDownloadReviewList<
     DownloadReviewAccountSortField,
     DownloadReviewAccount
   >(
     initialData?.accounts ?? null,
     DEFAULT_DOWNLOAD_REVIEW_ACCOUNT_QUERY,
-    (query) => getDownloadReviewAccounts(query)
+    (query) => getDownloadReviewAccounts(query, undefined, study)
   )
   const scripts = useDownloadReviewList<
     DownloadReviewScriptSortField,
@@ -66,7 +66,7 @@ export const DownloadReviewPanel = ({
   >(
     initialData?.scripts ?? null,
     DEFAULT_DOWNLOAD_REVIEW_SCRIPT_QUERY,
-    (query) => getDownloadReviewScripts(query)
+    (query) => getDownloadReviewScripts(query, undefined, study)
   )
 
   return (
@@ -93,7 +93,7 @@ export const DownloadReviewPanel = ({
         emptyText={ADMIN_STRINGS.downloadReviewEmptyAccounts}
         itemKey={(account) => account.profile_id}
         renderItem={(account) => (
-          <DownloadReviewAccountItem account={account} />
+          <DownloadReviewAccountItem account={account} study={study} />
         )}
       />
 
@@ -106,7 +106,9 @@ export const DownloadReviewPanel = ({
         errorText={ADMIN_STRINGS.downloadReviewScriptsLoadError}
         emptyText={ADMIN_STRINGS.downloadReviewEmptyScripts}
         itemKey={(script) => script.script_id}
-        renderItem={(script) => <DownloadReviewScriptItem script={script} />}
+        renderItem={(script) => (
+          <DownloadReviewScriptItem script={script} study={study} />
+        )}
       />
     </>
   )

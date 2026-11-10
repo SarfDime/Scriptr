@@ -38,7 +38,7 @@ export const ProfilePage = ({
   const displayName = getDisplayName(profile)
   const username = profile.username
   const reportButton =
-    profile.role === 'admin' ? undefined : (
+    profile.role === 'owner' ? undefined : (
       <FlagReportButton
         targetType='user'
         targetId={profile.id}

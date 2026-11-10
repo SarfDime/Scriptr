@@ -28,9 +28,11 @@ const formatEventTime = (value: string) =>
 export const DownloadReviewEvents = ({
   scriptId,
   profileId,
+  study,
 }: {
   scriptId?: string
   profileId?: string
+  study: string | null
 }) => {
   const [page, setPage] = useState<DownloadReviewEventsResponse | null>(null)
   const [failed, setFailed] = useState(false)
@@ -47,6 +49,7 @@ export const DownloadReviewEvents = ({
       user_id: profileId,
       limit: DOWNLOAD_REVIEW_EVENT_PAGE_SIZE,
       offset: request.offset,
+      study,
     })
       .then((result) => {
         if (!active) return
@@ -60,7 +63,7 @@ export const DownloadReviewEvents = ({
     return () => {
       active = false
     }
-  }, [scriptId, profileId, request])
+  }, [scriptId, profileId, study, request])
 
   if (failed) {
     return (

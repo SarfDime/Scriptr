@@ -25,7 +25,7 @@ import {
   readJsonBody,
   requiredParam,
 } from '../lib/request'
-import { requireAdmin } from '../lib/require-admin'
+import { requireOwner } from '../lib/require-admin'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
 import type { HonoEnv } from '../types/env.types'
 
@@ -125,7 +125,7 @@ achievementDefinitions.post(
     const user = c.get('user')
     const supabase = createSupabaseClient(c)
 
-    if (!(await requireAdmin(supabase, user.id))) {
+    if (!(await requireOwner(supabase, user.id))) {
       return c.json({ error: 'Unauthorized: Admin access required' }, 403)
     }
 
@@ -200,7 +200,7 @@ achievementDefinitions.patch(
     const id = requiredParam(c, 'id')
     const supabase = createSupabaseClient(c)
 
-    if (!(await requireAdmin(supabase, user.id))) {
+    if (!(await requireOwner(supabase, user.id))) {
       return c.json({ error: 'Unauthorized: Admin access required' }, 403)
     }
 
@@ -246,7 +246,7 @@ achievementDefinitions.delete(
     const id = requiredParam(c, 'id')
     const supabase = createSupabaseClient(c)
 
-    if (!(await requireAdmin(supabase, user.id))) {
+    if (!(await requireOwner(supabase, user.id))) {
       return c.json({ error: 'Unauthorized: Admin access required' }, 403)
     }
 

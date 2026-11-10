@@ -32,7 +32,7 @@ test('reads a page, a role, a sort column and a direction', () => {
       fromQuery({
         limit: '50',
         offset: '100',
-        role: 'moderator',
+        role: 'owner',
         sort: 'username',
         order: 'asc',
       })
@@ -40,7 +40,7 @@ test('reads a page, a role, a sort column and a direction', () => {
     {
       limit: 50,
       offset: 100,
-      role: 'moderator',
+      role: 'owner',
       searchPattern: null,
       sort: 'username',
       order: 'asc',
@@ -70,7 +70,9 @@ test('rejects paging outside the endpoint limits', () => {
 })
 
 test('rejects an unknown role, sort column or direction', () => {
-  assert.equal(parseAdminProfilesQuery(fromQuery({ role: 'owner' })), null)
+  // The old platform roles are study-level now, so they are not valid here.
+  assert.equal(parseAdminProfilesQuery(fromQuery({ role: 'admin' })), null)
+  assert.equal(parseAdminProfilesQuery(fromQuery({ role: 'moderator' })), null)
   assert.equal(parseAdminProfilesQuery(fromQuery({ sort: 'email' })), null)
   assert.equal(parseAdminProfilesQuery(fromQuery({ order: 'up' })), null)
 })

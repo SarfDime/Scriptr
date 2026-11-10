@@ -45,4 +45,6 @@ export type AdminUsersViewModel = {
 export type AdminDownloadReviewViewModel = {
   accounts: DownloadReviewListResponse<DownloadReviewAccount>
   scripts: DownloadReviewListResponse<DownloadReviewScript>
+  /** The study the review is scoped to; null means every study (owners). */
+  study: string | null
 }

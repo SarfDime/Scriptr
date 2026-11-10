@@ -27,9 +27,9 @@ export function CommentActions({
   onToggleReply,
   onEdit,
 }: CommentActionsProps) {
-  const { currentUserId, currentUserRole } = useCommentsServices()
+  const { currentUserId, canModerate } = useCommentsServices()
   const isAuthor = currentUserId === comment.author_id
-  const canManage = isAuthor || currentUserRole === 'admin'
+  const canManage = isAuthor || canModerate
   const hasReactions = Object.values(comment.reactions_by_type).some(
     (count) => count > 0
   )

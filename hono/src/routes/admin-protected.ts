@@ -4,9 +4,20 @@ import {
   ANNOUNCEMENT_BODY_MAX_LENGTH,
   ANNOUNCEMENT_TITLE_MAX_LENGTH,
 } from '../../../shared/config/shared-constants'
+import type {
+  AdminStudiesResponse,
+  AdminStudyRoleResponse,
+} from '../../../shared/types/admin.types'
 import type { BroadcastNotificationResponse } from '../../../shared/types/notifications.types'
-import type { AdminProfileRoleResponse } from '../../../shared/types/profile.types'
-import { isUserRole } from '../../../shared/utils/api.utils'
+import type {
+  AdminProfileRoleResponse,
+  StudyRole,
+} from '../../../shared/types/profile.types'
+import {
+  isOwner,
+  isStudyRole,
+  isUserRole,
+} from '../../../shared/utils/api.utils'
 import { createRateLimiter } from '../../../shared/utils/rate-limit'
 import { requireAdminAccess } from '../lib/admin-access'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
@@ -18,7 +29,7 @@ import {
   readJsonBody,
   requiredParam,
 } from '../lib/request'
-import { requireAdmin } from '../lib/require-admin'
+import { requireOwner } from '../lib/require-admin'
 import {
   authMiddleware,
   createInternalSupabaseClient,
@@ -55,14 +66,14 @@ protectedAdmin.patch('/profiles/:id/role', authMiddleware, async (c) => {
   const targetId = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)
 
-  if (!(await requireAdmin(supabase, user.id))) {
+  if (!(await requireOwner(supabase, user.id))) {
     return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 
   const body = await readJsonBody(c)
   if (!isUserRole(body.role)) {
     return c.json(
-      { error: 'Role must be "student", "moderator", or "admin"' },
+      { error: 'Role must be "student" or "owner". Study roles are separate.' },
       400
     )
   }
@@ -109,7 +120,7 @@ protectedAdmin.post('/notifications', authMiddleware, async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)
 
-  if (!(await requireAdmin(supabase, user.id))) {
+  if (!(await requireOwner(supabase, user.id))) {
     return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 
@@ -204,5 +215,137 @@ protectedAdmin.post('/notifications', authMiddleware, async (c) => {
 
   return c.json<BroadcastNotificationResponse>({ success: true, recipients })
 })
+
+/**
+ * The studies this caller can manage, for the admin switcher. An owner gets
+ * every study with `role: "owner"`; anyone else gets the studies they hold a
+ * role on, with that role.
+ */
+protectedAdmin.get('/studies', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const supabase = createSupabaseClient(c)
+
+  const [
+    { data: profile, error: profileError },
+    { data: roles, error: rolesError },
+  ] = await Promise.all([
+    supabase.from('profiles').select('role').eq('id', user.id).single(),
+    supabase
+      .from('study_roles')
+      .select('study_id, role')
+      .eq('profile_id', user.id),
+  ])
+
+  if (profileError) return databaseErrorResponse(c, profileError)
+  if (rolesError) return databaseErrorResponse(c, rolesError)
+
+  const owner = isOwner(profile?.role)
+  const allowedIds = (roles ?? []).map((role) => role.study_id)
+
+  if (!owner && allowedIds.length === 0) {
+    return c.json<AdminStudiesResponse>({ studies: [] })
+  }
+
+  let studyQuery = supabase
+    .from('studies')
+    .select(
+      'id, name, site_slug, faculty:faculties(id, name, university:universities(id, name))'
+    )
+    .order('name', { ascending: true })
+
+  if (!owner) studyQuery = studyQuery.in('id', allowedIds)
+
+  const { data: studies, error: studiesError } = await studyQuery
+  if (studiesError) return databaseErrorResponse(c, studiesError)
+
+  const roleByStudy = new Map(
+    (roles ?? []).map((role) => [role.study_id, role.role])
+  )
+
+  const roleFor = (studyId: string): StudyRole | 'owner' => {
+    if (owner) return 'owner'
+    const role = roleByStudy.get(studyId)
+    return isStudyRole(role) ? role : 'moderator'
+  }
+
+  return c.json<AdminStudiesResponse>({
+    studies: (studies ?? []).map((study) => ({
+      id: study.id,
+      name: study.name,
+      siteSlug: study.site_slug,
+      facultyName: study.faculty?.name ?? '',
+      universityName: study.faculty?.university?.name ?? '',
+      role: roleFor(study.id),
+    })),
+  })
+})
+
+/** Grant or replace one study role. Owners only: a study admin cannot promote
+ * anyone, including themselves, beyond the study they already hold. */
+protectedAdmin.put('/profiles/:id/study-roles', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const targetId = requiredParam(c, 'id')
+  const supabase = createSupabaseClient(c)
+
+  if (!(await requireOwner(supabase, user.id))) {
+    return c.json({ error: 'Unauthorized: Owner access required' }, 403)
+  }
+
+  const body = await readJsonBody(c)
+  if (typeof body.study_id !== 'string' || !isStudyRole(body.role)) {
+    return c.json(
+      { error: 'study_id and role ("admin" or "moderator") are required' },
+      400
+    )
+  }
+
+  const { data, error } = await supabase
+    .from('study_roles')
+    .upsert(
+      {
+        profile_id: targetId,
+        study_id: body.study_id,
+        role: body.role,
+        granted_by: user.id,
+      },
+      { onConflict: 'profile_id,study_id' }
+    )
+    .select('study_id, role')
+    .single()
+
+  if (error) return databaseErrorResponse(c, error)
+
+  return c.json<AdminStudyRoleResponse>({
+    success: true,
+    studyRole: {
+      studyId: data.study_id,
+      role: isStudyRole(data.role) ? data.role : 'moderator',
+    },
+  })
+})
+
+protectedAdmin.delete(
+  '/profiles/:id/study-roles/:studyId',
+  authMiddleware,
+  async (c) => {
+    const user = c.get('user')
+    const targetId = requiredParam(c, 'id')
+    const studyId = requiredParam(c, 'studyId')
+    const supabase = createSupabaseClient(c)
+
+    if (!(await requireOwner(supabase, user.id))) {
+      return c.json({ error: 'Unauthorized: Owner access required' }, 403)
+    }
+
+    const { error } = await supabase
+      .from('study_roles')
+      .delete()
+      .eq('profile_id', targetId)
+      .eq('study_id', studyId)
+
+    if (error) return databaseErrorResponse(c, error)
+    return c.json({ success: true })
+  }
+)
 
 export default protectedAdmin
