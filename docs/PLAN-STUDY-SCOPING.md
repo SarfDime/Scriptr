@@ -38,6 +38,13 @@ Last reconciled: 2026-11-10 (Phases 1–3 complete).
   keyed by study. Dismissing setup is per study and stops the redirect for that
   study. Either way the study site stays readable without an account.
 * **Restrictions and bans are org-wide.** They never carry a study id.
+* **Role rights.** An owner acts org-wide and gets the whole admin UI. A study
+  `admin` gets the admin UI and every edit or delete of another member's content,
+  inside their own studies only. A `moderator` is study-scoped like an admin but
+  is meant to be narrower — flagging (which hides the item) and short temporary
+  restrictions, no editing other people's content; today it still passes the
+  content checks, which is recorded as deferred in
+  [`PROGRESS.md`](PROGRESS.md).
 * **The API cannot infer the study.** It is served from `api.scriptr.uk`, so the
   caller passes the study id. It is a filter, never an authorization grant —
   authorization stays in RLS and membership checks.

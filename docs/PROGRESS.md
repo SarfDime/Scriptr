@@ -4,7 +4,7 @@ What is left to do. The system as it stands is described in
 [`ARCHITECTURE.md`](ARCHITECTURE.md); this file only tracks work, so finished
 features are not repeated here.
 
-Last reconciled: 2026-11-07. Tags: **[bug]**, **[decision]** (needs a call
+Last reconciled: 2026-11-10. Tags: **[bug]**, **[decision]** (needs a call
 before anyone builds it), **[deferred]** (recorded so it is not rediscovered,
 not queued).
 
@@ -215,6 +215,17 @@ described in
 
 ## Deferred
 
+- **Narrow moderator permissions:** a study `moderator` satisfies every
+  `'moderator'` check today, so one can edit and delete other people's scripts
+  and comments inside their study, exactly like a study admin. The intended
+  model is smaller: moderators flag (hiding the item with a notice) and can
+  impose a short restriction of a day or two, but never edit or delete someone
+  else's content. `has_study_role(uid, study, need)` makes an admin satisfy a
+  moderator check, so narrowing means moving the script/comment update/delete
+  checks from `'moderator'` to `'admin'` in the policies and in the
+  `requireStudyRole` callers, then giving hiding, flagging and restricting their
+  own `'moderator'` path — and deciding whether the admin UI stays open to
+  moderators. Deferred: nothing depends on the extra rights yet.
 - **Database privileges review:** `anon` holds table-wide
   `INSERT`/`UPDATE`/`DELETE`/`TRUNCATE` on the public tables checked so far
   (Supabase's default grant; RLS blocks the row-level writes and `TRUNCATE` is
