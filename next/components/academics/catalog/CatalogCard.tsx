@@ -26,7 +26,7 @@ export const CatalogCard = ({
 }: CatalogCardProps) => (
   <ClickableCard
     href={href}
-    className='group flex h-72 w-120 max-w-full flex-col overflow-hidden p-0 ui-above transition-colors hover:border-brand-200/50'
+    className='group flex h-72 w-full md:w-120 ui-sheen-horizontal-inverted max-w-full flex-col overflow-hidden p-0 ui-above-opaque transition-colors hover:border-brand-200/50'
   >
     <ClickableCard.Header className='relative h-32 shrink-0 overflow-hidden border-b border-grey-300/20 p-0'>
       <Box aria-hidden='true' className='absolute inset-0'>

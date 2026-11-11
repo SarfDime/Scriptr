@@ -39,6 +39,39 @@ const fieldsetFor = (role: string) => {
   return 'santa'
 }
 
+/** One theme's color overrides. A named type rather than an object inline in
+ * `christmasCanvas` because GraphQL cannot express an anonymous object: the
+ * extractor needs a top-level type to give the field. */
+export const ChristmasColors = defineType({
+  name: 'christmasColors',
+  title: 'Christmas background colors',
+  type: 'object',
+  fieldsets: COLOR_FIELDSETS.map((fieldset) => ({
+    ...fieldset,
+    options: { columns: 2 },
+  })),
+  fields: [
+    ...CHRISTMAS_COLOR_ROLES.map((role) =>
+      defineField({
+        name: role.key,
+        title: role.title,
+        description: role.description,
+        type: 'string',
+        fieldset: fieldsetFor(role.key),
+        options: { list: THEME_COLORS },
+      })
+    ),
+    defineField({
+      name: 'lights',
+      title: 'Christmas light colors',
+      description: `The bulbs on decorated trees and houses use these colors in turn (up to ${CHRISTMAS_MAX_LIGHT_COLORS}). Leave empty for red, golden yellow, green and blue.`,
+      type: 'array',
+      of: [{ type: 'string', options: { list: THEME_COLORS } }],
+      validation: (rule) => rule.max(CHRISTMAS_MAX_LIGHT_COLORS),
+    }),
+  ],
+})
+
 const colorsField = (
   name: 'lightColors' | 'darkColors',
   title: string,
@@ -49,33 +82,9 @@ const colorsField = (
     name,
     title,
     description: `Pick a theme color for any part of the scenery on the ${theme} theme. Parts left empty keep their built-in color. Shades, stripes and highlights are worked out from the color you pick.`,
-    type: 'object',
+    type: 'christmasColors',
     group,
     options: { collapsible: false },
-    fieldsets: COLOR_FIELDSETS.map((fieldset) => ({
-      ...fieldset,
-      options: { columns: 2 },
-    })),
-    fields: [
-      ...CHRISTMAS_COLOR_ROLES.map((role) =>
-        defineField({
-          name: role.key,
-          title: role.title,
-          description: role.description,
-          type: 'string',
-          fieldset: fieldsetFor(role.key),
-          options: { list: THEME_COLORS },
-        })
-      ),
-      defineField({
-        name: 'lights',
-        title: 'Christmas light colors',
-        description: `The bulbs on decorated trees and houses use these colors in turn (up to ${CHRISTMAS_MAX_LIGHT_COLORS}). Leave empty for red, golden yellow, green and blue.`,
-        type: 'array',
-        of: [{ type: 'string', options: { list: THEME_COLORS } }],
-        validation: (rule) => rule.max(CHRISTMAS_MAX_LIGHT_COLORS),
-      }),
-    ],
   })
 
 export const ChristmasCanvas = defineType({

@@ -12,1723 +12,1408 @@
  * ---------------------------------------------------------------------------------
  */
 
-export declare const internalGroqTypeReferenceTo: unique symbol;
+export declare const internalGroqTypeReferenceTo: unique symbol
 
 // Source: schema.json
 export type CalendarEventReference = {
-  _ref: string;
-  _type: "reference";
-  _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "calendarEvent";
-};
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'calendarEvent'
+}
 
 export type Calendar = {
-  _id: string;
-  _type: "calendar";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
+  _id: string
+  _type: 'calendar'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
   period:
-    | "2026-h1"
-    | "2026-h2"
-    | "2027-h1"
-    | "2027-h2"
-    | "2028-h1"
-    | "2028-h2"
-    | "2029-h1"
-    | "2029-h2"
-    | "2030-h1"
-    | "2030-h2"
-    | "2031-h1"
-    | "2031-h2";
+    | '2026-h1'
+    | '2026-h2'
+    | '2027-h1'
+    | '2027-h2'
+    | '2028-h1'
+    | '2028-h2'
+    | '2029-h1'
+    | '2029-h2'
+    | '2030-h1'
+    | '2030-h2'
+    | '2031-h1'
+    | '2031-h2'
   events?: Array<
     {
-      _key: string;
+      _key: string
     } & CalendarEventReference
-  >;
-};
+  >
+}
 
 export type SubjectReference = {
-  _ref: string;
-  _type: "reference";
-  _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "subject";
-};
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'subject'
+}
 
 export type ProfessorReference = {
-  _ref: string;
-  _type: "reference";
-  _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "professor";
-};
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'professor'
+}
 
 export type CalendarEvent = {
-  _id: string;
-  _type: "calendarEvent";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  stringTitle: string;
-  localizedTitle?: LocalizedString;
-  stringSubtitle?: string;
-  localizedSubtitle?: LocalizedString;
-  date: string;
-  type: "exam" | "preliminary_exam" | "reminder" | "info" | "announcement";
-  importance: "low" | "normal" | "high";
-  subject?: SubjectReference;
+  _id: string
+  _type: 'calendarEvent'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  stringTitle: string
+  localizedTitle?: LocalizedString
+  stringSubtitle?: string
+  localizedSubtitle?: LocalizedString
+  date: string
+  type: 'exam' | 'preliminary_exam' | 'reminder' | 'info' | 'announcement'
+  importance: 'low' | 'normal' | 'high'
+  subject?: SubjectReference
   professors?: Array<
     {
-      _key: string;
+      _key: string
     } & ProfessorReference
-  >;
-};
+  >
+}
 
 export type LocalizedString = {
-  _type: "localizedString";
-  en?: string;
-  mk?: string;
-};
+  _type: 'localizedString'
+  en?: string
+  mk?: string
+}
 
 export type StudyTip = {
-  _id: string;
-  _type: "studyTip";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  title: RichTextLite;
-  localizedTitle?: LocalizedRichTextLite;
-  content?: RichTextLite;
-};
+  _id: string
+  _type: 'studyTip'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  title: RichTextLite
+  localizedTitle?: LocalizedRichTextLite
+  content?: RichTextLite
+}
 
 export type SanityImageAssetReference = {
-  _ref: string;
-  _type: "reference";
-  _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
-};
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'sanity.imageAsset'
+}
 
 export type ButtonReference = {
-  _ref: string;
-  _type: "reference";
-  _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "button";
-};
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'button'
+}
 
 export type RichTextLite = Array<{
   children?: Array<
     | {
-        marks?: Array<string>;
-        text?: string;
-        _type: "span";
-        _key: string;
+        marks?: Array<string>
+        text?: string
+        _type: 'span'
+        _key: string
       }
     | {
-        asset?: SanityImageAssetReference;
-        media?: unknown;
-        hotspot?: SanityImageHotspot;
-        crop?: SanityImageCrop;
-        _type: "image";
-        _key: string;
+        asset?: SanityImageAssetReference
+        media?: unknown
+        hotspot?: SanityImageHotspot
+        crop?: SanityImageCrop
+        _type: 'image'
+        _key: string
       }
     | ({
-        _key: string;
+        _key: string
       } & ButtonReference)
     | {
-        placeholder?: string;
-        _type: "horizontalRule";
-        _key: string;
+        placeholder?: string
+        _type: 'horizontalRule'
+        _key: string
       }
-  >;
-  style?: "normal" | "-" | "h1" | "h2" | "h3" | "h4" | "h5" | "base" | "h6";
-  listItem?: never;
+  >
+  style?: 'normal' | '-' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'base' | 'h6'
+  listItem?: never
   markDefs?: Array<{
-    url: string;
-    _type: "link";
-    _key: string;
-  }>;
-  level?: number;
-  _type: "block";
-  _key: string;
-}>;
+    url: string
+    _type: 'link'
+    _key: string
+  }>
+  level?: number
+  _type: 'block'
+  _key: string
+}>
 
 export type LocalizedRichTextLite = {
-  _type: "localizedRichTextLite";
-  en?: RichTextLite;
-  mk?: RichTextLite;
-};
+  _type: 'localizedRichTextLite'
+  en?: RichTextLite
+  mk?: RichTextLite
+}
 
-export type StudyReference = {
-  _ref: string;
-  _type: "reference";
-  _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "study";
-};
-
-export type Subject = {
-  _id: string;
-  _type: "subject";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  name: string;
-  localizedName?: LocalizedString;
-  slug?: Slug;
-  code: string;
-  localizedCode?: LocalizedString;
-  description?: RichTextLite;
-  localizedDescription?: LocalizedRichTextLite;
-  keywords?: Array<string>;
-  localizedKeywords?: LocalizedStringArray;
-  credits: number;
-  year: number;
-  elective?: boolean;
-  classes?: string;
-  semester: number;
-  professors: Array<
-    {
-      _key: string;
-    } & ProfessorReference
-  >;
-  syllabus?: string;
-  study: StudyReference;
-  dbId?: string;
-};
-
-export type PersonReference = {
-  _ref: string;
-  _type: "reference";
-  _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "person";
-};
-
-export type FacultyReference = {
-  _ref: string;
-  _type: "reference";
-  _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "faculty";
-};
-
-export type CalendarReference = {
-  _ref: string;
-  _type: "reference";
-  _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "calendar";
-};
+export type ChristmasColors = {
+  _type: 'christmasColors'
+  mountainFar?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  mountainNear?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  mountainCap?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  hillBack?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  hillVillage?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  hillBand?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  hillFront?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  treeFar?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  treeMid?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  treeNear?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  houseWall?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  houseSnow?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  houseWindow?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  houseChimney?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  snowfall?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  smoke?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  sleigh?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  reindeer?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  lights?: Array<
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  >
+}
 
 export type NavMenuReference = {
-  _ref: string;
-  _type: "reference";
-  _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "navMenu";
-};
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'navMenu'
+}
+
+export type StudySiteSettings = {
+  _type: 'studySiteSettings'
+  tagline?: string
+  navigation?: NavMenuReference
+}
+
+export type StudyReference = {
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'study'
+}
+
+export type Subject = {
+  _id: string
+  _type: 'subject'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  name: string
+  localizedName?: LocalizedString
+  slug?: Slug
+  code: string
+  localizedCode?: LocalizedString
+  description?: RichTextLite
+  localizedDescription?: LocalizedRichTextLite
+  keywords?: Array<string>
+  localizedKeywords?: LocalizedStringArray
+  credits: number
+  year: number
+  elective?: boolean
+  classes?: string
+  semester: number
+  professors: Array<
+    {
+      _key: string
+    } & ProfessorReference
+  >
+  syllabus?: string
+  study: StudyReference
+  dbId?: string
+}
+
+export type PersonReference = {
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'person'
+}
+
+export type FacultyReference = {
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'faculty'
+}
+
+export type CalendarReference = {
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'calendar'
+}
 
 export type Study = {
-  _id: string;
-  _type: "study";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  name: string;
-  localizedName?: LocalizedString;
-  slug?: Slug;
+  _id: string
+  _type: 'study'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  name: string
+  localizedName?: LocalizedString
+  slug?: Slug
   logo?: {
-    asset?: SanityImageAssetReference;
-    media?: unknown;
-    hotspot?: SanityImageHotspot;
-    crop?: SanityImageCrop;
-    _type: "image";
-  };
+    asset?: SanityImageAssetReference
+    media?: unknown
+    hotspot?: SanityImageHotspot
+    crop?: SanityImageCrop
+    _type: 'image'
+  }
   picture?: {
-    asset?: SanityImageAssetReference;
-    media?: unknown;
-    hotspot?: SanityImageHotspot;
-    crop?: SanityImageCrop;
-    _type: "image";
-  };
-  description?: RichTextLite;
-  localizedDescription?: LocalizedRichTextLite;
-  studentCount?: number;
-  assistant?: PersonReference;
-  faculty: FacultyReference;
-  siteSlug: Slug;
-  r2BucketId?: string;
+    asset?: SanityImageAssetReference
+    media?: unknown
+    hotspot?: SanityImageHotspot
+    crop?: SanityImageCrop
+    _type: 'image'
+  }
+  description?: RichTextLite
+  localizedDescription?: LocalizedRichTextLite
+  studentCount?: number
+  assistant?: PersonReference
+  faculty: FacultyReference
+  siteSlug: Slug
+  r2BucketId?: string
   calendars?: Array<
     {
-      _key: string;
+      _key: string
     } & CalendarReference
-  >;
-  siteSettings?: {
-    tagline?: string;
-    navigation?: NavMenuReference;
-  };
-  dbId?: string;
-};
+  >
+  siteSettings?: StudySiteSettings
+  dbId?: string
+}
 
 export type Slug = {
-  _type: "slug";
-  current: string;
-  source?: string;
-};
+  _type: 'slug'
+  current: string
+  source?: string
+}
 
 export type SanityImageCrop = {
-  _type: "sanity.imageCrop";
-  top: number;
-  bottom: number;
-  left: number;
-  right: number;
-};
+  _type: 'sanity.imageCrop'
+  top: number
+  bottom: number
+  left: number
+  right: number
+}
 
 export type SanityImageHotspot = {
-  _type: "sanity.imageHotspot";
-  x: number;
-  y: number;
-  height: number;
-  width: number;
-};
+  _type: 'sanity.imageHotspot'
+  x: number
+  y: number
+  height: number
+  width: number
+}
 
 export type LocalizedStringArray = {
-  _type: "localizedStringArray";
-  en?: Array<string>;
-  mk?: Array<string>;
-};
+  _type: 'localizedStringArray'
+  en?: Array<string>
+  mk?: Array<string>
+}
 
 export type Professor = {
-  _id: string;
-  _type: "professor";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  name: string;
-  localizedName?: LocalizedString;
-  slug?: Slug;
-  title?: string;
-  localizedTitle?: LocalizedString;
-  description?: RichTextLite;
-  localizedDescription?: LocalizedRichTextLite;
+  _id: string
+  _type: 'professor'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  name: string
+  localizedName?: LocalizedString
+  slug?: Slug
+  title?: string
+  localizedTitle?: LocalizedString
+  description?: RichTextLite
+  localizedDescription?: LocalizedRichTextLite
   picture?: {
-    asset?: SanityImageAssetReference;
-    media?: unknown;
-    hotspot?: SanityImageHotspot;
-    crop?: SanityImageCrop;
-    _type: "image";
-  };
-  bio?: RichTextLite;
-  localizedBio?: LocalizedRichTextLite;
-  officeLocation?: string;
-  telephone?: string;
-  email?: string;
-  website?: string;
+    asset?: SanityImageAssetReference
+    media?: unknown
+    hotspot?: SanityImageHotspot
+    crop?: SanityImageCrop
+    _type: 'image'
+  }
+  bio?: RichTextLite
+  localizedBio?: LocalizedRichTextLite
+  officeLocation?: string
+  telephone?: string
+  email?: string
+  website?: string
   faculties: Array<
     {
-      _key: string;
+      _key: string
     } & FacultyReference
-  >;
+  >
   studies?: Array<
     {
-      _key: string;
+      _key: string
     } & StudyReference
-  >;
-  dbId?: string;
-};
+  >
+  dbId?: string
+}
 
 export type UniversityReference = {
-  _ref: string;
-  _type: "reference";
-  _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "university";
-};
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'university'
+}
 
 export type Faculty = {
-  _id: string;
-  _type: "faculty";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  name: string;
-  localizedName?: LocalizedString;
-  slug?: Slug;
-  description?: RichTextLite;
-  localizedDescription?: LocalizedRichTextLite;
-  studentCount?: number;
-  bio?: string;
-  localizedBio?: LocalizedString;
+  _id: string
+  _type: 'faculty'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  name: string
+  localizedName?: LocalizedString
+  slug?: Slug
+  description?: RichTextLite
+  localizedDescription?: LocalizedRichTextLite
+  studentCount?: number
+  bio?: string
+  localizedBio?: LocalizedString
   logo?: {
-    asset?: SanityImageAssetReference;
-    media?: unknown;
-    hotspot?: SanityImageHotspot;
-    crop?: SanityImageCrop;
-    _type: "image";
-  };
+    asset?: SanityImageAssetReference
+    media?: unknown
+    hotspot?: SanityImageHotspot
+    crop?: SanityImageCrop
+    _type: 'image'
+  }
   picture?: {
-    asset?: SanityImageAssetReference;
-    media?: unknown;
-    hotspot?: SanityImageHotspot;
-    crop?: SanityImageCrop;
-    _type: "image";
-  };
-  secretary: PersonReference;
-  dean: PersonReference;
+    asset?: SanityImageAssetReference
+    media?: unknown
+    hotspot?: SanityImageHotspot
+    crop?: SanityImageCrop
+    _type: 'image'
+  }
+  secretary: PersonReference
+  dean: PersonReference
   viceDeans?: Array<
     {
-      _key: string;
+      _key: string
     } & PersonReference
-  >;
-  streetAddress: string;
-  telephone: string;
-  email: string;
-  website?: string;
-  university: UniversityReference;
-  dbId?: string;
-};
+  >
+  streetAddress: string
+  telephone: string
+  email: string
+  website?: string
+  university: UniversityReference
+  dbId?: string
+}
 
 export type University = {
-  _id: string;
-  _type: "university";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
+  _id: string
+  _type: 'university'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
   logo?: {
-    asset?: SanityImageAssetReference;
-    media?: unknown;
-    hotspot?: SanityImageHotspot;
-    crop?: SanityImageCrop;
-    _type: "image";
-  };
+    asset?: SanityImageAssetReference
+    media?: unknown
+    hotspot?: SanityImageHotspot
+    crop?: SanityImageCrop
+    _type: 'image'
+  }
   picture?: {
-    asset?: SanityImageAssetReference;
-    media?: unknown;
-    hotspot?: SanityImageHotspot;
-    crop?: SanityImageCrop;
-    _type: "image";
-  };
-  name: string;
-  localizedName?: LocalizedString;
-  slug?: Slug;
-  description?: RichTextLite;
-  localizedDescription?: LocalizedRichTextLite;
-  rector?: PersonReference;
+    asset?: SanityImageAssetReference
+    media?: unknown
+    hotspot?: SanityImageHotspot
+    crop?: SanityImageCrop
+    _type: 'image'
+  }
+  name: string
+  localizedName?: LocalizedString
+  slug?: Slug
+  description?: RichTextLite
+  localizedDescription?: LocalizedRichTextLite
+  rector?: PersonReference
   viceRectors?: Array<
     {
-      _key: string;
+      _key: string
     } & PersonReference
-  >;
-  streetAddress: string;
-  telephone?: string;
-  email?: string;
-  website?: string;
-  r2BucketId?: string;
-  dbId?: string;
-};
+  >
+  streetAddress: string
+  telephone?: string
+  email?: string
+  website?: string
+  r2BucketId?: string
+  dbId?: string
+}
 
 export type LocalizedRichText = {
-  _type: "localizedRichText";
-  en?: RichText;
-  mk?: RichText;
-};
+  _type: 'localizedRichText'
+  en?: RichText
+  mk?: RichText
+}
 
 export type RichText = Array<{
   children?: Array<
     | {
-        marks?: Array<string>;
-        text?: string;
-        _type: "span";
-        _key: string;
+        marks?: Array<string>
+        text?: string
+        _type: 'span'
+        _key: string
       }
     | {
-        asset?: SanityImageAssetReference;
-        media?: unknown;
-        hotspot?: SanityImageHotspot;
-        crop?: SanityImageCrop;
-        _type: "image";
-        _key: string;
+        asset?: SanityImageAssetReference
+        media?: unknown
+        hotspot?: SanityImageHotspot
+        crop?: SanityImageCrop
+        _type: 'image'
+        _key: string
       }
     | ({
-        _key: string;
+        _key: string
       } & ButtonReference)
     | {
-        placeholder?: string;
-        _type: "horizontalRule";
-        _key: string;
+        placeholder?: string
+        _type: 'horizontalRule'
+        _key: string
       }
-  >;
-  style?: "normal" | "-" | "h1" | "h2" | "h3" | "h4" | "h5" | "base" | "h6";
-  listItem?: "bullet" | "number";
+  >
+  style?: 'normal' | '-' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'base' | 'h6'
+  listItem?: 'bullet' | 'number'
   markDefs?: Array<{
-    url: string;
-    _type: "link";
-    _key: string;
-  }>;
-  level?: number;
-  _type: "block";
-  _key: string;
-}>;
+    url: string
+    _type: 'link'
+    _key: string
+  }>
+  level?: number
+  _type: 'block'
+  _key: string
+}>
 
 export type Button = {
-  _id: string;
-  _type: "button";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  stringTitle?: string;
-  localizedTitle?: LocalizedString;
-  customLink: string;
+  _id: string
+  _type: 'button'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  stringTitle?: string
+  localizedTitle?: LocalizedString
+  customLink: string
   buttonColorVariant?:
     | string
-    | "transparent"
-    | "transparent alternate"
-    | "solid"
-    | "solid inverted"
-    | "subtle"
-    | "golden"
-    | "success"
-    | "error";
-};
+    | 'transparent'
+    | 'transparent alternate'
+    | 'solid'
+    | 'solid inverted'
+    | 'subtle'
+    | 'golden'
+    | 'success'
+    | 'error'
+}
 
 export type StarCanvasReference = {
-  _ref: string;
-  _type: "reference";
-  _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "starCanvas";
-};
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'starCanvas'
+}
 
 export type ChristmasCanvasReference = {
-  _ref: string;
-  _type: "reference";
-  _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "christmasCanvas";
-};
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'christmasCanvas'
+}
 
 export type Website = {
-  _id: string;
-  _type: "website";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  websiteTitle?: string;
-  siteName?: string;
-  siteUrl?: string;
-  defaultSeoTitle?: string;
-  defaultSeoDescription?: string;
-  defaultKeywords?: Array<string>;
-  background?: StarCanvasReference | ChristmasCanvasReference;
-  navAndFooterFields?: string;
-  navMenu?: NavMenuReference;
-  pagesFields?: string;
+  _id: string
+  _type: 'website'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  websiteTitle?: string
+  siteName?: string
+  siteUrl?: string
+  defaultSeoTitle?: string
+  defaultSeoDescription?: string
+  defaultKeywords?: Array<string>
+  background?: StarCanvasReference | ChristmasCanvasReference
+  navAndFooterFields?: string
+  navMenu?: NavMenuReference
+  pagesFields?: string
   universities?: Array<
     {
-      _key: string;
+      _key: string
     } & UniversityReference
-  >;
-};
+  >
+}
 
 export type ChristmasCanvas = {
-  _id: string;
-  _type: "christmasCanvas";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  seed?: number;
-  treeDecorationChance?: number;
-  houseDecorationChance?: number;
-  enableSmoke?: boolean;
-  enableWindowGlow?: boolean;
-  enableSnow?: boolean;
-  snowDensity?: number;
-  snowSpeed?: number;
-  enableSanta?: boolean;
-  santaFirstDelaySeconds?: number;
-  santaMinGapSeconds?: number;
-  santaMaxGapSeconds?: number;
-  lightColors?: {
-    mountainFar?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    mountainNear?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    mountainCap?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    hillBack?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    hillVillage?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    hillBand?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    hillFront?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    treeFar?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    treeMid?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    treeNear?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    houseWall?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    houseSnow?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    houseWindow?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    houseChimney?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    snowfall?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    smoke?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    sleigh?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    reindeer?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    lights?: Array<
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000"
-    >;
-  };
-  darkColors?: {
-    mountainFar?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    mountainNear?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    mountainCap?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    hillBack?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    hillVillage?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    hillBand?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    hillFront?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    treeFar?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    treeMid?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    treeNear?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    houseWall?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    houseSnow?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    houseWindow?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    houseChimney?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    snowfall?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    smoke?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    sleigh?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    reindeer?:
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000";
-    lights?: Array<
-      | "brand"
-      | "brand-300"
-      | "brand-850"
-      | "sky"
-      | "jade"
-      | "lavender"
-      | "rose-pink"
-      | "amber"
-      | "golden-yellow"
-      | "yellow"
-      | "error-red"
-      | "background-50"
-      | "grey-200"
-      | "grey-300"
-      | "grey-800"
-      | "background-1000"
-    >;
-  };
-};
+  _id: string
+  _type: 'christmasCanvas'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  seed?: number
+  treeDecorationChance?: number
+  houseDecorationChance?: number
+  enableSmoke?: boolean
+  enableWindowGlow?: boolean
+  enableSnow?: boolean
+  snowDensity?: number
+  snowSpeed?: number
+  enableSanta?: boolean
+  santaFirstDelaySeconds?: number
+  santaMinGapSeconds?: number
+  santaMaxGapSeconds?: number
+  lightColors?: ChristmasColors
+  darkColors?: ChristmasColors
+}
 
 export type StarCanvas = {
-  _id: string;
-  _type: "starCanvas";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  starCount?: number;
+  _id: string
+  _type: 'starCanvas'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  starCount?: number
   starColors?: Array<
-    | "brand"
-    | "brand-300"
-    | "brand-850"
-    | "sky"
-    | "jade"
-    | "lavender"
-    | "rose-pink"
-    | "amber"
-    | "golden-yellow"
-    | "yellow"
-    | "error-red"
-    | "background-50"
-    | "grey-200"
-    | "grey-300"
-    | "grey-800"
-    | "background-1000"
-  >;
-  starMinSize?: number;
-  starMaxSize?: number;
-  starDriftSpeed?: number;
-  enableBackgroundHaze?: boolean;
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  >
+  starMinSize?: number
+  starMaxSize?: number
+  starDriftSpeed?: number
+  enableBackgroundHaze?: boolean
   backgroundHazeColor?:
-    | "brand"
-    | "brand-300"
-    | "brand-850"
-    | "sky"
-    | "jade"
-    | "lavender"
-    | "rose-pink"
-    | "amber"
-    | "golden-yellow"
-    | "yellow"
-    | "error-red"
-    | "background-50"
-    | "grey-200"
-    | "grey-300"
-    | "grey-800"
-    | "background-1000";
-  backgroundHazeOpacity?: number;
-  backgroundHazeRadius?: number;
-  shootingStarChance?: number;
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  backgroundHazeOpacity?: number
+  backgroundHazeRadius?: number
+  shootingStarChance?: number
   shootingStarColor?:
-    | "brand"
-    | "brand-300"
-    | "brand-850"
-    | "sky"
-    | "jade"
-    | "lavender"
-    | "rose-pink"
-    | "amber"
-    | "golden-yellow"
-    | "yellow"
-    | "error-red"
-    | "background-50"
-    | "grey-200"
-    | "grey-300"
-    | "grey-800"
-    | "background-1000";
-  enableBlackHole?: boolean;
-  blackHolePresetPosition?: "center" | "top-right" | "bottom-right" | "custom";
-  blackHoleXRatio?: number;
-  blackHoleYRatio?: number;
-  blackHoleRadius?: number;
-  blackHoleGlowRadius?: number;
-  enableBlackHoleAscension?: boolean;
-  blackHoleAscensionClicks?: number;
-  blackHoleAscensionIntensity?: number;
-  blackHoleClickSwell?: number;
-  blackHoleClickSwellMax?: number;
-  blackHoleClickSettleSeconds?: number;
-  blackHoleClickBlob?: number;
-  blackHoleGravityRadius?: number;
-  blackHoleGravityForce?: number;
-  blackHoleHoverReachMultiplier?: number;
-  blackHoleHoverGravityMultiplier?: number;
-  blackHoleSmokeWisps?: number;
-  blackHoleSmokeIntensity?: number;
-  blackHoleSmokeSpeed?: number;
-  blackHoleEdgeRipple?: number;
-  blackHoleHoverRipple?: number;
-  blackHoleCoronaWidth?: number;
-  enableBlackHoleFlare?: boolean;
-  blackHoleFlare?: number;
-  blackHoleFlareSpin?: number;
-  blackHoleRingGlow?: number;
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  enableBlackHole?: boolean
+  blackHolePresetPosition?: 'center' | 'top-right' | 'bottom-right' | 'custom'
+  blackHoleXRatio?: number
+  blackHoleYRatio?: number
+  blackHoleRadius?: number
+  blackHoleGlowRadius?: number
+  enableBlackHoleAscension?: boolean
+  blackHoleAscensionClicks?: number
+  blackHoleAscensionIntensity?: number
+  blackHoleClickSwell?: number
+  blackHoleClickSwellMax?: number
+  blackHoleClickSettleSeconds?: number
+  blackHoleClickBlob?: number
+  blackHoleGravityRadius?: number
+  blackHoleGravityForce?: number
+  blackHoleHoverReachMultiplier?: number
+  blackHoleHoverGravityMultiplier?: number
+  blackHoleSmokeWisps?: number
+  blackHoleSmokeIntensity?: number
+  blackHoleSmokeSpeed?: number
+  blackHoleEdgeRipple?: number
+  blackHoleHoverRipple?: number
+  blackHoleCoronaWidth?: number
+  enableBlackHoleFlare?: boolean
+  blackHoleFlare?: number
+  blackHoleFlareSpin?: number
+  blackHoleRingGlow?: number
   planetColors?: Array<
-    | "brand"
-    | "brand-300"
-    | "brand-850"
-    | "sky"
-    | "jade"
-    | "lavender"
-    | "rose-pink"
-    | "amber"
-    | "golden-yellow"
-    | "yellow"
-    | "error-red"
-    | "background-50"
-    | "grey-200"
-    | "grey-300"
-    | "grey-800"
-    | "background-1000"
-  >;
-  planetMinSize?: number;
-  planetMaxSize?: number;
-  planetRingChance?: number;
-  planetSizeRarity?: number;
-  enablePlanets?: boolean;
-  planetCount?: number;
-  planetOrbitMinRatio?: number;
-  planetOrbitMaxRatio?: number;
-  planetOrbitTilt?: number;
-  planetSpeed?: number;
-  planetHoverChaos?: number;
-  freePlanetCount?: number;
-  freePlanetDriftSpeed?: number;
-  enableGalaxy?: boolean;
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  >
+  planetMinSize?: number
+  planetMaxSize?: number
+  planetRingChance?: number
+  planetSizeRarity?: number
+  enablePlanets?: boolean
+  planetCount?: number
+  planetOrbitMinRatio?: number
+  planetOrbitMaxRatio?: number
+  planetOrbitTilt?: number
+  planetSpeed?: number
+  planetHoverChaos?: number
+  freePlanetCount?: number
+  freePlanetDriftSpeed?: number
+  enableGalaxy?: boolean
   galaxyPosition?:
-    | "top-left"
-    | "top-right"
-    | "bottom-left"
-    | "bottom-right"
-    | "left"
-    | "right"
-    | "center"
-    | "random"
-    | "custom";
-  galaxyXRatio?: number;
-  galaxyYRatio?: number;
-  galaxyMinSize?: number;
-  galaxyMaxSize?: number;
-  galaxyTilt?: number;
-  galaxyDriftFactor?: number;
+    | 'top-left'
+    | 'top-right'
+    | 'bottom-left'
+    | 'bottom-right'
+    | 'left'
+    | 'right'
+    | 'center'
+    | 'random'
+    | 'custom'
+  galaxyXRatio?: number
+  galaxyYRatio?: number
+  galaxyMinSize?: number
+  galaxyMaxSize?: number
+  galaxyTilt?: number
+  galaxyDriftFactor?: number
   galaxyDriftDirection?:
-    | "up-left"
-    | "up"
-    | "up-right"
-    | "left"
-    | "right"
-    | "down-left"
-    | "down"
-    | "down-right";
-  galaxyOpacity?: number;
-  galaxyWidthScale?: number;
-  galaxyHeightScale?: number;
-  galaxyDensity?: number;
-  galaxyCenterDensity?: number;
-  galaxyEndDensity?: number;
+    | 'up-left'
+    | 'up'
+    | 'up-right'
+    | 'left'
+    | 'right'
+    | 'down-left'
+    | 'down'
+    | 'down-right'
+  galaxyOpacity?: number
+  galaxyWidthScale?: number
+  galaxyHeightScale?: number
+  galaxyDensity?: number
+  galaxyCenterDensity?: number
+  galaxyEndDensity?: number
   galaxyCoreColor?:
-    | "brand"
-    | "brand-300"
-    | "brand-850"
-    | "sky"
-    | "jade"
-    | "lavender"
-    | "rose-pink"
-    | "amber"
-    | "golden-yellow"
-    | "yellow"
-    | "error-red"
-    | "background-50"
-    | "grey-200"
-    | "grey-300"
-    | "grey-800"
-    | "background-1000";
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
   galaxyArmColor?:
-    | "brand"
-    | "brand-300"
-    | "brand-850"
-    | "sky"
-    | "jade"
-    | "lavender"
-    | "rose-pink"
-    | "amber"
-    | "golden-yellow"
-    | "yellow"
-    | "error-red"
-    | "background-50"
-    | "grey-200"
-    | "grey-300"
-    | "grey-800"
-    | "background-1000";
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
   galaxyAccentColor?:
-    | "brand"
-    | "brand-300"
-    | "brand-850"
-    | "sky"
-    | "jade"
-    | "lavender"
-    | "rose-pink"
-    | "amber"
-    | "golden-yellow"
-    | "yellow"
-    | "error-red"
-    | "background-50"
-    | "grey-200"
-    | "grey-300"
-    | "grey-800"
-    | "background-1000";
-  enableAurora?: boolean;
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  enableAurora?: boolean
   auroraColors?: Array<
-    | "brand"
-    | "brand-300"
-    | "brand-850"
-    | "sky"
-    | "jade"
-    | "lavender"
-    | "rose-pink"
-    | "amber"
-    | "golden-yellow"
-    | "yellow"
-    | "error-red"
-    | "background-50"
-    | "grey-200"
-    | "grey-300"
-    | "grey-800"
-    | "background-1000"
-  >;
-  auroraPosition?: "top" | "middle" | "bottom" | "custom";
-  auroraYRatio?: number;
-  auroraHeight?: number;
-  auroraIntensity?: number;
-  auroraCurtains?: number;
-  auroraSpeed?: number;
-  auroraWaviness?: number;
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  >
+  auroraPosition?: 'top' | 'middle' | 'bottom' | 'custom'
+  auroraYRatio?: number
+  auroraHeight?: number
+  auroraIntensity?: number
+  auroraCurtains?: number
+  auroraSpeed?: number
+  auroraWaviness?: number
   blackHoleCoreColor?:
-    | "brand"
-    | "brand-300"
-    | "brand-850"
-    | "sky"
-    | "jade"
-    | "lavender"
-    | "rose-pink"
-    | "amber"
-    | "golden-yellow"
-    | "yellow"
-    | "error-red"
-    | "background-50"
-    | "grey-200"
-    | "grey-300"
-    | "grey-800"
-    | "background-1000";
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
   blackHolePhotonRingColor?:
-    | "brand"
-    | "brand-300"
-    | "brand-850"
-    | "sky"
-    | "jade"
-    | "lavender"
-    | "rose-pink"
-    | "amber"
-    | "golden-yellow"
-    | "yellow"
-    | "error-red"
-    | "background-50"
-    | "grey-200"
-    | "grey-300"
-    | "grey-800"
-    | "background-1000";
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
   blackHoleBaseGlowColor?:
-    | "brand"
-    | "brand-300"
-    | "brand-850"
-    | "sky"
-    | "jade"
-    | "lavender"
-    | "rose-pink"
-    | "amber"
-    | "golden-yellow"
-    | "yellow"
-    | "error-red"
-    | "background-50"
-    | "grey-200"
-    | "grey-300"
-    | "grey-800"
-    | "background-1000";
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
   blackHoleCoronaColor?:
-    | "brand"
-    | "brand-300"
-    | "brand-850"
-    | "sky"
-    | "jade"
-    | "lavender"
-    | "rose-pink"
-    | "amber"
-    | "golden-yellow"
-    | "yellow"
-    | "error-red"
-    | "background-50"
-    | "grey-200"
-    | "grey-300"
-    | "grey-800"
-    | "background-1000";
-  mobileScale?: number;
-  mobileEnableBlackHole?: boolean;
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  mobileScale?: number
+  mobileEnableBlackHole?: boolean
   mobileBlackHolePresetPosition?:
-    "desktop" | "center" | "top-right" | "bottom-right" | "custom";
-  mobileBlackHoleXRatio?: number;
-  mobileBlackHoleYRatio?: number;
-  mobileEnableGalaxy?: boolean;
+    | 'desktop'
+    | 'center'
+    | 'top-right'
+    | 'bottom-right'
+    | 'custom'
+  mobileBlackHoleXRatio?: number
+  mobileBlackHoleYRatio?: number
+  mobileEnableGalaxy?: boolean
   mobileGalaxyPosition?:
-    | "desktop"
-    | "top-left"
-    | "top-right"
-    | "bottom-left"
-    | "bottom-right"
-    | "left"
-    | "right"
-    | "center"
-    | "random"
-    | "custom";
-  mobileGalaxyXRatio?: number;
-  mobileGalaxyYRatio?: number;
-  mobileEnableAurora?: boolean;
-  mobileAuroraPosition?: "desktop" | "top" | "middle" | "bottom" | "custom";
-  mobileAuroraYRatio?: number;
-};
+    | 'desktop'
+    | 'top-left'
+    | 'top-right'
+    | 'bottom-left'
+    | 'bottom-right'
+    | 'left'
+    | 'right'
+    | 'center'
+    | 'random'
+    | 'custom'
+  mobileGalaxyXRatio?: number
+  mobileGalaxyYRatio?: number
+  mobileEnableAurora?: boolean
+  mobileAuroraPosition?: 'desktop' | 'top' | 'middle' | 'bottom' | 'custom'
+  mobileAuroraYRatio?: number
+}
 
 export type Person = {
-  _id: string;
-  _type: "person";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
+  _id: string
+  _type: 'person'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
   picture?: {
-    asset?: SanityImageAssetReference;
-    media?: unknown;
-    hotspot?: SanityImageHotspot;
-    crop?: SanityImageCrop;
-    _type: "image";
-  };
-  name: string;
-  title: string;
-  email?: string;
-  academicRank?: string;
-  scientificField?: string;
-  website: string;
-  description?: RichTextLite;
-};
+    asset?: SanityImageAssetReference
+    media?: unknown
+    hotspot?: SanityImageHotspot
+    crop?: SanityImageCrop
+    _type: 'image'
+  }
+  name: string
+  title: string
+  email?: string
+  academicRank?: string
+  scientificField?: string
+  website: string
+  description?: RichTextLite
+}
 
 export type SubMenuItem = {
-  _id: string;
-  _type: "subMenuItem";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  title?: RichText;
-  localizedTitle?: LocalizedRichText;
-  subtitle?: RichTextLite;
-  localizedSubtitle?: LocalizedRichTextLite;
+  _id: string
+  _type: 'subMenuItem'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  title?: RichText
+  localizedTitle?: LocalizedRichText
+  subtitle?: RichTextLite
+  localizedSubtitle?: LocalizedRichTextLite
   icon: {
-    asset?: SanityImageAssetReference;
-    media?: unknown;
-    hotspot?: SanityImageHotspot;
-    crop?: SanityImageCrop;
-    _type: "image";
-  };
-  customLink: string;
-};
+    asset?: SanityImageAssetReference
+    media?: unknown
+    hotspot?: SanityImageHotspot
+    crop?: SanityImageCrop
+    _type: 'image'
+  }
+  customLink: string
+}
 
 export type NavItem = {
-  _id: string;
-  _type: "navItem";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  stringTitle?: string;
-  localizedTitle?: LocalizedString;
+  _id: string
+  _type: 'navItem'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  stringTitle?: string
+  localizedTitle?: LocalizedString
   icon?: {
-    asset?: SanityImageAssetReference;
-    media?: unknown;
-    hotspot?: SanityImageHotspot;
-    crop?: SanityImageCrop;
-    _type: "image";
-  };
-  customLink: string;
-};
+    asset?: SanityImageAssetReference
+    media?: unknown
+    hotspot?: SanityImageHotspot
+    crop?: SanityImageCrop
+    _type: 'image'
+  }
+  customLink: string
+}
 
 export type NavItemReference = {
-  _ref: string;
-  _type: "reference";
-  _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "navItem";
-};
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'navItem'
+}
 
 export type NavMenu = {
-  _id: string;
-  _type: "navMenu";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  title?: string;
+  _id: string
+  _type: 'navMenu'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  title?: string
   websiteLogo?: {
-    asset?: SanityImageAssetReference;
-    media?: unknown;
-    hotspot?: SanityImageHotspot;
-    crop?: SanityImageCrop;
-    _type: "image";
-  };
+    asset?: SanityImageAssetReference
+    media?: unknown
+    hotspot?: SanityImageHotspot
+    crop?: SanityImageCrop
+    _type: 'image'
+  }
   navItems?: Array<
     {
-      _key: string;
+      _key: string
     } & NavItemReference
-  >;
-};
+  >
+}
 
 export type MediaFolderReference = {
-  _ref: string;
-  _type: "reference";
-  _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "media.folder";
-};
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'media.folder'
+}
 
 export type MediaFolder = {
-  _id: string;
-  _type: "media.folder";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  name?: string;
-  parent?: MediaFolderReference;
-};
+  _id: string
+  _type: 'media.folder'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  name?: string
+  parent?: MediaFolderReference
+}
 
 export type MediaTag = {
-  _id: string;
-  _type: "media.tag";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  name?: Slug;
-};
+  _id: string
+  _type: 'media.tag'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  name?: Slug
+}
 
 export type SanityImagePaletteSwatch = {
-  _type: "sanity.imagePaletteSwatch";
-  background?: string;
-  foreground?: string;
-  population?: number;
-  title?: string;
-};
+  _type: 'sanity.imagePaletteSwatch'
+  background?: string
+  foreground?: string
+  population?: number
+  title?: string
+}
 
 export type SanityImagePalette = {
-  _type: "sanity.imagePalette";
-  darkMuted?: SanityImagePaletteSwatch;
-  lightVibrant?: SanityImagePaletteSwatch;
-  darkVibrant?: SanityImagePaletteSwatch;
-  vibrant?: SanityImagePaletteSwatch;
-  dominant?: SanityImagePaletteSwatch;
-  lightMuted?: SanityImagePaletteSwatch;
-  muted?: SanityImagePaletteSwatch;
-};
+  _type: 'sanity.imagePalette'
+  darkMuted?: SanityImagePaletteSwatch
+  lightVibrant?: SanityImagePaletteSwatch
+  darkVibrant?: SanityImagePaletteSwatch
+  vibrant?: SanityImagePaletteSwatch
+  dominant?: SanityImagePaletteSwatch
+  lightMuted?: SanityImagePaletteSwatch
+  muted?: SanityImagePaletteSwatch
+}
 
 export type SanityImageDimensions = {
-  _type: "sanity.imageDimensions";
-  height: number;
-  width: number;
-  aspectRatio: number;
-};
+  _type: 'sanity.imageDimensions'
+  height: number
+  width: number
+  aspectRatio: number
+}
 
 export type SanityImageMetadata = {
-  _type: "sanity.imageMetadata";
-  location?: Geopoint;
-  dimensions?: SanityImageDimensions;
-  palette?: SanityImagePalette;
-  lqip?: string;
-  blurHash?: string;
-  thumbHash?: string;
-  hasAlpha?: boolean;
-  isOpaque?: boolean;
-};
+  _type: 'sanity.imageMetadata'
+  location?: Geopoint
+  dimensions?: SanityImageDimensions
+  palette?: SanityImagePalette
+  lqip?: string
+  blurHash?: string
+  thumbHash?: string
+  hasAlpha?: boolean
+  isOpaque?: boolean
+}
 
 export type SanityFileAsset = {
-  _id: string;
-  _type: "sanity.fileAsset";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  originalFilename?: string;
-  label?: string;
-  title?: string;
-  description?: string;
-  altText?: string;
-  sha1hash: string;
-  extension: string;
-  mimeType: string;
-  size: number;
-  assetId: string;
-  uploadId?: string;
-  path: string;
-  url: string;
-  source?: SanityAssetSourceData;
-};
+  _id: string
+  _type: 'sanity.fileAsset'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  originalFilename?: string
+  label?: string
+  title?: string
+  description?: string
+  altText?: string
+  sha1hash: string
+  extension: string
+  mimeType: string
+  size: number
+  assetId: string
+  uploadId?: string
+  path: string
+  url: string
+  source?: SanityAssetSourceData
+}
 
 export type SanityAssetSourceData = {
-  _type: "sanity.assetSourceData";
-  name?: string;
-  id?: string;
-  url?: string;
-};
+  _type: 'sanity.assetSourceData'
+  name?: string
+  id?: string
+  url?: string
+}
 
 export type SanityImageAsset = {
-  _id: string;
-  _type: "sanity.imageAsset";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  originalFilename?: string;
-  label?: string;
-  title?: string;
-  description?: string;
-  altText?: string;
-  sha1hash: string;
-  extension: string;
-  mimeType: string;
-  size: number;
-  assetId: string;
-  uploadId?: string;
-  path: string;
-  url: string;
-  metadata?: SanityImageMetadata;
-  source?: SanityAssetSourceData;
-};
+  _id: string
+  _type: 'sanity.imageAsset'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  originalFilename?: string
+  label?: string
+  title?: string
+  description?: string
+  altText?: string
+  sha1hash: string
+  extension: string
+  mimeType: string
+  size: number
+  assetId: string
+  uploadId?: string
+  path: string
+  url: string
+  metadata?: SanityImageMetadata
+  source?: SanityAssetSourceData
+}
 
 export type Geopoint = {
-  _type: "geopoint";
-  lat?: number;
-  lng?: number;
-  alt?: number;
-};
+  _type: 'geopoint'
+  lat?: number
+  lng?: number
+  alt?: number
+}
 
 export type AllSanitySchemaTypes =
   | CalendarEventReference
@@ -1742,12 +1427,14 @@ export type AllSanitySchemaTypes =
   | ButtonReference
   | RichTextLite
   | LocalizedRichTextLite
+  | ChristmasColors
+  | NavMenuReference
+  | StudySiteSettings
   | StudyReference
   | Subject
   | PersonReference
   | FacultyReference
   | CalendarReference
-  | NavMenuReference
   | Study
   | Slug
   | SanityImageCrop
@@ -1780,1578 +1467,1578 @@ export type AllSanitySchemaTypes =
   | SanityFileAsset
   | SanityAssetSourceData
   | SanityImageAsset
-  | Geopoint;
+  | Geopoint
 
 // Source: ../next/sanity/queries/academics/faculty.queries.ts
 // Variable: facultySeoQuery
 // Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "faculty"  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)  && university->slug.current == $universitySlug][0] {  _id,  "slug": slug.current,  name,  description,}
 export type FacultySeoQueryResult = {
-  _id: string;
-  slug: string | null;
-  name: string;
-  description: RichTextLite | null;
-} | null;
+  _id: string
+  slug: string | null
+  name: string
+  description: RichTextLite | null
+} | null
 
 // Source: ../next/sanity/queries/academics/faculty.queries.ts
 // Variable: minimalFacultyTypedQuery
 // Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "faculty"  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)  && university->slug.current == $universitySlug][0]{_id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),dean->{  _id,  name,  title,  "picture": sanityImage::full(picture)},secretary->{  _id,  name,  title,  "picture": sanityImage::full(picture)},viceDeans[]->{  _id,  name,  title,  "picture": sanityImage::full(picture)},university->{  _id,  "slug": slug.current,  name},"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {  _id,dbId,"slug": slug.current,"siteSlug": siteSlug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  name,  title,  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},},},}
 export type MinimalFacultyTypedQueryResult = {
-  _id: string;
-  slug: string | null;
-  name: string;
-  studentCount: number | null;
+  _id: string
+  slug: string | null
+  name: string
+  studentCount: number | null
   picture: {
-    asset: SanityImageAssetReference | null;
-    crop: SanityImageCrop | null;
-    hotspot: SanityImageHotspot | null;
-    alt: string | null;
-  } | null;
+    asset: SanityImageAssetReference | null
+    crop: SanityImageCrop | null
+    hotspot: SanityImageHotspot | null
+    alt: string | null
+  } | null
   logo: {
-    asset: SanityImageAssetReference | null;
-    crop: SanityImageCrop | null;
-    hotspot: SanityImageHotspot | null;
-    alt: string | null;
-  } | null;
+    asset: SanityImageAssetReference | null
+    crop: SanityImageCrop | null
+    hotspot: SanityImageHotspot | null
+    alt: string | null
+  } | null
   dean: {
-    _id: string;
-    name: string;
-    title: string;
+    _id: string
+    name: string
+    title: string
     picture: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
-  };
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
+  }
   secretary: {
-    _id: string;
-    name: string;
-    title: string;
+    _id: string
+    name: string
+    title: string
     picture: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
-  };
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
+  }
   viceDeans: Array<{
-    _id: string;
-    name: string;
-    title: string;
+    _id: string
+    name: string
+    title: string
     picture: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
-  }> | null;
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
+  }> | null
   university: {
-    _id: string;
-    slug: string | null;
-    name: string;
-  };
-  studyCount: number;
-  professorCount: number;
+    _id: string
+    slug: string | null
+    name: string
+  }
+  studyCount: number
+  professorCount: number
   professors: Array<{
-    _id: string;
-    slug: string | null;
-    dbId: string | null;
-    name: string;
-    title: string | null;
+    _id: string
+    slug: string | null
+    dbId: string | null
+    name: string
+    title: string | null
     picture: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
     faculties: Array<{
-      _id: string;
-      slug: string | null;
-      name: string;
+      _id: string
+      slug: string | null
+      name: string
       university: {
-        _id: string;
-        slug: string | null;
-        name: string;
-      };
-    }>;
+        _id: string
+        slug: string | null
+        name: string
+      }
+    }>
     universities: Array<{
-      _id: string;
-      slug: string | null;
-      name: string;
-    }>;
+      _id: string
+      slug: string | null
+      name: string
+    }>
     subjects: Array<{
-      _id: string;
-      slug: string | null;
-      name: string;
-      code: string;
-    }>;
-  }>;
+      _id: string
+      slug: string | null
+      name: string
+      code: string
+    }>
+  }>
   studies: Array<{
-    _id: string;
-    dbId: string | null;
-    slug: string | null;
-    siteSlug: string;
-    name: string;
-    studentCount: number | null;
+    _id: string
+    dbId: string | null
+    slug: string | null
+    siteSlug: string
+    name: string
+    studentCount: number | null
     picture: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
     logo: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
     assistant: {
-      _id: string;
-      name: string;
-      title: string;
+      _id: string
+      name: string
+      title: string
       picture: {
-        asset: SanityImageAssetReference | null;
-        crop: SanityImageCrop | null;
-        hotspot: SanityImageHotspot | null;
-        alt: string | null;
-      } | null;
-    } | null;
+        asset: SanityImageAssetReference | null
+        crop: SanityImageCrop | null
+        hotspot: SanityImageHotspot | null
+        alt: string | null
+      } | null
+    } | null
     faculty: {
-      _id: string;
-      slug: string | null;
-      name: string;
+      _id: string
+      slug: string | null
+      name: string
       university: {
-        _id: string;
-        slug: string | null;
-        name: string;
-      };
-    };
-    subjectCount: number;
-    professorCount: number;
+        _id: string
+        slug: string | null
+        name: string
+      }
+    }
+    subjectCount: number
+    professorCount: number
     professors: Array<{
-      _id: string;
-      slug: string | null;
-      dbId: string | null;
-      name: string;
-      title: string | null;
+      _id: string
+      slug: string | null
+      dbId: string | null
+      name: string
+      title: string | null
       picture: {
-        asset: SanityImageAssetReference | null;
-        crop: SanityImageCrop | null;
-        hotspot: SanityImageHotspot | null;
-        alt: string | null;
-      } | null;
+        asset: SanityImageAssetReference | null
+        crop: SanityImageCrop | null
+        hotspot: SanityImageHotspot | null
+        alt: string | null
+      } | null
       faculties: Array<{
-        _id: string;
-        slug: string | null;
-        name: string;
+        _id: string
+        slug: string | null
+        name: string
         university: {
-          _id: string;
-          slug: string | null;
-          name: string;
-        };
-      }>;
+          _id: string
+          slug: string | null
+          name: string
+        }
+      }>
       universities: Array<{
-        _id: string;
-        slug: string | null;
-        name: string;
-      }>;
+        _id: string
+        slug: string | null
+        name: string
+      }>
       subjects: Array<{
-        _id: string;
-        slug: string | null;
-        name: string;
-        code: string;
-      }>;
-    }>;
+        _id: string
+        slug: string | null
+        name: string
+        code: string
+      }>
+    }>
     subjects: Array<{
-      _id: string;
-      dbId: string | null;
-      slug: string | null;
-      name: string;
-      code: string;
-      credits: number;
-      year: number;
-      semester: number;
-      elective: boolean | null;
-      description: RichTextLite | null;
-      syllabus: string | null;
+      _id: string
+      dbId: string | null
+      slug: string | null
+      name: string
+      code: string
+      credits: number
+      year: number
+      semester: number
+      elective: boolean | null
+      description: RichTextLite | null
+      syllabus: string | null
       faculty: {
-        _id: string;
-        slug: string | null;
-        name: string;
+        _id: string
+        slug: string | null
+        name: string
         university: {
-          _id: string;
-          slug: string | null;
-          name: string;
-        };
-      };
+          _id: string
+          slug: string | null
+          name: string
+        }
+      }
       study: {
-        _id: string;
-        slug: string | null;
-        siteSlug: string;
-        name: string;
+        _id: string
+        slug: string | null
+        siteSlug: string
+        name: string
         faculty: {
-          _id: string;
-          slug: string | null;
-          name: string;
+          _id: string
+          slug: string | null
+          name: string
           university: {
-            _id: string;
-            slug: string | null;
-            name: string;
-          };
-        };
-      };
+            _id: string
+            slug: string | null
+            name: string
+          }
+        }
+      }
       professors: Array<{
-        _id: string;
-        dbId: string | null;
-        slug: string | null;
-        name: string;
-        title: string | null;
-      }>;
-    }>;
-  }>;
-} | null;
+        _id: string
+        dbId: string | null
+        slug: string | null
+        name: string
+        title: string | null
+      }>
+    }>
+  }>
+} | null
 
 // Source: ../next/sanity/queries/academics/faculty.queries.ts
 // Variable: facultyDetailQuery
 // Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "faculty"  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)  && university->slug.current == $universitySlug][0] {  _id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),dean->{  _id,  name,  title,  "picture": sanityImage::full(picture)},secretary->{  _id,  name,  title,  "picture": sanityImage::full(picture)},viceDeans[]->{  _id,  name,  title,  "picture": sanityImage::full(picture)},university->{  _id,  "slug": slug.current,  name},"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {  _id,dbId,"slug": slug.current,"siteSlug": siteSlug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  name,  title,  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},},},  _type,  description,  streetAddress,  telephone,  email,  website,}
 export type FacultyDetailQueryResult = {
-  _id: string;
-  slug: string | null;
-  name: string;
-  studentCount: number | null;
+  _id: string
+  slug: string | null
+  name: string
+  studentCount: number | null
   picture: {
-    asset: SanityImageAssetReference | null;
-    crop: SanityImageCrop | null;
-    hotspot: SanityImageHotspot | null;
-    alt: string | null;
-  } | null;
+    asset: SanityImageAssetReference | null
+    crop: SanityImageCrop | null
+    hotspot: SanityImageHotspot | null
+    alt: string | null
+  } | null
   logo: {
-    asset: SanityImageAssetReference | null;
-    crop: SanityImageCrop | null;
-    hotspot: SanityImageHotspot | null;
-    alt: string | null;
-  } | null;
+    asset: SanityImageAssetReference | null
+    crop: SanityImageCrop | null
+    hotspot: SanityImageHotspot | null
+    alt: string | null
+  } | null
   dean: {
-    _id: string;
-    name: string;
-    title: string;
+    _id: string
+    name: string
+    title: string
     picture: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
-  };
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
+  }
   secretary: {
-    _id: string;
-    name: string;
-    title: string;
+    _id: string
+    name: string
+    title: string
     picture: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
-  };
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
+  }
   viceDeans: Array<{
-    _id: string;
-    name: string;
-    title: string;
+    _id: string
+    name: string
+    title: string
     picture: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
-  }> | null;
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
+  }> | null
   university: {
-    _id: string;
-    slug: string | null;
-    name: string;
-  };
-  studyCount: number;
-  professorCount: number;
+    _id: string
+    slug: string | null
+    name: string
+  }
+  studyCount: number
+  professorCount: number
   professors: Array<{
-    _id: string;
-    slug: string | null;
-    dbId: string | null;
-    name: string;
-    title: string | null;
+    _id: string
+    slug: string | null
+    dbId: string | null
+    name: string
+    title: string | null
     picture: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
     faculties: Array<{
-      _id: string;
-      slug: string | null;
-      name: string;
+      _id: string
+      slug: string | null
+      name: string
       university: {
-        _id: string;
-        slug: string | null;
-        name: string;
-      };
-    }>;
+        _id: string
+        slug: string | null
+        name: string
+      }
+    }>
     universities: Array<{
-      _id: string;
-      slug: string | null;
-      name: string;
-    }>;
+      _id: string
+      slug: string | null
+      name: string
+    }>
     subjects: Array<{
-      _id: string;
-      slug: string | null;
-      name: string;
-      code: string;
-    }>;
-  }>;
+      _id: string
+      slug: string | null
+      name: string
+      code: string
+    }>
+  }>
   studies: Array<{
-    _id: string;
-    dbId: string | null;
-    slug: string | null;
-    siteSlug: string;
-    name: string;
-    studentCount: number | null;
+    _id: string
+    dbId: string | null
+    slug: string | null
+    siteSlug: string
+    name: string
+    studentCount: number | null
     picture: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
     logo: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
     assistant: {
-      _id: string;
-      name: string;
-      title: string;
+      _id: string
+      name: string
+      title: string
       picture: {
-        asset: SanityImageAssetReference | null;
-        crop: SanityImageCrop | null;
-        hotspot: SanityImageHotspot | null;
-        alt: string | null;
-      } | null;
-    } | null;
+        asset: SanityImageAssetReference | null
+        crop: SanityImageCrop | null
+        hotspot: SanityImageHotspot | null
+        alt: string | null
+      } | null
+    } | null
     faculty: {
-      _id: string;
-      slug: string | null;
-      name: string;
+      _id: string
+      slug: string | null
+      name: string
       university: {
-        _id: string;
-        slug: string | null;
-        name: string;
-      };
-    };
-    subjectCount: number;
-    professorCount: number;
+        _id: string
+        slug: string | null
+        name: string
+      }
+    }
+    subjectCount: number
+    professorCount: number
     professors: Array<{
-      _id: string;
-      slug: string | null;
-      dbId: string | null;
-      name: string;
-      title: string | null;
+      _id: string
+      slug: string | null
+      dbId: string | null
+      name: string
+      title: string | null
       picture: {
-        asset: SanityImageAssetReference | null;
-        crop: SanityImageCrop | null;
-        hotspot: SanityImageHotspot | null;
-        alt: string | null;
-      } | null;
+        asset: SanityImageAssetReference | null
+        crop: SanityImageCrop | null
+        hotspot: SanityImageHotspot | null
+        alt: string | null
+      } | null
       faculties: Array<{
-        _id: string;
-        slug: string | null;
-        name: string;
+        _id: string
+        slug: string | null
+        name: string
         university: {
-          _id: string;
-          slug: string | null;
-          name: string;
-        };
-      }>;
+          _id: string
+          slug: string | null
+          name: string
+        }
+      }>
       universities: Array<{
-        _id: string;
-        slug: string | null;
-        name: string;
-      }>;
+        _id: string
+        slug: string | null
+        name: string
+      }>
       subjects: Array<{
-        _id: string;
-        slug: string | null;
-        name: string;
-        code: string;
-      }>;
-    }>;
+        _id: string
+        slug: string | null
+        name: string
+        code: string
+      }>
+    }>
     subjects: Array<{
-      _id: string;
-      dbId: string | null;
-      slug: string | null;
-      name: string;
-      code: string;
-      credits: number;
-      year: number;
-      semester: number;
-      elective: boolean | null;
-      description: RichTextLite | null;
-      syllabus: string | null;
+      _id: string
+      dbId: string | null
+      slug: string | null
+      name: string
+      code: string
+      credits: number
+      year: number
+      semester: number
+      elective: boolean | null
+      description: RichTextLite | null
+      syllabus: string | null
       faculty: {
-        _id: string;
-        slug: string | null;
-        name: string;
+        _id: string
+        slug: string | null
+        name: string
         university: {
-          _id: string;
-          slug: string | null;
-          name: string;
-        };
-      };
+          _id: string
+          slug: string | null
+          name: string
+        }
+      }
       study: {
-        _id: string;
-        slug: string | null;
-        siteSlug: string;
-        name: string;
+        _id: string
+        slug: string | null
+        siteSlug: string
+        name: string
         faculty: {
-          _id: string;
-          slug: string | null;
-          name: string;
+          _id: string
+          slug: string | null
+          name: string
           university: {
-            _id: string;
-            slug: string | null;
-            name: string;
-          };
-        };
-      };
+            _id: string
+            slug: string | null
+            name: string
+          }
+        }
+      }
       professors: Array<{
-        _id: string;
-        dbId: string | null;
-        slug: string | null;
-        name: string;
-        title: string | null;
-      }>;
-    }>;
-  }>;
-  _type: "faculty";
-  description: RichTextLite | null;
-  streetAddress: string;
-  telephone: string;
-  email: string;
-  website: string | null;
-} | null;
+        _id: string
+        dbId: string | null
+        slug: string | null
+        name: string
+        title: string | null
+      }>
+    }>
+  }>
+  _type: 'faculty'
+  description: RichTextLite | null
+  streetAddress: string
+  telephone: string
+  email: string
+  website: string | null
+} | null
 
 // Source: ../next/sanity/queries/academics/faculty.queries.ts
 // Variable: facultyStaticParamsQuery
 // Query: *[_type == "faculty" && !(_id in path("drafts.**")) && dbId != null] {  "facultySlug": coalesce(slug.current, _id),  "universitySlug": coalesce(university->slug.current, university->_id)}
 export type FacultyStaticParamsQueryResult = Array<{
-  facultySlug: string;
-  universitySlug: string;
-}>;
+  facultySlug: string
+  universitySlug: string
+}>
 
 // Source: ../next/sanity/queries/academics/professor.queries.ts
 // Variable: professorSeoQuery
 // Query: *[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {  _id,  "slug": slug.current,  name,  bio}
 export type ProfessorSeoQueryResult = {
-  _id: string;
-  slug: string | null;
-  name: string;
-  bio: RichTextLite | null;
-} | null;
+  _id: string
+  slug: string | null
+  name: string
+  bio: RichTextLite | null
+} | null
 
 // Source: ../next/sanity/queries/academics/professor.queries.ts
 // Variable: minimalProfessorTypedQuery
 // Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {_id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},}
 export type MinimalProfessorTypedQueryResult = {
-  _id: string;
-  slug: string | null;
-  dbId: string | null;
-  name: string;
-  title: string | null;
+  _id: string
+  slug: string | null
+  dbId: string | null
+  name: string
+  title: string | null
   picture: {
-    asset: SanityImageAssetReference | null;
-    crop: SanityImageCrop | null;
-    hotspot: SanityImageHotspot | null;
-    alt: string | null;
-  } | null;
+    asset: SanityImageAssetReference | null
+    crop: SanityImageCrop | null
+    hotspot: SanityImageHotspot | null
+    alt: string | null
+  } | null
   faculties: Array<{
-    _id: string;
-    slug: string | null;
-    name: string;
+    _id: string
+    slug: string | null
+    name: string
     university: {
-      _id: string;
-      slug: string | null;
-      name: string;
-    };
-  }>;
+      _id: string
+      slug: string | null
+      name: string
+    }
+  }>
   universities: Array<{
-    _id: string;
-    slug: string | null;
-    name: string;
-  }>;
+    _id: string
+    slug: string | null
+    name: string
+  }>
   subjects: Array<{
-    _id: string;
-    slug: string | null;
-    name: string;
-    code: string;
-  }>;
-} | null;
+    _id: string
+    slug: string | null
+    name: string
+    code: string
+  }>
+} | null
 
 // Source: ../next/sanity/queries/academics/professor.queries.ts
 // Variable: professorDetailQuery
 // Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},  _type,  bio,  office,  telephone,  email,  website,  faculties[]->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    }  },  "subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {    _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},  }}
 export type ProfessorDetailQueryResult = {
-  _id: string;
-  slug: string | null;
-  dbId: string | null;
-  name: string;
-  title: string | null;
+  _id: string
+  slug: string | null
+  dbId: string | null
+  name: string
+  title: string | null
   picture: {
-    asset: SanityImageAssetReference | null;
-    crop: SanityImageCrop | null;
-    hotspot: SanityImageHotspot | null;
-    alt: string | null;
-  } | null;
+    asset: SanityImageAssetReference | null
+    crop: SanityImageCrop | null
+    hotspot: SanityImageHotspot | null
+    alt: string | null
+  } | null
   faculties: Array<{
-    _id: string;
-    slug: string | null;
-    name: string;
+    _id: string
+    slug: string | null
+    name: string
     university: {
-      _id: string;
-      slug: string | null;
-      name: string;
-    };
-  }>;
+      _id: string
+      slug: string | null
+      name: string
+    }
+  }>
   universities: Array<{
-    _id: string;
-    slug: string | null;
-    name: string;
-  }>;
+    _id: string
+    slug: string | null
+    name: string
+  }>
   subjects: Array<{
-    _id: string;
-    dbId: string | null;
-    slug: string | null;
-    name: string;
-    code: string;
-    credits: number;
-    year: number;
-    semester: number;
-    elective: boolean | null;
-    description: RichTextLite | null;
-    syllabus: string | null;
+    _id: string
+    dbId: string | null
+    slug: string | null
+    name: string
+    code: string
+    credits: number
+    year: number
+    semester: number
+    elective: boolean | null
+    description: RichTextLite | null
+    syllabus: string | null
     faculty: {
-      _id: string;
-      slug: string | null;
-      name: string;
+      _id: string
+      slug: string | null
+      name: string
       university: {
-        _id: string;
-        slug: string | null;
-        name: string;
-      };
-    };
+        _id: string
+        slug: string | null
+        name: string
+      }
+    }
     study: {
-      _id: string;
-      slug: string | null;
-      siteSlug: string;
-      name: string;
+      _id: string
+      slug: string | null
+      siteSlug: string
+      name: string
       faculty: {
-        _id: string;
-        slug: string | null;
-        name: string;
+        _id: string
+        slug: string | null
+        name: string
         university: {
-          _id: string;
-          slug: string | null;
-          name: string;
-        };
-      };
-    };
+          _id: string
+          slug: string | null
+          name: string
+        }
+      }
+    }
     professors: Array<{
-      _id: string;
-      dbId: string | null;
-      slug: string | null;
-      name: string;
-      title: string | null;
-    }>;
-  }>;
-  _type: "professor";
-  bio: RichTextLite | null;
-  office: null;
-  telephone: string | null;
-  email: string | null;
-  website: string | null;
-} | null;
+      _id: string
+      dbId: string | null
+      slug: string | null
+      name: string
+      title: string | null
+    }>
+  }>
+  _type: 'professor'
+  bio: RichTextLite | null
+  office: null
+  telephone: string | null
+  email: string | null
+  website: string | null
+} | null
 
 // Source: ../next/sanity/queries/academics/professor.queries.ts
 // Variable: professorStaticParamsQuery
 // Query: *[_type == "professor" && !(_id in path("drafts.**")) && dbId != null] {  "professorSlug": coalesce(slug.current, _id)}
 export type ProfessorStaticParamsQueryResult = Array<{
-  professorSlug: string;
-}>;
+  professorSlug: string
+}>
 
 // Source: ../next/sanity/queries/academics/study.queries.ts
 // Variable: studySeoQuery
 // Query: *[_type == "study"  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)  && faculty->slug.current == $facultySlug  && faculty->university->slug.current == $universitySlug][0] {  _id,  "slug": slug.current,  name,  description,}
 export type StudySeoQueryResult = {
-  _id: string;
-  slug: string | null;
-  name: string;
-  description: RichTextLite | null;
-} | null;
+  _id: string
+  slug: string | null
+  name: string
+  description: RichTextLite | null
+} | null
 
 // Source: ../next/sanity/queries/academics/study.queries.ts
 // Variable: minimalStudyTypedQuery
 // Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "study"  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)  && faculty->slug.current == $facultySlug  && faculty->university->slug.current == $universitySlug][0] {_id,dbId,"slug": slug.current,"siteSlug": siteSlug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  name,  title,  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},},}
 export type MinimalStudyTypedQueryResult = {
-  _id: string;
-  dbId: string | null;
-  slug: string | null;
-  siteSlug: string;
-  name: string;
-  studentCount: number | null;
+  _id: string
+  dbId: string | null
+  slug: string | null
+  siteSlug: string
+  name: string
+  studentCount: number | null
   picture: {
-    asset: SanityImageAssetReference | null;
-    crop: SanityImageCrop | null;
-    hotspot: SanityImageHotspot | null;
-    alt: string | null;
-  } | null;
+    asset: SanityImageAssetReference | null
+    crop: SanityImageCrop | null
+    hotspot: SanityImageHotspot | null
+    alt: string | null
+  } | null
   logo: {
-    asset: SanityImageAssetReference | null;
-    crop: SanityImageCrop | null;
-    hotspot: SanityImageHotspot | null;
-    alt: string | null;
-  } | null;
+    asset: SanityImageAssetReference | null
+    crop: SanityImageCrop | null
+    hotspot: SanityImageHotspot | null
+    alt: string | null
+  } | null
   assistant: {
-    _id: string;
-    name: string;
-    title: string;
+    _id: string
+    name: string
+    title: string
     picture: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
-  } | null;
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
+  } | null
   faculty: {
-    _id: string;
-    slug: string | null;
-    name: string;
+    _id: string
+    slug: string | null
+    name: string
     university: {
-      _id: string;
-      slug: string | null;
-      name: string;
-    };
-  };
-  subjectCount: number;
-  professorCount: number;
+      _id: string
+      slug: string | null
+      name: string
+    }
+  }
+  subjectCount: number
+  professorCount: number
   professors: Array<{
-    _id: string;
-    slug: string | null;
-    dbId: string | null;
-    name: string;
-    title: string | null;
+    _id: string
+    slug: string | null
+    dbId: string | null
+    name: string
+    title: string | null
     picture: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
     faculties: Array<{
-      _id: string;
-      slug: string | null;
-      name: string;
+      _id: string
+      slug: string | null
+      name: string
       university: {
-        _id: string;
-        slug: string | null;
-        name: string;
-      };
-    }>;
+        _id: string
+        slug: string | null
+        name: string
+      }
+    }>
     universities: Array<{
-      _id: string;
-      slug: string | null;
-      name: string;
-    }>;
+      _id: string
+      slug: string | null
+      name: string
+    }>
     subjects: Array<{
-      _id: string;
-      slug: string | null;
-      name: string;
-      code: string;
-    }>;
-  }>;
+      _id: string
+      slug: string | null
+      name: string
+      code: string
+    }>
+  }>
   subjects: Array<{
-    _id: string;
-    dbId: string | null;
-    slug: string | null;
-    name: string;
-    code: string;
-    credits: number;
-    year: number;
-    semester: number;
-    elective: boolean | null;
-    description: RichTextLite | null;
-    syllabus: string | null;
+    _id: string
+    dbId: string | null
+    slug: string | null
+    name: string
+    code: string
+    credits: number
+    year: number
+    semester: number
+    elective: boolean | null
+    description: RichTextLite | null
+    syllabus: string | null
     faculty: {
-      _id: string;
-      slug: string | null;
-      name: string;
+      _id: string
+      slug: string | null
+      name: string
       university: {
-        _id: string;
-        slug: string | null;
-        name: string;
-      };
-    };
+        _id: string
+        slug: string | null
+        name: string
+      }
+    }
     study: {
-      _id: string;
-      slug: string | null;
-      siteSlug: string;
-      name: string;
+      _id: string
+      slug: string | null
+      siteSlug: string
+      name: string
       faculty: {
-        _id: string;
-        slug: string | null;
-        name: string;
+        _id: string
+        slug: string | null
+        name: string
         university: {
-          _id: string;
-          slug: string | null;
-          name: string;
-        };
-      };
-    };
+          _id: string
+          slug: string | null
+          name: string
+        }
+      }
+    }
     professors: Array<{
-      _id: string;
-      dbId: string | null;
-      slug: string | null;
-      name: string;
-      title: string | null;
-    }>;
-  }>;
-} | null;
+      _id: string
+      dbId: string | null
+      slug: string | null
+      name: string
+      title: string | null
+    }>
+  }>
+} | null
 
 // Source: ../next/sanity/queries/academics/study.queries.ts
 // Variable: studyDetailQuery
 // Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "study"  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)  && faculty->slug.current == $facultySlug  && faculty->university->slug.current == $universitySlug][0] {  _id,dbId,"slug": slug.current,"siteSlug": siteSlug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  name,  title,  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},},  _type,  description,  streetAddress,  telephone,  email,  website,}
 export type StudyDetailQueryResult = {
-  _id: string;
-  dbId: string | null;
-  slug: string | null;
-  siteSlug: string;
-  name: string;
-  studentCount: number | null;
+  _id: string
+  dbId: string | null
+  slug: string | null
+  siteSlug: string
+  name: string
+  studentCount: number | null
   picture: {
-    asset: SanityImageAssetReference | null;
-    crop: SanityImageCrop | null;
-    hotspot: SanityImageHotspot | null;
-    alt: string | null;
-  } | null;
+    asset: SanityImageAssetReference | null
+    crop: SanityImageCrop | null
+    hotspot: SanityImageHotspot | null
+    alt: string | null
+  } | null
   logo: {
-    asset: SanityImageAssetReference | null;
-    crop: SanityImageCrop | null;
-    hotspot: SanityImageHotspot | null;
-    alt: string | null;
-  } | null;
+    asset: SanityImageAssetReference | null
+    crop: SanityImageCrop | null
+    hotspot: SanityImageHotspot | null
+    alt: string | null
+  } | null
   assistant: {
-    _id: string;
-    name: string;
-    title: string;
+    _id: string
+    name: string
+    title: string
     picture: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
-  } | null;
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
+  } | null
   faculty: {
-    _id: string;
-    slug: string | null;
-    name: string;
+    _id: string
+    slug: string | null
+    name: string
     university: {
-      _id: string;
-      slug: string | null;
-      name: string;
-    };
-  };
-  subjectCount: number;
-  professorCount: number;
+      _id: string
+      slug: string | null
+      name: string
+    }
+  }
+  subjectCount: number
+  professorCount: number
   professors: Array<{
-    _id: string;
-    slug: string | null;
-    dbId: string | null;
-    name: string;
-    title: string | null;
+    _id: string
+    slug: string | null
+    dbId: string | null
+    name: string
+    title: string | null
     picture: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
     faculties: Array<{
-      _id: string;
-      slug: string | null;
-      name: string;
+      _id: string
+      slug: string | null
+      name: string
       university: {
-        _id: string;
-        slug: string | null;
-        name: string;
-      };
-    }>;
+        _id: string
+        slug: string | null
+        name: string
+      }
+    }>
     universities: Array<{
-      _id: string;
-      slug: string | null;
-      name: string;
-    }>;
+      _id: string
+      slug: string | null
+      name: string
+    }>
     subjects: Array<{
-      _id: string;
-      slug: string | null;
-      name: string;
-      code: string;
-    }>;
-  }>;
+      _id: string
+      slug: string | null
+      name: string
+      code: string
+    }>
+  }>
   subjects: Array<{
-    _id: string;
-    dbId: string | null;
-    slug: string | null;
-    name: string;
-    code: string;
-    credits: number;
-    year: number;
-    semester: number;
-    elective: boolean | null;
-    description: RichTextLite | null;
-    syllabus: string | null;
+    _id: string
+    dbId: string | null
+    slug: string | null
+    name: string
+    code: string
+    credits: number
+    year: number
+    semester: number
+    elective: boolean | null
+    description: RichTextLite | null
+    syllabus: string | null
     faculty: {
-      _id: string;
-      slug: string | null;
-      name: string;
+      _id: string
+      slug: string | null
+      name: string
       university: {
-        _id: string;
-        slug: string | null;
-        name: string;
-      };
-    };
+        _id: string
+        slug: string | null
+        name: string
+      }
+    }
     study: {
-      _id: string;
-      slug: string | null;
-      siteSlug: string;
-      name: string;
+      _id: string
+      slug: string | null
+      siteSlug: string
+      name: string
       faculty: {
-        _id: string;
-        slug: string | null;
-        name: string;
+        _id: string
+        slug: string | null
+        name: string
         university: {
-          _id: string;
-          slug: string | null;
-          name: string;
-        };
-      };
-    };
+          _id: string
+          slug: string | null
+          name: string
+        }
+      }
+    }
     professors: Array<{
-      _id: string;
-      dbId: string | null;
-      slug: string | null;
-      name: string;
-      title: string | null;
-    }>;
-  }>;
-  _type: "study";
-  description: RichTextLite | null;
-  streetAddress: null;
-  telephone: null;
-  email: null;
-  website: null;
-} | null;
+      _id: string
+      dbId: string | null
+      slug: string | null
+      name: string
+      title: string | null
+    }>
+  }>
+  _type: 'study'
+  description: RichTextLite | null
+  streetAddress: null
+  telephone: null
+  email: null
+  website: null
+} | null
 
 // Source: ../next/sanity/queries/academics/study.queries.ts
 // Variable: studyStaticParamsQuery
 // Query: *[_type == "study" && !(_id in path("drafts.**")) && dbId != null] {  "studySlug": coalesce(slug.current, _id),  "facultySlug": coalesce(faculty->slug.current, faculty->_id),  "universitySlug": coalesce(faculty->university->slug.current, faculty->university->_id),  "siteSlug": siteSlug.current}
 export type StudyStaticParamsQueryResult = Array<{
-  studySlug: string;
-  facultySlug: string;
-  universitySlug: string;
-  siteSlug: string;
-}>;
+  studySlug: string
+  facultySlug: string
+  universitySlug: string
+  siteSlug: string
+}>
 
 // Source: ../next/sanity/queries/academics/study.queries.ts
 // Variable: studyPickerQuery
 // Query: {  "universities": *[_type == "university" && dbId != null] | order(name asc) {    _id,    name,    "slug": slug.current  },  "faculties": *[_type == "faculty" && dbId != null && university._ref != null] | order(name asc) {    _id,    name,    "slug": slug.current,    "universityId": university._ref  },  "studies": *[_type == "study" && dbId != null && faculty._ref != null && siteSlug.current != null] | order(name asc) {    _id,    name,    "slug": slug.current,    "siteSlug": siteSlug.current,    "facultyId": faculty._ref  }}
 export type StudyPickerQueryResult = {
   universities: Array<{
-    _id: string;
-    name: string;
-    slug: string | null;
-  }>;
+    _id: string
+    name: string
+    slug: string | null
+  }>
   faculties: Array<{
-    _id: string;
-    name: string;
-    slug: string | null;
-    universityId: string;
-  }>;
+    _id: string
+    name: string
+    slug: string | null
+    universityId: string
+  }>
   studies: Array<{
-    _id: string;
-    name: string;
-    slug: string | null;
-    siteSlug: string;
-    facultyId: string;
-  }>;
-};
+    _id: string
+    name: string
+    slug: string | null
+    siteSlug: string
+    facultyId: string
+  }>
+}
 
 // Source: ../next/sanity/queries/academics/study.queries.ts
 // Variable: studySiteQuery
 // Query: *[_type == "study" && siteSlug.current == $siteSlug]{  _id,  "studySlug": coalesce(slug.current, _id),  "facultySlug": coalesce(faculty->slug.current, faculty->_id),  "universitySlug": coalesce(faculty->university->slug.current, faculty->university->_id),  "siteSlug": siteSlug.current,  "name": name,  "facultyName": faculty->name,  "universityName": faculty->university->name,  dbId}[0]
 export type StudySiteQueryResult = {
-  _id: string;
-  studySlug: string;
-  facultySlug: string;
-  universitySlug: string;
-  siteSlug: string;
-  name: string;
-  facultyName: string;
-  universityName: string;
-  dbId: string | null;
-} | null;
+  _id: string
+  studySlug: string
+  facultySlug: string
+  universitySlug: string
+  siteSlug: string
+  name: string
+  facultyName: string
+  universityName: string
+  dbId: string | null
+} | null
 
 // Source: ../next/sanity/queries/academics/study.queries.ts
 // Variable: studyAlertSubjectsQuery
 // Query: *[_type == "subject"  && dbId != null  && study._ref == *[_type == "study" && siteSlug.current == $siteSlug][0]._id] | order(name asc){  dbId,  name}
 export type StudyAlertSubjectsQueryResult = Array<{
-  dbId: string | null;
-  name: string;
-}>;
+  dbId: string | null
+  name: string
+}>
 
 // Source: ../next/sanity/queries/academics/subject.queries.ts
 // Variable: subjectSeoQuery
 // Query: *[_type == "subject"  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)  && study->slug.current == $studySlug  && study->faculty->slug.current == $facultySlug  && study->faculty->university->slug.current == $universitySlug][0] {  _id,  "slug": slug.current,  name,  description,}
 export type SubjectSeoQueryResult = {
-  _id: string;
-  slug: string | null;
-  name: string;
-  description: RichTextLite | null;
-} | null;
+  _id: string
+  slug: string | null
+  name: string
+  description: RichTextLite | null
+} | null
 
 // Source: ../next/sanity/queries/academics/subject.queries.ts
 // Variable: minimalSubjectQueryTyped
 // Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "subject"  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)  && study->slug.current == $studySlug  && study->faculty->slug.current == $facultySlug  && study->faculty->university->slug.current == $universitySlug][0]{  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},}
 export type MinimalSubjectQueryTypedResult = {
-  _id: string;
-  dbId: string | null;
-  slug: string | null;
-  name: string;
-  code: string;
-  credits: number;
-  year: number;
-  semester: number;
-  elective: boolean | null;
-  description: RichTextLite | null;
-  syllabus: string | null;
+  _id: string
+  dbId: string | null
+  slug: string | null
+  name: string
+  code: string
+  credits: number
+  year: number
+  semester: number
+  elective: boolean | null
+  description: RichTextLite | null
+  syllabus: string | null
   faculty: {
-    _id: string;
-    slug: string | null;
-    name: string;
+    _id: string
+    slug: string | null
+    name: string
     university: {
-      _id: string;
-      slug: string | null;
-      name: string;
-    };
-  };
+      _id: string
+      slug: string | null
+      name: string
+    }
+  }
   study: {
-    _id: string;
-    slug: string | null;
-    siteSlug: string;
-    name: string;
+    _id: string
+    slug: string | null
+    siteSlug: string
+    name: string
     faculty: {
-      _id: string;
-      slug: string | null;
-      name: string;
+      _id: string
+      slug: string | null
+      name: string
       university: {
-        _id: string;
-        slug: string | null;
-        name: string;
-      };
-    };
-  };
+        _id: string
+        slug: string | null
+        name: string
+      }
+    }
+  }
   professors: Array<{
-    _id: string;
-    dbId: string | null;
-    slug: string | null;
-    name: string;
-    title: string | null;
-  }>;
-} | null;
+    _id: string
+    dbId: string | null
+    slug: string | null
+    name: string
+    title: string | null
+  }>
+} | null
 
 // Source: ../next/sanity/queries/academics/subject.queries.ts
 // Variable: subjectDetailQuery
 // Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "subject"  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)  && study->slug.current == $studySlug  && study->faculty->slug.current == $facultySlug  && study->faculty->university->slug.current == $universitySlug][0] {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},  _type,  professors[]->{    _id,    "slug": slug.current,    name,    dbId,    title,    picture,    email  }}
 export type SubjectDetailQueryResult = {
-  _id: string;
-  dbId: string | null;
-  slug: string | null;
-  name: string;
-  code: string;
-  credits: number;
-  year: number;
-  semester: number;
-  elective: boolean | null;
-  description: RichTextLite | null;
-  syllabus: string | null;
+  _id: string
+  dbId: string | null
+  slug: string | null
+  name: string
+  code: string
+  credits: number
+  year: number
+  semester: number
+  elective: boolean | null
+  description: RichTextLite | null
+  syllabus: string | null
   faculty: {
-    _id: string;
-    slug: string | null;
-    name: string;
+    _id: string
+    slug: string | null
+    name: string
     university: {
-      _id: string;
-      slug: string | null;
-      name: string;
-    };
-  };
+      _id: string
+      slug: string | null
+      name: string
+    }
+  }
   study: {
-    _id: string;
-    slug: string | null;
-    siteSlug: string;
-    name: string;
+    _id: string
+    slug: string | null
+    siteSlug: string
+    name: string
     faculty: {
-      _id: string;
-      slug: string | null;
-      name: string;
+      _id: string
+      slug: string | null
+      name: string
       university: {
-        _id: string;
-        slug: string | null;
-        name: string;
-      };
-    };
-  };
+        _id: string
+        slug: string | null
+        name: string
+      }
+    }
+  }
   professors: Array<{
-    _id: string;
-    slug: string | null;
-    name: string;
-    dbId: string | null;
-    title: string | null;
+    _id: string
+    slug: string | null
+    name: string
+    dbId: string | null
+    title: string | null
     picture: {
-      asset?: SanityImageAssetReference;
-      media?: unknown;
-      hotspot?: SanityImageHotspot;
-      crop?: SanityImageCrop;
-      _type: "image";
-    } | null;
-    email: string | null;
-  }>;
-  _type: "subject";
-} | null;
+      asset?: SanityImageAssetReference
+      media?: unknown
+      hotspot?: SanityImageHotspot
+      crop?: SanityImageCrop
+      _type: 'image'
+    } | null
+    email: string | null
+  }>
+  _type: 'subject'
+} | null
 
 // Source: ../next/sanity/queries/academics/subject.queries.ts
 // Variable: subjectByIdQuery
 // Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "subject" && (_id == $subjectId || _id == "drafts." + $subjectId || dbId == $subjectId)][0] {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},  _type,  professors[]->{    _id,    "slug": slug.current,    name,    dbId,    title,    picture,    email  }}
 export type SubjectByIdQueryResult = {
-  _id: string;
-  dbId: string | null;
-  slug: string | null;
-  name: string;
-  code: string;
-  credits: number;
-  year: number;
-  semester: number;
-  elective: boolean | null;
-  description: RichTextLite | null;
-  syllabus: string | null;
+  _id: string
+  dbId: string | null
+  slug: string | null
+  name: string
+  code: string
+  credits: number
+  year: number
+  semester: number
+  elective: boolean | null
+  description: RichTextLite | null
+  syllabus: string | null
   faculty: {
-    _id: string;
-    slug: string | null;
-    name: string;
+    _id: string
+    slug: string | null
+    name: string
     university: {
-      _id: string;
-      slug: string | null;
-      name: string;
-    };
-  };
+      _id: string
+      slug: string | null
+      name: string
+    }
+  }
   study: {
-    _id: string;
-    slug: string | null;
-    siteSlug: string;
-    name: string;
+    _id: string
+    slug: string | null
+    siteSlug: string
+    name: string
     faculty: {
-      _id: string;
-      slug: string | null;
-      name: string;
+      _id: string
+      slug: string | null
+      name: string
       university: {
-        _id: string;
-        slug: string | null;
-        name: string;
-      };
-    };
-  };
+        _id: string
+        slug: string | null
+        name: string
+      }
+    }
+  }
   professors: Array<{
-    _id: string;
-    slug: string | null;
-    name: string;
-    dbId: string | null;
-    title: string | null;
+    _id: string
+    slug: string | null
+    name: string
+    dbId: string | null
+    title: string | null
     picture: {
-      asset?: SanityImageAssetReference;
-      media?: unknown;
-      hotspot?: SanityImageHotspot;
-      crop?: SanityImageCrop;
-      _type: "image";
-    } | null;
-    email: string | null;
-  }>;
-  _type: "subject";
-} | null;
+      asset?: SanityImageAssetReference
+      media?: unknown
+      hotspot?: SanityImageHotspot
+      crop?: SanityImageCrop
+      _type: 'image'
+    } | null
+    email: string | null
+  }>
+  _type: 'subject'
+} | null
 
 // Source: ../next/sanity/queries/academics/subject.queries.ts
 // Variable: subjectPathQuery
 // Query: *[_type == "subject" && (_id == $subjectId || _id == "drafts." + $subjectId || dbId == $subjectId)][0] {  "subjectSlug": coalesce(slug.current, _id),  "studySlug": coalesce(study->slug.current, study->_id),  "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),  "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id),  "siteSlug": study->siteSlug.current}
 export type SubjectPathQueryResult = {
-  subjectSlug: string;
-  studySlug: string;
-  facultySlug: string;
-  universitySlug: string;
-  siteSlug: string;
-} | null;
+  subjectSlug: string
+  studySlug: string
+  facultySlug: string
+  universitySlug: string
+  siteSlug: string
+} | null
 
 // Source: ../next/sanity/queries/academics/subject.queries.ts
 // Variable: subjectStaticParamsQuery
 // Query: *[_type == "subject" && !(_id in path("drafts.**")) && dbId != null] {  "subjectSlug": coalesce(slug.current, _id),  "studySlug": coalesce(study->slug.current, study->_id),  "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),  "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id),  "siteSlug": study->siteSlug.current}
 export type SubjectStaticParamsQueryResult = Array<{
-  subjectSlug: string;
-  studySlug: string;
-  facultySlug: string;
-  universitySlug: string;
-  siteSlug: string;
-}>;
+  subjectSlug: string
+  studySlug: string
+  facultySlug: string
+  universitySlug: string
+  siteSlug: string
+}>
 
 // Source: ../next/sanity/queries/academics/university.queries.ts
 // Variable: universityGalleryQuery
 // Query: *[_type == "university" && dbId != null] | order(name asc) {  _id,  "slug": slug.current,  name,  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {    _id,    "slug": slug.current,    name,  }}
 export type UniversityGalleryQueryResult = Array<{
-  _id: string;
-  slug: string | null;
-  name: string;
+  _id: string
+  slug: string | null
+  name: string
   faculties: Array<{
-    _id: string;
-    slug: string | null;
-    name: string;
-  }>;
-}>;
+    _id: string
+    slug: string | null
+    name: string
+  }>
+}>
 
 // Source: ../next/sanity/queries/academics/university.queries.ts
 // Variable: universitySeoQuery
 // Query: *[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {  _id,  "slug": slug.current,  name,  description,}
 export type UniversitySeoQueryResult = {
-  _id: string;
-  slug: string | null;
-  name: string;
-  description: RichTextLite | null;
-} | null;
+  _id: string
+  slug: string | null
+  name: string
+  description: RichTextLite | null
+} | null
 
 // Source: ../next/sanity/queries/academics/university.queries.ts
 // Variable: universityDetailQuery
 // Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {  _id,  "slug": slug.current,  _type,  name,  description,  "picture": sanityImage::full(picture),  "logo": sanityImage::full(logo),  streetAddress,  telephone,  email,  website,  rector->{    _id,    name,    title,    "picture": sanityImage::full(picture)  },  viceRectors[]->{    _id,    name,    title,    "picture": sanityImage::full(picture)  },  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {    _id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),dean->{  _id,  name,  title,  "picture": sanityImage::full(picture)},secretary->{  _id,  name,  title,  "picture": sanityImage::full(picture)},viceDeans[]->{  _id,  name,  title,  "picture": sanityImage::full(picture)},university->{  _id,  "slug": slug.current,  name},"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {  _id,dbId,"slug": slug.current,"siteSlug": siteSlug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  name,  title,  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},},},  }}
 export type UniversityDetailQueryResult = {
-  _id: string;
-  slug: string | null;
-  _type: "university";
-  name: string;
-  description: RichTextLite | null;
+  _id: string
+  slug: string | null
+  _type: 'university'
+  name: string
+  description: RichTextLite | null
   picture: {
-    asset: SanityImageAssetReference | null;
-    crop: SanityImageCrop | null;
-    hotspot: SanityImageHotspot | null;
-    alt: string | null;
-  } | null;
+    asset: SanityImageAssetReference | null
+    crop: SanityImageCrop | null
+    hotspot: SanityImageHotspot | null
+    alt: string | null
+  } | null
   logo: {
-    asset: SanityImageAssetReference | null;
-    crop: SanityImageCrop | null;
-    hotspot: SanityImageHotspot | null;
-    alt: string | null;
-  } | null;
-  streetAddress: string;
-  telephone: string | null;
-  email: string | null;
-  website: string | null;
+    asset: SanityImageAssetReference | null
+    crop: SanityImageCrop | null
+    hotspot: SanityImageHotspot | null
+    alt: string | null
+  } | null
+  streetAddress: string
+  telephone: string | null
+  email: string | null
+  website: string | null
   rector: {
-    _id: string;
-    name: string;
-    title: string;
+    _id: string
+    name: string
+    title: string
     picture: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
-  } | null;
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
+  } | null
   viceRectors: Array<{
-    _id: string;
-    name: string;
-    title: string;
+    _id: string
+    name: string
+    title: string
     picture: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
-  }> | null;
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
+  }> | null
   faculties: Array<{
-    _id: string;
-    slug: string | null;
-    name: string;
-    studentCount: number | null;
+    _id: string
+    slug: string | null
+    name: string
+    studentCount: number | null
     picture: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
     logo: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
     dean: {
-      _id: string;
-      name: string;
-      title: string;
+      _id: string
+      name: string
+      title: string
       picture: {
-        asset: SanityImageAssetReference | null;
-        crop: SanityImageCrop | null;
-        hotspot: SanityImageHotspot | null;
-        alt: string | null;
-      } | null;
-    };
+        asset: SanityImageAssetReference | null
+        crop: SanityImageCrop | null
+        hotspot: SanityImageHotspot | null
+        alt: string | null
+      } | null
+    }
     secretary: {
-      _id: string;
-      name: string;
-      title: string;
+      _id: string
+      name: string
+      title: string
       picture: {
-        asset: SanityImageAssetReference | null;
-        crop: SanityImageCrop | null;
-        hotspot: SanityImageHotspot | null;
-        alt: string | null;
-      } | null;
-    };
+        asset: SanityImageAssetReference | null
+        crop: SanityImageCrop | null
+        hotspot: SanityImageHotspot | null
+        alt: string | null
+      } | null
+    }
     viceDeans: Array<{
-      _id: string;
-      name: string;
-      title: string;
+      _id: string
+      name: string
+      title: string
       picture: {
-        asset: SanityImageAssetReference | null;
-        crop: SanityImageCrop | null;
-        hotspot: SanityImageHotspot | null;
-        alt: string | null;
-      } | null;
-    }> | null;
+        asset: SanityImageAssetReference | null
+        crop: SanityImageCrop | null
+        hotspot: SanityImageHotspot | null
+        alt: string | null
+      } | null
+    }> | null
     university: {
-      _id: string;
-      slug: string | null;
-      name: string;
-    };
-    studyCount: number;
-    professorCount: number;
+      _id: string
+      slug: string | null
+      name: string
+    }
+    studyCount: number
+    professorCount: number
     professors: Array<{
-      _id: string;
-      slug: string | null;
-      dbId: string | null;
-      name: string;
-      title: string | null;
+      _id: string
+      slug: string | null
+      dbId: string | null
+      name: string
+      title: string | null
       picture: {
-        asset: SanityImageAssetReference | null;
-        crop: SanityImageCrop | null;
-        hotspot: SanityImageHotspot | null;
-        alt: string | null;
-      } | null;
+        asset: SanityImageAssetReference | null
+        crop: SanityImageCrop | null
+        hotspot: SanityImageHotspot | null
+        alt: string | null
+      } | null
       faculties: Array<{
-        _id: string;
-        slug: string | null;
-        name: string;
+        _id: string
+        slug: string | null
+        name: string
         university: {
-          _id: string;
-          slug: string | null;
-          name: string;
-        };
-      }>;
+          _id: string
+          slug: string | null
+          name: string
+        }
+      }>
       universities: Array<{
-        _id: string;
-        slug: string | null;
-        name: string;
-      }>;
+        _id: string
+        slug: string | null
+        name: string
+      }>
       subjects: Array<{
-        _id: string;
-        slug: string | null;
-        name: string;
-        code: string;
-      }>;
-    }>;
+        _id: string
+        slug: string | null
+        name: string
+        code: string
+      }>
+    }>
     studies: Array<{
-      _id: string;
-      dbId: string | null;
-      slug: string | null;
-      siteSlug: string;
-      name: string;
-      studentCount: number | null;
+      _id: string
+      dbId: string | null
+      slug: string | null
+      siteSlug: string
+      name: string
+      studentCount: number | null
       picture: {
-        asset: SanityImageAssetReference | null;
-        crop: SanityImageCrop | null;
-        hotspot: SanityImageHotspot | null;
-        alt: string | null;
-      } | null;
+        asset: SanityImageAssetReference | null
+        crop: SanityImageCrop | null
+        hotspot: SanityImageHotspot | null
+        alt: string | null
+      } | null
       logo: {
-        asset: SanityImageAssetReference | null;
-        crop: SanityImageCrop | null;
-        hotspot: SanityImageHotspot | null;
-        alt: string | null;
-      } | null;
+        asset: SanityImageAssetReference | null
+        crop: SanityImageCrop | null
+        hotspot: SanityImageHotspot | null
+        alt: string | null
+      } | null
       assistant: {
-        _id: string;
-        name: string;
-        title: string;
+        _id: string
+        name: string
+        title: string
         picture: {
-          asset: SanityImageAssetReference | null;
-          crop: SanityImageCrop | null;
-          hotspot: SanityImageHotspot | null;
-          alt: string | null;
-        } | null;
-      } | null;
+          asset: SanityImageAssetReference | null
+          crop: SanityImageCrop | null
+          hotspot: SanityImageHotspot | null
+          alt: string | null
+        } | null
+      } | null
       faculty: {
-        _id: string;
-        slug: string | null;
-        name: string;
+        _id: string
+        slug: string | null
+        name: string
         university: {
-          _id: string;
-          slug: string | null;
-          name: string;
-        };
-      };
-      subjectCount: number;
-      professorCount: number;
+          _id: string
+          slug: string | null
+          name: string
+        }
+      }
+      subjectCount: number
+      professorCount: number
       professors: Array<{
-        _id: string;
-        slug: string | null;
-        dbId: string | null;
-        name: string;
-        title: string | null;
+        _id: string
+        slug: string | null
+        dbId: string | null
+        name: string
+        title: string | null
         picture: {
-          asset: SanityImageAssetReference | null;
-          crop: SanityImageCrop | null;
-          hotspot: SanityImageHotspot | null;
-          alt: string | null;
-        } | null;
+          asset: SanityImageAssetReference | null
+          crop: SanityImageCrop | null
+          hotspot: SanityImageHotspot | null
+          alt: string | null
+        } | null
         faculties: Array<{
-          _id: string;
-          slug: string | null;
-          name: string;
+          _id: string
+          slug: string | null
+          name: string
           university: {
-            _id: string;
-            slug: string | null;
-            name: string;
-          };
-        }>;
+            _id: string
+            slug: string | null
+            name: string
+          }
+        }>
         universities: Array<{
-          _id: string;
-          slug: string | null;
-          name: string;
-        }>;
+          _id: string
+          slug: string | null
+          name: string
+        }>
         subjects: Array<{
-          _id: string;
-          slug: string | null;
-          name: string;
-          code: string;
-        }>;
-      }>;
+          _id: string
+          slug: string | null
+          name: string
+          code: string
+        }>
+      }>
       subjects: Array<{
-        _id: string;
-        dbId: string | null;
-        slug: string | null;
-        name: string;
-        code: string;
-        credits: number;
-        year: number;
-        semester: number;
-        elective: boolean | null;
-        description: RichTextLite | null;
-        syllabus: string | null;
+        _id: string
+        dbId: string | null
+        slug: string | null
+        name: string
+        code: string
+        credits: number
+        year: number
+        semester: number
+        elective: boolean | null
+        description: RichTextLite | null
+        syllabus: string | null
         faculty: {
-          _id: string;
-          slug: string | null;
-          name: string;
+          _id: string
+          slug: string | null
+          name: string
           university: {
-            _id: string;
-            slug: string | null;
-            name: string;
-          };
-        };
+            _id: string
+            slug: string | null
+            name: string
+          }
+        }
         study: {
-          _id: string;
-          slug: string | null;
-          siteSlug: string;
-          name: string;
+          _id: string
+          slug: string | null
+          siteSlug: string
+          name: string
           faculty: {
-            _id: string;
-            slug: string | null;
-            name: string;
+            _id: string
+            slug: string | null
+            name: string
             university: {
-              _id: string;
-              slug: string | null;
-              name: string;
-            };
-          };
-        };
+              _id: string
+              slug: string | null
+              name: string
+            }
+          }
+        }
         professors: Array<{
-          _id: string;
-          dbId: string | null;
-          slug: string | null;
-          name: string;
-          title: string | null;
-        }>;
-      }>;
-    }>;
-  }>;
-} | null;
+          _id: string
+          dbId: string | null
+          slug: string | null
+          name: string
+          title: string | null
+        }>
+      }>
+    }>
+  }>
+} | null
 
 // Source: ../next/sanity/queries/academics/university.queries.ts
 // Variable: universityStaticParamsQuery
 // Query: *[_type == "university" && !(_id in path("drafts.**")) && dbId != null] {  "universitySlug": coalesce(slug.current, _id)}
 export type UniversityStaticParamsQueryResult = Array<{
-  universitySlug: string;
-}>;
+  universitySlug: string
+}>
 
 // Source: ../next/sanity/queries/calendar.queries.ts
 // Variable: calendarEventsQuery
 // Query: *[_type == "calendarEvent"  && _id in *[_type == "study" && siteSlug.current == $siteSlug][0].calendars[]->events[]._ref  && dateTime(date) >= dateTime($from)  && dateTime(date) <= dateTime($to)] | order(date asc, _id asc) {    _id,  "title": stringTitle,  "description": stringSubtitle,  date,  type,  importance,  "subject": subject->{    _id,    dbId,    name,    "slug": coalesce(slug.current, _id),    "studySlug": coalesce(study->slug.current, study->_id),    "siteSlug": study->siteSlug.current,    "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),    "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id)  },  "professors": professors[]->{    _id,    dbId,    name,    "slug": coalesce(slug.current, _id)  }}
 export type CalendarEventsQueryResult = Array<{
-  _id: string;
-  title: string;
-  description: string | null;
-  date: string;
-  type: "announcement" | "exam" | "info" | "preliminary_exam" | "reminder";
-  importance: "high" | "low" | "normal";
+  _id: string
+  title: string
+  description: string | null
+  date: string
+  type: 'announcement' | 'exam' | 'info' | 'preliminary_exam' | 'reminder'
+  importance: 'high' | 'low' | 'normal'
   subject: {
-    _id: string;
-    dbId: string | null;
-    name: string;
-    slug: string;
-    studySlug: string;
-    siteSlug: string;
-    facultySlug: string;
-    universitySlug: string;
-  } | null;
+    _id: string
+    dbId: string | null
+    name: string
+    slug: string
+    studySlug: string
+    siteSlug: string
+    facultySlug: string
+    universitySlug: string
+  } | null
   professors: Array<{
-    _id: string;
-    dbId: string | null;
-    name: string;
-    slug: string;
-  }> | null;
-}>;
+    _id: string
+    dbId: string | null
+    name: string
+    slug: string
+  }> | null
+}>
 
 // Source: ../next/sanity/queries/catalog-home.queries.ts
 // Variable: catalogHomeQuery
 // Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};{  "universities": *[_type == "university" && dbId != null] | order(name asc) {    _id,    name,    "slug": slug.current,    "logo": sanityImage::full(logo),    "picture": sanityImage::full(picture),    "facultyCount": count(*[_type == "faculty" && references(^._id) && dbId != null])  },  "faculties": *[_type == "faculty" && university._ref != null && dbId != null] | order(name asc) {    _id,    name,    "slug": slug.current,    "logo": sanityImage::full(logo),    "picture": sanityImage::full(picture),    "studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),    "professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),    university->{      _id,      name,      "slug": slug.current    }  },  "studies": *[_type == "study" && faculty._ref != null && dbId != null] | order(name asc) {    _id,    name,    "slug": slug.current,    "siteSlug": siteSlug.current,    "logo": sanityImage::full(logo),    "picture": sanityImage::full(picture),    "subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),    "professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),    faculty->{      _id,      name,      "slug": slug.current,      university->{        _id,        name,        "slug": slug.current      }    }  }}
 export type CatalogHomeQueryResult = {
   universities: Array<{
-    _id: string;
-    name: string;
-    slug: string | null;
+    _id: string
+    name: string
+    slug: string | null
     logo: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
     picture: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
-    facultyCount: number;
-  }>;
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
+    facultyCount: number
+  }>
   faculties: Array<{
-    _id: string;
-    name: string;
-    slug: string | null;
+    _id: string
+    name: string
+    slug: string | null
     logo: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
     picture: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
-    studyCount: number;
-    professorCount: number;
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
+    studyCount: number
+    professorCount: number
     university: {
-      _id: string;
-      name: string;
-      slug: string | null;
-    };
-  }>;
+      _id: string
+      name: string
+      slug: string | null
+    }
+  }>
   studies: Array<{
-    _id: string;
-    name: string;
-    slug: string | null;
-    siteSlug: string;
+    _id: string
+    name: string
+    slug: string | null
+    siteSlug: string
     logo: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
     picture: {
-      asset: SanityImageAssetReference | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-      alt: string | null;
-    } | null;
-    subjectCount: number;
-    professorCount: number;
+      asset: SanityImageAssetReference | null
+      crop: SanityImageCrop | null
+      hotspot: SanityImageHotspot | null
+      alt: string | null
+    } | null
+    subjectCount: number
+    professorCount: number
     faculty: {
-      _id: string;
-      name: string;
-      slug: string | null;
+      _id: string
+      name: string
+      slug: string | null
       university: {
-        _id: string;
-        name: string;
-        slug: string | null;
-      };
-    };
-  }>;
-};
+        _id: string
+        name: string
+        slug: string | null
+      }
+    }
+  }>
+}
 
 // Source: ../next/sanity/queries/catalog-search.queries.ts
 // Variable: catalogSearchQuery
 // Query: {  "universities": *[_type == "university" && dbId != null && name match $term] | order(name asc)[0...20] {    _id,    name,    "slug": slug.current  },  "faculties": *[_type == "faculty" && dbId != null && name match $term] | order(name asc)[0...20] {    _id,    name,    "slug": slug.current,    university->{      _id,      name,      "slug": slug.current    }  },  "studies": *[_type == "study" && dbId != null && name match $term] | order(name asc)[0...20] {    _id,    name,    "slug": slug.current,    "siteSlug": siteSlug.current,    faculty->{      _id,      name,      "slug": slug.current,      university->{        _id,        name,        "slug": slug.current      }    }  },  "professors": *[_type == "professor" && dbId != null && name match $term] | order(name asc)[0...20] {    _id,    name,    "slug": slug.current  }}
 export type CatalogSearchQueryResult = {
   universities: Array<{
-    _id: string;
-    name: string;
-    slug: string | null;
-  }>;
+    _id: string
+    name: string
+    slug: string | null
+  }>
   faculties: Array<{
-    _id: string;
-    name: string;
-    slug: string | null;
+    _id: string
+    name: string
+    slug: string | null
     university: {
-      _id: string;
-      name: string;
-      slug: string | null;
-    };
-  }>;
+      _id: string
+      name: string
+      slug: string | null
+    }
+  }>
   studies: Array<{
-    _id: string;
-    name: string;
-    slug: string | null;
-    siteSlug: string;
+    _id: string
+    name: string
+    slug: string | null
+    siteSlug: string
     faculty: {
-      _id: string;
-      name: string;
-      slug: string | null;
+      _id: string
+      name: string
+      slug: string | null
       university: {
-        _id: string;
-        name: string;
-        slug: string | null;
-      };
-    };
-  }>;
+        _id: string
+        name: string
+        slug: string | null
+      }
+    }
+  }>
   professors: Array<{
-    _id: string;
-    name: string;
-    slug: string | null;
-  }>;
-};
+    _id: string
+    name: string
+    slug: string | null
+  }>
+}
 
 // Source: ../next/sanity/queries/nav.queries.ts
 // Variable: navMenuQuery
@@ -3359,1269 +3046,626 @@ export type CatalogSearchQueryResult = {
 export type NavMenuQueryResult =
   | null
   | {
-      title: string | null;
+      title: string | null
       websiteLogo: {
-        asset: SanityImageAssetReference | null;
-        crop: SanityImageCrop | null;
-        hotspot: SanityImageHotspot | null;
-        alt: string | null;
-      } | null;
+        asset: SanityImageAssetReference | null
+        crop: SanityImageCrop | null
+        hotspot: SanityImageHotspot | null
+        alt: string | null
+      } | null
       navItems: Array<
         | {
-            stringTitle: string | null;
-            stringSubtitle: null;
-            customLink: string;
+            stringTitle: string | null
+            stringSubtitle: null
+            customLink: string
             icon: {
-              asset: SanityImageAssetReference | null;
-              crop: SanityImageCrop | null;
-              hotspot: SanityImageHotspot | null;
-              alt: string | null;
-            } | null;
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
           }
         | {
-            stringTitle: string | null;
-            stringSubtitle: null;
-            customLink: string;
+            stringTitle: string | null
+            stringSubtitle: null
+            customLink: string
           }
-      > | null;
+      > | null
     }
   | {
-      title: string | null;
+      title: string | null
       navItems: Array<
         | {
-            stringTitle: string | null;
-            stringSubtitle: null;
-            customLink: string;
+            stringTitle: string | null
+            stringSubtitle: null
+            customLink: string
             icon: {
-              asset: SanityImageAssetReference | null;
-              crop: SanityImageCrop | null;
-              hotspot: SanityImageHotspot | null;
-              alt: string | null;
-            } | null;
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
           }
         | {
-            stringTitle: string | null;
-            stringSubtitle: null;
-            customLink: string;
+            stringTitle: string | null
+            stringSubtitle: null
+            customLink: string
           }
-      > | null;
+      > | null
     }
   | {
       websiteLogo: {
-        asset: SanityImageAssetReference | null;
-        crop: SanityImageCrop | null;
-        hotspot: SanityImageHotspot | null;
-        alt: string | null;
-      } | null;
+        asset: SanityImageAssetReference | null
+        crop: SanityImageCrop | null
+        hotspot: SanityImageHotspot | null
+        alt: string | null
+      } | null
       navItems: Array<
         | {
-            stringTitle: string | null;
-            stringSubtitle: null;
-            customLink: string;
+            stringTitle: string | null
+            stringSubtitle: null
+            customLink: string
             icon: {
-              asset: SanityImageAssetReference | null;
-              crop: SanityImageCrop | null;
-              hotspot: SanityImageHotspot | null;
-              alt: string | null;
-            } | null;
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
           }
         | {
-            stringTitle: string | null;
-            stringSubtitle: null;
-            customLink: string;
+            stringTitle: string | null
+            stringSubtitle: null
+            customLink: string
           }
-      > | null;
+      > | null
     }
   | {
       navItems: Array<
         | {
-            stringTitle: string | null;
-            stringSubtitle: null;
-            customLink: string;
+            stringTitle: string | null
+            stringSubtitle: null
+            customLink: string
             icon: {
-              asset: SanityImageAssetReference | null;
-              crop: SanityImageCrop | null;
-              hotspot: SanityImageHotspot | null;
-              alt: string | null;
-            } | null;
+              asset: SanityImageAssetReference | null
+              crop: SanityImageCrop | null
+              hotspot: SanityImageHotspot | null
+              alt: string | null
+            } | null
           }
         | {
-            stringTitle: string | null;
-            stringSubtitle: null;
-            customLink: string;
+            stringTitle: string | null
+            stringSubtitle: null
+            customLink: string
           }
-      > | null;
-    };
+      > | null
+    }
 
 // Source: ../next/sanity/queries/nav.queries.ts
 // Variable: studyLogosQuery
 // Query: fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};*[_type == "study" && defined(siteSlug.current)]{  "siteSlug": siteSlug.current,  "logo": sanityImage::full(logo),}
 export type StudyLogosQueryResult = Array<{
-  siteSlug: string;
+  siteSlug: string
   logo: {
-    asset: SanityImageAssetReference | null;
-    crop: SanityImageCrop | null;
-    hotspot: SanityImageHotspot | null;
-    alt: string | null;
-  } | null;
-}>;
+    asset: SanityImageAssetReference | null
+    crop: SanityImageCrop | null
+    hotspot: SanityImageHotspot | null
+    alt: string | null
+  } | null
+}>
 
 // Source: ../next/sanity/queries/onboarding.queries.ts
 // Variable: onboardingCatalogQuery
 // Query: {  "universities": *[_type == "university" && dbId != null]{ _id, dbId, name, "slug": slug.current },  "faculties": *[_type == "faculty" && university._ref != null && dbId != null]{ _id, dbId, name, "slug": slug.current, "universityId": university._ref },  "studies": *[_type == "study" && faculty._ref != null && dbId != null]{    _id,    dbId,    name,    "slug": slug.current,    "siteSlug": siteSlug.current,    "facultyId": faculty._ref,    "subjectsByYear": *[_type == "subject" && study._ref == ^._id && dbId != null        && _id == (*[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(_id asc)[0]._id)      ] | order(year asc){      year,      "subjects": *[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(name asc){        _id, dbId, name, year, elective, "studyId": study._ref      }    },  },  "subjects": *[_type == "subject" && study._ref != null && dbId != null] | order(year asc){      _id,  dbId,  "slug": slug.current,  name,  code,  credits,  year,  semester,  elective,  "faculty": study->faculty->{    _id,    "slug": slug.current,    name,    dbId,    university->{      _id,      "slug": slug.current,      name,    },  },  study->{    _id,    "slug": slug.current,    "siteSlug": siteSlug.current,    name,    dbId,    faculty->{      _id,      "slug": slug.current,      name,      university->{        _id,        "slug": slug.current,        name,      },    },  },  professors[]->{    _id,    dbId,    "slug": slug.current,    name,    title,  },  }}
 export type OnboardingCatalogQueryResult = {
   universities: Array<{
-    _id: string;
-    dbId: string;
-    name: string;
-    slug: string | null;
-  }>;
+    _id: string
+    dbId: string
+    name: string
+    slug: string | null
+  }>
   faculties: Array<{
-    _id: string;
-    dbId: string;
-    name: string;
-    slug: string | null;
-    universityId: string;
-  }>;
+    _id: string
+    dbId: string
+    name: string
+    slug: string | null
+    universityId: string
+  }>
   studies: Array<{
-    _id: string;
-    dbId: string;
-    name: string;
-    slug: string | null;
-    siteSlug: string;
-    facultyId: string;
+    _id: string
+    dbId: string
+    name: string
+    slug: string | null
+    siteSlug: string
+    facultyId: string
     subjectsByYear: Array<{
-      year: number;
+      year: number
       subjects: Array<{
-        _id: string;
-        dbId: string | null;
-        name: string;
-        year: number;
-        elective: boolean | null;
-        studyId: string;
-      }>;
-    }>;
-  }>;
+        _id: string
+        dbId: string | null
+        name: string
+        year: number
+        elective: boolean | null
+        studyId: string
+      }>
+    }>
+  }>
   subjects: Array<{
-    _id: string;
-    dbId: string;
-    slug: string | null;
-    name: string;
-    code: string;
-    credits: number;
-    year: number;
-    semester: number;
-    elective: boolean | null;
+    _id: string
+    dbId: string
+    slug: string | null
+    name: string
+    code: string
+    credits: number
+    year: number
+    semester: number
+    elective: boolean | null
     faculty: {
-      _id: string;
-      slug: string | null;
-      name: string;
-      dbId: string | null;
+      _id: string
+      slug: string | null
+      name: string
+      dbId: string | null
       university: {
-        _id: string;
-        slug: string | null;
-        name: string;
-      };
-    };
+        _id: string
+        slug: string | null
+        name: string
+      }
+    }
     study: {
-      _id: string;
-      slug: string | null;
-      siteSlug: string;
-      name: string;
-      dbId: string | null;
+      _id: string
+      slug: string | null
+      siteSlug: string
+      name: string
+      dbId: string | null
       faculty: {
-        _id: string;
-        slug: string | null;
-        name: string;
+        _id: string
+        slug: string | null
+        name: string
         university: {
-          _id: string;
-          slug: string | null;
-          name: string;
-        };
-      };
-    };
+          _id: string
+          slug: string | null
+          name: string
+        }
+      }
+    }
     professors: Array<{
-      _id: string;
-      dbId: string | null;
-      slug: string | null;
-      name: string;
-      title: string | null;
-    }>;
-  }>;
-};
+      _id: string
+      dbId: string | null
+      slug: string | null
+      name: string
+      title: string | null
+    }>
+  }>
+}
 
 // Source: ../next/sanity/queries/study-tip.queries.ts
 // Variable: studyTipsQuery
 // Query: *[_type == "studyTip" && length(title) > 0 && length(content) > 0] | order(_createdAt asc, _id asc) {  _id,  title,  content}
 export type StudyTipsQueryResult = Array<{
-  _id: string;
-  title: RichTextLite;
-  content: RichTextLite | null;
-}>;
+  _id: string
+  title: RichTextLite
+  content: RichTextLite | null
+}>
 
 // Source: ../next/sanity/queries/website.queries.ts
 // Variable: websiteSeoQuery
 // Query: *[_id == $WEBSITE][0]{  "siteName": coalesce(siteName, websiteTitle, "Scriptr"),  "siteUrl": coalesce(siteUrl, ""),  "defaultSeoTitle": coalesce(defaultSeoTitle, websiteTitle, "Scriptr"),  "defaultSeoDescription": coalesce(defaultSeoDescription, ""),  "defaultKeywords": defaultKeywords[]}
 export type WebsiteSeoQueryResult =
   | {
-      siteName: "Scriptr";
-      siteUrl: "";
-      defaultSeoTitle: "Scriptr";
-      defaultSeoDescription: "";
-      defaultKeywords: null;
+      siteName: 'Scriptr'
+      siteUrl: ''
+      defaultSeoTitle: 'Scriptr'
+      defaultSeoDescription: ''
+      defaultKeywords: null
     }
   | {
-      siteName: string | "Scriptr";
-      siteUrl: string | "";
-      defaultSeoTitle: string | "Scriptr";
-      defaultSeoDescription: string | "";
-      defaultKeywords: Array<string> | null;
+      siteName: string | 'Scriptr'
+      siteUrl: string | ''
+      defaultSeoTitle: string | 'Scriptr'
+      defaultSeoDescription: string | ''
+      defaultKeywords: Array<string> | null
     }
-  | null;
+  | null
 
 // Source: ../next/sanity/queries/website.queries.ts
 // Variable: websiteBackgroundQuery
 // Query: *[_id == $WEBSITE][0].background->{...}
 export type WebsiteBackgroundQueryResult =
   | {
-      _id: string;
-      _type: "christmasCanvas";
-      _createdAt: string;
-      _updatedAt: string;
-      _rev: string;
-      seed?: number;
-      treeDecorationChance?: number;
-      houseDecorationChance?: number;
-      enableSmoke?: boolean;
-      enableWindowGlow?: boolean;
-      enableSnow?: boolean;
-      snowDensity?: number;
-      snowSpeed?: number;
-      enableSanta?: boolean;
-      santaFirstDelaySeconds?: number;
-      santaMinGapSeconds?: number;
-      santaMaxGapSeconds?: number;
-      lightColors?: {
-        mountainFar?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        mountainNear?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        mountainCap?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        hillBack?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        hillVillage?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        hillBand?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        hillFront?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        treeFar?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        treeMid?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        treeNear?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        houseWall?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        houseSnow?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        houseWindow?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        houseChimney?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        snowfall?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        smoke?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        sleigh?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        reindeer?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        lights?: Array<
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow"
-        >;
-      };
-      darkColors?: {
-        mountainFar?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        mountainNear?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        mountainCap?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        hillBack?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        hillVillage?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        hillBand?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        hillFront?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        treeFar?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        treeMid?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        treeNear?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        houseWall?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        houseSnow?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        houseWindow?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        houseChimney?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        snowfall?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        smoke?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        sleigh?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        reindeer?:
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow";
-        lights?: Array<
-          | "amber"
-          | "background-1000"
-          | "background-50"
-          | "brand-300"
-          | "brand-850"
-          | "brand"
-          | "error-red"
-          | "golden-yellow"
-          | "grey-200"
-          | "grey-300"
-          | "grey-800"
-          | "jade"
-          | "lavender"
-          | "rose-pink"
-          | "sky"
-          | "yellow"
-        >;
-      };
+      _id: string
+      _type: 'christmasCanvas'
+      _createdAt: string
+      _updatedAt: string
+      _rev: string
+      seed?: number
+      treeDecorationChance?: number
+      houseDecorationChance?: number
+      enableSmoke?: boolean
+      enableWindowGlow?: boolean
+      enableSnow?: boolean
+      snowDensity?: number
+      snowSpeed?: number
+      enableSanta?: boolean
+      santaFirstDelaySeconds?: number
+      santaMinGapSeconds?: number
+      santaMaxGapSeconds?: number
+      lightColors?: ChristmasColors
+      darkColors?: ChristmasColors
     }
   | {
-      _id: string;
-      _type: "starCanvas";
-      _createdAt: string;
-      _updatedAt: string;
-      _rev: string;
-      starCount?: number;
+      _id: string
+      _type: 'starCanvas'
+      _createdAt: string
+      _updatedAt: string
+      _rev: string
+      starCount?: number
       starColors?: Array<
-        | "amber"
-        | "background-1000"
-        | "background-50"
-        | "brand-300"
-        | "brand-850"
-        | "brand"
-        | "error-red"
-        | "golden-yellow"
-        | "grey-200"
-        | "grey-300"
-        | "grey-800"
-        | "jade"
-        | "lavender"
-        | "rose-pink"
-        | "sky"
-        | "yellow"
-      >;
-      starMinSize?: number;
-      starMaxSize?: number;
-      starDriftSpeed?: number;
-      enableBackgroundHaze?: boolean;
+        | 'amber'
+        | 'background-1000'
+        | 'background-50'
+        | 'brand-300'
+        | 'brand-850'
+        | 'brand'
+        | 'error-red'
+        | 'golden-yellow'
+        | 'grey-200'
+        | 'grey-300'
+        | 'grey-800'
+        | 'jade'
+        | 'lavender'
+        | 'rose-pink'
+        | 'sky'
+        | 'yellow'
+      >
+      starMinSize?: number
+      starMaxSize?: number
+      starDriftSpeed?: number
+      enableBackgroundHaze?: boolean
       backgroundHazeColor?:
-        | "amber"
-        | "background-1000"
-        | "background-50"
-        | "brand-300"
-        | "brand-850"
-        | "brand"
-        | "error-red"
-        | "golden-yellow"
-        | "grey-200"
-        | "grey-300"
-        | "grey-800"
-        | "jade"
-        | "lavender"
-        | "rose-pink"
-        | "sky"
-        | "yellow";
-      backgroundHazeOpacity?: number;
-      backgroundHazeRadius?: number;
-      shootingStarChance?: number;
+        | 'amber'
+        | 'background-1000'
+        | 'background-50'
+        | 'brand-300'
+        | 'brand-850'
+        | 'brand'
+        | 'error-red'
+        | 'golden-yellow'
+        | 'grey-200'
+        | 'grey-300'
+        | 'grey-800'
+        | 'jade'
+        | 'lavender'
+        | 'rose-pink'
+        | 'sky'
+        | 'yellow'
+      backgroundHazeOpacity?: number
+      backgroundHazeRadius?: number
+      shootingStarChance?: number
       shootingStarColor?:
-        | "amber"
-        | "background-1000"
-        | "background-50"
-        | "brand-300"
-        | "brand-850"
-        | "brand"
-        | "error-red"
-        | "golden-yellow"
-        | "grey-200"
-        | "grey-300"
-        | "grey-800"
-        | "jade"
-        | "lavender"
-        | "rose-pink"
-        | "sky"
-        | "yellow";
-      enableBlackHole?: boolean;
+        | 'amber'
+        | 'background-1000'
+        | 'background-50'
+        | 'brand-300'
+        | 'brand-850'
+        | 'brand'
+        | 'error-red'
+        | 'golden-yellow'
+        | 'grey-200'
+        | 'grey-300'
+        | 'grey-800'
+        | 'jade'
+        | 'lavender'
+        | 'rose-pink'
+        | 'sky'
+        | 'yellow'
+      enableBlackHole?: boolean
       blackHolePresetPosition?:
-        "bottom-right" | "center" | "custom" | "top-right";
-      blackHoleXRatio?: number;
-      blackHoleYRatio?: number;
-      blackHoleRadius?: number;
-      blackHoleGlowRadius?: number;
-      enableBlackHoleAscension?: boolean;
-      blackHoleAscensionClicks?: number;
-      blackHoleAscensionIntensity?: number;
-      blackHoleClickSwell?: number;
-      blackHoleClickSwellMax?: number;
-      blackHoleClickSettleSeconds?: number;
-      blackHoleClickBlob?: number;
-      blackHoleGravityRadius?: number;
-      blackHoleGravityForce?: number;
-      blackHoleHoverReachMultiplier?: number;
-      blackHoleHoverGravityMultiplier?: number;
-      blackHoleSmokeWisps?: number;
-      blackHoleSmokeIntensity?: number;
-      blackHoleSmokeSpeed?: number;
-      blackHoleEdgeRipple?: number;
-      blackHoleHoverRipple?: number;
-      blackHoleCoronaWidth?: number;
-      enableBlackHoleFlare?: boolean;
-      blackHoleFlare?: number;
-      blackHoleFlareSpin?: number;
-      blackHoleRingGlow?: number;
+        | 'bottom-right'
+        | 'center'
+        | 'custom'
+        | 'top-right'
+      blackHoleXRatio?: number
+      blackHoleYRatio?: number
+      blackHoleRadius?: number
+      blackHoleGlowRadius?: number
+      enableBlackHoleAscension?: boolean
+      blackHoleAscensionClicks?: number
+      blackHoleAscensionIntensity?: number
+      blackHoleClickSwell?: number
+      blackHoleClickSwellMax?: number
+      blackHoleClickSettleSeconds?: number
+      blackHoleClickBlob?: number
+      blackHoleGravityRadius?: number
+      blackHoleGravityForce?: number
+      blackHoleHoverReachMultiplier?: number
+      blackHoleHoverGravityMultiplier?: number
+      blackHoleSmokeWisps?: number
+      blackHoleSmokeIntensity?: number
+      blackHoleSmokeSpeed?: number
+      blackHoleEdgeRipple?: number
+      blackHoleHoverRipple?: number
+      blackHoleCoronaWidth?: number
+      enableBlackHoleFlare?: boolean
+      blackHoleFlare?: number
+      blackHoleFlareSpin?: number
+      blackHoleRingGlow?: number
       planetColors?: Array<
-        | "amber"
-        | "background-1000"
-        | "background-50"
-        | "brand-300"
-        | "brand-850"
-        | "brand"
-        | "error-red"
-        | "golden-yellow"
-        | "grey-200"
-        | "grey-300"
-        | "grey-800"
-        | "jade"
-        | "lavender"
-        | "rose-pink"
-        | "sky"
-        | "yellow"
-      >;
-      planetMinSize?: number;
-      planetMaxSize?: number;
-      planetRingChance?: number;
-      planetSizeRarity?: number;
-      enablePlanets?: boolean;
-      planetCount?: number;
-      planetOrbitMinRatio?: number;
-      planetOrbitMaxRatio?: number;
-      planetOrbitTilt?: number;
-      planetSpeed?: number;
-      planetHoverChaos?: number;
-      freePlanetCount?: number;
-      freePlanetDriftSpeed?: number;
-      enableGalaxy?: boolean;
+        | 'amber'
+        | 'background-1000'
+        | 'background-50'
+        | 'brand-300'
+        | 'brand-850'
+        | 'brand'
+        | 'error-red'
+        | 'golden-yellow'
+        | 'grey-200'
+        | 'grey-300'
+        | 'grey-800'
+        | 'jade'
+        | 'lavender'
+        | 'rose-pink'
+        | 'sky'
+        | 'yellow'
+      >
+      planetMinSize?: number
+      planetMaxSize?: number
+      planetRingChance?: number
+      planetSizeRarity?: number
+      enablePlanets?: boolean
+      planetCount?: number
+      planetOrbitMinRatio?: number
+      planetOrbitMaxRatio?: number
+      planetOrbitTilt?: number
+      planetSpeed?: number
+      planetHoverChaos?: number
+      freePlanetCount?: number
+      freePlanetDriftSpeed?: number
+      enableGalaxy?: boolean
       galaxyPosition?:
-        | "bottom-left"
-        | "bottom-right"
-        | "center"
-        | "custom"
-        | "left"
-        | "random"
-        | "right"
-        | "top-left"
-        | "top-right";
-      galaxyXRatio?: number;
-      galaxyYRatio?: number;
-      galaxyMinSize?: number;
-      galaxyMaxSize?: number;
-      galaxyTilt?: number;
-      galaxyDriftFactor?: number;
+        | 'bottom-left'
+        | 'bottom-right'
+        | 'center'
+        | 'custom'
+        | 'left'
+        | 'random'
+        | 'right'
+        | 'top-left'
+        | 'top-right'
+      galaxyXRatio?: number
+      galaxyYRatio?: number
+      galaxyMinSize?: number
+      galaxyMaxSize?: number
+      galaxyTilt?: number
+      galaxyDriftFactor?: number
       galaxyDriftDirection?:
-        | "down-left"
-        | "down-right"
-        | "down"
-        | "left"
-        | "right"
-        | "up-left"
-        | "up-right"
-        | "up";
-      galaxyOpacity?: number;
-      galaxyWidthScale?: number;
-      galaxyHeightScale?: number;
-      galaxyDensity?: number;
-      galaxyCenterDensity?: number;
-      galaxyEndDensity?: number;
+        | 'down-left'
+        | 'down-right'
+        | 'down'
+        | 'left'
+        | 'right'
+        | 'up-left'
+        | 'up-right'
+        | 'up'
+      galaxyOpacity?: number
+      galaxyWidthScale?: number
+      galaxyHeightScale?: number
+      galaxyDensity?: number
+      galaxyCenterDensity?: number
+      galaxyEndDensity?: number
       galaxyCoreColor?:
-        | "amber"
-        | "background-1000"
-        | "background-50"
-        | "brand-300"
-        | "brand-850"
-        | "brand"
-        | "error-red"
-        | "golden-yellow"
-        | "grey-200"
-        | "grey-300"
-        | "grey-800"
-        | "jade"
-        | "lavender"
-        | "rose-pink"
-        | "sky"
-        | "yellow";
+        | 'amber'
+        | 'background-1000'
+        | 'background-50'
+        | 'brand-300'
+        | 'brand-850'
+        | 'brand'
+        | 'error-red'
+        | 'golden-yellow'
+        | 'grey-200'
+        | 'grey-300'
+        | 'grey-800'
+        | 'jade'
+        | 'lavender'
+        | 'rose-pink'
+        | 'sky'
+        | 'yellow'
       galaxyArmColor?:
-        | "amber"
-        | "background-1000"
-        | "background-50"
-        | "brand-300"
-        | "brand-850"
-        | "brand"
-        | "error-red"
-        | "golden-yellow"
-        | "grey-200"
-        | "grey-300"
-        | "grey-800"
-        | "jade"
-        | "lavender"
-        | "rose-pink"
-        | "sky"
-        | "yellow";
+        | 'amber'
+        | 'background-1000'
+        | 'background-50'
+        | 'brand-300'
+        | 'brand-850'
+        | 'brand'
+        | 'error-red'
+        | 'golden-yellow'
+        | 'grey-200'
+        | 'grey-300'
+        | 'grey-800'
+        | 'jade'
+        | 'lavender'
+        | 'rose-pink'
+        | 'sky'
+        | 'yellow'
       galaxyAccentColor?:
-        | "amber"
-        | "background-1000"
-        | "background-50"
-        | "brand-300"
-        | "brand-850"
-        | "brand"
-        | "error-red"
-        | "golden-yellow"
-        | "grey-200"
-        | "grey-300"
-        | "grey-800"
-        | "jade"
-        | "lavender"
-        | "rose-pink"
-        | "sky"
-        | "yellow";
-      enableAurora?: boolean;
+        | 'amber'
+        | 'background-1000'
+        | 'background-50'
+        | 'brand-300'
+        | 'brand-850'
+        | 'brand'
+        | 'error-red'
+        | 'golden-yellow'
+        | 'grey-200'
+        | 'grey-300'
+        | 'grey-800'
+        | 'jade'
+        | 'lavender'
+        | 'rose-pink'
+        | 'sky'
+        | 'yellow'
+      enableAurora?: boolean
       auroraColors?: Array<
-        | "amber"
-        | "background-1000"
-        | "background-50"
-        | "brand-300"
-        | "brand-850"
-        | "brand"
-        | "error-red"
-        | "golden-yellow"
-        | "grey-200"
-        | "grey-300"
-        | "grey-800"
-        | "jade"
-        | "lavender"
-        | "rose-pink"
-        | "sky"
-        | "yellow"
-      >;
-      auroraPosition?: "bottom" | "custom" | "middle" | "top";
-      auroraYRatio?: number;
-      auroraHeight?: number;
-      auroraIntensity?: number;
-      auroraCurtains?: number;
-      auroraSpeed?: number;
-      auroraWaviness?: number;
+        | 'amber'
+        | 'background-1000'
+        | 'background-50'
+        | 'brand-300'
+        | 'brand-850'
+        | 'brand'
+        | 'error-red'
+        | 'golden-yellow'
+        | 'grey-200'
+        | 'grey-300'
+        | 'grey-800'
+        | 'jade'
+        | 'lavender'
+        | 'rose-pink'
+        | 'sky'
+        | 'yellow'
+      >
+      auroraPosition?: 'bottom' | 'custom' | 'middle' | 'top'
+      auroraYRatio?: number
+      auroraHeight?: number
+      auroraIntensity?: number
+      auroraCurtains?: number
+      auroraSpeed?: number
+      auroraWaviness?: number
       blackHoleCoreColor?:
-        | "amber"
-        | "background-1000"
-        | "background-50"
-        | "brand-300"
-        | "brand-850"
-        | "brand"
-        | "error-red"
-        | "golden-yellow"
-        | "grey-200"
-        | "grey-300"
-        | "grey-800"
-        | "jade"
-        | "lavender"
-        | "rose-pink"
-        | "sky"
-        | "yellow";
+        | 'amber'
+        | 'background-1000'
+        | 'background-50'
+        | 'brand-300'
+        | 'brand-850'
+        | 'brand'
+        | 'error-red'
+        | 'golden-yellow'
+        | 'grey-200'
+        | 'grey-300'
+        | 'grey-800'
+        | 'jade'
+        | 'lavender'
+        | 'rose-pink'
+        | 'sky'
+        | 'yellow'
       blackHolePhotonRingColor?:
-        | "amber"
-        | "background-1000"
-        | "background-50"
-        | "brand-300"
-        | "brand-850"
-        | "brand"
-        | "error-red"
-        | "golden-yellow"
-        | "grey-200"
-        | "grey-300"
-        | "grey-800"
-        | "jade"
-        | "lavender"
-        | "rose-pink"
-        | "sky"
-        | "yellow";
+        | 'amber'
+        | 'background-1000'
+        | 'background-50'
+        | 'brand-300'
+        | 'brand-850'
+        | 'brand'
+        | 'error-red'
+        | 'golden-yellow'
+        | 'grey-200'
+        | 'grey-300'
+        | 'grey-800'
+        | 'jade'
+        | 'lavender'
+        | 'rose-pink'
+        | 'sky'
+        | 'yellow'
       blackHoleBaseGlowColor?:
-        | "amber"
-        | "background-1000"
-        | "background-50"
-        | "brand-300"
-        | "brand-850"
-        | "brand"
-        | "error-red"
-        | "golden-yellow"
-        | "grey-200"
-        | "grey-300"
-        | "grey-800"
-        | "jade"
-        | "lavender"
-        | "rose-pink"
-        | "sky"
-        | "yellow";
+        | 'amber'
+        | 'background-1000'
+        | 'background-50'
+        | 'brand-300'
+        | 'brand-850'
+        | 'brand'
+        | 'error-red'
+        | 'golden-yellow'
+        | 'grey-200'
+        | 'grey-300'
+        | 'grey-800'
+        | 'jade'
+        | 'lavender'
+        | 'rose-pink'
+        | 'sky'
+        | 'yellow'
       blackHoleCoronaColor?:
-        | "amber"
-        | "background-1000"
-        | "background-50"
-        | "brand-300"
-        | "brand-850"
-        | "brand"
-        | "error-red"
-        | "golden-yellow"
-        | "grey-200"
-        | "grey-300"
-        | "grey-800"
-        | "jade"
-        | "lavender"
-        | "rose-pink"
-        | "sky"
-        | "yellow";
-      mobileScale?: number;
-      mobileEnableBlackHole?: boolean;
+        | 'amber'
+        | 'background-1000'
+        | 'background-50'
+        | 'brand-300'
+        | 'brand-850'
+        | 'brand'
+        | 'error-red'
+        | 'golden-yellow'
+        | 'grey-200'
+        | 'grey-300'
+        | 'grey-800'
+        | 'jade'
+        | 'lavender'
+        | 'rose-pink'
+        | 'sky'
+        | 'yellow'
+      mobileScale?: number
+      mobileEnableBlackHole?: boolean
       mobileBlackHolePresetPosition?:
-        "bottom-right" | "center" | "custom" | "desktop" | "top-right";
-      mobileBlackHoleXRatio?: number;
-      mobileBlackHoleYRatio?: number;
-      mobileEnableGalaxy?: boolean;
+        | 'bottom-right'
+        | 'center'
+        | 'custom'
+        | 'desktop'
+        | 'top-right'
+      mobileBlackHoleXRatio?: number
+      mobileBlackHoleYRatio?: number
+      mobileEnableGalaxy?: boolean
       mobileGalaxyPosition?:
-        | "bottom-left"
-        | "bottom-right"
-        | "center"
-        | "custom"
-        | "desktop"
-        | "left"
-        | "random"
-        | "right"
-        | "top-left"
-        | "top-right";
-      mobileGalaxyXRatio?: number;
-      mobileGalaxyYRatio?: number;
-      mobileEnableAurora?: boolean;
-      mobileAuroraPosition?: "bottom" | "custom" | "desktop" | "middle" | "top";
-      mobileAuroraYRatio?: number;
+        | 'bottom-left'
+        | 'bottom-right'
+        | 'center'
+        | 'custom'
+        | 'desktop'
+        | 'left'
+        | 'random'
+        | 'right'
+        | 'top-left'
+        | 'top-right'
+      mobileGalaxyXRatio?: number
+      mobileGalaxyYRatio?: number
+      mobileEnableAurora?: boolean
+      mobileAuroraPosition?: 'bottom' | 'custom' | 'desktop' | 'middle' | 'top'
+      mobileAuroraYRatio?: number
     }
-  | null;
+  | null
 
 // Query TypeMap
 declare global {
   interface SanityQueries {
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "faculty"\n  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)\n  && university->slug.current == $universitySlug\n][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  description,\n}\n': FacultySeoQueryResult;
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "faculty"\n  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)\n  && university->slug.current == $universitySlug\n][0]{\n\n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\ndean->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nsecretary->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nviceDeans[]->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nuniversity->{\n  _id,\n  "slug": slug.current,\n  name\n},\n"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\n"siteSlug": siteSlug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n},\n\n}\n': MinimalFacultyTypedQueryResult;
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "faculty"\n  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)\n  && university->slug.current == $universitySlug\n][0] {\n  \n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\ndean->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nsecretary->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nviceDeans[]->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nuniversity->{\n  _id,\n  "slug": slug.current,\n  name\n},\n"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\n"siteSlug": siteSlug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n},\n\n  _type,\n  description,\n  streetAddress,\n  telephone,\n  email,\n  website,\n}\n': FacultyDetailQueryResult;
-    '\n*[_type == "faculty" && !(_id in path("drafts.**")) && dbId != null] {\n  "facultySlug": coalesce(slug.current, _id),\n  "universitySlug": coalesce(university->slug.current, university->_id)\n}\n': FacultyStaticParamsQueryResult;
-    '\n*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  bio\n}\n': ProfessorSeoQueryResult;
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {\n\n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n}\n': MinimalProfessorTypedQueryResult;
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n  _type,\n  bio,\n  office,\n  telephone,\n  email,\n  website,\n  faculties[]->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    }\n  },\n  "subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n    \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n  }\n}\n': ProfessorDetailQueryResult;
-    '\n*[_type == "professor" && !(_id in path("drafts.**")) && dbId != null] {\n  "professorSlug": coalesce(slug.current, _id)\n}\n': ProfessorStaticParamsQueryResult;
-    '\n*[_type == "study"\n  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)\n  && faculty->slug.current == $facultySlug\n  && faculty->university->slug.current == $universitySlug\n][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  description,\n}\n': StudySeoQueryResult;
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "study"\n  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)\n  && faculty->slug.current == $facultySlug\n  && faculty->university->slug.current == $universitySlug\n][0] {\n\n_id,\ndbId,\n"slug": slug.current,\n"siteSlug": siteSlug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n}\n': MinimalStudyTypedQueryResult;
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "study"\n  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)\n  && faculty->slug.current == $facultySlug\n  && faculty->university->slug.current == $universitySlug\n][0] {\n  \n_id,\ndbId,\n"slug": slug.current,\n"siteSlug": siteSlug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n  _type,\n  description,\n  streetAddress,\n  telephone,\n  email,\n  website,\n}\n': StudyDetailQueryResult;
-    '\n*[_type == "study" && !(_id in path("drafts.**")) && dbId != null] {\n  "studySlug": coalesce(slug.current, _id),\n  "facultySlug": coalesce(faculty->slug.current, faculty->_id),\n  "universitySlug": coalesce(faculty->university->slug.current, faculty->university->_id),\n  "siteSlug": siteSlug.current\n}\n': StudyStaticParamsQueryResult;
-    '\n{\n  "universities": *[_type == "university" && dbId != null] | order(name asc) {\n    _id,\n    name,\n    "slug": slug.current\n  },\n  "faculties": *[_type == "faculty" && dbId != null && university._ref != null] | order(name asc) {\n    _id,\n    name,\n    "slug": slug.current,\n    "universityId": university._ref\n  },\n  "studies": *[_type == "study" && dbId != null && faculty._ref != null && siteSlug.current != null] | order(name asc) {\n    _id,\n    name,\n    "slug": slug.current,\n    "siteSlug": siteSlug.current,\n    "facultyId": faculty._ref\n  }\n}\n': StudyPickerQueryResult;
-    '\n*[_type == "study" && siteSlug.current == $siteSlug]{\n  _id,\n  "studySlug": coalesce(slug.current, _id),\n  "facultySlug": coalesce(faculty->slug.current, faculty->_id),\n  "universitySlug": coalesce(faculty->university->slug.current, faculty->university->_id),\n  "siteSlug": siteSlug.current,\n  "name": name,\n  "facultyName": faculty->name,\n  "universityName": faculty->university->name,\n  dbId\n}[0]\n': StudySiteQueryResult;
-    '\n*[_type == "subject"\n  && dbId != null\n  && study._ref == *[_type == "study" && siteSlug.current == $siteSlug][0]._id\n] | order(name asc){\n  dbId,\n  name\n}\n': StudyAlertSubjectsQueryResult;
-    '\n*[_type == "subject"\n  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)\n  && study->slug.current == $studySlug\n  && study->faculty->slug.current == $facultySlug\n  && study->faculty->university->slug.current == $universitySlug\n][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  description,\n}\n': SubjectSeoQueryResult;
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "subject"\n  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)\n  && study->slug.current == $studySlug\n  && study->faculty->slug.current == $facultySlug\n  && study->faculty->university->slug.current == $universitySlug\n][0]{\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n}\n': MinimalSubjectQueryTypedResult;
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "subject"\n  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)\n  && study->slug.current == $studySlug\n  && study->faculty->slug.current == $facultySlug\n  && study->faculty->university->slug.current == $universitySlug\n][0] {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n  _type,\n  professors[]->{\n    _id,\n    "slug": slug.current,\n    name,\n    dbId,\n    title,\n    picture,\n    email\n  }\n}\n': SubjectDetailQueryResult;
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "subject" && (_id == $subjectId || _id == "drafts." + $subjectId || dbId == $subjectId)][0] {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n  _type,\n  professors[]->{\n    _id,\n    "slug": slug.current,\n    name,\n    dbId,\n    title,\n    picture,\n    email\n  }\n}\n': SubjectByIdQueryResult;
-    '\n*[_type == "subject" && (_id == $subjectId || _id == "drafts." + $subjectId || dbId == $subjectId)][0] {\n  "subjectSlug": coalesce(slug.current, _id),\n  "studySlug": coalesce(study->slug.current, study->_id),\n  "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),\n  "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id),\n  "siteSlug": study->siteSlug.current\n}\n': SubjectPathQueryResult;
-    '\n*[_type == "subject" && !(_id in path("drafts.**")) && dbId != null] {\n  "subjectSlug": coalesce(slug.current, _id),\n  "studySlug": coalesce(study->slug.current, study->_id),\n  "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),\n  "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id),\n  "siteSlug": study->siteSlug.current\n}\n': SubjectStaticParamsQueryResult;
-    '\n*[_type == "university" && dbId != null] | order(name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {\n    _id,\n    "slug": slug.current,\n    name,\n  }\n}\n': UniversityGalleryQueryResult;
-    '\n*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  description,\n}\n': UniversitySeoQueryResult;
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {\n  _id,\n  "slug": slug.current,\n  _type,\n  name,\n  description,\n  "picture": sanityImage::full(picture),\n  "logo": sanityImage::full(logo),\n  streetAddress,\n  telephone,\n  email,\n  website,\n  rector->{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n  },\n  viceRectors[]->{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n  },\n  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {\n    \n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\ndean->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nsecretary->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nviceDeans[]->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nuniversity->{\n  _id,\n  "slug": slug.current,\n  name\n},\n"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\n"siteSlug": siteSlug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n},\n\n  }\n}\n': UniversityDetailQueryResult;
-    '\n*[_type == "university" && !(_id in path("drafts.**")) && dbId != null] {\n  "universitySlug": coalesce(slug.current, _id)\n}\n': UniversityStaticParamsQueryResult;
-    '\n*[_type == "calendarEvent"\n  && _id in *[_type == "study" && siteSlug.current == $siteSlug][0].calendars[]->events[]._ref\n  && dateTime(date) >= dateTime($from)\n  && dateTime(date) <= dateTime($to)\n] | order(date asc, _id asc) {\n  \n  _id,\n  "title": stringTitle,\n  "description": stringSubtitle,\n  date,\n  type,\n  importance,\n  "subject": subject->{\n    _id,\n    dbId,\n    name,\n    "slug": coalesce(slug.current, _id),\n    "studySlug": coalesce(study->slug.current, study->_id),\n    "siteSlug": study->siteSlug.current,\n    "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),\n    "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id)\n  },\n  "professors": professors[]->{\n    _id,\n    dbId,\n    name,\n    "slug": coalesce(slug.current, _id)\n  }\n\n}\n': CalendarEventsQueryResult;
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n{\n  "universities": *[_type == "university" && dbId != null] | order(name asc) {\n    _id,\n    name,\n    "slug": slug.current,\n    "logo": sanityImage::full(logo),\n    "picture": sanityImage::full(picture),\n    "facultyCount": count(*[_type == "faculty" && references(^._id) && dbId != null])\n  },\n  "faculties": *[_type == "faculty" && university._ref != null && dbId != null] | order(name asc) {\n    _id,\n    name,\n    "slug": slug.current,\n    "logo": sanityImage::full(logo),\n    "picture": sanityImage::full(picture),\n    "studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n    "professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n    university->{\n      _id,\n      name,\n      "slug": slug.current\n    }\n  },\n  "studies": *[_type == "study" && faculty._ref != null && dbId != null] | order(name asc) {\n    _id,\n    name,\n    "slug": slug.current,\n    "siteSlug": siteSlug.current,\n    "logo": sanityImage::full(logo),\n    "picture": sanityImage::full(picture),\n    "subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n    "professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n    faculty->{\n      _id,\n      name,\n      "slug": slug.current,\n      university->{\n        _id,\n        name,\n        "slug": slug.current\n      }\n    }\n  }\n}\n': CatalogHomeQueryResult;
-    '\n{\n  "universities": *[_type == "university" && dbId != null && name match $term] | order(name asc)[0...20] {\n    _id,\n    name,\n    "slug": slug.current\n  },\n  "faculties": *[_type == "faculty" && dbId != null && name match $term] | order(name asc)[0...20] {\n    _id,\n    name,\n    "slug": slug.current,\n    university->{\n      _id,\n      name,\n      "slug": slug.current\n    }\n  },\n  "studies": *[_type == "study" && dbId != null && name match $term] | order(name asc)[0...20] {\n    _id,\n    name,\n    "slug": slug.current,\n    "siteSlug": siteSlug.current,\n    faculty->{\n      _id,\n      name,\n      "slug": slug.current,\n      university->{\n        _id,\n        name,\n        "slug": slug.current\n      }\n    }\n  },\n  "professors": *[_type == "professor" && dbId != null && name match $term] | order(name asc)[0...20] {\n    _id,\n    name,\n    "slug": slug.current\n  }\n}\n': CatalogSearchQueryResult;
-    '\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\n*[_id == $WEBSITE][0]{\n  "navMenu": navMenu->{\n    defined(title) => {title},\n    defined(websiteLogo)=>{ "websiteLogo": sanityImage::full(websiteLogo) },\n    navItems[]->{\n      stringTitle,\n      stringSubtitle,\n      ...linkSelector::full(@),\n      defined(new) => {new},\n      defined(comingSoon) => {comingSoon},\n      defined(disabled) => {disabled},\n      defined(icon) => { "icon": sanityImage::full(icon) },\n    },\n  }\n}.navMenu': NavMenuQueryResult;
-    '\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\n*[_type == "study" && defined(siteSlug.current)]{\n  "siteSlug": siteSlug.current,\n  "logo": sanityImage::full(logo),\n}': StudyLogosQueryResult;
-    '\n{\n  "universities": *[_type == "university" && dbId != null]{ _id, dbId, name, "slug": slug.current },\n  "faculties": *[_type == "faculty" && university._ref != null && dbId != null]{ _id, dbId, name, "slug": slug.current, "universityId": university._ref },\n  "studies": *[_type == "study" && faculty._ref != null && dbId != null]{\n    _id,\n    dbId,\n    name,\n    "slug": slug.current,\n    "siteSlug": siteSlug.current,\n    "facultyId": faculty._ref,\n    "subjectsByYear": *[_type == "subject" && study._ref == ^._id && dbId != null\n        && _id == (*[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(_id asc)[0]._id)\n      ] | order(year asc){\n      year,\n      "subjects": *[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(name asc){\n        _id, dbId, name, year, elective, "studyId": study._ref\n      }\n    },\n  },\n  "subjects": *[_type == "subject" && study._ref != null && dbId != null] | order(year asc){\n    \n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  code,\n  credits,\n  year,\n  semester,\n  elective,\n  "faculty": study->faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    dbId,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n  study->{\n    _id,\n    "slug": slug.current,\n    "siteSlug": siteSlug.current,\n    name,\n    dbId,\n    faculty->{\n      _id,\n      "slug": slug.current,\n      name,\n      university->{\n        _id,\n        "slug": slug.current,\n        name,\n      },\n    },\n  },\n  professors[]->{\n    _id,\n    dbId,\n    "slug": slug.current,\n    name,\n    title,\n  },\n\n  }\n}': OnboardingCatalogQueryResult;
-    '\n*[_type == "studyTip" && length(title) > 0 && length(content) > 0] | order(_createdAt asc, _id asc) {\n  _id,\n  title,\n  content\n}\n': StudyTipsQueryResult;
-    '\n*[_id == $WEBSITE][0]{\n  "siteName": coalesce(siteName, websiteTitle, "Scriptr"),\n  "siteUrl": coalesce(siteUrl, ""),\n  "defaultSeoTitle": coalesce(defaultSeoTitle, websiteTitle, "Scriptr"),\n  "defaultSeoDescription": coalesce(defaultSeoDescription, ""),\n  "defaultKeywords": defaultKeywords[]\n}\n': WebsiteSeoQueryResult;
-    "\n*[_id == $WEBSITE][0].background->{...}\n": WebsiteBackgroundQueryResult;
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "faculty"\n  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)\n  && university->slug.current == $universitySlug\n][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  description,\n}\n': FacultySeoQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "faculty"\n  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)\n  && university->slug.current == $universitySlug\n][0]{\n\n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\ndean->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nsecretary->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nviceDeans[]->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nuniversity->{\n  _id,\n  "slug": slug.current,\n  name\n},\n"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\n"siteSlug": siteSlug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n},\n\n}\n': MinimalFacultyTypedQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "faculty"\n  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)\n  && university->slug.current == $universitySlug\n][0] {\n  \n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\ndean->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nsecretary->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nviceDeans[]->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nuniversity->{\n  _id,\n  "slug": slug.current,\n  name\n},\n"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\n"siteSlug": siteSlug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n},\n\n  _type,\n  description,\n  streetAddress,\n  telephone,\n  email,\n  website,\n}\n': FacultyDetailQueryResult
+    '\n*[_type == "faculty" && !(_id in path("drafts.**")) && dbId != null] {\n  "facultySlug": coalesce(slug.current, _id),\n  "universitySlug": coalesce(university->slug.current, university->_id)\n}\n': FacultyStaticParamsQueryResult
+    '\n*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  bio\n}\n': ProfessorSeoQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {\n\n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n}\n': MinimalProfessorTypedQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n  _type,\n  bio,\n  office,\n  telephone,\n  email,\n  website,\n  faculties[]->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    }\n  },\n  "subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n    \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n  }\n}\n': ProfessorDetailQueryResult
+    '\n*[_type == "professor" && !(_id in path("drafts.**")) && dbId != null] {\n  "professorSlug": coalesce(slug.current, _id)\n}\n': ProfessorStaticParamsQueryResult
+    '\n*[_type == "study"\n  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)\n  && faculty->slug.current == $facultySlug\n  && faculty->university->slug.current == $universitySlug\n][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  description,\n}\n': StudySeoQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "study"\n  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)\n  && faculty->slug.current == $facultySlug\n  && faculty->university->slug.current == $universitySlug\n][0] {\n\n_id,\ndbId,\n"slug": slug.current,\n"siteSlug": siteSlug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n}\n': MinimalStudyTypedQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "study"\n  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)\n  && faculty->slug.current == $facultySlug\n  && faculty->university->slug.current == $universitySlug\n][0] {\n  \n_id,\ndbId,\n"slug": slug.current,\n"siteSlug": siteSlug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n  _type,\n  description,\n  streetAddress,\n  telephone,\n  email,\n  website,\n}\n': StudyDetailQueryResult
+    '\n*[_type == "study" && !(_id in path("drafts.**")) && dbId != null] {\n  "studySlug": coalesce(slug.current, _id),\n  "facultySlug": coalesce(faculty->slug.current, faculty->_id),\n  "universitySlug": coalesce(faculty->university->slug.current, faculty->university->_id),\n  "siteSlug": siteSlug.current\n}\n': StudyStaticParamsQueryResult
+    '\n{\n  "universities": *[_type == "university" && dbId != null] | order(name asc) {\n    _id,\n    name,\n    "slug": slug.current\n  },\n  "faculties": *[_type == "faculty" && dbId != null && university._ref != null] | order(name asc) {\n    _id,\n    name,\n    "slug": slug.current,\n    "universityId": university._ref\n  },\n  "studies": *[_type == "study" && dbId != null && faculty._ref != null && siteSlug.current != null] | order(name asc) {\n    _id,\n    name,\n    "slug": slug.current,\n    "siteSlug": siteSlug.current,\n    "facultyId": faculty._ref\n  }\n}\n': StudyPickerQueryResult
+    '\n*[_type == "study" && siteSlug.current == $siteSlug]{\n  _id,\n  "studySlug": coalesce(slug.current, _id),\n  "facultySlug": coalesce(faculty->slug.current, faculty->_id),\n  "universitySlug": coalesce(faculty->university->slug.current, faculty->university->_id),\n  "siteSlug": siteSlug.current,\n  "name": name,\n  "facultyName": faculty->name,\n  "universityName": faculty->university->name,\n  dbId\n}[0]\n': StudySiteQueryResult
+    '\n*[_type == "subject"\n  && dbId != null\n  && study._ref == *[_type == "study" && siteSlug.current == $siteSlug][0]._id\n] | order(name asc){\n  dbId,\n  name\n}\n': StudyAlertSubjectsQueryResult
+    '\n*[_type == "subject"\n  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)\n  && study->slug.current == $studySlug\n  && study->faculty->slug.current == $facultySlug\n  && study->faculty->university->slug.current == $universitySlug\n][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  description,\n}\n': SubjectSeoQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "subject"\n  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)\n  && study->slug.current == $studySlug\n  && study->faculty->slug.current == $facultySlug\n  && study->faculty->university->slug.current == $universitySlug\n][0]{\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n}\n': MinimalSubjectQueryTypedResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "subject"\n  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)\n  && study->slug.current == $studySlug\n  && study->faculty->slug.current == $facultySlug\n  && study->faculty->university->slug.current == $universitySlug\n][0] {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n  _type,\n  professors[]->{\n    _id,\n    "slug": slug.current,\n    name,\n    dbId,\n    title,\n    picture,\n    email\n  }\n}\n': SubjectDetailQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "subject" && (_id == $subjectId || _id == "drafts." + $subjectId || dbId == $subjectId)][0] {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n  _type,\n  professors[]->{\n    _id,\n    "slug": slug.current,\n    name,\n    dbId,\n    title,\n    picture,\n    email\n  }\n}\n': SubjectByIdQueryResult
+    '\n*[_type == "subject" && (_id == $subjectId || _id == "drafts." + $subjectId || dbId == $subjectId)][0] {\n  "subjectSlug": coalesce(slug.current, _id),\n  "studySlug": coalesce(study->slug.current, study->_id),\n  "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),\n  "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id),\n  "siteSlug": study->siteSlug.current\n}\n': SubjectPathQueryResult
+    '\n*[_type == "subject" && !(_id in path("drafts.**")) && dbId != null] {\n  "subjectSlug": coalesce(slug.current, _id),\n  "studySlug": coalesce(study->slug.current, study->_id),\n  "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),\n  "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id),\n  "siteSlug": study->siteSlug.current\n}\n': SubjectStaticParamsQueryResult
+    '\n*[_type == "university" && dbId != null] | order(name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {\n    _id,\n    "slug": slug.current,\n    name,\n  }\n}\n': UniversityGalleryQueryResult
+    '\n*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  description,\n}\n': UniversitySeoQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {\n  _id,\n  "slug": slug.current,\n  _type,\n  name,\n  description,\n  "picture": sanityImage::full(picture),\n  "logo": sanityImage::full(logo),\n  streetAddress,\n  telephone,\n  email,\n  website,\n  rector->{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n  },\n  viceRectors[]->{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n  },\n  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {\n    \n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\ndean->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nsecretary->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nviceDeans[]->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nuniversity->{\n  _id,\n  "slug": slug.current,\n  name\n},\n"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\n"siteSlug": siteSlug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n},\n\n  }\n}\n': UniversityDetailQueryResult
+    '\n*[_type == "university" && !(_id in path("drafts.**")) && dbId != null] {\n  "universitySlug": coalesce(slug.current, _id)\n}\n': UniversityStaticParamsQueryResult
+    '\n*[_type == "calendarEvent"\n  && _id in *[_type == "study" && siteSlug.current == $siteSlug][0].calendars[]->events[]._ref\n  && dateTime(date) >= dateTime($from)\n  && dateTime(date) <= dateTime($to)\n] | order(date asc, _id asc) {\n  \n  _id,\n  "title": stringTitle,\n  "description": stringSubtitle,\n  date,\n  type,\n  importance,\n  "subject": subject->{\n    _id,\n    dbId,\n    name,\n    "slug": coalesce(slug.current, _id),\n    "studySlug": coalesce(study->slug.current, study->_id),\n    "siteSlug": study->siteSlug.current,\n    "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),\n    "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id)\n  },\n  "professors": professors[]->{\n    _id,\n    dbId,\n    name,\n    "slug": coalesce(slug.current, _id)\n  }\n\n}\n': CalendarEventsQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n{\n  "universities": *[_type == "university" && dbId != null] | order(name asc) {\n    _id,\n    name,\n    "slug": slug.current,\n    "logo": sanityImage::full(logo),\n    "picture": sanityImage::full(picture),\n    "facultyCount": count(*[_type == "faculty" && references(^._id) && dbId != null])\n  },\n  "faculties": *[_type == "faculty" && university._ref != null && dbId != null] | order(name asc) {\n    _id,\n    name,\n    "slug": slug.current,\n    "logo": sanityImage::full(logo),\n    "picture": sanityImage::full(picture),\n    "studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n    "professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n    university->{\n      _id,\n      name,\n      "slug": slug.current\n    }\n  },\n  "studies": *[_type == "study" && faculty._ref != null && dbId != null] | order(name asc) {\n    _id,\n    name,\n    "slug": slug.current,\n    "siteSlug": siteSlug.current,\n    "logo": sanityImage::full(logo),\n    "picture": sanityImage::full(picture),\n    "subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n    "professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n    faculty->{\n      _id,\n      name,\n      "slug": slug.current,\n      university->{\n        _id,\n        name,\n        "slug": slug.current\n      }\n    }\n  }\n}\n': CatalogHomeQueryResult
+    '\n{\n  "universities": *[_type == "university" && dbId != null && name match $term] | order(name asc)[0...20] {\n    _id,\n    name,\n    "slug": slug.current\n  },\n  "faculties": *[_type == "faculty" && dbId != null && name match $term] | order(name asc)[0...20] {\n    _id,\n    name,\n    "slug": slug.current,\n    university->{\n      _id,\n      name,\n      "slug": slug.current\n    }\n  },\n  "studies": *[_type == "study" && dbId != null && name match $term] | order(name asc)[0...20] {\n    _id,\n    name,\n    "slug": slug.current,\n    "siteSlug": siteSlug.current,\n    faculty->{\n      _id,\n      name,\n      "slug": slug.current,\n      university->{\n        _id,\n        name,\n        "slug": slug.current\n      }\n    }\n  },\n  "professors": *[_type == "professor" && dbId != null && name match $term] | order(name asc)[0...20] {\n    _id,\n    name,\n    "slug": slug.current\n  }\n}\n': CatalogSearchQueryResult
+    '\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\n*[_id == $WEBSITE][0]{\n  "navMenu": navMenu->{\n    defined(title) => {title},\n    defined(websiteLogo)=>{ "websiteLogo": sanityImage::full(websiteLogo) },\n    navItems[]->{\n      stringTitle,\n      stringSubtitle,\n      ...linkSelector::full(@),\n      defined(new) => {new},\n      defined(comingSoon) => {comingSoon},\n      defined(disabled) => {disabled},\n      defined(icon) => { "icon": sanityImage::full(icon) },\n    },\n  }\n}.navMenu': NavMenuQueryResult
+    '\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\n*[_type == "study" && defined(siteSlug.current)]{\n  "siteSlug": siteSlug.current,\n  "logo": sanityImage::full(logo),\n}': StudyLogosQueryResult
+    '\n{\n  "universities": *[_type == "university" && dbId != null]{ _id, dbId, name, "slug": slug.current },\n  "faculties": *[_type == "faculty" && university._ref != null && dbId != null]{ _id, dbId, name, "slug": slug.current, "universityId": university._ref },\n  "studies": *[_type == "study" && faculty._ref != null && dbId != null]{\n    _id,\n    dbId,\n    name,\n    "slug": slug.current,\n    "siteSlug": siteSlug.current,\n    "facultyId": faculty._ref,\n    "subjectsByYear": *[_type == "subject" && study._ref == ^._id && dbId != null\n        && _id == (*[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(_id asc)[0]._id)\n      ] | order(year asc){\n      year,\n      "subjects": *[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(name asc){\n        _id, dbId, name, year, elective, "studyId": study._ref\n      }\n    },\n  },\n  "subjects": *[_type == "subject" && study._ref != null && dbId != null] | order(year asc){\n    \n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  code,\n  credits,\n  year,\n  semester,\n  elective,\n  "faculty": study->faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    dbId,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n  study->{\n    _id,\n    "slug": slug.current,\n    "siteSlug": siteSlug.current,\n    name,\n    dbId,\n    faculty->{\n      _id,\n      "slug": slug.current,\n      name,\n      university->{\n        _id,\n        "slug": slug.current,\n        name,\n      },\n    },\n  },\n  professors[]->{\n    _id,\n    dbId,\n    "slug": slug.current,\n    name,\n    title,\n  },\n\n  }\n}': OnboardingCatalogQueryResult
+    '\n*[_type == "studyTip" && length(title) > 0 && length(content) > 0] | order(_createdAt asc, _id asc) {\n  _id,\n  title,\n  content\n}\n': StudyTipsQueryResult
+    '\n*[_id == $WEBSITE][0]{\n  "siteName": coalesce(siteName, websiteTitle, "Scriptr"),\n  "siteUrl": coalesce(siteUrl, ""),\n  "defaultSeoTitle": coalesce(defaultSeoTitle, websiteTitle, "Scriptr"),\n  "defaultSeoDescription": coalesce(defaultSeoDescription, ""),\n  "defaultKeywords": defaultKeywords[]\n}\n': WebsiteSeoQueryResult
+    '\n*[_id == $WEBSITE][0].background->{...}\n': WebsiteBackgroundQueryResult
   }
 }
 // Lets @sanity/client releases that predate the global registry read it too
-declare module "@sanity/client" {
+declare module '@sanity/client' {
   interface SanityQueries extends globalThis.SanityQueries {}
 }

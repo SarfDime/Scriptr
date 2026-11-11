@@ -23,6 +23,10 @@
   @apply text-base font-semibold text-fg-700 md:text-lg;
 }
 
+@utility ui-title-modern {
+  @apply uppercase tracking-[.125rem] text-base font-semibold text-fg-700;
+}
+
 @utility ui-subtitle {
   @apply text-sm text-fg-muted;
 }

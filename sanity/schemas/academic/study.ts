@@ -163,25 +163,10 @@ export const Study = defineType({
     {
       name: 'siteSettings',
       title: 'Site settings',
-      type: 'object',
+      type: 'studySiteSettings',
       group: 'information',
       fieldset: 'information',
       options: { collapsible: true, collapsed: true },
-      fields: [
-        {
-          name: 'tagline',
-          title: 'Tagline',
-          type: 'string',
-          validation: (rule) => rule.max(120),
-        },
-        {
-          name: 'navigation',
-          title: 'Navigation menu',
-          type: 'reference',
-          to: [{ type: 'navMenu' }],
-          description: 'Leave empty to use the global navigation menu.',
-        },
-      ],
     },
     ...academicFields(ENTITY, ['dbId']),
   ],

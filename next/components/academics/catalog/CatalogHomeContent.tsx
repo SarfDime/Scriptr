@@ -56,14 +56,15 @@ export const CatalogHomeContent = ({ catalog }: CatalogHomeContentProps) => {
   })
 
   return (
-    <Box className='ui-stack gap-12'>
-      <Box as='section' className='ui-stack gap-5'>
+    <Box className='ui-cluster'>
+      <Box as='section' className='ui-stack gap-5 grow'>
         <SectionHeader
           title={UI_STRINGS.home.universitiesTitle}
+          titleVariant='heading'
           count={universities.length}
         />
         {universities.length > 0 ? (
-          <Box className='flex w-full flex-wrap gap-4'>
+          <Box className='ui-cluster gap-4'>
             {universities.map((university) => (
               <CatalogCard
                 key={university._id}
@@ -106,10 +107,11 @@ export const CatalogHomeContent = ({ catalog }: CatalogHomeContentProps) => {
         )}
       </Box>
 
-      <Box as='section' className='ui-stack gap-5'>
+      <Box as='section' className='ui-stack gap-5 grow'>
         <SectionHeader
           title={UI_STRINGS.home.facultiesTitle}
           count={faculties.length}
+          titleVariant='heading'
         />
         {faculties.length > 0 ? (
           <Box className='flex w-full flex-wrap gap-4'>
@@ -160,10 +162,11 @@ export const CatalogHomeContent = ({ catalog }: CatalogHomeContentProps) => {
         )}
       </Box>
 
-      <Box as='section' className='ui-stack gap-5'>
+      <Box as='section' className='ui-stack gap-5 grow'>
         <SectionHeader
           title={UI_STRINGS.home.studiesTitle}
           count={studies.length}
+          titleVariant='heading'
         />
         {studies.length > 0 ? (
           <Box className='flex w-full flex-wrap gap-4'>
