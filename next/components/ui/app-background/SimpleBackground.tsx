@@ -1,4 +1,4 @@
-import { Box } from '../common/Box'
+import { Box } from '../../common/Box'
 
 /** Static brand-colored gradient backdrop. Shown in simple mode and whenever
  * no StarCanvas is configured in Sanity. Styling lives in `ui-simple-backdrop`.

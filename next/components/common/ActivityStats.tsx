@@ -52,31 +52,29 @@ export const ActivityStats = ({
   ]
 
   return (
-    <Box as='section' className='p-4 ui-above-light'>
-      <Box className='ui-stack gap-4 p-4 ui-above-inside'>
-        <SectionHeader
-          title={title}
-          subtitle={subtitle}
-          actions={
-            <Button className='button button-sm subtle'>
-              <Text>{UI_STRINGS.activity.view}</Text>
-            </Button>
-          }
-        />
-        <Box className='flex flex-wrap gap-2'>
-          {stats.map(({ key, icon: Icon, count, label, color }) => (
-            <Box
-              key={key}
-              className='ui-stack flex-[1_1_8rem] gap-1 rounded-md p-2'
-            >
-              <Box className='ui-cluster gap-2'>
-                <Icon className={`${color} h-7 w-7 rounded-md p-1`} />
-                <Text className='ui-stat'>{count}</Text>
-              </Box>
-              <Text className='ui-subtitle'>{label}</Text>
+    <Box as='section' className='ui-stack gap-4 p-4 ui-above'>
+      <SectionHeader
+        title={title}
+        subtitle={subtitle}
+        actions={
+          <Button className='button button-sm subtle'>
+            <Text>{UI_STRINGS.activity.view}</Text>
+          </Button>
+        }
+      />
+      <Box className='flex flex-wrap gap-2'>
+        {stats.map(({ key, icon: Icon, count, label, color }) => (
+          <Box
+            key={key}
+            className='ui-stack flex-[1_1_8rem] gap-1 rounded-md p-2'
+          >
+            <Box className='ui-cluster gap-2'>
+              <Icon className={`${color} h-7 w-7 rounded-md p-1`} />
+              <Text className='ui-stat'>{count}</Text>
             </Box>
-          ))}
-        </Box>
+            <Text className='ui-subtitle'>{label}</Text>
+          </Box>
+        ))}
       </Box>
     </Box>
   )

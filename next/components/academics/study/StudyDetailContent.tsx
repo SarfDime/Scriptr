@@ -1,37 +1,29 @@
 import { UI_STRINGS } from '@shared/config/strings'
 import { ProfessorsSection } from '@/components/academics/professor/ProfessorsSection'
-import { ScriptsSection } from '@/components/academics/scripts/ScriptSection'
 import { StudyOverviewCard } from '@/components/academics/study/StudyOverviewCard'
 import { SubjectsExplorer } from '@/components/academics/subject/SubjectsExplorer'
 import { BackLink } from '@/components/common/BackLink'
+import { NextLink } from '@/components/common/NextLink'
 import { PageLayout } from '@/components/layout/PageLayout'
-import { getAcademicPath } from '@/lib/academic-routes'
-import { getScriptsByStudy } from '@/lib/api/scripts-api'
-import { toScriptSummaryDetails } from '@/lib/script-display'
+import { getAcademicPath, getStudyFeedPath } from '@/lib/academic-routes'
 import type { StudyDetail } from '@/types/academics/study.types'
 
 export type StudyDetailContentProps = {
   study: StudyDetail
   /** Slugs to fall back on when a parent document's own are missing. */
   fallback: { universitySlug: string; facultySlug: string }
-  /** The study's database id. Its scripts are only readable with it. */
-  studyId: string | null
 }
 
 /**
- * One study's page body, shared by its site (`/study/[siteSlug]`) and the
- * nested catalog URL a study still has while it has no handle. Both parents are
- * catalog pages either way, so the breadcrumbs do not depend on which route
- * rendered it.
+ * A study's academic overview: the overview card, its subjects and its
+ * professors. It is the study site's root (`/study/[siteSlug]`), so the page
+ * leads with what the study is; the scripts are a step ahead through the header
+ * action rather than the landing content.
  */
-export const StudyDetailContent = async ({
+export const StudyDetailContent = ({
   study,
   fallback,
-  studyId,
 }: StudyDetailContentProps) => {
-  const studyScripts = studyId ? await getScriptsByStudy(studyId) : []
-  const scripts = studyScripts ? toScriptSummaryDetails(studyScripts) : []
-
   return (
     <PageLayout
       header={{
@@ -39,6 +31,12 @@ export const StudyDetailContent = async ({
         title: study.name,
         actions: (
           <>
+            <NextLink
+              href={getStudyFeedPath(study.siteSlug)}
+              className='button button-sm solid'
+            >
+              {UI_STRINGS.scripts.browseAll}
+            </NextLink>
             <BackLink
               href={getAcademicPath({
                 type: 'faculty',
@@ -47,6 +45,7 @@ export const StudyDetailContent = async ({
                 facultySlug: study.faculty?.slug ?? fallback.facultySlug,
               })}
               label={study.faculty?.name ?? UI_STRINGS.academics.entity.faculty}
+              backLevel='twoBack'
             />
             <BackLink
               href={getAcademicPath({
@@ -58,7 +57,7 @@ export const StudyDetailContent = async ({
                 study.faculty?.university?.name ??
                 UI_STRINGS.academics.entity.university
               }
-              backLevel='twoBack'
+              backLevel='threeBack'
             />
           </>
         ),
@@ -68,14 +67,6 @@ export const StudyDetailContent = async ({
       <StudyOverviewCard study={study} />
 
       <SubjectsExplorer subjects={study.subjects ?? []} />
-
-      {/* The study's own scripts, with search, subject filter and sort inline:
-        the site is where a reader looks for them, so they live on its home
-        rather than on a listing page of their own. */}
-      <ScriptsSection
-        scripts={scripts}
-        scriptsUnavailable={studyId !== null && studyScripts === null}
-      />
     </PageLayout>
   )
 }

@@ -1,0 +1,62 @@
+@layer components {
+  @theme {
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+
+    /* Error-page astronaut: a slow drift, not a bounce. Simple mode clamps
+       every animation to one 0.01ms iteration further down this file, so it
+       stops there without a rule of its own. */
+    @keyframes errorFloat {
+      0%,
+      100% {
+        transform: translateY(-4px) rotate(-1deg);
+      }
+      50% {
+        transform: translateY(4px) rotate(1deg);
+      }
+    }
+  }
+
+  @apply placeholder:select-none;
+
+  .fadeInElement {
+    @apply animate-[fadeIn_0.2s_ease-in-out_1.5s_forwards];
+  }
+
+  .error-float {
+    @apply animate-[errorFloat_6s_ease-in-out_infinite];
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .error-float {
+      animation: none;
+    }
+  }
+
+  .opacity-start {
+    @apply starting:opacity-0 transition-opacity duration-300;
+  }
+  ::selection {
+    background: var(--color-brand-100);
+  }
+}
+
+/* Simple mode (<html data-simple>, set by ThemeProvider): no animation or
+ * transition time, opaque surfaces. The loading screen keeps its animation (it
+ * is the loading indicator), so it is excluded from the motion clamp. */
+:root[data-simple] :not(.ui-loading-overlay, .ui-loading-overlay *),
+:root[data-simple] :not(.ui-loading-overlay, .ui-loading-overlay *)::before,
+:root[data-simple] :not(.ui-loading-overlay, .ui-loading-overlay *)::after {
+  animation-duration: 0.01ms;
+  animation-delay: 0s;
+  animation-iteration-count: 1;
+  transition-duration: 200ms;
+  transition-delay: 0s;
+  scroll-behavior: auto;
+}

@@ -2,7 +2,7 @@ import { isOwner } from '../../../shared/utils/api.utils'
 import type { createSupabaseClient } from './supabase'
 
 /**
- * Explicit owner check for a write route that is already gated by `is_admin()`
+ * Explicit owner check for a write route that is already gated by `is_owner()`
  * in RLS. The RLS check is the real boundary; this exists so the caller gets a
  * clean `403` instead of an RLS rejection mapped from a database error.
  *

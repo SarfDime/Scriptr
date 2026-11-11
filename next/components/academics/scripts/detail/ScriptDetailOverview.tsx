@@ -6,7 +6,7 @@ import { ScriptFilesSection } from './ScriptFilesSection'
 import { ScriptInfoPanel } from './ScriptInfoPanel'
 
 /**
- * The top section of the script page. Two frosted surfaces share a row: the
+ * The top section of the script page. Two translucent surfaces share a row: the
  * info group (script info + additional reading, itself wrapping) and the
  * files. The files take almost all the free space (grow 100 vs 1), so the info
  * group stays near its basis; when the row can't fit both, the *first* wrap is

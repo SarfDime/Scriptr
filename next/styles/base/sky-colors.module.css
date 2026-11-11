@@ -1,0 +1,221 @@
+/* Sky colors for the shared skybox (next/lib/skybox-canvas.ts,
+   shared/config/skybox.ts). Read through the theme resolver like every other
+   canvas color, so nothing is hardcoded in the drawing code.
+   Imported from next/styles/main.css, next to colors.module.css. */
+@layer colors {
+  /* Light theme: exaggerated, not photorealistic. The day phases are a light,
+     airy blue; only sunrise and sunset go saturated. Night is kept brighter than
+     the dark theme's, close to that theme's midday. */
+  :root {
+    --color-sky-night-top: #1b2b52;
+    --color-sky-night-bottom: #35507d;
+    --color-sky-night-sun: #ffd9a0;
+    --color-sky-night-sun-glow: #ffbe6b;
+    --color-sky-night-moon: #fdfbff;
+    --color-sky-night-cloud: #46557a;
+    --color-sky-night-cloud-shade: #2f3a58;
+
+    --color-sky-dawn-top: #3a2f5e;
+    --color-sky-dawn-bottom: #e08b5a;
+    --color-sky-dawn-sun: #ffb37a;
+    --color-sky-dawn-sun-glow: #ff9a5c;
+    --color-sky-dawn-moon: #e6e8f5;
+    --color-sky-dawn-cloud: #b07a86;
+    --color-sky-dawn-cloud-shade: #6d4c62;
+
+    --color-sky-sunrise-top: #7f8fc4;
+    --color-sky-sunrise-bottom: #ff8a4d;
+    --color-sky-sunrise-sun: #ff5a24;
+    --color-sky-sunrise-sun-glow: #ff9b4a;
+    --color-sky-sunrise-moon: #dfe2f0;
+    --color-sky-sunrise-cloud: #ffc09a;
+    --color-sky-sunrise-cloud-shade: #a9645c;
+
+    --color-sky-morning-top: #6fb4ec;
+    --color-sky-morning-bottom: #cbe6ff;
+    --color-sky-morning-sun: #fff0b8;
+    --color-sky-morning-sun-glow: #ffe49a;
+    --color-sky-morning-moon: #cdd3e6;
+    --color-sky-morning-cloud: #ffffff;
+    --color-sky-morning-cloud-shade: #c8dcee;
+
+    --color-sky-noon-top: #4aa3f0;
+    --color-sky-noon-bottom: #a8d8ff;
+    --color-sky-noon-sun: #fff6d0;
+    --color-sky-noon-sun-glow: #ffeeb0;
+    --color-sky-noon-moon: #c3c9dd;
+    --color-sky-noon-cloud: #ffffff;
+    --color-sky-noon-cloud-shade: #c2d8ec;
+
+    --color-sky-afternoon-top: #5cabe8;
+    --color-sky-afternoon-bottom: #c2e2fb;
+    --color-sky-afternoon-sun: #fff0b8;
+    --color-sky-afternoon-sun-glow: #ffe49a;
+    --color-sky-afternoon-moon: #cbd1e4;
+    --color-sky-afternoon-cloud: #fdfdff;
+    --color-sky-afternoon-cloud-shade: #c0d3e6;
+
+    --color-sky-sunset-top: #6b3f7a;
+    --color-sky-sunset-bottom: #e0407f;
+    --color-sky-sunset-sun: #ff7a2f;
+    --color-sky-sunset-sun-glow: #ff5c5c;
+    --color-sky-sunset-moon: #e8e4f2;
+    --color-sky-sunset-cloud: #ff9a7a;
+    --color-sky-sunset-cloud-shade: #8f4a6a;
+
+    --color-sky-dusk-top: #2b2352;
+    --color-sky-dusk-bottom: #7a4f8a;
+    --color-sky-dusk-sun: #ff9a6a;
+    --color-sky-dusk-sun-glow: #ff7a7a;
+    --color-sky-dusk-moon: #f4f2ff;
+    --color-sky-dusk-cloud: #6a5580;
+    --color-sky-dusk-cloud-shade: #40334f;
+
+    --color-sky-star: #ffeec4;
+  }
+
+  /* Dark theme: the whole day is muted so it fits the #050505 page instead of
+     glaring off it. Only sunrise, sunset and the sun itself keep saturation.
+     `:not([data-theme='light'])` keeps an explicit light choice honest. */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --color-sky-night-top: #04060f;
+      --color-sky-night-bottom: #0b1430;
+      --color-sky-night-sun: #ffd9a0;
+      --color-sky-night-sun-glow: #ffbe6b;
+      --color-sky-night-moon: #eef1ff;
+      --color-sky-night-cloud: #131a2e;
+      --color-sky-night-cloud-shade: #0a0e1c;
+
+      --color-sky-dawn-top: #100a1e;
+      --color-sky-dawn-bottom: #4f2422;
+      --color-sky-dawn-sun: #ffb37a;
+      --color-sky-dawn-sun-glow: #d6803f;
+      --color-sky-dawn-moon: #dfe3f2;
+      --color-sky-dawn-cloud: #3a2630;
+      --color-sky-dawn-cloud-shade: #1e1319;
+
+      --color-sky-sunrise-top: #1c1f3a;
+      --color-sky-sunrise-bottom: #7a2e14;
+      --color-sky-sunrise-sun: #ff5a24;
+      --color-sky-sunrise-sun-glow: #e07a3a;
+      --color-sky-sunrise-moon: #d6daeb;
+      --color-sky-sunrise-cloud: #6a3a2a;
+      --color-sky-sunrise-cloud-shade: #331a14;
+
+      --color-sky-morning-top: #17324f;
+      --color-sky-morning-bottom: #37658a;
+      --color-sky-morning-sun: #ffdf9a;
+      --color-sky-morning-sun-glow: #c9a35c;
+      --color-sky-morning-moon: #c3c9dd;
+      --color-sky-morning-cloud: #7a8fa0;
+      --color-sky-morning-cloud-shade: #3f4e5b;
+
+      --color-sky-noon-top: #14355c;
+      --color-sky-noon-bottom: #2f6491;
+      --color-sky-noon-sun: #ffeab0;
+      --color-sky-noon-sun-glow: #d4b060;
+      --color-sky-noon-moon: #b7bdd2;
+      --color-sky-noon-cloud: #8095a6;
+      --color-sky-noon-cloud-shade: #42525f;
+
+      --color-sky-afternoon-top: #183a5c;
+      --color-sky-afternoon-bottom: #356688;
+      --color-sky-afternoon-sun: #ffe4a0;
+      --color-sky-afternoon-sun-glow: #cfa356;
+      --color-sky-afternoon-moon: #c0c6da;
+      --color-sky-afternoon-cloud: #7d92a4;
+      --color-sky-afternoon-cloud-shade: #404f5c;
+
+      --color-sky-sunset-top: #1a0e20;
+      --color-sky-sunset-bottom: #6a1e3e;
+      --color-sky-sunset-sun: #ff7a2f;
+      --color-sky-sunset-sun-glow: #e05a3a;
+      --color-sky-sunset-moon: #e2def0;
+      --color-sky-sunset-cloud: #5e2e40;
+      --color-sky-sunset-cloud-shade: #2a1620;
+
+      --color-sky-dusk-top: #0a071a;
+      --color-sky-dusk-bottom: #241838;
+      --color-sky-dusk-sun: #ff9a6a;
+      --color-sky-dusk-sun-glow: #d65a6a;
+      --color-sky-dusk-moon: #eef0ff;
+      --color-sky-dusk-cloud: #1c1630;
+      --color-sky-dusk-cloud-shade: #0e0a1a;
+
+      --color-sky-star: #ffe9b8;
+    }
+  }
+
+  /* Explicit dark (theme toggle): the same values as the media query above, so
+     the sky follows the toggle even when the OS is set to light. Duplicated on
+     purpose — CSS cannot alias an @media block, and colors.module.css does the
+     same thing for the same reason. */
+  :root[data-theme="dark"] {
+    --color-sky-night-top: #04060f;
+    --color-sky-night-bottom: #0b1430;
+    --color-sky-night-sun: #ffd9a0;
+    --color-sky-night-sun-glow: #ffbe6b;
+    --color-sky-night-moon: #eef1ff;
+    --color-sky-night-cloud: #131a2e;
+    --color-sky-night-cloud-shade: #0a0e1c;
+
+    --color-sky-dawn-top: #100a1e;
+    --color-sky-dawn-bottom: #4f2422;
+    --color-sky-dawn-sun: #ffb37a;
+    --color-sky-dawn-sun-glow: #d6803f;
+    --color-sky-dawn-moon: #dfe3f2;
+    --color-sky-dawn-cloud: #3a2630;
+    --color-sky-dawn-cloud-shade: #1e1319;
+
+    --color-sky-sunrise-top: #1c1f3a;
+    --color-sky-sunrise-bottom: #7a2e14;
+    --color-sky-sunrise-sun: #ff5a24;
+    --color-sky-sunrise-sun-glow: #e07a3a;
+    --color-sky-sunrise-moon: #d6daeb;
+    --color-sky-sunrise-cloud: #6a3a2a;
+    --color-sky-sunrise-cloud-shade: #331a14;
+
+    --color-sky-morning-top: #17324f;
+    --color-sky-morning-bottom: #37658a;
+    --color-sky-morning-sun: #ffdf9a;
+    --color-sky-morning-sun-glow: #c9a35c;
+    --color-sky-morning-moon: #c3c9dd;
+    --color-sky-morning-cloud: #7a8fa0;
+    --color-sky-morning-cloud-shade: #3f4e5b;
+
+    --color-sky-noon-top: #14355c;
+    --color-sky-noon-bottom: #2f6491;
+    --color-sky-noon-sun: #ffeab0;
+    --color-sky-noon-sun-glow: #d4b060;
+    --color-sky-noon-moon: #b7bdd2;
+    --color-sky-noon-cloud: #8095a6;
+    --color-sky-noon-cloud-shade: #42525f;
+
+    --color-sky-afternoon-top: #183a5c;
+    --color-sky-afternoon-bottom: #356688;
+    --color-sky-afternoon-sun: #ffe4a0;
+    --color-sky-afternoon-sun-glow: #cfa356;
+    --color-sky-afternoon-moon: #c0c6da;
+    --color-sky-afternoon-cloud: #7d92a4;
+    --color-sky-afternoon-cloud-shade: #404f5c;
+
+    --color-sky-sunset-top: #1a0e20;
+    --color-sky-sunset-bottom: #6a1e3e;
+    --color-sky-sunset-sun: #ff7a2f;
+    --color-sky-sunset-sun-glow: #e05a3a;
+    --color-sky-sunset-moon: #e2def0;
+    --color-sky-sunset-cloud: #5e2e40;
+    --color-sky-sunset-cloud-shade: #2a1620;
+
+    --color-sky-dusk-top: #0a071a;
+    --color-sky-dusk-bottom: #241838;
+    --color-sky-dusk-sun: #ff9a6a;
+    --color-sky-dusk-sun-glow: #d65a6a;
+    --color-sky-dusk-moon: #eef0ff;
+    --color-sky-dusk-cloud: #1c1630;
+    --color-sky-dusk-cloud-shade: #0e0a1a;
+
+    --color-sky-star: #ffe9b8;
+  }
+}

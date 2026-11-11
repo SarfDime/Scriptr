@@ -1,11 +1,10 @@
 import { createAcademicStaticParams } from '@/lib/academic-detail-page'
-import { getAcademicPath } from '@/lib/academic-routes'
+import { getAcademicPath, getStudyFeedPath } from '@/lib/academic-routes'
 import { getScriptSitemapEntries } from '@/lib/api/sitemap-api'
 import { ACADEMIC_CATALOG_TAGS } from '@/lib/sanity-tags'
 import {
   CATALOG_SECTION,
   hasSiteOrigin,
-  listStudies,
   listStudySites,
   MAX_URLS_PER_SITEMAP,
   SCRIPT_SECTION_PREFIX,
@@ -54,7 +53,9 @@ const readParams = <TParams extends Record<string, string>>(
 const toCatalogEntries = async (
   toUrl: (path: string) => string
 ): Promise<Array<SitemapEntry>> => {
-  const [universities, faculties, studies, professors] = await Promise.all([
+  // Every study is served from its own site, so it has its own section (see
+  // `listStudySites`) and the catalog lists only the levels above it.
+  const [universities, faculties, professors] = await Promise.all([
     readParams<UniversityRouteParams>(
       universityStaticParamsQuery,
       'sitemap-universities'
@@ -63,9 +64,6 @@ const toCatalogEntries = async (
       facultyStaticParamsQuery,
       'sitemap-faculties'
     ),
-    // A study with a site has its own section, so only the ones still served
-    // at their nested catalog URL are listed here.
-    listStudies().then((studies) => studies.filter((study) => !study.siteSlug)),
     readParams<ProfessorRouteParams>(
       professorStaticParamsQuery,
       'sitemap-professors'
@@ -80,9 +78,6 @@ const toCatalogEntries = async (
     })),
     ...faculties.map((params) => ({
       url: toUrl(getAcademicPath({ type: 'faculty', ...params })),
-    })),
-    ...studies.map((params) => ({
-      url: toUrl(getAcademicPath({ type: 'study', ...params })),
     })),
     ...professors.map((params) => ({
       url: toUrl(getAcademicPath({ type: 'professor', ...params })),
@@ -102,6 +97,7 @@ const toStudyEntries = async (
 
   return [
     { url: toUrl(getAcademicPath({ type: 'study', ...study })) },
+    { url: toUrl(getStudyFeedPath(study.siteSlug)) },
     ...subjects
       .filter((params) => studyKey(params) === key)
       .map((params) => ({

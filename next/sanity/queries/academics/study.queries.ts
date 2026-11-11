@@ -133,6 +133,8 @@ export const studySiteQuery = groq`
   "universitySlug": coalesce(faculty->university->slug.current, faculty->university->_id),
   "siteSlug": siteSlug.current,
   "name": name,
+  "facultyName": faculty->name,
+  "universityName": faculty->university->name,
   dbId
 }[0]
 `

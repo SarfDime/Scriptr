@@ -1,5 +1,4 @@
 import { UI_STRINGS } from '@shared/config/strings'
-import { StudySetupGate } from '@/components/academics/setup/StudySetupGate'
 import { StudyDetailContent } from '@/components/academics/study/StudyDetailContent'
 import {
   createAcademicMetadata,
@@ -13,10 +12,13 @@ import type { StudySiteRouteParams } from '@/types/academics/academics.types'
 import type { StudyDetail } from '@/types/academics/study.types'
 
 /**
- * A study's home. Prerendered on the first request and then held until the
- * publish webhook invalidates it — there is no clock (`revalidate = false`), and
- * the page count grows with the catalog rather than with user activity, so it is
- * not part of the build either.
+ * A study site's root: its academic overview — what it is, its subjects and its
+ * professors. Every academic entity in the catalog is served at its overview, so
+ * a study reads the same way as a university and a faculty; the scripts its
+ * students share are the sub-page beside it (`…/scripts`).
+ *
+ * Prerendered on the first request and held until the publish webhook
+ * invalidates it (`revalidate = false`): editorial content, no clock.
  */
 export const revalidate = false
 
@@ -63,10 +65,5 @@ export default async function StudySitePage({
     tags: ACADEMIC_PAGE_TAGS.study,
   })
 
-  return (
-    <>
-      {site.dbId && <StudySetupGate siteSlug={siteSlug} studyId={site.dbId} />}
-      <StudyDetailContent study={study} fallback={site} studyId={site.dbId} />
-    </>
-  )
+  return <StudyDetailContent study={study} fallback={site} />
 }

@@ -90,6 +90,8 @@ export type ProfileScriptSummary = {
   id: string
   /** Address segment of the script's page — see `ScriptSummary.slug`. */
   slug: string
+  /** The script's study, whose site handle puts the page under `/study/…`. */
+  study: { site_slug: string | null } | null
   title: PortableTextValue
   description: PortableTextValue | null
   vote_score: number

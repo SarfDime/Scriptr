@@ -2,12 +2,12 @@
 
 import { ADMIN_STRINGS } from '@shared/strings/admin-strings'
 import type { DownloadReviewScript } from '@shared/types/download-review.types'
+import { getScriptSitePath } from '@shared/utils/site-paths'
 import { useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { NextLink } from '@/components/common/NextLink'
 import { Text } from '@/components/typography/Text'
-import { getAcademicPath } from '@/lib/academic-routes'
 import { convertDateToClientLocale } from '@/lib/common-utils'
 import { DownloadReviewEvents } from './DownloadReviewEvents'
 
@@ -30,9 +30,9 @@ export const DownloadReviewScriptItem = ({
         <Text className='ui-body-strong'>
           {script.slug ? (
             <NextLink
-              href={getAcademicPath({
-                type: 'script',
-                scriptSlug: script.slug,
+              href={getScriptSitePath({
+                siteSlug: script.site_slug,
+                slug: script.slug,
               })}
             >
               {name}

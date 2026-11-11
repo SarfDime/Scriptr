@@ -1,13 +1,15 @@
 # Academic Catalog
 
 * **Entities:** University, Faculty, Study, Subject, Professor, each with a Sanity mini-schema for shared fields.
-* **Routing:** nested, one segment per level:
+* **Routing:** the catalog tree ends at the faculty, and everything below it belongs to the study's own site:
   - `/university/[universitySlug]`
   - `.../faculty/[facultySlug]`
-  - `.../study/[studySlug]`
-  - `.../subject/[subjectSlug]`
+  - `/study/[siteSlug]` — a study's home (its own handle, not its slug inside the catalog): the academic overview
+  - `…/scripts` — the same study's content surface (the feed), the parent of `…/scripts/[scriptSlug]`
+  - `…/calendar`, `…/academic-setup`, `…/user/[username]`
+  - `/study/[siteSlug]/subject/[subjectSlug]`
 
-  Slugs only need to be unique among siblings; the path disambiguates. **Professors stay flat at `/professor/[professorSlug]`** since they belong to many faculties, studies, and subjects. Each level's GROQ query filters on its ancestor chain.
+  Slugs only need to be unique among siblings; the path disambiguates. A study's `siteSlug` is globally unique because it is the first segment of its own site. The old nested `/university/…/faculty/…/study/[studySlug]` and its subject sibling are gone: every synced study has a handle, the Studio requires one, and the redirectors were removed once nothing minted those URLs. **Professors stay flat at `/professor/[professorSlug]`** since they belong to many faculties, studies, and subjects. Each level's GROQ query filters on its ancestor chain.
 * **Sanity ↔ DB sync (tested, working):**
   1. Author the entity in Sanity (edits allowed before a DB row exists).
   2. **"Create in Database"** creates the Supabase row and writes the DB id back to the Sanity document. **"Sync with Database"** pushes later edits.

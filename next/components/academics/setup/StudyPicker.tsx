@@ -55,7 +55,7 @@ export const StudyPicker = ({ catalog }: { catalog: StudyPickerCatalog }) => {
   }
 
   return (
-    <Box className='ui-stack gap-3'>
+    <Box className='ui-stack ui-above'>
       <OnboardingSelectStep
         title={UI_STRINGS.onboarding.universityTitle}
         options={catalog.universities.map((university) => ({

@@ -1,0 +1,13 @@
+@layer base {
+  html.is-immersive,
+  html.is-immersive body {
+    overflow: hidden;
+  }
+}
+
+@layer utilities {
+  html.is-immersive #app-background canvas {
+    z-index: 40;
+    pointer-events: auto;
+  }
+}

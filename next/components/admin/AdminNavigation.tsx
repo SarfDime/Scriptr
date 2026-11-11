@@ -63,7 +63,7 @@ const canSeeSection = (
   return true
 }
 
-/** Plain links, like `ScriptFeedToggle`: the section lives in the URL, so the
+/** Plain links: the section lives in the URL, so the
  * admin pages stay Server Components and each passes its own `current`. */
 export const AdminNavigation = ({
   current,

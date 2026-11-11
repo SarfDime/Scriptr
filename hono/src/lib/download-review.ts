@@ -28,6 +28,8 @@ export type DownloadReviewEventRow = {
   username: string | null
   full_name: string | null
   script_slug: string | null
+  /** The downloaded script's study site handle; null when the embed is missing. */
+  script_site_slug: string | null
   script_title: string | null
 }
 
@@ -59,6 +61,7 @@ type Bucket = {
   username: string | null
   fullName: string | null
   slug: string | null
+  siteSlug: string | null
   title: string | null
   firstAt: string
   firstMs: number | null
@@ -76,6 +79,7 @@ const createBucket = (): Bucket => ({
   username: null,
   fullName: null,
   slug: null,
+  siteSlug: null,
   title: null,
   firstAt: '',
   firstMs: null,
@@ -101,6 +105,7 @@ const track = (bucket: Bucket, row: DownloadReviewEventRow) => {
   bucket.username ??= row.username
   bucket.fullName ??= row.full_name
   bucket.slug ??= row.script_slug
+  bucket.siteSlug ??= row.script_site_slug
   bucket.title ??= row.script_title
 
   const ms = time(row.created_at)
@@ -167,6 +172,7 @@ export const aggregateDownloadReview = (
     scripts: ranked(scripts).map(([scriptId, bucket]) => ({
       script_id: scriptId,
       slug: bucket.slug,
+      site_slug: bucket.siteSlug,
       title: bucket.title,
       events: bucket.events,
       accounts: bucket.accounts.size,

@@ -24,6 +24,8 @@ export type DownloadReviewAccount = {
 export type DownloadReviewScript = {
   script_id: string
   slug: string | null
+  /** The site handle of the study the script belongs to: its page lives there. */
+  site_slug: string | null
   title: string | null
   events: number
   /** Distinct signed-in accounts that downloaded it. */
@@ -65,6 +67,8 @@ export type DownloadReviewEvent = {
   created_at: string
   script_id: string
   script_slug: string | null
+  /** The script's study site handle; null when the embed is missing. */
+  script_site_slug: string | null
   script_title: string | null
   profile_id: string | null
   username: string | null

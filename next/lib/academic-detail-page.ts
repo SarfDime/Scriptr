@@ -116,6 +116,7 @@ export const createAcademicMetadata = <
   getOwnSlug,
   getDescription,
   descriptionFallback,
+  titleTemplate,
   tags,
 }: {
   query: string
@@ -138,8 +139,15 @@ export const createAcademicMetadata = <
   fetchOriginPrefix: string
   /** Pulls the page's own (leaf) slug out of the full route-params object, for logging/SEO param. */
   getOwnSlug: (params: TParams) => string
-  getDescription: (detail: TDetail) => PortableTextValue
+  /** The entity's rich-text description, flattened into the meta description.
+   * Omitted by a sub-page of the entity (a study's script feed), which has a
+   * description of its own rather than the parent's. */
+  getDescription?: (detail: TDetail) => PortableTextValue
   descriptionFallback: (detail: TDetail) => string
+  /** The title without the site name. Defaults to the entity's name; a sub-page
+   * of the entity passes its own so two pages of one entity do not share a
+   * title. */
+  titleTemplate?: (detail: TDetail) => string
   tags?: ReadonlyArray<string>
 }) => {
   return async ({
@@ -175,11 +183,14 @@ export const createAcademicMetadata = <
     }
 
     const seoDescription =
-      convertToPlainText({ value: getDescription(detail) }) ||
-      descriptionFallback(detail)
+      convertToPlainText({
+        value: getDescription ? getDescription(detail) : undefined,
+      }) || descriptionFallback(detail)
 
     return PageSEO({
-      seoTitle: `${detail.name} | ${websiteSettings.siteName ?? 'Scriptr'}`,
+      seoTitle: `${titleTemplate ? titleTemplate(detail) : detail.name} | ${
+        websiteSettings.siteName ?? 'Scriptr'
+      }`,
       seoDescription,
       pagePath: getPath(routeParams),
       siteName: websiteSettings.siteName,

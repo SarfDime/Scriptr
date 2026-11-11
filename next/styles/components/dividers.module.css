@@ -1,0 +1,71 @@
+/* A hairline, not a pane: `Divider` used to borrow `ui-above-inside`, which gave
+ * a 2px strip a fill, a shadow and a lit edge. It is a groove now — the border is
+ * the cut and the orientation class adds the lip that catches the light under
+ * it, so the line reads as pressed into the surface instead of drawn on it. */
+/* A divider paints both bands of the groove in one gradient. Drawing the cut as
+ * a border and the lip as an inset shadow let the two layers snap to device rows
+ * independently, so identical dividers read at different strengths depending on
+ * the fractional offset layout gave them. */
+/* Registered so `--divider-line` can interpolate: an unregistered custom
+ * property is discrete, and a gradient painted from a discrete value would jump.
+ * `transparent` is only the root default — `ui-divider` always sets the line. */
+@property --divider-line {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
+@utility ui-divider {
+  background-color: transparent;
+  border-width: 0;
+  /* Call sites tint the line by setting this, either directly or through the
+   * `cp-divider` palette helper. It is painted into a gradient, so it only
+   * interpolates because it is registered as a `<color>` below; without that
+   * the tint would snap between palettes instead of fading. */
+  --divider-line: var(--divider-cut);
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: --divider-line 250ms ease-out;
+  }
+}
+
+@utility ui-divider-h {
+  min-height: 2px;
+  height: 2px;
+  background-image: linear-gradient(
+    to bottom,
+    var(--divider-line) 0 1px,
+    var(--divider-lip) 1px 2px
+  );
+}
+
+@utility ui-divider-v {
+  min-width: 2px;
+  width: 2px;
+  background-image: linear-gradient(
+    to right,
+    var(--divider-line) 0 1px,
+    var(--divider-lip) 1px 2px
+  );
+}
+
+/* Turn any border into the same groove: the border is the cut, the class paints
+ * the lip just inside it. One per side, so an element that already draws a
+ * separator with a border (a card footer, a dialog header) gets the treatment
+ * without becoming a `Divider`. Only for elements that carry no shadow of their
+ * own — this replaces `box-shadow`. */
+@utility ui-groove-t {
+  box-shadow: inset 0 1px 0 var(--divider-lip);
+}
+
+@utility ui-groove-b {
+  box-shadow: inset 0 -1px 0 var(--divider-lip);
+}
+
+@utility ui-groove-l {
+  box-shadow: inset 1px 0 0 var(--divider-lip);
+}
+
+@utility ui-groove-r {
+  box-shadow: inset -1px 0 0 var(--divider-lip);
+}

@@ -16,7 +16,7 @@ export type ScriptFilesSectionProps = {
   canManage?: boolean
 }
 
-/** The script's files on their own frosted surface. Takes nearly all the free
+/** The script's files on their own translucent surface. Takes nearly all the free
  * space in the overview row and wraps below the info group first when that
  * row is too narrow. */
 export function ScriptFilesSection({

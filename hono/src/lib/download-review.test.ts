@@ -21,6 +21,7 @@ const event = (
   username: 'student',
   full_name: 'Student One',
   script_slug: 'script-one',
+  script_site_slug: 'lbe',
   script_title: 'Script One',
   ...overrides,
 })
@@ -95,6 +96,7 @@ test('separates a script’s accounts from its anonymous downloads', () => {
     {
       script_id: 'script-1',
       slug: 'script-one',
+      site_slug: 'lbe',
       title: 'Script One',
       events: 3,
       accounts: 2,

@@ -2,10 +2,12 @@
 
 import { UI_STRINGS } from '@shared/config/strings'
 import { useState } from 'react'
+import { SubjectFilters } from '@/components/academics/subject/SubjectFilters'
 import { SubjectsSidebar } from '@/components/academics/subject/SubjectsSidebar'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { Select } from '@/components/ui/select/Select'
+import { useSubjectFilters } from '@/hooks/useSubjectFilters'
 import { cn } from '@/lib/common-utils'
 import type { ProfileSubjectsSidebarProps } from '@/types/components/ProfilePage.types'
 import type { SelectOptionType } from '@/types/components/Select.types'
@@ -15,34 +17,11 @@ type SubjectView = 'completed' | 'currently_taking'
 const ALL = 'all'
 
 /**
- * What a filter select offers. With several values it gets an "all" option
- * and keeps the user's pick (falling back to "all" if that value is gone,
- * e.g. after the data refreshed). With a single value there is nothing to
- * choose, so that value is picked and the select is locked.
- */
-const buildFilter = (
-  allLabel: string,
-  values: Array<SelectOptionType<string>>,
-  selected: string
-) => {
-  const [only] = values
-  if (values.length === 1 && only) {
-    return { options: values, active: only.value, isLocked: true }
-  }
-
-  return {
-    options: [{ id: ALL, label: allLabel, value: ALL }, ...values],
-    active: values.some((option) => option.value === selected) ? selected : ALL,
-    isLocked: false,
-  }
-}
-
-/**
  * The profile's subjects section: a toggle (in the header) between completed
- * and currently-taking subjects, plus two independent filters over whichever
- * list is showing — by study and by year. The filter options come from the
- * subjects in the showing list, so they only offer what can match, and
- * switching the list resets both filters.
+ * and currently-taking subjects, a study filter, and the shared year/electives
+ * filters. Every option comes from the subjects in the showing list, so the
+ * controls only offer what can match, and switching the list resets the study
+ * filter.
  */
 export function ProfileSubjectsSidebar({
   completed,
@@ -53,42 +32,42 @@ export function ProfileSubjectsSidebar({
   const strings = UI_STRINGS.profile.subjects
   const [view, setView] = useState<SubjectView>('currently_taking')
   const [studyId, setStudyId] = useState<string>(ALL)
-  const [year, setYear] = useState<string>(ALL)
 
   const subjects = view === 'completed' ? completed : currentlyTaking
 
-  const studyFilter = buildFilter(
-    strings.allStudies,
-    [
-      ...new Map(
-        subjects.map((subject) => [subject.study._id, subject.study.name])
-      ),
-    ].map(([id, name]) => ({ id: `study-${id}`, label: name, value: id })),
-    studyId
-  )
-  const yearFilter = buildFilter(
-    strings.allYears,
-    [...new Set(subjects.map((subject) => subject.year))]
-      .sort((a, b) => a - b)
-      .map((value) => ({
-        id: `year-${value}`,
-        label: UI_STRINGS.general.year(value),
-        value: String(value),
-      })),
-    year
+  const studyOptions: Array<SelectOptionType<string>> = [
+    ...new Map(
+      subjects.map((subject) => [subject.study._id, subject.study.name])
+    ),
+  ].map(([id, name]) => ({ id: `study-${id}`, label: name, value: id }))
+  // One study has nothing to choose: its own option is selected and locked.
+  const onlyStudy = studyOptions.length === 1 ? studyOptions[0] : undefined
+  const studyFilterLocked = onlyStudy !== undefined
+  let activeStudyId = ALL
+  if (onlyStudy) activeStudyId = onlyStudy.value
+  else if (studyOptions.some((option) => option.value === studyId)) {
+    activeStudyId = studyId
+  }
+  const studySelectOptions = onlyStudy
+    ? studyOptions
+    : [{ id: ALL, label: strings.allStudies, value: ALL }, ...studyOptions]
+
+  const studyFiltered = subjects.filter(
+    (subject) => activeStudyId === ALL || subject.study._id === activeStudyId
   )
 
-  const visibleSubjects = subjects.filter(
-    (subject) =>
-      (studyFilter.active === ALL ||
-        subject.study._id === studyFilter.active) &&
-      (yearFilter.active === ALL || String(subject.year) === yearFilter.active)
-  )
+  const {
+    year,
+    setYear,
+    years,
+    includeElectives,
+    setIncludeElectives,
+    visibleSubjects,
+  } = useSubjectFilters(studyFiltered)
 
   const selectView = (nextView: SubjectView) => {
     setView(nextView)
     setStudyId(ALL)
-    setYear(ALL)
   }
 
   const views: Array<{ value: SubjectView; label: string }> = [
@@ -102,10 +81,6 @@ export function ProfileSubjectsSidebar({
           subtitle: strings.currentlyTakingSubtitle,
           empty: strings.currentlyTakingEmpty,
         }
-
-  // Select keeps its own selected option, so it is remounted (a new `key`)
-  // whenever the list it filters changes, to pick up the reset value.
-  const selectKey = `${view}:${studyFilter.options.length}:${yearFilter.options.length}`
 
   return (
     <SubjectsSidebar
@@ -143,34 +118,31 @@ export function ProfileSubjectsSidebar({
       }}
       toolbar={
         subjects.length > 0 && (
-          <Box className='ui-cluster gap-2'>
+          <Box className='ui-stack gap-2'>
             <Select
-              key={`study:${selectKey}`}
-              defaultOption={studyFilter.options.find(
-                (option) => option.value === studyFilter.active
+              key={`study:${view}:${studyOptions.length}`}
+              defaultOption={studySelectOptions.find(
+                (option) => option.value === activeStudyId
               )}
-              disabled={studyFilter.isLocked}
-              options={studyFilter.options}
+              disabled={studyFilterLocked}
+              options={studySelectOptions}
               setSelectedValue={(value) => setStudyId(value || ALL)}
               triggerProps={{
                 'aria-label': strings.studyFilterLabel,
-                disabled: studyFilter.isLocked,
+                disabled: studyFilterLocked,
               }}
               className='w-auto max-w-full grow'
             />
-            <Select
-              key={`year:${selectKey}`}
-              defaultOption={yearFilter.options.find(
-                (option) => option.value === yearFilter.active
-              )}
-              disabled={yearFilter.isLocked}
-              options={yearFilter.options}
-              setSelectedValue={(value) => setYear(value || ALL)}
-              triggerProps={{
-                'aria-label': strings.yearFilterLabel,
-                disabled: yearFilter.isLocked,
-              }}
-              className='w-auto max-w-full grow'
+            {/* `Select` keeps its own pick, so the filters remount when the
+                list they read changes (another view or study selection). */}
+            <SubjectFilters
+              key={`filters:${view}:${years.join(',')}`}
+              year={year}
+              years={years}
+              includeElectives={includeElectives}
+              onYearChange={setYear}
+              onIncludeElectivesChange={setIncludeElectives}
+              className='grow'
             />
           </Box>
         )

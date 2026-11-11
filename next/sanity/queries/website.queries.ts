@@ -9,8 +9,8 @@ export const websiteSeoQuery = groq`
   "defaultKeywords": defaultKeywords[]
 }
 `
-export const starCanvasQuery = groq`
-*[_id == $WEBSITE][0]{
-  dtBackground->{...}
-}.dtBackground
+/** The background document the website settings point at. `_type` comes along in
+ * the projection, so the frontend can tell a star canvas from a Christmas one. */
+export const websiteBackgroundQuery = groq`
+*[_id == $WEBSITE][0].background->{...}
 `

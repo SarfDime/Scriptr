@@ -44,7 +44,7 @@ export const Header = async ({
     <header
       className={cn(
         'sticky top-0 z-10 flex h-16 items-center justify-between',
-        'ui-above-header gap-2'
+        'ui-above-header ui-sheen-diagonal-inverted gap-2'
       )}
     >
       {/* Always available below xl. From xl up it is `display: none` while the

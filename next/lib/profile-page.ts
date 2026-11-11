@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import { getSession, getSessionRequired } from '@/lib/api/auth-api'
 import { getRequestCookieHeader } from '@/lib/api/next-api'
 import {
+  getMyProfile,
   getProfileStats,
   getPublicProfileByUsername,
 } from '@/lib/api/profile-api'
@@ -23,17 +24,27 @@ import type {
  * reads, and the redirect has to happen before anything renders.
  */
 export const loadMyProfilePage = async (): Promise<MyProfilePageViewModel> => {
-  const session = await getSessionRequired(await getRequestCookieHeader())
+  const cookie = await getRequestCookieHeader()
+  const session = await getSessionRequired(cookie)
   if (!session?.user) redirect('/auth')
 
-  // No subjects here: the global profile shows who someone is and what they
-  // have done. What they are taking belongs to a study's view of them.
-  const [catalog, studyTip] = await Promise.all([
+  const [profile, catalog, studyTip] = await Promise.all([
+    getMyProfile(cookie),
     getOnboardingCatalog(),
     getDailyStudyTip(),
   ])
 
-  return { catalog, studyTip }
+  // Every study the account has joined: the profile's own page is not scoped
+  // to one, so the sidebar lists all of them and filters by study in place.
+  const studyIds = profile.selected_studies.flatMap(({ study }) =>
+    study ? [study.id] : []
+  )
+
+  return {
+    catalog,
+    studyTip,
+    subjects: await getProfileSubjectSections(studyIds, profile.subjects),
+  }
 }
 
 /**

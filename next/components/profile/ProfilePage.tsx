@@ -24,9 +24,10 @@ import type { ProfilePageProps } from '@/types/components/ProfilePage.types'
  * can be refreshed after edits; the public one is fetched on the server),
  * so the callers load it and pass it in. `isOwner` adds the edit actions.
  *
- * The subject list is optional: the catalog profile page omits it (identity,
- * affiliations and activity only), while the study site's profile page passes
- * that study's subjects.
+ * The subject list is optional: the signed-in user's own page and the study
+ * site's profile page pass it, while a public catalog profile
+ * (`/user/[username]`) leaves it out — identity, affiliations and activity
+ * only.
  */
 export const ProfilePage = ({
   profile,
@@ -109,13 +110,11 @@ export const ProfilePage = ({
         scripts={toScriptDetails(profile.scripts)}
         title={UI_STRINGS.scripts.authoredSectionTitle}
         subtitle={UI_STRINGS.scripts.authoredSectionSubtitle}
-        className='grow'
       />
       <ScriptsSection
         scripts={toScriptDetails(profile.favorite_scripts)}
         title={UI_STRINGS.scripts.favoritesSectionTitle}
         subtitle={UI_STRINGS.scripts.favoritesSectionSubtitle}
-        className='grow'
       />
     </PageLayout>
   )

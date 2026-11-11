@@ -39,7 +39,7 @@ import type { HonoEnv } from '../types/env.types'
 const WINDOW_PAGE_SIZE = 500
 
 const WINDOW_SELECT = `script_id, user_id, ip_address, device_id, identity_key, created_at,
-  script:scripts(slug, title, study_id), profile:profiles(username, full_name)`
+  script:scripts(slug, title, study_id, study:studies(site_slug)), profile:profiles(username, full_name)`
 
 /**
  * Suspicious-download review: what the counted downloads in `download_events`
@@ -112,6 +112,7 @@ const readWindow = async (
         username: row.profile?.username ?? null,
         full_name: row.profile?.full_name ?? null,
         script_slug: row.script?.slug ?? null,
+        script_site_slug: row.script?.study?.site_slug ?? null,
         script_title: row.script
           ? portableTextToPlainText(row.script.title)
           : null,
@@ -243,7 +244,7 @@ downloadReview.get('/events', requireAdminAccess, async (c) => {
     .from('download_events')
     .select(
       `id, created_at, script_id, user_id, ip_address, device_id, identity_key,
-        script:scripts(slug, title), profile:profiles(username, full_name)`,
+        script:scripts(slug, title, study:studies(site_slug)), profile:profiles(username, full_name)`,
       { count: 'exact' }
     )
     .order('created_at', { ascending: false })
@@ -280,6 +281,7 @@ downloadReview.get('/events', requireAdminAccess, async (c) => {
     created_at: row.created_at,
     script_id: row.script_id,
     script_slug: row.script?.slug ?? null,
+    script_site_slug: row.script?.study?.site_slug ?? null,
     script_title: row.script ? portableTextToPlainText(row.script.title) : null,
     profile_id: row.user_id,
     username: row.profile?.username ?? null,

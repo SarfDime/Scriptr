@@ -52,7 +52,7 @@ export const NotificationsAside = () => {
           'fixed top-16 z-50 ui-stack h-[calc(100%-4rem)] w-full max-w-full md:max-w-sm overflow-y-auto md:min-w-[unset] md:w-full',
           trayOpen && 'transition-transform transform translate-x-0',
           !trayOpen && 'transition-transform transform translate-x-full',
-          'ui-above-nav rounded-none border-r-0 border-b-0 border-t-0 shadow-none'
+          'ui-above-drawer'
         ),
       }}
       headerProps={{

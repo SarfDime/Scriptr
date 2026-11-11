@@ -20,6 +20,15 @@ export const WHITE = '255, 255, 255'
 export const MOBILE_QUERY =
   '(max-width: 767px), (hover: none) and (pointer: coarse)'
 
+// For useSyncExternalStore: tracks MOBILE_QUERY (false on the server)
+export const subscribeToMobile = (onChange: () => void) => {
+  const query = window.matchMedia(MOBILE_QUERY)
+  query.addEventListener('change', onChange)
+  return () => query.removeEventListener('change', onChange)
+}
+export const getIsMobile = () => window.matchMedia(MOBILE_QUERY).matches
+export const getIsMobileOnServer = () => false
+
 export const SPRITE_SIZE = 128 // planet sprites are drawn at this size, then scaled
 export const BODY_RADIUS = 36 // planet body radius inside the sprite (rest is ring space)
 export const TEXTURE_PERIOD = 128 // width of the planet surface texture (one full turn)
@@ -295,7 +304,7 @@ export const scaleForMobile = (config: StarCanvasConfig): StarCanvasConfig => {
  * then we paint one pixel and read it back, which always yields sRGB bytes.
  * Call this again after a theme change to pick up the new values.
  */
-const createColorResolver = () => {
+export const createColorResolver = () => {
   const sampler = document.createElement('canvas')
   sampler.width = 1
   sampler.height = 1

@@ -18,7 +18,7 @@ import { CloseButton } from './CloseButton'
 
 /**
  * Default look of a centered dialog. Below `md` it fills the screen: square,
- * borderless, scrolling inside. From `md` up it is a framed, frosted card with
+ * borderless, scrolling inside. From `md` up it is a framed, translucent card with
  * a width of its own content. The padding sits on the header and on the
  * content, not on the dialog, so the header bar runs edge to edge. Override any
  * of it through `dialogProps.className` (later classes win).
@@ -265,7 +265,7 @@ export function Dialog({
             {!hideBackdrop && showBackdrop && (
               <div
                 className={cn(
-                  'pointer-events-none fixed inset-0 bg-background-250/50 backdrop-blur-xs starting:backdrop-blur-[0] transition-[backdrop-filter] duration-350',
+                  'pointer-events-none fixed inset-0 bg-background-250/80 starting:opacity-0 transition-opacity duration-350',
                   Z_INDEX.DIALOG_BACKDROP
                 )}
               />

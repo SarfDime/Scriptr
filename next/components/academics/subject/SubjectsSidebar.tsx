@@ -3,10 +3,14 @@ import { Divider } from '@/components/ui/Divider'
 import { cn } from '@/lib/common-utils'
 import type { SubjectsSidebarProps } from '@/types/academics/subject.types'
 import { Box } from '../../common/Box'
-import { NextLink } from '../../common/NextLink'
 import { SectionHeader } from '../../common/SectionHeader'
 import { StudyTipCard } from '../../common/StudyTipCard'
 import { SubjectCard } from './SubjectCard'
+
+/** Four cards at the sidebar's width (135px each) plus the gaps between them:
+ * past that the list scrolls instead of growing, so a study with dozens of
+ * subjects cannot push the rest of the sidebar off-screen. */
+const LIST_MAX_HEIGHT = 'max-h-[36rem]'
 
 /** The "Your subjects" sidebar: a header, the subject list (or `emptyMessage`
  * when there are none) and, when one is given, the study tip. */
@@ -17,7 +21,6 @@ export const SubjectsSidebar = ({
   emptyMessage = UI_STRINGS.subjects.emptyState,
   toolbar,
   headerProps,
-  showAllHref,
   studyTip,
   className,
   ...props
@@ -27,7 +30,7 @@ export const SubjectsSidebar = ({
   return (
     <Box
       as='aside'
-      className={cn('ui-stack ui-above-light h-fit', className)}
+      className={cn('ui-stack ui-above h-fit', className)}
       {...props}
     >
       <SectionHeader
@@ -39,16 +42,14 @@ export const SubjectsSidebar = ({
       {toolbar}
 
       {hasSubjects && (
-        <Box className='ui-stack gap-3'>
+        /* Block flow, not `ui-stack`: the cards clip their content
+           (`overflow: hidden`), so as flex items they shrink to fit the capped
+           height instead of overflowing into the scroller. */
+        <Box className={cn('space-y-3 overflow-y-auto', LIST_MAX_HEIGHT)}>
           {subjects.map((item) => (
             <SubjectCard key={item._id} {...item} />
           ))}
         </Box>
-      )}
-      {hasSubjects && showAllHref && (
-        <NextLink href={showAllHref} className='button subtle w-full'>
-          {UI_STRINGS.subjects.showAll}
-        </NextLink>
       )}
       {studyTip && (
         <>

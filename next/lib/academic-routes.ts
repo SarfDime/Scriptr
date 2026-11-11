@@ -43,32 +43,53 @@ const cleanEntityId = (id: string | null | undefined): string => {
 }
 
 /**
- * The study site's root: `/study/[siteSlug]`. A study without a handle yet is
- * still served at its nested catalog URL (see `buildAcademicPath`), which is
- * what keeps the site working while the handle is being authored.
+ * The study site's root: `/study/[siteSlug]`, its academic overview. A study
+ * without a handle has no page of its own — the schema requires one — so callers
+ * fall back to its faculty (see `buildAcademicPath`) rather than to a nested URL
+ * that no longer exists.
+ *
+ * Every academic entity is served at an overview, so a study dropped into this
+ * catalog path reads the same way as `/university/[slug]` and
+ * `/university/[slug]/faculty/[slug]`; its content surface is a sub-path.
  */
 export const getStudyPath = (siteSlug: string | null | undefined): string => {
   const site = cleanEntityId(siteSlug)
   return site ? `/study/${site}` : '/'
 }
 
+/** A study's content surface: the scripts its students share. A sub-path of the
+ * site — and the parent of `/study/[siteSlug]/scripts/[scriptSlug]` — because
+ * the root is the academic overview a newcomer lands on. */
+export const getStudyFeedPath = (
+  siteSlug: string | null | undefined
+): string => {
+  const site = cleanEntityId(siteSlug)
+  return site ? `${getStudyPath(site)}/scripts` : '/'
+}
+
+const facultyPath = (input: {
+  universitySlug: string
+  facultySlug: string
+}): string =>
+  `/university/${cleanEntityId(input.universitySlug)}/faculty/${cleanEntityId(input.facultySlug)}`
+
 const buildAcademicPath = (input: AcademicPathInput): string => {
   switch (input.type) {
     case 'university':
       return `/university/${cleanEntityId(input.universitySlug)}`
     case 'faculty':
-      return `/university/${cleanEntityId(input.universitySlug)}/faculty/${cleanEntityId(input.facultySlug)}`
+      return facultyPath(input)
     case 'study': {
       const site = cleanEntityId(input.siteSlug)
       if (site) return getStudyPath(site)
-      return `/university/${cleanEntityId(input.universitySlug)}/faculty/${cleanEntityId(input.facultySlug)}/study/${cleanEntityId(input.studySlug)}`
+      return facultyPath(input)
     }
     case 'subject': {
       const site = cleanEntityId(input.siteSlug)
       if (site) {
         return `${getStudyPath(site)}/subject/${cleanEntityId(input.subjectSlug)}`
       }
-      return `/university/${cleanEntityId(input.universitySlug)}/faculty/${cleanEntityId(input.facultySlug)}/study/${cleanEntityId(input.studySlug)}/subject/${cleanEntityId(input.subjectSlug)}`
+      return facultyPath(input)
     }
     case 'professor':
       return `/professor/${cleanEntityId(input.professorSlug)}`

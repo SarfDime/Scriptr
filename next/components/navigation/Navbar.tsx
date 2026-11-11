@@ -1,7 +1,7 @@
 import CloseIcon from '@sanity/icons/Close'
 import { UI_STRINGS } from '@shared/config/strings'
 import { cn } from '@/lib/common-utils'
-import type { NavMenuType } from '@/types/components/Nav.types'
+import type { NavBarProps } from '@/types/components/Nav.types'
 import { Box } from '../common/Box'
 import { Divider } from '../ui/Divider'
 import { SimpleModeToggle } from '../ui/SimpleModeToggle'
@@ -10,6 +10,7 @@ import { AdminNavLink } from './AdminNavLink'
 import { NavFavorites } from './NavFavorites'
 import { NavigationLinks } from './NavigationLinks'
 import { NavLogo } from './NavLogo'
+import { NavStudies } from './NavStudies'
 import { NavToggle } from './NavToggle'
 import { NavUserSlot } from './NavUserSlot'
 
@@ -20,14 +21,14 @@ import { NavUserSlot } from './NavUserSlot'
  * collapsed. Hidden states are also `invisible` so the links leave the tab
  * order.
  */
-export const NavBar = ({ navItems }: NavMenuType) => (
+export const NavBar = ({ navItems, studyLogos }: NavBarProps) => (
   <>
     <NavToggle
       action='close'
       tabIndex={-1}
       aria-label={UI_STRINGS.navigation.closeNavigation}
       className={cn(
-        'fixed inset-0 z-15 bg-background-200/70 backdrop-blur-sm',
+        'fixed inset-0 z-15 bg-background-200/85',
         'hidden max-xl:group-data-[nav-open=true]/nav:block'
       )}
     />
@@ -46,7 +47,7 @@ export const NavBar = ({ navItems }: NavMenuType) => (
         'xl:group-data-[nav-collapsed=true]/nav:-translate-x-full'
       )}
     >
-      <Box className='ui-cluster justify-between h-16 px-3 border-b border-grey-300'>
+      <Box className='ui-cluster justify-between h-16 px-3 ui-groove-b'>
         <NavLogo />
         <NavToggle
           action='close'
@@ -56,9 +57,13 @@ export const NavBar = ({ navItems }: NavMenuType) => (
         </NavToggle>
       </Box>
 
-      <NavigationLinks navItems={navItems} />
+      {navItems && (
+        <>
+          <NavigationLinks navItems={navItems} /> <Divider />
+        </>
+      )}
 
-      <Divider />
+      <NavStudies studyLogos={studyLogos} />
 
       <NavFavorites />
 

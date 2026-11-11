@@ -53,7 +53,7 @@ export function ScriptFileCard({
   return (
     // `@container` makes the card the query container for the `@md:` variants
     // below, so the row layout depends on the card's own width. A ScriptPanel
-    // (inner fill) sitting on the files' frosted surface.
+    // (inner fill) sitting on the files' translucent surface.
     <ScriptPanel
       as='div'
       className={cn('min-w-0 overflow-hidden', isWide && '@container')}

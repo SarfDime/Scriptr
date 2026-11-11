@@ -100,17 +100,28 @@ export const getScriptsByStudy = async (studyId: string) => {
   }
 }
 
-/** Platform-wide top scripts by vote score. Public and unscoped. `null` means
- * the read failed, for the same reason as `getScriptsBySubject`. */
-export const getTopScripts = async (limit = 10) => {
+/**
+ * The top scripts by vote score — the one study's when `studyId` is given (a
+ * study's site asks for its own), the whole platform otherwise. `null` means the
+ * read failed, for the same reason as `getScriptsBySubject`.
+ */
+export const getTopScripts = async (limit = 10, studyId?: string | null) => {
   try {
     return await apiFetch<Array<ScriptSummary>>(
-      `${apiRoutes.scripts.top(limit)}&commentCountVersion=${SCRIPT_COMMENT_COUNT_CACHE_VERSION}`,
-      cachedPublicRead([SCRIPT_CACHE_TAGS.top()])
+      `${apiRoutes.scripts.top(limit)}&commentCountVersion=${
+        SCRIPT_COMMENT_COUNT_CACHE_VERSION
+      }${studyId ? `&study=${encodeURIComponent(studyId)}` : ''}`,
+      cachedPublicRead(
+        // One study's top list is invalidated by that study's mutations; the
+        // platform-wide one by any of them.
+        studyId ? [SCRIPT_CACHE_TAGS.study(studyId)] : [SCRIPT_CACHE_TAGS.top()]
+      )
     )
   } catch (error) {
     nextLogs({
-      message: 'Top scripts could not be read.',
+      message: studyId
+        ? `Top scripts for study ${studyId} could not be read.`
+        : 'Top scripts could not be read.',
       logLevel: 'warn',
       error,
     })
@@ -118,9 +129,12 @@ export const getTopScripts = async (limit = 10) => {
   }
 }
 
-/** Builds a personalized top list from individually cached public subject
- * feeds. The selection itself stays request-specific; the script reads do
- * not carry a cookie and therefore remain shared Data Cache entries. */
+/**
+ * A personalized top list built from the individually cached public feeds of the
+ * given subjects — a study's site uses it for the reader's unfinished subjects.
+ * The selection is request-specific; the per-subject reads carry no cookie and
+ * stay shared cache entries.
+ */
 export const getTopScriptsForSubjects = async (
   subjectIds: Array<string>,
   limit = 10

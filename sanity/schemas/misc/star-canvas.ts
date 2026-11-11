@@ -11,7 +11,7 @@ import { SunIcon } from '@sanity/icons/Sun'
 import { defineField, defineType } from 'sanity'
 
 // Values must match CSS theme variables (--color-<value> or --<value>)
-const THEME_COLORS = [
+export const THEME_COLORS = [
   { title: 'Brand (Blue)', value: 'brand' },
   { title: 'Brand Light', value: 'brand-300' },
   { title: 'Brand Dark', value: 'brand-850' },
@@ -30,7 +30,7 @@ const THEME_COLORS = [
   { title: 'Black / Darkest', value: 'background-1000' },
 ]
 
-type Context = { parent?: Record<string, unknown> }
+export type Context = { parent?: Record<string, unknown> }
 
 const hideUnlessCustomPosition = ({ parent }: Context) =>
   parent?.blackHolePresetPosition !== 'custom'
@@ -82,7 +82,7 @@ const hideUnlessCustomMobileAuroraPosition = ({ parent }: Context) =>
 const blackHoleDisabled = ({ value }: { value?: unknown }) =>
   !(value as { enableBlackHole?: boolean } | undefined)?.enableBlackHole
 
-type NumberFieldOptions = {
+export type NumberFieldOptions = {
   name: string
   title: string
   description: string
@@ -96,7 +96,7 @@ type NumberFieldOptions = {
   hidden?: (context: Context) => boolean
 }
 
-const numberField = ({
+export const numberField = ({
   name,
   title,
   description,

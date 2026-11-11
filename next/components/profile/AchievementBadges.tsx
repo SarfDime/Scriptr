@@ -297,7 +297,6 @@ export const AchievementBadges = ({
     <Box className='ui-stack gap-2'>
       {scopes.map((scope) => (
         <Box key={scope.key} className='ui-stack gap-1'>
-          <Text className='ui-caption font-semibold'>{scope.label}</Text>
           <BadgeList
             badges={scope.badges}
             label={`${ACHIEVEMENTS_STRINGS.groupLabel} — ${scope.label}`}

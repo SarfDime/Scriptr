@@ -1,7 +1,6 @@
 import { defineType } from 'sanity'
 import { FieldsetWithClass } from '../components/FieldsetWithClass'
 import { filterExistingReferences } from './util-functions/schemaFilters'
-import { validationRules } from './validation'
 
 const WebsiteContent = [
   {
@@ -21,7 +20,6 @@ const WebsiteContent = [
     options: {
       disableNew: true,
     },
-    validation: validationRules.isRequired,
     to: [{ type: 'navMenu' }],
   },
 
@@ -141,16 +139,12 @@ export const Website = defineType({
     },
 
     {
-      title: 'Dark Theme Background',
-      name: 'dtBackground',
+      title: 'Background',
+      name: 'background',
       type: 'reference',
-      to: [{ type: 'starCanvas' }],
-    },
-    {
-      title: 'Light Theme Background',
-      name: 'ltBackground',
-      type: 'reference',
-      to: [{ type: 'starCanvas' }],
+      to: [{ type: 'starCanvas' }, { type: 'christmasCanvas' }],
+      description:
+        'The animated site background: a Star Canvas or a Christmas Canvas document, each adapting its own colors to the theme. Empty falls back to the static gradient.',
     },
     ...WebsiteContent,
   ],

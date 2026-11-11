@@ -114,7 +114,7 @@ const PROFILE_ACADEMIC_SELECT =
  * whoever wrote it, not the profile being viewed.
  */
 const PROFILE_SCRIPT_FIELDS =
-  'id, slug, title, description, vote_score, download_count, created_at, updated_at, subject:subjects(name), author:profiles!author_id(username, full_name), files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, file_name, created_at)'
+  'id, slug, title, description, vote_score, download_count, created_at, updated_at, study:studies(site_slug), subject:subjects(name), author:profiles!author_id(username, full_name), files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, file_name, created_at)'
 
 /**
  * `scripts!author_id`, not a bare `scripts` — script_favorites has FKs to
@@ -437,7 +437,7 @@ function profileWriteErrorResponse(c: Context<HonoEnv>, error: DatabaseError) {
 /**
  * Shared body of PATCH /me and PATCH /:id. The profiles row goes through
  * the session client either way (its UPDATE policy is `id = auth.uid()` or
- * `is_admin()`). The selection tables' policies are `profile_id =
+ * `is_owner()`). The selection tables' policies are `profile_id =
  * auth.uid()` with no admin override, so an admin editing someone else's
  * selections has no RLS path and needs the service-role client — the
  * caller's admin check happens before this runs.

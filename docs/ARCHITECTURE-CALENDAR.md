@@ -116,14 +116,12 @@
 * **Header alert, client matching.** `CalendarAlert` keeps events whose day key
   is today or within `CALENDAR_ALERT_WINDOW_DAYS`, then keeps an event when it
   has no subject and is `high` importance, or when its `subjectDbId` is one of
-  the reader's uncompleted subjects. Those are derived, not stored: every
-  subject of the reader's selected studies that isn't `completed`, computed by
-  `deriveIncompleteSubjectDbIds` (`next/lib/study-subjects.ts`) — the pure half
-  of the server-only `getIncompleteSubjectIdsForStudies` — from the session and
-  the onboarding catalog the client already holds. While the session loads (and
-  for a signed-out visitor) only the global branch applies. The badge and the
-  preview are hidden until mounted, so the server render and the first client
-  render are identical.
+  the reader's uncompleted subjects. Those are derived, not stored: the study
+  layout passes the alert its own subject list (a small Sanity read), and the
+  client keeps the ones the session does not mark `completed`, so no catalog
+  fetch is involved. While the session loads (and for a signed-out visitor) only
+  the global branch applies. The badge and the preview are hidden until mounted,
+  so the server render and the first client render are identical.
 * **Preview and dismissal.** The desktop preview shows the soonest matching
   event plus a count of the others, in one of two shapes: "Exam in 2 days:
   Subject" or the event's own title for a global one. Dismissals live in

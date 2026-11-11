@@ -39,7 +39,7 @@ Each workspace has an `.env.example`. Copy it and fill in the values:
 | Workspace | Example file          | Copy to           | Covers                                            |
 | --------- | --------------------- | ----------------- | ------------------------------------------------- |
 | `hono/`   | `hono/.env.example`   | `hono/.env`       | Supabase, R2, sitemap secret, Studio TOTP secret, cache revalidation |
-| `next/`   | `next/.env.example`   | `next/.env.local` | API URL, Sanity project, revalidation secret      |
+| `next/`   | `next/.env.example`   | `next/.env.local` | API URL, Sanity project, revalidation and webhook secrets |
 | `sanity/` | `sanity/.env.example` | `sanity/.env`     | Studio API URL, preview origin                    |
 
 Some values must match across workspaces:
@@ -47,9 +47,12 @@ Some values must match across workspaces:
 - `SITEMAP_SECRET` (`hono/`) and `SITEMAP_SECRET` (`next/`), or the sitemap
   drops every script URL.
 - `ADMIN_TOTP_SECRET` (`hono/`) and the code in your authenticator app — the
-  Studio asks for it once per ten minutes. Nothing secret is stored in
+  Studio asks for it once per twenty minutes. Nothing secret is stored in
   `sanity/`.
 - `REVALIDATE_SECRET` in `hono/` and `next/`, or cache revalidation is rejected.
+- `SANITY_REVALIDATE_SECRET` (`next/`) and the Sanity publish webhook's
+  `x-sanity-webhook-secret` header, or an editorial publish only reaches
+  readers on the next deploy.
 
 Keep secrets out of source control.
 

@@ -1,6 +1,5 @@
 import CheckmarkIcon from '@sanity/icons/Checkmark'
 import { UI_STRINGS } from '@shared/config/strings'
-import { AcademicBadge } from '@/components/academics/AcademicBadge'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { SectionHeader } from '@/components/common/SectionHeader'
@@ -8,6 +7,7 @@ import { Text } from '@/components/typography/Text'
 import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/lib/common-utils'
 import type { OnboardingSubject } from '@/types/onboarding.types'
+import { Divider } from '../ui/Divider'
 
 type OnboardingSubjectsStepProps = {
   subjectsByYear: Map<number, Array<OnboardingSubject>>
@@ -36,6 +36,33 @@ export const OnboardingSubjectsStep = ({
     disabledReason ??
     (subjectsByYear.size === 0 ? UI_STRINGS.onboarding.noSubjects : null)
 
+  // Electives sit in their own column, so their membership is the column's
+  // label rather than a badge on every button.
+  const renderSubjectButtons = (subjects: Array<OnboardingSubject>) => (
+    <Box className='ui-cluster gap-1.5'>
+      {subjects.map((subject) => {
+        const isSubjectComplete = completedSubjectIds.includes(subject._id)
+        return (
+          <Button
+            key={subject._id}
+            onClick={() =>
+              isSubjectComplete
+                ? onUncompleteSubject(subject._id)
+                : onCompleteSubject(subject._id)
+            }
+            aria-pressed={isSubjectComplete}
+            className={cn(
+              'button button-md gap-1 py-1 px-2',
+              isSubjectComplete ? 'solid' : 'subtle'
+            )}
+          >
+            {subject.name}
+          </Button>
+        )
+      })}
+    </Box>
+  )
+
   return (
     <Box className='ui-stack gap-3'>
       <SectionHeader
@@ -52,6 +79,12 @@ export const OnboardingSubjectsStep = ({
             const completedCount = subjects.filter((s) =>
               completedSubjectIds.includes(s._id)
             ).length
+            const requiredSubjects = subjects.filter(
+              (subject) => !subject.elective
+            )
+            const electiveSubjects = subjects.filter(
+              (subject) => subject.elective
+            )
 
             return (
               <Box key={year} className='ui-stack ui-above-inside gap-2 p-3'>
@@ -75,7 +108,7 @@ export const OnboardingSubjectsStep = ({
                     }
                     className={cn(
                       'button button-sm gap-1.5 px-3 py-1.5 rounded-full',
-                      isYearComplete ? 'subtle' : 'outline'
+                      isYearComplete ? 'subtle' : 'hollow'
                     )}
                   >
                     {isYearComplete && <CheckmarkIcon />}
@@ -84,30 +117,29 @@ export const OnboardingSubjectsStep = ({
                       : UI_STRINGS.onboarding.markYearComplete}
                   </Button>
                 </Box>
-                <Box className='ui-cluster gap-1.5'>
-                  {subjects.map((subject) => {
-                    const isSubjectComplete = completedSubjectIds.includes(
-                      subject._id
-                    )
-                    return (
-                      <Button
-                        key={subject._id}
-                        onClick={() =>
-                          isSubjectComplete
-                            ? onUncompleteSubject(subject._id)
-                            : onCompleteSubject(subject._id)
-                        }
-                        aria-pressed={isSubjectComplete}
-                        className={cn(
-                          'button button-sm gap-1',
-                          isSubjectComplete ? 'solid' : 'subtle'
-                        )}
-                      >
-                        {subject.name}
-                        {subject.elective && <AcademicBadge type='elective' />}
-                      </Button>
-                    )
-                  })}
+                <Divider />
+                <Box
+                  className={cn(
+                    'grid items-start gap-3 ',
+                    electiveSubjects.length > 0 && 'md:grid-cols-2'
+                  )}
+                >
+                  <Box className='ui-stack gap-1.5'>
+                    {electiveSubjects.length > 0 && (
+                      <Text className='ui-small-label text-red-400'>
+                        {UI_STRINGS.onboarding.requiredSubjects}
+                      </Text>
+                    )}
+                    {renderSubjectButtons(requiredSubjects)}
+                  </Box>
+                  {electiveSubjects.length > 0 && (
+                    <Box className='ui-stack gap-1.5'>
+                      <Text className='ui-small-label text-golden-yellow'>
+                        {UI_STRINGS.onboarding.electiveSubjects}
+                      </Text>
+                      {renderSubjectButtons(electiveSubjects)}
+                    </Box>
+                  )}
                 </Box>
               </Box>
             )

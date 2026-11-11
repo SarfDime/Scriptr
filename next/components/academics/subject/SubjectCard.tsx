@@ -5,6 +5,8 @@ import { ClickableCard } from '@/components/ui/Card'
 import { getAcademicPath } from '@/lib/academic-routes'
 import type { SubjectSidebarItem } from '@/types/academics/subject.types'
 
+/** A subject in a list: the entity overview card, narrowed to the fields a
+ * sidebar needs. */
 export const SubjectCard = ({
   slug,
   name,
@@ -13,7 +15,7 @@ export const SubjectCard = ({
   credits,
   semester,
   elective,
-  professors = [],
+  professors,
   study,
 }: SubjectSidebarItem) => {
   const [firstProfessor, ...restProfessors] = professors ?? []
@@ -25,16 +27,18 @@ export const SubjectCard = ({
   const universityName = study?.faculty?.university?.name
   const facultyName = study?.faculty?.name
 
+  const href = getAcademicPath({
+    type: 'subject',
+    siteSlug: study?.siteSlug,
+    universitySlug,
+    facultySlug,
+    studySlug,
+    subjectSlug: slug ?? '',
+  })
+
   return (
     <EntityCard
-      href={getAcademicPath({
-        type: 'subject',
-        siteSlug: study?.siteSlug,
-        universitySlug,
-        facultySlug,
-        studySlug,
-        subjectSlug: slug ?? '',
-      })}
+      href={href}
       title={name}
       subtitle={
         firstProfessor?.name

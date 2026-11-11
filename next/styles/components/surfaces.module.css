@@ -1,0 +1,339 @@
+@utility ui-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  gap: 1rem;
+  border: 1px solid var(--color-grey-300);
+  border-radius: 0.75rem;
+  /* Longhand on purpose: the `background` shorthand reset the sheen image when
+   * a card also carried `ui-above`. */
+  background-color: var(--color-background-100);
+  color: var(--color-fg-700);
+  box-shadow:
+    inset 0 1px 0 var(--ui-lit-edge),
+    var(--shadow-sm);
+  @apply ui-sheen;
+}
+
+@utility ui-card-header {
+  padding-block: 1rem;
+  padding-top: 0;
+  border-bottom: 1px solid var(--divider-cut);
+  @apply ui-groove-b;
+}
+
+@utility ui-card-body {
+  flex: 1;
+}
+
+@utility ui-card-footer {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--divider-cut);
+  color: var(--color-fg-muted);
+  @apply ui-groove-t;
+}
+
+@utility ui-badge {
+  @apply inline-flex items-center px-2.5 py-0.5 font-medium text-xs rounded-xl w-fit;
+}
+
+@utility ui-badge-fixed {
+  @apply inline-flex items-center px-1 py-0.5 gap-1 justify-center font-medium text-xs rounded-xl w-fit;
+  svg {
+    @apply w-5 h-5;
+  }
+}
+
+/* Light catching the top edge. The per-surface knobs are the alpha
+ * (`--ui-sheen`), the colour (`--ui-sheen-color`, white unless a palette wants
+ * its own hue) and the band height (`--ui-sheen-length`), so a panel and an
+ * input catch the same light. White in both themes on purpose:
+ * `--color-background-50` is black in dark mode, which turned the same wash into
+ * a shadow (see `button.module.css`). */
+@utility ui-sheen {
+  /* Corner to corner, the way light falls across a pane. The band stops at 60%
+   * of the box as well as at `--ui-sheen-length`, so a 90px card gets a short
+   * band instead of being washed edge to edge; `--ui-sheen-strength` is the
+   * theme's dial (dark mode gets 60% of it). Tried a pure percentage (45% of
+   * the box) so a bigger pane carried more of it, and a 471px panel washed
+   * almost to its footer — the fixed band reads better, so it stays.
+   *
+   * The direction is a knob (`ui-sheen-horizontal` moves it); the band's
+   * falloff is not: every surface catches the same light. */
+  --ui-sheen-angle: 135deg;
+  /* The band only reaches into the top of a box, which leaves a tall surface one
+   * tone below it. This second layer runs the whole height — lit at the top,
+   * settling into shade at the foot — so a column reads as a lit volume instead
+   * of a flat slab. It is a knob, off by default: panels stay on the band alone,
+   * and the full-height chrome (`ui-above-nav`, `ui-above-header`,
+   * `ui-above-drawer`) turns it on. Both ends weaken with
+   * `--ui-sheen-strength`, like the band.
+   *
+   * The knobs are read with a fallback, never declared here: a `ui-sheen-*`
+   * direction class re-applies this utility, and a declared default would reset
+   * a surface's own value wherever that class was written after the surface. */
+  background-image:
+    linear-gradient(
+      to bottom,
+      color-mix(
+          in oklab,
+          var(--ui-sheen-color, white)
+            calc(var(--ui-ramp-light, 0%) * var(--ui-sheen-strength, 1)),
+          transparent
+        )
+        0,
+      transparent var(--ui-ramp-mid, 45%),
+      color-mix(
+          in oklab,
+          black calc(var(--ui-ramp-shade, 0%) * var(--ui-sheen-strength, 1)),
+          transparent
+        )
+        100%
+    ),
+    linear-gradient(
+      var(--ui-sheen-angle),
+      color-mix(
+          in oklab,
+          var(--ui-sheen-color, white)
+            calc(var(--ui-sheen, 11%) * var(--ui-sheen-strength, 1)),
+          transparent
+        )
+        0,
+      transparent min(var(--ui-sheen-length, 96px), 60%)
+    );
+  /* Surfaces add this as their first inset shadow: the 1px edge a real pane
+   * has where the light hits it. */
+  --ui-lit-edge: color-mix(
+    in oklab,
+    white var(--ui-sheen-edge, 20%),
+    transparent
+  );
+}
+
+@utility ui-above-defaults {
+  @apply rounded-xl border border-background-300;
+  @apply p-4 gap-4 rounded-xl;
+  @apply ui-sheen;
+}
+
+@utility ui-above {
+  /* A 97% fill, not a frosted one. The page sits over an animated star canvas,
+   * and backdrop blur was the most expensive paint on it, so surfaces are
+   * nearly opaque instead; the remaining 3% keeps the sheen and the border from
+   * reading as paint on a flat block. */
+  @apply ui-above-defaults;
+  @apply bg-background-250/97;
+  /* Composed with Tailwind's ring variables so `ring-*` (inputs) still shows. */
+  box-shadow:
+    inset 0 1px 0 var(--ui-lit-edge),
+    var(--tw-inset-shadow, 0 0 #0000),
+    var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000),
+    var(--ui-above-shadow, var(--shadow-above));
+}
+
+@utility ui-above-opaque {
+  @apply ui-above;
+  @apply bg-background-250;
+}
+
+@utility ui-above-nav {
+  @apply ui-above-opaque;
+  border-radius: 0;
+  border-width: 0 1px 0 0;
+  --ui-above-shadow: var(--shadow-edge-right);
+  /* A full-height column keeps its volume past the corner band. */
+  --ui-ramp-light: 12%;
+  --ui-ramp-shade: 8%;
+}
+
+@utility ui-above-header {
+  @apply ui-above-opaque;
+
+  border-radius: 0;
+  border-width: 0 0 1px;
+  --ui-above-shadow: var(--shadow-edge-bottom);
+  /* A 64px bar compresses the ramp into a stripe, so it keeps the light and
+     barely any shade. */
+  --ui-ramp-light: 12%;
+  --ui-ramp-shade: 4%;
+}
+
+/* A slide-over off the right edge (the notification tray): the same lit volume
+ * as the navbar, but the edge that separates it from the page is the leading
+ * one, so the border and the drop sit on the left. */
+@utility ui-above-drawer {
+  @apply ui-above-opaque;
+  border-radius: 0;
+  border-width: 0 0 0 1px;
+  --ui-above-shadow: var(--shadow-drawer);
+  --ui-ramp-light: 12%;
+  --ui-ramp-shade: 6%;
+  /* A tall panel has the room for the shade to start late. */
+  --ui-ramp-mid: 55%;
+  box-shadow:
+    inset 1px 0 0 var(--ui-lit-edge),
+    var(--tw-inset-shadow, 0 0 #0000),
+    var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000),
+    var(--ui-above-shadow);
+}
+
+@utility ui-above-inside {
+  @apply bg-background-150/60;
+  @apply ui-above-defaults border-background-300/70 rounded-lg;
+  /* Composed with Tailwind's ring variables so `ring-*` (inputs) still shows. */
+  box-shadow:
+    inset 0 1px 0 var(--ui-lit-edge),
+    var(--tw-inset-shadow, 0 0 #0000),
+    var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000),
+    var(--shadow-above-inside);
+}
+
+@utility ui-above-reverse {
+  @apply ui-above-defaults;
+  @apply bg-background-300/75;
+  --ui-above-shadow: var(--shadow-edge-top);
+}
+
+/* Where the light comes from. Each one keeps the band, colour, strength and
+ * length and only moves the direction, so a surface changes its lighting
+ * without becoming a second material: `@apply ui-sheen` brings the gradient,
+ * the edge highlight and the knobs, then the angle is overridden. Declared
+ * after the `*-above*` utilities for the same source-order reason as
+ * `no-gradient` — they have to win against the sheen those apply, and every one
+ * of them also works on an element with no surface class of its own.
+ *
+ * The name is the edge the band lies along, not the axis the ramp runs on: a
+ * horizontal band sits at the top or bottom, a vertical one at the left or
+ * right, and `-inverted` is the opposite edge. A diagonal band is named for the
+ * corner it comes from — `ui-sheen` (the default, top left) and
+ * `ui-sheen-diagonal-inverted` (bottom right).
+ *
+ * Diagonal suits a pane that is lit from the corner; the axis-aligned ones suit
+ * wide, short surfaces (a header, a toolbar, a row), where a diagonal band only
+ * ever crosses a corner. */
+@utility ui-sheen-horizontal {
+  @apply ui-sheen;
+  --ui-sheen-angle: to bottom;
+}
+
+@utility ui-sheen-horizontal-inverted {
+  @apply ui-sheen;
+  --ui-sheen-angle: to top;
+}
+
+@utility ui-sheen-vertical {
+  @apply ui-sheen;
+  --ui-sheen-angle: to right;
+}
+
+@utility ui-sheen-vertical-inverted {
+  @apply ui-sheen;
+  --ui-sheen-angle: to left;
+}
+
+@utility ui-sheen-diagonal-inverted {
+  @apply ui-sheen;
+  --ui-sheen-angle: 315deg;
+}
+
+/* Drops the sheen from a surface that keeps everything else — fill, border,
+ * shadow: `ui-above no-gradient`, `ui-above-inside no-gradient`. For panels that
+ * carry dense text, where the wash competed with it.
+ *
+ * Declared after every `*-above*` utility above so plain source order wins on an
+ * equal-specificity conflict, instead of depending on the class order in the
+ * markup. `--ui-sheen: 0%` is belt and braces for anything re-applying the sheen
+ * underneath. */
+@utility no-gradient {
+  background-image: none;
+  --ui-sheen: 0%;
+}
+
+/* Static brand gradient with a faint dot grid. Used instead of the StarCanvas
+ * in simple mode and when no StarCanvas is configured in Sanity. */
+@utility ui-simple-backdrop {
+  background-color: var(--color-background-100);
+  /* Four washes: the brand glow bottom-right, a second hue top-left so the
+   * background is not one colour, the soft centre, and the tint across the top.
+   * Strength is per theme (`--simple-*` in semantic.module.css`), and light
+   * carries the more colourful set. */
+  background-image:
+    radial-gradient(
+      circle at 1px 1px,
+      color-mix(in oklab, var(--color-brand) 16%, transparent) 1px,
+      transparent 0
+    ),
+    radial-gradient(
+      circle at 100% 100%,
+      color-mix(
+          in oklab,
+          var(--color-brand) var(--simple-glow, 60%),
+          transparent
+        )
+        0%,
+      var(--simple-accent) var(--simple-glow-mid, 9%),
+      transparent var(--simple-glow-end, 24%)
+    ),
+    radial-gradient(
+      circle at 6% 8%,
+      var(--simple-accent-alt) 0%,
+      transparent 48%
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      color-mix(in oklab, var(--color-brand-300) 12%, transparent) 0%,
+      transparent 40%
+    ),
+    linear-gradient(
+      var(--simple-tint-angle, 160deg),
+      color-mix(
+          in oklab,
+          var(--color-brand-300) var(--simple-wash, 42%),
+          transparent
+        )
+        0%,
+      transparent 45%
+    );
+  background-size:
+    28px 28px,
+    auto,
+    auto,
+    auto,
+    auto;
+}
+
+/* Where CSS random() exists, every page load nudges the glow height and the
+ * tint angle a little. Elsewhere the variables fall back to the fixed values
+ * used in `ui-simple-backdrop`. */
+/* biome-ignore lint/correctness/noUnknownFunction: CSS random() is not in Biome's function list yet */
+@supports (width: random(1px, 2px)) {
+  .ui-simple-backdrop {
+    /* biome-ignore lint/correctness/noUnknownFunction: CSS random() */
+    --simple-glow-mid: random(7%, 11%);
+    /* biome-ignore lint/correctness/noUnknownFunction: CSS random() */
+    --simple-glow-end: random(20%, 28%);
+    /* biome-ignore lint/correctness/noUnknownFunction: CSS random() */
+    --simple-tint-angle: random(150deg, 170deg);
+  }
+}
+
+/* Panels only: the chrome is `ui-above-opaque`, not `.ui-above`, so listing it
+ * here would flatten its fill back to a panel colour. */
+:root[data-simple] :is(.ui-above) {
+  background-color: var(--color-background-250);
+}
+
+:root[data-simple] .ui-above-inside {
+  background-color: var(--color-background-200);
+}
+
+:root[data-simple] .ui-above-reverse {
+  background-color: var(--color-background-300);
+}

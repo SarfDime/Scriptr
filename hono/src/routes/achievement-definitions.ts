@@ -119,7 +119,7 @@ function definitionErrorResponse(
 const achievementDefinitions = new Hono<HonoEnv>()
 
 /* ---------------------------------------------------------------------- */
-/* Achievement definitions — public read, admin-managed (is_admin() RLS)  */
+/* Achievement definitions — public read, owner-managed (is_owner() RLS)  */
 /* ---------------------------------------------------------------------- */
 
 /** List achievement definitions, grouped by metric then threshold */

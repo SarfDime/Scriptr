@@ -66,12 +66,29 @@ export const UI_STRINGS = {
     minimumReasonLength: 10,
   },
   home: {
-    greeting: 'Welcome',
+    greeting: 'Welcome to Scriptr',
     metaDescription:
       'A platform for students to share and discover study materials.',
-    title: 'Make studying feel a little lighter.',
+    title: 'Your study, all in one place.',
     subtitle:
-      'Find the notes, scripts, and shared knowledge you need to move through this week with confidence.',
+      'Every university, faculty and study on Scriptr — with the scripts its students share, the subjects they take and the professors who teach them.',
+    createAccount: 'Create account',
+    setUpStudies: 'Set up studies',
+    universitiesTitle: 'Universities',
+    facultiesTitle: 'Faculties',
+    studiesTitle: 'Studies',
+    facultyCount: (count: number) =>
+      `${count} ${count === 1 ? 'faculty' : 'faculties'}`,
+    facultySummary: (studies: number, professors: number) =>
+      `${studies} ${studies === 1 ? 'Study' : 'Studies'} • ${professors} ${
+        professors === 1 ? 'Professor' : 'Professors'
+      }`,
+    /** The path under a study's name: its faculty, then its university. */
+    studyPath: (faculty: string, university: string) =>
+      `${faculty} • ${university}`,
+    noUniversities: 'No universities are listed yet.',
+    noFaculties: 'No faculties are listed yet.',
+    noStudies: 'No studies are open for enrolment yet.',
   },
   scripts: {
     sectionTitle: 'Subject Scripts',
@@ -87,20 +104,37 @@ export const UI_STRINGS = {
     loadFailed:
       'These scripts could not be loaded right now. Try again in a moment.',
     browseAll: 'Browse all scripts',
+    feed: {
+      toggleLabel: 'Script feed',
+      forYou: 'For you',
+      all: 'All scripts',
+      allTitle: 'All scripts',
+      allSubtitle: 'Top scripts from every subject in this study.',
+      // The feed is a page of its own beside the study's overview, so it titles
+      // itself after its content instead of repeating the study's own title.
+      metadataTitle: (studyName: string) => `${studyName} · Scripts`,
+      metadataDescription: (studyName: string) =>
+        `The scripts students of ${studyName} share, and the subjects they cover.`,
+    },
     search: {
-      pageTitle: 'Search scripts',
-      pageSubtitle: 'Find notes and study material across every subject.',
-      formAriaLabel: 'Search all scripts',
-      placeholder: 'Search all scripts by title or description...',
+      // The global search is the catalog: universities, faculties, studies and
+      // professors. Subjects and scripts belong to a study, and a study's site
+      // searches its own content.
+      pageTitle: 'Search the catalog',
+      pageSubtitle: 'Find a university, faculty, study or professor.',
+      formAriaLabel: 'Search the catalog',
+      placeholder: 'Search universities, faculties, studies or professors...',
       submit: 'Search',
       resultsTitle: 'Results',
-      resultsSubtitle: (query: string) => `Scripts matching “${query}”.`,
-      prompt: 'Enter a search term to find scripts.',
+      resultsSubtitle: (query: string) =>
+        `Catalog entries matching “${query}”.`,
+      prompt:
+        'Enter a search term to find a university, faculty, study or professor.',
       loadFailed:
         'Search is unavailable right now. Try again in a moment — your query is still in the box above.',
       noResults: (query: string) =>
-        `No scripts match “${query}”. Try different keywords or check the spelling.`,
-      searchAll: (query: string) => `Search all scripts for “${query}”`,
+        `No catalog entries match “${query}”. Try different keywords or check the spelling.`,
+      searchAll: (query: string) => `Search the catalog for “${query}”`,
       quickSearchLabel: 'Quick search',
       closeSearch: 'Close search',
       invalidQuery: (maxLength: number) =>
@@ -129,13 +163,6 @@ export const UI_STRINGS = {
       notFoundDescription:
         'This script may have been removed, or the link is incorrect.',
       errorFallback: 'Please try again.',
-    },
-    feed: {
-      toggleLabel: 'Script feed',
-      forYou: 'For you',
-      all: 'All scripts',
-      allTitle: 'All scripts',
-      allSubtitle: 'Top scripts from every subject.',
     },
 
     uploadModal: {
@@ -257,18 +284,12 @@ export const UI_STRINGS = {
     noMatchingSubjects: 'No subjects match those filters.',
     sidebarTitle: 'Your subjects',
     sidebarSubtitle: 'Subjects from your selected studies.',
-    showAll: 'Show all',
     emptyState: 'Complete your study setup to see your current subjects here.',
-    guestStudyPrompt:
-      'Choose a study to see your subjects and the scripts for them.',
-    chooseStudy: 'Choose a study',
-    guestNoIncompleteSubjects:
-      'All subjects in your selected study are marked complete.',
     electiveLabel: 'Elective',
     filters: {
-      allYears: 'All years',
+      electives: 'Electives',
       sortByYear: 'Sort by year',
-      sortBySubject: 'Sort by subject',
+      sortBySubject: 'Sort by name',
       sortByProfessor: 'Sort by professor',
       filterByYear: 'Filter by year',
       sortSubjects: 'Sort subjects',
@@ -281,6 +302,7 @@ export const UI_STRINGS = {
     noProfessorCourses: 'No courses are listed for this professor yet.',
     studyImageAlt: 'Study image',
     studyAbout: 'About the Study',
+    studyOverview: 'Overview',
     visitWebsite: 'Visit website',
     location: 'Location',
     secretary: 'Secretary',
@@ -363,6 +385,8 @@ export const UI_STRINGS = {
       'Mark a whole year done at once, or check off individual subjects below — fine-tune this later from your profile too.',
     subjectCount: (completed: number, total: number) =>
       `${completed}/${total} subjects`,
+    requiredSubjects: 'Required',
+    electiveSubjects: 'Electives',
     yearCompleted: 'Year completed',
     markYearComplete: 'Mark year complete',
     continue: 'Continue',
@@ -428,8 +452,6 @@ export const UI_STRINGS = {
       currentlyTakingEmpty: 'No subjects in progress.',
       studyFilterLabel: 'Filter by study',
       allStudies: 'All studies',
-      yearFilterLabel: 'Filter by year',
-      allYears: 'All years',
     },
     academics: {
       editLabel: 'Edit academics',
@@ -465,6 +487,7 @@ export const UI_STRINGS = {
     auth: 'Auth',
     subjects: 'Subjects',
     scripts: 'Scripts',
+    studies: 'Your studies',
     professors: 'Professors',
     workspace: 'Workspace',
     favorites: 'Favorites',
@@ -476,7 +499,7 @@ export const UI_STRINGS = {
     closeNavigation: 'Close navigation',
     simpleMode: 'Simple mode',
     simpleModeDescription:
-      'Turns off blur, transparency, animations and the animated background.',
+      'Turns off transparency, animations and the animated background.',
     openNavigation: 'Open navigation',
     mainNavigation: 'Main navigation',
   },

@@ -6,7 +6,7 @@ import { cn } from '../../lib/common-utils'
 import { useTheme } from '../../providers/theme/ThemeProvider'
 import { Button } from '../common/Button'
 
-/** Switches simple mode (no blur, transparency, animations or animated
+/** Switches simple mode (no transparency, animations or animated
  * background) on and off. Meant to sit next to the ThemeToggle.
  */
 export function SimpleModeToggle({ className }: { className?: string }) {

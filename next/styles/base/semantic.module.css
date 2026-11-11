@@ -19,15 +19,6 @@
   --ui-sheen-strength: 1;
   --button-sheen: 45%;
 
-  /* Chrome (nav, header, footer): denser and darker than a panel, plus a
-   * stronger border, so the frame separates from the content it frames. */
-  --ui-chrome-bg: color-mix(
-    in oklab,
-    var(--color-background-350) 72%,
-    transparent
-  );
-  --ui-chrome-border: var(--color-background-400);
-
   /* Simple mode's flat backdrop. Light carries the stronger wash; dark keeps
    * the accents low so text over them stays legible. */
   --simple-wash: 46%;
@@ -67,12 +58,6 @@
     --button-sheen: 30%;
     --divider-cut: rgb(0 0 0 / 0.55);
     --divider-lip: rgb(255 255 255 / 0.08);
-    --ui-chrome-bg: color-mix(
-      in oklab,
-      var(--color-background-250) 72%,
-      transparent
-    );
-    --ui-chrome-border: var(--color-background-300);
     --simple-wash: 24%;
     --simple-glow: 45%;
     --simple-accent: color-mix(
@@ -105,12 +90,6 @@
   --button-sheen: 30%;
   --divider-cut: rgb(0 0 0 / 0.55);
   --divider-lip: rgb(255 255 255 / 0.08);
-  --ui-chrome-bg: color-mix(
-    in oklab,
-    var(--color-background-250) 72%,
-    transparent
-  );
-  --ui-chrome-border: var(--color-background-300);
   --simple-wash: 24%;
   --simple-glow: 45%;
   --simple-accent: color-mix(in oklab, var(--color-brand-450) 24%, transparent);
@@ -131,8 +110,8 @@
 }
 
 /*
- * Simple mode replaces the frosted panes and the animated backdrop with a flat
- * fill and a glow, so the same two things stop working there:
+ * Simple mode replaces the translucent panes and the animated backdrop with a
+ * flat fill and a glow, so the same two things stop working there:
  * - muted text now sits on the glow instead of on a pane, which measured 3.4-4.1
  *   against it (below 4.5). One step stronger on the scale, which darkens in
  *   light mode and lightens in dark mode, clears it from both sides.

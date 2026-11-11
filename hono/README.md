@@ -54,7 +54,7 @@ match `SITEMAP_SECRET` in `next/`.
 `ADMIN_TOTP_SECRET` gates the Studio's sync/delete actions. Generate one with
 `corepack pnpm --filter @scriptr/api admin:totp`, add the printed `otpauth` URI
 to an authenticator app, and paste the secret into `hono/.env`. The Studio asks
-for a code once per ten minutes; nothing secret is bundled into it.
+for a code once per twenty minutes; nothing secret is bundled into it.
 
 `CORS_ORIGINS` is the origin allowlist. The localhost dev ports
 (`3000`, `5173`, `3333`) are added automatically unless `NODE_ENV` is
@@ -62,7 +62,7 @@ for a code once per ten minutes; nothing secret is bundled into it.
 there. Studio actions run in the browser, so an unlisted Studio hostname fails
 its preflight with `(Reason: CORS request did not succeed)`, while a
 `401 Access code required` after that means the Studio asked for a code before
-one was entered, or the ten-minute token lapsed.
+one was entered, or the twenty-minute token lapsed.
 
 `R2_ENDPOINT` must be the bucket's S3 endpoint and nothing more — a path on the
 end (e.g. `.../scriptr`) makes the SDK store every object under an extra prefix,
@@ -176,9 +176,9 @@ curl walkthrough covering every route is in
 
 ## Security Notes
 
-- Academic catalog routes (`/api/sanity/universities`, `/api/sanity/faculties`, `/api/sanity/studies`, `/api/sanity/professors`, `/api/sanity/subjects`) are **not** public — every request, reads included, requires a ten-minute admin token in `x-admin-token`, obtained by trading a TOTP code at `POST /api/sanity/access`. RLS closes these tables to every Supabase role, admin included; there is no session-based access path at all.
+- Academic catalog routes (`/api/sanity/universities`, `/api/sanity/faculties`, `/api/sanity/studies`, `/api/sanity/professors`, `/api/sanity/subjects`) are **not** public — every request, reads included, requires a twenty-minute admin token in `x-admin-token`, obtained by trading a TOTP code at `POST /api/sanity/access`. RLS closes these tables to every Supabase role, admin included; there is no session-based access path at all.
 - That token is the only credential the Sanity Studio holds, and it lives in memory: nothing secret is bundled into the Studio, whose JavaScript is public.
-- **Every admin action needs the ten-minute unlock**, not just a session: the flag queue, restriction management, rating-type and achievement-definition writes, the admin script list and the admin profile routes all chain `requireAdminAccess` after `authMiddleware`. `/admin` shows the code form while the HttpOnly `scriptr-admin-access` cookie is missing or spent.
+- **Every admin action needs the twenty-minute unlock**, not just a session: the flag queue, restriction management, rating-type and achievement-definition writes, the admin script list and the admin profile routes all chain `requireAdminAccess` after `authMiddleware`. `/admin` shows the code form while the HttpOnly `scriptr-admin-access` cookie is missing or spent.
 - Role changes live on the website's admin surface (`PATCH /api/admin/profiles/:id/role`), with the same double gate; the first admin has to be promoted directly in the database.
 - `/api/admin/*` is the site's admin surface: pinned to `WEBSITE_ORIGIN` and unlocked with a TOTP code. `/api/sanity/*` is the Studio's, pinned to `SANITY_STUDIO_ORIGIN` and using the header form of the same token. A request from one surface's origin is `403` on the other.
 - `GET /api/sitemap/scripts` is the one route with a shared header secret (`x-sitemap-secret`), scoped to that path and held only by the Next build. It is limited to 10 requests a day and 2 a minute per IP.

@@ -65,6 +65,9 @@ export const SearchForm = ({
 
   const searchBar = (
     <SearchBar
+      // The sr-only label follows the same copy as the aria-label, so the two
+      // never disagree on what this field searches.
+      label={ariaLabel}
       invalid={invalid}
       inputOnChange={() => {
         if (invalid) setInvalid(false)

@@ -4,17 +4,22 @@ import { NextLink } from '@/components/common/NextLink'
 import { cn } from '@/lib/common-utils'
 
 export type ScriptFeedToggleProps = {
-  /** `true` when the platform-wide list is showing. */
+  /** `true` when the study's whole list is showing. */
   showAll: boolean
+  /** The page the switch lives on — a study's home. */
+  basePath: string
 }
 
 /**
- * Switches the homepage between the viewer's subject feed and every script on
- * the platform. Deliberately plain links: the choice lives in the URL, so the
- * homepage stays a Server Component and renders the right list on the first
- * paint instead of fetching twice or hydrating a control.
+ * Switches a study's feed between the viewer's subjects and every script in
+ * that study. Deliberately plain links: the choice lives in the URL, so the page
+ * stays a Server Component and renders the right list on the first paint
+ * instead of fetching twice or hydrating a control.
  */
-export const ScriptFeedToggle = ({ showAll }: ScriptFeedToggleProps) => {
+export const ScriptFeedToggle = ({
+  showAll,
+  basePath,
+}: ScriptFeedToggleProps) => {
   const feed = UI_STRINGS.scripts.feed
 
   return (
@@ -24,14 +29,14 @@ export const ScriptFeedToggle = ({ showAll }: ScriptFeedToggleProps) => {
       className='ui-cluster gap-1'
     >
       <NextLink
-        href='/'
+        href={basePath}
         aria-current={showAll ? undefined : 'page'}
         className={cn('button button-sm', showAll ? 'subtle' : 'solid')}
       >
         {feed.forYou}
       </NextLink>
       <NextLink
-        href='/?scripts=all'
+        href={`${basePath}?scripts=all`}
         aria-current={showAll ? 'page' : undefined}
         className={cn('button button-sm', showAll ? 'solid' : 'subtle')}
       >

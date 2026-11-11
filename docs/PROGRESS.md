@@ -4,7 +4,7 @@ What is left to do. The system as it stands is described in
 [`ARCHITECTURE.md`](ARCHITECTURE.md); this file only tracks work, so finished
 features are not repeated here.
 
-Last reconciled: 2026-11-10. Tags: **[bug]**, **[decision]** (needs a call
+Last reconciled: 2026-11-11. Tags: **[bug]**, **[decision]** (needs a call
 before anyone builds it), **[deferred]** (recorded so it is not rediscovered,
 not queued).
 
@@ -59,25 +59,16 @@ the remaining work below by area.
   name rule and the a11y lint rules cover what a compiler and a parser can see.
   These need a design pass each, so they are listed instead of done — split so
   each ships on its own:
+  - **No skip link** past the navbar to `main`.
 - **UI polish:** take z-index values from `Z_INDEX` rather than inline classes
   (the select list uses `z-90`), modal lifecycle (don't render closed dialogs),
   image sizing, a mobile layout pass, production CSS obfuscation, and more
   mobile-friendly toasts.
-- **Style-file split:** `components.module.css` is 662 lines holding unrelated
-  concerns — layout (`ui-container`, `ui-stack`, `ui-cluster`, the grid
-  utilities), typography (`ui-title` … `ui-caption`), surfaces (`ui-card`,
-  `ui-badge`, `ui-sheen`, `ui-above*`) and the divider/groove helpers — and
-  `base/colors.module.css` (292) and `components/color-palettes.module.css`
-  (270) are next by size. Split them by concern **without changing the
-  effective order**: equal-specificity utilities resolve by source order, and
-  this project leans on that (`no-gradient` and the `ui-sheen-*` family must
-  come after the `*-above*` utilities, `--ui-lit-edge` stays first in every
-  `box-shadow` stack — see
-  [`STYLING_GUIDE.md`](../next/STYLING_GUIDE.md#glass-detail)). Move blocks
-  verbatim, make `styles/main.css`'s import sequence reproduce the old
-  concatenation, and never alphabetise. Verify with before/after screenshots of
-  the glass, dialog, nav/header and simple-mode surfaces plus `build:next`, and
-  move the file list in the styling guide with it.
+- **Palette file split:** `components/color-palettes.module.css` (270) is the
+  last large stylesheet. Its palette definitions and shared derivation rules
+  change together today, so split it by concern only if it grows past that —
+  and if it does, keep `styles/main.css` importing the pieces in the same
+  sequence.
 
 ## Code and comments
 
@@ -134,10 +125,10 @@ the remaining work below by area.
 
 ## Visual fidelity
 
-The frosted surfaces now carry their material detail — a sheen band, a 1px inner
-top highlight, groove dividers and darker chrome on the nav/header/footer — as
+The surfaces now carry their material detail — a sheen band, a 1px inner top
+highlight, groove dividers and darker chrome on the nav/header/footer — as
 described in
-[`next/STYLING_GUIDE.md`](../next/STYLING_GUIDE.md#glass-detail). Outstanding:
+[`next/STYLING_GUIDE.md`](../next/STYLING_GUIDE.md#surface-detail). Outstanding:
 
 - **Contrast audit coverage:** the simple-mode pass sampled five pages and fixed
   muted captions through `--color-fg-muted` and `--shadow-strength` on
@@ -166,18 +157,13 @@ described in
   `Matter` and `Antique Olive`, and no page uses more than three of each. That
   needs a sweep of the UI's computed font-weights once the design is final,
   because removing a declared weight changes any element that falls back to it.
-- **Backdrop blur cost:** the frosted surfaces are the most expensive thing the
-  page paints. Cost scales with radius × area × number of stacked surfaces, and
-  all of it recomputes every frame because the star canvas behind animates
-  continuously in `requestAnimationFrame`. Handled: `ui-above` dropped from
-  `24px` to `16px` (`lg`) from `md` up and `ui-above-light` from `40px` to
-  `24px`, so every panel is 33-40% cheaper per frame while the screenshot
-  comparison stayed equivalent (10.6% / 12% of pixels moved by more than 5/255,
-  4.2% / 2% by more than 20/255 — the halo edge, not the surface); simple mode
-  sets `backdrop-filter: none`; `prefers-reduced-motion` draws one static frame;
-  the canvas is capped at `devicePixelRatio` 2. What is left: `content-visibility:
-  auto` on long card grids (off-screen panels would stop compositing) and pausing
-  the canvas while the page is scrolled far from it.
+- **Animated backdrop cost:** the star canvas repaints continuously in
+  `requestAnimationFrame`, so whatever sits over it recomposites every frame.
+  Backdrop blur has been removed site-wide, so surfaces are flat 97% fills and
+  no longer pay that cost; `prefers-reduced-motion` draws one static frame and
+  the canvas is capped at `devicePixelRatio` 2. What is left is pausing the
+  canvas and compositing: `content-visibility: auto` on long card grids, and
+  stopping the canvas while the page is scrolled far from it.
 
 ## Infrastructure and deployment
 
@@ -215,29 +201,21 @@ described in
 
 ## Deferred
 
-- **Study-routing shims to delete when they go dead:** the path split left a
-  set of forwarders and fallbacks that exist only for links and data from before
-  the move. Each one names its exit condition; none is load-bearing for anything
-  created after it.
-  - `next/app/scripts/[slug]/route.ts` — 308s an old script URL to the study's
-    page. Goes once `ProfileScriptSummary` (the favorites list) and the
-    download-review payloads carry the study's `site_slug`, so nothing mints
-    `/scripts/…` any more.
-  - `app/(site)/university/…/study/[studySlug]/page.tsx` and its subject
-    sibling — they 308 to the study tree when the study has a handle and render
-    the old nested page when it does not. Go once every synced study has a
-    `siteSlug` (the Studio requires one now), either as bare `route.ts`
-    redirectors or removed outright.
-  - `getAcademicPath`'s nested study/subject fallback — the branch that builds
-    `/university/…/study/…` when no handle is passed. Keep it only while
-    handle-less studies can still exist.
-  - `is_admin()` — a database alias of `is_owner()` kept so nineteen older
-    policies did not have to be rewritten; rename those policies and drop it.
-    `is_moderator()` is already unread by any policy; the moderator narrowing
-    above decides whether it survives at all.
-  - The Studio navigation document still points at the nested study URL
-    (`…/faculty/faculty-of-pharmacy/study/laboratory-biomedical-engineering`);
-    it 308s correctly but should become `/study/lbe`.
+- **The notification tray filtering is one of two shapes.** Today a study site
+  shows that study's notifications plus the platform-wide ones, and any other
+  page shows everything, so nothing is ever unreachable. The alternative worth
+  building later is grouped rather than filtered: show everything everywhere,
+  in collapsible groups (platform-wide, then one per study), with the current
+  site's group open. That keeps a study's rows visible off its site without
+  letting them crowd the page; it needs the tray to become expandable, which the
+  flat list it is now is not.
+- **A study's pages are navigated two ways, not one.** The overview
+  (`/study/[siteSlug]`) links forward to the scripts with a header action, and
+  the feed links back with an "Overview" one; the calendar is only reachable from
+  the header's calendar alert or a nav item. A study sub-nav in
+  `app/(study)/study/[siteSlug]/layout.tsx` (Feed · Overview · Calendar) would
+  make the three pages one surface and let the Sanity nav drop its study-specific
+  `customLink` — worth doing once a study has a fourth page of its own.
 - **Write scoping is enforced in the API, not in RLS.** Phase 5 gates script,
   comment, vote, subject-rating and favorite writes on membership in (or a role
   on) the target study, but the RLS policies behind them still accept any
@@ -325,7 +303,16 @@ described in
 
 ## Exploratory ideas
 
-- **Christmas effects:** a seasonal background and effects.
+- **Christmas effects:** the `christmasCanvas` document is one of the backgrounds
+  the website settings accept (the single `background` field references either it
+  or a `starCanvas`), so switching it on is a Studio edit: create the document,
+  point the background field at it. `AppBackground` reads `_type` and mounts the skybox
+  plus `ChristmasCanvas` (`next/components/ui/app-background/ChristmasCanvas.tsx`,
+  scenery in `next/lib/app-background/christmas-canvas.ts`) instead of the star
+  canvas. Settings and light/dark scenery colors come from the document, with
+  defaults and editable color roles in `shared/config/christmas-canvas.ts`. Still
+  open: deciding when the seasonal background starts and ends (today it is on only
+  while the document is referenced).
 - **Computed rarity:** derive an achievement's rarity from the share of
   profiles that hold it instead of the admin-set tier. Only meaningful with a
   much larger user base.

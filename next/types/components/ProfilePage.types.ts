@@ -21,9 +21,8 @@ export type ProfileSubjectsSidebarProps = ProfileSubjectSections & {
 export type ProfilePageProps = {
   profile: ProfileCore
   academics: ProfileAcademics
-  /** The academic profile's subject list. Omitted on the catalog profile page,
-   * which shows who someone is and what they have done, not what they are
-   * taking — that belongs to the study site's view of the person. */
+  /** The academic profile's subject list. Omitted only when the caller has no
+   * subject read (the study site narrows it to its own study). */
   subjects?: ProfileSubjectSections
   /** Omitted when the stats read failed; the activity strip is then skipped
    * rather than rendered with invented zeros. */
@@ -47,6 +46,8 @@ export type PublicProfilePageViewModel = Omit<ProfilePageProps, 'isOwner'>
  * the catalog out of the client bundle's data fetches. */
 export type MyProfilePageViewModel = {
   catalog: OnboardingCatalog | null
+  /** Every study's subjects, filtered in place by the sidebar. */
+  subjects: ProfileSubjectSections
   /** Today's study tip; the card is omitted without it. */
   studyTip?: StudyTipData
 }

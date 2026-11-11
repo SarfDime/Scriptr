@@ -32,7 +32,9 @@ const AdministrationCardBody = ({
       'ui-cluster items-start flex-nowrap p-1 bg-transparent! bg-none! border-0! w-full'
     )}
   >
-    <Avatar className='shrink-0' picture={picture} name={name} color={color} />
+    <Box className='relative h-10 w-10 shrink-0 overflow-hidden rounded-md'>
+      <Avatar picture={picture} name={name} color={color} />
+    </Box>
 
     <Box className='ui-stack gap-0.5 w-full overflow-hidden'>
       <Title

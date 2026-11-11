@@ -650,7 +650,7 @@ again, so the client-side check only saves a round trip.
 ### Admin
 `GET /profiles/:id/admin`, `PATCH /profiles/:id`, `DELETE /profiles/:id` — an
 admin session **and** the unlock, like `GET /profiles`. The profiles row goes
-through the session client (`is_admin()` is baked into its RLS policy), but
+through the session client (`is_owner()` is baked into its RLS policy), but
 `profile_faculties`/`profile_studies` policies are `profile_id = auth.uid()`
 with no admin override, so `PATCH /profiles/:id` writes selections with the
 service-role client after the admin check. The PATCH body is the same as the
@@ -665,7 +665,7 @@ the selected `faculties` and `studies`. `404` for an unknown id.
 `DELETE /profiles/:id` removes the profile row, its avatar object and its
 Supabase Auth login. The login matters: without it the account can still sign
 in with no profile behind it. The profile goes first on the caller's session
-client (the DELETE policy is `id = auth.uid() or is_admin()`); if the login
+client (the DELETE policy is `id = auth.uid() or is_owner()`); if the login
 deletion then fails, the profile stays deleted, the failure is logged and the
 response says so — `{ success: true, auth_user_deleted: false }` — instead of
 re-reporting a request that already removed the row. `400` when an admin targets
@@ -768,7 +768,7 @@ Professors and subjects each take multiple, independently extensible rating
 types via a shared `rating_types` lookup (`target_type: 'professor'|'subject'`).
 One rating per user per type per entity — posting again updates the score.
 
-**Rating types** — public read, admin-only write (`is_admin()` RLS, no service
+**Rating types** — public read, owner-only write (`is_owner()` RLS, no service
 secret involved):
 `GET /ratings/types` (optional `?target_type=`), `GET /ratings/types/:id`,
 `POST /ratings/types` (`{ id, target_type, label }`, `id` matches
@@ -894,7 +894,7 @@ check (service role used where RLS was supposed to be the actual gate).
 
 **Use the session client** when RLS already grants the caller access: their
 own resource (`author_id`/`user_id`/`profile_id` = `auth.uid()`), or an
-`is_admin()`-gated policy for an admin action. This is nearly everything —
+`is_owner()`-gated policy for an owner action. This is nearly everything —
 scripts/comments/profiles admin actions, all "own resource" endpoints, flags
 (list/resolve/delete, now that admin has direct SELECT/DELETE RLS), rating
 types, professor/subject ratings, profile faculties/studies/subjects,
@@ -961,9 +961,8 @@ Database predicates:
 | Predicate | Meaning |
 | --- | --- |
 | `is_owner(uid)` | the org role |
-| `is_admin(uid)` | legacy alias of `is_owner` — 19 older policies still call it |
 | `has_study_role(uid, study_id, need)` | `need` is `admin` or `moderator`; an admin satisfies `moderator` |
-| `is_moderator(uid)` | holds any study role, used only where a row has no study |
+| `is_moderator(uid)` | holds any study role anywhere; no policy calls it (kept for the moderator-narrowing follow-up) |
 
 Study-scoped policies (`scripts`, `comments`, `flags`, `script_files`,
 `professor_studies`) read
@@ -971,8 +970,13 @@ Study-scoped policies (`scripts`, `comments`, `flags`, `script_files`,
 The study comes from the row itself for scripts and professor assignments, from
 the script for comments and script files, and from `flag_study_id(...)` for
 flags; a flag or comment with no script belongs to no study, so only an owner
-moderates it. Achievement definitions, rating types, restrictions, the profile
-admin branch and notification broadcast remain owner-only.
+moderates it. Achievement definitions, rating types, restrictions and the
+profile admin branch remain owner-only; an announcement to everyone is
+owner-only too, while a study admin may announce inside a study they administer
+(see [Notifications](#notifications)).
+
+`is_admin(uid)` is gone: it was an alias of `is_owner` kept while the older
+policies still spelled it that way, and Phase 7 rewrote them.
 
 Gates:
 

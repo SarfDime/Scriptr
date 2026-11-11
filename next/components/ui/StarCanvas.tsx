@@ -23,7 +23,8 @@ import {
   buildShadeSprite,
   buildSoftDot,
   GALAXY_DRIFT_DIRECTIONS,
-  MOBILE_QUERY,
+  getIsMobile,
+  getIsMobileOnServer,
   makeAuroraCurtains,
   makeGalaxy,
   makePlanets,
@@ -31,6 +32,7 @@ import {
   resolveColors,
   SPRITE_SIZE,
   scaleForMobile,
+  subscribeToMobile,
   TAU,
   TEXTURE_HEIGHT,
   TEXTURE_PERIOD,
@@ -93,14 +95,6 @@ const ASCEND_Z = '2147483000' // on top of everything
 // Clicks on these are meant for the page, so they never count
 const INTERACTIVE =
   'a, button, input, textarea, select, label, summary, [role="button"], [role="link"], [contenteditable]'
-
-const subscribeToMobile = (onChange: () => void) => {
-  const query = window.matchMedia(MOBILE_QUERY)
-  query.addEventListener('change', onChange)
-  return () => query.removeEventListener('change', onChange)
-}
-const getIsMobile = () => window.matchMedia(MOBILE_QUERY).matches
-const getIsMobileOnServer = () => false
 
 export const CustomStarCanvas = ({
   sanityData,

@@ -1,0 +1,65 @@
+/*
+ * Typography scale. Sizes are fixed here on purpose: the responsive
+ * `font-size-*` scale in portable-text.module.css is for authored rich text
+ * only. Color and weight belong to the class; do not re-add `font-*` or
+ * `text-<color>` utilities next to a ui-* class.
+ */
+@utility ui-display {
+  @apply font-olive text-3xl font-bold leading-tight tracking-tight text-fg-700 sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl;
+}
+
+/* A step below `ui-display`: section headings that lead a page but are not
+ * the page's own title. */
+@utility ui-heading {
+  @apply font-olive text-2xl font-bold leading-tight tracking-tight text-fg-700 sm:text-3xl md:text-4xl lg:text-5xl;
+}
+
+/* Rich text rendered inside a heading takes the heading's color. */
+:is(.ui-display, .ui-heading, .ui-title) .pt-text {
+  color: inherit;
+}
+
+@utility ui-title {
+  @apply text-base font-semibold text-fg-700 md:text-lg;
+}
+
+@utility ui-subtitle {
+  @apply text-sm text-fg-muted;
+}
+
+@utility ui-body {
+  @apply text-base text-fg;
+}
+
+/* Entity and person names inside body-sized content. */
+@utility ui-body-strong {
+  @apply text-base font-semibold text-fg;
+}
+
+@utility ui-label {
+  @apply text-sm font-semibold text-fg-muted;
+}
+
+@utility ui-label-modern {
+  @apply text-xs uppercase tracking-[.125rem] text-fg-muted;
+}
+
+@utility ui-small-label {
+  @apply text-[0.65rem] uppercase tracking-[.1rem] text-fg-muted;
+}
+
+@utility ui-caption {
+  @apply text-xs text-fg-muted;
+}
+
+@utility ui-large-caption {
+  @apply text-sm text-fg-muted;
+}
+
+@utility ui-nav-caption {
+  @apply text-xs text-fg-muted uppercase tracking-[.15rem];
+}
+
+@utility ui-stat {
+  @apply text-2xl font-medium text-fg-700;
+}

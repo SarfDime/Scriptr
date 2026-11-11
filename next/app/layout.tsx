@@ -4,16 +4,20 @@ import type { Metadata } from 'next'
 import { NavBar } from '@/components/navigation/Navbar'
 
 import './globals.css'
+import type { WebsiteBackground } from '@shared/types/app-background.types'
 import { NotificationsAside } from '@/components/notifications/NotificationsAside'
-import { AppBackground } from '@/components/ui/AppBackground'
-import type { StarCanvasSanityData } from '@/components/ui/StarCanvas'
+import { AppBackground } from '@/components/ui/app-background/AppBackground'
 import { ToastContainer } from '@/components/ui/toast/ToastContainer'
 import { fetchWebsiteSeoSettings, toOrigin } from '@/lib/academic-detail-page'
 import { NavProvider } from '@/providers/nav/NavProvider'
 import { fetchSanityData } from '@/sanity/lib/utils'
-import { navMenuQuery } from '@/sanity/queries/nav.queries'
-import { starCanvasQuery } from '@/sanity/queries/website.queries'
-import type { NavMenuType } from '@/types/components/Nav.types'
+import { navMenuQuery, studyLogosQuery } from '@/sanity/queries/nav.queries'
+import { websiteBackgroundQuery } from '@/sanity/queries/website.queries'
+import type {
+  NavMenuType,
+  NavStudyLogoEntry,
+  NavStudyLogos,
+} from '@/types/components/Nav.types'
 import { antiqueOlive, antiqueOliveCond, matter } from './fonts/fonts'
 import { Providers } from './providers'
 
@@ -48,16 +52,31 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const navMenu = await fetchSanityData<NavMenuType>({
-    query: navMenuQuery,
-    fetchOrigin: `navMenuQuery`,
-    tags: [SANITY_CACHE_TAGS.navigation],
-  })
-  const starCanvasConfig = await fetchSanityData<StarCanvasSanityData>({
-    query: starCanvasQuery,
-    fetchOrigin: `starCanvasConfig(layout)`,
-    tags: [SANITY_CACHE_TAGS.website],
-  })
+  const [navMenu, background, studyLogos] = await Promise.all([
+    fetchSanityData<NavMenuType>({
+      query: navMenuQuery,
+      fetchOrigin: `navMenuQuery`,
+      tags: [SANITY_CACHE_TAGS.navigation],
+    }),
+    fetchSanityData<WebsiteBackground>({
+      query: websiteBackgroundQuery,
+      fetchOrigin: `websiteBackgroundQuery(layout)`,
+      tags: [SANITY_CACHE_TAGS.website],
+    }),
+    fetchSanityData<Array<NavStudyLogoEntry>>({
+      query: studyLogosQuery,
+      fetchOrigin: 'studyLogosQuery',
+      tags: [SANITY_CACHE_TAGS.study],
+    }),
+  ])
+
+  // The enrolled-studies list in the navbar carries Postgres rows, which have
+  // no logo; the handle the row does carry is the key into this cached map.
+  const studyLogosBySite: NavStudyLogos = Object.fromEntries(
+    (studyLogos ?? []).flatMap(({ siteSlug, logo }) =>
+      logo ? [[siteSlug, logo] as const] : []
+    )
+  )
 
   return (
     <html
@@ -68,9 +87,9 @@ export default async function RootLayout({
       <body>
         <Providers>
           <ToastContainer />
-          <AppBackground sanityData={starCanvasConfig} />
+          <AppBackground background={background} />
           <NavProvider>
-            <NavBar {...navMenu} />
+            <NavBar {...navMenu} studyLogos={studyLogosBySite} />
             {children}
           </NavProvider>
           <NotificationsAside />

@@ -1,13 +1,21 @@
 @import "tailwindcss";
 @import "./base/breakpoints.module.css";
+@import "./base/sky-colors.module.css";
+@import "./base/immersive.module.css";
 @import "./base/colors.module.css";
+@import "./base/colors-dark.module.css";
 @import "./base/semantic.module.css";
 @import "./base/shadows.module.css";
 @import "./base/utilities.module.css";
 
 @import "./components/button.module.css";
 @import "./components/color-palettes.module.css";
-@import "./components/components.module.css";
+@import "./components/animations.module.css";
+@import "./components/layout.module.css";
+@import "./components/typography.module.css";
+@import "./components/surfaces.module.css";
+@import "./components/dividers.module.css";
+@import "./components/loading.module.css";
 @import "./components/portable-text.module.css";
 @import "./components/skeleton.module.css";
 @import "./components/toast.module.css";

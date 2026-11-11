@@ -18,7 +18,11 @@ import type { MyProfilePageViewModel } from '@/types/components/ProfilePage.type
  * the loaded profile to the shared `ProfilePage`, with the affiliations'
  * names and links resolved from the server-read catalog.
  */
-export function MyProfilePage({ catalog, studyTip }: MyProfilePageViewModel) {
+export function MyProfilePage({
+  catalog,
+  subjects,
+  studyTip,
+}: MyProfilePageViewModel) {
   const profileState = useMyProfile()
   const { refresh, reload } = useMyProfileActions()
   const statsState = useProfileStats(
@@ -68,6 +72,7 @@ export function MyProfilePage({ catalog, studyTip }: MyProfilePageViewModel) {
     <ProfilePage
       profile={profile}
       academics={academics}
+      subjects={subjects}
       studyTip={studyTip}
       authoredCount={profile.scripts.length}
       commentCount={

@@ -2804,6 +2804,36 @@
     }
   },
   {
+    "type": "type",
+    "name": "christmasCanvas.reference",
+    "value": {
+      "type": "object",
+      "attributes": {
+        "_ref": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "string"
+          }
+        },
+        "_type": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "string",
+            "value": "reference"
+          }
+        },
+        "_weak": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "boolean"
+          },
+          "optional": true
+        }
+      },
+      "dereferencesTo": "christmasCanvas"
+    }
+  },
+  {
     "name": "website",
     "type": "document",
     "attributes": {
@@ -2883,19 +2913,20 @@
         },
         "optional": true
       },
-      "dtBackground": {
+      "background": {
         "type": "objectAttribute",
         "value": {
-          "type": "inline",
-          "name": "starCanvas.reference"
-        },
-        "optional": true
-      },
-      "ltBackground": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "inline",
-          "name": "starCanvas.reference"
+          "type": "union",
+          "of": [
+            {
+              "type": "inline",
+              "name": "starCanvas.reference"
+            },
+            {
+              "type": "inline",
+              "name": "christmasCanvas.reference"
+            }
+          ]
         },
         "optional": true
       },
@@ -2912,7 +2943,7 @@
           "type": "inline",
           "name": "navMenu.reference"
         },
-        "optional": false
+        "optional": true
       },
       "pagesFields": {
         "type": "objectAttribute",
@@ -2938,6 +2969,2925 @@
             "rest": {
               "type": "inline",
               "name": "university.reference"
+            }
+          }
+        },
+        "optional": true
+      }
+    }
+  },
+  {
+    "name": "christmasCanvas",
+    "type": "document",
+    "attributes": {
+      "_id": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "_type": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string",
+          "value": "christmasCanvas"
+        }
+      },
+      "_createdAt": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "_updatedAt": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "_rev": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "seed": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "treeDecorationChance": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "houseDecorationChance": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "enableSmoke": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "boolean"
+        },
+        "optional": true
+      },
+      "enableWindowGlow": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "boolean"
+        },
+        "optional": true
+      },
+      "enableSnow": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "boolean"
+        },
+        "optional": true
+      },
+      "snowDensity": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "snowSpeed": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "enableSanta": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "boolean"
+        },
+        "optional": true
+      },
+      "santaFirstDelaySeconds": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "santaMinGapSeconds": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "santaMaxGapSeconds": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
+      "lightColors": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "object",
+          "attributes": {
+            "mountainFar": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "mountainNear": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "mountainCap": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "hillBack": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "hillVillage": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "hillBand": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "hillFront": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "treeFar": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "treeMid": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "treeNear": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "houseWall": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "houseSnow": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "houseWindow": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "houseChimney": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "snowfall": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "smoke": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "sleigh": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "reindeer": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "lights": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "array",
+                "of": {
+                  "type": "union",
+                  "of": [
+                    {
+                      "type": "string",
+                      "value": "brand"
+                    },
+                    {
+                      "type": "string",
+                      "value": "brand-300"
+                    },
+                    {
+                      "type": "string",
+                      "value": "brand-850"
+                    },
+                    {
+                      "type": "string",
+                      "value": "sky"
+                    },
+                    {
+                      "type": "string",
+                      "value": "jade"
+                    },
+                    {
+                      "type": "string",
+                      "value": "lavender"
+                    },
+                    {
+                      "type": "string",
+                      "value": "rose-pink"
+                    },
+                    {
+                      "type": "string",
+                      "value": "amber"
+                    },
+                    {
+                      "type": "string",
+                      "value": "golden-yellow"
+                    },
+                    {
+                      "type": "string",
+                      "value": "yellow"
+                    },
+                    {
+                      "type": "string",
+                      "value": "error-red"
+                    },
+                    {
+                      "type": "string",
+                      "value": "background-50"
+                    },
+                    {
+                      "type": "string",
+                      "value": "grey-200"
+                    },
+                    {
+                      "type": "string",
+                      "value": "grey-300"
+                    },
+                    {
+                      "type": "string",
+                      "value": "grey-800"
+                    },
+                    {
+                      "type": "string",
+                      "value": "background-1000"
+                    }
+                  ]
+                }
+              },
+              "optional": true
+            }
+          }
+        },
+        "optional": true
+      },
+      "darkColors": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "object",
+          "attributes": {
+            "mountainFar": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "mountainNear": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "mountainCap": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "hillBack": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "hillVillage": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "hillBand": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "hillFront": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "treeFar": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "treeMid": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "treeNear": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "houseWall": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "houseSnow": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "houseWindow": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "houseChimney": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "snowfall": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "smoke": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "sleigh": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "reindeer": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "brand"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "brand-850"
+                  },
+                  {
+                    "type": "string",
+                    "value": "sky"
+                  },
+                  {
+                    "type": "string",
+                    "value": "jade"
+                  },
+                  {
+                    "type": "string",
+                    "value": "lavender"
+                  },
+                  {
+                    "type": "string",
+                    "value": "rose-pink"
+                  },
+                  {
+                    "type": "string",
+                    "value": "amber"
+                  },
+                  {
+                    "type": "string",
+                    "value": "golden-yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "yellow"
+                  },
+                  {
+                    "type": "string",
+                    "value": "error-red"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-50"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-200"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-300"
+                  },
+                  {
+                    "type": "string",
+                    "value": "grey-800"
+                  },
+                  {
+                    "type": "string",
+                    "value": "background-1000"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "lights": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "array",
+                "of": {
+                  "type": "union",
+                  "of": [
+                    {
+                      "type": "string",
+                      "value": "brand"
+                    },
+                    {
+                      "type": "string",
+                      "value": "brand-300"
+                    },
+                    {
+                      "type": "string",
+                      "value": "brand-850"
+                    },
+                    {
+                      "type": "string",
+                      "value": "sky"
+                    },
+                    {
+                      "type": "string",
+                      "value": "jade"
+                    },
+                    {
+                      "type": "string",
+                      "value": "lavender"
+                    },
+                    {
+                      "type": "string",
+                      "value": "rose-pink"
+                    },
+                    {
+                      "type": "string",
+                      "value": "amber"
+                    },
+                    {
+                      "type": "string",
+                      "value": "golden-yellow"
+                    },
+                    {
+                      "type": "string",
+                      "value": "yellow"
+                    },
+                    {
+                      "type": "string",
+                      "value": "error-red"
+                    },
+                    {
+                      "type": "string",
+                      "value": "background-50"
+                    },
+                    {
+                      "type": "string",
+                      "value": "grey-200"
+                    },
+                    {
+                      "type": "string",
+                      "value": "grey-300"
+                    },
+                    {
+                      "type": "string",
+                      "value": "grey-800"
+                    },
+                    {
+                      "type": "string",
+                      "value": "background-1000"
+                    }
+                  ]
+                }
+              },
+              "optional": true
             }
           }
         },

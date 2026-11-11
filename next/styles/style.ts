@@ -15,6 +15,7 @@ const IMAGE_SIZES = {
   UNIVERSITY_HERO: '(min-width: 640px) 50vw, 100vw',
   FILE_PREVIEW: '(min-width: 768px) 70vw, 100vw',
   SCRIPT_THUMBNAIL: '320px',
+  CATALOG_CARD: '320px',
   OVERVIEW_CARD: '(min-width: 1024px) 50vw, 100vw',
   LARGE_AVATAR: '(min-width: 1024px) 50vw, 100vw',
   AVATAR: '4rem',

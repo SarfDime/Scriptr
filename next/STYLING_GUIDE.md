@@ -8,24 +8,31 @@ or component class changes.
 
 - `styles/main.css`: Tailwind entry point and stylesheet imports.
 - `styles/base/breakpoints.module.css`: viewport breakpoints (`--breakpoint-*`).
-- `styles/base/colors.module.css`: theme and color tokens.
+- `styles/base/colors.module.css`: theme and color tokens (the light palette).
+- `styles/base/colors-dark.module.css`: the same scales retuned for dark mode, by preference and by `data-theme="dark"`.
 - `styles/base/semantic.module.css`: role-based tokens that resolve per theme (`text-fg-muted`).
 - `styles/base/shadows.module.css`: elevation tokens (`shadow-sm` to `shadow-xl`, button shadows).
 - `styles/base/utilities.module.css`: small global utilities and animations.
-- `styles/components/components.module.css`: layout, card, prose, and palette utilities.
+- `styles/components/animations.module.css`: entry animations, the selection colour and the simple-mode motion clamp.
+- `styles/components/layout.module.css`: container, section padding, stack/cluster and the grid utilities.
+- `styles/components/typography.module.css`: the `ui-display` … `ui-caption` type scale.
+- `styles/components/surfaces.module.css`: cards, badges, the sheen, the `ui-above*` panels and the simple-mode surface overrides.
+- `styles/components/dividers.module.css`: `ui-divider` and the `ui-groove-*` helpers.
+- `styles/components/loading.module.css`: the loading overlay and its veil.
 - `styles/components/button.module.css`: button base and variants.
 - `styles/components/color-palettes.module.css`: badge color classes.
 - `styles/components/portable-text.module.css`: authored rich-text styles, including the responsive `font-size-*` classes.
 - `styles/components/skeleton.module.css`: skeleton loading wash.
 - `styles/components/toast.module.css`: toast styles.
 
-**This order is load-bearing.** The imports above run in sequence, and rules of
-equal specificity resolve by source order within a file, so a split tidies by
-moving blocks verbatim and keeping the sequence — never reorder or alphabetise
-these files. Several utilities depend on it: `no-gradient` and the
-`ui-sheen-*` family must stay after the `*-above*` utilities, and `--ui-lit-edge`
-stays first in every `box-shadow` stack (see
-[Glass detail](#glass-detail)). `PROGRESS.md` tracks splitting the large ones.
+**The import order is load-bearing.** `@utility` definitions are emitted in
+Tailwind's own property order, so one can move between files without changing
+which of two utilities wins; the plain rules (theme variables, the simple-mode
+overrides, the loading overlay) keep the source order they are imported in, so a
+split moves blocks verbatim and never reorders or alphabetises them. Several
+utilities still depend on the emitted order: `no-gradient` and the `ui-sheen-*`
+family come after the `*-above*` utilities, and `--ui-lit-edge` stays first in
+every `box-shadow` stack (see [Surface detail](#surface-detail)).
 
 ## Layout
 
@@ -65,6 +72,7 @@ monotonic and flip in dark mode).
 | Class            | Size            | Weight   | Color      | Use                          |
 | ---------------- | --------------- | -------- | ---------- | ---------------------------- |
 | `ui-display`     | 30px to 72px    | bold     | `fg-700`   | Large page heading.          |
+| `ui-heading`     | 24px to 48px    | bold     | `fg-700`   | Section heading under a page title. |
 | `ui-title`       | 16px, 18px `md` | semibold | `fg-700`   | Section or card heading.     |
 | `ui-subtitle`    | 14px            | normal   | `fg-muted` | Supporting copy.             |
 | `ui-body`        | 16px            | normal   | `fg`       | Standard body copy.          |
@@ -125,15 +133,14 @@ The preferred component APIs are `Box`, `Card`, `Button`, `Badge`, and
 | `ui-card-body`                  | Main card content.                                                                                                                                                            |
 | `ui-card-footer`                | Card footer with a top border.                                                                                                                                                |
 | `ui-badge`                      | Shared radius and sizing behavior for badges.                                                                                                                                 |
-| `ui-above`                      | Semi transparent blurred background, blur and shadow. Sets no border width; add `border`.                                                                                     |
-| `ui-above-light`                | Lighter variant of `ui-above`.                                                                                                                                                |
-| `ui-above-chrome`               | `ui-above` for app chrome (navbar, header, footer), one step darker than `ui-above` so the frame separates from the content. Colours: `--ui-chrome-bg`, `--ui-chrome-border`. |
+| `ui-above`                      | Translucent panel: 97% fill, sheen and shadow, no backdrop blur. Sets no border width; add `border`.                                                                          |                                                                                            
+| `ui-above-drawer`               | Slide-over off the right edge (the notification tray): the chrome volume, square, with its border and drop on the leading (left) side.                                        |
 | `no-gradient`                   | Drops the sheen from any surface that keeps its fill, border and shadow: `ui-above no-gradient`, `ui-above-inside no-gradient`. For panels carrying dense text, where the wash competed with it. |
 | `ui-sheen-horizontal` and friends | Moves the sheen band, keeping its colour, strength and length: `ui-sheen-horizontal` (top edge, fades down), `ui-sheen-horizontal-inverted` (bottom edge, fades up), `ui-sheen-vertical` (left edge, fades right), `ui-sheen-vertical-inverted` (right edge, fades left), `ui-sheen-diagonal-inverted` (bottom-right corner). Named for the edge the band lies along, not the axis the ramp runs on. |
 | `ui-divider`                    | Base for `Divider`: paints the groove line and uses no border.                                                                                                                |
 | `ui-divider-h` / `ui-divider-v` | The groove itself, horizontal or vertical (2px).                                                                                                                              |
 | `ui-groove-t/b/l/r`             | Turns an element's own border on that side into the same groove.                                                                                                              |
-| `ui-loading-overlay`            | The global loading screen's modal `<dialog>`: fills the viewport, frosted background, fades in and out. Not for other overlays.                                               |
+| `ui-loading-overlay`            | The global loading screen's modal `<dialog>`: fills the viewport, near-opaque veil, fades in and out. Not for other overlays.                                                 |
 | `ui-loading-overlay-exiting`    | Added alongside `ui-loading-overlay` for the fade-out, just before the dialog is closed.                                                                                      |
 
 ```tsx
@@ -146,8 +153,8 @@ The preferred component APIs are `Box`, `Card`, `Button`, `Badge`, and
 
 ## Layered surfaces
 
-Content on the script pages and in dialogs sits on two layers: an outer frosted
-surface and, inside it, a lighter fill where the text is shown.
+Content on the script pages and in dialogs sits on two layers: an outer
+translucent surface and, inside it, a lighter fill where the text is shown.
 
 | Layer | Classes                                                 | Component       |
 | ----- | ------------------------------------------------------- | --------------- |
@@ -158,11 +165,19 @@ surface and, inside it, a lighter fill where the text is shown.
 content such as file cards. Do not put `ui-card` and a `bg-*` utility on one
 element to override its fill; use `ScriptPanel` or a plain `Box`.
 
-## Glass detail
+## Surface detail
 
-Three utilities give the frosted surfaces their material. All three are opt-in
-through the surfaces themselves, so a component that already uses `ui-above`,
-`ui-card` or a filled button needs no extra class.
+Surfaces are translucent fills, never frosted: there is no `backdrop-filter`
+anywhere in the app, because blurring an animated backdrop was the most
+expensive paint on the page. `ui-above` and its variants sit at 97% opacity, so
+the page behind shows only as a faint tint, without needing a blur to stay
+legible. The chrome (`ui-above-nav`, `ui-above-header`, `ui-above-drawer`, the
+footer) is fully opaque instead — it frames the page, and there is nothing
+behind it to tint.
+
+Three utilities give the surfaces their material. All three are opt-in through
+the surfaces themselves, so a component that already uses `ui-above`, `ui-card`
+or a filled button needs no extra class.
 
 - **`ui-sheen`** paints a light-to-nothing band across the top left of the
   element, so the pane catches light like a bevel. It is one gradient, `135deg`
@@ -174,6 +189,15 @@ through the surfaces themselves, so a component that already uses `ui-above`,
   the colour comes from `--ui-sheen-color` (white by default). The `cp-*`
   palettes set it to their own hue at 18%: white is invisible on a chip that is
   near-white already, while a hue wash reads in both themes.
+- **The volume ramp** is the second `background-image` layer inside `ui-sheen`.
+  Because the band only reaches 96px into a box, a tall surface was one tone from
+  there down; the ramp runs the whole height instead — lit at the top
+  (`--ui-ramp-light`), transparent at `--ui-ramp-mid` (45% by default) and
+  settling into shade at the foot (`--ui-ramp-shade`). Both ends are **off by
+  default**, so panels keep just the band: `ui-above-nav`, `ui-above-header` and
+  `ui-above-drawer` turn it on, the 64px header with less shade so the ramp does
+  not compress into a stripe. Both ends weaken with `--ui-sheen-strength`, like
+  the band, and `no-gradient` removes the layer with the rest.
 - **`no-gradient`** removes that sheen while keeping everything else the surface
   paints. It is declared after every `*-above*` utility, so plain source order
   settles the conflict — write it in any position in the class list. Use it for
@@ -189,8 +213,8 @@ through the surfaces themselves, so a component that already uses `ui-above`,
   the mirror of the `135deg` default). Each `@apply ui-sheen`s, so it also works
   on an element with no surface class of its own, and each is declared after the
   `*-above*` utilities for the same source-order reason as `no-gradient`. The
-  direction is a knob (`--ui-sheen-angle`); the ramp is not — every surface
-  catches the same light. Anything else is a variant on a call site:
+  direction is a knob (`--ui-sheen-angle`); the band's falloff is not — every
+  surface catches the same light. Anything else is a variant on a call site:
   `[--ui-sheen-angle:200deg]`, no new class.
 - **`--ui-lit-edge`** is the 1px inner highlight along the top edge. Every
   surface sets `inset 0 1px 0 var(--ui-lit-edge)` **first** in its `box-shadow`
@@ -198,6 +222,18 @@ through the surfaces themselves, so a component that already uses `ui-above`,
 - **Grain** (a tiled noise overlay) was prototyped and removed: at any opacity
   that reads as texture it also dulls the surface to a flat tone. Do not re-add
   it without a different compositing approach.
+
+### Chrome edges
+
+The frame pieces are square and flat-edged, so their separation comes from the
+side they meet the page on:
+
+- `ui-above-nav` (docked navbar) — border and `--shadow-edge-right`.
+- `ui-above-header` — border and `--shadow-edge-bottom`.
+- `ui-above-drawer` (the notification tray) — border and `--shadow-drawer` on
+  the **left**. It is the only chrome that overlaps the page rather than framing
+  it, so its drop is the one soft layer deeper than the fixed edges; its leading
+  1px is `inset` with `--ui-lit-edge`, like every other lit edge.
 
 ### Dividers and grooves
 
@@ -219,7 +255,7 @@ zoom.
   trigger then belongs to the call site, not the palette file.
 - The tint fades: `ui-divider` transitions `--divider-line` over 200ms
   `ease-in-out`. That only works because the variable is registered as a
-  `<color>` (`@property` in `components.module.css`) — an unregistered property
+  `<color>` (`@property` in `dividers.module.css`) — an unregistered property
   is discrete and a gradient built from it would jump. Keep divider tints
   inside that type.
 - `ui-groove-t/b/l/r` gives any element that already separates itself with a
@@ -282,8 +318,7 @@ Rules specific to admin UI:
   <div className='grid-auto-fit gap-4 [--grid-min:12rem]' />
   ```
 
-  Prefer the component utilities in `components.module.css` for the common
-  cases:
+  Prefer the component utilities in `layout.module.css` for the common cases:
 
   | Class                | Behaviour                                                              |
   | -------------------- | ---------------------------------------------------------------------- |
@@ -367,7 +402,7 @@ Notes:
 - **`Dialog`** styles itself with inline Tailwind merged with `cn` (there is no
   `.dialog` CSS). A centered dialog (the default) fills the screen below `md`:
   square, borderless, scrolling inside. From `md` up it is a framed
-  `ui-above-light` card with `md:min-w-2xl`. The padding is on the header (a
+  `ui-above` card with `md:min-w-2xl`. The padding is on the header (a
   default bar with a bottom border) and on your content (give it `p-5`), not on
   the dialog. Only override what differs, through `dialogProps.className`,
   `headerProps.className` and `titleProps.className` (later classes win), e.g.
@@ -436,7 +471,7 @@ past the edge). Do not add zero-offset glows or blur above about 12px.
 | Token / class              | Use                                             |
 | -------------------------- | ----------------------------------------------- |
 | `shadow-sm`                | Cards, avatars, resting quiet buttons.          |
-| `shadow-md` (`shadow-mdx`) | Frosted `ui-above` surfaces, toasts, dropdowns. |
+| `shadow-md` (`shadow-mdx`) | `ui-above` surfaces, toasts, dropdowns.        |
 | `shadow-lg`                | Dialogs and modals.                             |
 | `shadow-xl`                | Select lists and popovers.                      |
 | `--shadow-button`          | Filled buttons at rest (highlight + hard edge). |
@@ -445,8 +480,8 @@ past the edge). Do not add zero-offset glows or blur above about 12px.
 Tailwind's defaults for `shadow-sm/md/lg/xl` are overridden, so the built-in
 class names follow this scale. `--shadow-strength` (`semantic.module.css`) is
 1 in light mode and 1.8 in dark mode and scales every alpha, so the same
-tokens stay visible on dark surfaces; simple mode sets it to 0.7, where the blur
-and the background gradients are gone and the same shadows overpower the page. Change the look of the whole site by
+tokens stay visible on dark surfaces; simple mode sets it to 0.7, where the
+background gradients are gone and the same shadows overpower the page. Change the look of the whole site by
 editing `shadows.module.css`; do not hardcode `box-shadow` values in
 components.
 
@@ -506,7 +541,7 @@ picking a step.
 
 ### Simple mode
 
-`data-simple` on `<html>` drops the blur, the star canvas and the gradients. Two
+`data-simple` on `<html>` drops the transparency, the star canvas and the gradients. Two
 knobs compensate, both set on `:root[data-simple]` in `semantic.module.css`:
 `--color-fg-muted` steps to `fg-450` (`fg-500` in light mode), and
 `--shadow-strength` drops to 0.7. Muted captions were measured at 3.4-4.1:1 on

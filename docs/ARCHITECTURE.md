@@ -4,11 +4,11 @@ This describes the system as it currently stands, one file per area. Start here,
 
 ## 1. System Overview
 
-[Open](ARCHITECTURE-SYSTEM-OVERVIEW.md) — hierarchy, Sanity vs. Supabase data split, junction tables, workspace dependencies, type derivation, access control, API surface.
+[Open](ARCHITECTURE-SYSTEM-OVERVIEW.md) — hierarchy, the study as tenant, Sanity vs. Supabase data split, junction tables, workspace dependencies, type derivation, access control, API surface.
 
 ## 2. Academic Catalog
 
-[Open](ARCHITECTURE-ACADEMIC-CATALOG.md) — entities, nested routing, Sanity ↔ DB sync, internal-secret access model.
+[Open](ARCHITECTURE-ACADEMIC-CATALOG.md) — entities, catalog routing and the study site handle, Sanity ↔ DB sync, internal-secret access model.
 
 ## 3. Scripts & Uploads
 
@@ -16,7 +16,7 @@ This describes the system as it currently stands, one file per area. Start here,
 
 ## 4. Users, Auth, Roles & Access
 
-[Open](ARCHITECTURE-USERS-AUTH.md) — cookie auth, onboarding, roles, restrictions, profiles, avatars, achievements, notifications, ratings.
+[Open](ARCHITECTURE-USERS-AUTH.md) — cookie auth, per-study academic setup, roles, restrictions, profiles, avatars, achievements, notifications, ratings.
 
 ## 5. Moderation
 

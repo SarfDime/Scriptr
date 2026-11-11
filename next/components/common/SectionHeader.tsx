@@ -22,6 +22,8 @@ export const SectionHeader = ({
   count,
   actions,
   as = 'h2',
+  titleVariant = 'title',
+  align = 'start',
   titleProps,
   subtitleProps,
   iconProps,
@@ -29,9 +31,23 @@ export const SectionHeader = ({
   className,
   ...rest
 }: SectionHeaderProps) => {
+  const isCentered = align === 'center'
+
   return (
-    <Box className={cn('ui-stack gap-1', className)} {...rest}>
-      <Box className='ui-cluster justify-between gap-3'>
+    <Box
+      className={cn(
+        'ui-stack gap-1',
+        isCentered && 'items-center text-center',
+        className
+      )}
+      {...rest}
+    >
+      <Box
+        className={cn(
+          'ui-cluster justify-between gap-3',
+          isCentered && 'justify-center'
+        )}
+      >
         <Box className='ui-cluster min-w-0 items-center gap-2'>
           {Icon && (
             <Icon
@@ -47,7 +63,10 @@ export const SectionHeader = ({
           <Title
             as={as}
             {...titleProps}
-            className={cn('ui-title', titleProps?.className)}
+            className={cn(
+              titleVariant === 'heading' ? 'ui-heading' : 'ui-title',
+              titleProps?.className
+            )}
           >
             {title}
           </Title>

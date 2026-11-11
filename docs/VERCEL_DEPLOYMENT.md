@@ -89,6 +89,13 @@ Production:
   key, not a header value: the API sends `x-revalidate-timestamp` +
   `x-revalidate-signature` and this project verifies the HMAC, so the secret
   never crosses the wire.
+- `SANITY_REVALIDATE_SECRET` is the bearer secret the Sanity publish webhook
+  sends in `x-sanity-webhook-secret`; the webhook is configured with the same
+  value (see [`sanity/README.md`](../sanity/README.md#publish-webhook)). Sanity
+  cannot sign a request, so unlike `REVALIDATE_SECRET` this one does cross the
+  wire and belongs in the webhook header. Without it
+  `POST /api/sanity/revalidate` answers `503`, and a mismatch answers `401` —
+  either way an editorial publish only reaches readers on the next deploy.
 
 ### `scriptr-api`
 
@@ -223,10 +230,10 @@ Then, signed in as an admin: `/admin` shows the code form; after entering a code
 
 ## Rotating the shared secrets
 
-Four values are shared between projects, and each only works when **both** sides
-change. Rotate them on a schedule and whenever someone with access leaves; use a
-unique random value per environment (`openssl rand -base64 32`), never the
-`.env.example` placeholder.
+These values are shared with another deployment or configuration, and each only
+works when **both** sides change. Rotate them on a schedule and whenever someone
+with access leaves; use a unique random value per environment
+(`openssl rand -base64 32`), never the `.env.example` placeholder.
 
 | Secret | Held by | Rotation order |
 | ------ | ------- | -------------- |
@@ -234,6 +241,7 @@ unique random value per environment (`openssl rand -base64 32`), never the
 | `OPTIMIZER_SECRET` | `scriptr-api`, Cloud Run (`optimizer-secret`) | Create a new Secret Manager version and deploy the service, then set the same value on the API and redeploy. Between the two deploys uploads fail with `503` — finalize fails closed rather than storing files unoptimized. |
 | `SITEMAP_SECRET` | `scriptr-api`, `scriptr-web` | Same as `REVALIDATE_SECRET`. A mismatch silently drops script URLs from `/sitemap.xml` (the API answers `403`, the web app logs a warning). |
 | `ADMIN_TOTP_SECRET` | `scriptr-api` only | Generate with `corepack pnpm --filter @scriptr/api admin:totp`, set it, and re-enrol the new `otpauth` URI in the authenticator app. Every issued token stops working immediately; the old secret is dead as soon as the API restarts. |
+| `SANITY_REVALIDATE_SECRET` | `scriptr-web`, the Sanity publish webhook | Set the new value on the web project, redeploy it, then update the webhook's `x-sanity-webhook-secret` header in Sanity. Between the two, every publish answers `401` and the cache waits for the next deploy. |
 
 **A version is not `latest` by being enabled.** `latest` means the highest
 version *number that exists*, whatever its state. Disabling or destroying a bad
@@ -272,6 +280,9 @@ curl -i \
   -H 'Origin: https://scriptr.uk' \
   https://api.scriptr.uk/api/auth/session
 curl -i https://scriptr.uk/
+# 401 — the Sanity webhook route rejects an unsigned publish (503 means
+# SANITY_REVALIDATE_SECRET is missing from the web project)
+curl -s -o /dev/null -w '%{http_code}\n' -X POST https://scriptr.uk/api/sanity/revalidate
 ```
 
 The API health and session requests must return JSON with HTTP `200`. The

@@ -8,6 +8,7 @@ import { Button } from '@/components/common/Button'
 import { OnboardingSubjectsStep } from '@/components/onboarding/OnboardingSubjectsStep'
 import { Text } from '@/components/typography/Text'
 import { useSubjectCompletion } from '@/hooks/onboarding/useSubjectCompletion'
+import { getStudyFeedPath } from '@/lib/academic-routes'
 import { addProfileStudy, setProfileSubjectStatus } from '@/lib/api/profile-api'
 import {
   EMPTY_STUDY_SETUP,
@@ -67,7 +68,6 @@ export const AcademicSetupForm = ({
   siteSlug,
   studySanityId,
   studyId,
-  studyName,
   subjects,
 }: AcademicSetupFormProps) => {
   const router = useRouter()
@@ -117,7 +117,8 @@ export const AcademicSetupForm = ({
       })
   )
 
-  const studyPath = `/study/${siteSlug}`
+  // Setup exists to shape the feed, so it hands the reader to the feed.
+  const studyPath = getStudyFeedPath(siteSlug)
   const isSignedIn = session.status === 'authenticated'
 
   const dbSubjectIds = completedSubjectIds.flatMap((sanityId) => {
@@ -164,11 +165,7 @@ export const AcademicSetupForm = ({
   }
 
   return (
-    <Box className='ui-stack gap-4'>
-      <Text className='ui-body'>
-        {UI_STRINGS.onboarding.academicSetup.subtitle(studyName)}
-      </Text>
-
+    <Box className='ui-stack ui-above'>
       <OnboardingSubjectsStep
         subjectsByYear={subjectsByYear}
         completedYears={completedYears}
@@ -192,6 +189,9 @@ export const AcademicSetupForm = ({
       )}
 
       <Box className='ui-cluster gap-2'>
+        <Button className='button subtle' disabled={isSaving} onClick={skip}>
+          {UI_STRINGS.onboarding.academicSetup.skip}
+        </Button>
         <Button
           className='button solid'
           isLoading={isSaving}
@@ -199,9 +199,6 @@ export const AcademicSetupForm = ({
           onClick={save}
         >
           {UI_STRINGS.onboarding.academicSetup.submit}
-        </Button>
-        <Button className='button subtle' disabled={isSaving} onClick={skip}>
-          {UI_STRINGS.onboarding.academicSetup.skip}
         </Button>
       </Box>
     </Box>

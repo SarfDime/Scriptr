@@ -15,6 +15,7 @@ import {
 import { Button } from './misc/button'
 import { Calendar } from './misc/calendar'
 import { CalendarEvent } from './misc/calendar-event'
+import { ChristmasCanvas } from './misc/christmas-canvas'
 import { Person } from './misc/person'
 import { StarCanvas } from './misc/star-canvas'
 import { StudyTip } from './misc/study-tip'
@@ -44,6 +45,7 @@ export const schemaTypes = [
   Subject,
   Study,
   StarCanvas,
+  ChristmasCanvas,
   StudyTip,
   CalendarEvent,
   Calendar,

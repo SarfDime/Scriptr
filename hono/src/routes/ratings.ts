@@ -78,7 +78,7 @@ function aggregateStats(
 const ratings = new Hono<HonoEnv>()
 
 /* ---------------------------------------------------------------------- */
-/* Rating types — public read, admin-managed (is_admin() RLS)             */
+/* Rating types — public read, owner-managed (is_owner() RLS)             */
 /* ---------------------------------------------------------------------- */
 
 /** List rating types, optionally filtered by target_type */

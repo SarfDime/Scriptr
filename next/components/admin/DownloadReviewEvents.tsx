@@ -3,12 +3,12 @@
 import { DOWNLOAD_REVIEW_EVENT_PAGE_SIZE } from '@shared/config/shared-constants'
 import { ADMIN_STRINGS } from '@shared/strings/admin-strings'
 import type { DownloadReviewEventsResponse } from '@shared/types/download-review.types'
+import { getScriptSitePath } from '@shared/utils/site-paths'
 import { useEffect, useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { NextLink } from '@/components/common/NextLink'
 import { Text } from '@/components/typography/Text'
-import { getAcademicPath } from '@/lib/academic-routes'
 import { getDownloadReviewEvents } from '@/lib/api/download-review-api'
 
 /** Events are reviewed for bursts, so the list needs the time of day, unlike
@@ -126,9 +126,9 @@ export const DownloadReviewEvents = ({
               {' · '}
               {event.script_slug ? (
                 <NextLink
-                  href={getAcademicPath({
-                    type: 'script',
-                    scriptSlug: event.script_slug,
+                  href={getScriptSitePath({
+                    siteSlug: event.script_site_slug,
+                    slug: event.script_slug,
                   })}
                 >
                   {event.script_title || event.script_slug}

@@ -14,9 +14,9 @@ implementation plan: what changes, in which app, and why.
 | 4. Study routes | Done | Shell, chrome per tree, setup and selection pages, study-scoped calendar and scripts |
 | 5. Study-scoped API | Done | Reads open with an optional `?study=`, writes gated on membership/role, per-study cache tags, onboarding modal retired |
 | 6. Achievements and notifications | Done | Study definitions measured in their study, `notifications.study_id`, badges grouped by scope, study-aware links |
-| 7. Cleanup and docs | Not started | — |
+| 7. Cleanup and docs | Done | Shims deleted, docs reconciled, everything regenerated |
 
-Last reconciled: 2026-11-10 (Phases 1–6 complete).
+Last reconciled: 2026-11-10 (all phases complete).
 
 ## Important points
 
@@ -165,9 +165,9 @@ Small, independent of scoping, and pays off immediately.
 * [x] `profiles.role` becomes `student | owner`; add `study_roles(profile_id,
   study_id, role)` with `role in ('admin','moderator')`. One role per person per
   study, so an admin can hold any number of studies.
-* [x] `has_study_role(uid, study_id, need)` plus `is_owner`, and `is_admin`
-  kept as its alias so the policies that still call it moved meaning in one
-  place.
+* [x] `has_study_role(uid, study_id, need)` plus `is_owner`. `is_admin` was
+  kept as its alias at first so the older policies moved meaning in one place;
+  Phase 7 rewrote them and dropped it.
 * [x] Rewrite content policies to `is_owner(uid) or has_study_role(uid, row.study_id, …)`:
   `scripts`, `comments`, `flags`, `script_files` and `professor_studies`.
   *Why:* admin and moderator must not act outside their study. Ratings and
@@ -198,8 +198,8 @@ Small, independent of scoping, and pays off immediately.
   Scripts read `study_id` from the row they already load, comments resolve it
   from their script, and flags from their target; only the queues keep the
   coarse "any study role" check, because RLS decides which rows they return.
-  `is_admin()` remains as the legacy alias of `is_owner` for the org-level
-  policies that still spell it that way.
+  (`is_admin()` was the legacy alias of `is_owner` for the org-level policies
+  that still spelled it that way; Phase 7 rewrote them and dropped it.)
 
 ---
 
@@ -229,14 +229,16 @@ Small, independent of scoping, and pays off immediately.
   `academic-setup`.
 * [x] A viewer with no academic profile for the study — and who has not
   dismissed setup for it — is sent to `academic-setup` (`StudySetupGate`, on the
-  study home). Client-side on purpose: a guest's profile is in this browser, and
-  reading the session on the server would make every study page dynamic.
+  study's script feed, which is the page setup shapes). Client-side on purpose: a
+  guest's profile is in this browser, and reading the session on the server would
+  make every study page dynamic.
 * [x] `academic-setup` writes to `profile_studies` / `profile_subjects` when
   signed in and to a per-study browser record otherwise. "Skip for now" records
-  a per-study dismissal and returns to the study home, which then offers the
+  a per-study dismissal and returns to the study's feed, which then offers the
   resume link.
-* [x] Metadata and canonical URLs built from the study path; the study home's
-  breadcrumbs link back to the catalog faculty page.
+* [x] Metadata and canonical URLs built from the study path; the study
+  overview's breadcrumbs link back to the catalog faculty page, and the feed
+  titles itself after its content rather than repeating the study's title.
 * [x] Move the existing pages into a `(site)` route group; URLs do not change.
   `admin`, `auth`, `api` and the sitemaps stay outside it, so site chrome can
   later be added without touching them.
@@ -266,11 +268,18 @@ Small, independent of scoping, and pays off immediately.
 * [x] Global search is catalog-only: universities, faculties, studies and
   professors. Scripts and subjects are searched inside a study.
 * [ ] No professor route: professors are university-scoped.
-* [x] The study home is the study's content surface: its subjects, its
-  professors and its scripts with the search, subject filter and sort inline
-  (`GET /scripts/study/:studyId`). No separate `/study/[siteSlug]/scripts`
-  listing or `/study/[siteSlug]/search` page — one page a reader already lands
-  on beats two more routes.
+* [x] Every academic entity is served at its overview, so a study reads like
+  the rest of the catalog: `/study/[siteSlug]` is the study's academic overview
+  (subjects, professors, administration) and `…/scripts` is its content surface
+  — the old root homepage, study-scoped: the scripts its students share (curated
+  to the reader's unfinished subjects, `?scripts=all` for the study's top
+  scripts) with the reader's unfinished subjects beside them. The setup gate
+  lives on the feed, not on the landing page, so a newcomer is never bounced
+  into the subject picker before seeing what the study is. No
+  `/study/[siteSlug]/search` page.
+* [x] The root became the catalog: it lists universities, faculties and studies
+  and links each study to its site — no script feed, no subject sidebar. The
+  curated `/?scripts=all` feed and its toggle were removed with it.
 * [x] The "resume setup" notification is a link to the chosen study's
   `academic-setup` (or `/start` when nothing is chosen); the `open-onboarding`
   action kind is gone.
@@ -377,14 +386,26 @@ Small, independent of scoping, and pays off immediately.
 
 ## Phase 7 — Cleanup and docs
 
-* [ ] Delete unused nested study/subject routes and their static-param queries,
-  along with the redirect and compatibility shims listed under "Study-routing
-  shims" in [`PROGRESS.md`](PROGRESS.md).
-* [ ] Update [`ARCHITECTURE-ACADEMIC-CATALOG.md`](ARCHITECTURE-ACADEMIC-CATALOG.md),
+* [x] Delete the compatibility shims:
+  - `app/(site)/university/…/study/[studySlug]` and its subject sibling, removed
+    outright — every synced study has a `siteSlug` and the Studio requires one,
+    so the pages had nothing left to render.
+  - `next/app/scripts/[slug]/route.ts`, removed once the profile favourites and
+    the download-review payloads carried the study's `site_slug` and nothing
+    minted `/scripts/…` any more.
+  - `getAcademicPath`'s nested study/subject fallback now returns the faculty
+    page, so a handle-less study can never mint a URL that no longer exists.
+  - `is_admin()`: its nineteen policies were rewritten to `is_owner()` from
+    `pg_policies` (same expression, renamed call) and the function dropped.
+  - The Studio navigation document points at `/study/lbe` instead of the nested
+    catalog URL.
+* [x] Update [`ARCHITECTURE-ACADEMIC-CATALOG.md`](ARCHITECTURE-ACADEMIC-CATALOG.md),
   [`ARCHITECTURE-USERS-AUTH.md`](ARCHITECTURE-USERS-AUTH.md),
-  [`ARCHITECTURE-SYSTEM-OVERVIEW.md`](ARCHITECTURE-SYSTEM-OVERVIEW.md) and
+  [`ARCHITECTURE-SYSTEM-OVERVIEW.md`](ARCHITECTURE-SYSTEM-OVERVIEW.md),
+  [`ARCHITECTURE-FRONTEND.md`](ARCHITECTURE-FRONTEND.md),
+  [`ARCHITECTURE-SCRIPTS-UPLOADS.md`](ARCHITECTURE-SCRIPTS-UPLOADS.md) and
   [`PROGRESS.md`](PROGRESS.md).
-* [ ] Update [`API_DOCUMENTATION.md`](../hono/src/routes/API_DOCUMENTATION.md) with
-  the study parameter and the new role model.
-* [ ] `corepack pnpm gen:api-types`, `corepack pnpm sanity:typegen`,
+* [x] Update [`API_DOCUMENTATION.md`](../hono/src/routes/API_DOCUMENTATION.md) with
+  the study parameter, the write gate and the new role model.
+* [x] `corepack pnpm gen:api-types`, `corepack pnpm sanity:typegen`,
   `corepack pnpm gen:api-endpoints`, `corepack pnpm check-types`, `corepack pnpm test`.

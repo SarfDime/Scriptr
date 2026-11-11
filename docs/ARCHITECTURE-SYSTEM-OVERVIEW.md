@@ -1,8 +1,8 @@
 # System Overview
 
-* **Hierarchy:** `University → Faculty → Study → Subject`. Single university at launch, read-only catalog for users.
+* **Hierarchy:** `University → Faculty → Study → Subject`. One university today, and the catalog is read-only for users. A study is the tenant: it has its own site at `/study/[siteSlug]`, its own media bucket, and its own admin and moderator roles, while identities, usernames, restrictions and announcements-to-everyone stay org-wide.
 * **Sanity CMS (source of truth for academic metadata):** bios, descriptions, syllabus, `year`, `semester`, `elective` (subjects only — electives have no fixed semester and are badged in the UI).
-* **Supabase DB (runtime):** identities, relationships, user content (scripts, comments, votes, ratings, flags), notifications, achievements, runtime script metadata (`exam_session`, `exam_year`, `additional_reading`, files).
+* **Supabase DB (runtime):** identities, relationships, user content (scripts, comments, votes, ratings, flags), notifications and achievements (each either platform-wide or scoped to one study), runtime script metadata (`exam_session`, `exam_year`, `additional_reading`, files). A script carries its study, and files live under that study's bucket.
 * **Junction tables:** `profile_faculties`, `profile_studies`, `profile_subjects`, `professor_faculties`, `professor_studies`, `subject_professors`.
 * **Data fetching:** the API merges DB identity/relationship records with Sanity metadata.
 * **Workspace dependencies:** pnpm 12 uses an isolated linker and a single root lockfile. Each app declares its own dependencies and the lightweight `@scriptr/shared` workspace package; existing `@shared/*` TypeScript aliases continue to resolve shared source. Vercel installs are filtered to the target app, its workspace dependencies, and root tooling, so unrelated app dependencies are not installed for that deployment.

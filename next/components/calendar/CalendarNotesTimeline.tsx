@@ -41,14 +41,14 @@ export const CalendarNotesTimeline = () => {
         mode='click'
         placement='right'
         // On a phone the wrapper drops its `relative`, so the panel anchors to
-        // the frosted card rather than this button-sized box: it pins to the
+        // the translucent card rather than this button-sized box: it pins to the
         // card's right edge and opens from its own static position, which keeps
         // it on screen whatever the toolbar has wrapped into.
         className='max-sm:static'
         // The panel scrolls rather than the list inside it, so the padding stays
         // put while the notes move; 22rem keeps it clear of the day rows below.
         // `ui-above-inside` with a solid fill because the panel sits over dense
-        // text, which read through the frosted surface.
+        // text, which read through the translucent surface.
         innerWrapperClass='bg-background-200 rounded-xl p-1.5 max-h-[22rem] overflow-y-auto w-80 max-w-[calc(100vw-2rem)] max-sm:left-0 max-sm:right-0 max-sm:w-auto max-sm:max-w-none shadow-xl border border-background-600'
         trigger={
           <Button

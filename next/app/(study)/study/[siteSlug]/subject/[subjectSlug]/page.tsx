@@ -12,8 +12,8 @@ import type { SubjectSiteRouteParams } from '@/types/academics/academics.types'
 import type { SubjectDetail } from '@/types/academics/subject.types'
 
 /**
- * A subject inside one study's site. Same caching contract as the study home:
- * rendered on demand, held until the publish webhook invalidates it.
+ * A subject inside one study's site. Same caching contract as the study
+ * overview: rendered on demand, held until the publish webhook invalidates it.
  */
 export const revalidate = false
 

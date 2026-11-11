@@ -1371,7 +1371,6 @@ export type Database = {
         Args: { p_script_id: string }
         Returns: number
       }
-      is_admin: { Args: { uid: string }; Returns: boolean }
       is_moderator: { Args: { uid: string }; Returns: boolean }
       is_owner: { Args: { uid: string }; Returns: boolean }
       is_restricted: { Args: { uid: string }; Returns: boolean }

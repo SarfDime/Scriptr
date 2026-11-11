@@ -21,14 +21,18 @@ export const SubjectsExplorer = ({ subjects }: SubjectsExplorerProps) => {
     setQuery,
     year,
     setYear,
+    years,
+    includeElectives,
+    setIncludeElectives,
     sort,
     setSort,
-    yearOptions,
     visibleSubjects,
   } = useSubjectExplorer(subjects)
 
   return (
-    <Card className='ui-stack ui-above'>
+    /* `#subjects`: a link from the study's script feed lands on the list
+       itself rather than the top of the study page. */
+    <Card id='subjects' className='ui-stack ui-above'>
       <SectionHeader
         title={UI_STRINGS.subjects.title}
         count={visibleSubjects.length}
@@ -47,10 +51,11 @@ export const SubjectsExplorer = ({ subjects }: SubjectsExplorerProps) => {
 
         <SubjectFilters
           year={year}
-          years={yearOptions}
-          sort={sort}
+          years={years}
+          includeElectives={includeElectives}
           onYearChange={setYear}
-          onSortChange={setSort}
+          onIncludeElectivesChange={setIncludeElectives}
+          sort={{ value: sort, onChange: setSort }}
         />
       </Box>
 
