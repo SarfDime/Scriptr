@@ -4,6 +4,7 @@ import type {
 } from '@shared/types/profile.types'
 import { getAcademicPath } from '@/lib/academic-routes'
 import { findByDbId } from '@/lib/catalog-lookup'
+import { catalogUrl } from '@/lib/study-origin'
 import type {
   ProfileAcademicEntry,
   ProfileAcademics,
@@ -32,10 +33,12 @@ export const buildProfileAcademics = (
   const universityHref = (dbId: string): string | null => {
     const university = findByDbId(catalog.universities, dbId)
     if (!university?.slug) return null
-    return getAcademicPath({
-      type: 'university',
-      universitySlug: university.slug,
-    })
+    return catalogUrl(
+      getAcademicPath({
+        type: 'university',
+        universitySlug: university.slug,
+      })
+    )
   }
 
   const facultyHref = (dbId: string): string | null => {
@@ -44,11 +47,13 @@ export const buildProfileAcademics = (
       (item) => item._id === faculty?.universityId
     )
     if (!faculty?.slug || !university?.slug) return null
-    return getAcademicPath({
-      type: 'faculty',
-      universitySlug: university.slug,
-      facultySlug: faculty.slug,
-    })
+    return catalogUrl(
+      getAcademicPath({
+        type: 'faculty',
+        universitySlug: university.slug,
+        facultySlug: faculty.slug,
+      })
+    )
   }
 
   const studyHref = (dbId: string): string | null => {

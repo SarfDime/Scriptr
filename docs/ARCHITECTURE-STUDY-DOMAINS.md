@@ -82,6 +82,13 @@ Two shapes exist and they are not interchangeable:
   `studySiteHomePath` (`/`), `studySiteFeedPath` (`/scripts`),
   `studySiteCalendarPath`, `studySiteSetupPath`. Pointing those at
   `/study/<label>/…` would still work, but every click would pay a redirect.
+* **Catalog address** — a link a study page renders to something the study does
+  not own: `/admin`, `/user`, `/auth`, `/start`, a professor, a university. It
+  has to be absolute too (`catalogUrl`, or `catalogUrl(getAcademicPath(…))` for
+  an entity). A *relative* one is worse than slow: the router prefetches it from
+  the study host, the catalog redirect answers cross-origin, and the browser
+  blocks that RSC fetch — "Cross-Origin Request Blocked … Status code: 307",
+  then a hard reload.
 
 Two exceptions are accepted rather than fixed:
 
@@ -209,6 +216,16 @@ automated** — it is the three steps above. Recorded in
   silently ignores `generateStaticParams` there and substitutes `-`, and the
   placeholder's body is what every host is served. Verified on `/sitemap.xml`
   under `study/[siteSlug]`; the workaround is a dot-free route plus a rewrite.
+* **A cross-origin redirect of the router's own fetch is a CORS error.** The
+  catalog-owned redirects therefore exclude `?_rsc=` requests (`missing`): a page
+  request still redirects, while a client navigation renders the page on the
+  study host and the next full load lands on the catalog. Links the app renders
+  use `catalogUrl`, so they skip that path entirely; the exclusion is for a
+  stored link, a bookmark or an API-minted one.
+* **A Sanity nav item is data.** One that points at a catalog path is served on
+  the study host (its payload renders, no error) and redirects on the next full
+  load — the app cannot rewrite what the Studio stores. Author absolute links
+  there, or normalize them in `NavigationLinks`.
 * **A Sanity nav item that points at `/study/lbe`** costs one redirect to the
   study host. Its destination is data, so it is corrected in the Studio, not in
   the app.

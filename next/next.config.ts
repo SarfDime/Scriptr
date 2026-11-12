@@ -146,9 +146,20 @@ const nextConfig = {
       },
       // A study host serves its study, not the rest of the platform: a catalog
       // page opened there belongs on the catalog host.
+      //
+      // `?_rsc=` is excluded on purpose. That is the router's own fetch, and a
+      // cross-origin redirect of it is blocked by CORS — the link logged
+      // "Cross-Origin Request Blocked … Status code: 307" and fell back to a
+      // hard reload. A page request still redirects; the payload of a client
+      // navigation is rendered here instead, and the next full load lands on
+      // the catalog. Links the app renders are absolute catalog addresses
+      // (`catalogUrl`), so the router does not fetch them through this host at
+      // all; this is the safety net for a stored link, a bookmark or an
+      // API-minted one.
       ...CATALOG_OWNED_PATHS.map((source) => ({
         source,
         has: onStudyHost,
+        missing: [{ type: 'query' as const, key: '_rsc' }],
         destination: `${SITE_ORIGIN}${source}`,
         permanent: false,
       })),

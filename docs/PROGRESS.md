@@ -28,6 +28,9 @@ are still open:
   someone remembering.
 - **Each host's sitemap is submitted separately in Search Console.** One-time per
   host, and currently only `lbe` exists.
+- **A Sanity nav item that points at a catalog path** renders on the study host
+  rather than the catalog (the router's fetch cannot be redirected cross-origin).
+  Author absolute links in the Studio, or normalize them in `NavigationLinks`.
 
 ## Features
 

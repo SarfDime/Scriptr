@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { getAcademicPath } from '@/lib/academic-routes'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
+import { catalogUrl } from '@/lib/study-origin'
 import type { MinimalProfessor } from '@/types/academics/professor.types'
 import type { ComponentColorPalettes } from '@/types/components/ColorPalettes.types'
 import { Box } from '../common/Box'
@@ -75,10 +76,12 @@ export const AdministrationCard = ({
     <>
       {slug ? (
         <ClickableCard
-          href={getAcademicPath({
-            type: 'professor',
-            professorSlug: slug,
-          })}
+          href={catalogUrl(
+            getAcademicPath({
+              type: 'professor',
+              professorSlug: slug,
+            })
+          )}
           className={cn(ADMINISTRATION_ITEM_WRAPPER_CLASS, 'button group')}
         >
           <AdministrationCardBody

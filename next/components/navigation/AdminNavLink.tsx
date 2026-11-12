@@ -3,6 +3,7 @@
 import DashboardIcon from '@sanity/icons/Dashboard'
 import { ADMIN_STRINGS } from '@shared/strings/admin-strings'
 import { NextLink } from '@/components/common/NextLink'
+import { catalogUrl } from '@/lib/study-origin'
 import { useSession } from '@/providers/SessionProvider'
 
 export const AdminNavLink = () => {
@@ -14,7 +15,7 @@ export const AdminNavLink = () => {
   if (!canEnter) return null
   return (
     <NextLink
-      href='/admin'
+      href={catalogUrl('/admin')}
       className='button subtle shrink-0 gap-1.5 rounded-lg px-3 py-2 text-sm'
     >
       <DashboardIcon />

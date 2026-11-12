@@ -6,6 +6,7 @@ import { BackLink } from '@/components/common/BackLink'
 import { NextLink } from '@/components/common/NextLink'
 import { PageLayout } from '@/components/layout/PageLayout'
 import { getAcademicPath, studySiteFeedPath } from '@/lib/academic-routes'
+import { catalogUrl } from '@/lib/study-origin'
 import type { StudyDetail } from '@/types/academics/study.types'
 
 export type StudyDetailContentProps = {
@@ -38,21 +39,25 @@ export const StudyDetailContent = ({
               {UI_STRINGS.scripts.browseAll}
             </NextLink>
             <BackLink
-              href={getAcademicPath({
-                type: 'faculty',
-                universitySlug:
-                  study.faculty?.university?.slug ?? fallback.universitySlug,
-                facultySlug: study.faculty?.slug ?? fallback.facultySlug,
-              })}
+              href={catalogUrl(
+                getAcademicPath({
+                  type: 'faculty',
+                  universitySlug:
+                    study.faculty?.university?.slug ?? fallback.universitySlug,
+                  facultySlug: study.faculty?.slug ?? fallback.facultySlug,
+                })
+              )}
               label={study.faculty?.name ?? UI_STRINGS.academics.entity.faculty}
               backLevel='twoBack'
             />
             <BackLink
-              href={getAcademicPath({
-                type: 'university',
-                universitySlug:
-                  study.faculty?.university?.slug ?? fallback.universitySlug,
-              })}
+              href={catalogUrl(
+                getAcademicPath({
+                  type: 'university',
+                  universitySlug:
+                    study.faculty?.university?.slug ?? fallback.universitySlug,
+                })
+              )}
               label={
                 study.faculty?.university?.name ??
                 UI_STRINGS.academics.entity.university

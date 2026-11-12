@@ -3,6 +3,7 @@
 import User from '@sanity/icons/User'
 import { UI_STRINGS } from '@shared/config/strings'
 import { getDisplayName } from '@/lib/profile-display'
+import { catalogUrl } from '@/lib/study-origin'
 import { useNotifications } from '@/providers/notification/NotificationProvider'
 import { useMyProfile } from '@/providers/ProfileProvider'
 import { useSession } from '@/providers/SessionProvider'
@@ -22,7 +23,10 @@ export const NavUserSlot = () => {
 
   if (session.status === 'unauthenticated') {
     return (
-      <NextLink href='/auth' className='button subtle w-full rounded-lg'>
+      <NextLink
+        href={catalogUrl('/auth')}
+        className='button subtle w-full rounded-lg'
+      >
         <User />
         <Text className='ui-label'>{UI_STRINGS.navigation.signIn}</Text>
       </NextLink>

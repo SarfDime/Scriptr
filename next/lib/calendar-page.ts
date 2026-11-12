@@ -26,6 +26,7 @@ import {
   shiftDayKey,
 } from './calendar'
 import { loadCalendarEvents } from './calendar-data'
+import { catalogUrl } from './study-origin'
 
 /** Next's `searchParams`, already awaited. A repeated parameter arrives as an
  * array and is ignored, which falls back to the default like any other
@@ -72,10 +73,12 @@ const professorLink = (
   return {
     id: professor._id,
     name: professor.name,
-    href: getAcademicPath({
-      type: 'professor',
-      professorSlug: professor.slug,
-    }),
+    href: catalogUrl(
+      getAcademicPath({
+        type: 'professor',
+        professorSlug: professor.slug,
+      })
+    ),
   }
 }
 

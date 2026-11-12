@@ -1,4 +1,5 @@
 import { cn } from '@/lib/common-utils'
+import { catalogUrl } from '@/lib/study-origin'
 import { Box } from '../common/Box'
 import { NextLink } from '../common/NextLink'
 import { Text } from '../typography/Text'
@@ -19,7 +20,7 @@ export const UserCard = ({
   name,
   userRole,
   avatarUrl,
-  href = '/user',
+  href = catalogUrl('/user'),
   restricted = false,
 }: UserCardProps) => (
   <NextLink

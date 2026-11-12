@@ -3,6 +3,7 @@
 import { UI_STRINGS } from '@shared/config/strings'
 import { cn } from '@/lib/common-utils'
 import { getDisplayName } from '@/lib/profile-display'
+import { catalogUrl } from '@/lib/study-origin'
 import { useMyProfile } from '@/providers/ProfileProvider'
 import { useSession } from '@/providers/SessionProvider'
 import { NextLink } from '../common/NextLink'
@@ -31,7 +32,7 @@ export const HeaderProfileLink = () => {
 
   return (
     <NextLink
-      href='/user'
+      href={catalogUrl('/user')}
       aria-label={UI_STRINGS.profile.viewProfileAriaLabel}
       className={cn(
         'button ghost p-1',

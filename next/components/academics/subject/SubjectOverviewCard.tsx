@@ -9,6 +9,7 @@ import { Divider } from '@/components/ui/Divider'
 import { getAcademicPath } from '@/lib/academic-routes'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn, createPersonSummaries } from '@/lib/common-utils'
+import { catalogUrl } from '@/lib/study-origin'
 import type { SubjectDetail } from '@/types/academics/subject.types'
 
 export const SubjectOverviewCard = ({
@@ -31,10 +32,12 @@ export const SubjectOverviewCard = ({
       target: professors,
       title: UI_STRINGS.academics.entity.professor,
       getHref: (professor) =>
-        getAcademicPath({
-          type: 'professor',
-          professorSlug: professor.slug ?? professor._id,
-        }),
+        catalogUrl(
+          getAcademicPath({
+            type: 'professor',
+            professorSlug: professor.slug ?? professor._id,
+          })
+        ),
     },
     {
       target: study,
@@ -52,12 +55,15 @@ export const SubjectOverviewCard = ({
       target: faculty,
       title: UI_STRINGS.academics.entity.faculty,
       getHref: () =>
-        getAcademicPath({ type: 'faculty', universitySlug, facultySlug }),
+        catalogUrl(
+          getAcademicPath({ type: 'faculty', universitySlug, facultySlug })
+        ),
     },
     {
       target: university,
       title: UI_STRINGS.academics.entity.university,
-      getHref: () => getAcademicPath({ type: 'university', universitySlug }),
+      getHref: () =>
+        catalogUrl(getAcademicPath({ type: 'university', universitySlug })),
     }
   )
 

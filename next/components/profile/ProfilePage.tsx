@@ -15,6 +15,7 @@ import { FlagReportButton } from '@/components/ui/FlagReportButton'
 import { sortAchievements } from '@/lib/achievement-display'
 import { getDisplayName } from '@/lib/profile-display'
 import { toScriptDetails } from '@/lib/script-display'
+import { catalogUrl } from '@/lib/study-origin'
 import type { ProfilePageProps } from '@/types/components/ProfilePage.types'
 
 /**
@@ -61,7 +62,7 @@ export const ProfilePage = ({
             <Divider orientation='vertical' className='h-4' />
             <EditProfileButton profile={profile} />
             <NextLink
-              href='/start'
+              href={catalogUrl('/start')}
               className='button button-sm subtle ui-cluster gap-1.5'
             >
               <BookIcon />

@@ -33,6 +33,21 @@ export const studySiteHost = (): string => {
   return url ? url.host.replace(/^www\./, '') : ''
 }
 
+/**
+ * An absolute address on the catalog host, for a link a study site renders to
+ * something the study does not own: `/admin`, `/user`, a professor, a
+ * university.
+ *
+ * A *relative* one would be prefetched from the study host, answered by the
+ * catalog-owned redirect, and the browser would block that cross-origin RSC
+ * fetch — the link would log a CORS error and fall back to a hard reload. An
+ * absolute address is skipped by the router's prefetch and navigates once.
+ */
+export const catalogUrl = (path: string): string => {
+  const url = toUrl()
+  return url ? `${url.protocol}//${studySiteHost()}${path}` : path
+}
+
 /** `https://lbe.scriptr.uk`, or `http://lbe.localhost:3000` in development.
  * Empty when the site origin is unusable or the study has no handle, so callers
  * can fall back to the catalog path. */

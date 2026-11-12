@@ -4,6 +4,7 @@ import BookmarkIcon from '@sanity/icons/Bookmark'
 import { UI_STRINGS } from '@shared/config/strings'
 import { portableTextToPlainText } from '@shared/utils/portable-text.utils'
 import { getScriptSitePath } from '@shared/utils/site-paths'
+import { catalogUrl } from '@/lib/study-origin'
 import { useMyProfile } from '@/providers/ProfileProvider'
 import { Box } from '../common/Box'
 import { NextLink } from '../common/NextLink'
@@ -48,7 +49,10 @@ export const NavFavorites = () => {
       <Divider className='my-2' />
 
       {favorites.length > MAX_FAVORITES && (
-        <NextLink href='/user' className='button ghost button-sm w-full my-1'>
+        <NextLink
+          href={catalogUrl('/user')}
+          className='button ghost button-sm w-full my-1'
+        >
           {UI_STRINGS.navigation.favoritesShowAll}
         </NextLink>
       )}
