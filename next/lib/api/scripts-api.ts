@@ -49,8 +49,13 @@ import {
  * a field is added to `SCRIPT_SUMMARY_SELECT` while a cached copy predates it.
  * Raised to 3 when `slug` joined the select: a stale copy put `undefined` into
  * `getAcademicPath` and took the whole page down.
+ *
+ * Raised to 4 to evict detail bodies that were cached under a script's slug
+ * while `scriptMutationTags` only expired the id key: a copy from before the
+ * script's study was wired up kept failing the site's `study_id` check and made
+ * a live script 404 under its study site, with no deploy able to clear it.
  */
-const SCRIPT_COMMENT_COUNT_CACHE_VERSION = 3
+const SCRIPT_COMMENT_COUNT_CACHE_VERSION = 4
 
 /** Scripts for one subject. Public and unscoped, so the response is shared.
  *

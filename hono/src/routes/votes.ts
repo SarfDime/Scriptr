@@ -155,7 +155,7 @@ votes.post('/:scriptId', authMiddleware, async (c) => {
 
   const { data: script } = await supabase
     .from('scripts')
-    .select('author_id, subject_id, study_id')
+    .select('author_id, slug, subject_id, study_id')
     .eq('id', scriptId)
     .single()
 

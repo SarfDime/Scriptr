@@ -65,10 +65,15 @@ export const RATING_CACHE_TAGS = {
 }
 
 /** Tags to revalidate whenever a script is created, updated, or deleted.
+ * The detail read is cached under whichever identifier its URL used, and every
+ * public link uses the slug, so both keys are expired: tagging only the id left
+ * the slug entry — the one readers actually hit — stale indefinitely, because
+ * the Data Cache outlives a deploy and nothing else ever clears that key.
  * `study_id` is optional because a few call sites only carry the fields they
  * need; when it is present, the script's own study feed is invalidated too. */
 export function scriptMutationTags(script: {
   id: string
+  slug: string
   subject_id: string
   author_id: string
   study_id?: string | null
@@ -76,6 +81,7 @@ export function scriptMutationTags(script: {
   return [
     SCRIPT_CACHE_TAGS.list(),
     SCRIPT_CACHE_TAGS.detail(script.id),
+    SCRIPT_CACHE_TAGS.detail(script.slug),
     SCRIPT_CACHE_TAGS.subject(script.subject_id),
     ...(script.study_id ? [SCRIPT_CACHE_TAGS.study(script.study_id)] : []),
     SCRIPT_CACHE_TAGS.top(),

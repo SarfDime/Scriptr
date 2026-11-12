@@ -576,7 +576,7 @@ scripts.delete('/:scriptId/files/:fileId', authMiddleware, async (c) => {
       .single(),
     supabase
       .from('scripts')
-      .select('author_id, subject_id, study_id')
+      .select('author_id, slug, subject_id, study_id')
       .eq('id', scriptId)
       .single(),
     supabase.from('profiles').select('role').eq('id', user.id).single(),
@@ -629,6 +629,7 @@ scripts.delete('/:scriptId/files/:fileId', authMiddleware, async (c) => {
       c.env,
       scriptMutationTags({
         id: scriptId,
+        slug: script.slug,
         subject_id: script.subject_id,
         author_id: script.author_id,
         study_id: script.study_id,
@@ -742,12 +743,13 @@ scripts.post(
     // be derived from it in the same insert: the suffix is what makes two
     // identically titled scripts distinct, and the slug is never rewritten.
     const scriptId = crypto.randomUUID()
+    const scriptSlug = buildScriptSlug(portableTextToPlainText(title), scriptId)
 
     const { data, error } = await supabase
       .from('scripts')
       .insert({
         id: scriptId,
-        slug: buildScriptSlug(portableTextToPlainText(title), scriptId),
+        slug: scriptSlug,
         title,
         description,
         subject_id: subjectId,
@@ -850,6 +852,7 @@ scripts.post(
       c.env,
       scriptMutationTags({
         id: data.id,
+        slug: scriptSlug,
         subject_id: subjectId,
         author_id: user.id,
         study_id: subject.study_id,
@@ -919,7 +922,7 @@ scripts.post(
     const [{ data: script }, { data: profile }] = await Promise.all([
       supabase
         .from('scripts')
-        .select('author_id, subject_id, study_id')
+        .select('author_id, slug, subject_id, study_id')
         .eq('id', scriptId)
         .single(),
       supabase.from('profiles').select('role').eq('id', user.id).single(),
@@ -1009,6 +1012,7 @@ scripts.post(
       c.env,
       scriptMutationTags({
         id: scriptId,
+        slug: script.slug,
         subject_id: script.subject_id,
         author_id: script.author_id,
         study_id: script.study_id,
@@ -1168,7 +1172,7 @@ scripts.delete('/:id', authMiddleware, async (c) => {
   const [{ data: script }, { data: profile }] = await Promise.all([
     supabase
       .from('scripts')
-      .select('author_id, subject_id, title, study_id')
+      .select('author_id, slug, subject_id, title, study_id')
       .eq('id', scriptId)
       .single(),
     supabase.from('profiles').select('role').eq('id', user.id).single(),
@@ -1217,6 +1221,7 @@ scripts.delete('/:id', authMiddleware, async (c) => {
       c.env,
       scriptMutationTags({
         id: scriptId,
+        slug: script.slug,
         subject_id: script.subject_id,
         author_id: script.author_id,
         study_id: script.study_id,
@@ -1290,7 +1295,7 @@ scripts.post('/:id/download', async (c) => {
 
   const { data: script } = await supabase
     .from('scripts')
-    .select('author_id, subject_id, study_id')
+    .select('author_id, slug, subject_id, study_id')
     .eq('id', scriptId)
     .single()
 
@@ -1309,6 +1314,7 @@ scripts.post('/:id/download', async (c) => {
 
   const countedScript = {
     id: scriptId,
+    slug: script.slug,
     subject_id: script.subject_id,
     author_id: script.author_id,
   }
