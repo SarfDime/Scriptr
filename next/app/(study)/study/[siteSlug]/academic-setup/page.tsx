@@ -65,6 +65,7 @@ export default async function AcademicSetupPage({
     >
       {site.dbId ? (
         <AcademicSetupForm
+          siteSlug={siteSlug}
           studySanityId={site._id}
           studyId={site.dbId}
           studyName={site.name}

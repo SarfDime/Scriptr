@@ -17,6 +17,14 @@ A study's host is `<siteSlug>.<host of NEXT_PUBLIC_SITE_URL>`
 `http://lbe.localhost:3000`. There is no second variable to forget and no way
 for a study host to disagree with the catalog's origin.
 
+In development the host is **not** used: a localhost origin serves the study at
+`/study/<handle>` (its address, links, canonicals and sitemap all stay
+path-based), because `*.localhost` is a different origin — the dev session cookie
+would not follow it and anything that does not special-case `localhost` cannot
+reach it. `NEXT_PUBLIC_STUDY_HOSTS=true` opts back in to exercise hosts locally;
+production never sets it, and `next.config.ts` registers no host rules when the
+feature is off.
+
 The subdomain label **is** the `siteSlug`. There is no host table, no per-study
 routing config and no Sanity read in front of the app: an unknown label rewrites
 to a handle that `getStudySiteOrNotFound` already 404s. A reserved label
@@ -78,10 +86,6 @@ Two shapes exist and they are not interchangeable:
   `getAcademicPath` returns one for `study`, `subject` and `script`, so catalog
   cards, `NavStudies`, `StudyPicker`, search, profile links and the calendar's
   subject links all name the study's host.
-* **Site-relative path** — what a page rendered *by* a study site links to:
-  `studySiteHomePath` (`/`), `studySiteFeedPath` (`/scripts`),
-  `studySiteCalendarPath`, `studySiteSetupPath`. Pointing those at
-  `/study/<label>/…` would still work, but every click would pay a redirect.
 * **Catalog address** — a link a study page renders to something the study does
   not own: `/admin`, `/user`, `/auth`, `/start`, a professor, a university. It
   has to be absolute too (`catalogUrl`, or `catalogUrl(getAcademicPath(…))` for
@@ -90,15 +94,12 @@ Two shapes exist and they are not interchangeable:
   blocks that RSC fetch — "Cross-Origin Request Blocked … Status code: 307",
   then a hard reload.
 
-Two exceptions are accepted rather than fixed:
-
-* `getScriptSitePath` (`shared/utils/site-paths.ts`) stays a `/study/<label>/…`
-  path because the API mints notification and admin hrefs with it, from a
-  context that is not a study site.
-* A script card links through `getAcademicPath({ type: 'script' })` — the
-  absolute address — and is also rendered on the catalog profile page, where it
-  must name the study. The cost is one same-origin `308` per click from inside a
-  study.
+One shape is exempt on purpose: `getScriptSitePath`
+(`shared/utils/site-paths.ts`) stays a `/study/<label>/…` path, because the API
+mints notification and admin hrefs with it from a context that is not a study
+site. Every place the web app renders one as a link passes it through
+`studyUrlFromPath` first (`next/lib/study-origin.ts`), so the address is what
+the browser sees.
 
 ## Canonicals: one address per study
 
@@ -203,7 +204,9 @@ automated** — it is the three steps above. Recorded in
   looks unset on `lbe.scriptr.uk` and is prompted once. Accepted, not fixed.
 * **A preview deployment cannot exercise a study host.** Its
   `NEXT_PUBLIC_SITE_URL` is a `*.vercel.app` alias, so the patterns built from it
-  target that alias. Test on `http://lbe.localhost:<port>` instead.
+  target that alias. Locally, set `NEXT_PUBLIC_STUDY_HOSTS=true` and use
+  `http://lbe.localhost:<port>`; leave it unset and a study stays at
+  `/study/<handle>`, which is what development uses.
 * **A study rename breaks its hostname.** `siteSlug` is immutable once the study
   is in the database; renaming now needs a hostname redirect as well as a path
   redirect.

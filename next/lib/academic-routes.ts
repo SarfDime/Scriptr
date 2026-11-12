@@ -70,19 +70,6 @@ export const getStudyFeedPath = (
   return site ? `${getStudySiteUrl(site)}/scripts` : '/'
 }
 
-/**
- * A page path inside a study's own site, for links rendered *by* that site:
- * `lbe.scriptr.uk/scripts` is also `/scripts` in the markup.
- *
- * Anything rendered outside the study tree must use `getStudySiteUrl` /
- * `getStudyFeedPath` instead — a bare `/scripts` there would point at the
- * current site rather than at the study.
- */
-export const studySiteHomePath = '/'
-export const studySiteFeedPath = '/scripts'
-export const studySiteCalendarPath = '/calendar'
-export const studySiteSetupPath = '/academic-setup'
-
 const facultyPath = (input: {
   universitySlug: string
   facultySlug: string

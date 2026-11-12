@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { MainLayout } from '@/components/layout/PageLayout'
-import { studySiteCalendarPath } from '@/lib/academic-routes'
+import { getStudySiteUrl } from '@/lib/academic-routes'
 import {
   getCalendarAlertEvents,
   getCalendarAlertSubjects,
@@ -39,7 +39,7 @@ export default async function StudySiteLayout({
       calendarAlert={{
         events: calendarAlertEvents,
         subjects: calendarAlertSubjects,
-        calendarHref: studySiteCalendarPath,
+        calendarHref: `${getStudySiteUrl(siteSlug)}/calendar`,
       }}
     >
       {children}

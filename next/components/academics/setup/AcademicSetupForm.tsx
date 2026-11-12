@@ -8,7 +8,7 @@ import { Button } from '@/components/common/Button'
 import { OnboardingSubjectsStep } from '@/components/onboarding/OnboardingSubjectsStep'
 import { Text } from '@/components/typography/Text'
 import { useSubjectCompletion } from '@/hooks/onboarding/useSubjectCompletion'
-import { studySiteFeedPath } from '@/lib/academic-routes'
+import { getStudyFeedPath } from '@/lib/academic-routes'
 import { addProfileStudy, setProfileSubjectStatus } from '@/lib/api/profile-api'
 import {
   EMPTY_STUDY_SETUP,
@@ -30,6 +30,8 @@ export type AcademicSetupSubject = {
 }
 
 export type AcademicSetupFormProps = {
+  /** The study's handle, for the page it hands the reader back to. */
+  siteSlug: string
   /** The study document's id, for the picker's subject shape. */
   studySanityId: string
   /** The study's database id: the key for both the account row and the browser record. */
@@ -64,6 +66,7 @@ const groupByYear = (
  * writes the same record's dismissal, which is what makes it per study.
  */
 export const AcademicSetupForm = ({
+  siteSlug,
   studySanityId,
   studyId,
   subjects,
@@ -116,7 +119,7 @@ export const AcademicSetupForm = ({
   )
 
   // Setup exists to shape the feed, so it hands the reader to the feed.
-  const studyPath = studySiteFeedPath
+  const studyPath = getStudyFeedPath(siteSlug)
   const isSignedIn = session.status === 'authenticated'
 
   const dbSubjectIds = completedSubjectIds.flatMap((sanityId) => {

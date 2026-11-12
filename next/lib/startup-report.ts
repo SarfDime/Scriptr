@@ -52,6 +52,12 @@ const ENV_REQUIREMENTS: Array<EnvVarRequirement> = [
     purpose: 'the app assumes `development`',
   },
   {
+    name: 'NEXT_PUBLIC_STUDY_HOSTS',
+    required: false,
+    purpose:
+      'a localhost origin serves studies at `/study/<handle>`; set it to `true` to exercise study hosts locally',
+  },
+  {
     name: 'SITEMAP_SECRET',
     required: false,
     purpose: '/sitemap.xml omits every script URL',

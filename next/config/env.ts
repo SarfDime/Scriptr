@@ -30,6 +30,15 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? ''
 // and canonical is derived from. Inlined at build time.
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? ''
 
+// Whether a study is served from its own hostname here. A localhost origin is
+// path-based (`localhost:3000/study/lbe`): `*.localhost` does resolve in a
+// browser, but it is a different origin, so the dev session cookie does not
+// follow and anything that does not special-case `localhost` cannot reach it.
+// `NEXT_PUBLIC_STUDY_HOSTS=true` opts back in to exercise hosts locally.
+const STUDY_HOSTS = process.env.NEXT_PUBLIC_STUDY_HOSTS
+  ? process.env.NEXT_PUBLIC_STUDY_HOSTS === 'true'
+  : !/^https?:\/\/(?:[a-z0-9-]+\.)?localhost(?::\d+)?$/i.test(SITE_URL)
+
 // `SITEMAP_SECRET` is deliberately not read here: this module is imported by
 // client code. It lives in `lib/api/sitemap-api.ts` (`server-only`).
 
@@ -42,4 +51,5 @@ export {
   isProd,
   isStaging,
   SITE_URL,
+  STUDY_HOSTS,
 }

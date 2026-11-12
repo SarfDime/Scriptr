@@ -1,4 +1,4 @@
-import { SITE_URL } from '@/config/env'
+import { SITE_URL, STUDY_HOSTS } from '@/config/env'
 
 /**
  * A study's own hostname, derived from the site origin.
@@ -26,11 +26,12 @@ const toUrl = (): URL | null => {
   }
 }
 
-/** The apex host studies hang off, without a `www.` prefix (`scriptr.uk`, or
- * `localhost:3000` in development). Empty when the site origin is unusable. */
+/** The apex host studies hang off, without a `www.` prefix (`scriptr.uk`).
+ * Empty when study hosts are off — a localhost origin by default — or when the
+ * site origin is unusable, and every caller then falls back to the catalog path. */
 export const studySiteHost = (): string => {
   const url = toUrl()
-  return url ? url.host.replace(/^www\./, '') : ''
+  return url && STUDY_HOSTS ? url.host.replace(/^www\./, '') : ''
 }
 
 /**
@@ -45,7 +46,8 @@ export const studySiteHost = (): string => {
  */
 export const catalogUrl = (path: string): string => {
   const url = toUrl()
-  return url ? `${url.protocol}//${studySiteHost()}${path}` : path
+  const host = studySiteHost()
+  return url && host ? `${url.protocol}//${host}${path}` : path
 }
 
 /** `/study/<handle>` and anything under it. */
@@ -76,7 +78,8 @@ export const studySiteOrigin = (
 ): string => {
   const slug = cleanSiteSlug(siteSlug)
   const url = toUrl()
-  if (!slug || !url) return ''
+  const host = studySiteHost()
+  if (!slug || !url || !host) return ''
 
-  return `${url.protocol}//${slug}.${studySiteHost()}`
+  return `${url.protocol}//${slug}.${host}`
 }

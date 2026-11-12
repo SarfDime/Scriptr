@@ -39,6 +39,16 @@ const SITE_HOST = siteUrl.hostname.replace(/^www\./, '')
 const SITE_HOST_WITH_PORT = siteUrl.host.replace(/^www\./, '')
 const SITE_ORIGIN = `${siteUrl.protocol}//${SITE_HOST_WITH_PORT}`
 
+/**
+ * Whether a study is served from its own hostname here. A localhost origin stays
+ * path-based, or the dev session cookie does not follow `lbe.localhost` and
+ * tooling that does not special-case `localhost` cannot reach it. Mirrors
+ * `STUDY_HOSTS` in `next/config/env.ts`; `NEXT_PUBLIC_STUDY_HOSTS=true` opts in.
+ */
+const STUDY_HOSTS = process.env.NEXT_PUBLIC_STUDY_HOSTS
+  ? process.env.NEXT_PUBLIC_STUDY_HOSTS === 'true'
+  : !/^https?:\/\/(?:[a-z0-9-]+\.)?localhost(?::\d+)?$/i.test(SITE_URL)
+
 /** Subdomains the app itself serves; a study handle can never be one. */
 const RESERVED_LABELS = [
   'www',
@@ -131,6 +141,8 @@ const nextConfig = {
    * destination's `:label` is filled from the host pattern's named group.
    */
   async redirects() {
+    if (!STUDY_HOSTS) return []
+
     return [
       {
         source: '/study/:label/:path*',
@@ -169,6 +181,10 @@ const nextConfig = {
   /** A study host's own paths, served by the study tree without changing the
    * URL the reader sees. */
   async rewrites() {
+    if (!STUDY_HOSTS) {
+      return { beforeFiles: [], afterFiles: [], fallback: [] }
+    }
+
     return {
       beforeFiles: [
         {

@@ -10,11 +10,7 @@ import { NextLink } from '@/components/common/NextLink'
 import { PageLayout } from '@/components/layout/PageLayout'
 import { Divider } from '@/components/ui/Divider'
 import { createAcademicMetadata } from '@/lib/academic-detail-page'
-import {
-  getStudyFeedPath,
-  studySiteFeedPath,
-  studySiteHomePath,
-} from '@/lib/academic-routes'
+import { getStudyFeedPath, getStudySiteUrl } from '@/lib/academic-routes'
 import { getSession } from '@/lib/api/auth-api'
 import { getRequestCookieHeader } from '@/lib/api/next-api'
 import { getTopScripts, getTopScriptsForSubjects } from '@/lib/api/scripts-api'
@@ -113,8 +109,8 @@ export default async function StudyScriptsPage({
     : await getTopScripts(undefined, studyId)
   const scripts = toScriptSummaryDetails(feedScripts ?? [])
 
-  const feedPath = studySiteFeedPath
-  const overviewPath = studySiteHomePath
+  const feedPath = getStudyFeedPath(siteSlug)
+  const overviewPath = getStudySiteUrl(siteSlug)
 
   return (
     <PageLayout
@@ -128,7 +124,7 @@ export default async function StudyScriptsPage({
         ),
       }}
     >
-      {site.dbId && <StudySetupGate studyId={site.dbId} />}
+      {site.dbId && <StudySetupGate siteSlug={siteSlug} studyId={site.dbId} />}
 
       <Divider />
       <Box
