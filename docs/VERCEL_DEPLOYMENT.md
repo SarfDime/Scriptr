@@ -83,7 +83,9 @@ Use the variables from [`next/.env.example`](../next/.env.example). In
 Production:
 
 - `NEXT_PUBLIC_API_URL` must be `https://api.scriptr.uk`.
-- `NEXT_PUBLIC_SITE_URL` must be `https://scriptr.uk`.
+- `NEXT_PUBLIC_SITE_URL` must be `https://scriptr.uk`. It is also the base every
+  study hostname is derived from (`<siteSlug>.scriptr.uk`), so it decides each
+  study's address and canonical — see [Study hostnames](#study-hostnames).
 - `NEXT_TELEMETRY_DISABLED=1` disables Next.js telemetry during builds.
 - `REVALIDATE_SECRET` must equal the API's `REVALIDATE_SECRET`. It is a signing
   key, not a header value: the API sends `x-revalidate-timestamp` +
@@ -96,6 +98,27 @@ Production:
   wire and belongs in the webhook header. Without it
   `POST /api/sanity/revalidate` answers `503`, and a mismatch answers `401` —
   either way an editorial publish only reaches readers on the next deploy.
+
+### Study hostnames
+
+A study is served from its own hostname (`lbe.scriptr.uk`) by **one deployment
+and one build**: `next/next.config.ts` rewrites that host's paths onto the study
+tree and redirects the catalog path (`scriptr.uk/study/lbe/*`) to it. Nothing is
+built separately for a study.
+
+How the mapping works, and the three steps to attach another host (Vercel
+domain → proxied `CNAME` at Cloudflare → certificate), live in
+[`ARCHITECTURE-STUDY-DOMAINS.md`](ARCHITECTURE-STUDY-DOMAINS.md). Two things
+belong here because they are deployment values:
+
+- `COOKIE_DOMAIN=.scriptr.uk` and `CORS_ORIGINS=*.scriptr.uk` (both already
+  required above) are what keep the browser's session and calls working when the
+  reader moves between the apex and a study host: the browser loads
+  `https://lbe.scriptr.uk` itself, and only Vercel sees which host it was.
+- A **preview deployment** cannot exercise a study host. Its
+  `NEXT_PUBLIC_SITE_URL` is a `*.vercel.app` alias, so the patterns
+  `next.config.ts` builds from it target that alias. Test on
+  `http://lbe.localhost:3000` locally instead.
 
 ### `scriptr-api`
 

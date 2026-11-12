@@ -251,7 +251,7 @@ auth.post('/register', async (c) => {
 
   // The academic profile is no longer part of registration: it is per study,
   // written once the account exists through the study-scoped endpoints (see
-  // `PLAN-STUDY-SCOPING.md`, Phase 5).
+  // `docs/ARCHITECTURE-USERS-AUTH.md`).
   if (data.user?.id) {
     try {
       await ensureProfile(

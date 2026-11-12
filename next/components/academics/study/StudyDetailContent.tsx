@@ -5,7 +5,7 @@ import { SubjectsExplorer } from '@/components/academics/subject/SubjectsExplore
 import { BackLink } from '@/components/common/BackLink'
 import { NextLink } from '@/components/common/NextLink'
 import { PageLayout } from '@/components/layout/PageLayout'
-import { getAcademicPath, getStudyFeedPath } from '@/lib/academic-routes'
+import { getAcademicPath, studySiteFeedPath } from '@/lib/academic-routes'
 import type { StudyDetail } from '@/types/academics/study.types'
 
 export type StudyDetailContentProps = {
@@ -32,7 +32,7 @@ export const StudyDetailContent = ({
         actions: (
           <>
             <NextLink
-              href={getStudyFeedPath(study.siteSlug)}
+              href={studySiteFeedPath}
               className='button button-sm solid'
             >
               {UI_STRINGS.scripts.browseAll}

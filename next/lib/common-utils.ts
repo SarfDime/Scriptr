@@ -12,6 +12,7 @@ import { toPlainText } from 'next-sanity'
 import { twMerge } from 'tailwind-merge'
 import type { EntityCardStat } from '@/components/common/EntityCard'
 import { isProd } from '@/config/env'
+import { studySiteHost } from '@/lib/study-origin'
 import { client } from '@/sanity/lib/client'
 import type { PersonSummary } from '@/types/components/Person.types'
 import type { ComponentPlacement } from '../types/component.types'
@@ -238,19 +239,42 @@ export const convertDateToClientLocale = (date: string) => {
 }
 
 /**
- * Checks if a given link is an external or mailto link
+ * Checks if a given link leaves the Scriptr sites. An absolute URL counts as
+ * external only when its host is neither the catalog nor one of the studies:
+ * every academic page inside a study is addressed by its own host, and those
+ * are still ours — opening them in a new tab with an external-link icon would
+ * be wrong.
  */
 function externalLink(link: string) {
-  const isExternal =
-    link?.startsWith('http://') ||
-    link?.startsWith('https://') ||
-    link?.includes('tel:') ||
-    link?.startsWith('mailto:')
-  return {
-    isExternal,
-    attributes: isExternal
-      ? { target: '_blank', rel: 'nofollow noopener noreferrer' }
-      : null,
+  if (link?.includes('tel:') || link?.startsWith('mailto:')) {
+    return { isExternal: true, attributes: externalAttributes }
+  }
+
+  if (link?.startsWith('http://') || link?.startsWith('https://')) {
+    return isOurAddress(link)
+      ? { isExternal: false, attributes: null }
+      : { isExternal: true, attributes: externalAttributes }
+  }
+
+  return { isExternal: false, attributes: null }
+}
+
+const externalAttributes = {
+  target: '_blank',
+  rel: 'nofollow noopener noreferrer',
+}
+
+/** `<study>.<site host>` or the site host itself — the hosts this app serves. */
+function isOurAddress(link: string): boolean {
+  const siteHost = studySiteHost()
+  if (!siteHost) return false
+
+  try {
+    const { host } = new URL(link)
+    const candidate = host.replace(/^www\./, '')
+    return candidate === siteHost || candidate.endsWith(`.${siteHost}`)
+  } catch {
+    return false
   }
 }
 

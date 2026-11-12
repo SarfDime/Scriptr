@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   getScriptSitePath,
+  getSiteSlugFromHost,
   getSiteSlugFromPath,
   getStudySitePath,
 } from './site-paths'
@@ -32,4 +33,20 @@ test('the study a path belongs to is its first segment after /study', () => {
   assert.equal(getSiteSlugFromPath('/user'), null)
   assert.equal(getSiteSlugFromPath('/study'), null)
   assert.equal(getSiteSlugFromPath('/study/'), null)
+})
+
+test('the study a host serves is its single label under the catalog host', () => {
+  assert.equal(getSiteSlugFromHost('lbe.scriptr.uk', 'scriptr.uk'), 'lbe')
+  assert.equal(getSiteSlugFromHost('LBE.scriptr.uk', 'scriptr.uk'), 'lbe')
+  assert.equal(
+    getSiteSlugFromHost('lbe.localhost:3000', 'localhost:3000'),
+    'lbe'
+  )
+  assert.equal(getSiteSlugFromHost('scriptr.uk', 'scriptr.uk'), null)
+  assert.equal(getSiteSlugFromHost('www.scriptr.uk', 'scriptr.uk'), null)
+  assert.equal(getSiteSlugFromHost('a.b.scriptr.uk', 'scriptr.uk'), null)
+  assert.equal(getSiteSlugFromHost('notthere.example', 'scriptr.uk'), null)
+  assert.equal(getSiteSlugFromHost('evilscriptr.uk', 'scriptr.uk'), null)
+  assert.equal(getSiteSlugFromHost('', 'scriptr.uk'), null)
+  assert.equal(getSiteSlugFromHost('lbe.scriptr.uk', ''), null)
 })

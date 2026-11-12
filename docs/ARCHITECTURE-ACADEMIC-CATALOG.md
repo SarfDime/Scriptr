@@ -9,6 +9,8 @@
   - `…/calendar`, `…/academic-setup`, `…/user/[username]`
   - `/study/[siteSlug]/subject/[subjectSlug]`
 
+  A study is **its own site**, served at `<siteSlug>.<NEXT_PUBLIC_SITE_URL host>` — `lbe.scriptr.uk` — so the paths above are that site's paths and `/study/[siteSlug]/…` is only the rewrite target the host maps onto (the catalog path still answers, with a `308` to the study's own host). The hostname is the address: links, canonicals and each study's own sitemap use it, while the catalog only lists the levels above it. One deployment serves both hosts; see [`ARCHITECTURE-STUDY-DOMAINS.md`](ARCHITECTURE-STUDY-DOMAINS.md).
+
   Slugs only need to be unique among siblings; the path disambiguates. A study's `siteSlug` is globally unique because it is the first segment of its own site. The old nested `/university/…/faculty/…/study/[studySlug]` and its subject sibling are gone: every synced study has a handle, the Studio requires one, and the redirectors were removed once nothing minted those URLs. **Professors stay flat at `/professor/[professorSlug]`** since they belong to many faculties, studies, and subjects. Each level's GROQ query filters on its ancestor chain.
 * **Sanity ↔ DB sync (tested, working):**
   1. Author the entity in Sanity (edits allowed before a DB row exists).

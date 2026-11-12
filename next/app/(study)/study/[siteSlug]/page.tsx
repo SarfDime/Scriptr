@@ -4,7 +4,7 @@ import {
   createAcademicMetadata,
   fetchAcademicDetailOrNotFound,
 } from '@/lib/academic-detail-page'
-import { getStudyPath } from '@/lib/academic-routes'
+import { getStudySiteUrl } from '@/lib/academic-routes'
 import { ACADEMIC_PAGE_TAGS } from '@/lib/sanity-tags'
 import { getStudySite, getStudySiteOrNotFound } from '@/lib/study-site'
 import { studyDetailQuery } from '@/sanity/queries/academics/study.queries'
@@ -36,7 +36,7 @@ export const generateMetadata = createAcademicMetadata<
       studySlug: site.studySlug,
     }
   },
-  getPath: ({ siteSlug }) => getStudyPath(siteSlug),
+  getPath: ({ siteSlug }) => getStudySiteUrl(siteSlug),
   entityLabel: UI_STRINGS.academics.entity.study,
   fetchOriginPrefix: 'study-site',
   tags: ACADEMIC_PAGE_TAGS.study,

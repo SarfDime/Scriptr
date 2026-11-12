@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
-import { buildSitemapSection, type SitemapEntry } from '@/lib/sitemap-entries'
+import { buildSitemapSection } from '@/lib/sitemap-entries'
 import { hasSiteOrigin, listSitemapSections } from '@/lib/sitemap-sections'
+import { SITEMAP_CONTENT_TYPE, toSitemapUrlsetXml } from '@/lib/sitemap-xml'
 
 /**
- * One prerendered file per section (see `listSitemapSections`), served at
- * `/sitemap/<id>.xml`. A route handler rather than a `sitemap.ts` metadata
+ * One prerendered file per catalog section (see `listSitemapSections`), served
+ * at `/sitemap/<id>.xml`. A route handler rather than a `sitemap.ts` metadata
  * route because `/sitemap.xml` belongs to the index (`app/sitemap.xml`), and
  * Next refuses to serve both a route and a metadata file at one path.
  */
@@ -19,22 +20,6 @@ export const generateStaticParams = async (): Promise<
   (await listSitemapSections()).map((section) => ({
     section: `${section.id}${XML_SUFFIX}`,
   }))
-
-const escapeXml = (value: string): string =>
-  value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&apos;')
-
-const toEntryXml = (entry: SitemapEntry): string => {
-  const lastModified = entry.lastModified
-    ? `<lastmod>${new Date(entry.lastModified).toISOString()}</lastmod>`
-    : ''
-
-  return `  <url><loc>${escapeXml(entry.url)}</loc>${lastModified}</url>`
-}
 
 // biome-ignore lint/style/useNamingConvention: Next.js route handlers must be named GET/etc.
 export async function GET(
@@ -51,13 +36,7 @@ export async function GET(
     section.slice(0, -XML_SUFFIX.length)
   )
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${entries.map(toEntryXml).join('\n')}
-</urlset>
-`
-
-  return new NextResponse(xml, {
-    headers: { 'Content-Type': 'application/xml' },
+  return new NextResponse(toSitemapUrlsetXml(entries), {
+    headers: { 'Content-Type': SITEMAP_CONTENT_TYPE },
   })
 }

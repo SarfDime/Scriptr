@@ -25,6 +25,11 @@ const isDev =
 // Inlined at build time: redeploy after changing it.
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? ''
 
+// The catalog's public origin (e.g. https://scriptr.uk). A study is served at
+// `<siteSlug>.<this host>`, so this value is also the base every study hostname
+// and canonical is derived from. Inlined at build time.
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? ''
+
 // `SITEMAP_SECRET` is deliberately not read here: this module is imported by
 // client code. It lives in `lib/api/sitemap-api.ts` (`server-only`).
 
@@ -36,4 +41,5 @@ export {
   isDev,
   isProd,
   isStaging,
+  SITE_URL,
 }

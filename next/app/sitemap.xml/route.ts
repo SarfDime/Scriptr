@@ -1,13 +1,18 @@
 import { NextResponse } from 'next/server'
 import { hasSiteOrigin, listSitemapSections } from '@/lib/sitemap-sections'
+import { SITEMAP_CONTENT_TYPE, toSitemapIndexXml } from '@/lib/sitemap-xml'
 import { websiteDomain } from '@/sanity/env'
 
 /**
- * The index over the sections in `app/sitemap/[section]`; the protocol wants one
- * entry point a crawler can submit, so this lists each section. It owns
- * `/sitemap.xml` outright — the sections are route handlers rather than a
- * `sitemap.ts` metadata route because Next refuses to serve a route and a
+ * The catalog host's sitemap index. The protocol wants one entry point a
+ * crawler can submit, so this lists each section in `app/sitemap/[section]`.
+ * It owns `/sitemap.xml` outright — the sections are route handlers rather than
+ * a `sitemap.ts` metadata route because Next refuses to serve a route and a
  * metadata file at the same path.
+ *
+ * A study publishes its own index on its own host
+ * (`app/(study)/study/[siteSlug]/sitemap.xml`), and that host's `/sitemap.xml`
+ * never reaches this file.
  */
 export const dynamic = 'force-static'
 export const revalidate = false
@@ -19,20 +24,13 @@ export async function GET() {
   }
 
   const sections = await listSitemapSections()
-  const entries = sections
-    .map((section) => {
-      const loc = new URL(`/sitemap/${section.id}.xml`, websiteDomain)
-      return `  <sitemap><loc>${loc.toString()}</loc></sitemap>`
-    })
-    .join('\n')
-
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${entries}
-</sitemapindex>
-`
+  const xml = toSitemapIndexXml(
+    sections.map((section) =>
+      new URL(`/sitemap/${section.id}.xml`, websiteDomain).toString()
+    )
+  )
 
   return new NextResponse(xml, {
-    headers: { 'Content-Type': 'application/xml' },
+    headers: { 'Content-Type': SITEMAP_CONTENT_TYPE },
   })
 }

@@ -16,6 +16,7 @@ its own guide in `docs/`. Start with [Read First](#read-first), then open the
 
 * `docs/ARCHITECTURE.md` (how the system works) and `docs/PROGRESS.md` (outstanding work only — never propose something already listed there as done, and don't re-add finished features to it). Plus the target workspace's README before working in it.
 * `hono/src/routes/API_DOCUMENTATION.md` before touching a route: it records the real RLS/client model per table, which is not what the route file implies.
+* `docs/ARCHITECTURE-STUDY-DOMAINS.md` before touching how a study is addressed — a hostname, `next/next.config.ts` rewrites and redirects, a canonical, a sitemap, or anything that mints a study URL.
 * Where docs and code disagree, trust the code and flag the drift rather than working around it.
 
 ## Global Rules

@@ -4,7 +4,7 @@ What is left to do. The system as it stands is described in
 [`ARCHITECTURE.md`](ARCHITECTURE.md); this file only tracks work, so finished
 features are not repeated here.
 
-Last reconciled: 2026-11-11. Tags: **[bug]**, **[decision]** (needs a call
+Last reconciled: 2026-11-12. Tags: **[bug]**, **[decision]** (needs a call
 before anyone builds it), **[deferred]** (recorded so it is not rediscovered,
 not queued).
 
@@ -16,6 +16,18 @@ not queued).
 
 In roughly this order: the weekly note sync, the comment and doc cleanup, and
 the remaining work below by area.
+
+**Study hostnames are in use but attached by hand.** `lbe.scriptr.uk` serves
+the `lbe` study from the same build and deployment as the catalog; how that works
+is [`ARCHITECTURE-STUDY-DOMAINS.md`](ARCHITECTURE-STUDY-DOMAINS.md). Two things
+are still open:
+
+- **Attach a host per study is three manual steps** (`vercel domains add`, a
+  proxied `CNAME` at Cloudflare, then the certificate). Automate attaching on
+  handle assignment and detaching on delete, so a new study does not depend on
+  someone remembering.
+- **Each host's sitemap is submitted separately in Search Console.** One-time per
+  host, and currently only `lbe` exists.
 
 ## Features
 

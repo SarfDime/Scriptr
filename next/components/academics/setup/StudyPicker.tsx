@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { OnboardingSelectStep } from '@/components/onboarding/OnboardingSelectStep'
+import { getStudySiteUrl, studySiteSetupPath } from '@/lib/academic-routes'
 
 export type StudyPickerCatalog = NonNullable<StudyPickerQueryResult>
 
@@ -45,7 +46,11 @@ export const StudyPicker = ({ catalog }: { catalog: StudyPickerCatalog }) => {
 
   const enter = () => {
     if (!selectedStudy?.siteSlug) return
-    router.push(`/study/${selectedStudy.siteSlug}/academic-setup`)
+    // The setup page belongs to the study's own site, which the picker is
+    // not on: this has to be the study's address, not a path here.
+    router.push(
+      `${getStudySiteUrl(selectedStudy.siteSlug)}${studySiteSetupPath}`
+    )
   }
 
   if (catalog.studies.length === 0) {

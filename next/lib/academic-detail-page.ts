@@ -130,9 +130,10 @@ export const createAcademicMetadata = <
     params: TParams
   ) => Promise<Record<string, string> | null>
   /**
-   * The page's own site-relative path, built from the route params with
-   * `getAcademicPath`. It must equal the URL the route is served at, since it
-   * becomes the canonical and the Open Graph URL.
+   * The page's own address, built from the route params with `getAcademicPath`:
+   * a study's pages are absolute (they are served by the study's host), a
+   * catalog page is a path. It must equal the URL the route is served at, since
+   * it becomes the canonical and the Open Graph URL.
    */
   getPath: (params: TParams) => string
   entityLabel: string

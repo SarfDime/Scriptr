@@ -6,6 +6,7 @@ import { useCallback, useEffect, useSyncExternalStore } from 'react'
 import { Box } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
 import { Text } from '@/components/typography/Text'
+import { studySiteSetupPath } from '@/lib/academic-routes'
 import {
   EMPTY_STUDY_SETUP,
   readStudySetup,
@@ -27,13 +28,7 @@ const toSnapshot = (record: StudySetupRecord) =>
  * cannot answer the question, and reading the session here keeps the study pages
  * static instead of paying for a cookie read on every one of them.
  */
-export const StudySetupGate = ({
-  siteSlug,
-  studyId,
-}: {
-  siteSlug: string
-  studyId: string
-}) => {
+export const StudySetupGate = ({ studyId }: { studyId: string }) => {
   const router = useRouter()
   const { session } = useSession()
   const subscribe = useCallback(
@@ -51,7 +46,6 @@ export const StudySetupGate = ({
   const hasAccountProfile =
     isSignedIn && session.user.selected_study_ids.includes(studyId)
   const isReady = session.status !== 'loading'
-  const setupPath = `/study/${siteSlug}/academic-setup`
 
   const needsSetup =
     isReady &&
@@ -60,8 +54,8 @@ export const StudySetupGate = ({
     record.dismissedAt === null
 
   useEffect(() => {
-    if (needsSetup) router.replace(setupPath)
-  }, [needsSetup, router, setupPath])
+    if (needsSetup) router.replace(studySiteSetupPath)
+  }, [needsSetup, router])
 
   const showResume =
     isReady &&
@@ -81,7 +75,7 @@ export const StudySetupGate = ({
       <Text className='ui-caption'>
         {UI_STRINGS.onboarding.academicSetup.resumeBody}
       </Text>
-      <NextLink href={setupPath} className='button button-sm w-fit'>
+      <NextLink href={studySiteSetupPath} className='button button-sm w-fit'>
         {UI_STRINGS.onboarding.academicSetup.resume}
       </NextLink>
     </Box>

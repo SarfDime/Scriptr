@@ -4,7 +4,7 @@ import {
   createAcademicMetadata,
   fetchAcademicDetailOrNotFound,
 } from '@/lib/academic-detail-page'
-import { getStudyPath } from '@/lib/academic-routes'
+import { getStudySiteUrl, studySiteHomePath } from '@/lib/academic-routes'
 import { ACADEMIC_PAGE_TAGS } from '@/lib/sanity-tags'
 import { getStudySite, getStudySiteOrNotFound } from '@/lib/study-site'
 import { subjectDetailQuery } from '@/sanity/queries/academics/subject.queries'
@@ -33,7 +33,7 @@ export const generateMetadata = createAcademicMetadata<
     }
   },
   getPath: ({ siteSlug, subjectSlug }) =>
-    `${getStudyPath(siteSlug)}/subject/${subjectSlug}`,
+    `${getStudySiteUrl(siteSlug)}/subject/${subjectSlug}`,
   entityLabel: UI_STRINGS.academics.entity.subject,
   fetchOriginPrefix: 'subject-site',
   tags: ACADEMIC_PAGE_TAGS.subject,
@@ -66,7 +66,7 @@ export default async function SubjectSitePage({
   return (
     <SubjectDetailContent
       subject={subject}
-      studyPath={getStudyPath(siteSlug)}
+      studyPath={studySiteHomePath}
       fallback={site}
     />
   )

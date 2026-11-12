@@ -3,7 +3,7 @@
 import BookIcon from '@sanity/icons/Book'
 import EnterRight from '@sanity/icons/EnterRight'
 import { UI_STRINGS } from '@shared/config/strings'
-import { getStudyFeedPath, getStudyPath } from '@/lib/academic-routes'
+import { getStudyFeedPath, getStudySiteUrl } from '@/lib/academic-routes'
 import { useMyProfile } from '@/providers/ProfileProvider'
 import { IMAGE_SIZES } from '@/styles/style'
 import type { NavStudyLogos } from '@/types/components/Nav.types'
@@ -47,7 +47,7 @@ export const NavStudies = ({ studyLogos }: { studyLogos?: NavStudyLogos }) => {
         return (
           <Box key={study.id} className='ui-stack gap-0.5'>
             <NextLink
-              href={getStudyPath(study.site_slug)}
+              href={getStudySiteUrl(study.site_slug)}
               className='button ghost w-full justify-start gap-2 p-2'
             >
               {logo ? (

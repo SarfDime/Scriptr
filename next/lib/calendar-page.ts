@@ -11,7 +11,7 @@ import type {
   CalendarPageViewModel,
   CalendarWeek,
 } from '@/types/components/Calendar.types'
-import { getAcademicPath, getStudyPath } from './academic-routes'
+import { getAcademicPath, studySiteCalendarPath } from './academic-routes'
 import {
   addCalendarMonths,
   buildCalendarGrid,
@@ -38,10 +38,10 @@ export type CalendarSearchParams = Record<
 const single = (value: string | Array<string> | undefined) =>
   Array.isArray(value) ? undefined : value
 
-/** The study's calendar page, and the only calendar there is: a calendar
- * belongs to a study, so every navigation link keeps the site in the path. */
-const calendarHref = (siteSlug: string, view: CalendarView, dayKey: string) =>
-  `${getStudyPath(siteSlug)}/calendar?${CALENDAR_VIEW_PARAM}=${view}&${CALENDAR_DATE_PARAM}=${dayKey}`
+/** A calendar belongs to one study and is served by that study's own site, so
+ * every navigation link is a path on the current host. */
+const calendarHref = (view: CalendarView, dayKey: string) =>
+  `${studySiteCalendarPath}?${CALENDAR_VIEW_PARAM}=${view}&${CALENDAR_DATE_PARAM}=${dayKey}`
 
 /** A subject page exists only for a document synced to the database (`dbId`),
  * which is the same filter `subjectStaticParamsQuery` applies. */
@@ -152,7 +152,7 @@ export const loadCalendarPage = async (
     inPeriod: key.slice(0, 7) === anchorMonth,
     isToday: key === todayKey,
     events: byDay.get(key) ?? [],
-    weekHref: calendarHref(siteSlug, 'week', key),
+    weekHref: calendarHref('week', key),
   })
 
   // The notice is about the period on screen, not about the whole grid: a
@@ -193,22 +193,20 @@ export const loadCalendarPage = async (
       !dataRange || periodEnd < dataRange.from || periodStart > dataRange.to,
     links: {
       previous: calendarHref(
-        siteSlug,
         view,
         view === 'month'
           ? addCalendarMonths(anchorKey, -1)
           : shiftDayKey(anchorKey, -7)
       ),
       next: calendarHref(
-        siteSlug,
         view,
         view === 'month'
           ? addCalendarMonths(anchorKey, 1)
           : shiftDayKey(anchorKey, 7)
       ),
-      today: calendarHref(siteSlug, view, todayKey),
-      monthView: calendarHref(siteSlug, 'month', anchorKey),
-      weekView: calendarHref(siteSlug, 'week', anchorKey),
+      today: calendarHref(view, todayKey),
+      monthView: calendarHref('month', anchorKey),
+      weekView: calendarHref('week', anchorKey),
     },
   }
 }

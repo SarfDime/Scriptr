@@ -37,3 +37,7 @@ This describes the system as it currently stands, one file per area. Start here,
 ## 9. Calendar
 
 [Open](ARCHITECTURE-CALENDAR.md) — Sanity-only events, the timezone constant, the URL-encoded view, build-time alert data, client matching and per-browser dismissals.
+
+## 10. Study Domains
+
+[Open](ARCHITECTURE-STUDY-DOMAINS.md) — one build serving the catalog and every study host, the host-to-route rewrite, address versus path, per-host canonicals and sitemaps, attaching a hostname, and what was deliberately not done.

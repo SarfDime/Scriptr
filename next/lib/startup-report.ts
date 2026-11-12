@@ -19,7 +19,7 @@ const ENV_REQUIREMENTS: Array<EnvVarRequirement> = [
   {
     name: 'NEXT_PUBLIC_SITE_URL',
     required: true,
-    purpose: 'canonicals and /sitemap.xml have no origin',
+    purpose: 'canonicals, /sitemap.xml and every study hostname have no origin',
   },
   {
     name: 'NEXT_PUBLIC_SANITY_PROJECT_ID',
