@@ -10,6 +10,7 @@ import { Button } from '@/components/common/Button'
 import { NextLink } from '@/components/common/NextLink'
 import { Text } from '@/components/typography/Text'
 import { getDownloadReviewEvents } from '@/lib/api/download-review-api'
+import { studyUrlFromPath } from '@/lib/study-origin'
 
 /** Events are reviewed for bursts, so the list needs the time of day, unlike
  * the date-only formatter the admin cards use. */
@@ -126,10 +127,12 @@ export const DownloadReviewEvents = ({
               {' · '}
               {event.script_slug ? (
                 <NextLink
-                  href={getScriptSitePath({
-                    siteSlug: event.script_site_slug,
-                    slug: event.script_slug,
-                  })}
+                  href={studyUrlFromPath(
+                    getScriptSitePath({
+                      siteSlug: event.script_site_slug,
+                      slug: event.script_slug,
+                    })
+                  )}
                 >
                   {event.script_title || event.script_slug}
                 </NextLink>

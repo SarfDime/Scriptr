@@ -1,4 +1,5 @@
 import { cn, generateSlug } from '@/lib/common-utils'
+import { studyUrlFromPath } from '@/lib/study-origin'
 import { IMAGE_SIZES } from '@/styles/style'
 import type { NavItemType } from '@/types/components/Nav.types'
 import { Box } from '../common/Box'
@@ -7,7 +8,11 @@ import { NextLink } from '../common/NextLink'
 import { Text } from '../typography/Text'
 
 const NavItem = ({ stringTitle, icon, ...rest }: NavItemType) => {
-  const slug = generateSlug(rest)
+  // A menu item is editorial data: it may point anywhere. A `/study/<handle>`
+  // one has to be the study's own address, or the router prefetches it here,
+  // the study host answers with a cross-origin redirect, and the fetch is
+  // blocked.
+  const slug = studyUrlFromPath(generateSlug(rest))
   return (
     <NextLink
       href={slug}

@@ -207,7 +207,10 @@ building it. A branch can still be previewed on demand with the Vercel CLI
 (`vercel` from `hono/` or `next/`), which bypasses the allowlist. The
 project-level Ignored Build Step further limits automatic builds to commits
 whose subjects start with `feat:` or `fix:` — `docs:`, `chore:` and merge
-commits are skipped, so a docs-only push deploys nothing by design.
+commits are skipped, so a docs-only push deploys nothing by design. **A squash
+merge takes the PR title as the commit subject**, so the prefix has to be on the
+PR title too — "Address catalog pages absolutely" deploys nothing, and nothing
+says so beyond a deployment reported as *Canceled*.
 
 After changing production environment variables, redeploy both Vercel projects;
 `NEXT_PUBLIC_API_URL` is inlined at build time. Users need to sign in once again

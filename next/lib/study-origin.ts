@@ -48,6 +48,26 @@ export const catalogUrl = (path: string): string => {
   return url ? `${url.protocol}//${studySiteHost()}${path}` : path
 }
 
+/** `/study/<handle>` and anything under it. */
+const STUDY_PATH = /^\/study\/([^/?#]+)(.*)$/
+
+/**
+ * A catalog-minted study path — `/study/lbe/scripts/x`, what `getScriptSitePath`
+ * returns and what the API puts in a notification href — as the study's own
+ * address. Anything else, including a path carrying no handle, comes back
+ * unchanged.
+ *
+ * It matters as a link: the router prefetches a relative href, the study host
+ * answers with a cross-origin redirect, and the browser blocks that fetch.
+ */
+export const studyUrlFromPath = (href: string): string => {
+  const match = STUDY_PATH.exec(href ?? '')
+  if (!match) return href
+
+  const origin = studySiteOrigin(match[1])
+  return origin ? `${origin}${match[2] || '/'}` : href
+}
+
 /** `https://lbe.scriptr.uk`, or `http://lbe.localhost:3000` in development.
  * Empty when the site origin is unusable or the study has no handle, so callers
  * can fall back to the catalog path. */

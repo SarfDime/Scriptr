@@ -29,8 +29,10 @@ are still open:
 - **Each host's sitemap is submitted separately in Search Console.** One-time per
   host, and currently only `lbe` exists.
 - **A Sanity nav item that points at a catalog path** renders on the study host
-  rather than the catalog (the router's fetch cannot be redirected cross-origin).
-  Author absolute links in the Studio, or normalize them in `NavigationLinks`.
+  rather than the catalog (the router's fetch cannot be redirected cross-origin,
+  so the redirect skips `?_rsc=` requests). A `/study/<handle>` item is
+  normalized to the study's address in `NavigationLinks`; a catalog one still
+  needs an absolute address in the Studio to land on the apex.
 
 ## Features
 

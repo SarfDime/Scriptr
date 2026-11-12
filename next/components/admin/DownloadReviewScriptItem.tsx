@@ -9,6 +9,7 @@ import { Button } from '@/components/common/Button'
 import { NextLink } from '@/components/common/NextLink'
 import { Text } from '@/components/typography/Text'
 import { convertDateToClientLocale } from '@/lib/common-utils'
+import { studyUrlFromPath } from '@/lib/study-origin'
 import { DownloadReviewEvents } from './DownloadReviewEvents'
 
 /** One script in the review: its volume split between signed-in accounts and
@@ -30,10 +31,12 @@ export const DownloadReviewScriptItem = ({
         <Text className='ui-body-strong'>
           {script.slug ? (
             <NextLink
-              href={getScriptSitePath({
-                siteSlug: script.site_slug,
-                slug: script.slug,
-              })}
+              href={studyUrlFromPath(
+                getScriptSitePath({
+                  siteSlug: script.site_slug,
+                  slug: script.slug,
+                })
+              )}
             >
               {name}
             </NextLink>

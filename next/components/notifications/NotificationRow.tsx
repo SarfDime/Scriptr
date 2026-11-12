@@ -12,6 +12,7 @@ import { Button } from '@/components/common/Button'
 import { NextLink } from '@/components/common/NextLink'
 import { Text } from '@/components/typography/Text'
 import { cn } from '@/lib/common-utils'
+import { studyUrlFromPath } from '@/lib/study-origin'
 import { useNotifications } from '@/providers/notification/NotificationProvider'
 import {
   type AppNotification,
@@ -84,7 +85,7 @@ export const NotificationRow = ({
         </Text>
         {notification.action?.kind === 'link' && notification.action.href && (
           <NextLink
-            href={notification.action.href}
+            href={studyUrlFromPath(notification.action.href)}
             onClick={() => markRead(notification.id)}
             className={cn(
               'button button-sm w-fit',
