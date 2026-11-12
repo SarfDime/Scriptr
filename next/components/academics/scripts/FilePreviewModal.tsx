@@ -142,10 +142,12 @@ export function FilePreviewModal({
           setIsOpen(false)
         }}
       >
-        {/* One tree for both sizes, so toggling never remounts (reloads) the PDF. */}
+        {/* One tree for both sizes, so toggling never remounts (reloads) the PDF.
+         * `relative` gives the loading spinner its containing block, so it
+         * covers the preview and not the viewport. */}
         <Box
           className={cn(
-            'bg-background-200 p-4',
+            'relative bg-background-200 p-4',
             isFullscreen && 'flex min-h-0 flex-1 flex-col p-0'
           )}
         >

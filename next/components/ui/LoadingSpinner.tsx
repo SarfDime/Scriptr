@@ -12,7 +12,7 @@ export const LoadingSpinner = ({
   return (
     <Box
       className={cn(
-        'pointer-events-none absolute inset-0 z-50 flex items-center justify-center gap-1 bg-gray-400 opacity-100',
+        'pointer-events-none absolute inset-0 z-50 flex items-center justify-center gap-1 bg-background-200/85 opacity-100',
         rest?.className
       )}
       {...rest}

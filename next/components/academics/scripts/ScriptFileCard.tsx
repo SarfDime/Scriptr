@@ -82,12 +82,15 @@ export function ScriptFileCard({
             clipping here; each thumbnail variant rounds (and clips) itself.
             An inline preview is full-width and 20rem tall while stacked, then
             fills its half of the row once the card is wide enough, so it never
-            collapses to the iframe's default height. */}
+            collapses to the iframe's default height. `relative` is the loading
+            spinner's containing block while the file URL resolves — without it
+            that overlay's `inset-0` falls back to the viewport and paints a
+            sheet over the whole page. */}
         <Box
           className={cn(
             'shrink-0',
             showsInlinePreview
-              ? 'flex h-80 w-full flex-col @md:h-auto @md:w-1/2'
+              ? 'relative flex h-80 w-full flex-col @md:h-auto @md:w-1/2'
               : cn('h-44 w-full', isWide && '@md:h-48 @md:w-1/2 @md:max-w-80')
           )}
         >
