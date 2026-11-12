@@ -73,7 +73,6 @@ const STUDY_OWNED_PATHS = [
   '/subject/:path*',
   '/calendar',
   '/academic-setup',
-  '/sitemap.xml',
   '/sitemap/:path*',
   '/user/:username/:path*',
   '/user/:username',
@@ -165,6 +164,15 @@ const nextConfig = {
           source: '/',
           has: onStudyHost,
           destination: '/study/:label',
+        },
+        // The study's sitemap index lives at `sitemap/route.ts`, not
+        // `sitemap.xml/route.ts`: Next ignores `generateStaticParams` on a
+        // segment ending in a dot and prerenders it with `-` as the handle,
+        // which every study host would then be served.
+        {
+          source: '/sitemap.xml',
+          has: onStudyHost,
+          destination: '/study/:label/sitemap',
         },
         ...STUDY_OWNED_PATHS.map((source) => ({
           source,

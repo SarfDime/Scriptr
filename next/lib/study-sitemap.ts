@@ -1,8 +1,12 @@
 import { getScriptSitemapEntries } from '@/lib/api/sitemap-api'
 import { ACADEMIC_CATALOG_TAGS } from '@/lib/sanity-tags'
 import { studySiteOrigin } from '@/lib/study-origin'
+import { studyStaticParamsQuery } from '@/sanity/queries/academics/study.queries'
 import { subjectStaticParamsQuery } from '@/sanity/queries/academics/subject.queries'
-import type { SubjectRouteParams } from '@/types/academics/academics.types'
+import type {
+  StudyRouteParams,
+  SubjectRouteParams,
+} from '@/types/academics/academics.types'
 import { createAcademicStaticParams } from './academic-detail-page'
 import {
   MAX_URLS_PER_SITEMAP,
@@ -18,7 +22,30 @@ import type { SitemapEntry } from './sitemap-xml'
  * pages — one address per page is the point of giving a study a hostname.
  */
 
-/** The study's own pages, in one file: its overview, its feed and its subjects. */
+/**
+ * The studies that own a site, i.e. the hosts that publish a sitemap.
+ *
+ * Read at build time by `generateStaticParams`. It must not be left out: without
+ * it Next prerenders the route once with `-` as the parameter, and every study
+ * host is then served that placeholder's body — an empty 404.
+ */
+export const listStudySites = async (): Promise<Array<string>> => {
+  const studies = await createAcademicStaticParams<StudyRouteParams>(
+    studyStaticParamsQuery,
+    'sitemap-study-sites',
+    ACADEMIC_CATALOG_TAGS
+  )().catch(() => [])
+
+  return [
+    ...new Set(
+      (studies ?? []).flatMap((study) =>
+        study.siteSlug ? [study.siteSlug] : []
+      )
+    ),
+  ]
+}
+
+/** A study's own pages, in one file: its overview, its feed and its subjects. */
 const toStudyEntries = async (
   siteSlug: string,
   toUrl: (path: string) => string

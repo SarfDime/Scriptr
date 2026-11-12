@@ -111,12 +111,21 @@ faculties and professors — never a study URL, since a study has a canonical ho
 of its own.
 
 A study publishes its own index and sections under the study tree
-(`next/app/(study)/study/[siteSlug]/sitemap.xml/route.ts` and
+(`next/app/(study)/study/[siteSlug]/sitemap/route.ts` and
 `…/sitemap/[section]/route.ts`, built in `next/lib/study-sitemap.ts`): a `study`
 section with its root, its feed and its subjects, then `scripts-<n>` pages of its
-scripts. Because the host rewrite sends `/sitemap.xml` to that route, each host
-publishes its own URLs without reading a host header — both stay
-`revalidate = false`, and nothing is prerendered per study.
+scripts. The host rewrite sends `/sitemap.xml` to the first of those, so each
+host publishes its own URLs without reading a host header.
+
+**Both are prerendered per study at build** — `generateStaticParams` from
+`listStudySites()` — and held until the next deploy, like the catalog's. That is
+not optional. Next ignores `generateStaticParams` on a route segment that ends in
+a dot, so `/study/[siteSlug]/sitemap.xml` was prerendered once with `-` as the
+handle and every study host was served that placeholder's empty body: a 404 on
+the live host, while the same request worked under `next start`. That is why the
+index is `sitemap/route.ts` and the host rewrite maps `/sitemap.xml` onto it.
+The consequence to remember: a new study's sitemap appears after the next
+deploy, not the moment its host is attached.
 
 The script list comes from `GET /api/sitemap/scripts` (behind `x-sitemap-secret`,
 limited to 10 reads a day) and is filtered by `study_site_slug`. Submit each
@@ -193,6 +202,13 @@ automated** — it is the three steps above. Recorded in
   redirect.
 * **`robots.txt` is Vercel's**, not ours, so a per-host one needs that injection
   turned off first (see `PROGRESS.md`).
+* **A study's sitemap is built, not rendered.** It is prerendered from the study
+  list at build, so a study added after a deploy has a working site and no
+  sitemap until the next one.
+* **A route segment ending in a dot cannot be prerendered per parameter.** Next
+  silently ignores `generateStaticParams` there and substitutes `-`, and the
+  placeholder's body is what every host is served. Verified on `/sitemap.xml`
+  under `study/[siteSlug]`; the workaround is a dot-free route plus a rewrite.
 * **A Sanity nav item that points at `/study/lbe`** costs one redirect to the
   study host. Its destination is data, so it is corrected in the Studio, not in
   the app.

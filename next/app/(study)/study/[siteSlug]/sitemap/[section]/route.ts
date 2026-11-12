@@ -2,7 +2,11 @@ import { NextResponse } from 'next/server'
 import { SITEMAP_CONTENT_TYPE, toSitemapUrlsetXml } from '@/lib/sitemap-xml'
 import { studySiteOrigin } from '@/lib/study-origin'
 import { getStudySiteOrNotFound } from '@/lib/study-site'
-import { buildStudySitemapSection } from '@/lib/study-sitemap'
+import {
+  buildStudySitemapSection,
+  listStudySitemapSections,
+  listStudySites,
+} from '@/lib/study-sitemap'
 
 /**
  * One file of a study's sitemap: its pages, or one page of its scripts. The
@@ -12,6 +16,22 @@ import { buildStudySitemapSection } from '@/lib/study-sitemap'
 export const revalidate = false
 
 const XML_SUFFIX = '.xml'
+
+/** Every study's sections, so each file is built once instead of asking the
+ * sitemap API on every crawl. */
+export const generateStaticParams = async (): Promise<
+  Array<{ siteSlug: string; section: string }>
+> => {
+  const params: Array<{ siteSlug: string; section: string }> = []
+
+  for (const siteSlug of await listStudySites()) {
+    for (const section of await listStudySitemapSections(siteSlug)) {
+      params.push({ siteSlug, section: `${section.id}${XML_SUFFIX}` })
+    }
+  }
+
+  return params
+}
 
 // biome-ignore lint/style/useNamingConvention: Next.js route handlers must be named GET/etc.
 export async function GET(
