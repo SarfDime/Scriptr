@@ -82,7 +82,7 @@ const PROFILE_ACHIEVEMENTS_SELECT =
  * service-role client needed here.
  */
 const PROFILE_ACADEMIC_SELECT =
-  'subjects:profile_subjects(subject_id, status, updated_at), selected_faculties:profile_faculties(faculty:faculties(*, university:universities(id, name))), selected_studies:profile_studies(study:studies(*, faculty:faculties(*, university:universities(id, name))))'
+  'subjects:profile_subjects(subject_id, status, updated_at), selected_faculties:profile_faculties(faculty:faculties(*, university:universities(id, name))), selected_studies:profile_studies(created_at, study:studies(*, faculty:faculties(*, university:universities(id, name))))'
 
 /**
  * The projection used for both "scripts this profile authored" and

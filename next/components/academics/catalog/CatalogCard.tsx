@@ -1,18 +1,23 @@
 import { Box } from '@/components/common/Box'
+import { NextImage } from '@/components/common/NextImage'
 import { Text } from '@/components/typography/Text'
 import { Title } from '@/components/typography/Title'
+import { Badge } from '@/components/ui/Badge'
 import { ClickableCard } from '@/components/ui/Card'
+import { Divider } from '@/components/ui/Divider'
+import { cn } from '@/lib/common-utils'
+import { IMAGE_SIZES } from '@/styles/style'
 import type { CatalogCardProps } from '@/types/academics/catalog.types'
 
 /**
  * A compact version of the entity page's overview card: the picture fills the
  * header band, and the body carries the logo, the name, a counts line and the
  * entity's place in the catalog instead of a description and contact actions.
- * `h-72 w-80` is fixed rather than content-sized so every card in a section is
- * the same size; the lines that can run long clamp instead of growing the card.
+ * Width comes from the caller's grid; `h-72` is fixed so the cards in a column
+ * stay even, and the lines that can run long clamp instead of growing the card.
  *
- * Both images are decorative for assistive tech: the body already names the
- * entity, so repeating it through the image alts would only lengthen the link's
+ * The images are decorative for assistive tech: the body already names the
+ * entity, so repeating it through the alts would only lengthen the link's
  * accessible name.
  */
 export const CatalogCard = ({
@@ -23,38 +28,89 @@ export const CatalogCard = ({
   caption,
   picture,
   logo,
+  colorPalette,
+  priority = false,
 }: CatalogCardProps) => (
   <ClickableCard
     href={href}
-    className='group flex h-72 w-full md:w-120 ui-sheen-horizontal-inverted max-w-full flex-col overflow-hidden p-0 ui-above-opaque transition-colors hover:border-brand-200/50'
+    className={cn(
+      colorPalette,
+      'cp-vars group flex grow min-h-full w-full flex-col overflow-hidden ui-above-inside ui-sheen-vertical transition-[border-color,box-shadow] hover:shadow-button-hover'
+    )}
   >
-    <ClickableCard.Header className='relative h-32 shrink-0 overflow-hidden border-b border-grey-300/20 p-0'>
+    <ClickableCard.Header className='relative h-32 shrink-0 overflow-hidden p-0 ui-above-defaults rounded-lg'>
       <Box aria-hidden='true' className='absolute inset-0'>
-        {picture}
+        {picture ? (
+          <NextImage
+            {...picture}
+            alt=''
+            fillProp
+            sizes={IMAGE_SIZES.CATALOG_CARD}
+            className='absolute inset-0 h-full w-full'
+            objectFitProp='cover'
+            priority={priority}
+          />
+        ) : (
+          <CatalogBandFallback logo={logo} />
+        )}
       </Box>
-      {/* A soft fade into the body, so the band reads as part of the card. */}
-      <Box className='absolute inset-0 bg-linear-to-t from-background-100/70 via-background-100/10 to-transparent' />
+      {/* A soft fade at the band's foot, so the picture settles into the body
+          instead of ending against it as a pasted rectangle. */}
+      <Box className='absolute inset-0 bg-linear-to-t from-background-150/60 via-transparent to-transparent' />
     </ClickableCard.Header>
 
-    <ClickableCard.Body className='flex min-h-0 flex-1 flex-col gap-1.5 p-4 pt-0'>
-      <Box className='ui-cluster gap-2'>
+    <ClickableCard.Body className='flex min-h-0 flex-1 flex-col gap-1.5'>
+      <Box className='flex min-w-0 items-center gap-2'>
         {logo && (
-          <Box aria-hidden='true' className='shrink-0'>
-            {logo}
+          <Box
+            aria-hidden='true'
+            className='relative h-6 w-6 shrink-0 overflow-hidden rounded-md'
+          >
+            <NextImage
+              {...logo}
+              alt=''
+              fillProp
+              sizes={IMAGE_SIZES.AVATAR}
+              objectFitProp='contain'
+            />
           </Box>
         )}
-        <Text className='ui-small-label'>{eyebrow}</Text>
+        <Title
+          as='h3'
+          className='ui-title min-w-0 flex-1 line-clamp-2 transition-colors group-hover:cp-text'
+        >
+          {title}
+        </Title>
       </Box>
-      <Title
-        as='h3'
-        className='ui-body-strong line-clamp-2 transition-colors group-hover:text-brand-500'
-      >
-        {title}
-      </Title>
+      <Divider className='group-hover:cp-divider my-2' />
+
       {subtitle && <Text className='ui-caption truncate'>{subtitle}</Text>}
       {caption && (
-        <Text className='ui-caption mt-auto truncate'>{caption}</Text>
+        <Text className='ui-caption mt-auto truncate ui-cluster justify-between'>
+          {caption}
+          <Badge className='ui-small-label' colorPalette={`${colorPalette}-nb`}>
+            {eyebrow}
+          </Badge>
+        </Text>
       )}
     </ClickableCard.Body>
   </ClickableCard>
+)
+
+/** A band without a picture still reads as a card: a soft brand wash with the
+ * logo centered, or just the wash when the entity has none. */
+const CatalogBandFallback = ({ logo }: { logo?: CatalogCardProps['logo'] }) => (
+  <Box className='flex h-full w-full items-center justify-center bg-linear-to-br from-brand-500/20 via-background-200 to-background-100'>
+    {logo && (
+      <Box className='relative h-10 w-10 opacity-70'>
+        <NextImage
+          {...logo}
+          alt=''
+          fillProp
+          sizes={IMAGE_SIZES.AVATAR}
+          objectFitProp='contain'
+        />
+      </Box>
+    )}
+  </Box>
 )

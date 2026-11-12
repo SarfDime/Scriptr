@@ -117,7 +117,8 @@ export const studyPickerQuery = groq`
     name,
     "slug": slug.current,
     "siteSlug": siteSlug.current,
-    "facultyId": faculty._ref
+    "facultyId": faculty._ref,
+    dbId
   }
 }
 `

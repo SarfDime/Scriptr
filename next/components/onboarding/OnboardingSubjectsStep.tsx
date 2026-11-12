@@ -1,4 +1,5 @@
 import CheckmarkIcon from '@sanity/icons/Checkmark'
+import CheckmarkCircle from '@sanity/icons/CheckmarkCircle'
 import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
@@ -52,7 +53,7 @@ export const OnboardingSubjectsStep = ({
             }
             aria-pressed={isSubjectComplete}
             className={cn(
-              'button button-md gap-1 py-1 px-2',
+              'button button-md gap-1 py-1 px-2 items-start justify-start',
               isSubjectComplete ? 'solid' : 'subtle'
             )}
           >
@@ -93,7 +94,9 @@ export const OnboardingSubjectsStep = ({
                     <Text className='ui-body-strong'>
                       {UI_STRINGS.general.year(year)}
                     </Text>
-                    <Badge className='cp-unstyled border border-grey-200'>
+                    <Badge
+                      colorPalette={isYearComplete ? 'cp-brand-nb' : 'cp-gray'}
+                    >
                       {UI_STRINGS.onboarding.subjectCount(
                         completedCount,
                         subjects.length
@@ -106,12 +109,13 @@ export const OnboardingSubjectsStep = ({
                         ? onUncompleteYear(year)
                         : onCompleteYear(year)
                     }
+                    isActive={isYearComplete}
                     className={cn(
                       'button button-sm gap-1.5 px-3 py-1.5 rounded-full',
                       isYearComplete ? 'subtle' : 'hollow'
                     )}
                   >
-                    {isYearComplete && <CheckmarkIcon />}
+                    {isYearComplete ? <CheckmarkCircle /> : <CheckmarkIcon />}
                     {isYearComplete
                       ? UI_STRINGS.onboarding.yearCompleted
                       : UI_STRINGS.onboarding.markYearComplete}
@@ -126,17 +130,23 @@ export const OnboardingSubjectsStep = ({
                 >
                   <Box className='ui-stack gap-1.5'>
                     {electiveSubjects.length > 0 && (
-                      <Text className='ui-small-label text-red-400'>
+                      <Badge
+                        className='ui-small-label'
+                        colorPalette='cp-rose-nb'
+                      >
                         {UI_STRINGS.onboarding.requiredSubjects}
-                      </Text>
+                      </Badge>
                     )}
                     {renderSubjectButtons(requiredSubjects)}
                   </Box>
                   {electiveSubjects.length > 0 && (
                     <Box className='ui-stack gap-1.5'>
-                      <Text className='ui-small-label text-golden-yellow'>
+                      <Badge
+                        className='ui-small-label'
+                        colorPalette='cp-warning-nb'
+                      >
                         {UI_STRINGS.onboarding.electiveSubjects}
-                      </Text>
+                      </Badge>
                       {renderSubjectButtons(electiveSubjects)}
                     </Box>
                   )}

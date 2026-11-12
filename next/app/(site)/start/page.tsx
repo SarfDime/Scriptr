@@ -31,8 +31,9 @@ export default async function StartPage() {
   return (
     <PageLayout
       header={{
+        greeting: UI_STRINGS.onboarding.studySelection.greeting,
         title: UI_STRINGS.onboarding.studySelection.title,
-        greeting: UI_STRINGS.onboarding.studySelection.subtitle,
+        subtitle: UI_STRINGS.onboarding.studySelection.subtitle,
       }}
     >
       <StudyPicker

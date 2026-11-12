@@ -87,6 +87,7 @@ const isDesktop = () => window.matchMedia(DESKTOP_QUERY).matches
  */
 export function NavProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
+
   const collapsed = useSyncExternalStore(
     subscribeCollapsed,
     readCollapsed,

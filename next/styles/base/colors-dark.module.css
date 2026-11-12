@@ -8,9 +8,13 @@
     /* Pure Grayscale Background (No color tint at all) */
     --color-background-50: #000000;
     --color-background-100: #050505;
+    --color-background-125: #080808;
     --color-background-150: #0a0a0a;
+    --color-background-175: #0e0e0e;
     --color-background-200: #121212;
+    --color-background-225: #161616;
     --color-background-250: #1a1a1a;
+    --color-background-275: #1e1e1e;
     --color-background-300: #222222;
     --color-background-350: #2a2a2a;
     --color-background-400: #333333;
@@ -102,9 +106,13 @@
   color-scheme: dark;
   --color-background-50: #000000;
   --color-background-100: #050505;
+  --color-background-125: #080808;
   --color-background-150: #0a0a0a;
+  --color-background-175: #0e0e0e;
   --color-background-200: #121212;
+  --color-background-225: #161616;
   --color-background-250: #1a1a1a;
+  --color-background-275: #1e1e1e;
   --color-background-300: #222222;
   --color-background-350: #2a2a2a;
   --color-background-400: #333333;

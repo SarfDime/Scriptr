@@ -122,6 +122,10 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
     'loading' | 'hanging' | 'exiting' | 'hidden'
   >('loading')
 
+  // Both only close over `setPendingTasks`, so React Compiler gives them a
+  // stable identity — callers hold a task from an effect that lists them as
+  // dependencies, and a fresh function every render would make that effect
+  // start a task, re-render and start it again.
   const startTask = (key: string, details?: LoadingTaskDetails) =>
     setPendingTasks((prev) => new Map(prev).set(key, details ?? {}))
 

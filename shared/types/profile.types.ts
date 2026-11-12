@@ -145,7 +145,12 @@ export type ProfileCore = Tables<'profiles'> & {
   subjects: Array<ProfileSubjectRow>
   achievements: Array<ProfileAchievement>
   selected_faculties: Array<{ faculty: FacultyWithUniversity | null }>
-  selected_studies: Array<{ study: StudyWithFacultyAndUniversity | null }>
+  /** `created_at` dates the enrolment: the newest study is the one the reader
+   * is currently in, which is what "edit academics" opens. */
+  selected_studies: Array<{
+    created_at: string
+    study: StudyWithFacultyAndUniversity | null
+  }>
   scripts: Array<ProfileScriptSummary>
   favorite_scripts: Array<ProfileScriptSummary>
 }

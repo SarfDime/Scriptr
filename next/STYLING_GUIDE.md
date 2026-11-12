@@ -168,12 +168,15 @@ element to override its fill; use `ScriptPanel` or a plain `Box`.
 ## Surface detail
 
 Surfaces are translucent fills, never frosted: there is no `backdrop-filter`
-anywhere in the app, because blurring an animated backdrop was the most
-expensive paint on the page. `ui-above` and its variants sit at 97% opacity, so
-the page behind shows only as a faint tint, without needing a blur to stay
-legible. The chrome (`ui-above-nav`, `ui-above-header`, `ui-above-drawer`, the
-footer) is fully opaque instead — it frames the page, and there is nothing
-behind it to tint.
+on them, because blurring an animated backdrop was the most expensive paint on
+the page. `ui-above` and its variants sit at 97% opacity, so the page behind
+shows only as a faint tint, without needing a blur to stay legible. The chrome
+(`ui-above-nav`, `ui-above-header`, `ui-above-drawer`, the footer) is fully
+opaque instead — it frames the page, and there is nothing behind it to tint.
+
+The one blur in the app is the loading veil (`.ui-loading-overlay`): it covers
+the page while a task is pending, so nothing behind it animates, and it sits at
+70% opacity, which needs the blur to keep the page from reading through it.
 
 Three utilities give the surfaces their material. All three are opt-in through
 the surfaces themselves, so a component that already uses `ui-above`, `ui-card`
@@ -514,6 +517,13 @@ components. `cp-unstyled` removes the palette background and text color.
 Each palette also has two variants: `-nb` (no border) and `-int` (interactive:
 pointer cursor and a hover fill), e.g. `cp-warning-int` for the Report script
 button.
+
+When an element needs a palette's colour without its surface, add the palette
+class plus `cp-vars`: the class then only defines the variables, painting
+nothing. `cp-border` and `cp-text` paint one part of that palette from those
+variables, and both take variants — `hover:cp-border` on a card, or
+`group-hover:cp-text` on its title, gives a palette-driven hover without the
+resting tint.
 
 `cp-success`, `cp-warning` and `cp-danger` are aliases of `cp-green`,
 `cp-yellow` and `cp-red`. Palette text is the hue mixed toward `fg-1000`

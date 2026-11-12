@@ -1,6 +1,6 @@
 import BookIcon from '@sanity/icons/Book'
 import { UI_STRINGS } from '@shared/config/strings'
-import { ScriptsSection } from '@/components/academics/scripts/ScriptSection'
+import { ScriptsSection } from '@/components/academics/scripts/ScriptsSection'
 import { ActivityStats } from '@/components/common/ActivityStats'
 import { Box } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
@@ -12,6 +12,7 @@ import { ProfileCard } from '@/components/profile/ProfileCard'
 import { ProfileSubjectsSidebar } from '@/components/profile/ProfileSubjectsSidebar'
 import { Divider } from '@/components/ui/Divider'
 import { FlagReportButton } from '@/components/ui/FlagReportButton'
+import { getStudySetupUrl } from '@/lib/academic-routes'
 import { sortAchievements } from '@/lib/achievement-display'
 import { getDisplayName } from '@/lib/profile-display'
 import { toScriptDetails } from '@/lib/script-display'
@@ -41,6 +42,15 @@ export const ProfilePage = ({
 }: ProfilePageProps) => {
   const displayName = getDisplayName(profile)
   const username = profile.username
+
+  // Editing academics happens in a study's own setup, and the account can hold
+  // several: the newest one is the study the reader is currently in. With none
+  // there is nothing to edit yet, so the catalog picker is the way in.
+  const setupSiteSlug = [...profile.selected_studies]
+    .sort((left, right) => right.created_at.localeCompare(left.created_at))
+    .map(({ study }) => study?.site_slug)
+    .find((siteSlug): siteSlug is string => Boolean(siteSlug))
+
   const reportButton =
     profile.role === 'owner' ? undefined : (
       <FlagReportButton
@@ -62,7 +72,11 @@ export const ProfilePage = ({
             <Divider orientation='vertical' className='h-4' />
             <EditProfileButton profile={profile} />
             <NextLink
-              href={catalogUrl('/start')}
+              href={
+                setupSiteSlug
+                  ? getStudySetupUrl(setupSiteSlug)
+                  : catalogUrl('/start')
+              }
               className='button button-sm subtle ui-cluster gap-1.5'
             >
               <BookIcon />

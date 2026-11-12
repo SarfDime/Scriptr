@@ -14,6 +14,7 @@ import { cn } from '@/lib/common-utils'
 import { formatFileSize, getPreviewableKind } from '@/lib/file-preview'
 import { getScriptFileLabel, getScriptFileName } from '@/lib/script-file-name'
 import { ScriptDownloadButton } from './actions/ScriptDownloadButton'
+import { StoredFilePreviewContent } from './FilePreviewContent'
 import { FilePreviewModal } from './FilePreviewModal'
 import { ScriptFileRemoveButton } from './manage/ScriptFileRemoveButton'
 import { ScriptFileThumbnail } from './ScriptFileThumbnail'
@@ -26,23 +27,30 @@ export type ScriptFileCardProps = {
   layout?: 'tile' | 'wide'
   /** Shows the remove action (author or admin). */
   canRemove?: boolean
+  /** Renders the file itself in place of the thumbnail, for a script whose
+   * only file can be previewed. */
+  inlinePreview?: boolean
 }
 
 /**
  * Card for one file of a script. Composes the thumbnail, the type/size
  * details and the actions, and owns the preview modal that the thumbnail and
  * the Preview button both open. The full-size file only ever loads in the
- * modal, so a script with many files stays light.
+ * modal — or inline for `inlinePreview`, which the files section only asks for
+ * when it is the script's sole, previewable file — so a script with many files
+ * stays light.
  */
 export function ScriptFileCard({
   scriptId,
   file,
   layout = 'tile',
   canRemove = false,
+  inlinePreview = false,
 }: ScriptFileCardProps) {
   const isWide = layout === 'wide'
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const kind = getPreviewableKind(file.file_type)
+  const showsInlinePreview = inlinePreview && kind !== null
   const color = getColorPalette({ type: 'seed', value: file.file_type })
   const fileName = getScriptFileName(file)
   const fileLabel = getScriptFileLabel(file)
@@ -56,27 +64,49 @@ export function ScriptFileCard({
     // (inner fill) sitting on the files' translucent surface.
     <ScriptPanel
       as='div'
-      className={cn('min-w-0 overflow-hidden', isWide && '@container')}
+      className={cn(
+        'min-w-0 overflow-hidden',
+        isWide && '@container',
+        showsInlinePreview && 'flex'
+      )}
     >
       <Box
-        className={cn('flex flex-1 flex-col gap-4', isWide && '@md:flex-row')}
+        className={cn(
+          'flex flex-1 flex-col gap-4',
+          isWide && '@md:flex-row',
+          showsInlinePreview && '@md:min-h-96'
+        )}
       >
-        {/* Fixed height in both layouts: the thumbnail never follows the
+        {/* Fixed height in the stacked layout: the thumbnail never follows the
             card's height, which can be stretched by neighbouring panels. No
-            clipping here; each thumbnail variant rounds (and clips) itself. */}
+            clipping here; each thumbnail variant rounds (and clips) itself.
+            An inline preview is full-width and 20rem tall while stacked, then
+            fills its half of the row once the card is wide enough, so it never
+            collapses to the iframe's default height. */}
         <Box
           className={cn(
-            'h-44 w-full shrink-0',
-            isWide && '@md:h-48 @md:w-1/2 @md:max-w-80'
+            'shrink-0',
+            showsInlinePreview
+              ? 'flex h-80 w-full flex-col @md:h-auto @md:w-1/2'
+              : cn('h-44 w-full', isWide && '@md:h-48 @md:w-1/2 @md:max-w-80')
           )}
         >
-          <ScriptFileThumbnail
-            kind={kind}
-            fileKey={file.file_url}
-            fileName={fileName}
-            color={color}
-            onPreview={openPreview}
-          />
+          {kind !== null && showsInlinePreview ? (
+            <StoredFilePreviewContent
+              fileKey={file.file_url}
+              kind={kind}
+              fileName={fileName}
+              fillHeight
+            />
+          ) : (
+            <ScriptFileThumbnail
+              kind={kind}
+              fileKey={file.file_url}
+              fileName={fileName}
+              color={color}
+              onPreview={openPreview}
+            />
+          )}
         </Box>
         {/* Details always fill the remaining space and keep the actions at the
             bottom, so cards of equal height line up in either layout. */}

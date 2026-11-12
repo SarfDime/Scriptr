@@ -2,6 +2,10 @@
  * Color palettes: cp-<name> (surface + border), cp-<name>-nb (no border),
  * cp-<name>-int (interactive: border, pointer, hover surface).
  *
+ * `cp-vars` takes only the palette's variables, without painting a surface or
+ * border, so an element can hand its hue to children and to `cp-border` /
+ * `cp-text` (both of which compose with variants, like `hover:cp-border`).
+ *
  * A palette only declares a hue and strengths; the shared rules below derive
  * surface, border and text from it. Text is the hue mixed toward --color-fg-1000
  * (black in light mode, white in dark mode) so it keeps >= 4.5:1 contrast on
@@ -148,7 +152,7 @@
     .cp-danger,
     .cp-danger-nb,
     .cp-danger-int
-  ):not(.ui-divider) {
+  ):not(.ui-divider, .cp-vars) {
     /* The same light every other surface catches, but in the palette's own hue:
      * a white wash is invisible on a chip that is already near-white in light
      * mode, while the hue carries in both themes. */
@@ -193,7 +197,7 @@
     .cp-warning-int,
     .cp-danger,
     .cp-danger-int
-  ):not(.ui-divider) {
+  ):not(.ui-divider, .cp-vars) {
     border: 1px solid
       var(
         --cp-border-color,
@@ -266,5 +270,31 @@
       var(--cp-hue) var(--cp-border),
       var(--color-background-100)
     )
+  );
+}
+
+/* --- Accents --- */
+/* One part of a palette, for elements that use its colour without its surface.
+ * They read the variables a palette class sets on the element or an ancestor
+ * (pair it with `cp-vars` to avoid painting that element), and compose with
+ * variants: `hover:cp-border`, `group-hover:cp-text`. */
+
+/** The colour the palette draws its border with; it does not add a border. */
+@utility cp-border {
+  border-color: var(
+    --cp-border-color,
+    color-mix(
+      in srgb,
+      var(--cp-hue) var(--cp-border),
+      var(--color-background-100)
+    )
+  );
+}
+
+/** The palette's readable ink, the same mix a palette surface uses. */
+@utility cp-text {
+  color: var(
+    --cp-text,
+    color-mix(in srgb, var(--cp-hue) var(--cp-ink), var(--color-fg-1000))
   );
 }

@@ -5,11 +5,17 @@ import {
   fetchAcademicDetailOrNotFound,
 } from '@/lib/academic-detail-page'
 import { getStudySiteUrl } from '@/lib/academic-routes'
+import { getTopScripts } from '@/lib/api/scripts-api'
 import { ACADEMIC_PAGE_TAGS } from '@/lib/sanity-tags'
+import { toScriptSummaryDetails } from '@/lib/script-display'
 import { getStudySite, getStudySiteOrNotFound } from '@/lib/study-site'
 import { studyDetailQuery } from '@/sanity/queries/academics/study.queries'
 import type { StudySiteRouteParams } from '@/types/academics/academics.types'
 import type { StudyDetail } from '@/types/academics/study.types'
+
+/** How many of the study's top scripts the sidebar lists. The full list is the
+ * feed; this is a taste of it. */
+const SIDEBAR_SCRIPT_LIMIT = 7
 
 /**
  * A study site's root: its academic overview — what it is, its subjects and its
@@ -54,16 +60,30 @@ export default async function StudySitePage({
   const { siteSlug } = await params
   const site = await getStudySiteOrNotFound(siteSlug)
 
-  const study = await fetchAcademicDetailOrNotFound<StudyDetail>({
-    query: studyDetailQuery,
-    params: {
-      universitySlug: site.universitySlug,
-      facultySlug: site.facultySlug,
-      studySlug: site.studySlug,
-    },
-    fetchOrigin: `study-site-detail-${siteSlug}`,
-    tags: ACADEMIC_PAGE_TAGS.study,
-  })
+  const [study, topScripts] = await Promise.all([
+    fetchAcademicDetailOrNotFound<StudyDetail>({
+      query: studyDetailQuery,
+      params: {
+        universitySlug: site.universitySlug,
+        facultySlug: site.facultySlug,
+        studySlug: site.studySlug,
+      },
+      fetchOrigin: `study-site-detail-${siteSlug}`,
+      tags: ACADEMIC_PAGE_TAGS.study,
+    }),
+    // The sidebar's top scripts are a study-scoped, cache-tagged read: a script
+    // mutation revalidates this page with the tag, so it needs no clock.
+    site.dbId
+      ? getTopScripts(SIDEBAR_SCRIPT_LIMIT, site.dbId)
+      : Promise.resolve(null),
+  ])
 
-  return <StudyDetailContent study={study} fallback={site} />
+  return (
+    <StudyDetailContent
+      study={study}
+      fallback={site}
+      scripts={toScriptSummaryDetails(topScripts ?? [])}
+      scriptsUnavailable={topScripts === null}
+    />
+  )
 }

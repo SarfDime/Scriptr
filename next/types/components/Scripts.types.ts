@@ -138,6 +138,18 @@ export type ScriptsSectionProps = {
   title?: string
   subtitle?: string
   parentSubject?: SubjectDetail
+  /** Hide the search, the filters and the create action: a short list that
+   * only shows the study's own scripts (the study overview's sidebar) has
+   * nothing to search or filter. */
+  showControls?: {
+    all?: boolean
+    search?: boolean
+    filters?: boolean
+    create?: boolean
+  }
+  /** Copy for an empty list. The default speaks about filters, which is wrong
+   * wherever the controls are hidden. */
+  emptyMessage?: string
 
   /** End-aligned header content, e.g. the homepage's feed switch. */
   headerActions?: ReactNode

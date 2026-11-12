@@ -152,7 +152,7 @@ export const getSkyState = (
     moon: {
       x: moonX,
       y: moonY,
-      radius: 0.035 + 0.03 * (1 - daylight),
+      radius: 0.06 + 0.03 * (1 - daylight),
       opacity: 0.08 + 0.92 * (1 - daylight),
       color: colour('moon'),
     },

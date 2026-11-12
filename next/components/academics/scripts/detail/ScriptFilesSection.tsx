@@ -7,6 +7,7 @@ import { Box } from '@/components/common/Box'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
 import { cn } from '@/lib/common-utils'
+import { getPreviewableKind } from '@/lib/file-preview'
 
 export type ScriptFilesSectionProps = {
   scriptId: string
@@ -18,12 +19,19 @@ export type ScriptFilesSectionProps = {
 
 /** The script's files on their own translucent surface. Takes nearly all the free
  * space in the overview row and wraps below the info group first when that
- * row is too narrow. */
+ * row is too narrow. A script's only file, when it can be rendered inline,
+ * fills the whole surface and is previewed in place. */
 export function ScriptFilesSection({
   scriptId,
   files,
   canManage = false,
 }: ScriptFilesSectionProps) {
+  const [soleFile, ...otherFiles] = files
+  const previewsSoleFile =
+    soleFile !== undefined &&
+    otherFiles.length === 0 &&
+    Boolean(getPreviewableKind(soleFile.file_type))
+
   return (
     <ScriptSurface className='ui-stack min-w-0 grow-100 basis-[24rem] gap-3'>
       <SectionHeader title={SCRIPT_STRINGS.files.title} count={files.length} />
@@ -37,15 +45,17 @@ export function ScriptFilesSection({
         // row. Each card switches between stacked and side-by-side on its own
         // width (see ScriptFileCard). `items-start` keeps cards at their
         // content height instead of stretching to the surface's height. A lone
-        // file is capped at the width of its own content: 20rem thumbnail +
+        // file is capped at the width of its own content — 20rem thumbnail +
         // 1rem gap + two 7rem buttons with their 0.5rem gap + the card's 2rem
-        // padding and borders ≈ 37.6rem, so 38rem. Container queries need a
-        // width that doesn't depend on the content, so this is a measured cap,
-        // not `w-fit`; any narrower and the buttons would wrap.
+        // padding and borders ≈ 37.6rem, so 38rem — unless it is previewable,
+        // in which case it spans the surface to show the inline preview.
+        // Container queries need a width that doesn't depend on the content,
+        // so the cap is measured, not `w-fit`; any narrower and the buttons
+        // would wrap.
         <Box
           className={cn(
             'ui-card-grid items-start [--grid-min:18rem]',
-            files.length === 1 && 'max-w-152'
+            files.length === 1 && !previewsSoleFile && 'max-w-152'
           )}
         >
           {files.map((file) => (
@@ -55,6 +65,7 @@ export function ScriptFilesSection({
               file={file}
               layout='wide'
               canRemove={canManage}
+              inlinePreview={previewsSoleFile}
             />
           ))}
         </Box>

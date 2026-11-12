@@ -6,8 +6,11 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
+import { NextLink } from '@/components/common/NextLink'
 import { OnboardingSelectStep } from '@/components/onboarding/OnboardingSelectStep'
-import { getStudySiteUrl } from '@/lib/academic-routes'
+import { Text } from '@/components/typography/Text'
+import { getStudySetupUrl } from '@/lib/academic-routes'
+import { useSession } from '@/providers/SessionProvider'
 
 export type StudyPickerCatalog = NonNullable<StudyPickerQueryResult>
 
@@ -18,12 +21,21 @@ export type StudyPickerCatalog = NonNullable<StudyPickerQueryResult>
  *
  * The choose handler sends the reader straight to that study's setup, which is
  * also where the study's own gate would take them.
+ *
+ * A signed-in reader's own studies stay in the list — they can look — but they
+ * cannot continue into one: they already have an academic profile there, and
+ * the setup page it would land on is the one that updates it.
  */
 export const StudyPicker = ({ catalog }: { catalog: StudyPickerCatalog }) => {
   const router = useRouter()
+  const { session } = useSession()
   const [universityId, setUniversityId] = useState<string | null>(null)
   const [facultyId, setFacultyId] = useState<string | null>(null)
   const [studyId, setStudyId] = useState<string | null>(null)
+
+  const joinedStudyIds = new Set(
+    session.status === 'authenticated' ? session.user.selected_study_ids : []
+  )
 
   const faculties = catalog.faculties.filter(
     (faculty) => faculty.universityId === universityId
@@ -32,6 +44,9 @@ export const StudyPicker = ({ catalog }: { catalog: StudyPickerCatalog }) => {
     (study) => study.facultyId === facultyId
   )
   const selectedStudy = catalog.studies.find((study) => study._id === studyId)
+  const isJoined = Boolean(
+    selectedStudy && joinedStudyIds.has(selectedStudy.dbId)
+  )
 
   const chooseUniversity = (nextId: string) => {
     setUniversityId(nextId)
@@ -45,12 +60,10 @@ export const StudyPicker = ({ catalog }: { catalog: StudyPickerCatalog }) => {
   }
 
   const enter = () => {
-    if (!selectedStudy?.siteSlug) return
+    if (!selectedStudy?.siteSlug || isJoined) return
     // The setup page belongs to the study's own site, which the picker is
     // not on: this has to be the study's address, not a path here.
-    router.push(
-      `${getStudySiteUrl(selectedStudy.siteSlug)}/academic-setup`
-    )
+    router.push(getStudySetupUrl(selectedStudy.siteSlug))
   }
 
   if (catalog.studies.length === 0) {
@@ -94,13 +107,28 @@ export const StudyPicker = ({ catalog }: { catalog: StudyPickerCatalog }) => {
           facultyId ? undefined : UI_STRINGS.onboarding.selectFacultyFirst
         }
       />
-      <Button
-        className='button solid w-fit'
-        disabled={!selectedStudy?.siteSlug}
-        onClick={enter}
-      >
-        {UI_STRINGS.onboarding.continue}
-      </Button>
+      {/* One wrapping row: the reason sits beside Continue and drops under it
+       * when there is no room, instead of pushing the button down on its own. */}
+      <Box className='ui-cluster gap-2'>
+        <Button
+          className='button solid w-fit'
+          disabled={!selectedStudy?.siteSlug || isJoined}
+          onClick={enter}
+        >
+          {UI_STRINGS.onboarding.continue}
+        </Button>
+        {isJoined && selectedStudy?.siteSlug && (
+          <Text className='ui-caption'>
+            {UI_STRINGS.onboarding.studySelection.alreadyAdded}{' '}
+            <NextLink
+              href={getStudySetupUrl(selectedStudy.siteSlug)}
+              className='text-brand underline-offset-2 hover:underline'
+            >
+              {UI_STRINGS.onboarding.studySelection.alreadyAddedEdit}
+            </NextLink>
+          </Text>
+        )}
+      </Box>
     </Box>
   )
 }

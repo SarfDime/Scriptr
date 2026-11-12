@@ -1,5 +1,5 @@
 import { UI_STRINGS } from '@shared/config/strings'
-import { ScriptsSection } from '@/components/academics/scripts/ScriptSection'
+import { ScriptsSection } from '@/components/academics/scripts/ScriptsSection'
 import { SubjectHighlightsCard } from '@/components/academics/subject/SubjectHighlightsCard'
 import { SubjectOverviewCard } from '@/components/academics/subject/SubjectOverviewCard'
 import { BackLink } from '@/components/common/BackLink'

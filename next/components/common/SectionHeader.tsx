@@ -29,6 +29,7 @@ export const SectionHeader = ({
   iconProps,
   badgeProps,
   className,
+  colorPalette,
   ...rest
 }: SectionHeaderProps) => {
   const isCentered = align === 'center'
@@ -56,7 +57,9 @@ export const SectionHeader = ({
               className={cn(
                 'size-5 shrink-0',
                 !iconProps?.className?.includes('text-') && 'text-brand-600',
-                iconProps?.className
+                iconProps?.className,
+                colorPalette && colorPalette,
+                'bg-transparent! border-0! bg-none!'
               )}
             />
           )}
@@ -71,7 +74,7 @@ export const SectionHeader = ({
             {title}
           </Title>
           {count !== undefined && (
-            <Badge colorPalette='cp-brand' {...badgeProps}>
+            <Badge colorPalette={colorPalette ?? 'cp-brand'} {...badgeProps}>
               {count}
             </Badge>
           )}

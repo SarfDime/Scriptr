@@ -1,6 +1,6 @@
 /* The veil behind the loading screen eases from opaque to its resting
- * near-opaque value, so a theme or simple-mode applied after paint never shows
- * as a visible shift.
+ * translucency, so a theme or simple-mode applied after paint never shows as a
+ * visible shift.
  *
  * It is animated on the document rather than on the overlay element because the
  * overlay changes element a few hundred milliseconds into the page load: the
@@ -10,7 +10,7 @@
 @property --ui-loading-veil {
   syntax: "<number>";
   inherits: true;
-  initial-value: 0.97;
+  initial-value: 0.7;
 }
 
 @keyframes ui-loading-veil-in {
@@ -20,7 +20,7 @@
 }
 
 :root {
-  --ui-loading-veil: 0.97;
+  --ui-loading-veil: 0.7;
 }
 
 /* Matches for the whole session: the dialog is always mounted. */
@@ -41,7 +41,7 @@
    * scrollbar's strip: 100% resolves against the viewport without it, which
    * would leave a column of page showing down the right side. A fixed element
    * does not add scrollable overflow, so the extra width is safe. */
-  @apply fixed inset-0 z-100 m-0 h-dvh w-screen max-w-none max-h-none border-0 border-none p-0 text-fg outline-none transition-all duration-500 ease-in-out;
+  @apply fixed inset-0 z-100 m-0 h-dvh w-screen max-w-none max-h-none border-0 border-none p-0 text-fg outline-none backdrop-blur-xl transition-all duration-500 ease-in-out;
   background-color: color-mix(
     in oklab,
     var(--color-background-100) calc(var(--ui-loading-veil) * 100%),
@@ -66,7 +66,7 @@
   }
 }
 
-/* Simple mode stays fully opaque, like its other surfaces. */
+/* Without blur the 70% overlay would reveal the page behind it. */
 :root[data-simple] .ui-loading-overlay {
   background-color: var(--color-background-100);
 }

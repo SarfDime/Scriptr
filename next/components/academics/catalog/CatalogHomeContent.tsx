@@ -1,20 +1,24 @@
+import Book from '@sanity/icons/Book'
+import Component from '@sanity/icons/Component'
+import EarthGlobe from '@sanity/icons/EarthGlobe'
 import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
-import { NextImage } from '@/components/common/NextImage'
-import { SectionHeader } from '@/components/common/SectionHeader'
-import { Text } from '@/components/typography/Text'
 import { getAcademicPath } from '@/lib/academic-routes'
-import { IMAGE_SIZES } from '@/styles/style'
-import type { CatalogHomeContentProps } from '@/types/academics/catalog.types'
-import { CatalogCard } from './CatalogCard'
+import type {
+  CatalogHomeContentProps,
+  CatalogSectionProps,
+} from '@/types/academics/catalog.types'
+import { CatalogSection } from './CatalogSection'
 
 /**
- * The root page as a directory: the universities, and the studies that each
- * lead to their own site. It deliberately shows no subjects, professors or
- * scripts — those belong to a study, and a study is a site of its own.
+ * The root page as a directory: universities, their faculties, and the studies
+ * that each lead to their own site. It deliberately shows no subjects,
+ * professors or scripts — those belong to a study, and a study is a site of its
+ * own.
  *
- * Each list is a wrapped row of the same fixed-size card, so a section reads as
- * one row of tiles under its heading rather than stretched columns.
+ * The three sections are columns of one surface, side by side once there is
+ * room for them; each card fills its column, so the page keeps using the width
+ * whether a section holds one entity or many.
  *
  * A failed catalog read leaves the lists empty and says so, rather than
  * taking the page down: the navigation and the study picker still work.
@@ -55,172 +59,101 @@ export const CatalogHomeContent = ({ catalog }: CatalogHomeContentProps) => {
       : []
   })
 
+  const sections: Array<Omit<CatalogSectionProps, 'priority'>> = [
+    {
+      title: UI_STRINGS.home.universitiesTitle,
+      subtitle: UI_STRINGS.home.universitiesSubtitle,
+      empty: UI_STRINGS.home.noUniversities,
+      icon: EarthGlobe,
+      colorPalette: 'cp-rose',
+
+      cards: universities.map((university) => ({
+        key: university._id,
+        href: getAcademicPath({
+          type: 'university',
+          universitySlug: university.slug,
+        }),
+        eyebrow: UI_STRINGS.academics.entity.university,
+        title: university.name,
+        caption: UI_STRINGS.home.facultyCount(university.facultyCount),
+        picture: university.picture,
+        logo: university.logo,
+        colorPalette: 'cp-rose',
+      })),
+    },
+    {
+      title: UI_STRINGS.home.facultiesTitle,
+      subtitle: UI_STRINGS.home.facultiesSubtitle,
+      empty: UI_STRINGS.home.noFaculties,
+      icon: Component,
+      colorPalette: 'cp-brand',
+
+      cards: faculties.map((faculty) => ({
+        key: faculty._id,
+        href: getAcademicPath({
+          type: 'faculty',
+          universitySlug: faculty.universitySlug,
+          facultySlug: faculty.slug,
+        }),
+        eyebrow: UI_STRINGS.academics.entity.faculty,
+        title: faculty.name,
+        subtitle: UI_STRINGS.home.facultySummary(
+          faculty.studyCount,
+          faculty.professorCount
+        ),
+        caption: faculty.university.name,
+        picture: faculty.picture,
+        logo: faculty.logo,
+        colorPalette: 'cp-brand',
+      })),
+    },
+    {
+      title: UI_STRINGS.home.studiesTitle,
+      subtitle: UI_STRINGS.home.studiesSubtitle,
+      empty: UI_STRINGS.home.noStudies,
+      icon: Book,
+      colorPalette: 'cp-amber',
+
+      cards: studies.map((study) => ({
+        key: study._id,
+        href: getAcademicPath({
+          type: 'study',
+          siteSlug: study.siteSlug,
+          universitySlug: study.universitySlug,
+          facultySlug: study.facultySlug,
+          studySlug: study.studySlug,
+        }),
+        eyebrow: UI_STRINGS.academics.entity.study,
+        title: study.name,
+        subtitle: UI_STRINGS.academics.studySummary(
+          study.subjectCount,
+          study.professorCount
+        ),
+        caption: UI_STRINGS.home.studyPath(
+          study.faculty.name,
+          study.faculty.university.name
+        ),
+        picture: study.picture,
+        logo: study.logo,
+        colorPalette: 'cp-amber',
+      })),
+    },
+  ]
+
+  // The first picture in the page is the likely LCP, so it loads eagerly.
+  const firstFilledSection = sections.findIndex(
+    (section) => section.cards.length > 0
+  )
+
   return (
-    <Box className='ui-cluster'>
-      <Box as='section' className='ui-stack gap-5 grow'>
-        <SectionHeader
-          title={UI_STRINGS.home.universitiesTitle}
-          titleVariant='heading'
-          count={universities.length}
+    <Box className='grid-single items-start gap-x-8 gap-y-10 md:grid-cols-2 lg:grid-cols-3 h-full'>
+      {sections.map((section, index) => (
+        <CatalogSection
+          key={section.title}
+          {...section}
+          priority={index === firstFilledSection}
         />
-        {universities.length > 0 ? (
-          <Box className='ui-cluster gap-4'>
-            {universities.map((university) => (
-              <CatalogCard
-                key={university._id}
-                href={getAcademicPath({
-                  type: 'university',
-                  universitySlug: university.slug,
-                })}
-                eyebrow={UI_STRINGS.academics.entity.university}
-                title={university.name}
-                caption={UI_STRINGS.home.facultyCount(university.facultyCount)}
-                picture={
-                  university.picture && (
-                    <NextImage
-                      {...university.picture}
-                      alt={university.name}
-                      fillProp
-                      sizes={IMAGE_SIZES.CATALOG_CARD}
-                      className='absolute inset-0 h-full w-full'
-                      objectFitProp='cover'
-                    />
-                  )
-                }
-                logo={
-                  university.logo && (
-                    <NextImage
-                      {...university.logo}
-                      alt={university.name}
-                      fillProp
-                      sizes={IMAGE_SIZES.AVATAR}
-                      className='h-6 w-6 rounded-md'
-                      objectFitProp='contain'
-                    />
-                  )
-                }
-              />
-            ))}
-          </Box>
-        ) : (
-          <Text className='ui-caption'>{UI_STRINGS.home.noUniversities}</Text>
-        )}
-      </Box>
-
-      <Box as='section' className='ui-stack gap-5 grow'>
-        <SectionHeader
-          title={UI_STRINGS.home.facultiesTitle}
-          count={faculties.length}
-          titleVariant='heading'
-        />
-        {faculties.length > 0 ? (
-          <Box className='flex w-full flex-wrap gap-4'>
-            {faculties.map((faculty) => (
-              <CatalogCard
-                key={faculty._id}
-                href={getAcademicPath({
-                  type: 'faculty',
-                  universitySlug: faculty.universitySlug,
-                  facultySlug: faculty.slug,
-                })}
-                eyebrow={UI_STRINGS.academics.entity.faculty}
-                title={faculty.name}
-                subtitle={UI_STRINGS.home.facultySummary(
-                  faculty.studyCount,
-                  faculty.professorCount
-                )}
-                caption={faculty.university.name}
-                picture={
-                  faculty.picture && (
-                    <NextImage
-                      {...faculty.picture}
-                      alt={faculty.name}
-                      fillProp
-                      sizes={IMAGE_SIZES.CATALOG_CARD}
-                      className='absolute inset-0 h-full w-full'
-                      objectFitProp='cover'
-                    />
-                  )
-                }
-                logo={
-                  faculty.logo && (
-                    <NextImage
-                      {...faculty.logo}
-                      alt={faculty.name}
-                      fillProp
-                      sizes={IMAGE_SIZES.AVATAR}
-                      className='h-6 w-6 rounded-md'
-                      objectFitProp='contain'
-                    />
-                  )
-                }
-              />
-            ))}
-          </Box>
-        ) : (
-          <Text className='ui-caption'>{UI_STRINGS.home.noFaculties}</Text>
-        )}
-      </Box>
-
-      <Box as='section' className='ui-stack gap-5 grow'>
-        <SectionHeader
-          title={UI_STRINGS.home.studiesTitle}
-          count={studies.length}
-          titleVariant='heading'
-        />
-        {studies.length > 0 ? (
-          <Box className='flex w-full flex-wrap gap-4'>
-            {studies.map((study) => (
-              <CatalogCard
-                key={study._id}
-                href={getAcademicPath({
-                  type: 'study',
-                  siteSlug: study.siteSlug,
-                  universitySlug: study.universitySlug,
-                  facultySlug: study.facultySlug,
-                  studySlug: study.studySlug,
-                })}
-                eyebrow={UI_STRINGS.academics.entity.study}
-                title={study.name}
-                subtitle={UI_STRINGS.academics.studySummary(
-                  study.subjectCount,
-                  study.professorCount
-                )}
-                caption={UI_STRINGS.home.studyPath(
-                  study.faculty.name,
-                  study.faculty.university.name
-                )}
-                picture={
-                  study.picture && (
-                    <NextImage
-                      {...study.picture}
-                      alt={study.name}
-                      fillProp
-                      sizes={IMAGE_SIZES.CATALOG_CARD}
-                      className='absolute inset-0 h-full w-full'
-                      objectFitProp='cover'
-                    />
-                  )
-                }
-                logo={
-                  study.logo && (
-                    <NextImage
-                      {...study.logo}
-                      alt={study.name}
-                      fillProp
-                      sizes={IMAGE_SIZES.AVATAR}
-                      className='h-6 w-6 rounded-md'
-                      objectFitProp='contain'
-                    />
-                  )
-                }
-              />
-            ))}
-          </Box>
-        ) : (
-          <Text className='ui-caption'>{UI_STRINGS.home.noStudies}</Text>
-        )}
-      </Box>
+      ))}
     </Box>
   )
 }

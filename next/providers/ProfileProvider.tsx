@@ -10,6 +10,7 @@ import {
   useState,
 } from 'react'
 import { getMyProfile } from '@/lib/api/profile-api'
+import { useLoading } from './loading/LoadingProvider'
 import { useSession } from './SessionProvider'
 
 type ProfileFetchState =
@@ -26,6 +27,10 @@ type ProfileContextValue = {
 }
 
 const ProfileContext = createContext<ProfileContextValue | null>(null)
+
+/** The global loader's key for the boot, so the veil covers the session and
+ * profile reads together. */
+const BOOT_TASK = 'profile'
 
 /** Module-level, like SessionProvider's fetchSession — the effect below
  * calls it without pulling a `refresh` closure into its dependency
@@ -78,6 +83,7 @@ async function reloadProfile(
  */
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const { session } = useSession()
+  const { startTask, finishTask } = useLoading()
   const [fetchState, setFetchState] = useState<ProfileFetchState>({
     status: 'loading',
   })
@@ -101,6 +107,21 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   const profile: MyProfileState =
     session.status === 'authenticated' ? fetchState : { status: 'idle' }
+
+  // What the app cannot render without is the profile, and it cannot start
+  // reading it until the session resolves, so the loader is held for both: the
+  // theme task alone finishes long before either, which let the veil start
+  // leaving and then come back — and until then the navbar had no "your
+  // studies" to show. `reload` (after an edit) keeps `loaded`, so it never
+  // brings the veil back.
+  const isBooting = session.status === 'loading' || profile.status === 'loading'
+
+  useEffect(() => {
+    if (!isBooting) return undefined
+
+    startTask(BOOT_TASK)
+    return () => finishTask(BOOT_TASK)
+  }, [isBooting, startTask, finishTask])
 
   const refresh = () => fetchProfile(setFetchState)
   const reload = () => reloadProfile(setFetchState)

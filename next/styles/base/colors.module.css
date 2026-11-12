@@ -2,9 +2,13 @@
   @theme static {
     --color-background-50: #ffffff;
     --color-background-100: #fdfdfb;
+    --color-background-125: #fdfcfb;
     --color-background-150: #fcfbfa;
+    --color-background-175: #fcfbf9;
     --color-background-200: #fbfaf8;
+    --color-background-225: #f9f8f6;
     --color-background-250: #f6f5f3;
+    --color-background-275: #f3f2ef;
     --color-background-300: #f0efeb;
     --color-background-350: #e8e7e3;
     --color-background-400: #e0deda;

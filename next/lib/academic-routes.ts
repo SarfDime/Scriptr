@@ -70,6 +70,16 @@ export const getStudyFeedPath = (
   return site ? `${getStudySiteUrl(site)}/scripts` : '/'
 }
 
+/** A study's academic setup: where its gate sends a reader who has no profile
+ * there, and where editing academics starts. Absolute like the site it belongs
+ * to — the caller is usually outside that site. */
+export const getStudySetupUrl = (
+  siteSlug: string | null | undefined
+): string => {
+  const site = cleanEntityId(siteSlug)
+  return site ? `${getStudySiteUrl(site)}/academic-setup` : '/start'
+}
+
 const facultyPath = (input: {
   universitySlug: string
   facultySlug: string

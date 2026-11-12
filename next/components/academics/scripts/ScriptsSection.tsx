@@ -24,6 +24,8 @@ export const ScriptsSection = ({
   className,
   parentSubject,
   scriptsUnavailable = false,
+  showControls = { all: true, search: true, filters: true, create: true },
+  emptyMessage = UI_STRINGS.scripts.emptyState,
   headerActions,
   ...rest
 }: ScriptsSectionProps) => {
@@ -54,22 +56,28 @@ export const ScriptsSection = ({
         actions={headerActions}
       />
 
-      {!scriptsUnavailable && (
+      {!scriptsUnavailable && showControls?.all && (
         <Box className='ui-cluster items-stretch justify-between gap-3'>
-          <SearchBar
-            inputVal={query}
-            inputOnChange={(event) => setQuery(event.target.value)}
-            className='min-w-[50%]'
-          />
+          {showControls?.search && (
+            <SearchBar
+              inputVal={query}
+              inputOnChange={(event) => setQuery(event.target.value)}
+              className='min-w-[50%]'
+            />
+          )}
 
-          <ScriptFilters
-            subject={subject}
-            subjects={subjectOptions}
-            sort={sort}
-            onSubjectChange={setSubject}
-            onSortChange={setSort}
-          />
-          {parentSubject && <CreateScriptModal subject={parentSubject} />}
+          {showControls?.filters && (
+            <ScriptFilters
+              subject={subject}
+              subjects={subjectOptions}
+              sort={sort}
+              onSubjectChange={setSubject}
+              onSortChange={setSort}
+            />
+          )}
+          {parentSubject && showControls?.create && (
+            <CreateScriptModal subject={parentSubject} />
+          )}
         </Box>
       )}
 
@@ -78,10 +86,7 @@ export const ScriptsSection = ({
           {UI_STRINGS.scripts.loadFailed}
         </Text>
       ) : (
-        <ScriptList
-          scripts={shownScripts}
-          emptyMessage={UI_STRINGS.scripts.emptyState}
-        />
+        <ScriptList scripts={shownScripts} emptyMessage={emptyMessage} />
       )}
 
       {hasMore && (

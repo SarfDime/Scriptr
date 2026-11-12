@@ -6,7 +6,7 @@ import { useCallback, useEffect, useSyncExternalStore } from 'react'
 import { Box } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
 import { Text } from '@/components/typography/Text'
-import { getStudySiteUrl } from '@/lib/academic-routes'
+import { getStudySetupUrl } from '@/lib/academic-routes'
 import {
   EMPTY_STUDY_SETUP,
   readStudySetup,
@@ -52,7 +52,7 @@ export const StudySetupGate = ({
   const hasAccountProfile =
     isSignedIn && session.user.selected_study_ids.includes(studyId)
   const isReady = session.status !== 'loading'
-  const setupPath = `${getStudySiteUrl(siteSlug)}/academic-setup`
+  const setupPath = getStudySetupUrl(siteSlug)
 
   const needsSetup =
     isReady &&

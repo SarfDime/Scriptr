@@ -4,6 +4,7 @@ import type { TextProps } from '@/components/typography/Text'
 import type { TitleProps } from '@/components/typography/Title'
 import type { BadgeProps } from '@/components/ui/Badge'
 import type { SanityIconProps } from '@/types/component.types'
+import type { ComponentColorPalettes } from './ColorPalettes.types'
 
 export type SectionHeaderProps = {
   /** Heading text (or rich text). Nothing renders if empty. */
@@ -28,4 +29,5 @@ export type SectionHeaderProps = {
   subtitleProps?: Omit<TextProps, 'children'>
   iconProps?: SanityIconProps
   badgeProps?: Omit<BadgeProps, 'children'>
+  colorPalette?: ComponentColorPalettes
 } & Omit<BoxProps, 'children' | 'title' | 'as'>

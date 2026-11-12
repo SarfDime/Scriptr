@@ -115,6 +115,9 @@
   @apply rounded-xl border border-background-300;
   @apply p-4 gap-4 rounded-xl;
   @apply ui-sheen;
+  @supports (corner-shape: bevel) {
+    corner-shape: bevel;
+  }
 }
 
 @utility ui-above {
@@ -123,7 +126,7 @@
    * nearly opaque instead; the remaining 3% keeps the sheen and the border from
    * reading as paint on a flat block. */
   @apply ui-above-defaults;
-  @apply bg-background-250/97;
+  @apply bg-background-225/95;
   /* Composed with Tailwind's ring variables so `ring-*` (inputs) still shows. */
   box-shadow:
     inset 0 1px 0 var(--ui-lit-edge),
@@ -132,11 +135,14 @@
     var(--tw-ring-offset-shadow, 0 0 #0000),
     var(--tw-ring-shadow, 0 0 #0000),
     var(--ui-above-shadow, var(--shadow-above));
+  @supports (corner-shape: scoop) {
+    corner-shape: scoop;
+  }
 }
 
 @utility ui-above-opaque {
   @apply ui-above;
-  @apply bg-background-250;
+  @apply bg-background-225;
 }
 
 @utility ui-above-nav {
@@ -183,7 +189,7 @@
 }
 
 @utility ui-above-inside {
-  @apply bg-background-150/60;
+  @apply bg-background-125/70;
   @apply ui-above-defaults border-background-300/70 rounded-lg;
   /* Composed with Tailwind's ring variables so `ring-*` (inputs) still shows. */
   box-shadow:

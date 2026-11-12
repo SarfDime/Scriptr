@@ -75,8 +75,12 @@ export const UI_STRINGS = {
     createAccount: 'Create account',
     setUpStudies: 'Set up studies',
     universitiesTitle: 'Universities',
+    universitiesSubtitle: 'The institutions behind every faculty and study.',
     facultiesTitle: 'Faculties',
+    facultiesSubtitle: 'The faculties that make up each university.',
     studiesTitle: 'Studies',
+    studiesSubtitle:
+      'Open a study to reach its subjects, professors and scripts.',
     facultyCount: (count: number) =>
       `${count} ${count === 1 ? 'faculty' : 'faculties'}`,
     facultySummary: (studies: number, professors: number) =>
@@ -104,6 +108,11 @@ export const UI_STRINGS = {
     loadFailed:
       'These scripts could not be loaded right now. Try again in a moment.',
     browseAll: 'Browse all scripts',
+    showAll: 'Show all',
+    // The study overview's sidebar, under the professors.
+    studySidebarTitle: 'Scripts',
+    studySidebarSubtitle: 'The scripts this study’s students share.',
+    studySidebarEmpty: 'This study has no scripts yet.',
     feed: {
       toggleLabel: 'Script feed',
       forYou: 'For you',
@@ -384,7 +393,7 @@ export const UI_STRINGS = {
     subjectsSubtitle:
       'Mark a whole year done at once, or check off individual subjects below — fine-tune this later from your profile too.',
     subjectCount: (completed: number, total: number) =>
-      `${completed}/${total} subjects`,
+      `${completed}/${total} subjects completed`,
     requiredSubjects: 'Required',
     electiveSubjects: 'Electives',
     yearCompleted: 'Year completed',
@@ -401,17 +410,33 @@ export const UI_STRINGS = {
       action: 'Resume setup',
     },
     studySelection: {
+      /** The line above the heading: what the page is for, in three words. */
+      greeting: 'Let’s get you set up',
       title: 'Choose your study',
       subtitle:
         'Pick the university, faculty and study you attend. You can add another study later.',
       empty: 'No studies are open for enrolment yet.',
+      /** Followed by the `alreadyAddedEdit` link. */
+      alreadyAdded: 'Study already set up —',
+      alreadyAddedEdit: 'edit it here',
     },
     academicSetup: {
+      /** The line above the heading: three words on the effort, since the
+       * heading already says what the page does. */
+      greeting: 'Takes about a minute',
       title: 'Set up your academic profile',
+      /** A signed-in reader who is already a member of this study is changing
+       * the profile it holds, not creating one. */
+      updateTitle: 'Update your academic profile',
       subtitle: (studyName: string) =>
         `Which years of ${studyName} have you finished? This only affects what you see here — you can change it later from your profile.`,
       submit: 'Save and continue',
+      /** The same submit, when it is an update rather than a first setup. */
+      saveChanges: 'Save changes',
       saved: 'Your academic profile is saved.',
+      /** The way to the catalog picker, which is the only route to another
+       * study's setup from inside one. */
+      setupAnother: 'Set up another study',
       skip: 'Skip for now',
       resume: 'Finish setting up',
       resumeTitle: 'Your setup is not finished',
