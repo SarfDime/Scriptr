@@ -1,6 +1,5 @@
 import { UI_STRINGS } from '@shared/config/strings'
 import { ProfessorAffiliationsCard } from '@/components/academics/professor/ProfessorAffiliationsCard'
-import { ProfessorBiographyCard } from '@/components/academics/professor/ProfessorBiographyCard'
 import { ProfessorComments } from '@/components/academics/professor/ProfessorComments'
 import { ProfessorContactCard } from '@/components/academics/professor/ProfessorContactCard'
 import { SubjectsExplorer } from '@/components/academics/subject/SubjectsExplorer'
@@ -115,7 +114,6 @@ export default async function ProfessorDetailPage({
         </>
       }
     >
-      <ProfessorBiographyCard bio={professor.bio} />
       <SubjectsExplorer
         subjects={
           professor.subjects.map(

@@ -3,13 +3,11 @@
 import { UI_STRINGS } from '@shared/config/strings'
 import { useSubjectFilters } from '@/hooks/useSubjectFilters'
 import type { SubjectSidebarItem } from '@/types/academics/subject.types'
-import type { StudyTipData } from '@/types/components/StudyTipCard.types'
 import { SubjectFilters } from './SubjectFilters'
 import { SubjectsSidebar } from './SubjectsSidebar'
 
 type StudySubjectsPanelProps = {
   subjects: Array<SubjectSidebarItem>
-  studyTip?: StudyTipData
 }
 
 /**
@@ -18,10 +16,7 @@ type StudySubjectsPanelProps = {
  * sidebar is short and already ordered by the read that fills it, and the list
  * scrolls past four cards.
  */
-export const StudySubjectsPanel = ({
-  subjects,
-  studyTip,
-}: StudySubjectsPanelProps) => {
+export const StudySubjectsPanel = ({ subjects }: StudySubjectsPanelProps) => {
   const {
     year,
     setYear,
@@ -34,7 +29,6 @@ export const StudySubjectsPanel = ({
   return (
     <SubjectsSidebar
       subjects={visibleSubjects}
-      studyTip={studyTip}
       emptyMessage={
         subjects.length > 0 ? UI_STRINGS.subjects.noMatchingSubjects : undefined
       }

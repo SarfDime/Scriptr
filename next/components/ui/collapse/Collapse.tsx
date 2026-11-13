@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useId, useState } from 'react'
 
 import { cn } from '../../../lib/common-utils'
 import type { CollapseProps } from '../../../types/components/Collapse.types'
@@ -9,14 +9,14 @@ import { CollapseContent } from './CollapseContent'
 import { CollapseTrigger } from './CollapseTrigger'
 
 /** A component that renders a collapsible section.
- * It can take a title, children, a custom trigger, and other props.
- * It will render a collapsible section with a default trigger
- * that shows the title and an arrow. The arrow is hidden if showArrow is set to false.
+ * The trigger shows the title and an arrow (hidden if showArrow is false), or
+ * the `triggerProps.children` when they are provided. `triggerActions` renders
+ * controls in the trigger row that must not toggle the section.
  */
 export const Collapsible = ({
   title,
   children,
-  customTrigger,
+  triggerActions,
   showArrow = true,
   rootProps,
   contentProps,
@@ -24,16 +24,23 @@ export const Collapsible = ({
   triggerTitleProps,
   triggerArrowProps,
 }: CollapseProps) => {
-  const [isOpen, setIsOpen] = useState(customTrigger?.isOpen ?? false)
-  const toggleCollapse = () => {
-    if (customTrigger) {
-      customTrigger?.toggle?.()
-      return
-    }
-    setIsOpen(!isOpen)
-  }
+  const contentId = useId()
+  const [isOpen, setIsOpen] = useState(false)
 
-  const currentIsOpen = customTrigger ? customTrigger?.isOpen : isOpen
+  const trigger = (
+    <CollapseTrigger
+      {...triggerProps}
+      title={title}
+      isOpen={isOpen}
+      showArrow={showArrow}
+      triggerArrowProps={triggerArrowProps}
+      triggerTitleProps={triggerTitleProps}
+      currentIsOpen={isOpen}
+      aria-expanded={isOpen}
+      contentId={contentId}
+      toggleCollapse={() => setIsOpen((open) => !open)}
+    />
+  )
 
   return (
     <Box
@@ -43,23 +50,15 @@ export const Collapsible = ({
         rootProps?.className
       )}
     >
-      {customTrigger?.trigger ? (
-        customTrigger?.trigger
+      {triggerActions ? (
+        <Box className='ui-cluster justify-between'>
+          {trigger}
+          {triggerActions}
+        </Box>
       ) : (
-        <CollapseTrigger
-          {...triggerProps}
-          title={title}
-          isOpen={isOpen}
-          showArrow={showArrow}
-          triggerArrowProps={triggerArrowProps}
-          triggerTitleProps={triggerTitleProps}
-          currentIsOpen={currentIsOpen}
-          aria-expanded={currentIsOpen}
-          aria-controls='menu-list'
-          toggleCollapse={toggleCollapse}
-        />
+        trigger
       )}
-      <CollapseContent {...contentProps} currentIsOpen={currentIsOpen}>
+      <CollapseContent {...contentProps} id={contentId} currentIsOpen={isOpen}>
         {children}
       </CollapseContent>
     </Box>

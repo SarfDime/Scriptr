@@ -13,8 +13,10 @@ export const CollapseContent = ({
   return (
     <Box
       {...rest}
+      inert={!currentIsOpen}
+      aria-hidden={!currentIsOpen}
       className={cn(
-        'collapsible-content group/collapsible-content absolute grid overflow-hidden duration-200 ease-in-out',
+        'collapsible-content group/collapsible-content absolute grid overflow-hidden duration-200 ease-in-out transition-[grid-template-rows]',
         currentIsOpen
           ? 'max-h-screen grid-rows-[1fr]'
           : 'max-h-0 grid-rows-[0fr]',

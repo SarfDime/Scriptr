@@ -297,7 +297,8 @@ export const UI_STRINGS = {
     electiveLabel: 'Elective',
     filters: {
       electives: 'Electives',
-      sortByYear: 'Sort by year',
+      sortBySemester: 'Semester (asc)',
+      sortBySemesterDesc: 'Semester (desc)',
       sortBySubject: 'Sort by name',
       sortByProfessor: 'Sort by professor',
       filterByYear: 'Filter by year',
@@ -393,10 +394,13 @@ export const UI_STRINGS = {
     subjectsSubtitle:
       'Mark a whole year done at once, or check off individual subjects below — fine-tune this later from your profile too.',
     subjectCount: (completed: number, total: number) =>
-      `${completed}/${total} subjects completed`,
+      `${completed}/${total} subjects done`,
+    /** Compact progress for the narrow year header. */
+    subjectCountShort: (completed: number, total: number) =>
+      `${completed}/${total}`,
     requiredSubjects: 'Required',
     electiveSubjects: 'Electives',
-    yearCompleted: 'Year completed',
+    yearCompleted: 'Done',
     markYearComplete: 'Mark year complete',
     continue: 'Continue',
     saving: 'Saving…',
@@ -427,7 +431,7 @@ export const UI_STRINGS = {
       title: 'Set up your academic profile',
       /** A signed-in reader who is already a member of this study is changing
        * the profile it holds, not creating one. */
-      updateTitle: 'Update your academic profile',
+      updateTitle: 'Edit academic profile',
       subtitle: (studyName: string) =>
         `Which years of ${studyName} have you finished? This only affects what you see here — you can change it later from your profile.`,
       submit: 'Save and continue',
@@ -527,6 +531,7 @@ export const UI_STRINGS = {
       'Turns off transparency, animations and the animated background.',
     openNavigation: 'Open navigation',
     mainNavigation: 'Main navigation',
+    studyTip: 'Study tip',
   },
   activity: {
     title: 'Your activity',

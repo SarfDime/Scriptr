@@ -1,11 +1,14 @@
 import CheckmarkIcon from '@sanity/icons/Checkmark'
 import CheckmarkCircle from '@sanity/icons/CheckmarkCircle'
+import ChevronDownIcon from '@sanity/icons/ChevronDown'
+import Circle from '@sanity/icons/Circle'
 import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
 import { Badge } from '@/components/ui/Badge'
+import { Collapsible } from '@/components/ui/collapse/Collapse'
 import { cn } from '@/lib/common-utils'
 import type { OnboardingSubject } from '@/types/onboarding.types'
 import { Divider } from '../ui/Divider'
@@ -40,7 +43,7 @@ export const OnboardingSubjectsStep = ({
   // Electives sit in their own column, so their membership is the column's
   // label rather than a badge on every button.
   const renderSubjectButtons = (subjects: Array<OnboardingSubject>) => (
-    <Box className='ui-cluster gap-1.5'>
+    <Box className='ui-cluster gap-1.5 max-md:flex-col max-md:items-stretch'>
       {subjects.map((subject) => {
         const isSubjectComplete = completedSubjectIds.includes(subject._id)
         return (
@@ -52,11 +55,14 @@ export const OnboardingSubjectsStep = ({
                 : onCompleteSubject(subject._id)
             }
             aria-pressed={isSubjectComplete}
-            className={cn(
-              'button button-md gap-1 py-1 px-2 items-start justify-start',
-              isSubjectComplete ? 'solid' : 'subtle'
-            )}
+            isActive={isSubjectComplete}
+            className='button button-sm max-w-full items-center justify-start gap-1 pl-1 text-left subtle'
           >
+            {isSubjectComplete ? (
+              <CheckmarkCircle className='overwrite size-3' />
+            ) : (
+              <Circle className='overwrite size-3' />
+            )}
             {subject.name}
           </Button>
         )
@@ -68,8 +74,11 @@ export const OnboardingSubjectsStep = ({
     <Box className='ui-stack gap-3'>
       <SectionHeader
         title={UI_STRINGS.onboarding.subjectsTitle}
+        titleVariant='subHeading'
         subtitle={UI_STRINGS.onboarding.subjectsSubtitle}
       />
+
+      <Divider />
 
       {placeholder ? (
         <Text className='ui-caption'>{placeholder}</Text>
@@ -88,21 +97,42 @@ export const OnboardingSubjectsStep = ({
             )
 
             return (
-              <Box key={year} className='ui-stack ui-above-inside gap-2 p-3'>
-                <Box className='ui-cluster justify-between'>
-                  <Box className='ui-cluster gap-2'>
-                    <Text className='ui-body-strong'>
-                      {UI_STRINGS.general.year(year)}
-                    </Text>
-                    <Badge
-                      colorPalette={isYearComplete ? 'cp-brand-nb' : 'cp-gray'}
-                    >
-                      {UI_STRINGS.onboarding.subjectCount(
-                        completedCount,
-                        subjects.length
-                      )}
-                    </Badge>
-                  </Box>
+              <Collapsible
+                key={year}
+                rootProps={{ className: 'ui-above-inside p-2 md:p-3' }}
+                contentProps={{ className: 'relative max-h-none' }}
+                triggerProps={{
+                  className:
+                    'button button-md w-auto grow justify-start gap-2 px-0 py-2 min-h-11 md:min-h-0 md:py-1',
+                  isActive: false,
+                  children: (
+                    <>
+                      <Text as='span' className='ui-body-strong'>
+                        {UI_STRINGS.general.year(year)}
+                      </Text>
+                      <Badge
+                        colorPalette={
+                          isYearComplete ? 'cp-brand-nb' : 'cp-gray'
+                        }
+                      >
+                        <span className='sm:hidden'>
+                          {UI_STRINGS.onboarding.subjectCountShort(
+                            completedCount,
+                            subjects.length
+                          )}
+                        </span>
+                        <span className='hidden sm:inline'>
+                          {UI_STRINGS.onboarding.subjectCount(
+                            completedCount,
+                            subjects.length
+                          )}
+                        </span>
+                      </Badge>
+                      <ChevronDownIcon className='overwrite size-5 shrink-0 transition-transform duration-200 group-aria-expanded/trigger:rotate-180' />
+                    </>
+                  ),
+                }}
+                triggerActions={
                   <Button
                     onClick={() =>
                       isYearComplete
@@ -110,48 +140,50 @@ export const OnboardingSubjectsStep = ({
                         : onCompleteYear(year)
                     }
                     isActive={isYearComplete}
+                    aria-pressed={isYearComplete}
                     className={cn(
-                      'button button-sm gap-1.5 px-3 py-1.5 rounded-full',
+                      'button button-sm ml-auto shrink-0 rounded-full px-3 py-1.5 min-h-10 md:min-h-0',
                       isYearComplete ? 'subtle' : 'hollow'
                     )}
                   >
                     {isYearComplete ? <CheckmarkCircle /> : <CheckmarkIcon />}
-                    {isYearComplete
-                      ? UI_STRINGS.onboarding.yearCompleted
-                      : UI_STRINGS.onboarding.markYearComplete}
+                    {UI_STRINGS.onboarding.yearCompleted}
                   </Button>
-                </Box>
-                <Divider />
-                <Box
-                  className={cn(
-                    'grid items-start gap-3 ',
-                    electiveSubjects.length > 0 && 'md:grid-cols-2'
-                  )}
-                >
-                  <Box className='ui-stack gap-1.5'>
-                    {electiveSubjects.length > 0 && (
-                      <Badge
-                        className='ui-small-label'
-                        colorPalette='cp-rose-nb'
-                      >
-                        {UI_STRINGS.onboarding.requiredSubjects}
-                      </Badge>
+                }
+              >
+                <Box className='ui-stack gap-2 pt-2'>
+                  <Divider />
+                  <Box
+                    className={cn(
+                      'grid items-start gap-3',
+                      electiveSubjects.length > 0 && 'md:grid-cols-2'
                     )}
-                    {renderSubjectButtons(requiredSubjects)}
-                  </Box>
-                  {electiveSubjects.length > 0 && (
+                  >
                     <Box className='ui-stack gap-1.5'>
-                      <Badge
-                        className='ui-small-label'
-                        colorPalette='cp-warning-nb'
-                      >
-                        {UI_STRINGS.onboarding.electiveSubjects}
-                      </Badge>
-                      {renderSubjectButtons(electiveSubjects)}
+                      {electiveSubjects.length > 0 && (
+                        <Badge
+                          className='ui-small-label'
+                          colorPalette='cp-rose-nb'
+                        >
+                          {UI_STRINGS.onboarding.requiredSubjects}
+                        </Badge>
+                      )}
+                      {renderSubjectButtons(requiredSubjects)}
                     </Box>
-                  )}
+                    {electiveSubjects.length > 0 && (
+                      <Box className='ui-stack gap-1.5'>
+                        <Badge
+                          className='ui-small-label'
+                          colorPalette='cp-warning-nb'
+                        >
+                          {UI_STRINGS.onboarding.electiveSubjects}
+                        </Badge>
+                        {renderSubjectButtons(electiveSubjects)}
+                      </Box>
+                    )}
+                  </Box>
                 </Box>
-              </Box>
+              </Collapsible>
             )
           })}
         </Box>

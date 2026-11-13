@@ -6,7 +6,11 @@ import { useState } from 'react'
 import type { MinimalSubject } from '@/types/academics/subject.types'
 import { useSubjectFilters } from './useSubjectFilters'
 
-export type SubjectSortOption = 'Year' | 'Subject A-Z' | 'Professor A-Z'
+export type SubjectSortOption =
+  | 'Semester'
+  | 'Semester Desc'
+  | 'Subject A-Z'
+  | 'Professor A-Z'
 
 type ExtendedSubject = MinimalSubject & { primaryProfessor: string }
 
@@ -17,8 +21,12 @@ const SORT_RULES: Record<
   SubjectSortOption,
   Array<SortRule<ExtendedSubject>>
 > = {
-  Year: [
-    { key: 'year', direction: 'asc' },
+  Semester: [
+    { key: 'semester', direction: 'asc' },
+    { key: 'name', direction: 'asc' },
+  ],
+  'Semester Desc': [
+    { key: 'semester', direction: 'desc' },
     { key: 'name', direction: 'asc' },
   ],
   'Subject A-Z': [{ key: 'name', direction: 'asc' }],
@@ -28,7 +36,7 @@ const SORT_RULES: Record<
 /** The explorer's search and sort over the shared year/electives filters. */
 export const useSubjectExplorer = (subjects: Array<MinimalSubject>) => {
   const [query, setQuery] = useState('')
-  const [sort, setSort] = useState<SubjectSortOption>('Year')
+  const [sort, setSort] = useState<SubjectSortOption>('Semester')
 
   const subjectsWithProf = subjects.map((subject) => ({
     ...subject,

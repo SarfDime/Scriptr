@@ -14,7 +14,7 @@ import { loadCalendarEvents } from './calendar-data'
  * to "the next few days" and to this reader's subjects happens on the client,
  * where the session lives.
  *
- * Wrapped like `getDailyStudyTip`: a Sanity failure logs (inside
+ * Wrapped like `getStudyTipRotation`: a Sanity failure logs (inside
  * `fetchSanityData`) and renders no alert, rather than taking the whole site
  * down from the layout.
  */

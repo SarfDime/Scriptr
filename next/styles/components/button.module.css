@@ -24,9 +24,23 @@
     font-size: 0.875rem;
   }
 
-  /* Filled variants share one recipe; each only sets --button-bg/--button-fg. */
+  /* Filled variants share one recipe; each sets its own fill, ink and hover
+   * direction. */
   :is(.solid, .success, .danger, .error, .warning, .golden) {
-    background-color: var(--button-bg);
+    /* Hover moves the fill away from the label rather than washing the whole
+     * control out with opacity. The fixed-hue fills default to white, which
+     * lightens them away from their dark ink in both themes; `solid` overrides
+     * `--button-hover-lit` with the theme flip so it darkens in light mode and
+     * lightens in dark. */
+    --button-bg-hover: color-mix(
+      in oklab,
+      var(--button-bg) 85%,
+      var(--button-hover-lit, white)
+    );
+    /* Both paint layers read this, so the hover fill cannot be hidden by the
+     * opaque gradient. */
+    --button-fill: var(--button-bg);
+    background-color: var(--button-fill);
     /* `--button-lit` is what the sheen mixes toward, and it has to move away
      * from the ink rather than be white everywhere. `solid` pairs a fill and an
      * ink that both flip with the theme, so it keeps the theme's flip
@@ -39,19 +53,29 @@
       135deg,
       color-mix(
         in oklab,
-        var(--button-bg) 85%,
+        var(--button-fill) 85%,
         var(--button-lit, white) var(--button-sheen, 45%)
       ),
-      var(--button-bg)
+      var(--button-fill)
     );
     color: var(--button-fg);
     font-weight: 600;
     box-shadow: var(--shadow-button);
 
     @media (hover: hover) and (pointer: fine) {
-      &:hover {
+      &:hover:not(:disabled):not([data-disabled="true"]) {
+        --button-fill: var(--button-bg-hover);
         box-shadow: var(--shadow-button-hover);
-        opacity: 0.9;
+        /* The shadow token already describes a lift; the control has to move
+         * with it or the change reads as a slightly different drop. */
+        transform: translateY(-2px);
+      }
+
+      /* This hover selector is more specific than the shared `.button:active`
+       * rule, so restate the press or the lift would win and the control would
+       * not scale when clicked. */
+      &:active:not(:disabled):not([data-disabled="true"]) {
+        transform: scale(0.97);
       }
     }
   }
@@ -101,7 +125,7 @@
     opacity: 0.85;
   }
 
-  &[data-active="true"]:not(:disabled) {
+  &[data-active="true"] {
     background-color: var(--color-brand-100);
     color: var(--color-brand-700);
     box-shadow: inset 0 0 0 1px
@@ -125,6 +149,9 @@
   --button-bg: var(--color-brand-550);
   --button-fg: var(--color-background-100);
   --button-lit: var(--color-background-50);
+  /* The one fill whose ink flips with the theme: hover has to darken it in
+   * light mode and lighten it in dark so it always moves away from the label. */
+  --button-hover-lit: var(--color-background-1000);
 }
 
 /* Dark ink derived from the fill: white on jade is only ~2.7:1. */
@@ -238,7 +265,9 @@
   }
 }
 
-@utility subtle {
+/* --- Subtle: the two materials, picked by the switch at the foot of the file --- */
+
+@utility classic-subtle {
   background-color: var(--color-grey-200);
   color: var(--color-fg-muted);
   font-weight: 600;
@@ -261,3 +290,98 @@
     }
   }
 }
+
+@utility ice-subtle {
+  /* The same chip as `classic-subtle`, cast in the panel ice: the fill, edge,
+   * rim and depth come from the `--ice-*` tokens, so it follows both themes. A
+   * 90% fill rather than the slab's 97% keeps it a step lighter than a panel it
+   * sits on.
+   *
+   * Every ice value is read through a token with its ice default as the
+   * fallback, so simple mode can flatten the chip from one rule
+   * (`--ice-subtle-*` on `:root[data-simple] .subtle`) without out-ranking
+   * `.button[data-active]`, which also paints the background. */
+  background-color: var(--ice-subtle-fill, rgb(var(--ice-base) / 0.9));
+  /* `fg-700` rather than the theme's flip: ice stays a light fill in light mode
+   * and a deep one in dark, and this step reads on both. */
+  color: var(--ice-subtle-ink, var(--color-fg-700));
+  font-weight: 600;
+  /* Light catching the corner, then the same lit-to-shaded ramp the ice surfaces
+   * paint, so the chip is a small pane rather than a flat fill. */
+  background-image: var(
+    --ice-subtle-paint,
+    linear-gradient(
+      135deg,
+      rgb(255 255 255 / var(--ice-sheen-a)) 0,
+      transparent min(var(--ui-sheen-length, 96px), 60%)
+    ),
+    linear-gradient(
+      to bottom,
+      rgb(var(--ice-lit) / calc(var(--ice-lit-a) * 0.45)) 0,
+      transparent var(--ice-mid, 45%),
+      rgb(var(--ice-depth) / calc(var(--ice-shade-a) * 0.6)) 100%
+    )
+  );
+  background-size: auto, auto;
+  background-repeat: no-repeat, no-repeat;
+  /* Inset ring, top rim and foot shade, like the classical chip; the ring is an
+   * inset shadow so it never fights the `:focus-visible` outline. */
+  box-shadow: var(
+    --ice-subtle-shadow,
+    inset 0 0 0 1px rgb(var(--ice-edge) / calc(var(--ice-edge-a) * 0.9)),
+    inset 0 1px 0 rgb(255 255 255 / var(--ice-rim-a)),
+    inset 0 -1px 0 rgb(var(--ice-depth) / calc(var(--ice-depth-a) * 0.55)),
+    var(--shadow-sm)
+  );
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      /* The mix lit moves the fill away from the ink in both themes: darker in
+       * light mode, lighter in dark. */
+      background-color: var(
+        --ice-subtle-hover-fill,
+        color-mix(
+          in oklab,
+          var(--ice-subtle-fill, rgb(var(--ice-base) / 0.9)) 85%,
+          var(--color-background-1000)
+        )
+      );
+      box-shadow: var(
+        --ice-subtle-hover-shadow,
+        inset 0 0 0 1px rgb(var(--ice-edge) / var(--ice-edge-a)),
+        inset 0 1px 0 rgb(255 255 255 / var(--ice-rim-a)),
+        inset 0 -1px 0 rgb(var(--ice-depth) / calc(var(--ice-depth-a) * 0.55)),
+        var(--shadow-md)
+      );
+    }
+  }
+}
+
+/* Simple mode is flat: the ice chip becomes the neutral chip. The tokens are
+ * set as custom properties (not declarations) so a pressed/selected
+ * `.button[data-active]` keeps its own background and ink. */
+:root[data-simple] .subtle {
+  --ice-subtle-fill: var(--color-grey-200);
+  --ice-subtle-ink: var(--color-fg-muted);
+  --ice-subtle-paint: none;
+  --ice-subtle-shadow:
+    inset 0 0 0 1px var(--outline-light),
+    inset 0 1px 0 rgb(255 255 255 / calc(var(--shadow-strength, 1) * 0.24)),
+    inset 0 -1px 0 rgb(0 0 0 / calc(var(--shadow-strength, 1) * 0.1)),
+    var(--shadow-sm);
+  --ice-subtle-hover-fill: var(--color-brand-50);
+  --ice-subtle-hover-shadow: var(--shadow-md);
+}
+
+/* --- SUBTLE THEME SWITCH ---
+ * Mirrors the surface switch in `surfaces.module.css`: the variant alias points
+ * at the current material, so the look changes in one place. */
+@utility subtle {
+  @apply ice-subtle;
+}
+
+/* --- CLASSIC ---
+@utility subtle {
+  @apply classic-subtle;
+}
+*/

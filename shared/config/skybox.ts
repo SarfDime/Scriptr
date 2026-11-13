@@ -37,8 +37,9 @@ export const SKY_ANCHORS = {
 /**
  * One keyframe per phase; the day is these keyframes in order, blended by hour, so
  * there is no switch and no visible jump between phases. The colors are exaggerated
- * on purpose (a very bright sunrise, a deep magenta sunset), not photorealistic.
- * Each value is a theme color key (see sky-colors.module.css).
+ * on purpose, not photorealistic, and each theme picks its own: the dark theme has a
+ * deep night and a magenta sunset, the light theme pastel ones so its dark copy stays
+ * readable. Each value is a theme color key (see sky-colors.module.css).
  */
 export const SKY_COLORS: Record<
   SkyPhase,

@@ -1,45 +1,35 @@
 import { SANITY_CACHE_TAGS } from '@shared/config/cache-tags'
 import type { StudyTipsQueryResult } from '@shared/types/sanity.types'
 import type { WithResolvedSanityData } from '@shared/types/sanity-transform.types'
+import { dayNumber } from '@/lib/daily-pick'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { studyTipsQuery } from '@/sanity/queries/study-tip.queries'
-import type { StudyTipData } from '@/types/components/StudyTipCard.types'
+import type { StudyTipRotation } from '@/types/components/StudyTip.types'
 
-const MS_PER_DAY = 86_400_000
+/** Every published study tip, in the stable order the navbar rotates through
+ * by UTC day, plus the day this render was built for. A Sanity failure returns
+ * no tips so the navbar simply shows none instead of taking the whole site down
+ * from the layout (`fetchSanityData` logs the failure before rethrowing, so it
+ * is not logged again here). */
+export const getStudyTipRotation = async (): Promise<StudyTipRotation> => {
+  const serverDay = dayNumber(Date.now())
 
-/** One item per UTC day, cycling through `items` in their given order. Pure
- * and deterministic, so the server render is the same for everyone that day
- * (no client-side randomness, no hydration mismatch). */
-export const pickDailyItem = <T>(
-  items: ReadonlyArray<T>,
-  now: number
-): T | undefined => items[Math.floor(now / MS_PER_DAY) % items.length]
-
-/** Today's study tip from Sanity, or `undefined` when there are no tips or the
- * fetch fails, in which case the card is simply not rendered. A Sanity miss
- * must never crash or blank the page it sits on (`fetchSanityData` logs the
- * failure before rethrowing, so it is not logged again here).
- *
- * Reads Sanity only, with no cookies or headers, but it is per request on
- * dynamic pages: on a static or ISR page the tip would freeze until
- * revalidation. */
-export const getDailyStudyTip = async (): Promise<StudyTipData | undefined> => {
   try {
     const tips = await fetchSanityData<
       WithResolvedSanityData<StudyTipsQueryResult>
     >({
       query: studyTipsQuery,
-      fetchOrigin: 'getDailyStudyTip()',
+      fetchOrigin: 'getStudyTipRotation()',
       tags: [SANITY_CACHE_TAGS.studyTip],
     })
 
-    return pickDailyItem(
-      tips.flatMap(({ title, content }) =>
+    return {
+      serverDay,
+      tips: tips.flatMap(({ title, content }) =>
         title && content ? [{ title, content }] : []
       ),
-      Date.now()
-    )
+    }
   } catch {
-    return undefined
+    return { tips: [], serverDay }
   }
 }

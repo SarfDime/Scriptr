@@ -21,7 +21,6 @@ import {
 import { ACADEMIC_PAGE_TAGS } from '@/lib/sanity-tags'
 import { toScriptSummaryDetails } from '@/lib/script-display'
 import { getStudySite, getStudySiteOrNotFound } from '@/lib/study-site'
-import { getDailyStudyTip } from '@/lib/study-tip'
 import { studySeoQuery } from '@/sanity/queries/academics/study.queries'
 import type { StudySiteRouteParams } from '@/types/academics/academics.types'
 
@@ -83,10 +82,8 @@ export default async function StudyScriptsPage({
   const site = await getStudySiteOrNotFound(siteSlug)
   const showAllScripts = query.scripts === ALL_SCRIPTS_PARAM
 
-  const [session, studyTip] = await Promise.all([
-    getSession(cookie),
-    getDailyStudyTip(),
-  ])
+  const session = await getSession(cookie)
+
   const user = session?.user
   const studyId = site.dbId
 
@@ -149,7 +146,7 @@ export default async function StudyScriptsPage({
             ) : undefined
           }
         />
-        {user && <StudySubjectsPanel subjects={subjects} studyTip={studyTip} />}
+        {user && <StudySubjectsPanel subjects={subjects} />}
       </Box>
     </PageLayout>
   )

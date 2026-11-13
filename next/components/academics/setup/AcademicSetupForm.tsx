@@ -7,6 +7,7 @@ import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { OnboardingSubjectsStep } from '@/components/onboarding/OnboardingSubjectsStep'
 import { Text } from '@/components/typography/Text'
+import { Divider } from '@/components/ui/Divider'
 import { useSubjectCompletion } from '@/hooks/onboarding/useSubjectCompletion'
 import { getStudyFeedPath } from '@/lib/academic-routes'
 import {
@@ -228,6 +229,8 @@ export const AcademicSetupForm = ({
         onUncompleteSubject={completion.uncompleteSubject}
       />
 
+      <Divider />
+
       {!isSignedIn && (
         <Text className='ui-caption'>
           {UI_STRINGS.onboarding.academicSetup.guestNote}
@@ -241,11 +244,15 @@ export const AcademicSetupForm = ({
       )}
 
       <Box className='ui-cluster gap-2'>
-        <Button className='button subtle' disabled={isSaving} onClick={skip}>
+        <Button
+          className='button subtle w-full min-h-11 sm:w-auto sm:min-h-0'
+          disabled={isSaving}
+          onClick={skip}
+        >
           {UI_STRINGS.onboarding.academicSetup.skip}
         </Button>
         <Button
-          className='button solid'
+          className='button solid w-full min-h-11 sm:w-auto sm:min-h-0'
           isLoading={isSaving}
           disabled={isSaving || subjects.length === 0}
           onClick={save}

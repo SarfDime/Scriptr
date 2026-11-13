@@ -2,7 +2,6 @@ import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
-import { Card } from '@/components/ui/Card'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
 import type { ProfessorsSectionProps } from '@/types/academics/professor.types'
@@ -17,7 +16,7 @@ export const ProfessorsSection = ({ professors }: ProfessorsSectionProps) => {
   const professorList = professors ?? []
 
   return (
-    <Card className='ui-stack ui-above'>
+    <Box as='section' className='ui-stack ui-above'>
       <SectionHeader
         title={UI_STRINGS.navigation.professors}
         count={professorList.length}
@@ -45,6 +44,6 @@ export const ProfessorsSection = ({ professors }: ProfessorsSectionProps) => {
           {UI_STRINGS.academics.noProfessorsAssigned}
         </Text>
       )}
-    </Card>
+    </Box>
   )
 }

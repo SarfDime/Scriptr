@@ -1,3 +1,4 @@
+import Folder from '@sanity/icons/Folder'
 import { UI_STRINGS } from '@shared/config/strings'
 import { ProfessorsSection } from '@/components/academics/professor/ProfessorsSection'
 import { ScriptsSection } from '@/components/academics/scripts/ScriptsSection'
@@ -45,6 +46,7 @@ export const StudyDetailContent = ({
               href={getStudyFeedPath(study.siteSlug)}
               className='button button-sm solid'
             >
+              <Folder />
               {UI_STRINGS.scripts.browseAll}
             </NextLink>
             <BackLink

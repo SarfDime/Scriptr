@@ -6,7 +6,7 @@ import { Box } from '@/components/common/Box'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { SearchBar } from '@/components/typography/SearchBar'
 import { Text } from '@/components/typography/Text'
-import { Card } from '@/components/ui/Card'
+import { Divider } from '@/components/ui/Divider'
 import { useSubjectExplorer } from '@/hooks/useSubjectExplorer'
 import type { MinimalSubject } from '@/types/academics/subject.types'
 import { SubjectFilters } from './SubjectFilters'
@@ -32,21 +32,12 @@ export const SubjectsExplorer = ({ subjects }: SubjectsExplorerProps) => {
   return (
     /* `#subjects`: a link from the study's script feed lands on the list
        itself rather than the top of the study page. */
-    <Card id='subjects' className='ui-stack ui-above'>
-      <SectionHeader
-        title={UI_STRINGS.subjects.title}
-        count={visibleSubjects.length}
-      />
-
-      <Box className='ui-cluster items-start justify-between gap-3'>
-        <SearchBar
-          label={UI_STRINGS.subjects.searchLabel}
-          inputVal={query}
-          inputOnChange={(event) => setQuery(event.target.value)}
-          inputProps={{
-            placeholder: UI_STRINGS.subjects.searchPlaceholder,
-          }}
-          className='min-w-[50%]'
+    <Box as='section' id='subjects' className='ui-stack ui-above'>
+      <Box className='ui-cluster  items-start justify-between'>
+        <SectionHeader
+          title={UI_STRINGS.subjects.title}
+          titleVariant='subHeading'
+          count={visibleSubjects.length}
         />
 
         <SubjectFilters
@@ -57,6 +48,16 @@ export const SubjectsExplorer = ({ subjects }: SubjectsExplorerProps) => {
           onIncludeElectivesChange={setIncludeElectives}
           sort={{ value: sort, onChange: setSort }}
         />
+        <SearchBar
+          label={UI_STRINGS.subjects.searchLabel}
+          inputVal={query}
+          inputOnChange={(event) => setQuery(event.target.value)}
+          inputProps={{
+            placeholder: UI_STRINGS.subjects.searchPlaceholder,
+          }}
+          className='min-w-[50%]'
+        />
+        <Divider className='' />
       </Box>
 
       {visibleSubjects.length > 0 ? (
@@ -72,6 +73,6 @@ export const SubjectsExplorer = ({ subjects }: SubjectsExplorerProps) => {
             : UI_STRINGS.subjects.noMatchingSubjects}
         </Text>
       )}
-    </Card>
+    </Box>
   )
 }

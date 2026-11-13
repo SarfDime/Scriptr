@@ -46,7 +46,11 @@ export const ProfileCard = ({
   const { universities, faculties, studies } = academics
 
   return (
-    <Card {...props} className={cn('ui-above relative z-10 block', className)}>
+    <Box
+      as='section'
+      {...props}
+      className={cn('ui-above relative z-10 block', className)}
+    >
       {/* Below `lg` (where PageLayout stacks its columns) the avatar group is a
           row with the academics full-width underneath. From `lg` the group is a
           narrow column (avatar, badges wrapping under it) with the academics to
@@ -105,6 +109,6 @@ export const ProfileCard = ({
           )}
         </Box>
       </Card.Body>
-    </Card>
+    </Box>
   )
 }

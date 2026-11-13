@@ -265,7 +265,7 @@ export function Dialog({
             {!hideBackdrop && showBackdrop && (
               <div
                 className={cn(
-                  'pointer-events-none fixed inset-0 bg-background-250/80 starting:opacity-0 transition-opacity duration-350',
+                  'pointer-events-none fixed inset-0 bg-background-150/80 starting:opacity-0 starting:backdrop-blur-none backdrop-blur-sm transition-opacity duration-350',
                   Z_INDEX.DIALOG_BACKDROP
                 )}
               />

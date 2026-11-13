@@ -17,7 +17,11 @@ or component class changes.
 - `styles/components/layout.module.css`: container, section padding, stack/cluster and the grid utilities.
 - `styles/components/typography.module.css`: the `ui-display` … `ui-caption` type scale.
 - `styles/components/surfaces.module.css`: cards, badges, the sheen, the `ui-above*` panels and the simple-mode surface overrides.
-- `styles/components/dividers.module.css`: `ui-divider` and the `ui-groove-*` helpers.
+- `styles/components/ice-tokens.module.css`: the `--ice-*` tokens that every ice surface, the ice button and the ice ridge read.
+- `styles/components/ice-surfaces.module.css`: the `ice-*` panel recipes (`ice-above`, `ice-above-inside`, `ice-above-reverse`, the fracture tiles).
+- `styles/components/snow-cap.module.css`: the `snow-cap` cap and frost, with one art pair per theme.
+- `styles/components/dividers.module.css`: the `ui-divider` base, the classic groove, the `ui-groove-*` edge helpers and the material switch.
+- `styles/components/ice-dividers.module.css`: the horizontal/vertical ice ridges and the iced edge helpers, selected by that switch.
 - `styles/components/loading.module.css`: the loading overlay and its veil.
 - `styles/components/button.module.css`: button base and variants.
 - `styles/components/color-palettes.module.css`: badge color classes.
@@ -138,8 +142,9 @@ The preferred component APIs are `Box`, `Card`, `Button`, `Badge`, and
 | `no-gradient`                   | Drops the sheen from any surface that keeps its fill, border and shadow: `ui-above no-gradient`, `ui-above-inside no-gradient`. For panels carrying dense text, where the wash competed with it. |
 | `ui-sheen-horizontal` and friends | Moves the sheen band, keeping its colour, strength and length: `ui-sheen-horizontal` (top edge, fades down), `ui-sheen-horizontal-inverted` (bottom edge, fades up), `ui-sheen-vertical` (left edge, fades right), `ui-sheen-vertical-inverted` (right edge, fades left), `ui-sheen-diagonal-inverted` (bottom-right corner). Named for the edge the band lies along, not the axis the ramp runs on. |
 | `ui-divider`                    | Base for `Divider`: paints the groove line and uses no border.                                                                                                                |
-| `ui-divider-h` / `ui-divider-v` | The groove itself, horizontal or vertical (2px).                                                                                                                              |
-| `ui-groove-t/b/l/r`             | Turns an element's own border on that side into the same groove.                                                                                                              |
+| `ui-divider-h` / `ui-divider-v` | The ice ridge itself, horizontal or vertical (`ice-divider-xs`, 8px; a 2px groove in simple mode). |
+| `ui-groove-t/b/l/r`             | Turns an element's own border on that side into the same iced edge (ridge plus lip).                                                                                          |
+| `ice-groove-none`               | Keeps the ridge off an edge whose separator was removed deliberately (`border-0`).                                                                                           |
 | `ui-loading-overlay`            | The global loading screen's modal `<dialog>`: fills the viewport, near-opaque veil, fades in and out. Not for other overlays.                                                 |
 | `ui-loading-overlay-exiting`    | Added alongside `ui-loading-overlay` for the fade-out, just before the dialog is closed.                                                                                      |
 
@@ -225,6 +230,23 @@ or a filled button needs no extra class.
 - **Grain** (a tiled noise overlay) was prototyped and removed: at any opacity
   that reads as texture it also dulls the surface to a flat tone. Do not re-add
   it without a different compositing approach.
+- **Snow caps** (`snow-cap`, applied by `ice-above` and `classic-above`) hang a
+  snow mass over the surface's top edge. The art is one SVG pair per theme,
+  held in `--snow-cap-front-light`/`-dark` and `--snow-cap-back-light`/`-dark`
+  and picked by `--snow-cap-front`/`-back`; the frost below it reads
+  `--snow-cap-frost-a` and `--snow-cap-frost-tint`. A new theme swaps the art
+  pair — the light glacier art on a dark panel reads as paint, not snow, and a
+  dark cap does not read as snow at all. Simple mode sets
+  `--snow-cap-display: none`, so both layers disappear with every surface.
+
+**Simple mode** is the flat material and drops every ice effect, with no
+component changes: the panels lose their fracture, streak, grain and ramp
+imagery and the ice box-shadow (the edge ring, rim light and coloured depth
+give way to the classic `--ui-lit-edge` hairline plus the drop), the chrome
+moves from the ice tint to the opaque neutral fill, the snow cap and its frost
+are switched off by `--snow-cap-display`, and the dividers and edge grooves
+fall back to their plain lines (see [Buttons](#buttons) for the chip,
+[Dividers and grooves](#dividers-and-grooves) for the ridges).
 
 ### Chrome edges
 
@@ -240,31 +262,76 @@ side they meet the page on:
 
 ### Dividers and grooves
 
-A divider is a **single paint**: `2px` of `background-image` where the first
-1px is the cut (`--divider-cut`) and the second is the lip (`--divider-lip`).
-Drawing the cut as a border and the lip as an inset shadow was the earlier
-version and made identical dividers render at different strengths — the two
-layers snapped to device rows independently, which is visible at any non-100%
-zoom.
+The divider and the edge helpers have the same material switch as the surfaces:
+`ui-divider-h`, `ui-divider-v` and `ui-groove-*` are thin aliases at the foot of
+`dividers.module.css`, pointing at the ice material
+(`ice-dividers.module.css`) or at the classic groove (`classic-divider-*`,
+`classic-groove-*`) in the same file. Comment one block and uncomment the other.
+The shared base (`ui-divider`, the `--divider-line` channel) stays put.
 
-- Tint a divider by setting `--divider-line`, either directly
-  (`[--divider-line:var(--color-grey-500)]`) or through the `cp-divider` helper,
-  which derives the same colour a palette uses for its border. A palette class
-  on a divider contributes only its hue: `color-palettes.module.css` excludes
+Both orientations are ice by default: `ice-divider-h` applies
+`ice-divider ice-divider-xs` (an 8px strip of frozen ridge and icicles with a
+cold glow) and `ice-divider-v` applies
+`ice-divider ice-divider-vertical ice-divider-xs`, the same material drawn down
+a narrow column with its own art. Each groove is a **single paint**: `2px` of
+`background-image` where the first 1px is the cut (`--divider-cut`) and the
+second is the lip (`--divider-lip`). Drawing the cut as a border and the lip as
+an inset shadow was the earlier version and made identical dividers render at
+different strengths — the two layers snapped to device rows independently,
+which is visible at any non-100% zoom.
+
+- The ridge art follows the theme: `--ice-divider-front-light`/`-dark` and
+  `--ice-divider-back-light`/`-dark` (plus the `-v` pairs for the vertical
+  ridge) hold the SVG data URIs and `--ice-divider-front`/`--ice-divider-back`
+  (and `-v`) pick one per theme (light, dark and auto-dark), with
+  `--ice-divider-glow`/`-a` for the drop shadow. A data URI cannot read a custom
+  property, so a new theme needs its own art pair — the same rule as
+  `--ice-crack-img-*`.
+- `ice-divider` reads its box and art geometry from tokens
+  (`--ice-divider-w`/`-h`, `--ice-divider-mb`/`-mi`,
+  `--ice-divider-art`/`-size`/`-position`/`-repeat`), so
+  `ice-divider-vertical` only swaps values. That is also how simple mode turns
+  the horizontal ridge into a 2px groove without out-ranking any utility.
+- Tint a groove by setting `--divider-line`, either directly
+  (`[--divider-line:var(--color-grey-500)]`) or through `cp-divider`, which
+  derives the same colour a palette uses for its border. A palette class on a
+  divider contributes only its hue: `color-palettes.module.css` excludes
   `.ui-divider` from the palette surface and border rules.
+- The ridge is tinted through `--divider-tint`, not `--divider-line`: the art is
+  a closed image, so `ice-divider` paints a masked copy of its own silhouette in
+  that colour over the ridge (`mix-blend-mode: color`, so the highlights keep
+  their light). `cp-divider` sets both variables — the border mix for
+  `--divider-line` and the palette's raw hue at 65% for `--divider-tint`, which
+  is much stronger than the border mix and stays a tint rather than a recolour.
+  Use `--divider-tint` directly to tint a ridge by hand.
 - `cp-divider` is a Tailwind utility, so it takes variants like any other
   (`group-hover:cp-divider`, `peer-checked:cp-divider`). Tint it conditionally
   with a variant rather than adding a `-hover`/`-active` sibling class — the
   trigger then belongs to the call site, not the palette file.
-- The tint fades: `ui-divider` transitions `--divider-line` over 200ms
-  `ease-in-out`. That only works because the variable is registered as a
-  `<color>` (`@property` in `dividers.module.css`) — an unregistered property
-  is discrete and a gradient built from it would jump. Keep divider tints
-  inside that type.
+- Both tints fade: `ui-divider` transitions `--divider-line` and
+  `--divider-tint` over 250ms `ease-out`. That only works because both are
+  registered as a `<color>` (`@property` in `dividers.module.css`) — an
+  unregistered property is discrete and the paint built from it would jump. Keep
+  divider tints inside that type.
+- A `dashed` divider is a border, so `Divider` switches the ridge off with
+  `bg-none!` and `[--ice-divider-tint-a:0]` (the masked overlay has no
+  background of its own to clear).
+- Simple mode is flat: inherited tokens (`--ice-divider-h`, `--ice-v-w`,
+  `--ice-divider-paint`, `--ice-divider-filter`, `--ice-divider-groove-a`,
+  `--ice-divider-tint-a` in `dividers.module.css`) turn both ridges off and bring
+  back the plain 2px groove, which `ui-divider-h/v::before` paints. Nothing in
+  the component has to know.
 - `ui-groove-t/b/l/r` gives any element that already separates itself with a
-  border (card footer, dialog header) the same groove, so it does not need to
-  become a `Divider`. Only for elements that carry no shadow of their own — the
-  groove is a shadow, so the two would fight.
+  border (card footer, dialog header, the navbar) the same edge: the border is
+  the cut, an inset lip sits inside it, and the ridge is tiled along that side
+  through `background-image` (`--ice-groove-h` sets its thickness,
+  `--ice-groove-paint` disables it). Because it is a background image it paints
+  behind the content and needs no extra element, but the element must not have a
+  background image of its own and must carry no shadow (the lip replaces
+  `box-shadow`). A `background-image` cannot see that the border was removed, so
+  an element that opted out with `border-0` adds `ice-groove-none` to keep the
+  ridge off. Simple mode sets `--ice-groove-paint: none` and leaves just the
+  lip.
 - `--divider-lip: transparent` collapses the groove to a single crisp line.
 - **`outline` is reserved for the focus ring** (a global `:focus-visible` rule in
   `utilities.module.css` draws 2px of brand at 2px offset). Never draw a border
@@ -422,7 +489,10 @@ The base utility is `button`; add `button-sm` for compact buttons, add `button-m
 - `button link`: text link action with no button padding (inherits font size).
 - `button basic`: low-emphasis text action.
 - `button inverted`: light surface with brand text.
-- `button subtle`: muted filled action (the default secondary).
+- `button subtle`: muted filled action (the default secondary). Its material is
+  switchable, like the surfaces: `subtle` currently points at `ice-subtle`
+  (`classic-subtle` is kept and commented out beside it in
+  `button.module.css`).
 - `button success`: positive action.
 - `button warning`: attention action (dark ink on yellow).
 - `button danger`: destructive action.
@@ -439,7 +509,7 @@ when the action is not obvious from a familiar icon.
 
 ### The filled recipe
 
-`solid`, `success`, `warning`, `danger`, `inverted`, `subtle` and the pressed
+`solid`, `success`, `warning`, `danger` and the pressed
 `[data-active='true']` state share one gradient:
 `color-mix(--button-bg 85%, --button-lit --button-sheen) → --button-bg`.
 
@@ -453,9 +523,28 @@ when the action is not obvious from a familiar icon.
 - Ink follows the fill, never the theme: `danger` uses
   `color-mix(--color-error-red 20%, black)` so it stays dark on the red fill in
   both themes. Only `solid` takes an ink that flips.
-- `hollow` and `subtle` are not flat: they keep a 7-8% sheen plus a bevel
-  (`inset 0 1px 0 white 24%` / `inset 0 -1px 0 black 10%`, both scaled by
+- **Hover fills**, not opacity. Both paint layers read `--button-fill`, which
+  moves to `--button-bg-hover` (`color-mix(--button-bg 85%,
+  --button-hover-lit)`) on hover; the control also lifts 2px into
+  `--shadow-button-hover`. `--button-hover-lit` defaults to white, which
+  lightens the fixed-hue fills away from their dark ink; `solid` sets it to
+  `var(--color-background-1000)` (black in light mode, white in dark), so its
+  hover always moves away from its flipping label.
+- `hollow` and `classic-subtle` are not flat: they keep a 7-8% sheen plus a
+  bevel (`inset 0 1px 0 white 24%` / `inset 0 -1px 0 black 10%`, both scaled by
   `--ui-sheen-strength`).
+- Simple mode drops the ice chip too: the `--ice-subtle-fill`,
+  `--ice-subtle-ink`, `--ice-subtle-paint` and `--ice-subtle-shadow` values are
+  read with their ice defaults as fallbacks, so `:root[data-simple] .subtle`
+  can swap them for the neutral chip without out-ranking
+  `.button[data-active]`, which also paints the background.
+- `ice-subtle` is a chip cut from the panel ice: a 90% `--ice-base` fill, the
+  `--ice-sheen-a` corner light and the lit-to-shaded ramp above the
+  `--ice-edge` ring, `--ice-rim-a` top rim and `--ice-depth` foot shade, so it
+  follows both themes with the panels. Its ink is `fg-700` rather than the
+  flipping `fg-muted` because ice is a light fill in light mode and a deep one in
+  dark; hover mixes the fill 15% toward `--color-background-1000`, which darkens
+  it in light mode and lightens it in dark.
 
 **Disabled.** `:disabled` renders a control at `opacity: .55` with
 `filter: grayscale(1)`. A container that only borrows `.button` for its look —
@@ -478,7 +567,7 @@ past the edge). Do not add zero-offset glows or blur above about 12px.
 | `shadow-lg`                | Dialogs and modals.                             |
 | `shadow-xl`                | Select lists and popovers.                      |
 | `--shadow-button`          | Filled buttons at rest (highlight + hard edge). |
-| `--shadow-button-hover`    | Filled buttons on hover (1px lift).             |
+| `--shadow-button-hover`    | Filled buttons on hover (2px lift).             |
 
 Tailwind's defaults for `shadow-sm/md/lg/xl` are overridden, so the built-in
 class names follow this scale. `--shadow-strength` (`semantic.module.css`) is

@@ -7,8 +7,7 @@ import { SubjectsSidebar } from '@/components/academics/subject/SubjectsSidebar'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { Select } from '@/components/ui/select/Select'
-import { useSubjectFilters } from '@/hooks/useSubjectFilters'
-import { cn } from '@/lib/common-utils'
+import { useSubjectExplorer } from '@/hooks/useSubjectExplorer'
 import type { ProfileSubjectsSidebarProps } from '@/types/components/ProfilePage.types'
 import type { SelectOptionType } from '@/types/components/Select.types'
 
@@ -27,7 +26,6 @@ export function ProfileSubjectsSidebar({
   completed,
   currentlyTaking,
   title,
-  studyTip,
 }: ProfileSubjectsSidebarProps) {
   const strings = UI_STRINGS.profile.subjects
   const [view, setView] = useState<SubjectView>('currently_taking')
@@ -60,10 +58,12 @@ export function ProfileSubjectsSidebar({
     year,
     setYear,
     years,
+    sort,
+    setSort,
     includeElectives,
     setIncludeElectives,
     visibleSubjects,
-  } = useSubjectFilters(studyFiltered)
+  } = useSubjectExplorer(studyFiltered)
 
   const selectView = (nextView: SubjectView) => {
     setView(nextView)
@@ -86,7 +86,6 @@ export function ProfileSubjectsSidebar({
     <SubjectsSidebar
       subjects={visibleSubjects}
       title={title}
-      studyTip={studyTip}
       subtitle={viewCopy.subtitle}
       emptyMessage={
         subjects.length > 0
@@ -105,10 +104,9 @@ export function ProfileSubjectsSidebar({
                 key={value}
                 aria-pressed={view === value}
                 onClick={() => selectView(value)}
-                className={cn(
-                  'button button-sm',
-                  view === value ? 'solid' : 'subtle'
-                )}
+                isActive={view === value}
+                disabled={view === value}
+                className={'button button-sm subtle'}
               >
                 {label}
               </Button>
@@ -139,6 +137,7 @@ export function ProfileSubjectsSidebar({
               key={`filters:${view}:${years.join(',')}`}
               year={year}
               years={years}
+              sort={{ value: sort, onChange: setSort }}
               includeElectives={includeElectives}
               onYearChange={setYear}
               onIncludeElectivesChange={setIncludeElectives}

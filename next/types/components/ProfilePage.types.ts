@@ -1,6 +1,5 @@
 import type { ProfileCore } from '@shared/types/profile.types'
 import type { SubjectById } from '@/types/academics/subject.types'
-import type { StudyTipData } from '@/types/components/StudyTipCard.types'
 import type { OnboardingCatalog } from '@/types/onboarding.types'
 import type { ProfileAcademics } from './ProfileCard.types'
 
@@ -13,8 +12,6 @@ export type ProfileSubjectSections = {
 export type ProfileSubjectsSidebarProps = ProfileSubjectSections & {
   /** Defaults to the signed-in user's "Your subjects". */
   title?: string
-  /** Today's study tip; the tip card is omitted without it. */
-  studyTip?: StudyTipData
 }
 
 /** View model shared by the signed-in user's profile and the public one. */
@@ -31,7 +28,6 @@ export type ProfilePageProps = {
   /** The signed-in user's own profile: adds the edit actions and keeps
    * the "Your subjects" title. */
   isOwner?: boolean
-  studyTip?: StudyTipData
 }
 
 /** What `loadPublicProfilePage` hands the `/user/[username]` page: the shared
@@ -48,6 +44,4 @@ export type MyProfilePageViewModel = {
   catalog: OnboardingCatalog | null
   /** Every study's subjects, filtered in place by the sidebar. */
   subjects: ProfileSubjectSections
-  /** Today's study tip; the card is omitted without it. */
-  studyTip?: StudyTipData
 }

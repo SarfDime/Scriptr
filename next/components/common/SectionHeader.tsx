@@ -34,6 +34,12 @@ export const SectionHeader = ({
 }: SectionHeaderProps) => {
   const isCentered = align === 'center'
 
+  const titleVariantClass = {
+    title: 'ui-title',
+    heading: 'ui-heading',
+    subHeading: 'ui-subheading',
+  }
+
   return (
     <Box
       className={cn(
@@ -67,7 +73,7 @@ export const SectionHeader = ({
             as={as}
             {...titleProps}
             className={cn(
-              titleVariant === 'heading' ? 'ui-heading' : 'ui-title',
+              titleVariantClass[titleVariant] || 'ui-title',
               titleProps?.className
             )}
           >
@@ -84,7 +90,7 @@ export const SectionHeader = ({
       {subtitle && (
         <Text
           {...subtitleProps}
-          className={cn('ui-subtitle', subtitleProps?.className)}
+          className={cn('ui-label-modern', subtitleProps?.className)}
         >
           {subtitle}
         </Text>

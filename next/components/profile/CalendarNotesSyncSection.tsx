@@ -88,7 +88,7 @@ export const CalendarNotesSyncSection = () => {
   }
 
   return (
-    <Box className='ui-stack ui-above-inside gap-3'>
+    <Box className='ui-stack gap-3'>
       <SectionHeader
         title={PREFERENCES_STRINGS.notes.title}
         subtitle={CALENDAR_STRINGS.note.localNotice}

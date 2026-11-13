@@ -15,6 +15,7 @@ type CollapseTriggerProps = {
   isOpen?: boolean
   currentIsOpen?: boolean
   toggleCollapse?: () => void
+  contentId?: string
 } & CommonCollapseProps &
   Omit<ButtonBaseProps, 'title'>
 
@@ -25,11 +26,9 @@ type CollapseContentProps = {
 
 type CollapseProps = {
   children: React.ReactNode
-  customTrigger?: {
-    trigger?: React.ReactNode
-    toggle?: () => void
-    isOpen: boolean
-  }
+  /** Controls rendered beside the trigger, inside the same row, for actions
+   * that must not toggle the section. */
+  triggerActions?: React.ReactNode
   rootProps?: BoxProps
   contentProps?: CollapseContentProps
   triggerProps?: CollapseTriggerProps

@@ -1,10 +1,8 @@
 import { UI_STRINGS } from '@shared/config/strings'
-import { Divider } from '@/components/ui/Divider'
 import { cn } from '@/lib/common-utils'
 import type { SubjectsSidebarProps } from '@/types/academics/subject.types'
 import { Box } from '../../common/Box'
 import { SectionHeader } from '../../common/SectionHeader'
-import { StudyTipCard } from '../../common/StudyTipCard'
 import { SubjectCard } from './SubjectCard'
 
 /** Four cards at the sidebar's width (135px each) plus the gaps between them:
@@ -17,11 +15,10 @@ const LIST_MAX_HEIGHT = 'max-h-[36rem]'
 export const SubjectsSidebar = ({
   subjects,
   title = UI_STRINGS.subjects.sidebarTitle,
-  subtitle = UI_STRINGS.subjects.sidebarSubtitle,
+  subtitle,
   emptyMessage = UI_STRINGS.subjects.emptyState,
   toolbar,
   headerProps,
-  studyTip,
   className,
   ...props
 }: SubjectsSidebarProps) => {
@@ -43,19 +40,13 @@ export const SubjectsSidebar = ({
 
       {hasSubjects && (
         /* Block flow, not `ui-stack`: the cards clip their content
-           (`overflow: hidden`), so as flex items they shrink to fit the capped
+            (`overflow: hidden`), so as flex items they shrink to fit the capped
            height instead of overflowing into the scroller. */
         <Box className={cn('space-y-3 overflow-y-auto', LIST_MAX_HEIGHT)}>
           {subjects.map((item) => (
             <SubjectCard key={item._id} {...item} />
           ))}
         </Box>
-      )}
-      {studyTip && (
-        <>
-          <Divider />
-          <StudyTipCard {...studyTip} />
-        </>
       )}
     </Box>
   )

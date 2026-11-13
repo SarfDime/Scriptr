@@ -1,7 +1,9 @@
+import Projects from '@sanity/icons/Projects'
 import { UI_STRINGS } from '@shared/config/strings'
 import { AcademicSetupForm } from '@/components/academics/setup/AcademicSetupForm'
 import { NextLink } from '@/components/common/NextLink'
 import { PageLayout } from '@/components/layout/PageLayout'
+import { Text } from '@/components/typography/Text'
 import { fetchAcademicDetailOrNotFound } from '@/lib/academic-detail-page'
 import { getSession } from '@/lib/api/auth-api'
 import { getRequestCookieHeader } from '@/lib/api/next-api'
@@ -85,16 +87,17 @@ export default async function AcademicSetupPage({
   return (
     <PageLayout
       header={{
-        greeting: UI_STRINGS.onboarding.academicSetup.greeting,
-        subtitle: site.name,
+        greeting: site.name,
+        // subtitle:  UI_STRINGS.onboarding.academicSetup.greeting,
         title: hasProfile
           ? UI_STRINGS.onboarding.academicSetup.updateTitle
           : UI_STRINGS.onboarding.academicSetup.title,
         actions: (
           <NextLink
             href={catalogUrl('/start')}
-            className='button button-sm subtle'
+            className='button button-sm subtle gap-1'
           >
+            <Projects />
             {UI_STRINGS.onboarding.academicSetup.setupAnother}
           </NextLink>
         ),
@@ -113,9 +116,9 @@ export default async function AcademicSetupPage({
           )}
         />
       ) : (
-        <p className='ui-caption'>
+        <Text className='ui-caption'>
           {UI_STRINGS.onboarding.academicSetup.notSynced}
-        </p>
+        </Text>
       )}
     </PageLayout>
   )

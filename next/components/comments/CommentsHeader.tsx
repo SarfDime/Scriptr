@@ -32,6 +32,7 @@ export function CommentsHeader({
       <SectionHeader
         title={COMMENT_STRINGS.general.title}
         count={commentCount}
+        titleVariant='title'
         titleProps={{ id: headingId }}
         actions={
           !isComposing && (

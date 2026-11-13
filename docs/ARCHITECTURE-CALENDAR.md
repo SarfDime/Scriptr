@@ -112,7 +112,7 @@
   bound of "UTC midnight of the build day minus 24 hours", projecting neither
   the description nor professors. The read is cached like every Sanity read, so
   this is build-time data; a Sanity failure is contained and renders no alert,
-  exactly as `getDailyStudyTip` does.
+  exactly as the navbar's study-tip read does.
 * **Header alert, client matching.** `CalendarAlert` keeps events whose day key
   is today or within `CALENDAR_ALERT_WINDOW_DAYS`, then keeps an event when it
   has no subject and is `high` importance, or when its `subjectDbId` is one of

@@ -19,6 +19,7 @@ import { Select } from '@/components/ui/select/Select'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 import { usePreferencesForm } from '@/hooks/profile/usePreferencesForm'
 import type { SelectOptionType } from '@/types/components/Select.types'
+import { Divider } from '../ui/Divider'
 import { CalendarNotesSyncSection } from './CalendarNotesSyncSection'
 
 type ToastPreference = 'on' | 'off'
@@ -90,7 +91,7 @@ const PreferencesDialog = ({ onClose }: { onClose: () => void }) => {
     >
       <FormContainer onSubmit={handleSubmit}>
         <Card.Body className='ui-stack gap-4 p-4'>
-          <Box className='ui-stack ui-above-inside'>
+          <Box className='ui-stack'>
             <SectionHeader
               title={PREFERENCES_STRINGS.notifications.title}
               subtitle={
@@ -104,6 +105,7 @@ const PreferencesDialog = ({ onClose }: { onClose: () => void }) => {
               onChange={updateNotifications}
             />
           </Box>
+          <Divider />
           <CalendarNotesSyncSection />
         </Card.Body>
         <DialogFooter

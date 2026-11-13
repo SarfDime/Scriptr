@@ -257,11 +257,18 @@
   }
 }
 
-/* --- Groove tint --- */
+/* --- Divider tint --- */
 /* Hands a `ui-divider` the colour the palette would draw its border with. The
  * palette's own surface and border skip dividers, so the groove is unchanged.
  * Declared as a utility (not a plain class) so variants compose:
- * `group-hover:cp-divider`, `peer-checked:cp-divider`, `hover:cp-divider`. */
+ * `group-hover:cp-divider`, `peer-checked:cp-divider`, `hover:cp-divider`.
+ *
+ * The ice divider (when that material is selected) is an image, and a data URI
+ * cannot read a custom property, so the helper also sets `--divider-tint`: the
+ * ice paints a masked copy of its own silhouette in that colour. The classic
+ * groove ignores it. It uses the raw hue rather
+ * than the border mix (which is already most of the way to the background) so
+ * the palette reads on the ice; the alpha keeps it a tint. */
 @utility cp-divider {
   --divider-line: var(
     --cp-border-color,
@@ -271,6 +278,7 @@
       var(--color-background-100)
     )
   );
+  --divider-tint: color-mix(in oklab, var(--cp-hue) 65%, transparent);
 }
 
 /* --- Accents --- */

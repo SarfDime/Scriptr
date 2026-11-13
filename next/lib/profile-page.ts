@@ -11,7 +11,6 @@ import {
   getOnboardingCatalog,
   getProfileSubjectSections,
 } from '@/lib/profile-subjects'
-import { getDailyStudyTip } from '@/lib/study-tip'
 import type {
   MyProfilePageViewModel,
   PublicProfilePageViewModel,
@@ -28,10 +27,9 @@ export const loadMyProfilePage = async (): Promise<MyProfilePageViewModel> => {
   const session = await getSessionRequired(cookie)
   if (!session?.user) redirect('/auth')
 
-  const [profile, catalog, studyTip] = await Promise.all([
+  const [profile, catalog] = await Promise.all([
     getMyProfile(cookie),
     getOnboardingCatalog(),
-    getDailyStudyTip(),
   ])
 
   // Every study the account has joined: the profile's own page is not scoped
@@ -42,7 +40,6 @@ export const loadMyProfilePage = async (): Promise<MyProfilePageViewModel> => {
 
   return {
     catalog,
-    studyTip,
     subjects: await getProfileSubjectSections(studyIds, profile.subjects),
   }
 }
@@ -90,7 +87,7 @@ export const loadPublicProfilePage = async (
   if (options.studyId && !memberStudyIds.includes(options.studyId)) notFound()
 
   const studyIds = options.studyId ? [options.studyId] : memberStudyIds
-  const [stats, catalog, subjects, studyTip] = await Promise.all([
+  const [stats, catalog, subjects] = await Promise.all([
     getProfileStats(profile.id),
     getOnboardingCatalog(),
     // The catalog profile page lists what someone studies nowhere: their
@@ -99,7 +96,6 @@ export const loadPublicProfilePage = async (
     options.studyId
       ? getProfileSubjectSections(studyIds, profile.subjects)
       : Promise.resolve(undefined),
-    getDailyStudyTip(),
   ])
 
   return {
@@ -114,7 +110,6 @@ export const loadPublicProfilePage = async (
         : profile.selected_studies
     ),
     subjects,
-    studyTip,
     authoredCount: stats?.scripts_uploaded,
     commentCount: stats?.comments_made,
   }

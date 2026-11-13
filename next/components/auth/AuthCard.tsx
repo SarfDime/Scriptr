@@ -10,6 +10,7 @@ import { Title } from '@/components/typography/Title'
 import { Card } from '@/components/ui/Card'
 import { cn } from '@/lib/common-utils'
 import { useSession } from '@/providers/SessionProvider'
+import { Box } from '../common/Box'
 import { LoginForm } from './LoginForm'
 import { RegisterForm } from './RegisterForm'
 
@@ -61,7 +62,7 @@ export function AuthCard() {
     const displayName = session.user.username || session.user.email || ''
 
     return (
-      <Card className={AUTH_CARD_CLASS}>
+      <Box className={AUTH_CARD_CLASS}>
         <Card.Header>
           <Title as='h1' className='ui-title text-center'>
             {UI_STRINGS.auth.signedInTitle}
@@ -83,12 +84,12 @@ export function AuthCard() {
             {UI_STRINGS.auth.logoutButtonLabel}
           </Button>
         </Card.Body>
-      </Card>
+      </Box>
     )
   }
 
   return (
-    <Card className={AUTH_CARD_CLASS}>
+    <Box className={AUTH_CARD_CLASS}>
       <Card.Header>
         <Title as='h1' className='ui-title text-center'>
           {mode === 'login'
@@ -106,11 +107,11 @@ export function AuthCard() {
         <RegisterForm onSwitchToLogin={() => setMode('login')} />
       )}
 
-      <Card.Footer className='ui-stack gap-2 border-0'>
+      <Card.Footer className='ui-stack gap-2 border-0 ice-groove-none'>
         <NextLink href='/' className='button basic w-full justify-center'>
           {UI_STRINGS.auth.continueAsGuestLabel}
         </NextLink>
       </Card.Footer>
-    </Card>
+    </Box>
   )
 }

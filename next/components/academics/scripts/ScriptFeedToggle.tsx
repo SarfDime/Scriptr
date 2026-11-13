@@ -31,14 +31,18 @@ export const ScriptFeedToggle = ({
       <NextLink
         href={basePath}
         aria-current={showAll ? undefined : 'page'}
-        className={cn('button button-sm', showAll ? 'subtle' : 'solid')}
+        isActive={!showAll}
+        disabled={!showAll}
+        className={cn('button button-sm subtle')}
       >
         {feed.forYou}
       </NextLink>
       <NextLink
         href={`${basePath}?scripts=all`}
         aria-current={showAll ? 'page' : undefined}
-        className={cn('button button-sm', showAll ? 'solid' : 'subtle')}
+        isActive={showAll}
+        disabled={showAll}
+        className={cn('button button-sm subtle')}
       >
         {feed.all}
       </NextLink>

@@ -11,6 +11,7 @@ import { NavFavorites } from './NavFavorites'
 import { NavigationLinks } from './NavigationLinks'
 import { NavLogo } from './NavLogo'
 import { NavStudies } from './NavStudies'
+import { NavStudyTip } from './NavStudyTip'
 import { NavToggle } from './NavToggle'
 import { NavUserSlot } from './NavUserSlot'
 
@@ -21,7 +22,7 @@ import { NavUserSlot } from './NavUserSlot'
  * collapsed. Hidden states are also `invisible` so the links leave the tab
  * order.
  */
-export const NavBar = ({ navItems, studyLogos }: NavBarProps) => (
+export const NavBar = ({ navItems, studyLogos, studyTip }: NavBarProps) => (
   <>
     <NavToggle
       action='close'
@@ -67,7 +68,10 @@ export const NavBar = ({ navItems, studyLogos }: NavBarProps) => (
 
       <NavFavorites />
 
-      <Box className='ui-stack mt-auto gap-3'>
+      {studyTip && <NavStudyTip {...studyTip} />}
+
+      <Box className={cn('ui-stack gap-3', !studyTip && 'mt-auto')}>
+        <Divider />
         <ThemeToggle className='w-full flex-row' />
         <Box className='ui-cluster flex-nowrap gap-2'>
           <SimpleModeToggle className='min-w-0 flex-1' />

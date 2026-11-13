@@ -23,14 +23,14 @@ export const OverviewCard = ({
   ...boxProps
 }: OverviewCardProps) => {
   return (
-    <Card
+    <Box
       className={cn(
-        'grid xl:grid-cols-[1.08fr_0.92fr] overflow-hidden p-0 ui-above',
+        'grid xl:grid-cols-[1.08fr_0.92fr] p-0 ui-above',
         className
       )}
       {...boxProps}
     >
-      <Card.Header className='relative min-h-80 overflow-hidden border-b-0 px-5 py-5 lg:border-r border-grey-300/20'>
+      <Card.Header className='rounded-l-xl relative min-h-80 overflow-hidden border-b-0 px-5 py-5 lg:border-r border-grey-300/20'>
         {picture && (
           <NextImage
             {...picture}
@@ -81,6 +81,6 @@ export const OverviewCard = ({
           </Box>
         )}
       </Card.Body>
-    </Card>
+    </Box>
   )
 }

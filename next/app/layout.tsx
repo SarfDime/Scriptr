@@ -9,6 +9,7 @@ import { NotificationsAside } from '@/components/notifications/NotificationsAsid
 import { AppBackground } from '@/components/ui/app-background/AppBackground'
 import { ToastContainer } from '@/components/ui/toast/ToastContainer'
 import { fetchWebsiteSeoSettings, toOrigin } from '@/lib/academic-detail-page'
+import { getStudyTipRotation } from '@/lib/study-tip'
 import { NavProvider } from '@/providers/nav/NavProvider'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { navMenuQuery, studyLogosQuery } from '@/sanity/queries/nav.queries'
@@ -52,7 +53,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const [navMenu, background, studyLogos] = await Promise.all([
+  const [navMenu, background, studyLogos, studyTip] = await Promise.all([
     fetchSanityData<NavMenuType>({
       query: navMenuQuery,
       fetchOrigin: `navMenuQuery`,
@@ -68,6 +69,7 @@ export default async function RootLayout({
       fetchOrigin: 'studyLogosQuery',
       tags: [SANITY_CACHE_TAGS.study],
     }),
+    getStudyTipRotation(),
   ])
 
   // The enrolled-studies list in the navbar carries Postgres rows, which have
@@ -89,7 +91,11 @@ export default async function RootLayout({
           <ToastContainer />
           <AppBackground background={background} />
           <NavProvider>
-            <NavBar {...navMenu} studyLogos={studyLogosBySite} />
+            <NavBar
+              {...navMenu}
+              studyLogos={studyLogosBySite}
+              studyTip={studyTip}
+            />
             {children}
           </NavProvider>
           <NotificationsAside />

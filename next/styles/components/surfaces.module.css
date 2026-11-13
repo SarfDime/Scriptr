@@ -120,13 +120,17 @@
   }
 }
 
-@utility ui-above {
+/* ==========================================================================
+ * CLASSIC SURFACES (formerly `ui-above*`)
+ * ========================================================================== */
+
+@utility classic-above {
   /* A 97% fill, not a frosted one. The page sits over an animated star canvas,
    * and backdrop blur was the most expensive paint on it, so surfaces are
    * nearly opaque instead; the remaining 3% keeps the sheen and the border from
    * reading as paint on a flat block. */
   @apply ui-above-defaults;
-  @apply bg-background-225/95;
+  @apply bg-background-225/97;
   /* Composed with Tailwind's ring variables so `ring-*` (inputs) still shows. */
   box-shadow:
     inset 0 1px 0 var(--ui-lit-edge),
@@ -138,15 +142,16 @@
   @supports (corner-shape: scoop) {
     corner-shape: scoop;
   }
+  @apply snow-cap;
 }
 
-@utility ui-above-opaque {
-  @apply ui-above;
+@utility classic-above-opaque {
+  @apply classic-above;
   @apply bg-background-225;
 }
 
-@utility ui-above-nav {
-  @apply ui-above-opaque;
+@utility classic-above-nav {
+  @apply classic-above-opaque;
   border-radius: 0;
   border-width: 0 1px 0 0;
   --ui-above-shadow: var(--shadow-edge-right);
@@ -155,8 +160,8 @@
   --ui-ramp-shade: 8%;
 }
 
-@utility ui-above-header {
-  @apply ui-above-opaque;
+@utility classic-above-header {
+  @apply classic-above-opaque;
 
   border-radius: 0;
   border-width: 0 0 1px;
@@ -170,8 +175,8 @@
 /* A slide-over off the right edge (the notification tray): the same lit volume
  * as the navbar, but the edge that separates it from the page is the leading
  * one, so the border and the drop sit on the left. */
-@utility ui-above-drawer {
-  @apply ui-above-opaque;
+@utility classic-above-drawer {
+  @apply classic-above-opaque;
   border-radius: 0;
   border-width: 0 0 0 1px;
   --ui-above-shadow: var(--shadow-drawer);
@@ -188,7 +193,7 @@
     var(--ui-above-shadow);
 }
 
-@utility ui-above-inside {
+@utility classic-above-inside {
   @apply bg-background-125/70;
   @apply ui-above-defaults border-background-300/70 rounded-lg;
   /* Composed with Tailwind's ring variables so `ring-*` (inputs) still shows. */
@@ -201,11 +206,69 @@
     var(--shadow-above-inside);
 }
 
-@utility ui-above-reverse {
+@utility classic-above-reverse {
   @apply ui-above-defaults;
   @apply bg-background-300/75;
   --ui-above-shadow: var(--shadow-edge-top);
 }
+
+/* ==========================================================================
+ * SURFACE THEME SWITCH
+ * The app only ever uses `ui-above*`. To change the look, comment out one
+ * block and uncomment the other. Each alias points straight at its own
+ * variant (not through `ui-above`), so nav/header/drawer keep their own
+ * radius, border and ramp values.
+ *
+ * Declared after every surface above and before the `ui-sheen-*` directions
+ * and `no-gradient`, so those still win on source order.
+ * ========================================================================== */
+
+/* --- ICE --- */
+@utility ui-above {
+  @apply ice-above;
+}
+@utility ui-above-opaque {
+  @apply ice-above-opaque;
+}
+@utility ui-above-nav {
+  @apply ice-above-nav;
+}
+@utility ui-above-header {
+  @apply ice-above-header;
+}
+@utility ui-above-drawer {
+  @apply ice-above-drawer;
+}
+@utility ui-above-inside {
+  @apply ice-above-inside;
+}
+@utility ui-above-reverse {
+  @apply ice-above-reverse;
+}
+
+/* --- CLASSIC ---
+@utility ui-above {
+  @apply classic-above;
+}
+@utility ui-above-opaque {
+  @apply classic-above-opaque;
+}
+@utility ui-above-nav {
+  @apply classic-above-nav;
+}
+@utility ui-above-header {
+  @apply classic-above-header;
+}
+@utility ui-above-drawer {
+  @apply classic-above-drawer;
+}
+@utility ui-above-inside {
+  @apply classic-above-inside;
+}
+@utility ui-above-reverse {
+  @apply classic-above-reverse;
+}
+*/
 
 /* Where the light comes from. Each one keeps the band, colour, strength and
  * length and only moves the direction, so a surface changes its lighting
@@ -328,6 +391,52 @@
     /* biome-ignore lint/correctness/noUnknownFunction: CSS random() */
     --simple-tint-angle: random(150deg, 170deg);
   }
+}
+
+/* Simple mode is flat: every panel drops the ice imagery (fractures, streaks,
+ * grain and the lit-to-shaded ramp) and the ice box-shadow — the 1px edge ring,
+ * the rim light and the coloured inset depth — keeping only the classic
+ * `--ui-lit-edge` hairline and the drop shadow. The flat fill below is then the
+ * whole surface. The snow cap is switched off through `--snow-cap-display` in
+ * `snow-cap.module.css`. */
+:root[data-simple]
+:is(
+  .ui-above,
+  .ui-above-opaque,
+  .ui-above-nav,
+  .ui-above-header,
+  .ui-above-drawer,
+  .ui-above-reverse
+) {
+  background-image: none;
+  box-shadow:
+    inset 0 1px 0 var(--ui-lit-edge, rgb(255 255 255 / 0.2)),
+    var(--tw-inset-shadow, 0 0 #0000),
+    var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000),
+    var(--ui-above-shadow, var(--shadow-above));
+}
+
+/* The inner layer has its own, smaller drop. */
+:root[data-simple] .ui-above-inside {
+  background-image: none;
+  box-shadow:
+    inset 0 1px 0 var(--ui-lit-edge, rgb(255 255 255 / 0.2)),
+    var(--tw-inset-shadow, 0 0 #0000),
+    var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000),
+    var(--shadow-above-inside);
+}
+
+/* The chrome is opaque in both materials, so simple mode keeps it opaque but
+ * moves it off the ice tint. It is named separately from the panels below: the
+ * chrome classes are not `.ui-above`, and giving them the panel fill would
+ * flatten them. */
+:root[data-simple]
+:is(.ui-above-opaque, .ui-above-nav, .ui-above-header, .ui-above-drawer) {
+  background-color: var(--color-background-225);
 }
 
 /* Panels only: the chrome is `ui-above-opaque`, not `.ui-above`, so listing it

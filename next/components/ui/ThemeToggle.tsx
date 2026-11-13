@@ -21,7 +21,7 @@ export function ThemeToggle({ className }: { className?: string }) {
   return (
     <fieldset
       className={cn(
-        'border-grey-300 border rounded-xl bg-background-200 p-1.5 gap-1.5 flex flex-col w-fit mx-auto',
+        'ui-above-inside p-1.5 gap-1.5 flex flex-col w-fit mx-auto',
         className
       )}
     >

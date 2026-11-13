@@ -1,0 +1,107 @@
+/* Snow mass, per theme. A data URI is a closed image, so it cannot read the
+ * `--ice-*` tokens; each theme gets its own copy and the blocks below pick one.
+ * The frost is the one layer that can be tokenised outright: it is a gradient
+ * plus a grain, and both read from these values in `snow-cap`'s `::after`. */
+:root {
+  --snow-cap-front-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 72' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='8' x2='0' y2='64' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%23eef4fa'/%3E%3Cstop offset='.5' stop-color='%23d9e4f0'/%3E%3Cstop offset='1' stop-color='%23a9bcd3'/%3E%3C/linearGradient%3E%3Cfilter id='s' x='-5%25' y='-30%25' width='110%25' height='170%25'%3E%3CfeGaussianBlur stdDeviation='3'/%3E%3C/filter%3E%3Cpath id='p' d='M0 34C10 34 14 22 30 20C46 18 52 30 66 28C80 26 84 12 104 10C124 8 130 26 148 27C160 28 166 20 178 21C196 22 200 30 214 29C232 28 238 6 262 5C286 4 290 24 308 25C324 26 330 17 344 20C352 22 356 30 360 34L360 40C350 46 346 56 336 56C326 56 326 44 314 44C304 44 302 52 292 52C282 52 280 42 266 42C252 42 250 58 238 58C226 58 226 46 212 46C198 46 196 40 184 41C170 42 168 54 156 54C144 54 142 44 128 43C112 42 108 50 96 50C84 50 82 40 68 40C54 40 52 48 40 48C28 48 26 40 14 40C8 40 4 38 0 40Z'/%3E%3C/defs%3E%3Cg transform='translate(0 2)'%3E%3Cuse href='%23p' transform='translate(0 5)' fill='%233d5a85' opacity='.4' filter='url(%23s)'/%3E%3Cuse href='%23p' fill='url(%23b)'/%3E%3Cpath d='M0 34C10 34 14 22 30 20C46 18 52 30 66 28C80 26 84 12 104 10C124 8 130 26 148 27C160 28 166 20 178 21C196 22 200 30 214 29C232 28 238 6 262 5C286 4 290 24 308 25C324 26 330 17 344 20C352 22 356 30 360 34' fill='none' stroke='%23fff' stroke-width='1.6' stroke-linecap='round' transform='translate(0 -.8)'/%3E%3Cg fill='%23fff'%3E%3Ccircle cx='31' cy='24' r='.9'/%3E%3Ccircle cx='180' cy='26' r='.8'/%3E%3Ccircle cx='345' cy='25' r='1'/%3E%3Ccircle cx='70' cy='34' r='.8'/%3E%3Ccircle cx='150' cy='33' r='.7'/%3E%3Ccircle cx='310' cy='31' r='.9'/%3E%3Ccircle cx='238' cy='15' r='.8'/%3E%3Cpath d='M110 13.8L110.5 15.5L112.2 16L110.5 16.5L110 18.2L109.5 16.5L107.8 16L109.5 15.5Z'/%3E%3Cpath d='M264 8.8L264.5 10.5L266.2 11L264.5 11.5L264 13.2L263.5 11.5L261.8 11L263.5 10.5Z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --snow-cap-front-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 72' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='8' x2='0' y2='64' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%23e6f0fb'/%3E%3Cstop offset='.5' stop-color='%23c8dcf2'/%3E%3Cstop offset='1' stop-color='%239fbcdb'/%3E%3C/linearGradient%3E%3Cfilter id='s' x='-5%25' y='-30%25' width='110%25' height='170%25'%3E%3CfeGaussianBlur stdDeviation='3'/%3E%3C/filter%3E%3Cpath id='p' d='M0 34C10 34 14 22 30 20C46 18 52 30 66 28C80 26 84 12 104 10C124 8 130 26 148 27C160 28 166 20 178 21C196 22 200 30 214 29C232 28 238 6 262 5C286 4 290 24 308 25C324 26 330 17 344 20C352 22 356 30 360 34L360 40C350 46 346 56 336 56C326 56 326 44 314 44C304 44 302 52 292 52C282 52 280 42 266 42C252 42 250 58 238 58C226 58 226 46 212 46C198 46 196 40 184 41C170 42 168 54 156 54C144 54 142 44 128 43C112 42 108 50 96 50C84 50 82 40 68 40C54 40 52 48 40 48C28 48 26 40 14 40C8 40 4 38 0 40Z'/%3E%3C/defs%3E%3Cg transform='translate(0 2)'%3E%3Cuse href='%23p' transform='translate(0 5)' fill='%23000a18' opacity='.55' filter='url(%23s)'/%3E%3Cuse href='%23p' fill='url(%23b)'/%3E%3Cpath d='M0 34C10 34 14 22 30 20C46 18 52 30 66 28C80 26 84 12 104 10C124 8 130 26 148 27C160 28 166 20 178 21C196 22 200 30 214 29C232 28 238 6 262 5C286 4 290 24 308 25C324 26 330 17 344 20C352 22 356 30 360 34' fill='none' stroke='%23fff' stroke-width='1.6' stroke-linecap='round' transform='translate(0 -.8)'/%3E%3Cg fill='%23fff'%3E%3Ccircle cx='31' cy='24' r='.9'/%3E%3Ccircle cx='180' cy='26' r='.8'/%3E%3Ccircle cx='345' cy='25' r='1'/%3E%3Ccircle cx='70' cy='34' r='.8'/%3E%3Ccircle cx='150' cy='33' r='.7'/%3E%3Ccircle cx='310' cy='31' r='.9'/%3E%3Ccircle cx='238' cy='15' r='.8'/%3E%3Cpath d='M110 13.8L110.5 15.5L112.2 16L110.5 16.5L110 18.2L109.5 16.5L107.8 16L109.5 15.5Z'/%3E%3Cpath d='M264 8.8L264.5 10.5L266.2 11L264.5 11.5L264 13.2L263.5 11.5L261.8 11L263.5 10.5Z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --snow-cap-back-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 530 72' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='12' x2='0' y2='56' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%23d2deec'/%3E%3Cstop offset='1' stop-color='%2394a9c4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg transform='translate(0 2)'%3E%3Cpath fill='url(%23b)' d='M0 38C20 38 30 26 56 25C82 24 92 34 120 33C150 32 160 14 196 13C232 12 240 30 270 30C296 30 306 22 330 22C360 22 366 34 396 34C424 34 434 18 462 17C490 16 500 34 530 38L530 44C510 50 500 48 486 48C470 48 466 42 450 42C436 42 430 50 410 50C392 50 388 44 368 44C350 44 344 52 322 52C300 52 296 42 272 42C250 42 244 48 222 48C200 48 196 40 170 40C146 40 140 50 116 50C94 50 88 44 64 44C40 44 34 50 16 50C8 50 4 46 0 44Z'/%3E%3C/g%3E%3C/svg%3E");
+  --snow-cap-back-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 530 72' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='12' x2='0' y2='56' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%23c2d7ee'/%3E%3Cstop offset='1' stop-color='%238fadcf'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg transform='translate(0 2)'%3E%3Cpath fill='url(%23b)' d='M0 38C20 38 30 26 56 25C82 24 92 34 120 33C150 32 160 14 196 13C232 12 240 30 270 30C296 30 306 22 330 22C360 22 366 34 396 34C424 34 434 18 462 17C490 16 500 34 530 38L530 44C510 50 500 48 486 48C470 48 466 42 450 42C436 42 430 50 410 50C392 50 388 44 368 44C350 44 344 52 322 52C300 52 296 42 272 42C250 42 244 48 222 48C200 48 196 40 170 40C146 40 140 50 116 50C94 50 88 44 64 44C40 44 34 50 16 50C8 50 4 46 0 44Z'/%3E%3C/g%3E%3C/svg%3E");
+
+  --snow-cap-front: var(--snow-cap-front-light);
+  --snow-cap-back: var(--snow-cap-back-light);
+  --snow-cap-frost-a: 0.6;
+  --snow-cap-frost-tint: rgb(205 228 255 / 0.4);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --snow-cap-front: var(--snow-cap-front-dark);
+    --snow-cap-back: var(--snow-cap-back-dark);
+    --snow-cap-frost-a: 0.28;
+    --snow-cap-frost-tint: rgb(150 195 255 / 0.18);
+  }
+}
+
+:root[data-theme="dark"] {
+  --snow-cap-front: var(--snow-cap-front-dark);
+  --snow-cap-back: var(--snow-cap-back-dark);
+  --snow-cap-frost-a: 0.28;
+  --snow-cap-frost-tint: rgb(150 195 255 / 0.18);
+}
+
+/* Simple mode is flat: no cap, no frost. One inherited token turns both layers
+ * off wherever `snow-cap` was applied (including through `ui-above`). */
+:root[data-simple] {
+  --snow-cap-display: none;
+}
+
+@utility snow-cap {
+  position: relative;
+
+  /* Snow mass: half above the host's top edge, half hanging over it */
+  &::before {
+    content: "";
+    display: var(--snow-cap-display, block);
+    position: absolute;
+    z-index: 1;
+    left: 0;
+    right: 0;
+    top: calc(var(--snow-h, 2rem) * -0.5);
+    height: var(--snow-h, 2rem);
+    pointer-events: none;
+    background-repeat: repeat-x, repeat-x;
+    background-position:
+      0 0,
+      40% 0;
+    background-size:
+      calc(var(--snow-h, 2rem) * 6) 100%,
+      calc(var(--snow-h, 2rem) * 9.4) 100%;
+    background-image: var(--snow-cap-front), var(--snow-cap-back);
+  }
+
+  /* Surface frost: clamped to the host's height so it never adds scroll height */
+  &::after {
+    content: "";
+    display: var(--snow-cap-display, block);
+    position: absolute;
+    z-index: 1;
+    inset: 0 0 auto 0;
+    height: min(calc(var(--snow-h, 2rem) * 2.4), 100%);
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: var(--snow-cap-frost-a, 0.6);
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.4 -.55'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),
+      linear-gradient(to bottom, var(--snow-cap-frost-tint), transparent);
+    mask-image: linear-gradient(
+      to bottom,
+      #000 0%,
+      rgb(0 0 0 / 0.5) 40%,
+      transparent 100%
+    );
+  }
+}
+
+/* Numeric / arbitrary sizes: snow-cap-8 = 2rem, snow-cap-[2.5rem] */
+@utility snow-cap-* {
+  --snow-h: calc(var(--spacing) * --value(integer));
+  --snow-h: --value([length]);
+}
+
+/* Named steps */
+@utility snow-cap-xs {
+  --snow-h: 1rem;
+}
+@utility snow-cap-sm {
+  --snow-h: 1.5rem;
+}
+@utility snow-cap-md {
+  --snow-h: 2rem;
+}
+@utility snow-cap-lg {
+  --snow-h: 3rem;
+}
+@utility snow-cap-xl {
+  --snow-h: 4rem;
+}

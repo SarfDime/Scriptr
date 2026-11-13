@@ -143,8 +143,8 @@ are still open:
 ## Visual fidelity
 
 The surfaces now carry their material detail — a sheen band, a 1px inner top
-highlight, groove dividers and darker chrome on the nav/header/footer — as
-described in
+highlight, snow caps, ice ridges on horizontal and vertical dividers (and on
+the card/dialog/navbar edges) and darker chrome on the nav/header/footer — as described in
 [`next/STYLING_GUIDE.md`](../next/STYLING_GUIDE.md#surface-detail). Outstanding:
 
 - **Contrast audit coverage:** the simple-mode pass sampled five pages and fixed

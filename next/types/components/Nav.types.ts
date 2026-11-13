@@ -7,6 +7,7 @@ import type {
   SanityImageType,
   WithResolvedSanityData,
 } from '@shared/types/sanity-transform.types'
+import type { StudyTipRotation } from '@/types/components/StudyTip.types'
 
 type NavItemType = {
   navItemSlug: string
@@ -31,7 +32,11 @@ type NavStudyLogoEntry = NonNullable<
  * request of its own. */
 type NavStudyLogos = Record<string, SanityImageType>
 
-type NavBarProps = NavMenuType & { studyLogos?: NavStudyLogos }
+type NavBarProps = NavMenuType & {
+  studyLogos?: NavStudyLogos
+  /** The published study tips and the UTC day the layout rendered them. */
+  studyTip?: StudyTipRotation
+}
 
 export type {
   NavBarProps,

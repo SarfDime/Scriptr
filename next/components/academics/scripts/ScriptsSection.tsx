@@ -20,7 +20,6 @@ const VISIBLE_LIMIT = 5
 export const ScriptsSection = ({
   scripts,
   title = UI_STRINGS.scripts.sectionTitle,
-  subtitle = UI_STRINGS.scripts.sectionSubtitle,
   className,
   parentSubject,
   scriptsUnavailable = false,
@@ -51,7 +50,7 @@ export const ScriptsSection = ({
     >
       <SectionHeader
         title={title}
-        subtitle={subtitle}
+        titleVariant='subHeading'
         count={scriptsUnavailable ? undefined : visibleScripts.length}
         actions={headerActions}
       />

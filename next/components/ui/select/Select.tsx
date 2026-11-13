@@ -135,8 +135,8 @@ export const Select = <T = string>({
         {...triggerProps}
         disabled={disabled || triggerProps?.disabled}
         className={cn(
-          'group/trigger grow flex justify-start items-center text-left text-base leading-4 md:leading-[inherit] ',
-          'cursor-pointer p-2 gap-2 [&>span]:truncate',
+          'group/trigger grow flex justify-start items-center text-left text-base',
+          'cursor-pointer p-1.5 gap-2 [&>span]:truncate',
           triggerProps?.className
         )}
       >

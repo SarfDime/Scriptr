@@ -4,7 +4,7 @@ import { headerSchemaFields } from '../common/headerFields'
 import { validationRules } from '../validation'
 
 /** Sanity-only content: no `dbId`, no Create/Sync actions, no internal API
- * call. The site shows one published tip per day in the study tip card. */
+ * call. The site shows one published tip per day in the navbar. */
 export const StudyTip = defineType({
   name: 'studyTip',
   title: 'Study tip',
@@ -24,7 +24,7 @@ export const StudyTip = defineType({
       title: 'Tip title',
       type: 'richTextLite',
       isRequired: true,
-      description: 'The heading of the study tip card, shown to visitors.',
+      description: 'The heading of the study tip, shown in the navigation.',
     }),
     defineField({
       name: 'content',

@@ -19,6 +19,7 @@ export const CollapseTrigger = ({
   triggerTitleProps,
   triggerArrowProps,
   currentIsOpen,
+  contentId,
   toggleCollapse,
   ...rest
 }: CollapseTriggerProps) => {
@@ -27,6 +28,7 @@ export const CollapseTrigger = ({
       onClick={toggleCollapse}
       isActive={isOpen}
       aria-expanded={currentIsOpen}
+      aria-controls={contentId}
       {...rest}
       className={cn(
         'group/trigger collapsible-trigger w-full p-0',

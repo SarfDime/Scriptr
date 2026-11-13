@@ -1,11 +1,14 @@
-/* A hairline, not a pane: `Divider` used to borrow `ui-above-inside`, which gave
- * a 2px strip a fill, a shadow and a lit edge. It is a groove now — the border is
- * the cut and the orientation class adds the lip that catches the light under
- * it, so the line reads as pressed into the surface instead of drawn on it. */
-/* A divider paints both bands of the groove in one gradient. Drawing the cut as
- * a border and the lip as an inset shadow let the two layers snap to device rows
- * independently, so identical dividers read at different strengths depending on
- * the fractional offset layout gave them. */
+/* The divider and edge materials. The public classes are thin aliases at the
+ * foot of this file: `ui-divider-h`, `ui-divider-v` and `ui-groove-*` point at
+ * the ice material (`ice-dividers.module.css`) or at the classic groove below.
+ * The base `ui-divider` and the `--divider-line` channel are shared by both.
+ *
+ * The groove is one paint: the first 1px is the cut and the second is the lip
+ * that catches the light under it, so the line reads as pressed into the
+ * surface instead of drawn on it. Drawing the cut as a border and the lip as an
+ * inset shadow let the two layers snap to device rows independently, so
+ * identical dividers read at different strengths depending on the fractional
+ * offset layout gave them. */
 /* Registered so `--divider-line` can interpolate: an unregistered custom
  * property is discrete, and a gradient painted from a discrete value would jump.
  * `transparent` is only the root default — `ui-divider` always sets the line. */
@@ -20,16 +23,26 @@
   border-width: 0;
   /* Call sites tint the line by setting this, either directly or through the
    * `cp-divider` palette helper. It is painted into a gradient, so it only
-   * interpolates because it is registered as a `<color>` below; without that
-   * the tint would snap between palettes instead of fading. */
+   * interpolates because it is registered as a `<color>` above; without that
+   * the tint would snap between palettes instead of fading. The ice material
+   * adds `--divider-tint` beside it (registered in its own file), and both fade
+   * together here so the palette change never lands in two steps. */
   --divider-line: var(--divider-cut);
 
   @media (prefers-reduced-motion: no-preference) {
-    transition: --divider-line 250ms ease-out;
+    transition:
+      --divider-line 250ms ease-out,
+      --divider-tint 250ms ease-out;
   }
 }
 
-@utility ui-divider-h {
+/* ==========================================================================
+ * CLASSIC MATERIAL
+ * The original groove: a 1px cut plus a 1px lip, and an edge helper that only
+ * adds the lip inside an element's own border.
+ * ========================================================================== */
+
+@utility classic-divider-h {
   min-height: 2px;
   height: 2px;
   background-image: linear-gradient(
@@ -39,7 +52,7 @@
   );
 }
 
-@utility ui-divider-v {
+@utility classic-divider-v {
   min-width: 2px;
   width: 2px;
   background-image: linear-gradient(
@@ -54,18 +67,66 @@
  * separator with a border (a card footer, a dialog header) gets the treatment
  * without becoming a `Divider`. Only for elements that carry no shadow of their
  * own — this replaces `box-shadow`. */
-@utility ui-groove-t {
+@utility classic-groove-t {
   box-shadow: inset 0 1px 0 var(--divider-lip);
 }
 
-@utility ui-groove-b {
+@utility classic-groove-b {
   box-shadow: inset 0 -1px 0 var(--divider-lip);
 }
 
-@utility ui-groove-l {
+@utility classic-groove-l {
   box-shadow: inset 1px 0 0 var(--divider-lip);
 }
 
-@utility ui-groove-r {
+@utility classic-groove-r {
   box-shadow: inset -1px 0 0 var(--divider-lip);
 }
+
+/* ==========================================================================
+ * DIVIDER THEME SWITCH
+ * Mirrors the surface switch in `surfaces.module.css`: the public classes point
+ * at one material, so the look changes in one place. Comment out the active
+ * block and uncomment the other.
+ * ========================================================================== */
+
+/* --- ICE --- */
+@utility ui-divider-h {
+  @apply ice-divider-h;
+}
+@utility ui-divider-v {
+  @apply ice-divider-v;
+}
+@utility ui-groove-t {
+  @apply ice-groove-t;
+}
+@utility ui-groove-b {
+  @apply ice-groove-b;
+}
+@utility ui-groove-l {
+  @apply ice-groove-l;
+}
+@utility ui-groove-r {
+  @apply ice-groove-r;
+}
+
+/* --- CLASSIC ---
+@utility ui-divider-h {
+  @apply classic-divider-h;
+}
+@utility ui-divider-v {
+  @apply classic-divider-v;
+}
+@utility ui-groove-t {
+  @apply classic-groove-t;
+}
+@utility ui-groove-b {
+  @apply classic-groove-b;
+}
+@utility ui-groove-l {
+  @apply classic-groove-l;
+}
+@utility ui-groove-r {
+  @apply classic-groove-r;
+}
+*/

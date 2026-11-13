@@ -1,0 +1,213 @@
+/* ==========================================================================
+ * ICE SURFACES (theme-aware)
+ * Replaces the whole previous "ICE SURFACES" section. Colours come from the
+ * --ice-* tokens in ice-tokens.css, so they follow light / dark / auto-dark.
+ * ========================================================================== */
+
+/* Fracture tiles live in variables because an SVG data URI can't read CSS
+ * variables itself. Defined once here; each theme only picks one with
+ * `--ice-crack`. */
+:root {
+  /* Dark theme: dark blue shadow line + soft white highlight */
+  --ice-crack-img-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='340' viewBox='0 0 520 340' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='rgb(0 15 45)' stroke-opacity='.4' stroke-width='1.2' transform='translate(1.5 1)'%3E%3Cpath d='M40 0L62 70L48 120L90 190L70 250L110 340'/%3E%3Cpath d='M62 70L120 96L150 150'/%3E%3Cpath d='M90 190L160 210L214 280'/%3E%3Cpath d='M330 0L310 60L360 110L340 170L400 230L390 340'/%3E%3Cpath d='M360 110L430 100L480 150'/%3E%3Cpath d='M310 60L270 100'/%3E%3C/g%3E%3Cg stroke='white' stroke-opacity='.28' stroke-width='.8'%3E%3Cpath d='M40 0L62 70L48 120L90 190L70 250L110 340'/%3E%3Cpath d='M62 70L120 96L150 150'/%3E%3Cpath d='M90 190L160 210L214 280'/%3E%3Cpath d='M330 0L310 60L360 110L340 170L400 230L390 340'/%3E%3Cpath d='M360 110L430 100L480 150'/%3E%3Cpath d='M310 60L270 100'/%3E%3C/g%3E%3C/svg%3E");
+
+  /* Light theme: mid-blue shadow line + strong white highlight */
+  --ice-crack-img-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='340' viewBox='0 0 520 340' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='rgb(30 90 170)' stroke-opacity='.28' stroke-width='1.2' transform='translate(1.5 1)'%3E%3Cpath d='M40 0L62 70L48 120L90 190L70 250L110 340'/%3E%3Cpath d='M62 70L120 96L150 150'/%3E%3Cpath d='M90 190L160 210L214 280'/%3E%3Cpath d='M330 0L310 60L360 110L340 170L400 230L390 340'/%3E%3Cpath d='M360 110L430 100L480 150'/%3E%3Cpath d='M310 60L270 100'/%3E%3C/g%3E%3Cg stroke='white' stroke-opacity='.85' stroke-width='.9'%3E%3Cpath d='M40 0L62 70L48 120L90 190L70 250L110 340'/%3E%3Cpath d='M62 70L120 96L150 150'/%3E%3Cpath d='M90 190L160 210L214 280'/%3E%3Cpath d='M330 0L310 60L360 110L340 170L400 230L390 340'/%3E%3Cpath d='M360 110L430 100L480 150'/%3E%3Cpath d='M310 60L270 100'/%3E%3C/g%3E%3C/svg%3E");
+
+  /* Second tile (different period, offset) so cracks don't visibly repeat */
+  --ice-crack-b: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='710' height='460' viewBox='0 0 710 460' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='white' stroke-opacity='.3' stroke-width='.7'%3E%3Cpath d='M180 0L210 90L170 160L240 250L220 330L280 460'/%3E%3Cpath d='M210 90L300 120L340 190'/%3E%3Cpath d='M520 0L490 80L560 150L530 240L600 320L590 460'/%3E%3Cpath d='M560 150L650 140'/%3E%3C/g%3E%3Cg fill='white' fill-opacity='.4'%3E%3Ccircle cx='120' cy='60' r='1.2'/%3E%3Ccircle cx='400' cy='210' r='1'/%3E%3Ccircle cx='640' cy='300' r='1.4'/%3E%3Ccircle cx='300' cy='400' r='.9'/%3E%3C/g%3E%3C/svg%3E");
+
+  /* Fallback if a theme block forgot --ice-crack */
+  --ice-crack: var(--ice-crack-img-dark);
+}
+
+@utility ice-above {
+  /* Same box as ui-above: radius, border, padding, gap, corner shapes */
+  @apply rounded-xl p-4 gap-4;
+  border: 1px solid rgb(var(--ice-edge) / var(--ice-edge-a));
+  @supports (corner-shape: bevel) {
+    corner-shape: bevel;
+  }
+  @supports (corner-shape: scoop) {
+    corner-shape: scoop;
+  }
+
+  /* 97% fill, no blur. */
+  background-color: rgb(var(--ice-base) / 0.97);
+  /* Own light instead of ui-sheen. Top to bottom: corner light, streaks,
+   * two offset fracture tiles, grain, depth ramp. */
+  background-image:
+    linear-gradient(
+      135deg,
+      rgb(255 255 255 / var(--ice-sheen-a)) 0,
+      transparent min(var(--ui-sheen-length, 120px), 60%)
+    ),
+    linear-gradient(
+      115deg,
+      transparent 0 18%,
+      rgb(255 255 255 / var(--ice-streak-a)) 23%,
+      transparent 29%,
+      transparent 56%,
+      rgb(255 255 255 / calc(var(--ice-streak-a) * 0.6)) 61%,
+      transparent 67%
+    ),
+    var(--ice-crack), var(--ice-crack-b),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .7 -.3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),
+    linear-gradient(
+      to bottom,
+      rgb(var(--ice-lit) / calc(var(--ice-lit-a) * var(--ice-light-k, 1))) 0,
+      transparent var(--ice-mid, 45%),
+      rgb(var(--ice-depth) / calc(var(--ice-shade-a) * var(--ice-shade-k, 1)))
+        100%
+    );
+  background-size:
+    auto,
+    auto,
+    520px 340px,
+    710px 460px,
+    160px 160px,
+    auto;
+  background-position:
+    0 0,
+    0 0,
+    0 0,
+    130px 90px,
+    0 0,
+    0 0;
+  background-repeat: no-repeat, no-repeat, repeat, repeat, repeat, no-repeat;
+
+  /* Composed with Tailwind's ring variables so ring-* still shows */
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / var(--ice-rim-a)),
+    inset 0 0 0 1px rgb(var(--ice-edge) / calc(var(--ice-edge-a) * 0.45)),
+    inset 0 20px 32px -22px rgb(255 255 255 / calc(var(--ice-rim-a) * 0.5)),
+    inset 0 -24px 40px -16px rgb(var(--ice-depth) / var(--ice-depth-a)),
+    var(--tw-inset-shadow, 0 0 #0000),
+    var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000),
+    var(--ui-above-shadow, var(--shadow-above));
+
+  @apply snow-cap;
+}
+
+@utility ice-above-inside {
+  @apply rounded-lg p-4 gap-4;
+  border: 1px solid rgb(var(--ice-edge) / calc(var(--ice-edge-a) * 0.65));
+  @supports (corner-shape: bevel) {
+    corner-shape: bevel;
+  }
+
+  /* Calmer than the slab: grain and a soft ramp only, no fractures */
+  background-color: rgb(var(--ice-inside) / var(--ice-inside-a));
+  background-image:
+    linear-gradient(
+      135deg,
+      rgb(255 255 255 / calc(var(--ice-sheen-a) * 0.3)) 0,
+      transparent min(var(--ui-sheen-length, 96px), 60%)
+    ),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .3 -.14'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),
+    linear-gradient(
+      to bottom,
+      rgb(var(--ice-lit) / calc(var(--ice-lit-a) * 0.4)) 0,
+      transparent 55%,
+      rgb(var(--ice-depth) / calc(var(--ice-shade-a) * 0.8)) 100%
+    );
+  background-size:
+    auto,
+    160px 160px,
+    auto;
+  background-repeat: no-repeat, repeat, no-repeat;
+
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / calc(var(--ice-rim-a) * 0.7)),
+    var(--tw-inset-shadow, 0 0 #0000),
+    var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000),
+    var(--shadow-above-inside);
+}
+
+@utility ice-above-opaque {
+  @apply ice-above;
+  background-color: rgb(var(--ice-base));
+}
+
+@utility ice-above-nav {
+  @apply ice-above-opaque;
+  border-radius: 0;
+  border-width: 0 1px 0 0;
+  --ui-above-shadow: var(--shadow-edge-right);
+  /* A full-height column keeps its volume past the corner band. */
+  --ice-light-k: 0.7;
+  --ice-shade-k: 0.85;
+}
+
+@utility ice-above-header {
+  @apply ice-above-opaque;
+  border-radius: 0;
+  border-width: 0 0 1px;
+  --ui-above-shadow: var(--shadow-edge-bottom);
+  /* A short bar keeps the light and barely any shade. */
+  --ice-light-k: 0.7;
+  --ice-shade-k: 0.35;
+}
+
+@utility ice-above-drawer {
+  @apply ice-above-opaque;
+  border-radius: 0;
+  border-width: 0 0 0 1px;
+  --ui-above-shadow: var(--shadow-drawer);
+  --ice-light-k: 0.7;
+  --ice-shade-k: 0.85;
+  --ice-mid: 55%;
+  /* The lit edge is the leading (left) one. */
+  box-shadow:
+    inset 1px 0 0 rgb(255 255 255 / calc(var(--ice-rim-a) * 0.85)),
+    inset 0 0 0 1px rgb(var(--ice-edge) / calc(var(--ice-edge-a) * 0.45)),
+    inset 0 -24px 40px -16px rgb(var(--ice-depth) / var(--ice-depth-a)),
+    var(--tw-inset-shadow, 0 0 #0000),
+    var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000),
+    var(--ui-above-shadow);
+}
+
+/* Lit from below instead of above: shade at the top, a pale glow at the foot. */
+@utility ice-above-reverse {
+  @apply rounded-xl p-4 gap-4;
+  border: 1px solid rgb(var(--ice-edge) / calc(var(--ice-edge-a) * 0.8));
+  @supports (corner-shape: bevel) {
+    corner-shape: bevel;
+  }
+  --ui-above-shadow: var(--shadow-edge-top);
+
+  background-color: rgb(var(--ice-reverse) / 0.85);
+  background-image:
+    linear-gradient(
+      315deg,
+      rgb(255 255 255 / calc(var(--ice-sheen-a) * 0.45)) 0,
+      transparent min(var(--ui-sheen-length, 96px), 60%)
+    ),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .3 -.14'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),
+    linear-gradient(
+      to top,
+      rgb(var(--ice-lit) / calc(var(--ice-lit-a) * 0.7)) 0,
+      transparent 50%,
+      rgb(var(--ice-depth) / calc(var(--ice-shade-a) * 0.8)) 100%
+    );
+  background-size:
+    auto,
+    160px 160px,
+    auto;
+  background-repeat: no-repeat, repeat, no-repeat;
+
+  box-shadow:
+    inset 0 -1px 0 rgb(255 255 255 / calc(var(--ice-rim-a) * 0.7)),
+    inset 0 0 0 1px rgb(var(--ice-edge) / calc(var(--ice-edge-a) * 0.4)),
+    var(--tw-inset-shadow, 0 0 #0000),
+    var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000),
+    var(--ui-above-shadow);
+}

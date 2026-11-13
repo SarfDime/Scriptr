@@ -4,32 +4,33 @@
    Imported from next/styles/main.css, next to colors.module.css. */
 @layer colors {
   /* Light theme: exaggerated, not photorealistic. The day phases are a light,
-     airy blue; only sunrise and sunset go saturated. Night is kept brighter than
-     the dark theme's, close to that theme's midday. */
+     airy blue; sunrise and sunset carry the warm saturation. The dark phases are
+     moonlit pastels rather than true night, because the page's copy is dark and
+     a dark sky left it unreadable after sunset. */
   :root {
-    --color-sky-night-top: #1b2b52;
-    --color-sky-night-bottom: #35507d;
+    --color-sky-night-top: #8a97c8;
+    --color-sky-night-bottom: #dde3f1;
     --color-sky-night-sun: #ffd9a0;
     --color-sky-night-sun-glow: #ffbe6b;
     --color-sky-night-moon: #fdfbff;
-    --color-sky-night-cloud: #46557a;
-    --color-sky-night-cloud-shade: #2f3a58;
+    --color-sky-night-cloud: #e6eaf6;
+    --color-sky-night-cloud-shade: #b6c0db;
 
-    --color-sky-dawn-top: #3a2f5e;
-    --color-sky-dawn-bottom: #e08b5a;
+    --color-sky-dawn-top: #a892c6;
+    --color-sky-dawn-bottom: #f7c2a2;
     --color-sky-dawn-sun: #ffb37a;
     --color-sky-dawn-sun-glow: #ff9a5c;
     --color-sky-dawn-moon: #e6e8f5;
-    --color-sky-dawn-cloud: #b07a86;
-    --color-sky-dawn-cloud-shade: #6d4c62;
+    --color-sky-dawn-cloud: #ffdcc4;
+    --color-sky-dawn-cloud-shade: #d4a49c;
 
-    --color-sky-sunrise-top: #7f8fc4;
-    --color-sky-sunrise-bottom: #ff8a4d;
+    --color-sky-sunrise-top: #9aa8d6;
+    --color-sky-sunrise-bottom: #ffad78;
     --color-sky-sunrise-sun: #ff5a24;
     --color-sky-sunrise-sun-glow: #ff9b4a;
     --color-sky-sunrise-moon: #dfe2f0;
-    --color-sky-sunrise-cloud: #ffc09a;
-    --color-sky-sunrise-cloud-shade: #a9645c;
+    --color-sky-sunrise-cloud: #ffcda6;
+    --color-sky-sunrise-cloud-shade: #cf9078;
 
     --color-sky-morning-top: #6fb4ec;
     --color-sky-morning-bottom: #cbe6ff;
@@ -55,23 +56,25 @@
     --color-sky-afternoon-cloud: #fdfdff;
     --color-sky-afternoon-cloud-shade: #c0d3e6;
 
-    --color-sky-sunset-top: #6b3f7a;
-    --color-sky-sunset-bottom: #e0407f;
+    --color-sky-sunset-top: #cd93c2;
+    --color-sky-sunset-bottom: #ff9fb3;
     --color-sky-sunset-sun: #ff7a2f;
     --color-sky-sunset-sun-glow: #ff5c5c;
     --color-sky-sunset-moon: #e8e4f2;
-    --color-sky-sunset-cloud: #ff9a7a;
-    --color-sky-sunset-cloud-shade: #8f4a6a;
+    --color-sky-sunset-cloud: #ffd0d0;
+    --color-sky-sunset-cloud-shade: #d894a4;
 
-    --color-sky-dusk-top: #2b2352;
-    --color-sky-dusk-bottom: #7a4f8a;
+    --color-sky-dusk-top: #a892c2;
+    --color-sky-dusk-bottom: #e6cfe2;
     --color-sky-dusk-sun: #ff9a6a;
     --color-sky-dusk-sun-glow: #ff7a7a;
     --color-sky-dusk-moon: #f4f2ff;
-    --color-sky-dusk-cloud: #6a5580;
-    --color-sky-dusk-cloud-shade: #40334f;
+    --color-sky-dusk-cloud: #dcc6e4;
+    --color-sky-dusk-cloud-shade: #b295bb;
 
-    --color-sky-star: #ffeec4;
+    /* Deep indigo: at night the light theme's sky is pale, so cream stars would
+       vanish into it. */
+    --color-sky-star: #3f3c6b;
   }
 
   /* Dark theme: the whole day is muted so it fits the #050505 page instead of

@@ -46,6 +46,10 @@ most once a second, so reading the tint does not repaint a scene per frame.
 - The sky canvas is repainted twice a second normally and at the effects frame cap
   while immersive. The gradient is the expensive part; if a slower device struggles,
   raise `SKY_REPAINT_MS` for the normal mode.
+- The light theme's night, dusk, dawn and sunset are pale pastels instead of dark
+  ones. The page's copy is dark, so a dark sky left it at about 1.2:1 against the
+  background; the dark theme keeps the real night. The light theme's stars are deep
+  indigo for the same reason — cream ones disappeared into the pale sky.
 - The moon sits on the horizon line at midday instead of leaving the sky, because the
 model keeps it inside the viewport; its opacity there is 0.08, so it is invisible.
 - `scaleForMobile` takes the config as a generic so a non-Skybox caller can reuse it

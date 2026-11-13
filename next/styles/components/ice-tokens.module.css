@@ -1,0 +1,89 @@
+/* ==========================================================================
+ * ICE TOKENS: paste each block into the matching place in your theme file.
+ *
+ * Colours are bare channels ("R G B") so the utilities can add their own
+ * alpha: rgb(var(--ice-base) / .97). The "-a" tokens are alphas.
+ *
+ *   --ice-base       fill of ice-above and its chrome variants
+ *   --ice-inside     fill of ice-above-inside     (--ice-inside-a: its alpha)
+ *   --ice-reverse    fill of ice-above-reverse
+ *   --ice-edge       border / inner edge colour   (--ice-edge-a)
+ *   --ice-rim-a      alpha of the white highlight on the lit edge
+ *   --ice-depth      colour that pools at the bottom (--ice-depth-a: inner
+ *                    shadow, --ice-shade-a: bottom of the depth ramp)
+ *   --ice-lit        colour of the light at the top of the ramp (--ice-lit-a)
+ *   --ice-sheen-a    corner light
+ *   --ice-streak-a   diagonal light streaks
+ *   --ice-crack      which fracture tile to draw (defined in surfaces file)
+ * ========================================================================== */
+
+/* ---- 1. LIGHT: goes inside your existing `@layer colors { @theme static { … } }` ---- */
+@layer colors {
+  @theme static {
+    /* …your existing light colours… */
+
+    /* Ice: bright, sunlit glacier */
+    --ice-base: 172 218 246;
+    --ice-inside: 150 200 236;
+    --ice-inside-a: 0.7;
+    --ice-reverse: 140 192 232;
+    --ice-edge: 255 255 255;
+    --ice-edge-a: 0.65;
+    --ice-rim-a: 0.9;
+    --ice-depth: 40 110 190;
+    --ice-depth-a: 0.32;
+    --ice-shade-a: 0.22;
+    --ice-lit: 255 255 255;
+    --ice-lit-a: 0.55;
+    --ice-sheen-a: 0.5;
+    --ice-streak-a: 0.22;
+    --ice-crack: var(--ice-crack-img-light);
+  }
+}
+
+/* ---- 2. DARK: goes inside `:root[data-theme="dark"] { … }` ---- */
+:root[data-theme="dark"] {
+  /* …your existing dark colours… */
+
+  /* Ice: deep, dark glacier */
+  --ice-base: 12 40 74;
+  --ice-inside: 4 18 40;
+  --ice-inside-a: 0.78;
+  --ice-reverse: 10 36 68;
+  --ice-edge: 150 205 245;
+  --ice-edge-a: 0.3;
+  --ice-rim-a: 0.35;
+  --ice-depth: 0 20 70;
+  --ice-depth-a: 0.6;
+  --ice-shade-a: 0.4;
+  --ice-lit: 150 205 245;
+  --ice-lit-a: 0.2;
+  --ice-sheen-a: 0.14;
+  --ice-streak-a: 0.07;
+  --ice-crack: var(--ice-crack-img-dark);
+}
+
+/* ---- 3. AUTO DARK: same values again, inside
+ *         `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { … } }` ---- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    /* …your existing auto-dark colours… */
+
+    /* Ice: deep, dark glacier */
+    --ice-base: 12 40 74;
+    --ice-inside: 4 18 40;
+    --ice-inside-a: 0.78;
+    --ice-reverse: 10 36 68;
+    --ice-edge: 150 205 245;
+    --ice-edge-a: 0.3;
+    --ice-rim-a: 0.35;
+    --ice-depth: 0 20 70;
+    --ice-depth-a: 0.6;
+    --ice-shade-a: 0.4;
+    --ice-lit: 150 205 245;
+    --ice-lit-a: 0.2;
+    --ice-sheen-a: 0.14;
+    --ice-streak-a: 0.07;
+    --ice-crack: var(--ice-crack-img-dark);
+  }
+}

@@ -28,11 +28,15 @@ export function Divider({
       ? cn(
           'h-px! border-dashed border-(--divider-line)',
           orientation === 'horizontal' ? 'border-t!' : 'border-l!',
-          'bg-none!'
+          // The dashed line is a border, so the art and the tint overlay (both
+          // pseudo/background paint) are switched off or they would cover it.
+          'bg-none! before:hidden after:hidden'
         )
       : ''
   const colorSchemeStyles =
-    colorScheme === 'dark' ? '' : '[--divider-line:var(--color-grey-300)]'
+    colorScheme === 'dark'
+      ? ''
+      : '[--divider-line:var(--color-grey-300)] [--divider-tint:var(--color-grey-300)]'
 
   return (
     <Box

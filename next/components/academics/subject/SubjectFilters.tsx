@@ -1,4 +1,6 @@
 import Calendar from '@sanity/icons/Calendar'
+import CheckmarkCircle from '@sanity/icons/CheckmarkCircle'
+import Circle from '@sanity/icons/Circle'
 import Sort from '@sanity/icons/Sort'
 import User from '@sanity/icons/User'
 import { UI_STRINGS } from '@shared/config/strings'
@@ -27,16 +29,7 @@ export type SubjectFiltersProps = {
   className?: string
 }
 
-/**
- * The selects' trigger and the electives toggle share one box, so the row's
- * controls line up. `Select` gives its trigger its own type scale (16px, with a
- * 16px line-height below `md`), so a plain `button-sm` toggle came out shorter
- * than the selects beside it.
- */
-const CONTROL_BOX_CLASS =
-  'button text-base leading-4 md:leading-6 rounded-lg border px-3 py-2'
-
-const TRIGGER_CLASS = cn(CONTROL_BOX_CLASS, 'ghost min-w-36 border-grey-300')
+const TRIGGER_CLASS = cn('ghost min-w-36 border-grey-300')
 
 /**
  * The year/electives controls every subject list shares. Pair it with
@@ -66,9 +59,15 @@ export const SubjectFilters = ({
 
   const sortOptions: Array<SelectOptionType<SubjectSortOption>> = [
     {
-      id: 'sort-year',
-      label: UI_STRINGS.subjects.filters.sortByYear,
-      value: 'Year',
+      id: 'sort-semester',
+      label: UI_STRINGS.subjects.filters.sortBySemester,
+      value: 'Semester',
+      icon: <Calendar className={iconClass} />,
+    },
+    {
+      id: 'sort-semester-desc',
+      label: UI_STRINGS.subjects.filters.sortBySemesterDesc,
+      value: 'Semester Desc',
       icon: <Calendar className={iconClass} />,
     },
     {
@@ -90,10 +89,10 @@ export const SubjectFilters = ({
     yearOptions[0]
 
   return (
-    <Box className={cn('ui-cluster gap-2 grow xxl:grow-0', className)}>
+    <Box className={cn('flex flex-wrap gap-2 grow xxl:grow-0', className)}>
       {yearOptions.length > 0 && (
         <Select
-          className='w-auto grow bg-background-200'
+          className='w-auto grow'
           defaultOption={currentYearOption}
           options={yearOptions}
           icon={
@@ -112,21 +111,9 @@ export const SubjectFilters = ({
         />
       )}
 
-      <Button
-        aria-pressed={includeElectives}
-        onClick={() => onIncludeElectivesChange(!includeElectives)}
-        className={cn(
-          CONTROL_BOX_CLASS,
-          'border-transparent',
-          includeElectives ? 'solid' : 'subtle'
-        )}
-      >
-        {UI_STRINGS.subjects.filters.electives}
-      </Button>
-
       {sort && (
         <Select<SubjectSortOption>
-          className='w-auto grow bg-background-200'
+          className='w-auto grow'
           defaultOption={
             sortOptions.find((option) => option.value === sort.value) ??
             sortOptions[0]
@@ -149,6 +136,18 @@ export const SubjectFilters = ({
           }
         />
       )}
+
+      <Button
+        aria-pressed={includeElectives}
+        onClick={() => onIncludeElectivesChange(!includeElectives)}
+        isActive={includeElectives}
+        className={cn(
+          'button button-sm w-fit min-h-full ui-cluster gap-1 justify-center subtle'
+        )}
+      >
+        {includeElectives ? <CheckmarkCircle /> : <Circle />}
+        {UI_STRINGS.subjects.filters.electives}
+      </Button>
     </Box>
   )
 }
