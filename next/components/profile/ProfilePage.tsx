@@ -1,5 +1,6 @@
+'use client'
+
 import BookIcon from '@sanity/icons/Book'
-import { UI_STRINGS } from '@shared/config/strings'
 import { ScriptsSection } from '@/components/academics/scripts/ScriptsSection'
 import { ActivityStats } from '@/components/common/ActivityStats'
 import { Box } from '@/components/common/Box'
@@ -17,6 +18,8 @@ import { sortAchievements } from '@/lib/achievement-display'
 import { getDisplayName } from '@/lib/profile-display'
 import { toScriptDetails } from '@/lib/script-display'
 import { catalogUrl } from '@/lib/study-origin'
+import { useLocale } from '@/providers/locale/LocaleProvider'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import type { ProfilePageProps } from '@/types/components/ProfilePage.types'
 
 /**
@@ -39,6 +42,8 @@ export const ProfilePage = ({
   commentCount,
   isOwner = false,
 }: ProfilePageProps) => {
+  const { locale } = useLocale()
+  const ui = useUIStrings()
   const displayName = getDisplayName(profile)
   const username = profile.username
 
@@ -62,7 +67,7 @@ export const ProfilePage = ({
   return (
     <PageLayout
       header={{
-        greeting: UI_STRINGS.profile.greeting,
+        greeting: ui.profile.greeting,
         title: displayName,
         subtitle: username,
         actions: isOwner ? (
@@ -73,13 +78,13 @@ export const ProfilePage = ({
             <NextLink
               href={
                 setupSiteSlug
-                  ? getStudySetupUrl(setupSiteSlug)
-                  : catalogUrl('/start')
+                  ? getStudySetupUrl(setupSiteSlug, locale)
+                  : catalogUrl('/start', locale)
               }
               className='button button-sm subtle ui-cluster gap-1.5'
             >
               <BookIcon />
-              {UI_STRINGS.profile.academics.editLabel}
+              {ui.profile.academics.editLabel}
             </NextLink>
           </Box>
         ) : (
@@ -92,7 +97,7 @@ export const ProfilePage = ({
             <ProfileSubjectsSidebar
               completed={subjects.completed}
               currentlyTaking={subjects.currentlyTaking}
-              title={isOwner ? undefined : UI_STRINGS.subjects.title}
+              title={isOwner ? undefined : ui.subjects.title}
             />
           )}
           {authoredCount !== undefined && commentCount !== undefined && (
@@ -120,14 +125,14 @@ export const ProfilePage = ({
         }
       />
       <ScriptsSection
-        scripts={toScriptDetails(profile.scripts)}
-        title={UI_STRINGS.scripts.authoredSectionTitle}
-        subtitle={UI_STRINGS.scripts.authoredSectionSubtitle}
+        scripts={toScriptDetails(profile.scripts, locale)}
+        title={ui.scripts.authoredSectionTitle}
+        subtitle={ui.scripts.authoredSectionSubtitle}
       />
       <ScriptsSection
-        scripts={toScriptDetails(profile.favorite_scripts)}
-        title={UI_STRINGS.scripts.favoritesSectionTitle}
-        subtitle={UI_STRINGS.scripts.favoritesSectionSubtitle}
+        scripts={toScriptDetails(profile.favorite_scripts, locale)}
+        title={ui.scripts.favoritesSectionTitle}
+        subtitle={ui.scripts.favoritesSectionSubtitle}
       />
     </PageLayout>
   )

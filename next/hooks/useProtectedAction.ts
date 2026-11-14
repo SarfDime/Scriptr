@@ -1,10 +1,10 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import { useState } from 'react'
 import { ApiError } from '@/lib/api/next-api'
 import { UserFacingError } from '@/lib/user-facing-error'
 import { useAuthModal } from '@/providers/AuthModalProvider'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { useNotifications } from '@/providers/notification/NotificationProvider'
 import { useSession } from '@/providers/SessionProvider'
 import { useToast } from '@/providers/toaster/ToasterProvider'
@@ -56,6 +56,7 @@ export function useProtectedAction<Args extends Array<unknown>, T>(
   action: (...args: Args) => Promise<T>,
   options?: ProtectedActionOptions
 ) {
+  const ui = useUIStrings()
   const [state, setState] = useState<ProtectedActionState>({ status: 'idle' })
   const { session, refresh, logout } = useSession()
   const { addToast } = useToast()
@@ -70,7 +71,7 @@ export function useProtectedAction<Args extends Array<unknown>, T>(
     if (currentSession.status !== 'authenticated') {
       setState({
         status: 'error',
-        message: UI_STRINGS.general.signInRequired,
+        message: ui.general.signInRequired,
       })
       openAuthModal()
       return { ok: false }
@@ -80,7 +81,7 @@ export function useProtectedAction<Args extends Array<unknown>, T>(
     if (restrictionNotice) {
       setState({
         status: 'restricted',
-        message: UI_STRINGS.general.restrictedAction,
+        message: ui.general.restrictedAction,
       })
       openRestrictedModal()
       return { ok: false }
@@ -106,13 +107,13 @@ export function useProtectedAction<Args extends Array<unknown>, T>(
               await logout()
               setState({
                 status: 'error',
-                message: UI_STRINGS.general.sessionExpired,
+                message: ui.general.sessionExpired,
               })
               openAuthModal()
               addToast({
                 type: 'error',
-                title: errorTitle ?? UI_STRINGS.general.actionUnavailable,
-                description: UI_STRINGS.general.sessionExpired,
+                title: errorTitle ?? ui.general.actionUnavailable,
+                description: ui.general.sessionExpired,
               })
               return { ok: false }
             }
@@ -121,13 +122,13 @@ export function useProtectedAction<Args extends Array<unknown>, T>(
         } else {
           setState({
             status: 'error',
-            message: UI_STRINGS.general.sessionExpired,
+            message: ui.general.sessionExpired,
           })
           openAuthModal()
           addToast({
             type: 'error',
-            title: errorTitle ?? UI_STRINGS.general.actionUnavailable,
-            description: UI_STRINGS.general.sessionExpired,
+            title: errorTitle ?? ui.general.actionUnavailable,
+            description: ui.general.sessionExpired,
           })
           return { ok: false }
         }
@@ -140,7 +141,7 @@ export function useProtectedAction<Args extends Array<unknown>, T>(
       syncRestriction()
       setState({
         status: 'restricted',
-        message: UI_STRINGS.general.restrictedAction,
+        message: ui.general.restrictedAction,
       })
       openRestrictedModal()
       return { ok: false }
@@ -151,7 +152,7 @@ export function useProtectedAction<Args extends Array<unknown>, T>(
       message:
         actionError instanceof Error
           ? actionError.message
-          : UI_STRINGS.general.unexpectedError,
+          : ui.general.unexpectedError,
     })
     if (errorTitle) {
       addToast({
@@ -162,7 +163,7 @@ export function useProtectedAction<Args extends Array<unknown>, T>(
         description:
           actionError instanceof UserFacingError
             ? actionError.message
-            : UI_STRINGS.general.tryAgain,
+            : ui.general.tryAgain,
       })
     }
     return { ok: false }

@@ -2,13 +2,14 @@
 
 import EditIcon from '@sanity/icons/Edit'
 import ReplyIcon from '@sanity/icons/Undo'
-import { COMMENT_STRINGS } from '@shared/strings/comments-strings'
+import { COMMENT_STRINGS_PACK } from '@shared/strings/comments-strings'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { Text } from '@/components/typography/Text'
 import { Divider } from '@/components/ui/Divider'
 import { FlagReportButton } from '@/components/ui/FlagReportButton'
 import { cn } from '@/lib/common-utils'
+import { useStrings } from '@/providers/locale/use-strings'
 import type { CommentActionsProps } from '@/types/components/comments/CommentThread.types'
 import { CommentDeleteButton } from './CommentDeleteButton'
 import { CommentLikeButton } from './CommentLikeButton'
@@ -27,6 +28,7 @@ export function CommentActions({
   onToggleReply,
   onEdit,
 }: CommentActionsProps) {
+  const strings = useStrings(COMMENT_STRINGS_PACK)
   const { currentUserId, canModerate } = useCommentsServices()
   const isAuthor = currentUserId === comment.author_id
   const canManage = isAuthor || canModerate
@@ -64,7 +66,7 @@ export function CommentActions({
         {canManage && (
           <Button onClick={onEdit} className='button subtle button-sm'>
             <EditIcon />
-            <Text className='text-xs'>{COMMENT_STRINGS.actions.edit}</Text>
+            <Text className='text-xs'>{strings.actions.edit}</Text>
           </Button>
         )}
         <Button
@@ -76,7 +78,7 @@ export function CommentActions({
           )}
         >
           <ReplyIcon />
-          <Text className='text-xs'>{COMMENT_STRINGS.reply.action}</Text>
+          <Text className='text-xs'>{strings.reply.action}</Text>
         </Button>
 
         {!isAuthor && (
@@ -84,7 +86,7 @@ export function CommentActions({
             targetType='comment'
             targetId={comment.id}
             canReport={!isAuthor}
-            triggerLabel={COMMENT_STRINGS.actions.report}
+            triggerLabel={strings.actions.report}
           />
         )}
 

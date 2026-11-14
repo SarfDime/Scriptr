@@ -1,8 +1,9 @@
+'use client'
+
 import CheckmarkIcon from '@sanity/icons/Checkmark'
 import CheckmarkCircle from '@sanity/icons/CheckmarkCircle'
 import ChevronDownIcon from '@sanity/icons/ChevronDown'
 import Circle from '@sanity/icons/Circle'
-import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { SectionHeader } from '@/components/common/SectionHeader'
@@ -10,6 +11,7 @@ import { Text } from '@/components/typography/Text'
 import { Badge } from '@/components/ui/Badge'
 import { Collapsible } from '@/components/ui/collapse/Collapse'
 import { cn } from '@/lib/common-utils'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import type { OnboardingSubject } from '@/types/onboarding.types'
 import { Divider } from '../ui/Divider'
 
@@ -36,9 +38,10 @@ export const OnboardingSubjectsStep = ({
   onUncompleteSubject,
   disabledReason,
 }: OnboardingSubjectsStepProps) => {
+  const ui = useUIStrings()
   const placeholder =
     disabledReason ??
-    (subjectsByYear.size === 0 ? UI_STRINGS.onboarding.noSubjects : null)
+    (subjectsByYear.size === 0 ? ui.onboarding.noSubjects : null)
 
   // Electives sit in their own column, so their membership is the column's
   // label rather than a badge on every button.
@@ -73,9 +76,9 @@ export const OnboardingSubjectsStep = ({
   return (
     <Box className='ui-stack gap-3'>
       <SectionHeader
-        title={UI_STRINGS.onboarding.subjectsTitle}
+        title={ui.onboarding.subjectsTitle}
         titleVariant='subHeading'
-        subtitle={UI_STRINGS.onboarding.subjectsSubtitle}
+        subtitle={ui.onboarding.subjectsSubtitle}
       />
 
       <Divider />
@@ -108,7 +111,7 @@ export const OnboardingSubjectsStep = ({
                   children: (
                     <>
                       <Text as='span' className='ui-body-strong'>
-                        {UI_STRINGS.general.year(year)}
+                        {ui.general.year(year)}
                       </Text>
                       <Badge
                         colorPalette={
@@ -116,13 +119,13 @@ export const OnboardingSubjectsStep = ({
                         }
                       >
                         <span className='sm:hidden'>
-                          {UI_STRINGS.onboarding.subjectCountShort(
+                          {ui.onboarding.subjectCountShort(
                             completedCount,
                             subjects.length
                           )}
                         </span>
                         <span className='hidden sm:inline'>
-                          {UI_STRINGS.onboarding.subjectCount(
+                          {ui.onboarding.subjectCount(
                             completedCount,
                             subjects.length
                           )}
@@ -147,7 +150,7 @@ export const OnboardingSubjectsStep = ({
                     )}
                   >
                     {isYearComplete ? <CheckmarkCircle /> : <CheckmarkIcon />}
-                    {UI_STRINGS.onboarding.yearCompleted}
+                    {ui.onboarding.yearCompleted}
                   </Button>
                 }
               >
@@ -165,7 +168,7 @@ export const OnboardingSubjectsStep = ({
                           className='ui-small-label'
                           colorPalette='cp-rose-nb'
                         >
-                          {UI_STRINGS.onboarding.requiredSubjects}
+                          {ui.onboarding.requiredSubjects}
                         </Badge>
                       )}
                       {renderSubjectButtons(requiredSubjects)}
@@ -176,7 +179,7 @@ export const OnboardingSubjectsStep = ({
                           className='ui-small-label'
                           colorPalette='cp-warning-nb'
                         >
-                          {UI_STRINGS.onboarding.electiveSubjects}
+                          {ui.onboarding.electiveSubjects}
                         </Badge>
                         {renderSubjectButtons(electiveSubjects)}
                       </Box>

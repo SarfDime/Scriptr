@@ -1,6 +1,5 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import type { MyProfileResponse } from '@shared/types/profile.types'
 import { validateFullName, validateUsername } from '@shared/utils/api.utils'
 import { type SubmitEvent, useState } from 'react'
@@ -13,6 +12,8 @@ import { ApiError } from '@/lib/api/next-api'
 import { updateMyProfile, uploadMyAvatar } from '@/lib/api/profile-api'
 import { validateAvatarFile } from '@/lib/profile-avatar'
 import { toUserMessage } from '@/lib/user-facing-error'
+import { useLocale } from '@/providers/locale/LocaleProvider'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { useMyProfileActions } from '@/providers/ProfileProvider'
 import { useSession } from '@/providers/SessionProvider'
 import { useToast } from '@/providers/toaster/ToasterProvider'
@@ -43,6 +44,8 @@ export function useEditProfileForm({
   profile: MyProfileResponse
   onSaved: () => void
 }) {
+  const { locale } = useLocale()
+  const ui = useUIStrings()
   const { reload } = useMyProfileActions()
   const { refresh: refreshSession } = useSession()
   const { addToast } = useToast()
@@ -71,7 +74,7 @@ export function useEditProfileForm({
   }
 
   const selectAvatar = (file: File | null) => {
-    const error = file ? validateAvatarFile(file) : null
+    const error = file ? validateAvatarFile(file, locale) : null
     setAvatarError(error)
     setAvatarFile(error ? null : file)
   }
@@ -81,7 +84,7 @@ export function useEditProfileForm({
     username:
       validateUsername(values.username) ??
       (takenUsernames.has(values.username.trim().toLowerCase())
-        ? UI_STRINGS.auth.register.fieldErrors.usernameTaken
+        ? ui.auth.register.fieldErrors.usernameTaken
         : null),
   }
   const fields: Record<EditProfileField, FieldFeedback> = {
@@ -99,8 +102,8 @@ export function useEditProfileForm({
 
   const toastError = (error: unknown) =>
     addToast({
-      title: UI_STRINGS.profile.edit.saveFailed,
-      description: toUserMessage(error, UI_STRINGS.general.tryAgain),
+      title: ui.profile.edit.saveFailed,
+      description: toUserMessage(error, ui.general.tryAgain),
       type: 'error',
     })
 
@@ -141,7 +144,7 @@ export function useEditProfileForm({
 
   const saveAvatar = async (file: File): Promise<boolean> => {
     try {
-      await uploadMyAvatar(file)
+      await uploadMyAvatar(file, locale)
     } catch (error) {
       toastError(error)
       return false
@@ -167,7 +170,7 @@ export function useEditProfileForm({
     setIsBusy(false)
     if (!avatarSaved) return
 
-    addToast({ title: UI_STRINGS.profile.edit.saved, type: 'success' })
+    addToast({ title: ui.profile.edit.saved, type: 'success' })
     onSaved()
   }
 

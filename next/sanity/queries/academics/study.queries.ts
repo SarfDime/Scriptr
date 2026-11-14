@@ -1,5 +1,10 @@
 import { groq } from 'next-sanity'
 import { sanityFunctionQueries } from '../functions.queries'
+import {
+  localizedBlocksProjection,
+  localizedProjection,
+  localizedValue,
+} from '../localized.queries'
 import { minimalProfessorQuery } from './professor.queries'
 import { minimalSubjectQuery } from './subject.queries'
 
@@ -12,8 +17,8 @@ export const studySeoQuery = groq`
 ][0] {
   _id,
   "slug": slug.current,
-  name,
-  description,
+  ${localizedProjection('name', 'localizedName')},
+  ${localizedBlocksProjection('description', 'localizedDescription')},
 }
 `
 
@@ -22,32 +27,32 @@ _id,
 dbId,
 "slug": slug.current,
 "siteSlug": siteSlug.current,
-name,
+${localizedProjection('name', 'localizedName')},
 studentCount,
 "picture": sanityImage::full(picture),
 "logo": sanityImage::full(logo),
 assistant->{
   _id,
-  name,
-  title,
+  ${localizedProjection('name', 'localizedName')},
+  ${localizedProjection('title', 'localizedTitle')},
   "picture": sanityImage::full(picture)
 },
 faculty->{
   _id,
   "slug": slug.current,
-  name,
+  ${localizedProjection('name', 'localizedName')},
   university->{
     _id,
     "slug": slug.current,
-    name,
+    ${localizedProjection('name', 'localizedName')},
   }
 },
 "subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),
 "professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),
-"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {
+"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(${localizedValue('localizedName')} asc) {
   ${minimalProfessorQuery}
 },
-"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {
+"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, ${localizedValue('localizedName')} asc) {
   ${minimalSubjectQuery}
 },
 `
@@ -76,7 +81,7 @@ ${sanityFunctionQueries}
 ][0] {
   ${minimalStudyQuery}
   _type,
-  description,
+  ${localizedBlocksProjection('description', 'localizedDescription')},
   streetAddress,
   telephone,
   email,
@@ -101,20 +106,20 @@ export const studyStaticParamsQuery = groq`
  */
 export const studyPickerQuery = groq`
 {
-  "universities": *[_type == "university" && dbId != null] | order(name asc) {
+  "universities": *[_type == "university" && dbId != null] | order(${localizedValue('localizedName')} asc) {
     _id,
-    name,
+    ${localizedProjection('name', 'localizedName')},
     "slug": slug.current
   },
-  "faculties": *[_type == "faculty" && dbId != null && university._ref != null] | order(name asc) {
+  "faculties": *[_type == "faculty" && dbId != null && university._ref != null] | order(${localizedValue('localizedName')} asc) {
     _id,
-    name,
+    ${localizedProjection('name', 'localizedName')},
     "slug": slug.current,
     "universityId": university._ref
   },
-  "studies": *[_type == "study" && dbId != null && faculty._ref != null && siteSlug.current != null] | order(name asc) {
+  "studies": *[_type == "study" && dbId != null && faculty._ref != null && siteSlug.current != null] | order(${localizedValue('localizedName')} asc) {
     _id,
-    name,
+    ${localizedProjection('name', 'localizedName')},
     "slug": slug.current,
     "siteSlug": siteSlug.current,
     "facultyId": faculty._ref,
@@ -133,9 +138,9 @@ export const studySiteQuery = groq`
   "facultySlug": coalesce(faculty->slug.current, faculty->_id),
   "universitySlug": coalesce(faculty->university->slug.current, faculty->university->_id),
   "siteSlug": siteSlug.current,
-  "name": name,
-  "facultyName": faculty->name,
-  "universityName": faculty->university->name,
+  "name": ${localizedValue('localizedName')},
+  "facultyName": ${localizedValue('faculty->localizedName')},
+  "universityName": ${localizedValue('faculty->university->localizedName')},
   dbId
 }[0]
 `
@@ -147,8 +152,8 @@ export const studyAlertSubjectsQuery = groq`
 *[_type == "subject"
   && dbId != null
   && study._ref == *[_type == "study" && siteSlug.current == $siteSlug][0]._id
-] | order(name asc){
+] | order(${localizedValue('localizedName')} asc){
   dbId,
-  name
+  ${localizedProjection('name', 'localizedName')}
 }
 `

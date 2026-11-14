@@ -3,20 +3,23 @@
 import Desktop from '@sanity/icons/Desktop'
 import Moon from '@sanity/icons/Moon'
 import Sun from '@sanity/icons/Sun'
-import { UI_STRINGS } from '@shared/config/strings'
 import type { ReactNode } from 'react'
 import { cn } from '../../lib/common-utils'
+import { useUIStrings } from '../../providers/locale/use-strings'
 import { type ThemeMode, useTheme } from '../../providers/theme/ThemeProvider'
 import { Button } from '../common/Button'
 
-const modes: Array<{ value: ThemeMode; label: string; icon: ReactNode }> = [
-  { value: 'light', label: UI_STRINGS.general.themeLight, icon: <Sun /> },
-  { value: 'auto', label: UI_STRINGS.general.themeAuto, icon: <Desktop /> },
-  { value: 'dark', label: UI_STRINGS.general.themeDark, icon: <Moon /> },
-]
-
 export function ThemeToggle({ className }: { className?: string }) {
+  const UI_STRINGS = useUIStrings()
   const { mode, setMode } = useTheme()
+
+  // The labels are translated, so the list is built where the language is
+  // known rather than once at module scope.
+  const modes: Array<{ value: ThemeMode; label: string; icon: ReactNode }> = [
+    { value: 'light', label: UI_STRINGS.general.themeLight, icon: <Sun /> },
+    { value: 'auto', label: UI_STRINGS.general.themeAuto, icon: <Desktop /> },
+    { value: 'dark', label: UI_STRINGS.general.themeDark, icon: <Moon /> },
+  ]
 
   return (
     <fieldset

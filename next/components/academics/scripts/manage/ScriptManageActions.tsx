@@ -1,11 +1,12 @@
 'use client'
 
-import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
+import { SCRIPT_STRINGS_PACK } from '@shared/strings/scripts-strings'
 import { useRouter } from 'next/navigation'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { ConfirmAction } from '@/components/ui/ConfirmAction'
 import { deleteScript } from '@/lib/api/scripts-api'
+import { useStrings } from '@/providers/locale/use-strings'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 import type { ScriptManageActionsProps } from '@/types/components/ScriptManage.types'
 import { EditScriptModal } from './EditScriptModal'
@@ -21,11 +22,12 @@ export function ScriptManageActions({
 }: ScriptManageActionsProps) {
   const router = useRouter()
   const { addToast } = useToast()
+  const strings = useStrings(SCRIPT_STRINGS_PACK)
 
   const remove = async () => {
     try {
       await deleteScript(scriptId)
-      addToast({ type: 'success', title: SCRIPT_STRINGS.manage.deleted })
+      addToast({ type: 'success', title: strings.manage.deleted })
       router.replace(subjectHref ?? '/')
       // The Hono webhook only expires the server cache. This is queued after
       // the navigation and drops the client Router Cache entry, so the
@@ -34,8 +36,8 @@ export function ScriptManageActions({
     } catch {
       addToast({
         type: 'error',
-        title: SCRIPT_STRINGS.manage.deleteFailed,
-        description: SCRIPT_STRINGS.manage.tryAgain,
+        title: strings.manage.deleteFailed,
+        description: strings.manage.tryAgain,
       })
     }
   }
@@ -43,7 +45,7 @@ export function ScriptManageActions({
   return (
     <Box
       role='group'
-      aria-label={SCRIPT_STRINGS.manage.ariaLabel}
+      aria-label={strings.manage.ariaLabel}
       className='ui-cluster gap-2'
     >
       <EditScriptModal
@@ -52,14 +54,14 @@ export function ScriptManageActions({
         script={script}
       />
       <ConfirmAction
-        title={SCRIPT_STRINGS.manage.deleteTitle}
-        description={SCRIPT_STRINGS.manage.deleteDescription}
-        confirmLabel={SCRIPT_STRINGS.manage.deleteConfirm}
-        cancelLabel={SCRIPT_STRINGS.manage.cancel}
+        title={strings.manage.deleteTitle}
+        description={strings.manage.deleteDescription}
+        confirmLabel={strings.manage.deleteConfirm}
+        cancelLabel={strings.manage.cancel}
         onConfirm={remove}
         trigger={(open) => (
           <Button onClick={open} className='button button-sm danger grow'>
-            {SCRIPT_STRINGS.manage.delete}
+            {strings.manage.delete}
           </Button>
         )}
       />

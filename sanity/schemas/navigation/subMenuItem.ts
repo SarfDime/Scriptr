@@ -2,8 +2,8 @@ import { defineType } from 'sanity'
 import { headerSchemaFields } from '../common/headerFields'
 import { linkSelector } from '../common/link-selector'
 import {
-  generateLinkSelectorPreview,
-  LinkSelectorPreviewSelect,
+  generateLocalizedHeaderPreview,
+  LocalizedHeaderPreviewSelect,
 } from '../util-functions/utilFunctions'
 
 export const SubMenuItem = defineType({
@@ -17,8 +17,8 @@ export const SubMenuItem = defineType({
     },
   ],
   preview: {
-    select: LinkSelectorPreviewSelect,
-    prepare: generateLinkSelectorPreview,
+    select: LocalizedHeaderPreviewSelect,
+    prepare: generateLocalizedHeaderPreview,
   },
   fields: [
     ...headerSchemaFields({

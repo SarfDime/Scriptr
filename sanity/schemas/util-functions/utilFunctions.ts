@@ -3,7 +3,7 @@ import {
   SANITY_PROJECT_ID,
 } from '@shared/config/sanity-constants'
 import type { PortableTextBlock } from 'sanity'
-import type { LinkSelectorPreviewProps } from '../../types/common.types'
+import type { LocalizedHeaderPreviewProps } from '../../types/common.types'
 
 /**
  * Flatten a Portable Text block array into a plain string,
@@ -103,30 +103,29 @@ export function convertTimeToMinutesSeconds(seconds: number) {
   return formatMinutesSeconds(minutes, secondsLeft)
 }
 
-/** Preset for the Link Selector preview select */
-export const LinkSelectorPreviewSelect: Record<
-  keyof LinkSelectorPreviewProps,
-  string
-> = {
-  title: 'title',
+/** Preset select for a document previewed by its localized header title. */
+export const LocalizedHeaderPreviewSelect = {
+  title: 'localizedTitle.en',
+  titleMk: 'localizedTitle.mk',
   customLink: 'customLink',
-  variant: 'buttonColorVariant',
   media: 'icon',
 } as const
 
 /**
- * Generates a preview object for the Link Selector schema type.
- *
- * `customLink` is currently the only way to point a nav item or button at a
- * destination, so the subtitle is the link itself (or "not defined").
+ * Builds the preview for a nav entry or a link card: the default language's
+ * title, else the other one that is filled, with the link as the subtitle.
  */
-export function generateLinkSelectorPreview({
+export function generateLocalizedHeaderPreview({
   title,
+  titleMk,
   customLink,
   media,
-}: LinkSelectorPreviewProps) {
+}: LocalizedHeaderPreviewProps) {
+  const printable = (value?: string | Array<PortableTextBlock>) =>
+    Array.isArray(value) ? flattenRichText(value) : value
+
   return {
-    title: Array.isArray(title) ? flattenRichText(title) : title,
+    title: printable(title) || printable(titleMk) || 'Untitled',
     subtitle: customLink || 'not defined',
     media,
   }

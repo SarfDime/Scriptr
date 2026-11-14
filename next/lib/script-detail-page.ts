@@ -1,5 +1,6 @@
 import type { ScriptSummary } from '@shared/types/scripts.types'
 import { canModerateStudy } from '@shared/utils/api.utils'
+import { pickLocalizedPortableText } from '@shared/utils/localized-portable-text'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { getSessionRequired } from '@/lib/api/auth-api'
@@ -11,6 +12,7 @@ import { getMyScriptVote, getScriptVoteStats } from '@/lib/api/votes-api'
 import { EMPTY_COMMENT_PAGE } from '@/lib/comments/empty-comment-page'
 import { nextLogs } from '@/lib/logger'
 import { sortFilesByPosition } from '@/lib/script-detail'
+import { getServerLocale } from '@/lib/server-strings'
 import { getSubjectPath } from '@/lib/subject-path'
 import type { ScriptDetailViewModel } from '@/types/components/ScriptDetail.types'
 
@@ -137,11 +139,19 @@ export const loadScriptDetailPage = async (
     ])
 
   const viewerDataFailed = myVote.failed || myFavorite.failed || session.failed
+  const locale = await getServerLocale()
 
   return {
     detail: {
       scriptId,
-      script,
+      // Resolved once, here: every component below renders text, not a map.
+      script: {
+        ...script,
+        title: pickLocalizedPortableText(script.title, locale) ?? [],
+        description: pickLocalizedPortableText(script.description, locale),
+      },
+      localizedTitle: script.title,
+      localizedDescription: script.description,
       files: sortFilesByPosition(script.files),
       voteScore: voteStats.score,
       // GET /script/:scriptId/my-vote returns the raw votes row or `null` —

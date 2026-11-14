@@ -1,9 +1,10 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import { cn } from '@/lib/common-utils'
 import { getDisplayName } from '@/lib/profile-display'
 import { catalogUrl } from '@/lib/study-origin'
+import { useLocale } from '@/providers/locale/LocaleProvider'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { useMyProfile } from '@/providers/ProfileProvider'
 import { useSession } from '@/providers/SessionProvider'
 import { NextLink } from '../common/NextLink'
@@ -18,6 +19,8 @@ import { Avatar } from '../ui/Avatar'
  * navbar's sign-in link.
  */
 export const HeaderProfileLink = () => {
+  const strings = useUIStrings()
+  const { locale } = useLocale()
   const { session } = useSession()
   const profileState = useMyProfile()
 
@@ -28,12 +31,12 @@ export const HeaderProfileLink = () => {
     ? getDisplayName(profile)
     : (session.user.username ??
       session.user.email ??
-      UI_STRINGS.navigation.account)
+      strings.navigation.account)
 
   return (
     <NextLink
-      href={catalogUrl('/user')}
-      aria-label={UI_STRINGS.profile.viewProfileAriaLabel}
+      href={catalogUrl('/user', locale)}
+      aria-label={strings.profile.viewProfileAriaLabel}
       className={cn(
         'button ghost p-1',
         'xl:group-data-[nav-collapsed=false]/nav:hidden'

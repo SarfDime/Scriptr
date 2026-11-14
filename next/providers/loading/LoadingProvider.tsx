@@ -1,6 +1,5 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import {
   createContext,
   use,
@@ -13,6 +12,7 @@ import {
 import { Box } from '@/components/common/Box'
 import { Text } from '@/components/typography/Text'
 import { useBodyScrollLock } from '@/hooks/useBodyScroll'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { cn } from '../../lib/common-utils'
 
 /** What the overlay says under the logo. Both are optional: a task with no
@@ -103,6 +103,7 @@ function LoadingContent({
 }
 
 export function LoadingProvider({ children }: { children: React.ReactNode }) {
+  const ui = useUIStrings()
   const [pendingTasks, setPendingTasks] = useState<
     Map<string, LoadingTaskDetails>
   >(new Map())
@@ -229,7 +230,7 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
 
       <dialog
         ref={dialogRef}
-        aria-label={UI_STRINGS.general.loading}
+        aria-label={ui.general.loading}
         aria-busy={true}
         onCancel={(event) => event.preventDefault()}
         className={cn(

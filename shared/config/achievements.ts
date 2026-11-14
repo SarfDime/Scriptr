@@ -1,3 +1,8 @@
+import { ACHIEVEMENTS_STRINGS_PACK } from '../strings/achievements-strings'
+import type { LocalizedText } from '../types/localization.types'
+import { resolveLocalizedText } from '../utils/localized-strings'
+import { DEFAULT_LOCALE, type LocaleId } from './localization-constants'
+
 /**
  * Achievement metrics, rarity tiers and display copy shared by the API and the
  * frontend.
@@ -40,118 +45,47 @@ export const isAchievementRarity = (
   (ACHIEVEMENT_RARITIES as ReadonlyArray<string>).includes(value)
 
 /**
- * Display copy for the seeded achievements, keyed by `achievement_definitions.id`.
+ * Display copy for the seeded achievements, keyed by
+ * `achievement_definitions.id`.
  *
- * Titles and descriptions live here rather than in the database so a wording
- * change is a reviewed code change with no migration and no admin step, and so
- * the badge, the admin list and the notification all read the same sentence.
- * Metric, threshold and rarity stay in the database: the award helper and the
- * admin editor both need them as data.
+ * The wording lives in `ACHIEVEMENTS_STRINGS_PACK.copy`
+ * (`shared/strings/achievements-strings.ts`) so a wording change still reaches
+ * the badge, the admin list and the notification at once, and so the badge and
+ * the notification can read it in the reader's language. This export is the
+ * English view, for the call sites that have no reader: the API and the admin
+ * screens. Metric, threshold and rarity stay in the database — the award helper
+ * and the admin editor both need them as data.
  *
  * Definitions created later through the admin screen have no entry here and
  * fall back to the row they were saved with — see `getAchievementCopy`.
  */
+type AchievementCopyEntry = {
+  title: LocalizedText
+  description: LocalizedText
+}
+
+const CATALOGUE = ACHIEVEMENTS_STRINGS_PACK.copy as Record<
+  string,
+  AchievementCopyEntry
+>
+
 export const ACHIEVEMENT_COPY: Record<
   string,
   { title: string; description: string }
-> = {
-  // scripts_uploaded
-  first_upload: {
-    title: 'Fresh Off the Press',
-    description:
-      'Your first script is out in the wild. Somebody is about to study from it.',
-  },
-  script_stack: {
-    title: 'Starter Stack',
-    description: 'Three scripts in. The collection has officially begun.',
-  },
-  prolific_uploader: {
-    title: 'Script Hoarder',
-    description: 'Ten scripts shared. Your folder is turning into a library.',
-  },
-  syllabus_keeper: {
-    title: 'Syllabus Keeper',
-    description:
-      'Twenty-five scripts shared — the whole semester is archived for the next generation.',
-  },
-  library_of_scriptr: {
-    title: 'Library of Scriptr',
-    description:
-      'Fifty scripts shared. You are essentially the faculty archive now.',
-  },
-  // comments_posted
-  first_word: {
-    title: 'First Word',
-    description: 'You broke the silence with a comment.',
-  },
-  study_buddy: {
-    title: 'Study Buddy',
-    description:
-      "Ten comments. Somebody's question got answered because of you.",
-  },
-  active_commenter: {
-    title: 'Thread Goblin',
-    description:
-      'Twenty-five comments. You basically live in the discussion at this point.',
-  },
-  seminar_speaker: {
-    title: 'Seminar Speaker',
-    description: 'A hundred comments. The discussion tends to start with you.',
-  },
-  voice_of_the_faculty: {
-    title: 'Voice of the Faculty',
-    description:
-      'Two hundred and fifty comments. Yours is the answer everyone waits for.',
-  },
-  // total_script_votes
-  seal_of_approval: {
-    title: 'Seal of Approval',
-    description:
-      "Your first upvote landed. Validation tastes good, doesn't it?",
-  },
-  crowd_pleaser: {
-    title: 'Crowd Pleaser',
-    description:
-      'Ten votes across your scripts. The crowd is paying attention.',
-  },
-  popular_creator: {
-    title: 'Vote Magnet',
-    description:
-      'Fifty votes across your scripts. People go looking for your notes now.',
-  },
-  campus_legend: {
-    title: 'Campus Legend',
-    description:
-      'Two hundred and fifty votes. Your scripts are basically folklore now.',
-  },
-  script_royalty: {
-    title: 'Script Royalty',
-    description:
-      'A thousand votes across your scripts. They have their own fan club at this point.',
-  },
-  // total_script_downloads
-  someone_noticed: {
-    title: 'Someone Noticed',
-    description: 'Your script was downloaded for the first time.',
-  },
-  in_demand: {
-    title: 'In Demand',
-    description: 'Ten downloads. Study groups are passing your notes around.',
-  },
-  exam_season_hero: {
-    title: 'Exam Season Hero',
-    description: "A hundred downloads — you are somebody's last-minute rescue.",
-  },
-  viral_syllabus: {
-    title: 'Viral Syllabus',
-    description: 'Five hundred downloads. Half the faculty has a copy by now.',
-  },
-  greatest_hits: {
-    title: 'Greatest Hits',
-    description:
-      'Two thousand downloads. Somewhere, a printing press is jealous.',
-  },
-}
+> = Object.fromEntries(
+  Object.entries(CATALOGUE).map(([id, copy]) => [
+    id,
+    {
+      title: resolveLocalizedText(copy.title, DEFAULT_LOCALE),
+      description: resolveLocalizedText(copy.description, DEFAULT_LOCALE),
+    },
+  ])
+)
+
+/** Whether the catalogue has wording for an id — i.e. whether its badge and its
+ * notification can be spelled out in the reader's language rather than falling
+ * back to whatever the row was saved with. */
+export const hasAchievementCopy = (id: string): boolean => id in CATALOGUE
 
 /** Copy stored on the definition row, used when the id has no code entry. */
 type StoredAchievementCopy = {
@@ -166,9 +100,18 @@ type StoredAchievementCopy = {
  */
 export const getAchievementCopy = (
   id: string,
-  stored?: StoredAchievementCopy | null
-): { title: string; description: string | null } =>
-  ACHIEVEMENT_COPY[id] ?? {
-    title: stored?.title ?? id,
-    description: stored?.description ?? null,
+  stored?: StoredAchievementCopy | null,
+  locale: LocaleId = DEFAULT_LOCALE
+): { title: string; description: string | null } => {
+  const entry = CATALOGUE[id]
+  if (!entry) {
+    return {
+      title: stored?.title ?? id,
+      description: stored?.description ?? null,
+    }
   }
+  return {
+    title: resolveLocalizedText(entry.title, locale),
+    description: resolveLocalizedText(entry.description, locale),
+  }
+}

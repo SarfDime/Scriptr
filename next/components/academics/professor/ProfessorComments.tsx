@@ -1,7 +1,7 @@
 'use client'
 
 import { COMMENTS_SECTION_ID } from '@shared/config/shared-constants'
-import { COMMENT_STRINGS } from '@shared/strings/comments-strings'
+import { COMMENT_STRINGS_PACK } from '@shared/strings/comments-strings'
 import { useId } from 'react'
 import { CommentSection } from '@/components/comments/CommentSection'
 import { Box } from '@/components/common/Box'
@@ -9,6 +9,7 @@ import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
 import { useProfessorComments } from '@/hooks/useProfessorComments'
 import { EMPTY_COMMENT_PAGE } from '@/lib/comments/empty-comment-page'
+import { useStrings } from '@/providers/locale/use-strings'
 
 /**
  * Comments for a professor. The page stays static, so the first page of
@@ -36,6 +37,7 @@ export function ProfessorComments({ professorId }: { professorId: string }) {
  * the landmark label are valid while loading. Only one of these three states
  * is ever mounted, so the ids never collide. */
 function ProfessorCommentsLoading() {
+  const strings = useStrings(COMMENT_STRINGS_PACK)
   const headingId = useId()
 
   return (
@@ -47,11 +49,11 @@ function ProfessorCommentsLoading() {
       className='ui-stack scroll-mt-20 ui-above'
     >
       <SectionHeader
-        title={COMMENT_STRINGS.general.title}
+        title={strings.general.title}
         titleProps={{ id: headingId }}
       />
       <Text className='ui-caption' role='status'>
-        {COMMENT_STRINGS.general.loadingComments}
+        {strings.general.loadingComments}
       </Text>
     </Box>
   )

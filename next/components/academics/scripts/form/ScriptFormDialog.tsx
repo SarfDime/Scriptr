@@ -23,7 +23,9 @@ export type ScriptFormDialogProps = {
   submitLabel: string
   onSubmit: (event: SubmitEvent<HTMLFormElement>) => void
   isBusy: boolean
-  canSubmit: boolean
+  /** Busy work, or an edit with nothing to save — never validation, so a click
+   * on an invalid form can highlight what is missing instead of doing nothing. */
+  submitDisabled: boolean
   children: ReactNode
 }
 
@@ -41,7 +43,7 @@ export function ScriptFormDialog({
   submitLabel,
   onSubmit,
   isBusy,
-  canSubmit,
+  submitDisabled,
   children,
 }: ScriptFormDialogProps) {
   const isMobile = useDeviceType() === 'mobile'
@@ -70,7 +72,7 @@ export function ScriptFormDialog({
           onSecondary={onSecondaryAction}
           secondaryDisabled={isBusy}
           primaryLabel={submitLabel}
-          primaryDisabled={!canSubmit}
+          primaryDisabled={submitDisabled}
         />
       </FormContainer>
     </Dialog>

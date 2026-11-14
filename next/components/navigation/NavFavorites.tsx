@@ -1,10 +1,12 @@
 'use client'
 
 import BookmarkIcon from '@sanity/icons/Bookmark'
-import { UI_STRINGS } from '@shared/config/strings'
+import { pickLocalizedPortableText } from '@shared/utils/localized-portable-text'
 import { portableTextToPlainText } from '@shared/utils/portable-text.utils'
 import { getScriptSitePath } from '@shared/utils/site-paths'
 import { catalogUrl, studyUrlFromPath } from '@/lib/study-origin'
+import { useLocale } from '@/providers/locale/LocaleProvider'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { useMyProfile } from '@/providers/ProfileProvider'
 import { Box } from '../common/Box'
 import { NextLink } from '../common/NextLink'
@@ -16,6 +18,8 @@ const MAX_FAVORITES = 5
 /** The viewer's most recent favorites, from the profile the app already
  * loads (newest first). Hidden for guests and while there are none. */
 export const NavFavorites = () => {
+  const strings = useUIStrings()
+  const { locale } = useLocale()
   const profileState = useMyProfile()
   if (profileState.status !== 'loaded') return null
 
@@ -25,11 +29,11 @@ export const NavFavorites = () => {
   return (
     <Box
       as='section'
-      aria-label={UI_STRINGS.navigation.favorites}
+      aria-label={strings.navigation.favorites}
       className='ui-stack gap-1'
     >
       <Text className='ui-nav-caption px-2.5'>
-        {UI_STRINGS.navigation.favorites}
+        {strings.navigation.favorites}
       </Text>
       {favorites.slice(0, MAX_FAVORITES).map((script) => (
         <NextLink
@@ -38,13 +42,16 @@ export const NavFavorites = () => {
             getScriptSitePath({
               siteSlug: script.study?.site_slug,
               slug: script.slug,
-            })
+            }),
+            locale
           )}
           className='group button button-sm basic w-full justify-start gap-1 p-1 text-left'
         >
           <BookmarkIcon className='shrink-0 group-hover:text-amber' />
           <Text className='truncate'>
-            {portableTextToPlainText(script.title).trim()}
+            {portableTextToPlainText(
+              pickLocalizedPortableText(script.title, locale) ?? undefined
+            ).trim()}
           </Text>
         </NextLink>
       ))}
@@ -52,10 +59,10 @@ export const NavFavorites = () => {
 
       {favorites.length > MAX_FAVORITES && (
         <NextLink
-          href={catalogUrl('/user')}
+          href={catalogUrl('/user', locale)}
           className='button ghost button-sm w-full my-1'
         >
-          {UI_STRINGS.navigation.favoritesShowAll}
+          {strings.navigation.favoritesShowAll}
         </NextLink>
       )}
     </Box>

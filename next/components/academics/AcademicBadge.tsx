@@ -1,8 +1,12 @@
-import { UI_STRINGS } from '@shared/config/strings'
+'use client'
+
+import type { UI_STRINGS_PACK } from '@shared/config/strings'
 import type { SubjectSemester } from '@shared/types/academic.types'
+import type { ResolvedStrings } from '@shared/types/localization.types'
 import { Badge, type BadgeProps } from '@/components/ui/Badge'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
+import { useUIStrings } from '@/providers/locale/use-strings'
 
 type AcademicBadgeProps = (
   | { type: 'year'; value: number }
@@ -14,27 +18,29 @@ type AcademicBadgeProps = (
 ) &
   Omit<BadgeProps, 'colorPalette' | 'children'>
 
-const getBadgeContent = (props: AcademicBadgeProps) => {
+type UIStrings = ResolvedStrings<typeof UI_STRINGS_PACK>
+
+const getBadgeContent = (props: AcademicBadgeProps, strings: UIStrings) => {
   switch (props.type) {
     case 'year':
       return {
         colorPalette: getColorPalette({ type: 'year', value: props.value }),
-        label: UI_STRINGS.general.year(props.value),
+        label: strings.general.year(props.value),
       }
     case 'credits':
       return {
         colorPalette: getColorPalette({ type: 'credits', value: props.value }),
-        label: UI_STRINGS.academics.professor.ects(props.value),
+        label: strings.academics.professor.ects(props.value),
       }
     case 'semester':
       return {
         colorPalette: getColorPalette({ type: 'semester', value: props.value }),
-        label: UI_STRINGS.academics.semester(props.value),
+        label: strings.academics.semester(props.value),
       }
     case 'elective':
       return {
         colorPalette: 'cp-amber' as const,
-        label: UI_STRINGS.subjects.electiveLabel,
+        label: strings.subjects.electiveLabel,
       }
     case 'code':
       return {
@@ -51,7 +57,8 @@ const getBadgeContent = (props: AcademicBadgeProps) => {
 
 /** A component that renders an academic badge based on its type and value. */
 export const AcademicBadge = ({ className, ...props }: AcademicBadgeProps) => {
-  const { colorPalette, label } = getBadgeContent(props)
+  const strings = useUIStrings()
+  const { colorPalette, label } = getBadgeContent(props, strings)
 
   return (
     <Badge colorPalette={colorPalette} className={cn('ui-caption', className)}>

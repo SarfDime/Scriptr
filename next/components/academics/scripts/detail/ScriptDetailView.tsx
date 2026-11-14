@@ -1,3 +1,4 @@
+import type { PortableTextValue } from '@shared/types/portable-text.types'
 import type { ScriptSummary } from '@shared/types/scripts.types'
 import { Suspense } from 'react'
 import { ScriptDetailBody } from '@/components/academics/scripts/detail/ScriptDetailBody'
@@ -12,9 +13,16 @@ import { PageLayout } from '@/components/layout/PageLayout'
  * `loading.tsx`), and the rest of the screen streams behind a Suspense boundary
  * with the same skeleton that used to be the route's loading file.
  */
-export const ScriptDetailView = ({ script }: { script: ScriptSummary }) => (
+export const ScriptDetailView = ({
+  script,
+  /** The title in the reader's language: resolved by the route, which knows it. */
+  title,
+}: {
+  script: ScriptSummary
+  title: PortableTextValue
+}) => (
   <PageLayout>
-    <PageHeader title={script.title} />
+    <PageHeader title={title} />
     <Suspense fallback={<ScriptDetailSkeleton />}>
       <ScriptDetailBody scriptId={script.id} script={script} />
     </Suspense>

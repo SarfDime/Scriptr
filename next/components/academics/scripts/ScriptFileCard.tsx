@@ -1,8 +1,7 @@
 'use client'
 
 import EyeOpen from '@sanity/icons/EyeOpen'
-import { UI_STRINGS } from '@shared/config/strings'
-import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
+import { SCRIPT_STRINGS_PACK } from '@shared/strings/scripts-strings'
 import type { ScriptFile } from '@shared/types/scripts.types'
 import { useState } from 'react'
 import { Box } from '@/components/common/Box'
@@ -13,6 +12,7 @@ import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
 import { formatFileSize, getPreviewableKind } from '@/lib/file-preview'
 import { getScriptFileLabel, getScriptFileName } from '@/lib/script-file-name'
+import { useStrings, useUIStrings } from '@/providers/locale/use-strings'
 import { ScriptDownloadButton } from './actions/ScriptDownloadButton'
 import { StoredFilePreviewContent } from './FilePreviewContent'
 import { FilePreviewModal } from './FilePreviewModal'
@@ -47,13 +47,15 @@ export function ScriptFileCard({
   canRemove = false,
   inlinePreview = false,
 }: ScriptFileCardProps) {
+  const strings = useStrings(SCRIPT_STRINGS_PACK)
+  const ui = useUIStrings()
   const isWide = layout === 'wide'
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const kind = getPreviewableKind(file.file_type)
   const showsInlinePreview = inlinePreview && kind !== null
   const color = getColorPalette({ type: 'seed', value: file.file_type })
-  const fileName = getScriptFileName(file)
-  const fileLabel = getScriptFileLabel(file)
+  const fileName = getScriptFileName(file, strings)
+  const fileLabel = getScriptFileLabel(file, strings)
   const openPreview = () => setIsPreviewOpen(true)
 
   const buttonClass = cn('grow button-md', isWide && '@md:min-w-28 @md:grow-0')
@@ -128,7 +130,7 @@ export function ScriptFileCard({
             </Box>
             {isWide && (
               <Text className='ui-caption'>
-                {SCRIPT_STRINGS.file.summary(file.file_type, Boolean(kind))}
+                {strings.file.summary(file.file_type, Boolean(kind))}
               </Text>
             )}
           </Box>
@@ -139,7 +141,7 @@ export function ScriptFileCard({
                 className={cn('button hollow px-2 w-min', buttonClass)}
               >
                 <EyeOpen className={'overwrite size-5'} />
-                {UI_STRINGS.scripts.actions.preview}
+                {ui.scripts.actions.preview}
               </Button>
             )}
             <ScriptDownloadButton
@@ -147,7 +149,7 @@ export function ScriptFileCard({
               file={file}
               className={cn('solid', buttonClass)}
             >
-              {UI_STRINGS.scripts.actions.download}
+              {ui.scripts.actions.download}
             </ScriptDownloadButton>
             {canRemove && (
               <ScriptFileRemoveButton

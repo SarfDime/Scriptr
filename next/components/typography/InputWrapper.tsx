@@ -1,11 +1,13 @@
+'use client'
+
 import { CloseIcon } from '@sanity/icons/Close'
 import { INPUT_MAX_LENGTH } from '@shared/config/next-constants'
-import { UI_STRINGS } from '@shared/config/strings'
 import type {
   ChangeEventHandler,
   DetailedHTMLProps,
   InputHTMLAttributes,
 } from 'react'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { cn } from '../../lib/common-utils'
 import { Box, type BoxPropsWithoutChildren } from '../common/Box'
 import { Button } from '../common/Button'
@@ -40,6 +42,7 @@ export function InputWrapper({
   children,
   ...rest
 }: InputWrapperProps) {
+  const ui = useUIStrings()
   return (
     <Field {...rest}>
       <Box
@@ -71,7 +74,7 @@ export function InputWrapper({
             onClick={inputOnClear}
             icon={<CloseIcon />}
             type='button'
-            aria-label={UI_STRINGS.general.clearInput}
+            aria-label={ui.general.clearInput}
           />
         )}
       </Box>

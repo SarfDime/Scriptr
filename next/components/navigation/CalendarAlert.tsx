@@ -2,7 +2,8 @@
 
 import CalendarIcon from '@sanity/icons/Calendar'
 import CloseIcon from '@sanity/icons/Close'
-import { CALENDAR_STRINGS } from '@shared/strings/calendar-strings'
+import { CALENDAR_STRINGS_PACK } from '@shared/strings/calendar-strings'
+import type { ResolvedStrings } from '@shared/types/localization.types'
 import { useSyncExternalStore } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
@@ -23,6 +24,7 @@ import {
   subscribeToCalendarDismissals,
 } from '@/lib/calendar-dismissals'
 import { cn } from '@/lib/common-utils'
+import { useStrings } from '@/providers/locale/use-strings'
 import { useSession } from '@/providers/SessionProvider'
 import type {
   CalendarAlertEvent,
@@ -44,13 +46,19 @@ const useMounted = () =>
 const isDismissed = (dismissals: CalendarDismissals, eventId: string) =>
   eventId in dismissals
 
+type CalendarStrings = ResolvedStrings<typeof CALENDAR_STRINGS_PACK>
+
 /** `today`, `tomorrow`, `in 2 days` — in `CALENDAR_TIME_ZONE` days. */
-const describeWhen = (todayKey: string, date: string) => {
+const describeWhen = (
+  strings: CalendarStrings,
+  todayKey: string,
+  date: string
+) => {
   const distance = dayKeyDistance(todayKey, calendarDayKey(date))
 
-  if (distance <= 0) return CALENDAR_STRINGS.alert.today
-  if (distance === 1) return CALENDAR_STRINGS.alert.tomorrow
-  return CALENDAR_STRINGS.alert.inDays(distance)
+  if (distance <= 0) return strings.alert.today
+  if (distance === 1) return strings.alert.tomorrow
+  return strings.alert.inDays(distance)
 }
 
 type CalendarAlertProps = {
@@ -79,6 +87,7 @@ export const CalendarAlert = ({
   calendarHref,
   subjects,
 }: CalendarAlertProps) => {
+  const strings = useStrings(CALENDAR_STRINGS_PACK)
   const mounted = useMounted()
   const dismissals = useSyncExternalStore(
     subscribeToCalendarDismissals,
@@ -120,14 +129,14 @@ export const CalendarAlert = ({
   const previewLabel =
     next &&
     (subjectName
-      ? CALENDAR_STRINGS.alert.subjectEvent(
-          CALENDAR_STRINGS.eventType[next.type],
-          describeWhen(todayKey, next.date),
+      ? strings.alert.subjectEvent(
+          strings.eventType[next.type],
+          describeWhen(strings, todayKey, next.date),
           subjectName
         )
-      : CALENDAR_STRINGS.alert.globalEvent(
+      : strings.alert.globalEvent(
           next.title,
-          describeWhen(todayKey, next.date)
+          describeWhen(strings, todayKey, next.date)
         ))
 
   return (
@@ -136,8 +145,8 @@ export const CalendarAlert = ({
         href={calendarHref}
         aria-label={
           count > 0
-            ? CALENDAR_STRINGS.alert.openCalendarWithAlerts(count)
-            : CALENDAR_STRINGS.alert.openCalendar
+            ? strings.alert.openCalendarWithAlerts(count)
+            : strings.alert.openCalendar
         }
         className='button ghost relative p-2'
       >
@@ -157,14 +166,11 @@ export const CalendarAlert = ({
           className='button link hidden items-center gap-2 lg:flex'
         >
           <Text className='ui-caption font-semibold'>
-            {CALENDAR_STRINGS.alert.previewWithMore(
-              previewLabel,
-              pending.length - 1
-            )}
+            {strings.alert.previewWithMore(previewLabel, pending.length - 1)}
           </Text>
           <Button
             onClick={() => dismissCalendarEvents(matching)}
-            aria-label={CALENDAR_STRINGS.alert.dismiss}
+            aria-label={strings.alert.dismiss}
             className='button button-sm hollow p-0.5 rounded-lg'
           >
             <CloseIcon className='w-5 h-5 overwrite' />

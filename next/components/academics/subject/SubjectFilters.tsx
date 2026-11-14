@@ -1,15 +1,17 @@
+'use client'
+
 import Calendar from '@sanity/icons/Calendar'
 import CheckmarkCircle from '@sanity/icons/CheckmarkCircle'
 import Circle from '@sanity/icons/Circle'
 import Sort from '@sanity/icons/Sort'
 import User from '@sanity/icons/User'
-import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { Select } from '@/components/ui/select/Select'
 import type { SubjectSortOption } from '@/hooks/useSubjectExplorer'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import type { SelectOptionType } from '@/types/components/Select.types'
 
 export type SubjectSortFilter = {
@@ -44,11 +46,12 @@ export const SubjectFilters = ({
   sort,
   className,
 }: SubjectFiltersProps) => {
+  const ui = useUIStrings()
   const iconClass = 'rounded-md'
 
   const yearOptions: Array<SelectOptionType<string>> = years.map((value) => ({
     id: `year-${value}`,
-    label: UI_STRINGS.general.year(value),
+    label: ui.general.year(value),
     value: String(value),
     icon: (
       <Calendar
@@ -60,25 +63,25 @@ export const SubjectFilters = ({
   const sortOptions: Array<SelectOptionType<SubjectSortOption>> = [
     {
       id: 'sort-semester',
-      label: UI_STRINGS.subjects.filters.sortBySemester,
+      label: ui.subjects.filters.sortBySemester,
       value: 'Semester',
       icon: <Calendar className={iconClass} />,
     },
     {
       id: 'sort-semester-desc',
-      label: UI_STRINGS.subjects.filters.sortBySemesterDesc,
+      label: ui.subjects.filters.sortBySemesterDesc,
       value: 'Semester Desc',
       icon: <Calendar className={iconClass} />,
     },
     {
       id: 'sort-name',
-      label: UI_STRINGS.subjects.filters.sortBySubject,
+      label: ui.subjects.filters.sortBySubject,
       value: 'Subject A-Z',
       icon: <Sort className={iconClass} />,
     },
     {
       id: 'sort-professor',
-      label: UI_STRINGS.subjects.filters.sortByProfessor,
+      label: ui.subjects.filters.sortByProfessor,
       value: 'Professor A-Z',
       icon: <User className={iconClass} />,
     },
@@ -105,7 +108,7 @@ export const SubjectFilters = ({
           }
           setSelectedValue={(value) => value && onYearChange(Number(value))}
           triggerProps={{
-            'aria-label': UI_STRINGS.subjects.filters.filterByYear,
+            'aria-label': ui.subjects.filters.filterByYear,
             className: TRIGGER_CLASS,
           }}
         />
@@ -121,7 +124,7 @@ export const SubjectFilters = ({
           options={sortOptions}
           setSelectedValue={(value) => value && sort.onChange(value)}
           triggerProps={{
-            'aria-label': UI_STRINGS.subjects.filters.sortSubjects,
+            'aria-label': ui.subjects.filters.sortSubjects,
             className: TRIGGER_CLASS,
           }}
           icon={
@@ -142,11 +145,11 @@ export const SubjectFilters = ({
         onClick={() => onIncludeElectivesChange(!includeElectives)}
         isActive={includeElectives}
         className={cn(
-          'button button-sm w-fit min-h-full ui-cluster gap-1 justify-center subtle'
+          'button button-sm w-fit min-h-0 ui-cluster gap-1 justify-center subtle'
         )}
       >
         {includeElectives ? <CheckmarkCircle /> : <Circle />}
-        {UI_STRINGS.subjects.filters.electives}
+        {ui.subjects.filters.electives}
       </Button>
     </Box>
   )

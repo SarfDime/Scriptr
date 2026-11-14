@@ -1,5 +1,6 @@
+'use client'
+
 import DocumentTextIcon from '@sanity/icons/DocumentText'
-import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
 import { PortableTextContent } from '@/components/typography/PortableTextContent'
@@ -9,6 +10,8 @@ import { Card } from '@/components/ui/Card'
 import { getAcademicPath } from '@/lib/academic-routes'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn, formatUpdated } from '@/lib/common-utils'
+import { useLocale } from '@/providers/locale/LocaleProvider'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import type { ScriptCardProps } from '@/types/components/Scripts.types'
 import { ScriptActions } from './actions/ScriptActions'
 
@@ -21,6 +24,8 @@ export const ScriptCard = ({
   className,
   ...props
 }: ScriptCardProps) => {
+  const { locale } = useLocale()
+  const ui = useUIStrings()
   const color = getColorPalette({ type: 'seed', value: script.id })
 
   return (
@@ -32,13 +37,16 @@ export const ScriptCard = ({
       {...props}
     >
       <NextLink
-        href={getAcademicPath({
-          type: 'script',
-          scriptSlug: script.slug,
-          siteSlug: script.siteSlug,
-        })}
+        href={getAcademicPath(
+          {
+            type: 'script',
+            scriptSlug: script.slug,
+            siteSlug: script.siteSlug,
+          },
+          locale
+        )}
         className='flex items-start gap-3'
-        aria-label={UI_STRINGS.scripts.actions.openScript(script.author)}
+        aria-label={ui.scripts.actions.openScript(script.author)}
       >
         <Box
           className={cn(

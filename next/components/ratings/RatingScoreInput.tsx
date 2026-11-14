@@ -2,11 +2,12 @@
 
 import Star from '@sanity/icons/Star'
 import StarFilled from '@sanity/icons/StarFilled'
-import { RATING_STRINGS } from '@shared/strings/ratings-strings'
+import { RATING_STRINGS_PACK } from '@shared/strings/ratings-strings'
 import type { KeyboardEvent } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { cn } from '@/lib/common-utils'
+import { useStrings } from '@/providers/locale/use-strings'
 
 const SCORES = [1, 2, 3, 4, 5] as const
 
@@ -48,6 +49,7 @@ export function RatingScoreInput({
   disabled,
   onSelect,
 }: RatingScoreInputProps) {
+  const strings = useStrings(RATING_STRINGS_PACK)
   const tabStop = value ?? 1
 
   const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
@@ -67,7 +69,7 @@ export function RatingScoreInput({
   return (
     <Box
       role='radiogroup'
-      aria-label={RATING_STRINGS.groupLabel(label)}
+      aria-label={strings.groupLabel(label)}
       className='ui-cluster gap-1'
     >
       {SCORES.map((score) => {
@@ -79,7 +81,7 @@ export function RatingScoreInput({
             key={score}
             role='radio'
             aria-checked={score === value}
-            aria-label={RATING_STRINGS.scoreOption(score)}
+            aria-label={strings.scoreOption(score)}
             aria-disabled={disabled || undefined}
             tabIndex={score === tabStop ? 0 : -1}
             onKeyDown={handleKeyDown}

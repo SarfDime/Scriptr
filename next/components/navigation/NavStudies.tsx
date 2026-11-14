@@ -2,8 +2,9 @@
 
 import BookIcon from '@sanity/icons/Book'
 import EnterRight from '@sanity/icons/EnterRight'
-import { UI_STRINGS } from '@shared/config/strings'
 import { getStudyFeedPath, getStudySiteUrl } from '@/lib/academic-routes'
+import { useLocale } from '@/providers/locale/LocaleProvider'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { useMyProfile } from '@/providers/ProfileProvider'
 import { IMAGE_SIZES } from '@/styles/style'
 import type { NavStudyLogos } from '@/types/components/Nav.types'
@@ -24,6 +25,8 @@ import { Divider } from '../ui/Divider'
  * no logo of its own); a study without one falls back to the book icon.
  */
 export const NavStudies = ({ studyLogos }: { studyLogos?: NavStudyLogos }) => {
+  const strings = useUIStrings()
+  const { locale } = useLocale()
   const profileState = useMyProfile()
   if (profileState.status !== 'loaded') return null
 
@@ -35,11 +38,11 @@ export const NavStudies = ({ studyLogos }: { studyLogos?: NavStudyLogos }) => {
   return (
     <Box
       as='section'
-      aria-label={UI_STRINGS.navigation.studies}
+      aria-label={strings.navigation.studies}
       className='ui-stack gap-1'
     >
       <Text className='ui-nav-caption px-2.5'>
-        {UI_STRINGS.navigation.studies}
+        {strings.navigation.studies}
       </Text>
       {studies.map((study) => {
         const logo = study.site_slug ? studyLogos?.[study.site_slug] : undefined
@@ -47,7 +50,7 @@ export const NavStudies = ({ studyLogos }: { studyLogos?: NavStudyLogos }) => {
         return (
           <Box key={study.id} className='ui-stack gap-0.5'>
             <NextLink
-              href={getStudySiteUrl(study.site_slug)}
+              href={getStudySiteUrl(study.site_slug, locale)}
               className='button ghost w-full justify-start gap-2 p-2'
             >
               {logo ? (
@@ -67,11 +70,11 @@ export const NavStudies = ({ studyLogos }: { studyLogos?: NavStudyLogos }) => {
               <Text className='ui-large-caption truncate'>{study.name}</Text>
             </NextLink>
             <NextLink
-              href={getStudyFeedPath(study.site_slug)}
+              href={getStudyFeedPath(study.site_slug, locale)}
               className='button link text-fg button-sm w-full justify-start gap-2 py-1 pl-4'
             >
               <EnterRight aria-hidden='true' className='shrink-0' />
-              <Text className='truncate'>{UI_STRINGS.navigation.scripts}</Text>
+              <Text className='truncate'>{strings.navigation.scripts}</Text>
             </NextLink>
           </Box>
         )

@@ -1,5 +1,6 @@
 import { SANITY_CACHE_TAGS } from '@shared/config/cache-tags'
 import { getAcademicPath } from '@/lib/academic-routes'
+import { getServerLocale } from '@/lib/server-strings'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { subjectPathQuery } from '@/sanity/queries/academics/subject.queries'
 import type { SubjectPath } from '@/types/academics/subject.types'
@@ -34,18 +35,22 @@ export const getSubjectPath = async (
 
     const { subjectSlug, studySlug, facultySlug, universitySlug, siteSlug } =
       slugs
+    const locale = await getServerLocale()
     if (!subjectSlug || !studySlug || !facultySlug || !universitySlug) {
       return null
     }
 
-    return getAcademicPath({
-      type: 'subject',
-      siteSlug,
-      universitySlug,
-      facultySlug,
-      studySlug,
-      subjectSlug,
-    })
+    return getAcademicPath(
+      {
+        type: 'subject',
+        siteSlug,
+        universitySlug,
+        facultySlug,
+        studySlug,
+        subjectSlug,
+      },
+      locale
+    )
   } catch {
     return null
   }

@@ -1,3 +1,4 @@
+import { DEFAULT_LOCALE } from '@shared/config/localization-constants'
 import { NextResponse } from 'next/server'
 import { buildSitemapSection } from '@/lib/sitemap-entries'
 import { hasSiteOrigin, listSitemapSections } from '@/lib/sitemap-sections'
@@ -32,8 +33,12 @@ export async function GET(
     return new NextResponse(null, { status: 404 })
   }
 
+  // A route handler has no root param, so it names the language: a sitemap
+  // carries one entry per page with both languages as alternates (Phase 4), not
+  // one entry per language.
   const entries = await buildSitemapSection(
-    section.slice(0, -XML_SUFFIX.length)
+    section.slice(0, -XML_SUFFIX.length),
+    DEFAULT_LOCALE
   )
 
   return new NextResponse(toSitemapUrlsetXml(entries), {

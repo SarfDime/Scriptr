@@ -1,11 +1,11 @@
 'use client'
 
 import { EXAM_SESSIONS } from '@shared/config/shared-constants'
-import { UI_STRINGS } from '@shared/config/strings'
 import type { ExamSession } from '@shared/types/academic.types'
 import { capitalize } from '@shared/utils/common-utils'
 import { getScriptYears } from '@shared/utils/script-session.utils'
 import { useState } from 'react'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import type { SelectOptionType } from '@/types/components/Select.types'
 
 export type ScriptSessionValues = {
@@ -23,9 +23,13 @@ export type ScriptSessionValues = {
  * year that may no longer be allowed.
  */
 export function useScriptSessionFields(initial: ScriptSessionValues) {
+  const ui = useUIStrings()
   const [session, setSession] = useState<ExamSession | null>(initial.session)
   const [isChosen, setIsChosen] = useState(initial.isChosen)
   const [year, setYear] = useState<number | null>(initial.year)
+  // Set by a save attempt, so the field can point at what is missing instead of
+  // the dialog simply refusing to submit.
+  const [touched, setTouched] = useState(false)
 
   const selectSession = (next: ExamSession | null) => {
     setSession(next)
@@ -37,7 +41,7 @@ export function useScriptSessionFields(initial: ScriptSessionValues) {
     {
       id: 'general',
       value: null,
-      label: UI_STRINGS.scripts.uploadModal.generalSessionOption,
+      label: ui.scripts.uploadModal.generalSessionOption,
     },
     ...EXAM_SESSIONS.map((examSession) => ({
       id: examSession,
@@ -56,14 +60,14 @@ export function useScriptSessionFields(initial: ScriptSessionValues) {
               {
                 id: 'all-years',
                 value: null,
-                label: UI_STRINGS.scripts.uploadModal.generalYearOption,
+                label: ui.scripts.uploadModal.generalYearOption,
               },
             ]
           : []),
         ...getScriptYears(session).map((availableYear) => ({
           id: String(availableYear),
           value: availableYear,
-          label: UI_STRINGS.general.year(availableYear),
+          label: ui.general.year(availableYear),
         })),
       ]
     : []
@@ -76,10 +80,14 @@ export function useScriptSessionFields(initial: ScriptSessionValues) {
     setYear,
     sessionOptions,
     yearOptions,
+    /** A save attempt has happened and no session is picked. */
+    sessionInvalid: touched && !isChosen,
+    touchAll: () => setTouched(true),
     reset: (next: ScriptSessionValues) => {
       setSession(next.session)
       setIsChosen(next.isChosen)
       setYear(next.year)
+      setTouched(false)
     },
   }
 }

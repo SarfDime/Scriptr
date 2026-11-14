@@ -1,6 +1,4 @@
 import {
-  DEFAULT_LANGUAGE,
-  DEFAULT_LOCALE,
   SUPPORTED_LANGUAGES,
   type SupportedLanguage,
 } from '@shared/config/localization-constants'
@@ -132,7 +130,29 @@ const portableTextHasContent = (blocks: unknown): boolean => {
   })
 }
 
-const hasDefaultLocaleContent = (
+/** Whether one language of a localized object holds something to show. */
+const languageHasContent = (
+  value: unknown,
+  valueType: LocalizedValueType,
+  language: string
+): boolean => {
+  const languageValue = (value as Record<string, unknown>)[language]
+
+  if (valueType === 'richText' || valueType === 'richTextLite') {
+    return portableTextHasContent(languageValue)
+  }
+  if (valueType === 'stringArray') {
+    return Array.isArray(languageValue) && languageValue.length > 0
+  }
+  return typeof languageValue === 'string' && languageValue.trim().length > 0
+}
+
+/**
+ * At least one language, not necessarily the default one: a document can be
+ * authored only in Macedonian and still be publishable, and the frontend falls
+ * back requested → default → any other filled language.
+ */
+const hasAnyLocaleContent = (
   value: unknown,
   valueType: LocalizedValueType
 ): boolean => {
@@ -140,15 +160,9 @@ const hasDefaultLocaleContent = (
     return false
   }
 
-  const defaultValue = (value as Record<string, unknown>)[DEFAULT_LOCALE]
-
-  if (valueType === 'richText' || valueType === 'richTextLite') {
-    return portableTextHasContent(defaultValue)
-  }
-  if (valueType === 'stringArray') {
-    return Array.isArray(defaultValue) && defaultValue.length > 0
-  }
-  return typeof defaultValue === 'string' && defaultValue.trim().length > 0
+  return SUPPORTED_LANGUAGES.some(({ id }) =>
+    languageHasContent(value, valueType, id)
+  )
 }
 
 /**
@@ -174,9 +188,9 @@ export function localizedField({
     validation: isRequired
       ? (rule: Rule) =>
           rule.custom((value) =>
-            hasDefaultLocaleContent(value, valueType)
+            hasAnyLocaleContent(value, valueType)
               ? true
-              : `Add the ${DEFAULT_LANGUAGE.title} version of this field.`
+              : 'Add at least one language.'
           )
       : undefined,
   })

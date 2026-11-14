@@ -11,6 +11,7 @@ import { NextLink } from '@/components/common/NextLink'
 import { Text } from '@/components/typography/Text'
 import { getDownloadReviewEvents } from '@/lib/api/download-review-api'
 import { studyUrlFromPath } from '@/lib/study-origin'
+import { useLocale } from '@/providers/locale/LocaleProvider'
 
 /** Events are reviewed for bursts, so the list needs the time of day, unlike
  * the date-only formatter the admin cards use. */
@@ -35,6 +36,7 @@ export const DownloadReviewEvents = ({
   profileId?: string
   study: string | null
 }) => {
+  const { locale } = useLocale()
   const [page, setPage] = useState<DownloadReviewEventsResponse | null>(null)
   const [failed, setFailed] = useState(false)
   // The generation only makes a new object, which re-runs the read below —
@@ -131,7 +133,8 @@ export const DownloadReviewEvents = ({
                     getScriptSitePath({
                       siteSlug: event.script_site_slug,
                       slug: event.script_slug,
-                    })
+                    }),
+                    locale
                   )}
                 >
                   {event.script_title || event.script_slug}

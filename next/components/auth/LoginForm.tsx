@@ -1,17 +1,18 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import { Button } from '@/components/common/Button'
 import { FormContainer } from '@/components/typography/FormContainer'
 import { InputWrapper } from '@/components/typography/InputWrapper'
 import { Card } from '@/components/ui/Card'
 import { useLoginForm } from '@/hooks/auth/useLoginForm'
+import { useUIStrings } from '@/providers/locale/use-strings'
 
 export type LoginFormProps = {
   onSwitchToRegister: () => void
 }
 
 export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
+  const ui = useUIStrings()
   const { values, setField, touch, fields, isBusy, canSubmit, handleSubmit } =
     useLoginForm()
 
@@ -19,7 +20,7 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
     <FormContainer onSubmit={handleSubmit}>
       <Card.Body className='ui-stack gap-4'>
         <InputWrapper
-          label={UI_STRINGS.auth.login.emailLabel}
+          label={ui.auth.login.emailLabel}
           inputProps={{
             id: 'login-email',
             type: 'email',
@@ -37,7 +38,7 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
         />
 
         <InputWrapper
-          label={UI_STRINGS.auth.login.passwordLabel}
+          label={ui.auth.login.passwordLabel}
           inputProps={{
             id: 'login-password',
             type: 'password',
@@ -63,15 +64,15 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
           className='button solid w-full justify-center'
         >
           {isBusy
-            ? UI_STRINGS.auth.login.statuses.submitting
-            : UI_STRINGS.auth.login.submitButtonLabel}
+            ? ui.auth.login.statuses.submitting
+            : ui.auth.login.submitButtonLabel}
         </Button>
         <Button
           onClick={onSwitchToRegister}
           disabled={isBusy}
           className='button basic w-full justify-center'
         >
-          {UI_STRINGS.auth.login.switchToRegister}
+          {ui.auth.login.switchToRegister}
         </Button>
       </Card.Footer>
     </FormContainer>

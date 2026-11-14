@@ -5,6 +5,7 @@ import {
   normalizeSearchQuery,
   type SearchQueryParam,
 } from '@/lib/script-search'
+import { getServerLocale } from '@/lib/server-strings'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { catalogSearchQuery } from '@/sanity/queries/catalog-search.queries'
 import type { SearchResultGroups } from '@/types/components/Search.types'
@@ -38,11 +39,14 @@ export const loadSearchPage = async (
     query: catalogSearchQuery,
     // GROQ's word matching, widened to a prefix of the last typed word.
     params: { term: `${query}*` },
+    locale: await getServerLocale(),
     fetchOrigin: `catalog-search-${query}`,
     tags: ACADEMIC_CATALOG_TAGS,
   }).catch(() => null)
 
   if (!catalog) return { query, results: EMPTY_RESULTS, failed: true }
+
+  const locale = await getServerLocale()
 
   return {
     query,
@@ -54,10 +58,10 @@ export const loadSearchPage = async (
               {
                 id: university._id,
                 name: university.name,
-                href: getAcademicPath({
-                  type: 'university',
-                  universitySlug: university.slug,
-                }),
+                href: getAcademicPath(
+                  { type: 'university', universitySlug: university.slug },
+                  locale
+                ),
               },
             ]
           : []
@@ -69,11 +73,14 @@ export const loadSearchPage = async (
                 id: faculty._id,
                 name: faculty.name,
                 context: faculty.university.name,
-                href: getAcademicPath({
-                  type: 'faculty',
-                  universitySlug: faculty.university.slug,
-                  facultySlug: faculty.slug,
-                }),
+                href: getAcademicPath(
+                  {
+                    type: 'faculty',
+                    universitySlug: faculty.university.slug,
+                    facultySlug: faculty.slug,
+                  },
+                  locale
+                ),
               },
             ]
           : []
@@ -88,13 +95,16 @@ export const loadSearchPage = async (
             id: study._id,
             name: study.name,
             context: faculty.name,
-            href: getAcademicPath({
-              type: 'study',
-              siteSlug: study.siteSlug,
-              universitySlug: faculty.university.slug,
-              facultySlug: faculty.slug,
-              studySlug: study.slug,
-            }),
+            href: getAcademicPath(
+              {
+                type: 'study',
+                siteSlug: study.siteSlug,
+                universitySlug: faculty.university.slug,
+                facultySlug: faculty.slug,
+                studySlug: study.slug,
+              },
+              locale
+            ),
           },
         ]
       }),
@@ -104,10 +114,10 @@ export const loadSearchPage = async (
               {
                 id: professor._id,
                 name: professor.name,
-                href: getAcademicPath({
-                  type: 'professor',
-                  professorSlug: professor.slug,
-                }),
+                href: getAcademicPath(
+                  { type: 'professor', professorSlug: professor.slug },
+                  locale
+                ),
               },
             ]
           : []

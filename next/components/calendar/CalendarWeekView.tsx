@@ -1,6 +1,7 @@
-import { CALENDAR_STRINGS } from '@shared/strings/calendar-strings'
+import { CALENDAR_STRINGS_PACK } from '@shared/strings/calendar-strings'
 import { Box } from '@/components/common/Box'
 import { Badge } from '@/components/ui/Badge'
+import { getServerStrings } from '@/lib/server-strings'
 import type { CalendarDay } from '@/types/components/Calendar.types'
 import { Divider } from '../ui/Divider'
 import { CalendarDayHeading } from './CalendarDayHeading'
@@ -23,35 +24,39 @@ const EmptyDay = ({ day }: { day: CalendarDay }) => (
   </Box>
 )
 
-const DayEvents = ({ day }: { day: CalendarDay }) => (
-  <Box className='ui-stack gap-2 grow'>
-    <Box className='ui-cluster justify-between gap-2'>
-      <CalendarDayHeading day={day} />
-      <Divider className='cp-divider flex-1' />
+const DayEvents = async ({ day }: { day: CalendarDay }) => {
+  const strings = await getServerStrings(CALENDAR_STRINGS_PACK)
 
-      {day.isToday && (
-        <Badge
-          colorPalette='cp-brand'
-          className='pt-0 px-1 md:py-0.5 md:px-1.5'
-        >
-          {CALENDAR_STRINGS.today}
-        </Badge>
-      )}
-      <CalendarNoteDayControl day={day.key} dayLabel={day.label} hasEvents />
-    </Box>
-    {/* Cards wrap by available width instead of stacking: a day with several
+  return (
+    <Box className='ui-stack gap-2 grow'>
+      <Box className='ui-cluster justify-between gap-2'>
+        <CalendarDayHeading day={day} />
+        <Divider className='cp-divider flex-1' />
+
+        {day.isToday && (
+          <Badge
+            colorPalette='cp-brand'
+            className='pt-0 px-1 md:py-0.5 md:px-1.5'
+          >
+            {strings.today}
+          </Badge>
+        )}
+        <CalendarNoteDayControl day={day.key} dayLabel={day.label} hasEvents />
+      </Box>
+      {/* Cards wrap by available width instead of stacking: a day with several
         events fills the row, and a single event keeps its own card. */}
-    <Box className='ui-card-grid grow'>
-      {day.events.map((event) => (
-        <CalendarEventDetails
-          className='ui-above-inside'
-          key={event.id}
-          event={event}
-        />
-      ))}
+      <Box className='ui-card-grid grow'>
+        {day.events.map((event) => (
+          <CalendarEventDetails
+            className='ui-above-inside'
+            key={event.id}
+            event={event}
+          />
+        ))}
+      </Box>
     </Box>
-  </Box>
-)
+  )
+}
 
 /**
  * Week view: the week's days in order, each with its events as cards in a

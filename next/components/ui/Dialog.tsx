@@ -1,12 +1,12 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
 import type { DetailedHTMLProps, DialogHTMLAttributes, ReactNode } from 'react'
 import { useEffect, useEffectEvent, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useBodyScrollLock } from '@/hooks/useBodyScroll'
 import { cn, getPlacementClasses } from '@/lib/common-utils'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { Z_INDEX } from '../../styles/style'
 import type { ComponentPlacement } from '../../types/component.types'
 import { Box, type BoxProps } from '../common/Box'
@@ -108,6 +108,7 @@ export function Dialog({
   closeOnOutsideClick = true,
   closeOnEsc = true,
 }: DialogProps) {
+  const ui = useUIStrings()
   const titleId = useId()
   const isCentered = placement === 'center'
   const [showBackdrop, setShowBackdrop] = useState(false)
@@ -244,7 +245,7 @@ export function Dialog({
   const closeButton = hideCloseButton ? null : (
     <CloseButton
       onClick={handleClose}
-      aria-label={UI_STRINGS.general.closeDialog}
+      aria-label={ui.general.closeDialog}
       {...closeButtonProps}
       className={cn('button ghost p-1', closeButtonProps?.className)}
     />
@@ -255,7 +256,7 @@ export function Dialog({
       {/* Dialog Opener Button (if not hidden) */}
       {!hideTrigger && (
         <Button onClick={handleOpen} {...triggerButtonProps}>
-          {triggerButtonProps?.children || UI_STRINGS.general.openDialog}
+          {triggerButtonProps?.children || ui.general.openDialog}
         </Button>
       )}
 

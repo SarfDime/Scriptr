@@ -1,10 +1,29 @@
-import type { ScriptFile, ScriptSummary } from '@shared/types/scripts.types'
+import type { PortableTextValue } from '@shared/types/portable-text.types'
+import type {
+  LocalizedScriptText,
+  ScriptFile,
+  ScriptSummary,
+} from '@shared/types/scripts.types'
+
+/** The API row with its text resolved for this reader: what the screen renders.
+ *  The stored values per language ride along below, for the edit form. */
+export type ScriptDetailScript = Omit<
+  ScriptSummary,
+  'title' | 'description'
+> & {
+  title: PortableTextValue
+  description: PortableTextValue | null
+}
 
 /** Everything the script detail screen renders, resolved server-side so the
  * components only ever receive plain data (no fetching, no cookies). */
 export type ScriptDetailViewModel = {
   scriptId: string
-  script: ScriptSummary
+  script: ScriptDetailScript
+  /** What the author stored, per language — the edit form's initial values.
+   *  `script.title`/`description` above are already resolved for this reader. */
+  localizedTitle: LocalizedScriptText
+  localizedDescription: LocalizedScriptText | null
   /** Already ordered by `position`. */
   files: Array<ScriptFile>
   voteScore: number

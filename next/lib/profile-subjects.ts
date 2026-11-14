@@ -1,5 +1,6 @@
 import { SANITY_CACHE_TAGS } from '@shared/config/cache-tags'
 import { ACADEMIC_CATALOG_TAGS } from '@/lib/sanity-tags'
+import { getServerLocale } from '@/lib/server-strings'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { subjectByIdQuery } from '@/sanity/queries/academics/subject.queries'
 import type { SubjectById } from '@/types/academics/subject.types'
@@ -19,6 +20,7 @@ export async function getOnboardingCatalog() {
 
   return fetchSanityData<OnboardingCatalog>({
     query: onboardingCatalogQuery,
+    locale: await getServerLocale(),
     fetchOrigin: 'profile-subject-catalog',
     tags: ACADEMIC_CATALOG_TAGS,
   })
@@ -28,12 +30,15 @@ async function fetchSubjects(
   subjectIds: Array<string>,
   fetchOriginPrefix: string
 ): Promise<Array<SubjectById>> {
+  const locale = await getServerLocale()
+
   return (
     await Promise.all(
       subjectIds.map((subjectId) =>
         fetchSanityData<SubjectById | null>({
           query: subjectByIdQuery,
           params: { subjectId },
+          locale,
           fetchOrigin: `${fetchOriginPrefix}-${subjectId}`,
           tags: [SANITY_CACHE_TAGS.subject],
         })

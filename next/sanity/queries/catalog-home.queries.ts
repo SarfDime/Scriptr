@@ -1,5 +1,6 @@
 import { groq } from 'next-sanity'
 import { sanityFunctionQueries } from './functions.queries'
+import { localizedProjection, localizedValue } from './localized.queries'
 
 /**
  * The catalog home: the levels above a study. Universities lead to their
@@ -14,17 +15,17 @@ export const catalogHomeQuery = groq`
 ${sanityFunctionQueries}
 
 {
-  "universities": *[_type == "university" && dbId != null] | order(name asc) {
+  "universities": *[_type == "university" && dbId != null] | order(${localizedValue('localizedName')} asc) {
     _id,
-    name,
+    ${localizedProjection('name', 'localizedName')},
     "slug": slug.current,
     "logo": sanityImage::full(logo),
     "picture": sanityImage::full(picture),
     "facultyCount": count(*[_type == "faculty" && references(^._id) && dbId != null])
   },
-  "faculties": *[_type == "faculty" && university._ref != null && dbId != null] | order(name asc) {
+  "faculties": *[_type == "faculty" && university._ref != null && dbId != null] | order(${localizedValue('localizedName')} asc) {
     _id,
-    name,
+    ${localizedProjection('name', 'localizedName')},
     "slug": slug.current,
     "logo": sanityImage::full(logo),
     "picture": sanityImage::full(picture),
@@ -32,13 +33,13 @@ ${sanityFunctionQueries}
     "professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),
     university->{
       _id,
-      name,
+      ${localizedProjection('name', 'localizedName')},
       "slug": slug.current
     }
   },
-  "studies": *[_type == "study" && faculty._ref != null && dbId != null] | order(name asc) {
+  "studies": *[_type == "study" && faculty._ref != null && dbId != null] | order(${localizedValue('localizedName')} asc) {
     _id,
-    name,
+    ${localizedProjection('name', 'localizedName')},
     "slug": slug.current,
     "siteSlug": siteSlug.current,
     "logo": sanityImage::full(logo),
@@ -47,11 +48,11 @@ ${sanityFunctionQueries}
     "professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),
     faculty->{
       _id,
-      name,
+      ${localizedProjection('name', 'localizedName')},
       "slug": slug.current,
       university->{
         _id,
-        name,
+        ${localizedProjection('name', 'localizedName')},
         "slug": slug.current
       }
     }

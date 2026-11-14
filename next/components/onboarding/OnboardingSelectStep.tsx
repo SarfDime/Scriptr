@@ -1,6 +1,8 @@
-import { UI_STRINGS } from '@shared/config/strings'
+'use client'
+
 import { Field } from '@/components/ui/field/Field'
 import { Select } from '@/components/ui/select/Select'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import type { OnboardingSelectStepProps } from '@/types/onboarding.types'
 
 /**
@@ -17,6 +19,7 @@ export const OnboardingSelectStep = ({
   onSelect,
   disabledReason,
 }: OnboardingSelectStepProps) => {
+  const ui = useUIStrings()
   const selectOptions = options.map((option) => ({
     id: option.id,
     value: option.id,
@@ -24,7 +27,7 @@ export const OnboardingSelectStep = ({
   }))
   const placeholder =
     disabledReason ??
-    (options.length === 0 ? UI_STRINGS.onboarding.noOptions : undefined)
+    (options.length === 0 ? ui.onboarding.noOptions : undefined)
 
   return (
     <Field label={title} valid={Boolean(selectedId)}>

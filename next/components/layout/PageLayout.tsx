@@ -5,12 +5,12 @@ import { Box, type BoxProps } from '../common/Box'
 import { Header } from '../navigation/Header'
 import { Divider, type DividerProps } from '../ui/Divider'
 import { Footer } from './Footer'
-import { PageHeader } from './PageHeader'
+import { PageHeader, type PageHeaderProps } from './PageHeader'
 
-export type PageHeaderConfig = {
-  greeting?: string
-  title?: string
-  subtitle?: string
+/** The `header` shorthand: `PageHeader`'s own props, plus `actions` where its
+ * children would go. Copy may be a string or an `{ en, mk }` entry, which
+ * `PageHeader` resolves in the reader's language. */
+export type PageHeaderConfig = Omit<PageHeaderProps, 'children'> & {
   actions?: ReactNode
 }
 

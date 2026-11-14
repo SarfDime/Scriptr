@@ -1,6 +1,5 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import { useState } from 'react'
 import { SubjectFilters } from '@/components/academics/subject/SubjectFilters'
 import { SubjectsSidebar } from '@/components/academics/subject/SubjectsSidebar'
@@ -8,6 +7,7 @@ import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { Select } from '@/components/ui/select/Select'
 import { useSubjectExplorer } from '@/hooks/useSubjectExplorer'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import type { ProfileSubjectsSidebarProps } from '@/types/components/ProfilePage.types'
 import type { SelectOptionType } from '@/types/components/Select.types'
 
@@ -27,7 +27,8 @@ export function ProfileSubjectsSidebar({
   currentlyTaking,
   title,
 }: ProfileSubjectsSidebarProps) {
-  const strings = UI_STRINGS.profile.subjects
+  const ui = useUIStrings()
+  const strings = ui.profile.subjects
   const [view, setView] = useState<SubjectView>('currently_taking')
   const [studyId, setStudyId] = useState<string>(ALL)
 
@@ -88,9 +89,7 @@ export function ProfileSubjectsSidebar({
       title={title}
       subtitle={viewCopy.subtitle}
       emptyMessage={
-        subjects.length > 0
-          ? UI_STRINGS.subjects.noMatchingSubjects
-          : viewCopy.empty
+        subjects.length > 0 ? ui.subjects.noMatchingSubjects : viewCopy.empty
       }
       headerProps={{
         actions: (

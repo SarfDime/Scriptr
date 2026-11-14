@@ -68,9 +68,7 @@ export type CalendarEvent = {
   _createdAt: string
   _updatedAt: string
   _rev: string
-  stringTitle: string
   localizedTitle?: LocalizedString
-  stringSubtitle?: string
   localizedSubtitle?: LocalizedString
   date: string
   type: 'exam' | 'preliminary_exam' | 'reminder' | 'info' | 'announcement'
@@ -95,61 +93,9 @@ export type StudyTip = {
   _createdAt: string
   _updatedAt: string
   _rev: string
-  title: RichTextLite
   localizedTitle?: LocalizedRichTextLite
-  content?: RichTextLite
+  localizedContent?: LocalizedRichTextLite
 }
-
-export type SanityImageAssetReference = {
-  _ref: string
-  _type: 'reference'
-  _weak?: boolean
-  [internalGroqTypeReferenceTo]?: 'sanity.imageAsset'
-}
-
-export type ButtonReference = {
-  _ref: string
-  _type: 'reference'
-  _weak?: boolean
-  [internalGroqTypeReferenceTo]?: 'button'
-}
-
-export type RichTextLite = Array<{
-  children?: Array<
-    | {
-        marks?: Array<string>
-        text?: string
-        _type: 'span'
-        _key: string
-      }
-    | {
-        asset?: SanityImageAssetReference
-        media?: unknown
-        hotspot?: SanityImageHotspot
-        crop?: SanityImageCrop
-        _type: 'image'
-        _key: string
-      }
-    | ({
-        _key: string
-      } & ButtonReference)
-    | {
-        placeholder?: string
-        _type: 'horizontalRule'
-        _key: string
-      }
-  >
-  style?: 'normal' | '-' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'base' | 'h6'
-  listItem?: never
-  markDefs?: Array<{
-    url: string
-    _type: 'link'
-    _key: string
-  }>
-  level?: number
-  _type: 'block'
-  _key: string
-}>
 
 export type LocalizedRichTextLite = {
   _type: 'localizedRichTextLite'
@@ -511,14 +457,10 @@ export type Subject = {
   _createdAt: string
   _updatedAt: string
   _rev: string
-  name: string
   localizedName?: LocalizedString
   slug?: Slug
-  code: string
   localizedCode?: LocalizedString
-  description?: RichTextLite
   localizedDescription?: LocalizedRichTextLite
-  keywords?: Array<string>
   localizedKeywords?: LocalizedStringArray
   credits: number
   year: number
@@ -533,6 +475,13 @@ export type Subject = {
   syllabus?: string
   study: StudyReference
   dbId?: string
+}
+
+export type SanityImageAssetReference = {
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'sanity.imageAsset'
 }
 
 export type PersonReference = {
@@ -562,7 +511,6 @@ export type Study = {
   _createdAt: string
   _updatedAt: string
   _rev: string
-  name: string
   localizedName?: LocalizedString
   slug?: Slug
   logo?: {
@@ -579,7 +527,6 @@ export type Study = {
     crop?: SanityImageCrop
     _type: 'image'
   }
-  description?: RichTextLite
   localizedDescription?: LocalizedRichTextLite
   studentCount?: number
   assistant?: PersonReference
@@ -629,12 +576,9 @@ export type Professor = {
   _createdAt: string
   _updatedAt: string
   _rev: string
-  name: string
   localizedName?: LocalizedString
   slug?: Slug
-  title?: string
   localizedTitle?: LocalizedString
-  description?: RichTextLite
   localizedDescription?: LocalizedRichTextLite
   picture?: {
     asset?: SanityImageAssetReference
@@ -643,7 +587,6 @@ export type Professor = {
     crop?: SanityImageCrop
     _type: 'image'
   }
-  bio?: RichTextLite
   localizedBio?: LocalizedRichTextLite
   officeLocation?: string
   telephone?: string
@@ -675,13 +618,10 @@ export type Faculty = {
   _createdAt: string
   _updatedAt: string
   _rev: string
-  name: string
   localizedName?: LocalizedString
   slug?: Slug
-  description?: RichTextLite
   localizedDescription?: LocalizedRichTextLite
   studentCount?: number
-  bio?: string
   localizedBio?: LocalizedString
   logo?: {
     asset?: SanityImageAssetReference
@@ -732,10 +672,8 @@ export type University = {
     crop?: SanityImageCrop
     _type: 'image'
   }
-  name: string
   localizedName?: LocalizedString
   slug?: Slug
-  description?: RichTextLite
   localizedDescription?: LocalizedRichTextLite
   rector?: PersonReference
   viceRectors?: Array<
@@ -756,6 +694,50 @@ export type LocalizedRichText = {
   en?: RichText
   mk?: RichText
 }
+
+export type ButtonReference = {
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'button'
+}
+
+export type RichTextLite = Array<{
+  children?: Array<
+    | {
+        marks?: Array<string>
+        text?: string
+        _type: 'span'
+        _key: string
+      }
+    | {
+        asset?: SanityImageAssetReference
+        media?: unknown
+        hotspot?: SanityImageHotspot
+        crop?: SanityImageCrop
+        _type: 'image'
+        _key: string
+      }
+    | ({
+        _key: string
+      } & ButtonReference)
+    | {
+        placeholder?: string
+        _type: 'horizontalRule'
+        _key: string
+      }
+  >
+  style?: 'normal' | '-' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'base' | 'h6'
+  listItem?: never
+  markDefs?: Array<{
+    url: string
+    _type: 'link'
+    _key: string
+  }>
+  level?: number
+  _type: 'block'
+  _key: string
+}>
 
 export type RichText = Array<{
   children?: Array<
@@ -800,7 +782,6 @@ export type Button = {
   _createdAt: string
   _updatedAt: string
   _rev: string
-  stringTitle?: string
   localizedTitle?: LocalizedString
   customLink: string
   buttonColorVariant?:
@@ -1217,13 +1198,13 @@ export type Person = {
     crop?: SanityImageCrop
     _type: 'image'
   }
-  name: string
-  title: string
+  localizedName?: LocalizedString
+  localizedTitle?: LocalizedString
   email?: string
   academicRank?: string
   scientificField?: string
   website: string
-  description?: RichTextLite
+  localizedDescription?: LocalizedRichTextLite
 }
 
 export type SubMenuItem = {
@@ -1232,9 +1213,7 @@ export type SubMenuItem = {
   _createdAt: string
   _updatedAt: string
   _rev: string
-  title?: RichText
   localizedTitle?: LocalizedRichText
-  subtitle?: RichTextLite
   localizedSubtitle?: LocalizedRichTextLite
   icon: {
     asset?: SanityImageAssetReference
@@ -1252,7 +1231,6 @@ export type NavItem = {
   _createdAt: string
   _updatedAt: string
   _rev: string
-  stringTitle?: string
   localizedTitle?: LocalizedString
   icon?: {
     asset?: SanityImageAssetReference
@@ -1423,15 +1401,13 @@ export type AllSanitySchemaTypes =
   | CalendarEvent
   | LocalizedString
   | StudyTip
-  | SanityImageAssetReference
-  | ButtonReference
-  | RichTextLite
   | LocalizedRichTextLite
   | ChristmasColors
   | NavMenuReference
   | StudySiteSettings
   | StudyReference
   | Subject
+  | SanityImageAssetReference
   | PersonReference
   | FacultyReference
   | CalendarReference
@@ -1445,6 +1421,8 @@ export type AllSanitySchemaTypes =
   | Faculty
   | University
   | LocalizedRichText
+  | ButtonReference
+  | RichTextLite
   | RichText
   | Button
   | StarCanvasReference
@@ -1471,21 +1449,21 @@ export type AllSanitySchemaTypes =
 
 // Source: ../next/sanity/queries/academics/faculty.queries.ts
 // Variable: facultySeoQuery
-// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "faculty"  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)  && university->slug.current == $universitySlug][0] {  _id,  "slug": slug.current,  name,  description,}
+// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    "picture": sanityImage::full(picture)};*[_type == "faculty"  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)  && university->slug.current == $universitySlug][0] {  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),}
 export type FacultySeoQueryResult = {
   _id: string
   slug: string | null
-  name: string
+  name: string | ''
   description: RichTextLite | null
 } | null
 
 // Source: ../next/sanity/queries/academics/faculty.queries.ts
 // Variable: minimalFacultyTypedQuery
-// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "faculty"  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)  && university->slug.current == $universitySlug][0]{_id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),dean->{  _id,  name,  title,  "picture": sanityImage::full(picture)},secretary->{  _id,  name,  title,  "picture": sanityImage::full(picture)},viceDeans[]->{  _id,  name,  title,  "picture": sanityImage::full(picture)},university->{  _id,  "slug": slug.current,  name},"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {  _id,dbId,"slug": slug.current,"siteSlug": siteSlug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  name,  title,  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},},},}
+// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    "picture": sanityImage::full(picture)};*[_type == "faculty"  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)  && university->slug.current == $universitySlug][0]{_id,"slug": slug.current,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),dean->{  _id,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),  "picture": sanityImage::full(picture)},secretary->{  _id,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),  "picture": sanityImage::full(picture)},viceDeans[]->{  _id,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),  "picture": sanityImage::full(picture)},university->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "")},"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,"slug": slug.current,dbId,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),"title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),},},"studies": *[_type == "study" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,dbId,"slug": slug.current,"siteSlug": siteSlug.current,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,"slug": slug.current,dbId,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),"title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,dbId,"slug": slug.current,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),"code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),credits,year,semester,elective,"description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  faculty->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    university->{      _id,      "slug": slug.current,      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),},},},}
 export type MinimalFacultyTypedQueryResult = {
   _id: string
   slug: string | null
-  name: string
+  name: string | ''
   studentCount: number | null
   picture: {
     asset: SanityImageAssetReference | null
@@ -1501,8 +1479,8 @@ export type MinimalFacultyTypedQueryResult = {
   } | null
   dean: {
     _id: string
-    name: string
-    title: string
+    name: string | ''
+    title: string | ''
     picture: {
       asset: SanityImageAssetReference | null
       crop: SanityImageCrop | null
@@ -1512,8 +1490,8 @@ export type MinimalFacultyTypedQueryResult = {
   }
   secretary: {
     _id: string
-    name: string
-    title: string
+    name: string | ''
+    title: string | ''
     picture: {
       asset: SanityImageAssetReference | null
       crop: SanityImageCrop | null
@@ -1523,8 +1501,8 @@ export type MinimalFacultyTypedQueryResult = {
   }
   viceDeans: Array<{
     _id: string
-    name: string
-    title: string
+    name: string | ''
+    title: string | ''
     picture: {
       asset: SanityImageAssetReference | null
       crop: SanityImageCrop | null
@@ -1535,7 +1513,7 @@ export type MinimalFacultyTypedQueryResult = {
   university: {
     _id: string
     slug: string | null
-    name: string
+    name: string | ''
   }
   studyCount: number
   professorCount: number
@@ -1543,8 +1521,8 @@ export type MinimalFacultyTypedQueryResult = {
     _id: string
     slug: string | null
     dbId: string | null
-    name: string
-    title: string | null
+    name: string | ''
+    title: string | ''
     picture: {
       asset: SanityImageAssetReference | null
       crop: SanityImageCrop | null
@@ -1554,23 +1532,23 @@ export type MinimalFacultyTypedQueryResult = {
     faculties: Array<{
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
       university: {
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
       }
     }>
     universities: Array<{
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
     }>
     subjects: Array<{
       _id: string
       slug: string | null
-      name: string
-      code: string
+      name: string | ''
+      code: string | ''
     }>
   }>
   studies: Array<{
@@ -1578,7 +1556,7 @@ export type MinimalFacultyTypedQueryResult = {
     dbId: string | null
     slug: string | null
     siteSlug: string
-    name: string
+    name: string | ''
     studentCount: number | null
     picture: {
       asset: SanityImageAssetReference | null
@@ -1594,8 +1572,8 @@ export type MinimalFacultyTypedQueryResult = {
     } | null
     assistant: {
       _id: string
-      name: string
-      title: string
+      name: string | ''
+      title: string | ''
       picture: {
         asset: SanityImageAssetReference | null
         crop: SanityImageCrop | null
@@ -1606,11 +1584,11 @@ export type MinimalFacultyTypedQueryResult = {
     faculty: {
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
       university: {
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
       }
     }
     subjectCount: number
@@ -1619,8 +1597,8 @@ export type MinimalFacultyTypedQueryResult = {
       _id: string
       slug: string | null
       dbId: string | null
-      name: string
-      title: string | null
+      name: string | ''
+      title: string | ''
       picture: {
         asset: SanityImageAssetReference | null
         crop: SanityImageCrop | null
@@ -1630,31 +1608,31 @@ export type MinimalFacultyTypedQueryResult = {
       faculties: Array<{
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
         university: {
           _id: string
           slug: string | null
-          name: string
+          name: string | ''
         }
       }>
       universities: Array<{
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
       }>
       subjects: Array<{
         _id: string
         slug: string | null
-        name: string
-        code: string
+        name: string | ''
+        code: string | ''
       }>
     }>
     subjects: Array<{
       _id: string
       dbId: string | null
       slug: string | null
-      name: string
-      code: string
+      name: string | ''
+      code: string | ''
       credits: number
       year: number
       semester: number
@@ -1664,26 +1642,26 @@ export type MinimalFacultyTypedQueryResult = {
       faculty: {
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
         university: {
           _id: string
           slug: string | null
-          name: string
+          name: string | ''
         }
       }
       study: {
         _id: string
         slug: string | null
         siteSlug: string
-        name: string
+        name: string | ''
         faculty: {
           _id: string
           slug: string | null
-          name: string
+          name: string | ''
           university: {
             _id: string
             slug: string | null
-            name: string
+            name: string | ''
           }
         }
       }
@@ -1691,8 +1669,8 @@ export type MinimalFacultyTypedQueryResult = {
         _id: string
         dbId: string | null
         slug: string | null
-        name: string
-        title: string | null
+        name: string | ''
+        title: string | ''
       }>
     }>
   }>
@@ -1700,11 +1678,11 @@ export type MinimalFacultyTypedQueryResult = {
 
 // Source: ../next/sanity/queries/academics/faculty.queries.ts
 // Variable: facultyDetailQuery
-// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "faculty"  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)  && university->slug.current == $universitySlug][0] {  _id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),dean->{  _id,  name,  title,  "picture": sanityImage::full(picture)},secretary->{  _id,  name,  title,  "picture": sanityImage::full(picture)},viceDeans[]->{  _id,  name,  title,  "picture": sanityImage::full(picture)},university->{  _id,  "slug": slug.current,  name},"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {  _id,dbId,"slug": slug.current,"siteSlug": siteSlug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  name,  title,  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},},},  _type,  description,  streetAddress,  telephone,  email,  website,}
+// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    "picture": sanityImage::full(picture)};*[_type == "faculty"  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)  && university->slug.current == $universitySlug][0] {  _id,"slug": slug.current,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),dean->{  _id,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),  "picture": sanityImage::full(picture)},secretary->{  _id,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),  "picture": sanityImage::full(picture)},viceDeans[]->{  _id,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),  "picture": sanityImage::full(picture)},university->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "")},"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,"slug": slug.current,dbId,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),"title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),},},"studies": *[_type == "study" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,dbId,"slug": slug.current,"siteSlug": siteSlug.current,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,"slug": slug.current,dbId,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),"title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,dbId,"slug": slug.current,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),"code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),credits,year,semester,elective,"description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  faculty->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    university->{      _id,      "slug": slug.current,      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),},},},  _type,  "description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),  streetAddress,  telephone,  email,  website,}
 export type FacultyDetailQueryResult = {
   _id: string
   slug: string | null
-  name: string
+  name: string | ''
   studentCount: number | null
   picture: {
     asset: SanityImageAssetReference | null
@@ -1720,8 +1698,8 @@ export type FacultyDetailQueryResult = {
   } | null
   dean: {
     _id: string
-    name: string
-    title: string
+    name: string | ''
+    title: string | ''
     picture: {
       asset: SanityImageAssetReference | null
       crop: SanityImageCrop | null
@@ -1731,8 +1709,8 @@ export type FacultyDetailQueryResult = {
   }
   secretary: {
     _id: string
-    name: string
-    title: string
+    name: string | ''
+    title: string | ''
     picture: {
       asset: SanityImageAssetReference | null
       crop: SanityImageCrop | null
@@ -1742,8 +1720,8 @@ export type FacultyDetailQueryResult = {
   }
   viceDeans: Array<{
     _id: string
-    name: string
-    title: string
+    name: string | ''
+    title: string | ''
     picture: {
       asset: SanityImageAssetReference | null
       crop: SanityImageCrop | null
@@ -1754,7 +1732,7 @@ export type FacultyDetailQueryResult = {
   university: {
     _id: string
     slug: string | null
-    name: string
+    name: string | ''
   }
   studyCount: number
   professorCount: number
@@ -1762,8 +1740,8 @@ export type FacultyDetailQueryResult = {
     _id: string
     slug: string | null
     dbId: string | null
-    name: string
-    title: string | null
+    name: string | ''
+    title: string | ''
     picture: {
       asset: SanityImageAssetReference | null
       crop: SanityImageCrop | null
@@ -1773,23 +1751,23 @@ export type FacultyDetailQueryResult = {
     faculties: Array<{
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
       university: {
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
       }
     }>
     universities: Array<{
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
     }>
     subjects: Array<{
       _id: string
       slug: string | null
-      name: string
-      code: string
+      name: string | ''
+      code: string | ''
     }>
   }>
   studies: Array<{
@@ -1797,7 +1775,7 @@ export type FacultyDetailQueryResult = {
     dbId: string | null
     slug: string | null
     siteSlug: string
-    name: string
+    name: string | ''
     studentCount: number | null
     picture: {
       asset: SanityImageAssetReference | null
@@ -1813,8 +1791,8 @@ export type FacultyDetailQueryResult = {
     } | null
     assistant: {
       _id: string
-      name: string
-      title: string
+      name: string | ''
+      title: string | ''
       picture: {
         asset: SanityImageAssetReference | null
         crop: SanityImageCrop | null
@@ -1825,11 +1803,11 @@ export type FacultyDetailQueryResult = {
     faculty: {
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
       university: {
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
       }
     }
     subjectCount: number
@@ -1838,8 +1816,8 @@ export type FacultyDetailQueryResult = {
       _id: string
       slug: string | null
       dbId: string | null
-      name: string
-      title: string | null
+      name: string | ''
+      title: string | ''
       picture: {
         asset: SanityImageAssetReference | null
         crop: SanityImageCrop | null
@@ -1849,31 +1827,31 @@ export type FacultyDetailQueryResult = {
       faculties: Array<{
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
         university: {
           _id: string
           slug: string | null
-          name: string
+          name: string | ''
         }
       }>
       universities: Array<{
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
       }>
       subjects: Array<{
         _id: string
         slug: string | null
-        name: string
-        code: string
+        name: string | ''
+        code: string | ''
       }>
     }>
     subjects: Array<{
       _id: string
       dbId: string | null
       slug: string | null
-      name: string
-      code: string
+      name: string | ''
+      code: string | ''
       credits: number
       year: number
       semester: number
@@ -1883,26 +1861,26 @@ export type FacultyDetailQueryResult = {
       faculty: {
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
         university: {
           _id: string
           slug: string | null
-          name: string
+          name: string | ''
         }
       }
       study: {
         _id: string
         slug: string | null
         siteSlug: string
-        name: string
+        name: string | ''
         faculty: {
           _id: string
           slug: string | null
-          name: string
+          name: string | ''
           university: {
             _id: string
             slug: string | null
-            name: string
+            name: string | ''
           }
         }
       }
@@ -1910,8 +1888,8 @@ export type FacultyDetailQueryResult = {
         _id: string
         dbId: string | null
         slug: string | null
-        name: string
-        title: string | null
+        name: string | ''
+        title: string | ''
       }>
     }>
   }>
@@ -1933,23 +1911,23 @@ export type FacultyStaticParamsQueryResult = Array<{
 
 // Source: ../next/sanity/queries/academics/professor.queries.ts
 // Variable: professorSeoQuery
-// Query: *[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {  _id,  "slug": slug.current,  name,  bio}
+// Query: *[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "bio": coalesce(select($locale == "en" && length(localizedBio.en) > 0 => localizedBio.en, $locale == "mk" && length(localizedBio.mk) > 0 => localizedBio.mk), select(length(localizedBio.en) > 0 => localizedBio.en, length(localizedBio.mk) > 0 => localizedBio.mk))}
 export type ProfessorSeoQueryResult = {
   _id: string
   slug: string | null
-  name: string
+  name: string | ''
   bio: RichTextLite | null
 } | null
 
 // Source: ../next/sanity/queries/academics/professor.queries.ts
 // Variable: minimalProfessorTypedQuery
-// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {_id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},}
+// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    "picture": sanityImage::full(picture)};*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {_id,"slug": slug.current,dbId,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),"title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),},}
 export type MinimalProfessorTypedQueryResult = {
   _id: string
   slug: string | null
   dbId: string | null
-  name: string
-  title: string | null
+  name: string | ''
+  title: string | ''
   picture: {
     asset: SanityImageAssetReference | null
     crop: SanityImageCrop | null
@@ -1959,35 +1937,35 @@ export type MinimalProfessorTypedQueryResult = {
   faculties: Array<{
     _id: string
     slug: string | null
-    name: string
+    name: string | ''
     university: {
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
     }
   }>
   universities: Array<{
     _id: string
     slug: string | null
-    name: string
+    name: string | ''
   }>
   subjects: Array<{
     _id: string
     slug: string | null
-    name: string
-    code: string
+    name: string | ''
+    code: string | ''
   }>
 } | null
 
 // Source: ../next/sanity/queries/academics/professor.queries.ts
 // Variable: professorDetailQuery
-// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},  _type,  bio,  office,  telephone,  email,  website,  faculties[]->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    }  },  "subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {    _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},  }}
+// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    "picture": sanityImage::full(picture)};*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {  _id,"slug": slug.current,dbId,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),"title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),},  _type,  "bio": coalesce(select($locale == "en" && length(localizedBio.en) > 0 => localizedBio.en, $locale == "mk" && length(localizedBio.mk) > 0 => localizedBio.mk), select(length(localizedBio.en) > 0 => localizedBio.en, length(localizedBio.mk) > 0 => localizedBio.mk)),  office,  telephone,  email,  website,  faculties[]->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    university->{      _id,      "slug": slug.current,      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    }  },  "subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {    _id,dbId,"slug": slug.current,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),"code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),credits,year,semester,elective,"description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  faculty->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    university->{      _id,      "slug": slug.current,      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),},  }}
 export type ProfessorDetailQueryResult = {
   _id: string
   slug: string | null
   dbId: string | null
-  name: string
-  title: string | null
+  name: string | ''
+  title: string | ''
   picture: {
     asset: SanityImageAssetReference | null
     crop: SanityImageCrop | null
@@ -1997,24 +1975,24 @@ export type ProfessorDetailQueryResult = {
   faculties: Array<{
     _id: string
     slug: string | null
-    name: string
+    name: string | ''
     university: {
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
     }
   }>
   universities: Array<{
     _id: string
     slug: string | null
-    name: string
+    name: string | ''
   }>
   subjects: Array<{
     _id: string
     dbId: string | null
     slug: string | null
-    name: string
-    code: string
+    name: string | ''
+    code: string | ''
     credits: number
     year: number
     semester: number
@@ -2024,26 +2002,26 @@ export type ProfessorDetailQueryResult = {
     faculty: {
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
       university: {
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
       }
     }
     study: {
       _id: string
       slug: string | null
       siteSlug: string
-      name: string
+      name: string | ''
       faculty: {
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
         university: {
           _id: string
           slug: string | null
-          name: string
+          name: string | ''
         }
       }
     }
@@ -2051,8 +2029,8 @@ export type ProfessorDetailQueryResult = {
       _id: string
       dbId: string | null
       slug: string | null
-      name: string
-      title: string | null
+      name: string | ''
+      title: string | ''
     }>
   }>
   _type: 'professor'
@@ -2072,23 +2050,23 @@ export type ProfessorStaticParamsQueryResult = Array<{
 
 // Source: ../next/sanity/queries/academics/study.queries.ts
 // Variable: studySeoQuery
-// Query: *[_type == "study"  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)  && faculty->slug.current == $facultySlug  && faculty->university->slug.current == $universitySlug][0] {  _id,  "slug": slug.current,  name,  description,}
+// Query: *[_type == "study"  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)  && faculty->slug.current == $facultySlug  && faculty->university->slug.current == $universitySlug][0] {  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),}
 export type StudySeoQueryResult = {
   _id: string
   slug: string | null
-  name: string
+  name: string | ''
   description: RichTextLite | null
 } | null
 
 // Source: ../next/sanity/queries/academics/study.queries.ts
 // Variable: minimalStudyTypedQuery
-// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "study"  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)  && faculty->slug.current == $facultySlug  && faculty->university->slug.current == $universitySlug][0] {_id,dbId,"slug": slug.current,"siteSlug": siteSlug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  name,  title,  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},},}
+// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    "picture": sanityImage::full(picture)};*[_type == "study"  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)  && faculty->slug.current == $facultySlug  && faculty->university->slug.current == $universitySlug][0] {_id,dbId,"slug": slug.current,"siteSlug": siteSlug.current,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,"slug": slug.current,dbId,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),"title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,dbId,"slug": slug.current,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),"code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),credits,year,semester,elective,"description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  faculty->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    university->{      _id,      "slug": slug.current,      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),},},}
 export type MinimalStudyTypedQueryResult = {
   _id: string
   dbId: string | null
   slug: string | null
   siteSlug: string
-  name: string
+  name: string | ''
   studentCount: number | null
   picture: {
     asset: SanityImageAssetReference | null
@@ -2104,8 +2082,8 @@ export type MinimalStudyTypedQueryResult = {
   } | null
   assistant: {
     _id: string
-    name: string
-    title: string
+    name: string | ''
+    title: string | ''
     picture: {
       asset: SanityImageAssetReference | null
       crop: SanityImageCrop | null
@@ -2116,11 +2094,11 @@ export type MinimalStudyTypedQueryResult = {
   faculty: {
     _id: string
     slug: string | null
-    name: string
+    name: string | ''
     university: {
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
     }
   }
   subjectCount: number
@@ -2129,8 +2107,8 @@ export type MinimalStudyTypedQueryResult = {
     _id: string
     slug: string | null
     dbId: string | null
-    name: string
-    title: string | null
+    name: string | ''
+    title: string | ''
     picture: {
       asset: SanityImageAssetReference | null
       crop: SanityImageCrop | null
@@ -2140,31 +2118,31 @@ export type MinimalStudyTypedQueryResult = {
     faculties: Array<{
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
       university: {
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
       }
     }>
     universities: Array<{
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
     }>
     subjects: Array<{
       _id: string
       slug: string | null
-      name: string
-      code: string
+      name: string | ''
+      code: string | ''
     }>
   }>
   subjects: Array<{
     _id: string
     dbId: string | null
     slug: string | null
-    name: string
-    code: string
+    name: string | ''
+    code: string | ''
     credits: number
     year: number
     semester: number
@@ -2174,26 +2152,26 @@ export type MinimalStudyTypedQueryResult = {
     faculty: {
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
       university: {
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
       }
     }
     study: {
       _id: string
       slug: string | null
       siteSlug: string
-      name: string
+      name: string | ''
       faculty: {
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
         university: {
           _id: string
           slug: string | null
-          name: string
+          name: string | ''
         }
       }
     }
@@ -2201,21 +2179,21 @@ export type MinimalStudyTypedQueryResult = {
       _id: string
       dbId: string | null
       slug: string | null
-      name: string
-      title: string | null
+      name: string | ''
+      title: string | ''
     }>
   }>
 } | null
 
 // Source: ../next/sanity/queries/academics/study.queries.ts
 // Variable: studyDetailQuery
-// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "study"  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)  && faculty->slug.current == $facultySlug  && faculty->university->slug.current == $universitySlug][0] {  _id,dbId,"slug": slug.current,"siteSlug": siteSlug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  name,  title,  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},},  _type,  description,  streetAddress,  telephone,  email,  website,}
+// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    "picture": sanityImage::full(picture)};*[_type == "study"  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)  && faculty->slug.current == $facultySlug  && faculty->university->slug.current == $universitySlug][0] {  _id,dbId,"slug": slug.current,"siteSlug": siteSlug.current,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,"slug": slug.current,dbId,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),"title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,dbId,"slug": slug.current,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),"code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),credits,year,semester,elective,"description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  faculty->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    university->{      _id,      "slug": slug.current,      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),},},  _type,  "description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),  streetAddress,  telephone,  email,  website,}
 export type StudyDetailQueryResult = {
   _id: string
   dbId: string | null
   slug: string | null
   siteSlug: string
-  name: string
+  name: string | ''
   studentCount: number | null
   picture: {
     asset: SanityImageAssetReference | null
@@ -2231,8 +2209,8 @@ export type StudyDetailQueryResult = {
   } | null
   assistant: {
     _id: string
-    name: string
-    title: string
+    name: string | ''
+    title: string | ''
     picture: {
       asset: SanityImageAssetReference | null
       crop: SanityImageCrop | null
@@ -2243,11 +2221,11 @@ export type StudyDetailQueryResult = {
   faculty: {
     _id: string
     slug: string | null
-    name: string
+    name: string | ''
     university: {
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
     }
   }
   subjectCount: number
@@ -2256,8 +2234,8 @@ export type StudyDetailQueryResult = {
     _id: string
     slug: string | null
     dbId: string | null
-    name: string
-    title: string | null
+    name: string | ''
+    title: string | ''
     picture: {
       asset: SanityImageAssetReference | null
       crop: SanityImageCrop | null
@@ -2267,31 +2245,31 @@ export type StudyDetailQueryResult = {
     faculties: Array<{
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
       university: {
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
       }
     }>
     universities: Array<{
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
     }>
     subjects: Array<{
       _id: string
       slug: string | null
-      name: string
-      code: string
+      name: string | ''
+      code: string | ''
     }>
   }>
   subjects: Array<{
     _id: string
     dbId: string | null
     slug: string | null
-    name: string
-    code: string
+    name: string | ''
+    code: string | ''
     credits: number
     year: number
     semester: number
@@ -2301,26 +2279,26 @@ export type StudyDetailQueryResult = {
     faculty: {
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
       university: {
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
       }
     }
     study: {
       _id: string
       slug: string | null
       siteSlug: string
-      name: string
+      name: string | ''
       faculty: {
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
         university: {
           _id: string
           slug: string | null
-          name: string
+          name: string | ''
         }
       }
     }
@@ -2328,8 +2306,8 @@ export type StudyDetailQueryResult = {
       _id: string
       dbId: string | null
       slug: string | null
-      name: string
-      title: string | null
+      name: string | ''
+      title: string | ''
     }>
   }>
   _type: 'study'
@@ -2352,22 +2330,22 @@ export type StudyStaticParamsQueryResult = Array<{
 
 // Source: ../next/sanity/queries/academics/study.queries.ts
 // Variable: studyPickerQuery
-// Query: {  "universities": *[_type == "university" && dbId != null] | order(name asc) {    _id,    name,    "slug": slug.current  },  "faculties": *[_type == "faculty" && dbId != null && university._ref != null] | order(name asc) {    _id,    name,    "slug": slug.current,    "universityId": university._ref  },  "studies": *[_type == "study" && dbId != null && faculty._ref != null && siteSlug.current != null] | order(name asc) {    _id,    name,    "slug": slug.current,    "siteSlug": siteSlug.current,    "facultyId": faculty._ref,    dbId  }}
+// Query: {  "universities": *[_type == "university" && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "slug": slug.current  },  "faculties": *[_type == "faculty" && dbId != null && university._ref != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "slug": slug.current,    "universityId": university._ref  },  "studies": *[_type == "study" && dbId != null && faculty._ref != null && siteSlug.current != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "slug": slug.current,    "siteSlug": siteSlug.current,    "facultyId": faculty._ref,    dbId  }}
 export type StudyPickerQueryResult = {
   universities: Array<{
     _id: string
-    name: string
+    name: string | ''
     slug: string | null
   }>
   faculties: Array<{
     _id: string
-    name: string
+    name: string | ''
     slug: string | null
     universityId: string
   }>
   studies: Array<{
     _id: string
-    name: string
+    name: string | ''
     slug: string | null
     siteSlug: string
     facultyId: string
@@ -2377,46 +2355,46 @@ export type StudyPickerQueryResult = {
 
 // Source: ../next/sanity/queries/academics/study.queries.ts
 // Variable: studySiteQuery
-// Query: *[_type == "study" && siteSlug.current == $siteSlug]{  _id,  "studySlug": coalesce(slug.current, _id),  "facultySlug": coalesce(faculty->slug.current, faculty->_id),  "universitySlug": coalesce(faculty->university->slug.current, faculty->university->_id),  "siteSlug": siteSlug.current,  "name": name,  "facultyName": faculty->name,  "universityName": faculty->university->name,  dbId}[0]
+// Query: *[_type == "study" && siteSlug.current == $siteSlug]{  _id,  "studySlug": coalesce(slug.current, _id),  "facultySlug": coalesce(faculty->slug.current, faculty->_id),  "universitySlug": coalesce(faculty->university->slug.current, faculty->university->_id),  "siteSlug": siteSlug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "facultyName": coalesce(select($locale == "en" && length(faculty->localizedName.en) > 0 => faculty->localizedName.en, $locale == "mk" && length(faculty->localizedName.mk) > 0 => faculty->localizedName.mk), select(length(faculty->localizedName.en) > 0 => faculty->localizedName.en, length(faculty->localizedName.mk) > 0 => faculty->localizedName.mk), ""),  "universityName": coalesce(select($locale == "en" && length(faculty->university->localizedName.en) > 0 => faculty->university->localizedName.en, $locale == "mk" && length(faculty->university->localizedName.mk) > 0 => faculty->university->localizedName.mk), select(length(faculty->university->localizedName.en) > 0 => faculty->university->localizedName.en, length(faculty->university->localizedName.mk) > 0 => faculty->university->localizedName.mk), ""),  dbId}[0]
 export type StudySiteQueryResult = {
   _id: string
   studySlug: string
   facultySlug: string
   universitySlug: string
   siteSlug: string
-  name: string
-  facultyName: string
-  universityName: string
+  name: string | ''
+  facultyName: string | ''
+  universityName: string | ''
   dbId: string | null
 } | null
 
 // Source: ../next/sanity/queries/academics/study.queries.ts
 // Variable: studyAlertSubjectsQuery
-// Query: *[_type == "subject"  && dbId != null  && study._ref == *[_type == "study" && siteSlug.current == $siteSlug][0]._id] | order(name asc){  dbId,  name}
+// Query: *[_type == "subject"  && dbId != null  && study._ref == *[_type == "study" && siteSlug.current == $siteSlug][0]._id] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc){  dbId,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "")}
 export type StudyAlertSubjectsQueryResult = Array<{
   dbId: string | null
-  name: string
+  name: string | ''
 }>
 
 // Source: ../next/sanity/queries/academics/subject.queries.ts
 // Variable: subjectSeoQuery
-// Query: *[_type == "subject"  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)  && study->slug.current == $studySlug  && study->faculty->slug.current == $facultySlug  && study->faculty->university->slug.current == $universitySlug][0] {  _id,  "slug": slug.current,  name,  description,}
+// Query: *[_type == "subject"  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)  && study->slug.current == $studySlug  && study->faculty->slug.current == $facultySlug  && study->faculty->university->slug.current == $universitySlug][0] {  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),}
 export type SubjectSeoQueryResult = {
   _id: string
   slug: string | null
-  name: string
+  name: string | ''
   description: RichTextLite | null
 } | null
 
 // Source: ../next/sanity/queries/academics/subject.queries.ts
 // Variable: minimalSubjectQueryTyped
-// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "subject"  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)  && study->slug.current == $studySlug  && study->faculty->slug.current == $facultySlug  && study->faculty->university->slug.current == $universitySlug][0]{  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},}
+// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    "picture": sanityImage::full(picture)};*[_type == "subject"  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)  && study->slug.current == $studySlug  && study->faculty->slug.current == $facultySlug  && study->faculty->university->slug.current == $universitySlug][0]{  _id,dbId,"slug": slug.current,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),"code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),credits,year,semester,elective,"description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  faculty->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    university->{      _id,      "slug": slug.current,      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),},}
 export type MinimalSubjectQueryTypedResult = {
   _id: string
   dbId: string | null
   slug: string | null
-  name: string
-  code: string
+  name: string | ''
+  code: string | ''
   credits: number
   year: number
   semester: number
@@ -2426,26 +2404,26 @@ export type MinimalSubjectQueryTypedResult = {
   faculty: {
     _id: string
     slug: string | null
-    name: string
+    name: string | ''
     university: {
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
     }
   }
   study: {
     _id: string
     slug: string | null
     siteSlug: string
-    name: string
+    name: string | ''
     faculty: {
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
       university: {
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
       }
     }
   }
@@ -2453,20 +2431,20 @@ export type MinimalSubjectQueryTypedResult = {
     _id: string
     dbId: string | null
     slug: string | null
-    name: string
-    title: string | null
+    name: string | ''
+    title: string | ''
   }>
 } | null
 
 // Source: ../next/sanity/queries/academics/subject.queries.ts
 // Variable: subjectDetailQuery
-// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "subject"  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)  && study->slug.current == $studySlug  && study->faculty->slug.current == $facultySlug  && study->faculty->university->slug.current == $universitySlug][0] {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},  _type,  professors[]->{    _id,    "slug": slug.current,    name,    dbId,    title,    picture,    email  }}
+// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    "picture": sanityImage::full(picture)};*[_type == "subject"  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)  && study->slug.current == $studySlug  && study->faculty->slug.current == $facultySlug  && study->faculty->university->slug.current == $universitySlug][0] {  _id,dbId,"slug": slug.current,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),"code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),credits,year,semester,elective,"description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  faculty->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    university->{      _id,      "slug": slug.current,      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),},  _type,  professors[]->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    dbId,    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    picture,    email  }}
 export type SubjectDetailQueryResult = {
   _id: string
   dbId: string | null
   slug: string | null
-  name: string
-  code: string
+  name: string | ''
+  code: string | ''
   credits: number
   year: number
   semester: number
@@ -2476,35 +2454,35 @@ export type SubjectDetailQueryResult = {
   faculty: {
     _id: string
     slug: string | null
-    name: string
+    name: string | ''
     university: {
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
     }
   }
   study: {
     _id: string
     slug: string | null
     siteSlug: string
-    name: string
+    name: string | ''
     faculty: {
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
       university: {
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
       }
     }
   }
   professors: Array<{
     _id: string
     slug: string | null
-    name: string
+    name: string | ''
     dbId: string | null
-    title: string | null
+    title: string | ''
     picture: {
       asset?: SanityImageAssetReference
       media?: unknown
@@ -2519,13 +2497,13 @@ export type SubjectDetailQueryResult = {
 
 // Source: ../next/sanity/queries/academics/subject.queries.ts
 // Variable: subjectByIdQuery
-// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "subject" && (_id == $subjectId || _id == "drafts." + $subjectId || dbId == $subjectId)][0] {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},  _type,  professors[]->{    _id,    "slug": slug.current,    name,    dbId,    title,    picture,    email  }}
+// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    "picture": sanityImage::full(picture)};*[_type == "subject" && (_id == $subjectId || _id == "drafts." + $subjectId || dbId == $subjectId)][0] {  _id,dbId,"slug": slug.current,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),"code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),credits,year,semester,elective,"description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  faculty->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    university->{      _id,      "slug": slug.current,      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),},  _type,  professors[]->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    dbId,    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    picture,    email  }}
 export type SubjectByIdQueryResult = {
   _id: string
   dbId: string | null
   slug: string | null
-  name: string
-  code: string
+  name: string | ''
+  code: string | ''
   credits: number
   year: number
   semester: number
@@ -2535,35 +2513,35 @@ export type SubjectByIdQueryResult = {
   faculty: {
     _id: string
     slug: string | null
-    name: string
+    name: string | ''
     university: {
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
     }
   }
   study: {
     _id: string
     slug: string | null
     siteSlug: string
-    name: string
+    name: string | ''
     faculty: {
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
       university: {
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
       }
     }
   }
   professors: Array<{
     _id: string
     slug: string | null
-    name: string
+    name: string | ''
     dbId: string | null
-    title: string | null
+    title: string | ''
     picture: {
       asset?: SanityImageAssetReference
       media?: unknown
@@ -2600,36 +2578,36 @@ export type SubjectStaticParamsQueryResult = Array<{
 
 // Source: ../next/sanity/queries/academics/university.queries.ts
 // Variable: universityGalleryQuery
-// Query: *[_type == "university" && dbId != null] | order(name asc) {  _id,  "slug": slug.current,  name,  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {    _id,    "slug": slug.current,    name,  }}
+// Query: *[_type == "university" && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  }}
 export type UniversityGalleryQueryResult = Array<{
   _id: string
   slug: string | null
-  name: string
+  name: string | ''
   faculties: Array<{
     _id: string
     slug: string | null
-    name: string
+    name: string | ''
   }>
 }>
 
 // Source: ../next/sanity/queries/academics/university.queries.ts
 // Variable: universitySeoQuery
-// Query: *[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {  _id,  "slug": slug.current,  name,  description,}
+// Query: *[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),}
 export type UniversitySeoQueryResult = {
   _id: string
   slug: string | null
-  name: string
+  name: string | ''
   description: RichTextLite | null
 } | null
 
 // Source: ../next/sanity/queries/academics/university.queries.ts
 // Variable: universityDetailQuery
-// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {  _id,  "slug": slug.current,  _type,  name,  description,  "picture": sanityImage::full(picture),  "logo": sanityImage::full(logo),  streetAddress,  telephone,  email,  website,  rector->{    _id,    name,    title,    "picture": sanityImage::full(picture)  },  viceRectors[]->{    _id,    name,    title,    "picture": sanityImage::full(picture)  },  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {    _id,"slug": slug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),dean->{  _id,  name,  title,  "picture": sanityImage::full(picture)},secretary->{  _id,  name,  title,  "picture": sanityImage::full(picture)},viceDeans[]->{  _id,  name,  title,  "picture": sanityImage::full(picture)},university->{  _id,  "slug": slug.current,  name},"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {  _id,dbId,"slug": slug.current,"siteSlug": siteSlug.current,name,studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  name,  title,  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {  _id,"slug": slug.current,dbId,name,title,"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  name,},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,  "slug": slug.current,  name,  code,},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {  _id,dbId,"slug": slug.current,name,code,credits,year,semester,elective,description,syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  name,  university->{    _id,    "slug": slug.current,    name,  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  name,  faculty->{    _id,    "slug": slug.current,    name,    university->{      _id,      "slug": slug.current,      name,    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  name,  title,},},},  }}
+// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    "picture": sanityImage::full(picture)};*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {  _id,  "slug": slug.current,  _type,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),  "picture": sanityImage::full(picture),  "logo": sanityImage::full(logo),  streetAddress,  telephone,  email,  website,  rector->{    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    "picture": sanityImage::full(picture)  },  viceRectors[]->{    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    "picture": sanityImage::full(picture)  },  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {    _id,"slug": slug.current,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),dean->{  _id,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),  "picture": sanityImage::full(picture)},secretary->{  _id,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),  "picture": sanityImage::full(picture)},viceDeans[]->{  _id,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),  "picture": sanityImage::full(picture)},university->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "")},"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,"slug": slug.current,dbId,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),"title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),},},"studies": *[_type == "study" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,dbId,"slug": slug.current,"siteSlug": siteSlug.current,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),studentCount,"picture": sanityImage::full(picture),"logo": sanityImage::full(logo),assistant->{  _id,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),  "picture": sanityImage::full(picture)},faculty->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  }},"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,"slug": slug.current,dbId,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),"title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),"picture": sanityImage::full(picture),faculties[]->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  },},"universities": array::unique(faculties[]->university)[defined(@)]->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),},},"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {  _id,dbId,"slug": slug.current,"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),"code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),credits,year,semester,elective,"description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),syllabus,"faculty": study->faculty->{  _id,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  university->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  },},study->{  _id,  "slug": slug.current,  "siteSlug": siteSlug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  faculty->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    university->{      _id,      "slug": slug.current,      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    },  },},professors[]->{  _id,  dbId,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),},},},  }}
 export type UniversityDetailQueryResult = {
   _id: string
   slug: string | null
   _type: 'university'
-  name: string
+  name: string | ''
   description: RichTextLite | null
   picture: {
     asset: SanityImageAssetReference | null
@@ -2649,8 +2627,8 @@ export type UniversityDetailQueryResult = {
   website: string | null
   rector: {
     _id: string
-    name: string
-    title: string
+    name: string | ''
+    title: string | ''
     picture: {
       asset: SanityImageAssetReference | null
       crop: SanityImageCrop | null
@@ -2660,8 +2638,8 @@ export type UniversityDetailQueryResult = {
   } | null
   viceRectors: Array<{
     _id: string
-    name: string
-    title: string
+    name: string | ''
+    title: string | ''
     picture: {
       asset: SanityImageAssetReference | null
       crop: SanityImageCrop | null
@@ -2672,7 +2650,7 @@ export type UniversityDetailQueryResult = {
   faculties: Array<{
     _id: string
     slug: string | null
-    name: string
+    name: string | ''
     studentCount: number | null
     picture: {
       asset: SanityImageAssetReference | null
@@ -2688,8 +2666,8 @@ export type UniversityDetailQueryResult = {
     } | null
     dean: {
       _id: string
-      name: string
-      title: string
+      name: string | ''
+      title: string | ''
       picture: {
         asset: SanityImageAssetReference | null
         crop: SanityImageCrop | null
@@ -2699,8 +2677,8 @@ export type UniversityDetailQueryResult = {
     }
     secretary: {
       _id: string
-      name: string
-      title: string
+      name: string | ''
+      title: string | ''
       picture: {
         asset: SanityImageAssetReference | null
         crop: SanityImageCrop | null
@@ -2710,8 +2688,8 @@ export type UniversityDetailQueryResult = {
     }
     viceDeans: Array<{
       _id: string
-      name: string
-      title: string
+      name: string | ''
+      title: string | ''
       picture: {
         asset: SanityImageAssetReference | null
         crop: SanityImageCrop | null
@@ -2722,7 +2700,7 @@ export type UniversityDetailQueryResult = {
     university: {
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
     }
     studyCount: number
     professorCount: number
@@ -2730,8 +2708,8 @@ export type UniversityDetailQueryResult = {
       _id: string
       slug: string | null
       dbId: string | null
-      name: string
-      title: string | null
+      name: string | ''
+      title: string | ''
       picture: {
         asset: SanityImageAssetReference | null
         crop: SanityImageCrop | null
@@ -2741,23 +2719,23 @@ export type UniversityDetailQueryResult = {
       faculties: Array<{
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
         university: {
           _id: string
           slug: string | null
-          name: string
+          name: string | ''
         }
       }>
       universities: Array<{
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
       }>
       subjects: Array<{
         _id: string
         slug: string | null
-        name: string
-        code: string
+        name: string | ''
+        code: string | ''
       }>
     }>
     studies: Array<{
@@ -2765,7 +2743,7 @@ export type UniversityDetailQueryResult = {
       dbId: string | null
       slug: string | null
       siteSlug: string
-      name: string
+      name: string | ''
       studentCount: number | null
       picture: {
         asset: SanityImageAssetReference | null
@@ -2781,8 +2759,8 @@ export type UniversityDetailQueryResult = {
       } | null
       assistant: {
         _id: string
-        name: string
-        title: string
+        name: string | ''
+        title: string | ''
         picture: {
           asset: SanityImageAssetReference | null
           crop: SanityImageCrop | null
@@ -2793,11 +2771,11 @@ export type UniversityDetailQueryResult = {
       faculty: {
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
         university: {
           _id: string
           slug: string | null
-          name: string
+          name: string | ''
         }
       }
       subjectCount: number
@@ -2806,8 +2784,8 @@ export type UniversityDetailQueryResult = {
         _id: string
         slug: string | null
         dbId: string | null
-        name: string
-        title: string | null
+        name: string | ''
+        title: string | ''
         picture: {
           asset: SanityImageAssetReference | null
           crop: SanityImageCrop | null
@@ -2817,31 +2795,31 @@ export type UniversityDetailQueryResult = {
         faculties: Array<{
           _id: string
           slug: string | null
-          name: string
+          name: string | ''
           university: {
             _id: string
             slug: string | null
-            name: string
+            name: string | ''
           }
         }>
         universities: Array<{
           _id: string
           slug: string | null
-          name: string
+          name: string | ''
         }>
         subjects: Array<{
           _id: string
           slug: string | null
-          name: string
-          code: string
+          name: string | ''
+          code: string | ''
         }>
       }>
       subjects: Array<{
         _id: string
         dbId: string | null
         slug: string | null
-        name: string
-        code: string
+        name: string | ''
+        code: string | ''
         credits: number
         year: number
         semester: number
@@ -2851,26 +2829,26 @@ export type UniversityDetailQueryResult = {
         faculty: {
           _id: string
           slug: string | null
-          name: string
+          name: string | ''
           university: {
             _id: string
             slug: string | null
-            name: string
+            name: string | ''
           }
         }
         study: {
           _id: string
           slug: string | null
           siteSlug: string
-          name: string
+          name: string | ''
           faculty: {
             _id: string
             slug: string | null
-            name: string
+            name: string | ''
             university: {
               _id: string
               slug: string | null
-              name: string
+              name: string | ''
             }
           }
         }
@@ -2878,8 +2856,8 @@ export type UniversityDetailQueryResult = {
           _id: string
           dbId: string | null
           slug: string | null
-          name: string
-          title: string | null
+          name: string | ''
+          title: string | ''
         }>
       }>
     }>
@@ -2895,18 +2873,18 @@ export type UniversityStaticParamsQueryResult = Array<{
 
 // Source: ../next/sanity/queries/calendar.queries.ts
 // Variable: calendarEventsQuery
-// Query: *[_type == "calendarEvent"  && _id in *[_type == "study" && siteSlug.current == $siteSlug][0].calendars[]->events[]._ref  && dateTime(date) >= dateTime($from)  && dateTime(date) <= dateTime($to)] | order(date asc, _id asc) {    _id,  "title": stringTitle,  "description": stringSubtitle,  date,  type,  importance,  "subject": subject->{    _id,    dbId,    name,    "slug": coalesce(slug.current, _id),    "studySlug": coalesce(study->slug.current, study->_id),    "siteSlug": study->siteSlug.current,    "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),    "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id)  },  "professors": professors[]->{    _id,    dbId,    name,    "slug": coalesce(slug.current, _id)  }}
+// Query: *[_type == "calendarEvent"  && _id in *[_type == "study" && siteSlug.current == $siteSlug][0].calendars[]->events[]._ref  && dateTime(date) >= dateTime($from)  && dateTime(date) <= dateTime($to)] | order(date asc, _id asc) {    _id,  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),  "description": coalesce(select($locale == "en" && length(localizedSubtitle.en) > 0 => localizedSubtitle.en, $locale == "mk" && length(localizedSubtitle.mk) > 0 => localizedSubtitle.mk), select(length(localizedSubtitle.en) > 0 => localizedSubtitle.en, length(localizedSubtitle.mk) > 0 => localizedSubtitle.mk), ""),  date,  type,  importance,  "subject": subject->{    _id,    dbId,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "slug": coalesce(slug.current, _id),    "studySlug": coalesce(study->slug.current, study->_id),    "siteSlug": study->siteSlug.current,    "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),    "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id)  },  "professors": professors[]->{    _id,    dbId,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "slug": coalesce(slug.current, _id)  }}
 export type CalendarEventsQueryResult = Array<{
   _id: string
-  title: string
-  description: string | null
+  title: string | ''
+  description: string | ''
   date: string
   type: 'announcement' | 'exam' | 'info' | 'preliminary_exam' | 'reminder'
   importance: 'high' | 'low' | 'normal'
   subject: {
     _id: string
     dbId: string | null
-    name: string
+    name: string | ''
     slug: string
     studySlug: string
     siteSlug: string
@@ -2916,18 +2894,18 @@ export type CalendarEventsQueryResult = Array<{
   professors: Array<{
     _id: string
     dbId: string | null
-    name: string
+    name: string | ''
     slug: string
   }> | null
 }>
 
 // Source: ../next/sanity/queries/catalog-home.queries.ts
 // Variable: catalogHomeQuery
-// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": stringTitle,    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    name,    title,    "picture": sanityImage::full(picture)};{  "universities": *[_type == "university" && dbId != null] | order(name asc) {    _id,    name,    "slug": slug.current,    "logo": sanityImage::full(logo),    "picture": sanityImage::full(picture),    "facultyCount": count(*[_type == "faculty" && references(^._id) && dbId != null])  },  "faculties": *[_type == "faculty" && university._ref != null && dbId != null] | order(name asc) {    _id,    name,    "slug": slug.current,    "logo": sanityImage::full(logo),    "picture": sanityImage::full(picture),    "studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),    "professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),    university->{      _id,      name,      "slug": slug.current    }  },  "studies": *[_type == "study" && faculty._ref != null && dbId != null] | order(name asc) {    _id,    name,    "slug": slug.current,    "siteSlug": siteSlug.current,    "logo": sanityImage::full(logo),    "picture": sanityImage::full(picture),    "subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),    "professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),    faculty->{      _id,      name,      "slug": slug.current,      university->{        _id,        name,        "slug": slug.current      }    }  }}
+// Query: fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn sanityButton::full($button) = $button{    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    _id,    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},    ...linkSelector::full(@),};fn portableText::full($portableText) = $portableText{    ...,    children[]{    ...,    _type == "image" => {        asset,         "alt": asset->altText,        "aspectRatio": asset->metadata.dimensions.aspectRatio,    },    _type == "buttonReference" => @->{...sanityButton::full(@)},    },    markDefs[]{    ...,    }};fn person::full($person) = $person{    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),    "picture": sanityImage::full(picture)};{  "universities": *[_type == "university" && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "slug": slug.current,    "logo": sanityImage::full(logo),    "picture": sanityImage::full(picture),    "facultyCount": count(*[_type == "faculty" && references(^._id) && dbId != null])  },  "faculties": *[_type == "faculty" && university._ref != null && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "slug": slug.current,    "logo": sanityImage::full(logo),    "picture": sanityImage::full(picture),    "studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),    "professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),    university->{      _id,      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),      "slug": slug.current    }  },  "studies": *[_type == "study" && faculty._ref != null && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "slug": slug.current,    "siteSlug": siteSlug.current,    "logo": sanityImage::full(logo),    "picture": sanityImage::full(picture),    "subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),    "professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),    faculty->{      _id,      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),      "slug": slug.current,      university->{        _id,        "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),        "slug": slug.current      }    }  }}
 export type CatalogHomeQueryResult = {
   universities: Array<{
     _id: string
-    name: string
+    name: string | ''
     slug: string | null
     logo: {
       asset: SanityImageAssetReference | null
@@ -2945,7 +2923,7 @@ export type CatalogHomeQueryResult = {
   }>
   faculties: Array<{
     _id: string
-    name: string
+    name: string | ''
     slug: string | null
     logo: {
       asset: SanityImageAssetReference | null
@@ -2963,13 +2941,13 @@ export type CatalogHomeQueryResult = {
     professorCount: number
     university: {
       _id: string
-      name: string
+      name: string | ''
       slug: string | null
     }
   }>
   studies: Array<{
     _id: string
-    name: string
+    name: string | ''
     slug: string | null
     siteSlug: string
     logo: {
@@ -2988,11 +2966,11 @@ export type CatalogHomeQueryResult = {
     professorCount: number
     faculty: {
       _id: string
-      name: string
+      name: string | ''
       slug: string | null
       university: {
         _id: string
-        name: string
+        name: string | ''
         slug: string | null
       }
     }
@@ -3001,49 +2979,49 @@ export type CatalogHomeQueryResult = {
 
 // Source: ../next/sanity/queries/catalog-search.queries.ts
 // Variable: catalogSearchQuery
-// Query: {  "universities": *[_type == "university" && dbId != null && name match $term] | order(name asc)[0...20] {    _id,    name,    "slug": slug.current  },  "faculties": *[_type == "faculty" && dbId != null && name match $term] | order(name asc)[0...20] {    _id,    name,    "slug": slug.current,    university->{      _id,      name,      "slug": slug.current    }  },  "studies": *[_type == "study" && dbId != null && name match $term] | order(name asc)[0...20] {    _id,    name,    "slug": slug.current,    "siteSlug": siteSlug.current,    faculty->{      _id,      name,      "slug": slug.current,      university->{        _id,        name,        "slug": slug.current      }    }  },  "professors": *[_type == "professor" && dbId != null && name match $term] | order(name asc)[0...20] {    _id,    name,    "slug": slug.current  }}
+// Query: {  "universities": *[_type == "university" && dbId != null && (coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "")) match $term] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc)[0...20] {    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "slug": slug.current  },  "faculties": *[_type == "faculty" && dbId != null && (coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "")) match $term] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc)[0...20] {    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "slug": slug.current,    university->{      _id,      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),      "slug": slug.current    }  },  "studies": *[_type == "study" && dbId != null && (coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "")) match $term] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc)[0...20] {    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "slug": slug.current,    "siteSlug": siteSlug.current,    faculty->{      _id,      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),      "slug": slug.current,      university->{        _id,        "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),        "slug": slug.current      }    }  },  "professors": *[_type == "professor" && dbId != null && (coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "")) match $term] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc)[0...20] {    _id,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "slug": slug.current  }}
 export type CatalogSearchQueryResult = {
   universities: Array<{
     _id: string
-    name: string
+    name: string | ''
     slug: string | null
   }>
   faculties: Array<{
     _id: string
-    name: string
+    name: string | ''
     slug: string | null
     university: {
       _id: string
-      name: string
+      name: string | ''
       slug: string | null
     }
   }>
   studies: Array<{
     _id: string
-    name: string
+    name: string | ''
     slug: string | null
     siteSlug: string
     faculty: {
       _id: string
-      name: string
+      name: string | ''
       slug: string | null
       university: {
         _id: string
-        name: string
+        name: string | ''
         slug: string | null
       }
     }
   }>
   professors: Array<{
     _id: string
-    name: string
+    name: string | ''
     slug: string | null
   }>
 }
 
 // Source: ../next/sanity/queries/nav.queries.ts
 // Variable: navMenuQuery
-// Query: fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};*[_id == $WEBSITE][0]{  "navMenu": navMenu->{    defined(title) => {title},    defined(websiteLogo)=>{ "websiteLogo": sanityImage::full(websiteLogo) },    navItems[]->{      stringTitle,      stringSubtitle,      ...linkSelector::full(@),      defined(new) => {new},      defined(comingSoon) => {comingSoon},      defined(disabled) => {disabled},      defined(icon) => { "icon": sanityImage::full(icon) },    },  }}.navMenu
+// Query: fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};fn linkSelector::full($link) = $link{    defined(customLink) => {customLink},};*[_id == $WEBSITE][0]{  "navMenu": navMenu->{    defined(title) => {title},    defined(websiteLogo)=>{ "websiteLogo": sanityImage::full(websiteLogo) },    navItems[]->{      "stringTitle": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),      "stringSubtitle": coalesce(select($locale == "en" && length(localizedSubtitle.en) > 0 => localizedSubtitle.en, $locale == "mk" && length(localizedSubtitle.mk) > 0 => localizedSubtitle.mk), select(length(localizedSubtitle.en) > 0 => localizedSubtitle.en, length(localizedSubtitle.mk) > 0 => localizedSubtitle.mk), ""),      ...linkSelector::full(@),      defined(new) => {new},      defined(comingSoon) => {comingSoon},      defined(disabled) => {disabled},      defined(icon) => { "icon": sanityImage::full(icon) },    },  }}.navMenu
 export type NavMenuQueryResult =
   | null
   | {
@@ -3056,8 +3034,8 @@ export type NavMenuQueryResult =
       } | null
       navItems: Array<
         | {
-            stringTitle: string | null
-            stringSubtitle: null
+            stringTitle: string | ''
+            stringSubtitle: ''
             customLink: string
             icon: {
               asset: SanityImageAssetReference | null
@@ -3067,8 +3045,8 @@ export type NavMenuQueryResult =
             } | null
           }
         | {
-            stringTitle: string | null
-            stringSubtitle: null
+            stringTitle: string | ''
+            stringSubtitle: ''
             customLink: string
           }
       > | null
@@ -3077,8 +3055,8 @@ export type NavMenuQueryResult =
       title: string | null
       navItems: Array<
         | {
-            stringTitle: string | null
-            stringSubtitle: null
+            stringTitle: string | ''
+            stringSubtitle: ''
             customLink: string
             icon: {
               asset: SanityImageAssetReference | null
@@ -3088,8 +3066,8 @@ export type NavMenuQueryResult =
             } | null
           }
         | {
-            stringTitle: string | null
-            stringSubtitle: null
+            stringTitle: string | ''
+            stringSubtitle: ''
             customLink: string
           }
       > | null
@@ -3103,8 +3081,8 @@ export type NavMenuQueryResult =
       } | null
       navItems: Array<
         | {
-            stringTitle: string | null
-            stringSubtitle: null
+            stringTitle: string | ''
+            stringSubtitle: ''
             customLink: string
             icon: {
               asset: SanityImageAssetReference | null
@@ -3114,8 +3092,8 @@ export type NavMenuQueryResult =
             } | null
           }
         | {
-            stringTitle: string | null
-            stringSubtitle: null
+            stringTitle: string | ''
+            stringSubtitle: ''
             customLink: string
           }
       > | null
@@ -3123,8 +3101,8 @@ export type NavMenuQueryResult =
   | {
       navItems: Array<
         | {
-            stringTitle: string | null
-            stringSubtitle: null
+            stringTitle: string | ''
+            stringSubtitle: ''
             customLink: string
             icon: {
               asset: SanityImageAssetReference | null
@@ -3134,8 +3112,8 @@ export type NavMenuQueryResult =
             } | null
           }
         | {
-            stringTitle: string | null
-            stringSubtitle: null
+            stringTitle: string | ''
+            stringSubtitle: ''
             customLink: string
           }
       > | null
@@ -3156,25 +3134,25 @@ export type StudyLogosQueryResult = Array<{
 
 // Source: ../next/sanity/queries/onboarding.queries.ts
 // Variable: onboardingCatalogQuery
-// Query: {  "universities": *[_type == "university" && dbId != null]{ _id, dbId, name, "slug": slug.current },  "faculties": *[_type == "faculty" && university._ref != null && dbId != null]{ _id, dbId, name, "slug": slug.current, "universityId": university._ref },  "studies": *[_type == "study" && faculty._ref != null && dbId != null]{    _id,    dbId,    name,    "slug": slug.current,    "siteSlug": siteSlug.current,    "facultyId": faculty._ref,    "subjectsByYear": *[_type == "subject" && study._ref == ^._id && dbId != null        && _id == (*[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(_id asc)[0]._id)      ] | order(year asc){      year,      "subjects": *[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(name asc){        _id, dbId, name, year, elective, "studyId": study._ref      }    },  },  "subjects": *[_type == "subject" && study._ref != null && dbId != null] | order(year asc){      _id,  dbId,  "slug": slug.current,  name,  code,  credits,  year,  semester,  elective,  "faculty": study->faculty->{    _id,    "slug": slug.current,    name,    dbId,    university->{      _id,      "slug": slug.current,      name,    },  },  study->{    _id,    "slug": slug.current,    "siteSlug": siteSlug.current,    name,    dbId,    faculty->{      _id,      "slug": slug.current,      name,      university->{        _id,        "slug": slug.current,        name,      },    },  },  professors[]->{    _id,    dbId,    "slug": slug.current,    name,    title,  },  }}
+// Query: {  "universities": *[_type == "university" && dbId != null]{ _id, dbId, "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""), "slug": slug.current },  "faculties": *[_type == "faculty" && university._ref != null && dbId != null]{ _id, dbId, "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""), "slug": slug.current, "universityId": university._ref },  "studies": *[_type == "study" && faculty._ref != null && dbId != null]{    _id,    dbId,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "slug": slug.current,    "siteSlug": siteSlug.current,    "facultyId": faculty._ref,    "subjectsByYear": *[_type == "subject" && study._ref == ^._id && dbId != null        && _id == (*[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(_id asc)[0]._id)      ] | order(year asc){      year,      "subjects": *[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc){        _id, dbId, "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""), year, elective, "studyId": study._ref      }    },  },  "subjects": *[_type == "subject" && study._ref != null && dbId != null] | order(year asc){      _id,  dbId,  "slug": slug.current,  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),  "code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),  credits,  year,  semester,  elective,  "faculty": study->faculty->{    _id,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    dbId,    university->{      _id,      "slug": slug.current,      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    },  },  study->{    _id,    "slug": slug.current,    "siteSlug": siteSlug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    dbId,    faculty->{      _id,      "slug": slug.current,      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),      university->{        _id,        "slug": slug.current,        "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),      },    },  },  professors[]->{    _id,    dbId,    "slug": slug.current,    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),  },  }}
 export type OnboardingCatalogQueryResult = {
   universities: Array<{
     _id: string
     dbId: string
-    name: string
+    name: string | ''
     slug: string | null
   }>
   faculties: Array<{
     _id: string
     dbId: string
-    name: string
+    name: string | ''
     slug: string | null
     universityId: string
   }>
   studies: Array<{
     _id: string
     dbId: string
-    name: string
+    name: string | ''
     slug: string | null
     siteSlug: string
     facultyId: string
@@ -3183,7 +3161,7 @@ export type OnboardingCatalogQueryResult = {
       subjects: Array<{
         _id: string
         dbId: string | null
-        name: string
+        name: string | ''
         year: number
         elective: boolean | null
         studyId: string
@@ -3194,8 +3172,8 @@ export type OnboardingCatalogQueryResult = {
     _id: string
     dbId: string
     slug: string | null
-    name: string
-    code: string
+    name: string | ''
+    code: string | ''
     credits: number
     year: number
     semester: number
@@ -3203,28 +3181,28 @@ export type OnboardingCatalogQueryResult = {
     faculty: {
       _id: string
       slug: string | null
-      name: string
+      name: string | ''
       dbId: string | null
       university: {
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
       }
     }
     study: {
       _id: string
       slug: string | null
       siteSlug: string
-      name: string
+      name: string | ''
       dbId: string | null
       faculty: {
         _id: string
         slug: string | null
-        name: string
+        name: string | ''
         university: {
           _id: string
           slug: string | null
-          name: string
+          name: string | ''
         }
       }
     }
@@ -3232,18 +3210,18 @@ export type OnboardingCatalogQueryResult = {
       _id: string
       dbId: string | null
       slug: string | null
-      name: string
-      title: string | null
+      name: string | ''
+      title: string | ''
     }>
   }>
 }
 
 // Source: ../next/sanity/queries/study-tip.queries.ts
 // Variable: studyTipsQuery
-// Query: *[_type == "studyTip" && length(title) > 0 && length(content) > 0] | order(_createdAt asc, _id asc) {  _id,  title,  content}
+// Query: *[_type == "studyTip" && length(coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk))) > 0 && length(coalesce(select($locale == "en" && length(localizedContent.en) > 0 => localizedContent.en, $locale == "mk" && length(localizedContent.mk) > 0 => localizedContent.mk), select(length(localizedContent.en) > 0 => localizedContent.en, length(localizedContent.mk) > 0 => localizedContent.mk))) > 0] | order(_createdAt asc, _id asc) {  _id,  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk)),  "content": coalesce(select($locale == "en" && length(localizedContent.en) > 0 => localizedContent.en, $locale == "mk" && length(localizedContent.mk) > 0 => localizedContent.mk), select(length(localizedContent.en) > 0 => localizedContent.en, length(localizedContent.mk) > 0 => localizedContent.mk))}
 export type StudyTipsQueryResult = Array<{
   _id: string
-  title: RichTextLite
+  title: RichTextLite | null
   content: RichTextLite | null
 }>
 
@@ -3630,38 +3608,38 @@ export type WebsiteBackgroundQueryResult =
 // Query TypeMap
 declare global {
   interface SanityQueries {
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "faculty"\n  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)\n  && university->slug.current == $universitySlug\n][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  description,\n}\n': FacultySeoQueryResult
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "faculty"\n  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)\n  && university->slug.current == $universitySlug\n][0]{\n\n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\ndean->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nsecretary->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nviceDeans[]->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nuniversity->{\n  _id,\n  "slug": slug.current,\n  name\n},\n"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\n"siteSlug": siteSlug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n},\n\n}\n': MinimalFacultyTypedQueryResult
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "faculty"\n  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)\n  && university->slug.current == $universitySlug\n][0] {\n  \n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\ndean->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nsecretary->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nviceDeans[]->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nuniversity->{\n  _id,\n  "slug": slug.current,\n  name\n},\n"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\n"siteSlug": siteSlug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n},\n\n  _type,\n  description,\n  streetAddress,\n  telephone,\n  email,\n  website,\n}\n': FacultyDetailQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "faculty"\n  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)\n  && university->slug.current == $universitySlug\n][0] {\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),\n}\n': FacultySeoQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "faculty"\n  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)\n  && university->slug.current == $universitySlug\n][0]{\n\n_id,\n"slug": slug.current,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\ndean->{\n  _id,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n  "picture": sanityImage::full(picture)\n},\nsecretary->{\n  _id,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n  "picture": sanityImage::full(picture)\n},\nviceDeans[]->{\n  _id,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n  "picture": sanityImage::full(picture)\n},\nuniversity->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "")\n},\n"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n"title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),\n},\n\n},\n"studies": *[_type == "study" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\n"siteSlug": siteSlug.current,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n"title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n"code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),\ncredits,\nyear,\nsemester,\nelective,\n"description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  faculty->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    university->{\n      _id,\n      "slug": slug.current,\n      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n},\n\n},\n\n},\n\n}\n': MinimalFacultyTypedQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "faculty"\n  && (slug.current == $facultySlug || _id == $facultySlug || _id == "drafts." + $facultySlug || dbId == $facultySlug)\n  && university->slug.current == $universitySlug\n][0] {\n  \n_id,\n"slug": slug.current,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\ndean->{\n  _id,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n  "picture": sanityImage::full(picture)\n},\nsecretary->{\n  _id,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n  "picture": sanityImage::full(picture)\n},\nviceDeans[]->{\n  _id,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n  "picture": sanityImage::full(picture)\n},\nuniversity->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "")\n},\n"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n"title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),\n},\n\n},\n"studies": *[_type == "study" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\n"siteSlug": siteSlug.current,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n"title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n"code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),\ncredits,\nyear,\nsemester,\nelective,\n"description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  faculty->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    university->{\n      _id,\n      "slug": slug.current,\n      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n},\n\n},\n\n},\n\n  _type,\n  "description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),\n  streetAddress,\n  telephone,\n  email,\n  website,\n}\n': FacultyDetailQueryResult
     '\n*[_type == "faculty" && !(_id in path("drafts.**")) && dbId != null] {\n  "facultySlug": coalesce(slug.current, _id),\n  "universitySlug": coalesce(university->slug.current, university->_id)\n}\n': FacultyStaticParamsQueryResult
-    '\n*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  bio\n}\n': ProfessorSeoQueryResult
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {\n\n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n}\n': MinimalProfessorTypedQueryResult
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n  _type,\n  bio,\n  office,\n  telephone,\n  email,\n  website,\n  faculties[]->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    }\n  },\n  "subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n    \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n  }\n}\n': ProfessorDetailQueryResult
+    '\n*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "bio": coalesce(select($locale == "en" && length(localizedBio.en) > 0 => localizedBio.en, $locale == "mk" && length(localizedBio.mk) > 0 => localizedBio.mk), select(length(localizedBio.en) > 0 => localizedBio.en, length(localizedBio.mk) > 0 => localizedBio.mk))\n}\n': ProfessorSeoQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {\n\n_id,\n"slug": slug.current,\ndbId,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n"title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),\n},\n\n}\n': MinimalProfessorTypedQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "professor" && (slug.current == $professorSlug || _id == $professorSlug || _id == "drafts." + $professorSlug || dbId == $professorSlug)][0] {\n  \n_id,\n"slug": slug.current,\ndbId,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n"title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),\n},\n\n  _type,\n  "bio": coalesce(select($locale == "en" && length(localizedBio.en) > 0 => localizedBio.en, $locale == "mk" && length(localizedBio.mk) > 0 => localizedBio.mk), select(length(localizedBio.en) > 0 => localizedBio.en, length(localizedBio.mk) > 0 => localizedBio.mk)),\n  office,\n  telephone,\n  email,\n  website,\n  faculties[]->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    university->{\n      _id,\n      "slug": slug.current,\n      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    }\n  },\n  "subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n    \n_id,\ndbId,\n"slug": slug.current,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n"code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),\ncredits,\nyear,\nsemester,\nelective,\n"description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  faculty->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    university->{\n      _id,\n      "slug": slug.current,\n      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n},\n\n  }\n}\n': ProfessorDetailQueryResult
     '\n*[_type == "professor" && !(_id in path("drafts.**")) && dbId != null] {\n  "professorSlug": coalesce(slug.current, _id)\n}\n': ProfessorStaticParamsQueryResult
-    '\n*[_type == "study"\n  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)\n  && faculty->slug.current == $facultySlug\n  && faculty->university->slug.current == $universitySlug\n][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  description,\n}\n': StudySeoQueryResult
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "study"\n  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)\n  && faculty->slug.current == $facultySlug\n  && faculty->university->slug.current == $universitySlug\n][0] {\n\n_id,\ndbId,\n"slug": slug.current,\n"siteSlug": siteSlug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n}\n': MinimalStudyTypedQueryResult
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "study"\n  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)\n  && faculty->slug.current == $facultySlug\n  && faculty->university->slug.current == $universitySlug\n][0] {\n  \n_id,\ndbId,\n"slug": slug.current,\n"siteSlug": siteSlug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n  _type,\n  description,\n  streetAddress,\n  telephone,\n  email,\n  website,\n}\n': StudyDetailQueryResult
+    '\n*[_type == "study"\n  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)\n  && faculty->slug.current == $facultySlug\n  && faculty->university->slug.current == $universitySlug\n][0] {\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),\n}\n': StudySeoQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "study"\n  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)\n  && faculty->slug.current == $facultySlug\n  && faculty->university->slug.current == $universitySlug\n][0] {\n\n_id,\ndbId,\n"slug": slug.current,\n"siteSlug": siteSlug.current,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n"title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n"code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),\ncredits,\nyear,\nsemester,\nelective,\n"description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  faculty->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    university->{\n      _id,\n      "slug": slug.current,\n      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n},\n\n},\n\n}\n': MinimalStudyTypedQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "study"\n  && (slug.current == $studySlug || _id == $studySlug || _id == "drafts." + $studySlug || dbId == $studySlug)\n  && faculty->slug.current == $facultySlug\n  && faculty->university->slug.current == $universitySlug\n][0] {\n  \n_id,\ndbId,\n"slug": slug.current,\n"siteSlug": siteSlug.current,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n"title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n"code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),\ncredits,\nyear,\nsemester,\nelective,\n"description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  faculty->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    university->{\n      _id,\n      "slug": slug.current,\n      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n},\n\n},\n\n  _type,\n  "description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),\n  streetAddress,\n  telephone,\n  email,\n  website,\n}\n': StudyDetailQueryResult
     '\n*[_type == "study" && !(_id in path("drafts.**")) && dbId != null] {\n  "studySlug": coalesce(slug.current, _id),\n  "facultySlug": coalesce(faculty->slug.current, faculty->_id),\n  "universitySlug": coalesce(faculty->university->slug.current, faculty->university->_id),\n  "siteSlug": siteSlug.current\n}\n': StudyStaticParamsQueryResult
-    '\n{\n  "universities": *[_type == "university" && dbId != null] | order(name asc) {\n    _id,\n    name,\n    "slug": slug.current\n  },\n  "faculties": *[_type == "faculty" && dbId != null && university._ref != null] | order(name asc) {\n    _id,\n    name,\n    "slug": slug.current,\n    "universityId": university._ref\n  },\n  "studies": *[_type == "study" && dbId != null && faculty._ref != null && siteSlug.current != null] | order(name asc) {\n    _id,\n    name,\n    "slug": slug.current,\n    "siteSlug": siteSlug.current,\n    "facultyId": faculty._ref,\n    dbId\n  }\n}\n': StudyPickerQueryResult
-    '\n*[_type == "study" && siteSlug.current == $siteSlug]{\n  _id,\n  "studySlug": coalesce(slug.current, _id),\n  "facultySlug": coalesce(faculty->slug.current, faculty->_id),\n  "universitySlug": coalesce(faculty->university->slug.current, faculty->university->_id),\n  "siteSlug": siteSlug.current,\n  "name": name,\n  "facultyName": faculty->name,\n  "universityName": faculty->university->name,\n  dbId\n}[0]\n': StudySiteQueryResult
-    '\n*[_type == "subject"\n  && dbId != null\n  && study._ref == *[_type == "study" && siteSlug.current == $siteSlug][0]._id\n] | order(name asc){\n  dbId,\n  name\n}\n': StudyAlertSubjectsQueryResult
-    '\n*[_type == "subject"\n  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)\n  && study->slug.current == $studySlug\n  && study->faculty->slug.current == $facultySlug\n  && study->faculty->university->slug.current == $universitySlug\n][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  description,\n}\n': SubjectSeoQueryResult
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "subject"\n  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)\n  && study->slug.current == $studySlug\n  && study->faculty->slug.current == $facultySlug\n  && study->faculty->university->slug.current == $universitySlug\n][0]{\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n}\n': MinimalSubjectQueryTypedResult
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "subject"\n  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)\n  && study->slug.current == $studySlug\n  && study->faculty->slug.current == $facultySlug\n  && study->faculty->university->slug.current == $universitySlug\n][0] {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n  _type,\n  professors[]->{\n    _id,\n    "slug": slug.current,\n    name,\n    dbId,\n    title,\n    picture,\n    email\n  }\n}\n': SubjectDetailQueryResult
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "subject" && (_id == $subjectId || _id == "drafts." + $subjectId || dbId == $subjectId)][0] {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n  _type,\n  professors[]->{\n    _id,\n    "slug": slug.current,\n    name,\n    dbId,\n    title,\n    picture,\n    email\n  }\n}\n': SubjectByIdQueryResult
+    '\n{\n  "universities": *[_type == "university" && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "slug": slug.current\n  },\n  "faculties": *[_type == "faculty" && dbId != null && university._ref != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "slug": slug.current,\n    "universityId": university._ref\n  },\n  "studies": *[_type == "study" && dbId != null && faculty._ref != null && siteSlug.current != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "slug": slug.current,\n    "siteSlug": siteSlug.current,\n    "facultyId": faculty._ref,\n    dbId\n  }\n}\n': StudyPickerQueryResult
+    '\n*[_type == "study" && siteSlug.current == $siteSlug]{\n  _id,\n  "studySlug": coalesce(slug.current, _id),\n  "facultySlug": coalesce(faculty->slug.current, faculty->_id),\n  "universitySlug": coalesce(faculty->university->slug.current, faculty->university->_id),\n  "siteSlug": siteSlug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "facultyName": coalesce(select($locale == "en" && length(faculty->localizedName.en) > 0 => faculty->localizedName.en, $locale == "mk" && length(faculty->localizedName.mk) > 0 => faculty->localizedName.mk), select(length(faculty->localizedName.en) > 0 => faculty->localizedName.en, length(faculty->localizedName.mk) > 0 => faculty->localizedName.mk), ""),\n  "universityName": coalesce(select($locale == "en" && length(faculty->university->localizedName.en) > 0 => faculty->university->localizedName.en, $locale == "mk" && length(faculty->university->localizedName.mk) > 0 => faculty->university->localizedName.mk), select(length(faculty->university->localizedName.en) > 0 => faculty->university->localizedName.en, length(faculty->university->localizedName.mk) > 0 => faculty->university->localizedName.mk), ""),\n  dbId\n}[0]\n': StudySiteQueryResult
+    '\n*[_type == "subject"\n  && dbId != null\n  && study._ref == *[_type == "study" && siteSlug.current == $siteSlug][0]._id\n] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc){\n  dbId,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "")\n}\n': StudyAlertSubjectsQueryResult
+    '\n*[_type == "subject"\n  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)\n  && study->slug.current == $studySlug\n  && study->faculty->slug.current == $facultySlug\n  && study->faculty->university->slug.current == $universitySlug\n][0] {\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),\n}\n': SubjectSeoQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "subject"\n  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)\n  && study->slug.current == $studySlug\n  && study->faculty->slug.current == $facultySlug\n  && study->faculty->university->slug.current == $universitySlug\n][0]{\n  \n_id,\ndbId,\n"slug": slug.current,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n"code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),\ncredits,\nyear,\nsemester,\nelective,\n"description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  faculty->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    university->{\n      _id,\n      "slug": slug.current,\n      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n},\n\n}\n': MinimalSubjectQueryTypedResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "subject"\n  && (slug.current == $subjectSlug || _id == $subjectSlug || _id == "drafts." + $subjectSlug || dbId == $subjectSlug)\n  && study->slug.current == $studySlug\n  && study->faculty->slug.current == $facultySlug\n  && study->faculty->university->slug.current == $universitySlug\n][0] {\n  \n_id,\ndbId,\n"slug": slug.current,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n"code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),\ncredits,\nyear,\nsemester,\nelective,\n"description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  faculty->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    university->{\n      _id,\n      "slug": slug.current,\n      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n},\n\n  _type,\n  professors[]->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    dbId,\n    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    picture,\n    email\n  }\n}\n': SubjectDetailQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "subject" && (_id == $subjectId || _id == "drafts." + $subjectId || dbId == $subjectId)][0] {\n  \n_id,\ndbId,\n"slug": slug.current,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n"code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),\ncredits,\nyear,\nsemester,\nelective,\n"description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  faculty->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    university->{\n      _id,\n      "slug": slug.current,\n      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n},\n\n  _type,\n  professors[]->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    dbId,\n    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    picture,\n    email\n  }\n}\n': SubjectByIdQueryResult
     '\n*[_type == "subject" && (_id == $subjectId || _id == "drafts." + $subjectId || dbId == $subjectId)][0] {\n  "subjectSlug": coalesce(slug.current, _id),\n  "studySlug": coalesce(study->slug.current, study->_id),\n  "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),\n  "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id),\n  "siteSlug": study->siteSlug.current\n}\n': SubjectPathQueryResult
     '\n*[_type == "subject" && !(_id in path("drafts.**")) && dbId != null] {\n  "subjectSlug": coalesce(slug.current, _id),\n  "studySlug": coalesce(study->slug.current, study->_id),\n  "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),\n  "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id),\n  "siteSlug": study->siteSlug.current\n}\n': SubjectStaticParamsQueryResult
-    '\n*[_type == "university" && dbId != null] | order(name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {\n    _id,\n    "slug": slug.current,\n    name,\n  }\n}\n': UniversityGalleryQueryResult
-    '\n*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {\n  _id,\n  "slug": slug.current,\n  name,\n  description,\n}\n': UniversitySeoQueryResult
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {\n  _id,\n  "slug": slug.current,\n  _type,\n  name,\n  description,\n  "picture": sanityImage::full(picture),\n  "logo": sanityImage::full(logo),\n  streetAddress,\n  telephone,\n  email,\n  website,\n  rector->{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n  },\n  viceRectors[]->{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n  },\n  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {\n    \n_id,\n"slug": slug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\ndean->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nsecretary->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nviceDeans[]->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nuniversity->{\n  _id,\n  "slug": slug.current,\n  name\n},\n"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\n"siteSlug": siteSlug.current,\nname,\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  name,\n  title,\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\nname,\ntitle,\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  name,\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  _id,\n  "slug": slug.current,\n  name,\n  code,\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, name asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\nname,\ncode,\ncredits,\nyear,\nsemester,\nelective,\ndescription,\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  name,\n  university->{\n    _id,\n    "slug": slug.current,\n    name,\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  name,\n  faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  title,\n},\n\n},\n\n},\n\n  }\n}\n': UniversityDetailQueryResult
+    '\n*[_type == "university" && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  }\n}\n': UniversityGalleryQueryResult
+    '\n*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),\n}\n': UniversitySeoQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    "picture": sanityImage::full(picture)\n};\n\n\n\n*[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {\n  _id,\n  "slug": slug.current,\n  _type,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),\n  "picture": sanityImage::full(picture),\n  "logo": sanityImage::full(logo),\n  streetAddress,\n  telephone,\n  email,\n  website,\n  rector->{\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    "picture": sanityImage::full(picture)\n  },\n  viceRectors[]->{\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    "picture": sanityImage::full(picture)\n  },\n  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n    \n_id,\n"slug": slug.current,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\ndean->{\n  _id,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n  "picture": sanityImage::full(picture)\n},\nsecretary->{\n  _id,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n  "picture": sanityImage::full(picture)\n},\nviceDeans[]->{\n  _id,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n  "picture": sanityImage::full(picture)\n},\nuniversity->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "")\n},\n"studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n"title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),\n},\n\n},\n"studies": *[_type == "study" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\n"siteSlug": siteSlug.current,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\nstudentCount,\n"picture": sanityImage::full(picture),\n"logo": sanityImage::full(logo),\nassistant->{\n  _id,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n  "picture": sanityImage::full(picture)\n},\nfaculty->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  }\n},\n"subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n"professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  \n_id,\n"slug": slug.current,\ndbId,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n"title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n"picture": sanityImage::full(picture),\nfaculties[]->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  },\n},\n"universities": array::unique(faculties[]->university)[defined(@)]->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),\n},\n\n},\n"subjects": *[_type == "subject" && references(^._id) && dbId != null] | order(year asc, coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n  \n_id,\ndbId,\n"slug": slug.current,\n"name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n"code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),\ncredits,\nyear,\nsemester,\nelective,\n"description": coalesce(select($locale == "en" && length(localizedDescription.en) > 0 => localizedDescription.en, $locale == "mk" && length(localizedDescription.mk) > 0 => localizedDescription.mk), select(length(localizedDescription.en) > 0 => localizedDescription.en, length(localizedDescription.mk) > 0 => localizedDescription.mk)),\nsyllabus,\n"faculty": study->faculty->{\n  _id,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  university->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  },\n},\nstudy->{\n  _id,\n  "slug": slug.current,\n  "siteSlug": siteSlug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  faculty->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    university->{\n      _id,\n      "slug": slug.current,\n      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    },\n  },\n},\nprofessors[]->{\n  _id,\n  dbId,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n},\n\n},\n\n},\n\n  }\n}\n': UniversityDetailQueryResult
     '\n*[_type == "university" && !(_id in path("drafts.**")) && dbId != null] {\n  "universitySlug": coalesce(slug.current, _id)\n}\n': UniversityStaticParamsQueryResult
-    '\n*[_type == "calendarEvent"\n  && _id in *[_type == "study" && siteSlug.current == $siteSlug][0].calendars[]->events[]._ref\n  && dateTime(date) >= dateTime($from)\n  && dateTime(date) <= dateTime($to)\n] | order(date asc, _id asc) {\n  \n  _id,\n  "title": stringTitle,\n  "description": stringSubtitle,\n  date,\n  type,\n  importance,\n  "subject": subject->{\n    _id,\n    dbId,\n    name,\n    "slug": coalesce(slug.current, _id),\n    "studySlug": coalesce(study->slug.current, study->_id),\n    "siteSlug": study->siteSlug.current,\n    "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),\n    "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id)\n  },\n  "professors": professors[]->{\n    _id,\n    dbId,\n    name,\n    "slug": coalesce(slug.current, _id)\n  }\n\n}\n': CalendarEventsQueryResult
-    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": stringTitle,\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    name,\n    title,\n    "picture": sanityImage::full(picture)\n};\n\n\n\n{\n  "universities": *[_type == "university" && dbId != null] | order(name asc) {\n    _id,\n    name,\n    "slug": slug.current,\n    "logo": sanityImage::full(logo),\n    "picture": sanityImage::full(picture),\n    "facultyCount": count(*[_type == "faculty" && references(^._id) && dbId != null])\n  },\n  "faculties": *[_type == "faculty" && university._ref != null && dbId != null] | order(name asc) {\n    _id,\n    name,\n    "slug": slug.current,\n    "logo": sanityImage::full(logo),\n    "picture": sanityImage::full(picture),\n    "studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n    "professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n    university->{\n      _id,\n      name,\n      "slug": slug.current\n    }\n  },\n  "studies": *[_type == "study" && faculty._ref != null && dbId != null] | order(name asc) {\n    _id,\n    name,\n    "slug": slug.current,\n    "siteSlug": siteSlug.current,\n    "logo": sanityImage::full(logo),\n    "picture": sanityImage::full(picture),\n    "subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n    "professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n    faculty->{\n      _id,\n      name,\n      "slug": slug.current,\n      university->{\n        _id,\n        name,\n        "slug": slug.current\n      }\n    }\n  }\n}\n': CatalogHomeQueryResult
-    '\n{\n  "universities": *[_type == "university" && dbId != null && name match $term] | order(name asc)[0...20] {\n    _id,\n    name,\n    "slug": slug.current\n  },\n  "faculties": *[_type == "faculty" && dbId != null && name match $term] | order(name asc)[0...20] {\n    _id,\n    name,\n    "slug": slug.current,\n    university->{\n      _id,\n      name,\n      "slug": slug.current\n    }\n  },\n  "studies": *[_type == "study" && dbId != null && name match $term] | order(name asc)[0...20] {\n    _id,\n    name,\n    "slug": slug.current,\n    "siteSlug": siteSlug.current,\n    faculty->{\n      _id,\n      name,\n      "slug": slug.current,\n      university->{\n        _id,\n        name,\n        "slug": slug.current\n      }\n    }\n  },\n  "professors": *[_type == "professor" && dbId != null && name match $term] | order(name asc)[0...20] {\n    _id,\n    name,\n    "slug": slug.current\n  }\n}\n': CatalogSearchQueryResult
-    '\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\n*[_id == $WEBSITE][0]{\n  "navMenu": navMenu->{\n    defined(title) => {title},\n    defined(websiteLogo)=>{ "websiteLogo": sanityImage::full(websiteLogo) },\n    navItems[]->{\n      stringTitle,\n      stringSubtitle,\n      ...linkSelector::full(@),\n      defined(new) => {new},\n      defined(comingSoon) => {comingSoon},\n      defined(disabled) => {disabled},\n      defined(icon) => { "icon": sanityImage::full(icon) },\n    },\n  }\n}.navMenu': NavMenuQueryResult
+    '\n*[_type == "calendarEvent"\n  && _id in *[_type == "study" && siteSlug.current == $siteSlug][0].calendars[]->events[]._ref\n  && dateTime(date) >= dateTime($from)\n  && dateTime(date) <= dateTime($to)\n] | order(date asc, _id asc) {\n  \n  _id,\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n  "description": coalesce(select($locale == "en" && length(localizedSubtitle.en) > 0 => localizedSubtitle.en, $locale == "mk" && length(localizedSubtitle.mk) > 0 => localizedSubtitle.mk), select(length(localizedSubtitle.en) > 0 => localizedSubtitle.en, length(localizedSubtitle.mk) > 0 => localizedSubtitle.mk), ""),\n  date,\n  type,\n  importance,\n  "subject": subject->{\n    _id,\n    dbId,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "slug": coalesce(slug.current, _id),\n    "studySlug": coalesce(study->slug.current, study->_id),\n    "siteSlug": study->siteSlug.current,\n    "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),\n    "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id)\n  },\n  "professors": professors[]->{\n    _id,\n    dbId,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "slug": coalesce(slug.current, _id)\n  }\n\n}\n': CalendarEventsQueryResult
+    '\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn sanityButton::full($button) = $button{\n    "buttonLabel": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    _id,\n    defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},\n    ...linkSelector::full(@),\n};\n\n\nfn portableText::full($portableText) = $portableText{\n    ...,\n    children[]{\n    ...,\n    _type == "image" => {\n        asset, \n        "alt": asset->altText,\n        "aspectRatio": asset->metadata.dimensions.aspectRatio,\n    },\n    _type == "buttonReference" => @->{...sanityButton::full(@)},\n    },\n    markDefs[]{\n    ...,\n    }\n};\n\n\nfn person::full($person) = $person{\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n    "picture": sanityImage::full(picture)\n};\n\n\n\n{\n  "universities": *[_type == "university" && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "slug": slug.current,\n    "logo": sanityImage::full(logo),\n    "picture": sanityImage::full(picture),\n    "facultyCount": count(*[_type == "faculty" && references(^._id) && dbId != null])\n  },\n  "faculties": *[_type == "faculty" && university._ref != null && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "slug": slug.current,\n    "logo": sanityImage::full(logo),\n    "picture": sanityImage::full(picture),\n    "studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),\n    "professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n    university->{\n      _id,\n      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n      "slug": slug.current\n    }\n  },\n  "studies": *[_type == "study" && faculty._ref != null && dbId != null] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc) {\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "slug": slug.current,\n    "siteSlug": siteSlug.current,\n    "logo": sanityImage::full(logo),\n    "picture": sanityImage::full(picture),\n    "subjectCount": count(*[_type == "subject" && references(^._id) && dbId != null]),\n    "professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),\n    faculty->{\n      _id,\n      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n      "slug": slug.current,\n      university->{\n        _id,\n        "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n        "slug": slug.current\n      }\n    }\n  }\n}\n': CatalogHomeQueryResult
+    '\n{\n  "universities": *[_type == "university" && dbId != null && (coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "")) match $term] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc)[0...20] {\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "slug": slug.current\n  },\n  "faculties": *[_type == "faculty" && dbId != null && (coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "")) match $term] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc)[0...20] {\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "slug": slug.current,\n    university->{\n      _id,\n      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n      "slug": slug.current\n    }\n  },\n  "studies": *[_type == "study" && dbId != null && (coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "")) match $term] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc)[0...20] {\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "slug": slug.current,\n    "siteSlug": siteSlug.current,\n    faculty->{\n      _id,\n      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n      "slug": slug.current,\n      university->{\n        _id,\n        "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n        "slug": slug.current\n      }\n    }\n  },\n  "professors": *[_type == "professor" && dbId != null && (coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "")) match $term] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc)[0...20] {\n    _id,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "slug": slug.current\n  }\n}\n': CatalogSearchQueryResult
+    '\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\nfn linkSelector::full($link) = $link{\n    defined(customLink) => {customLink},\n};\n\n\n*[_id == $WEBSITE][0]{\n  "navMenu": navMenu->{\n    defined(title) => {title},\n    defined(websiteLogo)=>{ "websiteLogo": sanityImage::full(websiteLogo) },\n    navItems[]->{\n      "stringTitle": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n      "stringSubtitle": coalesce(select($locale == "en" && length(localizedSubtitle.en) > 0 => localizedSubtitle.en, $locale == "mk" && length(localizedSubtitle.mk) > 0 => localizedSubtitle.mk), select(length(localizedSubtitle.en) > 0 => localizedSubtitle.en, length(localizedSubtitle.mk) > 0 => localizedSubtitle.mk), ""),\n      ...linkSelector::full(@),\n      defined(new) => {new},\n      defined(comingSoon) => {comingSoon},\n      defined(disabled) => {disabled},\n      defined(icon) => { "icon": sanityImage::full(icon) },\n    },\n  }\n}.navMenu': NavMenuQueryResult
     '\n\nfn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};\n\n\n*[_type == "study" && defined(siteSlug.current)]{\n  "siteSlug": siteSlug.current,\n  "logo": sanityImage::full(logo),\n}': StudyLogosQueryResult
-    '\n{\n  "universities": *[_type == "university" && dbId != null]{ _id, dbId, name, "slug": slug.current },\n  "faculties": *[_type == "faculty" && university._ref != null && dbId != null]{ _id, dbId, name, "slug": slug.current, "universityId": university._ref },\n  "studies": *[_type == "study" && faculty._ref != null && dbId != null]{\n    _id,\n    dbId,\n    name,\n    "slug": slug.current,\n    "siteSlug": siteSlug.current,\n    "facultyId": faculty._ref,\n    "subjectsByYear": *[_type == "subject" && study._ref == ^._id && dbId != null\n        && _id == (*[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(_id asc)[0]._id)\n      ] | order(year asc){\n      year,\n      "subjects": *[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(name asc){\n        _id, dbId, name, year, elective, "studyId": study._ref\n      }\n    },\n  },\n  "subjects": *[_type == "subject" && study._ref != null && dbId != null] | order(year asc){\n    \n  _id,\n  dbId,\n  "slug": slug.current,\n  name,\n  code,\n  credits,\n  year,\n  semester,\n  elective,\n  "faculty": study->faculty->{\n    _id,\n    "slug": slug.current,\n    name,\n    dbId,\n    university->{\n      _id,\n      "slug": slug.current,\n      name,\n    },\n  },\n  study->{\n    _id,\n    "slug": slug.current,\n    "siteSlug": siteSlug.current,\n    name,\n    dbId,\n    faculty->{\n      _id,\n      "slug": slug.current,\n      name,\n      university->{\n        _id,\n        "slug": slug.current,\n        name,\n      },\n    },\n  },\n  professors[]->{\n    _id,\n    dbId,\n    "slug": slug.current,\n    name,\n    title,\n  },\n\n  }\n}': OnboardingCatalogQueryResult
-    '\n*[_type == "studyTip" && length(title) > 0 && length(content) > 0] | order(_createdAt asc, _id asc) {\n  _id,\n  title,\n  content\n}\n': StudyTipsQueryResult
+    '\n{\n  "universities": *[_type == "university" && dbId != null]{ _id, dbId, "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""), "slug": slug.current },\n  "faculties": *[_type == "faculty" && university._ref != null && dbId != null]{ _id, dbId, "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""), "slug": slug.current, "universityId": university._ref },\n  "studies": *[_type == "study" && faculty._ref != null && dbId != null]{\n    _id,\n    dbId,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "slug": slug.current,\n    "siteSlug": siteSlug.current,\n    "facultyId": faculty._ref,\n    "subjectsByYear": *[_type == "subject" && study._ref == ^._id && dbId != null\n        && _id == (*[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(_id asc)[0]._id)\n      ] | order(year asc){\n      year,\n      "subjects": *[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), "") asc){\n        _id, dbId, "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""), year, elective, "studyId": study._ref\n      }\n    },\n  },\n  "subjects": *[_type == "subject" && study._ref != null && dbId != null] | order(year asc){\n    \n  _id,\n  dbId,\n  "slug": slug.current,\n  "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n  "code": coalesce(select($locale == "en" && length(localizedCode.en) > 0 => localizedCode.en, $locale == "mk" && length(localizedCode.mk) > 0 => localizedCode.mk), select(length(localizedCode.en) > 0 => localizedCode.en, length(localizedCode.mk) > 0 => localizedCode.mk), ""),\n  credits,\n  year,\n  semester,\n  elective,\n  "faculty": study->faculty->{\n    _id,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    dbId,\n    university->{\n      _id,\n      "slug": slug.current,\n      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    },\n  },\n  study->{\n    _id,\n    "slug": slug.current,\n    "siteSlug": siteSlug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    dbId,\n    faculty->{\n      _id,\n      "slug": slug.current,\n      "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n      university->{\n        _id,\n        "slug": slug.current,\n        "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n      },\n    },\n  },\n  professors[]->{\n    _id,\n    dbId,\n    "slug": slug.current,\n    "name": coalesce(select($locale == "en" && length(localizedName.en) > 0 => localizedName.en, $locale == "mk" && length(localizedName.mk) > 0 => localizedName.mk), select(length(localizedName.en) > 0 => localizedName.en, length(localizedName.mk) > 0 => localizedName.mk), ""),\n    "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk), ""),\n  },\n\n  }\n}': OnboardingCatalogQueryResult
+    '\n*[_type == "studyTip" && length(coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk))) > 0 && length(coalesce(select($locale == "en" && length(localizedContent.en) > 0 => localizedContent.en, $locale == "mk" && length(localizedContent.mk) > 0 => localizedContent.mk), select(length(localizedContent.en) > 0 => localizedContent.en, length(localizedContent.mk) > 0 => localizedContent.mk))) > 0] | order(_createdAt asc, _id asc) {\n  _id,\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk)),\n  "content": coalesce(select($locale == "en" && length(localizedContent.en) > 0 => localizedContent.en, $locale == "mk" && length(localizedContent.mk) > 0 => localizedContent.mk), select(length(localizedContent.en) > 0 => localizedContent.en, length(localizedContent.mk) > 0 => localizedContent.mk))\n}\n': StudyTipsQueryResult
     '\n*[_id == $WEBSITE][0]{\n  "siteName": coalesce(siteName, websiteTitle, "Scriptr"),\n  "siteUrl": coalesce(siteUrl, ""),\n  "defaultSeoTitle": coalesce(defaultSeoTitle, websiteTitle, "Scriptr"),\n  "defaultSeoDescription": coalesce(defaultSeoDescription, ""),\n  "defaultKeywords": defaultKeywords[]\n}\n': WebsiteSeoQueryResult
     '\n*[_id == $WEBSITE][0].background->{...}\n': WebsiteBackgroundQueryResult
   }

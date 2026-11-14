@@ -10,6 +10,7 @@ import {
   useSyncExternalStore,
 } from 'react'
 import { Box } from '@/components/common/Box'
+import { subscribeToStorage } from '@/lib/storage-events'
 
 type NavContextType = {
   /** Desktop only: the docked navbar is hidden. Persisted across visits. */
@@ -42,16 +43,16 @@ let collapsedOverride: boolean | null = null
 const subscribeCollapsed = (listener: () => void) => {
   collapsedListeners.add(listener)
 
-  const onStorage = (event: StorageEvent) => {
-    if (event.key !== COLLAPSED_KEY) return
+  // Another tab's choice: drop the in-memory override so the next read comes
+  // from storage, then let React re-render.
+  const stopStorage = subscribeToStorage(COLLAPSED_KEY, () => {
     collapsedOverride = null
     listener()
-  }
-  window.addEventListener('storage', onStorage)
+  })
 
   return () => {
     collapsedListeners.delete(listener)
-    window.removeEventListener('storage', onStorage)
+    stopStorage()
   }
 }
 

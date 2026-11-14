@@ -1,3 +1,5 @@
+import type { LocaleId } from '@shared/config/localization-constants'
+import { localizedPath } from '@shared/utils/localized-path'
 import { SITE_URL, STUDY_HOSTS } from '@/config/env'
 
 /**
@@ -44,10 +46,15 @@ export const studySiteHost = (): string => {
  * fetch — the link would log a CORS error and fall back to a hard reload. An
  * absolute address is skipped by the router's prefetch and navigates once.
  */
-export const catalogUrl = (path: string): string => {
+export const catalogUrl = (path: string, locale: LocaleId): string => {
+  // An entity that lives on its own host already names it (`getAcademicPath`);
+  // re-basing that onto the catalog would nest one origin inside another.
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(path)) return path
+
+  const localized = localizedPath(path, locale)
   const url = toUrl()
   const host = studySiteHost()
-  return url && host ? `${url.protocol}//${host}${path}` : path
+  return url && host ? `${url.protocol}//${host}${localized}` : localized
 }
 
 /** `/study/<handle>` and anything under it. */
@@ -62,12 +69,14 @@ const STUDY_PATH = /^\/study\/([^/?#]+)(.*)$/
  * It matters as a link: the router prefetches a relative href, the study host
  * answers with a cross-origin redirect, and the browser blocks that fetch.
  */
-export const studyUrlFromPath = (href: string): string => {
+export const studyUrlFromPath = (href: string, locale: LocaleId): string => {
   const match = STUDY_PATH.exec(href ?? '')
   if (!match) return href
 
   const origin = studySiteOrigin(match[1])
-  return origin ? `${origin}${match[2] || '/'}` : href
+  return origin
+    ? localizedPath(`${origin}${match[2] || '/'}`, locale)
+    : localizedPath(href, locale)
 }
 
 /** `https://lbe.scriptr.uk`, or `http://lbe.localhost:3000` in development.

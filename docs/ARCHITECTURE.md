@@ -32,7 +32,7 @@ This describes the system as it currently stands, one file per area. Start here,
 
 ## 8. Frontend Structure & UI Conventions
 
-[Open](ARCHITECTURE-FRONTEND.md) — thin pages, loading and 404 behaviour, failure handling, surfaces and dialogs.
+[Open](ARCHITECTURE-FRONTEND.md) — thin pages, loading and 404 behaviour, failure handling, surfaces and dialogs, and localization: the `[locale]` tree, the string collections, and the unprefixed default.
 
 ## 9. Calendar
 

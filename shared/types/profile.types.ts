@@ -1,8 +1,7 @@
 import type { AdminProfileSortField } from '../config/shared-constants'
 import type { SortDirection } from '../utils/array-utils/sort'
 import type { Tables } from './database.types'
-import type { PortableTextValue } from './portable-text.types'
-import type { ScriptFile } from './scripts.types'
+import type { LocalizedScriptText, ScriptFile } from './scripts.types'
 
 export type UserRole = 'student' | 'owner'
 
@@ -44,8 +43,8 @@ export type FavoriteScriptRecord = {
   created_at: string
   script: {
     id: string
-    title: PortableTextValue
-    description: PortableTextValue | null
+    title: LocalizedScriptText
+    description: LocalizedScriptText | null
     subject_id: string
     professor_id: string
     author_id: string
@@ -92,8 +91,8 @@ export type ProfileScriptSummary = {
   slug: string
   /** The script's study, whose site handle puts the page under `/study/…`. */
   study: { site_slug: string | null } | null
-  title: PortableTextValue
-  description: PortableTextValue | null
+  title: LocalizedScriptText
+  description: LocalizedScriptText | null
   vote_score: number
   download_count: number
   created_at: string

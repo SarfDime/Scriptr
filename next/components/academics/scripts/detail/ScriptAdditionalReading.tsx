@@ -1,28 +1,33 @@
-import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
+import { SCRIPT_STRINGS_PACK } from '@shared/strings/scripts-strings'
 import { ScriptPanel } from '@/components/academics/scripts/ScriptPanel'
 import { Box } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
 import { getLinkAddress, getLinkLabel } from '@/lib/script-detail'
+import { getServerStrings } from '@/lib/server-strings'
 
 /** Reading list shown beside the script info: one raised row per link with
  * the site name as the headline and the rest of the address underneath. The
  * panel is always shown; with no links it carries an empty-state message. */
-export function ScriptAdditionalReading({ links }: { links: Array<string> }) {
+export async function ScriptAdditionalReading({
+  links,
+}: {
+  links: Array<string>
+}) {
+  const strings = await getServerStrings(SCRIPT_STRINGS_PACK)
+
   return (
     <ScriptPanel
-      aria-label={SCRIPT_STRINGS.additionalReading.title}
+      aria-label={strings.additionalReading.title}
       className='min-w-0 grow basis-56 gap-3'
     >
       <SectionHeader
-        title={SCRIPT_STRINGS.additionalReading.title}
+        title={strings.additionalReading.title}
         count={links.length > 0 ? links.length : undefined}
       />
       {links.length === 0 ? (
-        <Text className='ui-caption'>
-          {SCRIPT_STRINGS.additionalReading.empty}
-        </Text>
+        <Text className='ui-caption'>{strings.additionalReading.empty}</Text>
       ) : (
         <Box as='ul' className='ui-stack gap-2'>
           {links.map((link) => (

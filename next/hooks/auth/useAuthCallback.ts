@@ -1,8 +1,8 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { useSession } from '@/providers/SessionProvider'
 
 type CallbackState =
@@ -18,6 +18,7 @@ type CallbackState =
  * window.location since it never reaches Next.js server-side at all.
  */
 export function useAuthCallback() {
+  const ui = useUIStrings()
   const router = useRouter()
   const { loginWithTokens } = useSession()
   const [state, setState] = useState<CallbackState>({ status: 'processing' })
@@ -36,7 +37,7 @@ export function useAuthCallback() {
       if (!accessToken || !refreshToken) {
         return {
           ok: false as const,
-          message: UI_STRINGS.auth.callback.invalidLink,
+          message: ui.auth.callback.invalidLink,
         }
       }
       return loginWithTokens({

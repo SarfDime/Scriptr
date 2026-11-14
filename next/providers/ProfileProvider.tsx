@@ -1,6 +1,5 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import type { MyProfileResponse } from '@shared/types/profile.types'
 import {
   createContext,
@@ -10,6 +9,7 @@ import {
   useState,
 } from 'react'
 import { getMyProfile } from '@/lib/api/profile-api'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { useLoading } from './loading/LoadingProvider'
 import { useSession } from './SessionProvider'
 
@@ -35,7 +35,10 @@ const BOOT_TASK = 'profile'
 /** Module-level, like SessionProvider's fetchSession — the effect below
  * calls it without pulling a `refresh` closure into its dependency
  * array, since React guarantees setFetchState's identity is stable. */
-async function fetchProfile(setFetchState: (state: ProfileFetchState) => void) {
+async function fetchProfile(
+  setFetchState: (state: ProfileFetchState) => void,
+  loadError: string
+) {
   setFetchState({ status: 'loading' })
   try {
     const profile = await getMyProfile()
@@ -43,7 +46,7 @@ async function fetchProfile(setFetchState: (state: ProfileFetchState) => void) {
   } catch {
     setFetchState({
       status: 'error',
-      message: UI_STRINGS.profile.loadError,
+      message: loadError,
     })
   }
 }
@@ -82,6 +85,8 @@ async function reloadProfile(
  * the new fetch is in flight.
  */
 export function ProfileProvider({ children }: { children: ReactNode }) {
+  const ui = useUIStrings()
+  const { loadError } = ui.profile
   const { session } = useSession()
   const { startTask, finishTask } = useLoading()
   const [fetchState, setFetchState] = useState<ProfileFetchState>({
@@ -98,12 +103,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
     fetchProfile((next) => {
       if (!cancelled) setFetchState(next)
-    })
+    }, loadError)
 
     return () => {
       cancelled = true
     }
-  }, [session.status])
+  }, [session.status, loadError])
 
   const profile: MyProfileState =
     session.status === 'authenticated' ? fetchState : { status: 'idle' }
@@ -123,7 +128,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return () => finishTask(BOOT_TASK)
   }, [isBooting, startTask, finishTask])
 
-  const refresh = () => fetchProfile(setFetchState)
+  const refresh = () => fetchProfile(setFetchState, loadError)
   const reload = () => reloadProfile(setFetchState)
 
   return (

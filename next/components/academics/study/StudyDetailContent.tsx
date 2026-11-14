@@ -1,5 +1,5 @@
 import Folder from '@sanity/icons/Folder'
-import { UI_STRINGS } from '@shared/config/strings'
+import { UI_STRINGS_PACK } from '@shared/config/strings'
 import { ProfessorsSection } from '@/components/academics/professor/ProfessorsSection'
 import { ScriptsSection } from '@/components/academics/scripts/ScriptsSection'
 import { StudyOverviewCard } from '@/components/academics/study/StudyOverviewCard'
@@ -8,6 +8,7 @@ import { BackLink } from '@/components/common/BackLink'
 import { NextLink } from '@/components/common/NextLink'
 import { PageLayout } from '@/components/layout/PageLayout'
 import { getAcademicPath, getStudyFeedPath } from '@/lib/academic-routes'
+import { getServerLocale, getServerStrings } from '@/lib/server-strings'
 import { catalogUrl } from '@/lib/study-origin'
 import type { StudyDetail } from '@/types/academics/study.types'
 import type { ScriptDetail } from '@/types/components/Scripts.types'
@@ -29,49 +30,61 @@ export type StudyDetailContentProps = {
  * leads with what the study is; the scripts are a step ahead through the header
  * action rather than the landing content.
  */
-export const StudyDetailContent = ({
+export const StudyDetailContent = async ({
   study,
   fallback,
   scripts,
   scriptsUnavailable,
 }: StudyDetailContentProps) => {
+  const locale = await getServerLocale()
+  const ui = await getServerStrings(UI_STRINGS_PACK)
   return (
     <PageLayout
       header={{
-        greeting: study.faculty?.name ?? UI_STRINGS.academics.entity.faculty,
+        greeting: study.faculty?.name ?? ui.academics.entity.faculty,
         title: study.name,
         actions: (
           <>
             <NextLink
-              href={getStudyFeedPath(study.siteSlug)}
+              href={getStudyFeedPath(study.siteSlug, locale)}
               className='button button-sm solid'
             >
               <Folder />
-              {UI_STRINGS.scripts.browseAll}
+              {ui.scripts.browseAll}
             </NextLink>
             <BackLink
               href={catalogUrl(
-                getAcademicPath({
-                  type: 'faculty',
-                  universitySlug:
-                    study.faculty?.university?.slug ?? fallback.universitySlug,
-                  facultySlug: study.faculty?.slug ?? fallback.facultySlug,
-                })
+                getAcademicPath(
+                  {
+                    type: 'faculty',
+                    universitySlug:
+                      study.faculty?.university?.slug ??
+                      fallback.universitySlug,
+                    facultySlug: study.faculty?.slug ?? fallback.facultySlug,
+                  },
+                  locale
+                ),
+                locale
               )}
-              label={study.faculty?.name ?? UI_STRINGS.academics.entity.faculty}
+              label={study.faculty?.name ?? ui.academics.entity.faculty}
               backLevel='twoBack'
             />
             <BackLink
               href={catalogUrl(
-                getAcademicPath({
-                  type: 'university',
-                  universitySlug:
-                    study.faculty?.university?.slug ?? fallback.universitySlug,
-                })
+                getAcademicPath(
+                  {
+                    type: 'university',
+                    universitySlug:
+                      study.faculty?.university?.slug ??
+                      fallback.universitySlug,
+                  },
+                  locale
+                ),
+                locale
               )}
               label={
                 study.faculty?.university?.name ??
-                UI_STRINGS.academics.entity.university
+                ui.academics.entity.university
               }
               backLevel='threeBack'
             />
@@ -84,9 +97,9 @@ export const StudyDetailContent = ({
           <ScriptsSection
             scripts={scripts}
             scriptsUnavailable={scriptsUnavailable}
-            title={UI_STRINGS.scripts.studySidebarTitle}
-            subtitle={UI_STRINGS.scripts.studySidebarSubtitle}
-            emptyMessage={UI_STRINGS.scripts.studySidebarEmpty}
+            title={ui.scripts.studySidebarTitle}
+            subtitle={ui.scripts.studySidebarSubtitle}
+            emptyMessage={ui.scripts.studySidebarEmpty}
             showControls={{
               all: true,
               search: true,
@@ -95,10 +108,10 @@ export const StudyDetailContent = ({
             }}
             headerActions={
               <NextLink
-                href={getStudyFeedPath(study.siteSlug)}
+                href={getStudyFeedPath(study.siteSlug, locale)}
                 className='button button-sm subtle'
               >
-                {UI_STRINGS.scripts.showAll}
+                {ui.scripts.showAll}
               </NextLink>
             }
           />

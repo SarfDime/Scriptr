@@ -1,6 +1,5 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import { getReadingLinkErrors } from '@shared/utils/link-utils'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
@@ -8,6 +7,7 @@ import { InputWrapper } from '@/components/typography/InputWrapper'
 import type { TextProps } from '@/components/typography/Text'
 import { Field } from '@/components/ui/field/Field'
 import { cn } from '@/lib/common-utils'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import type { ReadingLinksFieldProps } from '@/types/components/ReadingLinksField.types'
 
 const FIELD_LABEL_PROPS: TextProps = { className: 'text-base font-semibold' }
@@ -27,6 +27,7 @@ export function ReadingLinksField({
   onRemove,
   onTouch,
 }: ReadingLinksFieldProps) {
+  const ui = useUIStrings()
   const linkErrors = getReadingLinkErrors(links)
   const hasLinkErrors = linkErrors.some((error) => error !== null)
   const hasVisibleLinkErrors = linkErrors.some(
@@ -38,9 +39,9 @@ export function ReadingLinksField({
     <Field
       className='min-w-0'
       grouped
-      label={UI_STRINGS.scripts.uploadModal.additionalReadingLabel}
+      label={ui.scripts.uploadModal.additionalReadingLabel}
       labelProps={FIELD_LABEL_PROPS}
-      helperText={UI_STRINGS.scripts.uploadModal.additionalReadingHelp}
+      helperText={ui.scripts.uploadModal.additionalReadingHelp}
       valid={hasLinks && !hasLinkErrors}
       invalid={hasVisibleLinkErrors}
     >
@@ -56,15 +57,13 @@ export function ReadingLinksField({
               invalid={Boolean(errorCode)}
               inputProps={{
                 type: 'url',
-                placeholder:
-                  UI_STRINGS.scripts.uploadModal.readingLinkPlaceholder,
-                'aria-label':
-                  UI_STRINGS.scripts.uploadModal.additionalReadingLabel,
+                placeholder: ui.scripts.uploadModal.readingLinkPlaceholder,
+                'aria-label': ui.scripts.uploadModal.additionalReadingLabel,
                 onBlur: () => onTouch(index),
               }}
               errorText={
                 errorCode
-                  ? UI_STRINGS.scripts.uploadModal.readingLinkErrors[errorCode]
+                  ? ui.scripts.uploadModal.readingLinkErrors[errorCode]
                   : undefined
               }
               inputVal={link}
@@ -78,9 +77,9 @@ export function ReadingLinksField({
                 onClick={() => onRemove(index)}
                 disabled={disabled}
                 className='button button-sm danger mr-1 rounded-none'
-                aria-label={UI_STRINGS.scripts.uploadModal.removeLinkAriaLabel}
+                aria-label={ui.scripts.uploadModal.removeLinkAriaLabel}
               >
-                {UI_STRINGS.scripts.uploadModal.removeButtonLabel}
+                {ui.scripts.uploadModal.removeButtonLabel}
               </Button>
             </InputWrapper>
           )
@@ -90,7 +89,7 @@ export function ReadingLinksField({
           disabled={disabled}
           className='button button-sm success self-start rounded-md'
         >
-          {UI_STRINGS.scripts.uploadModal.addLinkButtonLabel}
+          {ui.scripts.uploadModal.addLinkButtonLabel}
         </Button>
       </Box>
     </Field>

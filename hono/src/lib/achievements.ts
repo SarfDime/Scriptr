@@ -4,7 +4,7 @@ import {
   getAchievementCopy,
 } from '../../../shared/config/achievements'
 import { DEFAULT_PROFILE_PREFERENCES } from '../../../shared/config/profile-preferences'
-import { NOTIFICATIONS_STRINGS } from '../../../shared/strings/notifications-strings'
+import { NOTIFICATION_ROW_STRINGS } from '../../../shared/strings/notifications-strings'
 import type { HonoEnv } from '../types/env.types'
 import { honoLog } from './logger'
 import { insertNotificationBestEffort } from './notifications'
@@ -185,7 +185,7 @@ export async function checkAndAwardAchievements(
         const copy = getAchievementCopy(definition.id, definition)
         await insertNotificationBestEffort(supabase, profileId, {
           type: 'achievement_earned',
-          title: NOTIFICATIONS_STRINGS.achievementTitle(copy.title),
+          title: NOTIFICATION_ROW_STRINGS.achievementTitle(copy.title),
           body: copy.description,
           data: { achievement_id: definition.id },
           studyId: definition.study_id,

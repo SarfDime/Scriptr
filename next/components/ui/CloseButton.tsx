@@ -1,5 +1,7 @@
+'use client'
+
 import { CloseIcon } from '@sanity/icons/Close'
-import { UI_STRINGS } from '@shared/config/strings'
+import { useUIStrings } from '@/providers/locale/use-strings'
 
 import type { SanityIconProps } from '../../types/component.types'
 import type { ButtonBaseProps } from '../common/Button'
@@ -16,8 +18,9 @@ export type CloseButtonProps = {
  * This component can include custom children or default to a `CloseIcon`.
  */
 export function CloseButton({ iconProps, ...rest }: CloseButtonProps) {
+  const ui = useUIStrings()
   return (
-    <Button aria-label={UI_STRINGS.general.close} {...rest}>
+    <Button aria-label={ui.general.close} {...rest}>
       {rest?.children ?? <CloseIcon {...iconProps} />}
     </Button>
   )

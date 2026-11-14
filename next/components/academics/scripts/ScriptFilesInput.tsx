@@ -1,7 +1,6 @@
 'use client'
 
 import { ALLOWED_EXTENSIONS } from '@shared/config/shared-constants'
-import { UI_STRINGS } from '@shared/config/strings'
 import { useId, useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
@@ -13,6 +12,7 @@ import {
   getFileTypeFromFilename,
   getPreviewableKind,
 } from '@/lib/file-preview'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import type {
   FileWithError,
   ScriptFilesInputProps,
@@ -32,6 +32,7 @@ export function ScriptFilesInput({
   onRemove,
   fieldProps,
 }: ScriptFilesInputProps) {
+  const ui = useUIStrings()
   const hasFileErrors = files.some((entry) => entry.error !== null)
 
   return (
@@ -42,7 +43,7 @@ export function ScriptFilesInput({
       className={cn('min-w-0', fieldProps?.className)}
       errorText={
         hasFileErrors
-          ? UI_STRINGS.scripts.uploadModal.fieldErrors.filesInvalid
+          ? ui.scripts.uploadModal.fieldErrors.filesInvalid
           : undefined
       }
       valid={!hasFileErrors}
@@ -50,8 +51,8 @@ export function ScriptFilesInput({
     >
       <Box className='ui-stack gap-2'>
         <FileDropzone
-          label={UI_STRINGS.scripts.uploadModal.filesLabel}
-          help={UI_STRINGS.scripts.uploadModal.filesHelp}
+          label={ui.scripts.uploadModal.filesLabel}
+          help={ui.scripts.uploadModal.filesHelp}
           note={note}
           onFiles={onAdd}
           disabled={disabled}
@@ -164,6 +165,7 @@ function FileRow({
   onRemove: () => void
   disabled: boolean
 }) {
+  const ui = useUIStrings()
   const fileType = getFileTypeFromFilename(entry.file.name)
   const isPreviewable =
     entry.error === null && fileType !== null && getPreviewableKind(fileType)
@@ -193,11 +195,11 @@ function FileRow({
           onClick={onRemove}
           disabled={disabled}
           className='button button-sm danger rounded-md'
-          aria-label={UI_STRINGS.scripts.uploadModal.removeFileAriaLabel(
+          aria-label={ui.scripts.uploadModal.removeFileAriaLabel(
             entry.file.name
           )}
         >
-          {UI_STRINGS.scripts.uploadModal.removeButtonLabel}
+          {ui.scripts.uploadModal.removeButtonLabel}
         </Button>
       </Box>
     </Box>

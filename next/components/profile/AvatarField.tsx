@@ -1,12 +1,12 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import { useId } from 'react'
 import { Box } from '@/components/common/Box'
 import { Text } from '@/components/typography/Text'
 import { Avatar } from '@/components/ui/Avatar'
 import { cn } from '@/lib/common-utils'
 import { AVATAR_ACCEPT_ATTRIBUTE } from '@/lib/profile-avatar'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import type { AvatarFieldProps } from '@/types/components/EditProfile.types'
 
 /**
@@ -22,6 +22,7 @@ export function AvatarField({
   disabled,
   onSelect,
 }: AvatarFieldProps) {
+  const ui = useUIStrings()
   const inputId = useId()
   const captionId = useId()
 
@@ -45,7 +46,7 @@ export function AvatarField({
       />
       <Box className='ui-stack gap-1'>
         <Text className='text-base font-semibold'>
-          {UI_STRINGS.profile.edit.avatarLabel}
+          {ui.profile.edit.avatarLabel}
         </Text>
         <input
           id={inputId}
@@ -68,7 +69,7 @@ export function AvatarField({
             'peer-focus-visible:outline-2 peer-disabled:pointer-events-none peer-disabled:opacity-50'
           )}
         >
-          {UI_STRINGS.profile.edit.avatarChange}
+          {ui.profile.edit.avatarChange}
         </label>
         {caption && (
           <Text

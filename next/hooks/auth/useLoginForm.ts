@@ -1,6 +1,5 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import { validateEmailAddress, validatePassword } from '@shared/utils/api.utils'
 import { type SubmitEvent, useState } from 'react'
 import {
@@ -9,6 +8,7 @@ import {
   useTouchedFields,
 } from '@/hooks/auth/useTouchedFields'
 import { applyStoredStudySetup } from '@/lib/study-setup-sync'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { useSession } from '@/providers/SessionProvider'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 
@@ -26,6 +26,7 @@ const LOGIN_FIELDS: ReadonlyArray<LoginField> = ['email', 'password']
  * session update — mirrors useCreateScriptForm's split (form state here,
  * the actual mutation delegated elsewhere). */
 export function useLoginForm() {
+  const ui = useUIStrings()
   const { login, refresh } = useSession()
   const { addToast } = useToast()
   const { touch, touchAll, isTouched } = useTouchedFields<LoginField>()
@@ -72,7 +73,7 @@ export function useLoginForm() {
     if (!result.ok) {
       setState({ status: 'error', message: result.message })
       addToast({
-        title: UI_STRINGS.auth.login.statuses.errorTitle,
+        title: ui.auth.login.statuses.errorTitle,
         description: result.message,
         type: 'error',
       })
@@ -85,8 +86,8 @@ export function useLoginForm() {
     await refresh()
 
     addToast({
-      title: UI_STRINGS.auth.login.statuses.successTitle,
-      description: UI_STRINGS.auth.login.statuses.successDescription,
+      title: ui.auth.login.statuses.successTitle,
+      description: ui.auth.login.statuses.successDescription,
       type: 'success',
     })
   }

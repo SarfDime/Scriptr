@@ -79,7 +79,7 @@ Keep `page.tsx` thin: await `params`, call a loader from
 `next/lib/<feature>-page.ts` that does the fetching and returns a view model
 (typed in `next/types/components/`), and compose small components from
 `components/<area>/<feature>/`. The script detail page
-(`app/(study)/study/[siteSlug]/scripts/[scriptSlug]/page.tsx`) is the reference
+(`app/[locale]/(study)/study/[siteSlug]/scripts/[scriptSlug]/page.tsx`) is the reference
 example. User-facing text goes in `shared/strings/<area>-strings.ts` (or
 `UI_STRINGS`), not inline.
 

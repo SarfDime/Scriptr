@@ -43,7 +43,8 @@ type DefinitionWrite = {
 /**
  * Validates the editable fields present in a body. Absent fields are left out
  * (PATCH sends a subset; POST checks for the required ones afterwards). Title
- * and description are not editable here: they come from `ACHIEVEMENT_COPY`.
+ * and description are not editable here: the wording lives in
+ * `ACHIEVEMENTS_STRINGS_PACK.copy` (`shared/strings/achievements-strings.ts`).
  */
 function parseDefinitionFields(
   body: Record<string, unknown>
@@ -163,7 +164,7 @@ achievementDefinitions.post(
       return c.json(
         {
           error:
-            'Add this achievement to ACHIEVEMENT_COPY in shared/config/achievements.ts first: titles and descriptions are maintained in code',
+            'Add this achievement to ACHIEVEMENTS_STRINGS_PACK.copy in shared/strings/achievements-strings.ts first: titles and descriptions are maintained in code',
         },
         400
       )

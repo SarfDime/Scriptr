@@ -1,8 +1,9 @@
 import { apiRoutes, withQuery } from '@shared/config/api-routes'
 import { SCRIPT_CACHE_TAGS } from '@shared/config/cache-tags'
+import type { LocaleId } from '@shared/config/localization-constants'
 import { UPLOAD_FINALIZE_TIMEOUT_MS } from '@shared/config/next-constants'
 import { MAX_STORED_FILE_BYTES } from '@shared/config/shared-constants'
-import { UI_STRINGS } from '@shared/config/strings'
+import { UI_STRINGS_PACK } from '@shared/config/strings'
 import type { ScriptFileInput } from '@shared/types/api.types'
 import type {
   FinalizeUploadRequest,
@@ -22,6 +23,7 @@ import type {
   ScriptUpdateInput,
   UploadResponse,
 } from '@shared/types/scripts.types'
+import { getStrings } from '@shared/utils/localized-strings'
 import {
   isRetryPointless,
   retrySizeCeiling,
@@ -274,7 +276,8 @@ export type UploadStage = 'uploading' | 'optimizing'
 const toUploadError = (
   error: unknown,
   uploads: ReadonlyArray<StagedUpload>,
-  files: ReadonlyArray<File>
+  files: ReadonlyArray<File>,
+  locale: LocaleId
 ): unknown => {
   if (isUserFacingUploadRejection(error) && error.status === 413) {
     const { stagingKey, sizeBytes } = error.data ?? {}
@@ -284,7 +287,10 @@ const toUploadError = (
     const name = files[fileIndex]?.name
     if (name && typeof sizeBytes === 'number') {
       return new UserFacingError(
-        UI_STRINGS.scripts.uploadModal.fileErrors.tooLargeAfterOptimizingNamed(
+        getStrings(
+          UI_STRINGS_PACK,
+          locale
+        ).scripts.uploadModal.fileErrors.tooLargeAfterOptimizingNamed(
           name,
           MAX_STORED_FILE_BYTES,
           sizeBytes
@@ -302,6 +308,7 @@ const toUploadError = (
 export const uploadScriptFiles = async (
   subjectId: string,
   files: ReadonlyArray<File>,
+  locale: LocaleId,
   onStage?: (stage: UploadStage) => void
 ): Promise<Array<ScriptFileInput>> => {
   // Refuse a retry the optimizer cannot rescue before spending a presigned URL,
@@ -313,7 +320,10 @@ export const uploadScriptFiles = async (
       isRetryPointless(previous, file.size, MAX_STORED_FILE_BYTES)
     ) {
       throw new UserFacingError(
-        UI_STRINGS.scripts.uploadModal.fileErrors.retryTooLarge(
+        getStrings(
+          UI_STRINGS_PACK,
+          locale
+        ).scripts.uploadModal.fileErrors.retryTooLarge(
           file.name,
           retrySizeCeiling(previous, MAX_STORED_FILE_BYTES)
         )
@@ -330,7 +340,7 @@ export const uploadScriptFiles = async (
     apiRoutes.fileOps.uploadUrls,
     { method: 'POST', body: urlsRequest }
   ).catch((error: unknown) => {
-    throw toUploadError(error, [], files)
+    throw toUploadError(error, [], files, locale)
   })
 
   const staged = await Promise.all(
@@ -338,10 +348,11 @@ export const uploadScriptFiles = async (
       const file = files[index]
       if (!file) {
         throw new UserFacingError(
-          UI_STRINGS.scripts.uploadModal.fileErrors.stagingFailed
+          getStrings(UI_STRINGS_PACK, locale).scripts.uploadModal.fileErrors
+            .stagingFailed
         )
       }
-      await putToStaging(upload, file)
+      await putToStaging(upload, file, locale)
       const priorRejection = findOptimizerFailure(file.name)
       return {
         stagingKey: upload.stagingKey,
@@ -362,7 +373,7 @@ export const uploadScriptFiles = async (
     }
   ).catch((error: unknown) => {
     rememberRejections(error, uploads, files)
-    throw toUploadError(error, uploads, files)
+    throw toUploadError(error, uploads, files, locale)
   })
 
   for (const file of files) forgetOptimizerFailure(file.name)
@@ -396,9 +407,10 @@ export const addScriptFiles = async (
   scriptId: string,
   subjectId: string,
   files: ReadonlyArray<File>,
+  locale: LocaleId,
   onStage?: (stage: UploadStage) => void
 ) => {
-  const uploaded = await uploadScriptFiles(subjectId, files, onStage)
+  const uploaded = await uploadScriptFiles(subjectId, files, locale, onStage)
 
   return apiFetchRequired<ScriptAttachFilesResponse>(
     apiRoutes.scripts.filesById(scriptId),

@@ -6,6 +6,7 @@ import {
   SITE_SLUG_PATTERN,
 } from '@shared/config/site-slugs'
 import { CALENDAR_STRINGS } from '@shared/strings/calendar-strings'
+import { firstFilledLocalizedText } from '@shared/utils/localized-strings'
 import { defineType } from 'sanity'
 import {
   academicFields,
@@ -60,7 +61,8 @@ export const Study = defineType({
       description:
         'The permanent handle this study is served at. It cannot change once the study exists in the database.',
       options: {
-        source: 'name',
+        source: (document: Record<string, unknown>) =>
+          firstFilledLocalizedText(document.localizedName),
         slugify: (value: string) => sanitizeSlug(value),
       },
       readOnly: ({ document }) =>

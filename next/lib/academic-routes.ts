@@ -1,3 +1,5 @@
+import type { LocaleId } from '@shared/config/localization-constants'
+import { localizedPath } from '@shared/utils/localized-path'
 import { getScriptSitePath } from '@shared/utils/site-paths'
 import { studySiteOrigin } from '@/lib/study-origin'
 import type {
@@ -55,29 +57,37 @@ const cleanEntityId = (id: string | null | undefined): string => {
  * catalog path is still returned: a working redirect beats no link at all.
  */
 export const getStudySiteUrl = (
-  siteSlug: string | null | undefined
+  siteSlug: string | null | undefined,
+  locale: LocaleId
 ): string => {
   const site = cleanEntityId(siteSlug)
-  return site ? studySiteOrigin(site) || `/study/${site}` : '/'
+  return localizedPath(
+    site ? studySiteOrigin(site) || `/study/${site}` : '/',
+    locale
+  )
 }
 
 /** A study's content surface: the scripts its students share, one level below
  * the academic overview a newcomer lands on. */
 export const getStudyFeedPath = (
-  siteSlug: string | null | undefined
+  siteSlug: string | null | undefined,
+  locale: LocaleId
 ): string => {
   const site = cleanEntityId(siteSlug)
-  return site ? `${getStudySiteUrl(site)}/scripts` : '/'
+  return site ? `${getStudySiteUrl(site, locale)}/scripts` : '/'
 }
 
 /** A study's academic setup: where its gate sends a reader who has no profile
  * there, and where editing academics starts. Absolute like the site it belongs
  * to — the caller is usually outside that site. */
 export const getStudySetupUrl = (
-  siteSlug: string | null | undefined
+  siteSlug: string | null | undefined,
+  locale: LocaleId
 ): string => {
   const site = cleanEntityId(siteSlug)
-  return site ? `${getStudySiteUrl(site)}/academic-setup` : '/start'
+  return site
+    ? `${getStudySiteUrl(site, locale)}/academic-setup`
+    : localizedPath('/start', locale)
 }
 
 const facultyPath = (input: {
@@ -86,33 +96,45 @@ const facultyPath = (input: {
 }): string =>
   `/university/${cleanEntityId(input.universitySlug)}/faculty/${cleanEntityId(input.facultySlug)}`
 
-const buildAcademicPath = (input: AcademicPathInput): string => {
+const buildAcademicPath = (
+  input: AcademicPathInput,
+  locale: LocaleId
+): string => {
   switch (input.type) {
     case 'university':
-      return `/university/${cleanEntityId(input.universitySlug)}`
+      return localizedPath(
+        `/university/${cleanEntityId(input.universitySlug)}`,
+        locale
+      )
     case 'faculty':
-      return facultyPath(input)
+      return localizedPath(facultyPath(input), locale)
     case 'study': {
       const site = cleanEntityId(input.siteSlug)
-      if (site) return getStudySiteUrl(site)
-      return facultyPath(input)
+      if (site) return getStudySiteUrl(site, locale)
+      return localizedPath(facultyPath(input), locale)
     }
     case 'subject': {
       const site = cleanEntityId(input.siteSlug)
       if (site) {
-        return `${getStudySiteUrl(site)}/subject/${cleanEntityId(input.subjectSlug)}`
+        return `${getStudySiteUrl(site, locale)}/subject/${cleanEntityId(input.subjectSlug)}`
       }
-      return facultyPath(input)
+      return localizedPath(facultyPath(input), locale)
     }
     case 'professor':
-      return `/professor/${cleanEntityId(input.professorSlug)}`
+      return localizedPath(
+        `/professor/${cleanEntityId(input.professorSlug)}`,
+        locale
+      )
     case 'script': {
       const site = cleanEntityId(input.siteSlug)
       if (site) {
-        return `${getStudySiteUrl(site)}/scripts/${cleanEntityId(input.scriptSlug)}`
+        return `${getStudySiteUrl(site, locale)}/scripts/${cleanEntityId(input.scriptSlug)}`
       }
       // The API's own path shape, for a row whose study handle was not read.
-      return getScriptSitePath({ siteSlug: null, slug: input.scriptSlug })
+      return localizedPath(
+        getScriptSitePath({ siteSlug: null, slug: input.scriptSlug }),
+        locale
+      )
     }
     default:
       return '/'
@@ -129,8 +151,11 @@ const buildAcademicPath = (input: AcademicPathInput): string => {
  * path built from a missing slug resolves to the index rather than being
  * minted. Cards keep rendering and the bad doc is a data problem to fix.
  */
-export const getAcademicPath = (input: AcademicPathInput): string => {
-  const path = buildAcademicPath(input)
+export const getAcademicPath = (
+  input: AcademicPathInput,
+  locale: LocaleId
+): string => {
+  const path = buildAcademicPath(input, locale)
   // Absolute addresses carry their own `//`; only the path portion is checked.
   const pathOnly = path.replace(/^https?:\/\//, '')
   return pathOnly.includes('//') ? '/' : path

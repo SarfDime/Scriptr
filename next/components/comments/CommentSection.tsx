@@ -1,13 +1,14 @@
 'use client'
 
 import { COMMENTS_SECTION_ID } from '@shared/config/shared-constants'
-import { COMMENT_STRINGS } from '@shared/strings/comments-strings'
+import { COMMENT_STRINGS_PACK } from '@shared/strings/comments-strings'
 import { useEffect, useId, useRef, useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
 import { getTargetComments } from '@/lib/api/comments-api'
+import { useStrings } from '@/providers/locale/use-strings'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 import type { CommentSectionProps } from '@/types/components/comments/Comments.types'
 import { CommentComposer } from './CommentComposer'
@@ -26,6 +27,7 @@ export function CommentSection({
   initialLoadFailed = false,
   studyId = null,
 }: CommentSectionProps) {
+  const strings = useStrings(COMMENT_STRINGS_PACK)
   const [comments, setComments] = useState(initialComments)
   const [loadFailed, setLoadFailed] = useState(initialLoadFailed)
   const [isRetrying, setIsRetrying] = useState(false)
@@ -37,10 +39,15 @@ export function CommentSection({
     failureToastShownRef.current = true
     addToast({
       type: 'error',
-      title: COMMENT_STRINGS.general.loadCommentsError,
-      description: COMMENT_STRINGS.general.tryAgain,
+      title: strings.general.loadCommentsError,
+      description: strings.general.tryAgain,
     })
-  }, [addToast, loadFailed])
+  }, [
+    addToast,
+    loadFailed,
+    strings.general.loadCommentsError,
+    strings.general.tryAgain,
+  ])
 
   const retryComments = async () => {
     setIsRetrying(true)
@@ -50,8 +57,8 @@ export function CommentSection({
     } catch {
       addToast({
         type: 'error',
-        title: COMMENT_STRINGS.general.loadCommentsError,
-        description: COMMENT_STRINGS.general.tryAgain,
+        title: strings.general.loadCommentsError,
+        description: strings.general.tryAgain,
       })
     } finally {
       setIsRetrying(false)
@@ -67,12 +74,12 @@ export function CommentSection({
         className='ui-stack scroll-mt-20 ui-above'
       >
         <SectionHeader
-          title={COMMENT_STRINGS.general.title}
+          title={strings.general.title}
           titleProps={{ id: 'comments-heading' }}
         />
         <Box className='ui-cluster gap-3' role='alert'>
           <Text className='ui-subtitle'>
-            {COMMENT_STRINGS.general.loadCommentsError}
+            {strings.general.loadCommentsError}
           </Text>
           <Button
             type='button'
@@ -80,7 +87,7 @@ export function CommentSection({
             isLoading={isRetrying}
             onClick={retryComments}
           >
-            {COMMENT_STRINGS.general.tryAgain}
+            {strings.general.tryAgain}
           </Button>
         </Box>
       </Box>

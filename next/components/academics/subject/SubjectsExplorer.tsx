@@ -1,6 +1,5 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import { SubjectCard } from '@/components/academics/subject/SubjectCard'
 import { Box } from '@/components/common/Box'
 import { SectionHeader } from '@/components/common/SectionHeader'
@@ -8,6 +7,7 @@ import { SearchBar } from '@/components/typography/SearchBar'
 import { Text } from '@/components/typography/Text'
 import { Divider } from '@/components/ui/Divider'
 import { useSubjectExplorer } from '@/hooks/useSubjectExplorer'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import type { MinimalSubject } from '@/types/academics/subject.types'
 import { SubjectFilters } from './SubjectFilters'
 
@@ -16,6 +16,7 @@ type SubjectsExplorerProps = {
 }
 
 export const SubjectsExplorer = ({ subjects }: SubjectsExplorerProps) => {
+  const ui = useUIStrings()
   const {
     query,
     setQuery,
@@ -35,7 +36,7 @@ export const SubjectsExplorer = ({ subjects }: SubjectsExplorerProps) => {
     <Box as='section' id='subjects' className='ui-stack ui-above'>
       <Box className='ui-cluster  items-start justify-between'>
         <SectionHeader
-          title={UI_STRINGS.subjects.title}
+          title={ui.subjects.title}
           titleVariant='subHeading'
           count={visibleSubjects.length}
         />
@@ -49,11 +50,11 @@ export const SubjectsExplorer = ({ subjects }: SubjectsExplorerProps) => {
           sort={{ value: sort, onChange: setSort }}
         />
         <SearchBar
-          label={UI_STRINGS.subjects.searchLabel}
+          label={ui.subjects.searchLabel}
           inputVal={query}
           inputOnChange={(event) => setQuery(event.target.value)}
           inputProps={{
-            placeholder: UI_STRINGS.subjects.searchPlaceholder,
+            placeholder: ui.subjects.searchPlaceholder,
           }}
           className='min-w-[50%]'
         />
@@ -69,8 +70,8 @@ export const SubjectsExplorer = ({ subjects }: SubjectsExplorerProps) => {
       ) : (
         <Text className='ui-caption'>
           {subjects.length === 0
-            ? UI_STRINGS.subjects.noSubjects
-            : UI_STRINGS.subjects.noMatchingSubjects}
+            ? ui.subjects.noSubjects
+            : ui.subjects.noMatchingSubjects}
         </Text>
       )}
     </Box>

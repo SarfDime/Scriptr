@@ -1,7 +1,7 @@
 'use client'
 
 import { getAchievementCopy } from '@shared/config/achievements'
-import { ACHIEVEMENTS_STRINGS } from '@shared/strings/achievements-strings'
+import { ACHIEVEMENTS_STRINGS_PACK } from '@shared/strings/achievements-strings'
 import { ADMIN_STRINGS } from '@shared/strings/admin-strings'
 import type {
   AchievementDefinition,
@@ -15,6 +15,7 @@ import { FormContainer } from '@/components/typography/FormContainer'
 import { Text } from '@/components/typography/Text'
 import { ConfirmAction } from '@/components/ui/ConfirmAction'
 import { resolveAchievementRarity } from '@/lib/achievement-display'
+import { useStrings } from '@/providers/locale/use-strings'
 import { AchievementDefinitionBadge } from './AchievementDefinitionBadge'
 import {
   AchievementDefinitionFields,
@@ -56,6 +57,7 @@ export const AchievementDefinitionItem = ({
   onUpdate,
   onDelete,
 }: AchievementDefinitionItemProps) => {
+  const strings = useStrings(ACHIEVEMENTS_STRINGS_PACK)
   const [isEditing, setIsEditing] = useState(false)
   const [values, setValues] = useState(() => valuesOf(definition))
   const hasErrors = Object.values(getAchievementDefinitionErrors(values)).some(
@@ -130,7 +132,7 @@ export const AchievementDefinitionItem = ({
           <Box className='ui-stack min-w-0 gap-1'>
             <Text className='ui-body-strong'>{copy.title}</Text>
             <Text className='ui-caption'>
-              {definition.id} · {ACHIEVEMENTS_STRINGS.rarity[rarity]} ·{' '}
+              {definition.id} · {strings.rarity[rarity]} ·{' '}
               {ADMIN_STRINGS.achievementThresholdValue(definition.threshold)} ·{' '}
               {scopeName}
             </Text>

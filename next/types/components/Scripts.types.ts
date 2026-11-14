@@ -1,6 +1,9 @@
 import type { ExamSession } from '@shared/types/academic.types'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
-import type { ScriptFile } from '@shared/types/scripts.types'
+import type {
+  LocalizedScriptText,
+  ScriptFile,
+} from '@shared/types/scripts.types'
 import type { ReactNode } from 'react'
 import type { BoxPropsWithoutChildren } from '@/components/common/Box'
 import type { ButtonBaseProps } from '@/components/common/Button'
@@ -169,8 +172,8 @@ export type PageDataProps = {
  */
 
 export type ScriptUploadInput = {
-  title: PortableTextValue
-  description?: PortableTextValue
+  title: LocalizedScriptText
+  description?: LocalizedScriptText
   subjectId: string
   professorId: string
   examSession?: ExamSession | null

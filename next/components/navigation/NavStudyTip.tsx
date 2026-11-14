@@ -1,7 +1,6 @@
 'use client'
 
 import Sparkles from '@sanity/icons/Sparkles'
-import { UI_STRINGS } from '@shared/config/strings'
 import { useSyncExternalStore } from 'react'
 import { Box } from '@/components/common/Box'
 import { PortableTextContent } from '@/components/typography/PortableTextContent'
@@ -9,6 +8,7 @@ import { Text } from '@/components/typography/Text'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
 import { dayNumber, pickByDay } from '@/lib/daily-pick'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import type { StudyTipData } from '@/types/components/StudyTip.types'
 
 const subscribeToDay = () => () => {
@@ -31,6 +31,7 @@ type NavStudyTipProps = {
  * here so a static or ISR page does not freeze on the day it was built.
  */
 export const NavStudyTip = ({ tips, serverDay }: NavStudyTipProps) => {
+  const strings = useUIStrings()
   const day = useSyncExternalStore(
     subscribeToDay,
     getClientDay,
@@ -46,11 +47,11 @@ export const NavStudyTip = ({ tips, serverDay }: NavStudyTipProps) => {
   return (
     <Box
       as='section'
-      aria-label={UI_STRINGS.navigation.studyTip}
+      aria-label={strings.navigation.studyTip}
       className={cn('ui-stack gap-2 mt-auto', colorPalette, 'cp-vars')}
     >
       <Text className={cn('ui-nav-caption px-2.5 ui-cluster justify-between')}>
-        {UI_STRINGS.navigation.studyTip}
+        {strings.navigation.studyTip}
         <Sparkles
           aria-hidden='true'
           className={cn('mt-0.5 size-4 shrink-0 cp-text')}

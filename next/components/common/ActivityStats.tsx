@@ -1,7 +1,9 @@
+'use client'
+
 import Comment from '@sanity/icons/Comment'
 import DocumentText from '@sanity/icons/DocumentText'
 import Heart from '@sanity/icons/Heart'
-import { UI_STRINGS } from '@shared/config/strings'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { Text } from '../typography/Text'
 import { Box } from './Box'
 import { Button } from './Button'
@@ -20,9 +22,10 @@ export const ActivityStats = ({
   savedCount,
   authoredCount,
   commentCount,
-  title = UI_STRINGS.activity.title,
-  subtitle = UI_STRINGS.activity.subtitle,
+  title,
+  subtitle,
 }: ActivityStatsProps) => {
+  const ui = useUIStrings()
   const stats = [
     ...(savedCount === undefined
       ? []
@@ -31,7 +34,7 @@ export const ActivityStats = ({
             key: 'saved',
             icon: Heart,
             count: savedCount,
-            label: UI_STRINGS.activity.savedScripts,
+            label: ui.activity.savedScripts,
             color: 'cp-danger',
           },
         ]),
@@ -39,14 +42,14 @@ export const ActivityStats = ({
       key: 'authored',
       icon: DocumentText,
       count: authoredCount,
-      label: UI_STRINGS.activity.scriptsAuthored,
+      label: ui.activity.scriptsAuthored,
       color: 'cp-brand',
     },
     {
       key: 'comments',
       icon: Comment,
       count: commentCount,
-      label: UI_STRINGS.activity.helpfulComments,
+      label: ui.activity.helpfulComments,
       color: 'cp-warning',
     },
   ]
@@ -54,11 +57,11 @@ export const ActivityStats = ({
   return (
     <Box as='section' className='ui-stack gap-4 p-4 ui-above'>
       <SectionHeader
-        title={title}
-        subtitle={subtitle}
+        title={title ?? ui.activity.title}
+        subtitle={subtitle ?? ui.activity.subtitle}
         actions={
           <Button className='button button-sm subtle'>
-            <Text>{UI_STRINGS.activity.view}</Text>
+            <Text>{ui.activity.view}</Text>
           </Button>
         }
       />

@@ -32,17 +32,26 @@ to a handle that `getStudySiteOrNotFound` already 404s. A reserved label
 
 ## Mapping a host onto the study tree — `next/next.config.ts`
 
-A study host's own paths are rewritten onto `/study/[siteSlug]/…` before files
-are served, so the URL the reader sees never changes:
+A study host's own paths are rewritten onto `/[locale]/study/[siteSlug]/…` before
+files are served, so the URL the reader sees never changes:
 
 | Path on `lbe.scriptr.uk` | Served by |
 | --- | --- |
-| `/` | `study/[siteSlug]/page.tsx` — the academic overview |
+| `/` | `[locale]/study/[siteSlug]/page.tsx` — the academic overview |
 | `/scripts`, `/scripts/<slug>` | the study's feed and a script |
 | `/subject/<slug>` | a subject inside the study |
 | `/calendar`, `/academic-setup` | the study's calendar and setup |
 | `/user/<name>` | that person's profile **inside the study** |
 | `/sitemap.xml`, `/sitemap/<id>.xml` | the study's own sitemap |
+
+Every path is registered **twice**: unprefixed (the default language, mapping to
+`/en/study/…`) and under a non-default prefix (`/mk/scripts/x` →
+`/mk/study/[siteSlug]/scripts/x`), so a study host serves both languages at the
+address the reader chose. A study host's `/mk` is its overview in Macedonian, and
+its root follows the remembered language. The sitemap handlers are the exception
+— they sit outside `[locale]`, so their addresses carry no language: `/sitemap.xml`
+maps onto `/study/[siteSlug]/sitemap/index.xml` and `/sitemap/<id>.xml` onto the
+section route.
 
 Everything else is left alone, which is the point:
 
@@ -85,7 +94,10 @@ Two shapes exist and they are not interchangeable:
   (`next/lib/academic-routes.ts`), `studySiteOrigin` (`next/lib/study-origin.ts`).
   `getAcademicPath` returns one for `study`, `subject` and `script`, so catalog
   cards, `NavStudies`, `StudyPicker`, search, profile links and the calendar's
-  subject links all name the study's host.
+  subject links all name the study's host. All of those builders also take the
+  reader's `LocaleId` and append the language prefix inside the path
+  (`https://lbe.scriptr.uk/mk/scripts/x`), so the address on a study host carries
+  the language too — see [Frontend Structure & UI Conventions](ARCHITECTURE-FRONTEND.md).
 * **Catalog address** — a link a study page renders to something the study does
   not own: `/admin`, `/user`, `/auth`, `/start`, a professor, a university. It
   has to be absolute too (`catalogUrl`, or `catalogUrl(getAcademicPath(…))` for
@@ -119,11 +131,22 @@ faculties and professors — never a study URL, since a study has a canonical ho
 of its own.
 
 A study publishes its own index and sections under the study tree
-(`next/app/(study)/study/[siteSlug]/sitemap/route.ts` and
-`…/sitemap/[section]/route.ts`, built in `next/lib/study-sitemap.ts`): a `study`
-section with its root, its feed and its subjects, then `scripts-<n>` pages of its
-scripts. The host rewrite sends `/sitemap.xml` to the first of those, so each
-host publishes its own URLs without reading a host header.
+(`next/app/(study)/study/[siteSlug]/sitemap/[section]/route.ts`, built in
+`next/lib/study-sitemap.ts`): a `study` section with its root, its feed and its
+subjects, then `scripts-<n>` pages of its scripts. The index is that same route
+under the reserved `index.xml`, and the host rewrite sends `/sitemap.xml` there,
+so each host publishes its own URLs without reading a host header.
+
+Both hosts publish **one entry per page with `alternates.languages`**, never one
+entry per language. Two traps shaped the shape:
+
+* a segment ending in a dot cannot be prerendered per parameter (see below), so
+  the index cannot be `sitemap.xml/route.ts`;
+* an extension-less route handler is shadowed by a page that matches the same
+  URL — here `[locale]/[...notFound]` — because the router takes the first
+  dynamic match. That is why the index is reached as `index.xml` rather than as
+  `sitemap`.
+
 
 **Both are prerendered per study at build** — `generateStaticParams` from
 `listStudySites()` — and held until the next deploy, like the catalog's. That is

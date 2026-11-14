@@ -2,11 +2,11 @@
 
 import CloseIcon from '@sanity/icons/Close'
 import SearchIcon from '@sanity/icons/Search'
-import { UI_STRINGS } from '@shared/config/strings'
 import { useRouter } from 'next/navigation'
 import { useEffect, useEffectEvent, useId, useRef, useState } from 'react'
 import { cn } from '@/lib/common-utils'
 import { buildSearchHref } from '@/lib/script-search'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { Box } from '../common/Box'
 import { Button } from '../common/Button'
 import { SearchForm } from '../search/SearchForm'
@@ -23,6 +23,7 @@ import { SearchForm } from '../search/SearchForm'
  * It does not read the current `?q=`: `useSearchParams` in the root layout
  * would opt every static route into client-side rendering. */
 export const HeaderSearch = () => {
+  const ui = useUIStrings()
   const router = useRouter()
   const triggerId = useId()
   const panelId = useId()
@@ -76,7 +77,7 @@ export const HeaderSearch = () => {
           <>
             <SearchForm
               compact
-              ariaLabel={UI_STRINGS.scripts.search.quickSearchLabel}
+              ariaLabel={ui.scripts.search.quickSearchLabel}
               inputRef={inputRef}
               onValidSubmit={handleValidSubmit}
               className='min-w-0 flex-1'
@@ -84,7 +85,7 @@ export const HeaderSearch = () => {
             />
             <Button
               onClick={closeAndRestoreFocus}
-              aria-label={UI_STRINGS.scripts.search.closeSearch}
+              aria-label={ui.scripts.search.closeSearch}
               className='button ghost p-2 sm:hidden'
             >
               <CloseIcon />
@@ -95,7 +96,7 @@ export const HeaderSearch = () => {
       <Button
         id={triggerId}
         onClick={() => setOpen(!open)}
-        aria-label={UI_STRINGS.scripts.search.formAriaLabel}
+        aria-label={ui.scripts.search.formAriaLabel}
         aria-expanded={open}
         aria-controls={panelId}
         className='button ghost p-2'

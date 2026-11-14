@@ -1,10 +1,12 @@
 'use client'
 
+import type { LocaleId } from '@shared/config/localization-constants'
 import {
   DEFAULT_PROFILE_PREFERENCES,
   isProfilePreferences,
 } from '@shared/config/profile-preferences'
-import { NOTIFICATIONS_STRINGS } from '@shared/strings/notifications-strings'
+import { NOTIFICATIONS_STRINGS_PACK } from '@shared/strings/notifications-strings'
+import type { ResolvedStrings } from '@shared/types/localization.types'
 import type {
   ProfilePreferences,
   ProfilePreferencesResponse,
@@ -50,6 +52,8 @@ import type {
   NotificationsContextValue,
   PushInput,
 } from '@/types/notifications.types'
+import { useLocale } from '../locale/LocaleProvider'
+import { useStrings } from '../locale/use-strings'
 import { useSession } from '../SessionProvider'
 import { useToast } from '../toaster/ToasterProvider'
 
@@ -87,14 +91,17 @@ const newestModerationId = (items: Array<AppNotification>) =>
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))[0]?.id ??
   null
 
+type NotificationStrings = ResolvedStrings<typeof NOTIFICATIONS_STRINGS_PACK>
+
 const buildRestrictionNotice = (
+  strings: NotificationStrings,
   restriction: MyRestriction
 ): AppNotification | null => {
   if (!restriction || isRestrictionLapsed(restriction)) return null
   return {
     id: 'persistent:restriction',
-    title: NOTIFICATIONS_STRINGS.restrictionTitle,
-    body: NOTIFICATIONS_STRINGS.restrictionNoticeBody(
+    title: strings.restrictionTitle,
+    body: strings.restrictionNoticeBody(
       restriction.reason,
       restriction.expires_at
     ),
@@ -155,6 +162,8 @@ export const NotificationsProvider = ({
   const loadedUserIdRef = useRef<string | null>(null)
   const seenServerIdsRef = useRef(new Set<string>())
   const { addToast } = useToast()
+  const { locale } = useLocale()
+  const strings = useStrings(NOTIFICATIONS_STRINGS_PACK)
   const { session } = useSession()
   const pathname = usePathname()
   // On a study site the tray shows that study's notifications and the
@@ -183,7 +192,7 @@ export const NotificationsProvider = ({
       ? preferences
       : DEFAULT_PROFILE_PREFERENCES
 
-  const loadServerNotifications = useEffectEvent(() => {
+  const loadServerNotifications = useEffectEvent((activeLocale: LocaleId) => {
     if (session.status !== 'authenticated') {
       Promise.resolve().then(() => {
         setServerNotifications([])
@@ -228,7 +237,9 @@ export const NotificationsProvider = ({
         if (notificationsResult.status === 'rejected') {
           failures.push(notificationsResult.reason)
         } else {
-          const mapped = notificationsResult.value.map(mapNotificationRecord)
+          const mapped = notificationsResult.value.map((notification) =>
+            mapNotificationRecord(notification, activeLocale)
+          )
           moderationId = newestModerationId(mapped)
           const isInitialLoad = loadedUserIdRef.current !== userId
           if (isInitialLoad) {
@@ -288,7 +299,9 @@ export const NotificationsProvider = ({
             if (!reusableRestriction || restrictionChanged) {
               writeCachedRestriction(userId, { restriction, moderationId })
             }
-            setPersistentRestriction(buildRestrictionNotice(restriction))
+            setPersistentRestriction(
+              buildRestrictionNotice(strings, restriction)
+            )
             setRestrictionOwnerId(userId)
           }
         } else {
@@ -305,15 +318,18 @@ export const NotificationsProvider = ({
           failures.push(preferencesResult.reason)
         }
 
-        setError(failures.length > 0 ? NOTIFICATIONS_STRINGS.loadError : null)
+        setError(failures.length > 0 ? strings.loadError : null)
         setLoading(false)
       }
     )
   })
 
   useEffect(() => {
-    if (session.status !== 'loading') loadServerNotifications()
-  }, [session.status])
+    // `locale` is a dependency because the stored rows are mapped into it: a
+    // switch to the other language re-reads them instead of leaving the tray in
+    // the language the rows were fetched in.
+    if (session.status !== 'loading') loadServerNotifications(locale)
+  }, [session.status, locale])
 
   useEffect(() => {
     if (trayOpen && session.status === 'authenticated') {
@@ -322,9 +338,9 @@ export const NotificationsProvider = ({
         return
       }
       lastTrayRefreshRef.current = now
-      loadServerNotifications()
+      loadServerNotifications(locale)
     }
-  }, [trayOpen, session.status])
+  }, [trayOpen, session.status, locale])
 
   useEffect(() => {
     if (session.status === 'loading') return
@@ -340,15 +356,15 @@ export const NotificationsProvider = ({
         current = [
           {
             id: ACCOUNT_REMINDER_ID,
-            title: NOTIFICATIONS_STRINGS.accountReminderTitle,
-            body: NOTIFICATIONS_STRINGS.accountReminderBody,
+            title: strings.accountReminderTitle,
+            body: strings.accountReminderBody,
             createdAt: new Date().toISOString(),
             read: false,
             dismissed: false,
             persistent: true,
             type: 'info',
             action: {
-              label: NOTIFICATIONS_STRINGS.createAccount,
+              label: strings.createAccount,
               kind: 'link',
               href: '/auth?mode=register',
             },
@@ -366,7 +382,13 @@ export const NotificationsProvider = ({
         writeLocalNotifications(current, currentUserId ?? undefined)
       }
     }
-  }, [currentUserId, session.status])
+  }, [
+    currentUserId,
+    session.status,
+    strings.accountReminderTitle,
+    strings.accountReminderBody,
+    strings.createAccount,
+  ])
 
   const activeRestrictionNotice =
     restrictionOwnerId === currentUserId ? persistentRestriction : null
@@ -440,7 +462,7 @@ export const NotificationsProvider = ({
             current.filter((notification) => notification.id !== id)
           )
         )
-        .catch(() => setError(NOTIFICATIONS_STRINGS.updateError))
+        .catch(() => setError(strings.updateError))
       return
     }
     writeLocalNotifications(
@@ -473,7 +495,7 @@ export const NotificationsProvider = ({
         current.filter((notification) => !removedIds.has(notification.id))
       )
       if (results.some((result) => result.status === 'rejected')) {
-        setError(NOTIFICATIONS_STRINGS.updateError)
+        setError(strings.updateError)
       }
     })
   }
@@ -491,7 +513,7 @@ export const NotificationsProvider = ({
             )
           )
         )
-        .catch(() => setError(NOTIFICATIONS_STRINGS.updateError))
+        .catch(() => setError(strings.updateError))
       return
     }
     writeLocalNotifications(
@@ -517,10 +539,10 @@ export const NotificationsProvider = ({
           current.map((notification) => ({ ...notification, read: true }))
         )
       )
-      .catch(() => setError(NOTIFICATIONS_STRINGS.updateError))
+      .catch(() => setError(strings.updateError))
   }
 
-  const refresh = () => loadServerNotifications()
+  const refresh = () => loadServerNotifications(locale)
 
   /** Rereads the restriction after the API rejected an action as restricted,
    * so the notice shows without the tray being opened. */
@@ -533,10 +555,10 @@ export const NotificationsProvider = ({
           restriction,
           moderationId: newestModerationId(serverNotifications),
         })
-        setPersistentRestriction(buildRestrictionNotice(restriction))
+        setPersistentRestriction(buildRestrictionNotice(strings, restriction))
         setRestrictionOwnerId(userId)
       })
-      .catch(() => setError(NOTIFICATIONS_STRINGS.loadError))
+      .catch(() => setError(strings.loadError))
   }
 
   /** Stores freshly saved preferences locally so nothing needs refetching. */

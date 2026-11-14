@@ -1,10 +1,10 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
 import { type ReactNode, useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Text } from '@/components/typography/Text'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { Dialog } from './Dialog'
 import { DialogFooter } from './DialogFooter'
 
@@ -36,12 +36,13 @@ export type ConfirmActionProps = {
 export const ConfirmAction = ({
   title,
   description,
-  confirmLabel = UI_STRINGS.general.confirm,
-  cancelLabel = UI_STRINGS.general.cancel,
+  confirmLabel,
+  cancelLabel,
   destructive = true,
   onConfirm,
   trigger,
 }: ConfirmActionProps) => {
+  const ui = useUIStrings()
   const [isOpen, setIsOpen] = useState(false)
 
   const handleConfirm = () => {
@@ -64,9 +65,9 @@ export const ConfirmAction = ({
             <Text className='ui-body'>{description}</Text>
             <DialogFooter
               size='sm'
-              secondaryLabel={cancelLabel}
+              secondaryLabel={cancelLabel ?? ui.general.cancel}
               onSecondary={() => setIsOpen(false)}
-              primaryLabel={confirmLabel}
+              primaryLabel={confirmLabel ?? ui.general.confirm}
               primaryType='button'
               onPrimary={handleConfirm}
               destructive={destructive}

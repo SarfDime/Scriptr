@@ -1,5 +1,9 @@
 import { groq } from 'next-sanity'
 import { sanityFunctionQueries } from '../functions.queries'
+import {
+  localizedBlocksProjection,
+  localizedProjection,
+} from '../localized.queries'
 
 /** Minimal query for SEO metadata on a subject. */
 export const subjectSeoQuery = groq`
@@ -11,8 +15,8 @@ export const subjectSeoQuery = groq`
 ][0] {
   _id,
   "slug": slug.current,
-  name,
-  description,
+  ${localizedProjection('name', 'localizedName')},
+  ${localizedBlocksProjection('description', 'localizedDescription')},
 }
 `
 
@@ -20,37 +24,37 @@ export const minimalSubjectQuery = /* groq */ `
 _id,
 dbId,
 "slug": slug.current,
-name,
-code,
+${localizedProjection('name', 'localizedName')},
+${localizedProjection('code', 'localizedCode')},
 credits,
 year,
 semester,
 elective,
-description,
+${localizedBlocksProjection('description', 'localizedDescription')},
 syllabus,
 "faculty": study->faculty->{
   _id,
   "slug": slug.current,
-  name,
+  ${localizedProjection('name', 'localizedName')},
   university->{
     _id,
     "slug": slug.current,
-    name,
+    ${localizedProjection('name', 'localizedName')},
   },
 },
 study->{
   _id,
   "slug": slug.current,
   "siteSlug": siteSlug.current,
-  name,
+  ${localizedProjection('name', 'localizedName')},
   faculty->{
     _id,
     "slug": slug.current,
-    name,
+    ${localizedProjection('name', 'localizedName')},
     university->{
       _id,
       "slug": slug.current,
-      name,
+      ${localizedProjection('name', 'localizedName')},
     },
   },
 },
@@ -58,8 +62,8 @@ professors[]->{
   _id,
   dbId,
   "slug": slug.current,
-  name,
-  title,
+  ${localizedProjection('name', 'localizedName')},
+  ${localizedProjection('title', 'localizedTitle')},
 },
 `
 
@@ -91,9 +95,9 @@ ${sanityFunctionQueries}
   professors[]->{
     _id,
     "slug": slug.current,
-    name,
+    ${localizedProjection('name', 'localizedName')},
     dbId,
-    title,
+    ${localizedProjection('title', 'localizedTitle')},
     picture,
     email
   }
@@ -111,9 +115,9 @@ ${sanityFunctionQueries}
   professors[]->{
     _id,
     "slug": slug.current,
-    name,
+    ${localizedProjection('name', 'localizedName')},
     dbId,
-    title,
+    ${localizedProjection('title', 'localizedTitle')},
     picture,
     email
   }

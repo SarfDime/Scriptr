@@ -23,6 +23,7 @@
     "check-types": "tsc --noEmit",
     "db:migrate": "tsx scripts/db-migrate.ts",
     "backfill:script-slugs": "tsx --env-file=.env scripts/backfill-script-slugs.ts",
+    "backfill:script-locales": "tsx --env-file=.env scripts/backfill-script-locales.ts",
     "dev": "tsx watch --env-file=.env --import=tsx src/server.ts",
     "admin:totp": "tsx scripts/generate-admin-totp.ts",
     "gen:types": "supabase gen types typescript --project-id \"$PROJECT_REF\" --schema public > ../shared/types/database.types.ts",

@@ -1,7 +1,7 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import { useSubjectFilters } from '@/hooks/useSubjectFilters'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import type { SubjectSidebarItem } from '@/types/academics/subject.types'
 import { SubjectFilters } from './SubjectFilters'
 import { SubjectsSidebar } from './SubjectsSidebar'
@@ -17,6 +17,7 @@ type StudySubjectsPanelProps = {
  * scrolls past four cards.
  */
 export const StudySubjectsPanel = ({ subjects }: StudySubjectsPanelProps) => {
+  const ui = useUIStrings()
   const {
     year,
     setYear,
@@ -30,7 +31,7 @@ export const StudySubjectsPanel = ({ subjects }: StudySubjectsPanelProps) => {
     <SubjectsSidebar
       subjects={visibleSubjects}
       emptyMessage={
-        subjects.length > 0 ? UI_STRINGS.subjects.noMatchingSubjects : undefined
+        subjects.length > 0 ? ui.subjects.noMatchingSubjects : undefined
       }
       toolbar={
         subjects.length > 0 && (

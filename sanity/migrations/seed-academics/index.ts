@@ -21,7 +21,6 @@ import {
   localizedString,
   localizedStringList,
   ref,
-  toPortableText,
   uploadImage,
 } from './helpers'
 
@@ -89,9 +88,9 @@ export default defineMigration({
 async function personToDoc(seed: SeedPerson, client: AssetUploadClient) {
   return {
     _type: 'person' as const,
-    name: seed.name,
-    title: seed.title,
-    description: toPortableText(seed.description),
+    localizedName: localizedString({ en: seed.name }),
+    localizedTitle: localizedString({ en: seed.title }),
+    localizedDescription: localizedPortableText({ en: seed.description }),
     image: await uploadImage(client, seed.imageUrl),
   }
 }
@@ -99,8 +98,8 @@ async function personToDoc(seed: SeedPerson, client: AssetUploadClient) {
 function universityToDoc(seed: SeedUniversity) {
   return {
     _type: 'university' as const,
-    name: seed.name,
-    description: toPortableText(seed.description),
+    localizedName: localizedString({ en: seed.name }),
+    localizedDescription: localizedPortableText({ en: seed.description }),
     streetAddress: seed.streetAddress,
     telephone: seed.telephone,
     email: seed.email,
@@ -111,8 +110,8 @@ function universityToDoc(seed: SeedUniversity) {
 function facultyToDoc(seed: SeedFaculty) {
   return {
     _type: 'faculty' as const,
-    name: seed.name,
-    description: toPortableText(seed.description),
+    localizedName: localizedString({ en: seed.name }),
+    localizedDescription: localizedPortableText({ en: seed.description }),
     streetAddress: seed.streetAddress,
     telephone: seed.telephone,
     email: seed.email,
@@ -123,9 +122,9 @@ function facultyToDoc(seed: SeedFaculty) {
 function professorToDoc(seed: SeedProfessor) {
   return {
     _type: 'professor' as const,
-    name: seed.name,
-    title: seed.title,
-    bio: toPortableText(seed.bio),
+    localizedName: localizedString({ en: seed.name }),
+    localizedTitle: localizedString({ en: seed.title }),
+    localizedBio: localizedPortableText({ en: seed.bio }),
     office: seed.office,
     telephone: seed.telephone,
     email: seed.email,
@@ -135,13 +134,9 @@ function professorToDoc(seed: SeedProfessor) {
 
 function subjectFields(seed: SeedSubject) {
   return {
-    name: seed.title?.en ?? seed.code?.en ?? '',
-    code: seed.code?.en,
     localizedCode: localizedString(seed.code),
     localizedName: localizedString(seed.title),
-    description: toPortableText(seed.description?.en),
     localizedDescription: localizedPortableText(seed.description),
-    keywords: seed.keywords?.en,
     localizedKeywords: localizedStringList(seed.keywords),
     credits: seed.credits,
     syllabus: seed.syllabus,
@@ -198,9 +193,9 @@ async function collectSubjectIds(documents: DocumentsIterator) {
   return { draftCodesById, publishedIdByCode }
 }
 
-/** Reads a legacy string code or every value of a localizedCode object. */
+/** Every value of a subject's localizedCode object. */
 function subjectCodes(record: Record<string, unknown>) {
-  return [...codeValues(record.code), ...codeValues(record.localizedCode)]
+  return codeValues(record.localizedCode)
 }
 
 function codeValues(value: unknown): Array<string> {

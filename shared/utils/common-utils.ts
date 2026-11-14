@@ -1,4 +1,9 @@
-import { TIME_AGO_STRINGS } from '@shared/strings/time-strings'
+import {
+  DEFAULT_LOCALE,
+  type LocaleId,
+} from '@shared/config/localization-constants'
+import { TIME_AGO_STRINGS_PACK } from '@shared/strings/time-strings'
+import { getStrings } from './localized-strings'
 
 /**
  * Returns an object with the specified attribute name and value if the condition is true, otherwise returns an empty object.
@@ -53,28 +58,32 @@ export const generateRandomKey = (): string =>
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2)
 
-/** Formats a given date string into a human-readable string indicating how long ago it was updated. */
-export const formatDate = (dateString: string): string => {
+/** Formats a given date string into a human-readable string indicating how long ago it was updated, in the reader's language. */
+export const formatDate = (
+  dateString: string,
+  locale: LocaleId = DEFAULT_LOCALE
+): string => {
+  const strings = getStrings(TIME_AGO_STRINGS_PACK, locale)
   const parsedDate = new Date(dateString)
 
   const date = Number.isNaN(parsedDate.getTime())
     ? new Date(dateString.replace(/\.\d+/, (match) => match.slice(0, 4)))
     : parsedDate
 
-  if (Number.isNaN(date.getTime())) return TIME_AGO_STRINGS.invalidDate
+  if (Number.isNaN(date.getTime())) return strings.invalidDate
 
   const diffMs = Date.now() - date.getTime()
   const diffMinutes = Math.floor(diffMs / (1000 * 60))
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
 
-  if (diffMinutes < 1) return TIME_AGO_STRINGS.justNow
-  if (diffMinutes === 1) return TIME_AGO_STRINGS.oneMinuteAgo
-  if (diffMinutes < 60) return TIME_AGO_STRINGS.minutesAgo(diffMinutes)
-  if (diffHours === 1) return TIME_AGO_STRINGS.anHourAgo
-  if (diffHours < 24) return TIME_AGO_STRINGS.hoursAgo(diffHours)
-  if (diffDays === 1) return TIME_AGO_STRINGS.yesterday
-  return TIME_AGO_STRINGS.daysAgo(diffDays)
+  if (diffMinutes < 1) return strings.justNow
+  if (diffMinutes === 1) return strings.oneMinuteAgo
+  if (diffMinutes < 60) return strings.minutesAgo(diffMinutes)
+  if (diffHours === 1) return strings.anHourAgo
+  if (diffHours < 24) return strings.hoursAgo(diffHours)
+  if (diffDays === 1) return strings.yesterday
+  return strings.daysAgo(diffDays)
 }
 
 export { camelCase, capitalize, getAttribute }

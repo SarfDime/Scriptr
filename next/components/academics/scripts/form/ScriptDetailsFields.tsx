@@ -1,6 +1,5 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import { portableTextToPlainText } from '@shared/utils/portable-text.utils'
 import { slugifyTitle } from '@shared/utils/slug.utils'
 import dynamic from 'next/dynamic'
@@ -11,6 +10,8 @@ import { Divider } from '@/components/ui/Divider'
 import { Field } from '@/components/ui/field/Field'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 import type { UseScriptTextFieldsReturn } from '@/hooks/useScriptTextFields'
+import { useUIStrings } from '@/providers/locale/use-strings'
+import { ScriptLanguageSelector } from './ScriptLanguageSelector'
 import { SCRIPT_FIELD_LABEL_PROPS } from './script-form-layout'
 
 /** The editor's own boxes — padding, toolbar row and editing area — at the same
@@ -18,11 +19,13 @@ import { SCRIPT_FIELD_LABEL_PROPS } from './script-form-layout'
  * area takes its height from `--pt-editor-height` on the field, which is set to
  * match the `editorClassName` of the instance it stands in for. */
 function EditorPlaceholder() {
+  const ui = useUIStrings()
+
   return (
     <Box
       role='status'
       aria-busy='true'
-      aria-label={UI_STRINGS.general.loading}
+      aria-label={ui.general.loading}
       className='ui-stack ui-above-inside'
     >
       <Box className='ui-cluster gap-2'>
@@ -53,17 +56,28 @@ export type ScriptDetailsFieldsProps = {
   slug?: string
 }
 
-/** The details section (title + description) of a script form. */
+/**
+ * The details section (title + description) of a script form. A script carries
+ * its text in one or more languages, so the section edits one language at a
+ * time — the selector chooses which — instead of stacking an editor per
+ * language. Every language the author touches stays in form state, and the
+ * title must be filled in at least one of them.
+ */
 export function ScriptDetailsFields({
   fields,
   resetKey,
   slug,
 }: ScriptDetailsFieldsProps) {
+  const ui = useUIStrings()
   const {
+    language,
+    changeLanguage,
     title,
     description,
     changeTitle,
     changeDescription,
+    titleFilledLanguages,
+    titleHasContent,
     titleTooLong,
     titleUnsupportedScript,
     titleValid,
@@ -74,32 +88,40 @@ export function ScriptDetailsFields({
 
   const titleError = (() => {
     if (titleUnsupportedScript) {
-      return UI_STRINGS.scripts.uploadModal.fieldErrors.unsupportedScript
+      return ui.scripts.uploadModal.fieldErrors.unsupportedScript
     }
-    return titleTooLong
-      ? UI_STRINGS.scripts.uploadModal.fieldErrors.titleTooLong
-      : UI_STRINGS.scripts.uploadModal.fieldErrors.titleRequired
+    if (titleTooLong) {
+      return ui.scripts.uploadModal.fieldErrors.titleTooLong
+    }
+    return titleHasContent
+      ? undefined
+      : ui.scripts.uploadModal.fieldErrors.titleRequired
   })()
 
   return (
     <>
+      <ScriptLanguageSelector
+        value={language}
+        onChange={changeLanguage}
+        filled={titleFilledLanguages}
+      />
       <Field
         // `h-10` on the one-line editor: the placeholder is that tall too.
         className='min-w-0 [--pt-editor-height:2.5rem]'
         grouped
-        label={UI_STRINGS.scripts.uploadModal.formTitle}
+        label={ui.scripts.uploadModal.formTitle}
         labelProps={SCRIPT_FIELD_LABEL_PROPS}
-        helperText={UI_STRINGS.scripts.uploadModal.formTitleHelp}
+        helperText={ui.scripts.uploadModal.formTitleHelp}
         errorText={titleError}
         required
         valid={titleValid}
         invalid={titleInvalid}
       >
         <PortableTextEditorSection
-          key={`title-${resetKey}`}
+          key={`title-${language}-${resetKey}`}
           initialContent={title}
           onChange={changeTitle}
-          ariaLabel={UI_STRINGS.scripts.uploadModal.formTitle}
+          ariaLabel={ui.scripts.uploadModal.formTitle}
           editorOptions={RESTRICTED_EDITOR_OPTIONS}
           editorClassName='h-10 min-h-0 overflow-hidden whitespace-nowrap p-2'
           singleLine
@@ -107,19 +129,19 @@ export function ScriptDetailsFields({
       </Field>
       <Box className='ui-stack gap-1'>
         <Text className='ui-caption'>
-          {UI_STRINGS.scripts.uploadModal.slug.label}:{' '}
+          {ui.scripts.uploadModal.slug.label}:{' '}
           <code>
             {slug
-              ? UI_STRINGS.scripts.uploadModal.slug.path(slug)
-              : UI_STRINGS.scripts.uploadModal.slug.previewPath(
+              ? ui.scripts.uploadModal.slug.path(slug)
+              : ui.scripts.uploadModal.slug.previewPath(
                   slugifyTitle(portableTextToPlainText(title)) || 'script'
                 )}
           </code>
         </Text>
         <Text className='ui-label'>
           {slug
-            ? UI_STRINGS.scripts.uploadModal.slug.fixedNote
-            : UI_STRINGS.scripts.uploadModal.slug.previewNote}
+            ? ui.scripts.uploadModal.slug.fixedNote
+            : ui.scripts.uploadModal.slug.previewNote}
         </Text>
       </Box>
       <Divider />
@@ -127,21 +149,21 @@ export function ScriptDetailsFields({
       <Field
         className='min-w-0'
         grouped
-        label={UI_STRINGS.scripts.uploadModal.formDescription}
+        label={ui.scripts.uploadModal.formDescription}
         labelProps={SCRIPT_FIELD_LABEL_PROPS}
-        helperText={UI_STRINGS.scripts.uploadModal.formDescriptionHelp}
+        helperText={ui.scripts.uploadModal.formDescriptionHelp}
         errorText={
           descriptionUnsupportedScript
-            ? UI_STRINGS.scripts.uploadModal.fieldErrors.unsupportedScript
-            : UI_STRINGS.scripts.uploadModal.fieldErrors.descriptionTooLong
+            ? ui.scripts.uploadModal.fieldErrors.unsupportedScript
+            : ui.scripts.uploadModal.fieldErrors.descriptionTooLong
         }
         invalid={descriptionInvalid}
       >
         <PortableTextEditorSection
-          key={`description-${resetKey}`}
+          key={`description-${language}-${resetKey}`}
           initialContent={description}
           onChange={changeDescription}
-          ariaLabel={UI_STRINGS.scripts.uploadModal.formDescription}
+          ariaLabel={ui.scripts.uploadModal.formDescription}
           editorOptions={{
             excludedStyles: ['h1', 'h2', 'h3'],
             excludedColors: RESTRICTED_EDITOR_OPTIONS.excludedColors,

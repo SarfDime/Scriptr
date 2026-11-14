@@ -1,8 +1,9 @@
-import { NOTIFICATIONS_STRINGS } from '@shared/strings/notifications-strings'
+import type { LocaleId } from '@shared/config/localization-constants'
 import type {
   NotificationKind,
   NotificationWithStudy,
 } from '@shared/types/notifications.types'
+import { resolveStoredNotificationCopy } from '@shared/utils/notification-copy'
 import type { AppNotification } from '@/types/notifications.types'
 
 const isNotificationKind = (value: string): value is NotificationKind =>
@@ -27,17 +28,25 @@ const getHref = (record: NotificationWithStudy) => {
   return undefined
 }
 
+/**
+ * A stored row as the tray shows it: the sentence is rebuilt in `locale` from
+ * the row's `type` and `data`, so a notification written in the default
+ * language still reads in the reader's own. `resolveStoredNotificationCopy`
+ * documents what falls back to the stored text.
+ */
 export const mapNotificationRecord = (
-  record: NotificationWithStudy
+  record: NotificationWithStudy,
+  locale: LocaleId
 ): AppNotification => {
   const type = isNotificationKind(record.type) ? record.type : 'info'
   const sourceType = isNotificationKind(record.type) ? record.type : undefined
 
   const href = getHref(record)
+  const copy = resolveStoredNotificationCopy(record, locale)
   return {
     id: `server:${record.id}`,
-    title: record.title,
-    body: record.body ?? undefined,
+    title: copy.title,
+    body: copy.body,
     createdAt: record.created_at,
     read: record.is_read,
     dismissed: false,
@@ -46,11 +55,7 @@ export const mapNotificationRecord = (
     studySiteSlug: record.study?.site_slug ?? null,
     ...(href
       ? {
-          action: {
-            label: NOTIFICATIONS_STRINGS.openTarget,
-            kind: 'link' as const,
-            href,
-          },
+          action: { kind: 'link' as const, href },
         }
       : {}),
   }

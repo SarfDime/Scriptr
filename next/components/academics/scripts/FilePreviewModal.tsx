@@ -2,8 +2,7 @@
 
 import CollapseIcon from '@sanity/icons/Collapse'
 import ExpandIcon from '@sanity/icons/Expand'
-import { UI_STRINGS } from '@shared/config/strings'
-import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
+import { SCRIPT_STRINGS_PACK } from '@shared/strings/scripts-strings'
 import type { FileType } from '@shared/types/api.types'
 import { useState } from 'react'
 import { Box } from '@/components/common/Box'
@@ -15,6 +14,7 @@ import { useObjectUrl } from '@/hooks/useObjectUrl'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
 import { getPreviewableKind } from '@/lib/file-preview'
+import { useStrings, useUIStrings } from '@/providers/locale/use-strings'
 import {
   FilePreviewContent,
   StoredFilePreviewContent,
@@ -74,6 +74,8 @@ export function FilePreviewModal({
   open,
   onOpenChange,
 }: FilePreviewModalProps) {
+  const strings = useStrings(SCRIPT_STRINGS_PACK)
+  const ui = useUIStrings()
   const [internalOpen, setInternalOpen] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const isControlled = open !== undefined
@@ -105,7 +107,7 @@ export function FilePreviewModal({
             buttonProps.className
           )}
         >
-          {triggerLabel ?? UI_STRINGS.scripts.actions.preview}
+          {triggerLabel ?? ui.scripts.actions.preview}
         </Button>
       )}
       <Dialog
@@ -121,8 +123,8 @@ export function FilePreviewModal({
             onClick={() => setIsFullscreen((current) => !current)}
             aria-label={
               isFullscreen
-                ? SCRIPT_STRINGS.preview.exitFullscreen
-                : SCRIPT_STRINGS.preview.enterFullscreen
+                ? strings.preview.exitFullscreen
+                : strings.preview.enterFullscreen
             }
             className='button ghost p-1'
           >

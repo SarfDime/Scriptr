@@ -2,11 +2,11 @@
 
 import Calendar from '@sanity/icons/Calendar'
 import DocumentPdf from '@sanity/icons/DocumentPdf'
-import { UI_STRINGS } from '@shared/config/strings'
 import type { ExamSession } from '@shared/types/academic.types'
 import { Field } from '@/components/ui/field/Field'
 import { Select } from '@/components/ui/select/Select'
 import type { UseScriptSessionFieldsReturn } from '@/hooks/useScriptSessionFields'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { SCRIPT_FIELD_LABEL_PROPS } from './script-form-layout'
 
 export type ScriptSessionYearFieldsProps = {
@@ -29,6 +29,7 @@ export function ScriptSessionYearFields({
   disabled,
   required = false,
 }: ScriptSessionYearFieldsProps) {
+  const ui = useUIStrings()
   const {
     session,
     isChosen,
@@ -37,6 +38,7 @@ export function ScriptSessionYearFields({
     setYear,
     sessionOptions,
     yearOptions,
+    sessionInvalid,
   } = fields
 
   const choiceKey = isChosen ? (session ?? 'general') : 'none'
@@ -45,23 +47,25 @@ export function ScriptSessionYearFields({
     <>
       <Field
         className='min-w-0'
-        label={UI_STRINGS.scripts.uploadModal.examSessionLabel}
+        label={ui.scripts.uploadModal.examSessionLabel}
         labelProps={SCRIPT_FIELD_LABEL_PROPS}
-        helperText={UI_STRINGS.scripts.uploadModal.examSessionHelp}
+        helperText={ui.scripts.uploadModal.examSessionHelp}
+        errorText={ui.scripts.uploadModal.fieldErrors.sessionRequired}
         required={required}
         valid={isChosen}
+        invalid={required && sessionInvalid}
       >
         <Select<ExamSession | null>
           key={`exam-session-${resetKey}-${choiceKey}`}
-          className='w-full bg-background-200'
+          className='w-full'
           defaultOption={sessionOptions.find(
             (option) => option.value === session && isChosen
           )}
-          placeholder={UI_STRINGS.scripts.uploadModal.examSessionPlaceholder}
+          placeholder={ui.scripts.uploadModal.examSessionPlaceholder}
           options={sessionOptions}
           setSelectedValue={selectSession}
           triggerProps={{
-            'aria-label': UI_STRINGS.scripts.uploadModal.examSessionLabel,
+            'aria-label': ui.scripts.uploadModal.examSessionLabel,
             disabled,
           }}
           icon={<DocumentPdf />}
@@ -70,20 +74,20 @@ export function ScriptSessionYearFields({
 
       <Field
         className='min-w-0'
-        label={UI_STRINGS.scripts.uploadModal.examYearLabel}
+        label={ui.scripts.uploadModal.examYearLabel}
         labelProps={SCRIPT_FIELD_LABEL_PROPS}
-        helperText={UI_STRINGS.scripts.uploadModal.examYearHelp}
+        helperText={ui.scripts.uploadModal.examYearHelp}
       >
         <Select<number | null>
           key={`exam-year-${resetKey}-${choiceKey}-${year ?? 'all'}`}
-          className='w-full bg-background-200'
+          className='w-full'
           defaultOption={yearOptions.find((option) => option.value === year)}
-          placeholder={UI_STRINGS.scripts.uploadModal.examYearPlaceholder}
+          placeholder={ui.scripts.uploadModal.examYearPlaceholder}
           disabled={!isChosen || disabled}
           options={yearOptions}
           setSelectedValue={setYear}
           triggerProps={{
-            'aria-label': UI_STRINGS.scripts.uploadModal.examYearLabel,
+            'aria-label': ui.scripts.uploadModal.examYearLabel,
           }}
           icon={<Calendar />}
         />

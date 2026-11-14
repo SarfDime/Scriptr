@@ -9,7 +9,7 @@ import {
   isReactionType,
 } from '@shared/config/shared-constants'
 import { COMMENT_STRINGS } from '@shared/strings/comments-strings'
-import { NOTIFICATIONS_STRINGS } from '@shared/strings/notifications-strings'
+import { NOTIFICATION_ROW_STRINGS } from '@shared/strings/notifications-strings'
 import type {
   CommentCreateResult,
   CommentFlaggedSummary,
@@ -1411,8 +1411,8 @@ comments.delete('/:id', authMiddleware, async (c) => {
       : 'Comment'
     await notifyProfileBestEffort(c, comment.author_id, {
       type: 'content_removed',
-      title: NOTIFICATIONS_STRINGS.contentRemovedTitle(title),
-      body: NOTIFICATIONS_STRINGS.contentRemovedBody('comment'),
+      title: NOTIFICATION_ROW_STRINGS.contentRemovedTitle(title),
+      body: NOTIFICATION_ROW_STRINGS.contentRemovedBody('comment'),
       data: { target_kind: 'comment', title },
       studyId: commentStudyId,
     })

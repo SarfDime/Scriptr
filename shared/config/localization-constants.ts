@@ -5,9 +5,21 @@ export const LOCALES = [ENGLISH_LOCALE, MACEDONIAN_LOCALE] as const
 
 export type LocaleId = (typeof LOCALES)[number]
 
+/** `title` names the language in English, for the Studio's field labels;
+ * `nativeTitle` names it in its own language, for the reader-facing switch. */
 export const SUPPORTED_LANGUAGES = [
-  { id: ENGLISH_LOCALE, title: 'English', isDefault: true },
-  { id: MACEDONIAN_LOCALE, title: 'Macedonian', isDefault: false },
+  {
+    id: ENGLISH_LOCALE,
+    title: 'English',
+    nativeTitle: 'English',
+    isDefault: true,
+  },
+  {
+    id: MACEDONIAN_LOCALE,
+    title: 'Macedonian',
+    nativeTitle: 'Македонски',
+    isDefault: false,
+  },
 ] as const
 
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number]

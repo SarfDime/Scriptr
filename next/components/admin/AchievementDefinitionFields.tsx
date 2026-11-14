@@ -7,10 +7,11 @@ import {
   type AchievementMetric,
   type AchievementRarity,
 } from '@shared/config/achievements'
-import { ACHIEVEMENTS_STRINGS } from '@shared/strings/achievements-strings'
+import { ACHIEVEMENTS_STRINGS_PACK } from '@shared/strings/achievements-strings'
 import { ADMIN_STRINGS } from '@shared/strings/admin-strings'
 import type { AchievementDefinitionPatch } from '@shared/types/achievements.types'
 import type { AdminStudyOption } from '@shared/types/admin.types'
+import type { ResolvedStrings } from '@shared/types/localization.types'
 import { Box } from '@/components/common/Box'
 import { InputWrapper } from '@/components/typography/InputWrapper'
 import { Text } from '@/components/typography/Text'
@@ -18,6 +19,7 @@ import { Field } from '@/components/ui/field/Field'
 import { Select } from '@/components/ui/select/Select'
 import { getFieldFeedback } from '@/hooks/auth/useTouchedFields'
 import { validateAchievementThreshold } from '@/lib/admin-validation'
+import { useStrings } from '@/providers/locale/use-strings'
 import type { SelectOptionType } from '@/types/components/Select.types'
 import { AchievementDefinitionBadge } from './AchievementDefinitionBadge'
 
@@ -41,11 +43,13 @@ const METRIC_OPTIONS: Array<SelectOptionType<AchievementMetric>> =
     label: ADMIN_STRINGS.achievementMetricNames[metric],
   }))
 
-const RARITY_OPTIONS: Array<SelectOptionType<AchievementRarity>> =
+const rarityOptionsFor = (
+  strings: ResolvedStrings<typeof ACHIEVEMENTS_STRINGS_PACK>
+): Array<SelectOptionType<AchievementRarity>> =>
   ACHIEVEMENT_RARITIES.map((rarity) => ({
     id: rarity,
     value: rarity,
-    label: ACHIEVEMENTS_STRINGS.rarity[rarity],
+    label: strings.rarity[rarity],
   }))
 
 export const getAchievementDefinitionErrors = (
@@ -96,6 +100,8 @@ export const AchievementDefinitionFields = ({
   isTouched,
   touch,
 }: AchievementDefinitionFieldsProps) => {
+  const strings = useStrings(ACHIEVEMENTS_STRINGS_PACK)
+  const rarityOptions = rarityOptionsFor(strings)
   const errors = getAchievementDefinitionErrors(values)
   const scopeOptions: Array<SelectOptionType<string>> = [
     {
@@ -185,10 +191,10 @@ export const AchievementDefinitionFields = ({
       <Field label={ADMIN_STRINGS.achievementRarity}>
         <Select<AchievementRarity>
           defaultOption={
-            RARITY_OPTIONS.find((option) => option.value === values.rarity) ??
-            RARITY_OPTIONS[0]
+            rarityOptions.find((option) => option.value === values.rarity) ??
+            rarityOptions[0]
           }
-          options={RARITY_OPTIONS}
+          options={rarityOptions}
           setSelectedValue={(rarity) => onChange({ rarity })}
           disabled={saving}
           triggerProps={{ 'aria-label': ADMIN_STRINGS.achievementRarity }}

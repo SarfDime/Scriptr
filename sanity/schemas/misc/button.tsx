@@ -2,12 +2,15 @@ import { defineType } from 'sanity'
 import { ButtonColorVariantInput } from '../../components/ButtonColorVariantInput'
 import { ButtonIcon } from '../../components/Icons'
 import type { ButtonColorVariantInputProps } from '../../types/button.types'
-import type { PreviewPrepareProps } from '../../types/common.types'
+import type {
+  LocalizedHeaderPreviewProps,
+  PreviewPrepareProps,
+} from '../../types/common.types'
 import { headerSchemaFields } from '../common/headerFields'
 import { linkSelector } from '../common/link-selector'
 import {
-  generateLinkSelectorPreview,
-  LinkSelectorPreviewSelect,
+  generateLocalizedHeaderPreview,
+  LocalizedHeaderPreviewSelect,
 } from '../util-functions/utilFunctions'
 
 export const Button = defineType({
@@ -16,15 +19,18 @@ export const Button = defineType({
   type: 'document',
   icon: ButtonIcon,
   preview: {
-    select: { ...LinkSelectorPreviewSelect, title: 'stringTitle' },
-    prepare(selection: PreviewPrepareProps) {
+    select: { ...LocalizedHeaderPreviewSelect, variant: 'buttonColorVariant' },
+    prepare(
+      selection: LocalizedHeaderPreviewProps &
+        Pick<PreviewPrepareProps, 'variant'>
+    ) {
       const icon = (
         <ButtonIcon
           className={`button-variant-preview preview-icon ${selection?.variant}`}
           data-variant={selection?.variant}
         />
       )
-      return generateLinkSelectorPreview({
+      return generateLocalizedHeaderPreview({
         ...selection,
         media: icon,
       })

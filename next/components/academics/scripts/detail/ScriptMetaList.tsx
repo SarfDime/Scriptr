@@ -1,6 +1,7 @@
-import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
+import { SCRIPT_STRINGS_PACK } from '@shared/strings/scripts-strings'
 import type { ScriptSummary } from '@shared/types/scripts.types'
 import { NextLink } from '@/components/common/NextLink'
+import { getServerStrings } from '@/lib/server-strings'
 import { ScriptDetailItem } from './ScriptDetailItem'
 
 export type ScriptMetaListProps = {
@@ -13,11 +14,16 @@ export type ScriptMetaListProps = {
 }
 
 /** Subject, exam session/year and download count; absent fields are skipped. */
-export function ScriptMetaList({ script, subjectHref }: ScriptMetaListProps) {
+export async function ScriptMetaList({
+  script,
+  subjectHref,
+}: ScriptMetaListProps) {
+  const strings = await getServerStrings(SCRIPT_STRINGS_PACK)
+
   return (
     <dl className='ui-stack gap-3'>
       {script.subject && (
-        <ScriptDetailItem label={SCRIPT_STRINGS.info.subject}>
+        <ScriptDetailItem label={strings.info.subject}>
           {subjectHref ? (
             <NextLink href={subjectHref} className='hover:text-brand'>
               {script.subject.name}
@@ -28,14 +34,11 @@ export function ScriptMetaList({ script, subjectHref }: ScriptMetaListProps) {
         </ScriptDetailItem>
       )}
       {script.exam_session && (
-        <ScriptDetailItem label={SCRIPT_STRINGS.info.examSession}>
-          {SCRIPT_STRINGS.info.examSessionValue(
-            script.exam_session,
-            script.exam_year
-          )}
+        <ScriptDetailItem label={strings.info.examSession}>
+          {strings.info.examSessionValue(script.exam_session, script.exam_year)}
         </ScriptDetailItem>
       )}
-      <ScriptDetailItem label={SCRIPT_STRINGS.info.downloads}>
+      <ScriptDetailItem label={strings.info.downloads}>
         {script.download_count}
       </ScriptDetailItem>
     </dl>

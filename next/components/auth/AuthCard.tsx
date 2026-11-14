@@ -1,6 +1,6 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
+import { localizedPath } from '@shared/utils/localized-path'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/common/Button'
@@ -9,6 +9,8 @@ import { Text } from '@/components/typography/Text'
 import { Title } from '@/components/typography/Title'
 import { Card } from '@/components/ui/Card'
 import { cn } from '@/lib/common-utils'
+import { useLocale } from '@/providers/locale/LocaleProvider'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { useSession } from '@/providers/SessionProvider'
 import { Box } from '../common/Box'
 import { LoginForm } from './LoginForm'
@@ -40,20 +42,20 @@ export function AuthCard() {
   // homepage instead of leaving a signed-in/out card behind. The first resolved
   // status is the page load itself — someone arriving already signed in keeps
   // the choice of continuing or signing out.
+  const { locale } = useLocale()
+  const ui = useUIStrings()
   const previousStatusRef = useRef(session.status)
   useEffect(() => {
     const previous = previousStatusRef.current
     previousStatusRef.current = session.status
     if (previous === 'loading' || previous === session.status) return
-    router.replace('/')
-  }, [session.status, router])
+    router.replace(localizedPath('/', locale))
+  }, [session.status, router, locale])
 
   if (session.status === 'loading') {
     return (
       <Card className={AUTH_CARD_CLASS}>
-        <Text className='ui-body text-center'>
-          {UI_STRINGS.auth.loadingLabel}
-        </Text>
+        <Text className='ui-body text-center'>{ui.auth.loadingLabel}</Text>
       </Card>
     )
   }
@@ -65,23 +67,23 @@ export function AuthCard() {
       <Box className={AUTH_CARD_CLASS}>
         <Card.Header>
           <Title as='h1' className='ui-title text-center'>
-            {UI_STRINGS.auth.signedInTitle}
+            {ui.auth.signedInTitle}
           </Title>
         </Card.Header>
         <Card.Body className='ui-stack gap-4 text-center'>
           <Text className='ui-body text-fg-muted'>
-            {UI_STRINGS.auth.signedInLabel} {displayName}
+            {ui.auth.signedInLabel} {displayName}
           </Text>
-          <NextLink href='/' className='w-full'>
+          <NextLink href={localizedPath('/', locale)} className='w-full'>
             <Button className='button solid w-full justify-center'>
-              {UI_STRINGS.auth.continueLabel}
+              {ui.auth.continueLabel}
             </Button>
           </NextLink>
           <Button
             onClick={logout}
             className='button subtle w-full justify-center'
           >
-            {UI_STRINGS.auth.logoutButtonLabel}
+            {ui.auth.logoutButtonLabel}
           </Button>
         </Card.Body>
       </Box>
@@ -92,12 +94,10 @@ export function AuthCard() {
     <Box className={AUTH_CARD_CLASS}>
       <Card.Header>
         <Title as='h1' className='ui-title text-center'>
-          {mode === 'login'
-            ? UI_STRINGS.auth.login.title
-            : UI_STRINGS.auth.register.title}
+          {mode === 'login' ? ui.auth.login.title : ui.auth.register.title}
         </Title>
         <Text className='ui-body text-fg-muted text-center'>
-          {UI_STRINGS.auth.subtitle}
+          {ui.auth.subtitle}
         </Text>
       </Card.Header>
 
@@ -108,8 +108,11 @@ export function AuthCard() {
       )}
 
       <Card.Footer className='ui-stack gap-2 border-0 ice-groove-none'>
-        <NextLink href='/' className='button basic w-full justify-center'>
-          {UI_STRINGS.auth.continueAsGuestLabel}
+        <NextLink
+          href={localizedPath('/', locale)}
+          className='button basic w-full justify-center'
+        >
+          {ui.auth.continueAsGuestLabel}
         </NextLink>
       </Card.Footer>
     </Box>

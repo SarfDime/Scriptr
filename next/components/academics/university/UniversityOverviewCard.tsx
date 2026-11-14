@@ -3,13 +3,14 @@ import EarthGlobe from '@sanity/icons/EarthGlobe'
 import Envelope from '@sanity/icons/Envelope'
 import Marker from '@sanity/icons/Marker'
 import MobileDevice from '@sanity/icons/MobileDevice'
-import { UI_STRINGS } from '@shared/config/strings'
+import { UI_STRINGS_PACK } from '@shared/config/strings'
 import { OverviewCard } from '@/components/layout/OverviewCard/OverviewCard'
+import { getServerStrings } from '@/lib/server-strings'
 import type { UniversityDetail } from '@/types/academics/university.types'
 import type { OverviewCardActionItem } from '@/types/components/OverviewCard.types'
 import type { PersonSummary } from '@/types/components/Person.types'
 
-export const UniversityOverviewCard = ({
+export const UniversityOverviewCard = async ({
   website,
   rector,
   streetAddress,
@@ -18,20 +19,21 @@ export const UniversityOverviewCard = ({
   viceRectors: _viceRectors,
   ...university
 }: UniversityDetail) => {
+  const ui = await getServerStrings(UI_STRINGS_PACK)
   const administrators: Array<PersonSummary> = [...(rector ? [rector] : [])]
 
   const actions: Array<OverviewCardActionItem> = [
     website && {
       key: 'website',
       icon: <EarthGlobe />,
-      label: UI_STRINGS.academics.visitWebsite,
+      label: ui.academics.visitWebsite,
       href: website,
       colorPalette: 'cp-brand-int',
     },
     streetAddress && {
       key: 'location',
       icon: <Marker />,
-      label: UI_STRINGS.academics.location,
+      label: ui.academics.location,
       href: streetAddress,
       colorPalette: 'cp-rose-int',
     },
@@ -55,9 +57,9 @@ export const UniversityOverviewCard = ({
 
   return (
     <OverviewCard
-      imageAlt={university.name || UI_STRINGS.academics.universityImageAlt}
+      imageAlt={university.name || ui.academics.universityImageAlt}
       administrators={administrators}
-      eyebrow={UI_STRINGS.academics.aboutUniversity}
+      eyebrow={ui.academics.aboutUniversity}
       eyebrowIcon={<Component />}
       actions={actions}
       {...university}

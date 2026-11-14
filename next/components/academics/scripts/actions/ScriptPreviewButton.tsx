@@ -1,9 +1,9 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import { useState } from 'react'
 import { Button } from '@/components/common/Button'
 import { cn } from '@/lib/common-utils'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import type { ScriptPreviewButtonProps } from '@/types/components/Scripts.types'
 import { PreviewScriptModal } from '../PreviewScriptModal'
 
@@ -21,6 +21,7 @@ export const ScriptPreviewButton = ({
   onClick,
   ...props
 }: ScriptPreviewButtonProps) => {
+  const ui = useUIStrings()
   const [isOpen, setIsOpen] = useState(false)
 
   return (
@@ -34,7 +35,7 @@ export const ScriptPreviewButton = ({
         className={cn('button button-sm solid', className)}
         data-script-id={id}
       >
-        {children ?? UI_STRINGS.scripts.actions.preview}
+        {children ?? ui.scripts.actions.preview}
       </Button>
       <PreviewScriptModal
         scriptId={id}

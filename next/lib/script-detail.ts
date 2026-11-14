@@ -1,4 +1,5 @@
-import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
+import type { SCRIPT_STRINGS_PACK } from '@shared/strings/scripts-strings'
+import type { ResolvedStrings } from '@shared/types/localization.types'
 import type { ScriptFile, ScriptSummary } from '@shared/types/scripts.types'
 
 export const sortFilesByPosition = (
@@ -20,9 +21,11 @@ export const getLinkAddress = (link: string): string =>
   link.replace(/^https?:\/\/(www\.)?/, '')
 
 /** Display data for a script's uploader; copes with a deleted account. */
-export const getAuthorDisplay = (author: ScriptSummary['author']) => ({
-  name:
-    author?.full_name ?? author?.username ?? SCRIPT_STRINGS.info.deletedUser,
+export const getAuthorDisplay = (
+  author: ScriptSummary['author'],
+  strings: ResolvedStrings<typeof SCRIPT_STRINGS_PACK>
+) => ({
+  name: author?.full_name ?? author?.username ?? strings.info.deletedUser,
   username: author?.username ?? null,
   avatarUrl: author?.avatar_url ?? null,
   profileHref: author?.username

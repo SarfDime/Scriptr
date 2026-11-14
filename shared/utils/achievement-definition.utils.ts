@@ -6,7 +6,8 @@
  * checks metric length and the rarity set).
  *
  * Title and description are not edited through the API any more — they come
- * from `ACHIEVEMENT_COPY` — but the DB still caps them, so their limits stay
+ * from `ACHIEVEMENTS_STRINGS_PACK.copy` — but the DB still caps them, so their
+ * limits stay
  * here for the tests that keep the catalogue inside those caps.
  */
 export const ACHIEVEMENT_ID_PATTERN = /^[a-z0-9_]{2,60}$/

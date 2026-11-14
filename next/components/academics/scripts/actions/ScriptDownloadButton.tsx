@@ -1,12 +1,13 @@
 'use client'
 
 import Download from '@sanity/icons/Download'
-import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
+import { SCRIPT_STRINGS_PACK } from '@shared/strings/scripts-strings'
 import type { ScriptFile } from '@shared/types/scripts.types'
 import { useState } from 'react'
 import { Button, type ButtonProps } from '@/components/common/Button'
 import { downloadScript } from '@/lib/api/scripts-api'
 import { cn } from '@/lib/common-utils'
+import { useStrings } from '@/providers/locale/use-strings'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 import type { SanityIconProps } from '@/types/component.types'
 
@@ -32,6 +33,7 @@ export function ScriptDownloadButton({
 }: ScriptDownloadButtonProps) {
   const [isPending, setIsPending] = useState(false)
   const { addToast } = useToast()
+  const strings = useStrings(SCRIPT_STRINGS_PACK)
 
   const handleDownload = async () => {
     setIsPending(true)
@@ -43,8 +45,8 @@ export function ScriptDownloadButton({
     } catch {
       addToast({
         type: 'error',
-        title: SCRIPT_STRINGS.download.failedTitle,
-        description: SCRIPT_STRINGS.download.failedDescription,
+        title: strings.download.failedTitle,
+        description: strings.download.failedDescription,
       })
     } finally {
       setIsPending(false)
@@ -63,8 +65,8 @@ export function ScriptDownloadButton({
         className={cn('overwrite size-5 shrink-0', iconProps?.className)}
       />
       {isPending
-        ? SCRIPT_STRINGS.download.preparing
-        : (children ?? SCRIPT_STRINGS.download.defaultLabel(file.file_type))}
+        ? strings.download.preparing
+        : (children ?? strings.download.defaultLabel(file.file_type))}
     </Button>
   )
 }

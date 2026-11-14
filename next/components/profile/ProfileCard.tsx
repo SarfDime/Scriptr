@@ -1,7 +1,8 @@
+'use client'
+
 import Book from '@sanity/icons/Book'
 import Home from '@sanity/icons/Home'
 import Users from '@sanity/icons/Users'
-import { UI_STRINGS } from '@shared/config/strings'
 import type { ReactNode } from 'react'
 import { Box, type BoxPropsWithoutChildren } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
@@ -10,6 +11,7 @@ import { Avatar } from '@/components/ui/Avatar'
 import { Card } from '@/components/ui/Card'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import type {
   ProfileAcademicEntry,
   ProfileAcademics,
@@ -42,6 +44,7 @@ export const ProfileCard = ({
   className,
   ...props
 }: ProfileCardProps) => {
+  const ui = useUIStrings()
   const color = getColorPalette({ type: 'seed', value: name })
   const { universities, faculties, studies } = academics
 
@@ -67,16 +70,14 @@ export const ProfileCard = ({
         <Box className='ui-stack ui-above-inside w-full grow lg:w-auto'>
           {!faculties.length && !studies.length && (
             <Text className='ui-caption'>
-              {UI_STRINGS.profile.noAcademicAffiliations}
+              {ui.profile.noAcademicAffiliations}
             </Text>
           )}
           {universities.length > 0 && (
             <Box className='ui-cluster items-start gap-2'>
               <Home className='cp-blue rounded-sm p-0.5' />
               <Box className='ui-stack gap-0'>
-                <Text className='ui-label'>
-                  {UI_STRINGS.profile.universities}
-                </Text>
+                <Text className='ui-label'>{ui.profile.universities}</Text>
                 {universities.map((university) => (
                   <AcademicEntryLink key={university.id} entry={university} />
                 ))}
@@ -88,7 +89,7 @@ export const ProfileCard = ({
             <Box className='ui-cluster items-start gap-2'>
               <Users className='cp-amber rounded-sm p-0.5' />
               <Box className='ui-stack gap-0'>
-                <Text className='ui-label'>{UI_STRINGS.profile.faculties}</Text>
+                <Text className='ui-label'>{ui.profile.faculties}</Text>
                 {faculties.map((faculty) => (
                   <AcademicEntryLink key={faculty.id} entry={faculty} />
                 ))}
@@ -100,7 +101,7 @@ export const ProfileCard = ({
             <Box className='ui-cluster items-start gap-2'>
               <Book className='cp-green rounded-sm p-0.5' />
               <Box className='ui-stack gap-0'>
-                <Text className='ui-label'>{UI_STRINGS.profile.studies}</Text>
+                <Text className='ui-label'>{ui.profile.studies}</Text>
                 {studies.map((study) => (
                   <AcademicEntryLink key={study.id} entry={study} />
                 ))}

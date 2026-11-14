@@ -18,7 +18,9 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
+import { DEFAULT_LOCALE } from '../../shared/config/localization-constants'
 import type { Json } from '../../shared/types/database.types'
+import { pickLocalizedPortableText } from '../../shared/utils/localized-portable-text'
 import { portableTextToPlainText } from '../../shared/utils/portable-text.utils'
 import { buildScriptSlug, slugifyTitle } from '../../shared/utils/slug.utils'
 
@@ -74,18 +76,22 @@ const main = async () => {
   )
 
   const pending = stale
-    .map((script) => ({
-      id: script.id,
-      title: portableTextToPlainText(
-        script.title as Parameters<typeof portableTextToPlainText>[0]
-      ),
-      slug: buildScriptSlug(
-        portableTextToPlainText(
-          script.title as Parameters<typeof portableTextToPlainText>[0]
-        ),
-        script.id
-      ),
-    }))
+    .map((script) => {
+      // The title may be the old bare value or the localized map; the slug is
+      // built from what a reader of the default language would see.
+      const title = portableTextToPlainText(
+        pickLocalizedPortableText(
+          script.title as Parameters<typeof pickLocalizedPortableText>[0],
+          DEFAULT_LOCALE
+        ) ?? undefined
+      )
+
+      return {
+        id: script.id,
+        title,
+        slug: buildScriptSlug(title, script.id),
+      }
+    })
     .filter(({ title, slug }) => slug !== `script-${title}`)
 
   const renamed = pending.filter(

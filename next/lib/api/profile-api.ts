@@ -4,6 +4,7 @@ import {
   withQuery,
 } from '@shared/config/api-routes'
 import { PROFILE_CACHE_TAGS } from '@shared/config/cache-tags'
+import type { LocaleId } from '@shared/config/localization-constants'
 import { UPLOAD_FINALIZE_TIMEOUT_MS } from '@shared/config/next-constants'
 import type { QueryApiEndpointType } from '@shared/types/api.types'
 import type {
@@ -213,7 +214,10 @@ export const setProfileRole = (id: string, role: UserRole) =>
  * Resolves to the new stable public URL. Rejections carry messages written for
  * the user, so callers show them as they are.
  */
-export const uploadMyAvatar = async (file: File): Promise<string> => {
+export const uploadMyAvatar = async (
+  file: File,
+  locale: LocaleId
+): Promise<string> => {
   const urlsRequest: AvatarUploadUrlRequest = {
     name: file.name,
     size: file.size,
@@ -225,7 +229,7 @@ export const uploadMyAvatar = async (file: File): Promise<string> => {
     throw toUserFacingUploadError(error)
   })
 
-  await putToStaging(upload, file)
+  await putToStaging(upload, file, locale)
 
   // Cropping and converting can take a moment, like finalizing a script file.
   const uploadRequest: AvatarUploadRequest = {

@@ -21,20 +21,23 @@ export const Subject = defineType({
   ...academicPreview({
     isSubject: true,
     selectExtra: {
-      code: 'code',
+      code: 'localizedCode.en',
+      codeMk: 'localizedCode.mk',
       year: 'year',
       semester: 'semester',
       elective: 'elective',
     },
     formatSubtitle: (selection) => {
-      const { code, year, semester, elective } = selection as {
+      const { code, codeMk, year, semester, elective } = selection as {
         code?: string
+        codeMk?: string
         year?: number
         semester?: number
         elective?: boolean
       }
       const parts: Array<string> = []
-      if (code) parts.push(code)
+      const printedCode = code || codeMk
+      if (printedCode) parts.push(printedCode)
       if (elective) parts.push('Elective')
       if (year) parts.push(`${year}`)
       if (semester) parts.push(`${semester}`)
@@ -56,23 +59,15 @@ export const Subject = defineType({
     {
       title: 'Course Code',
       name: 'codeAsc',
-      by: [{ field: 'code', direction: 'asc' }],
+      by: [{ field: 'localizedCode.en', direction: 'asc' }],
     },
   ],
   fields: [
     ...academicFields(ENTITY, ['name', 'slug']),
-    {
-      name: 'code',
-      title: 'Course Code',
-      description: 'Course or catalog code (e.g., CS101, BIO201).',
-      type: 'string',
-      fieldset: 'information',
-      group: 'information',
-      validation: validationRules.isRequired,
-    },
     localizedField({
       name: 'localizedCode',
-      title: 'Course Code (localized)',
+      title: 'Course Code',
+      description: 'Course or catalog code (e.g., CS101, BIO201).',
       valueType: 'string',
       fieldset: 'information',
       group: 'information',

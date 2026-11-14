@@ -1,5 +1,5 @@
 import Launch from '@sanity/icons/Launch'
-import { UI_STRINGS } from '@shared/config/strings'
+import { UI_STRINGS_PACK } from '@shared/config/strings'
 import type { ReactNode } from 'react'
 import { Box } from '@/components/common/Box'
 import { Text } from '@/components/typography/Text'
@@ -8,10 +8,11 @@ import { DetailLink } from '@/components/ui/DetailLink'
 import { Divider } from '@/components/ui/Divider'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
+import { getServerStrings } from '@/lib/server-strings'
 import type { SubjectDetail } from '@/types/academics/subject.types'
 import { AcademicBadge } from '../AcademicBadge'
 
-export const SubjectHighlightsCard = ({
+export const SubjectHighlightsCard = async ({
   _id,
   year,
   code,
@@ -21,12 +22,13 @@ export const SubjectHighlightsCard = ({
   syllabus,
   children,
 }: SubjectDetail & { children?: ReactNode }) => {
+  const ui = await getServerStrings(UI_STRINGS_PACK)
   const color = getColorPalette({ type: 'seed', value: _id, variant: 'nb' })
   const colorBorder = getColorPalette({ type: 'seed', value: _id })
   return (
     <Card className='ui-stack ui-above'>
       <Text className='ui-label-modern'>
-        {UI_STRINGS.academics.subject.curriculumDetails}
+        {ui.academics.subject.curriculumDetails}
       </Text>
 
       <Box className='ui-cluster gap-2'>
@@ -42,7 +44,7 @@ export const SubjectHighlightsCard = ({
       <Divider className={cn('cp-divider', colorBorder)} />
 
       <Text className='ui-body text-fg-muted'>
-        {UI_STRINGS.academics.subject.revisitPrompt}
+        {ui.academics.subject.revisitPrompt}
       </Text>
 
       {syllabus && (
@@ -50,12 +52,12 @@ export const SubjectHighlightsCard = ({
           <Divider className={cn('cp-divider', colorBorder)} />
           <DetailLink
             href={syllabus}
-            label={UI_STRINGS.academics.subject.syllabusLabel}
+            label={ui.academics.subject.syllabusLabel}
             hideExternalIcon
             className={color}
             value={
               <>
-                {UI_STRINGS.academics.subject.viewSyllabusDocument}
+                {ui.academics.subject.viewSyllabusDocument}
                 <Launch />
               </>
             }

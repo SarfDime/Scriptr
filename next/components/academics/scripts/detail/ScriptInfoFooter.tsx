@@ -1,8 +1,9 @@
-import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
+import { SCRIPT_STRINGS_PACK } from '@shared/strings/scripts-strings'
 import { Box } from '@/components/common/Box'
 import { Badge } from '@/components/ui/Badge'
 import { Divider } from '@/components/ui/Divider'
 import { FlagReportButton } from '@/components/ui/FlagReportButton'
+import { getServerLocale, getServerStrings } from '@/lib/server-strings'
 import { ScriptDetailItem } from './ScriptDetailItem'
 
 export type ScriptInfoFooterProps = {
@@ -14,31 +15,36 @@ export type ScriptInfoFooterProps = {
 
 /** Pinned to the bottom of the info panel: last-updated on the left, report
  * on the right, under their own divider. */
-export function ScriptInfoFooter({
+export async function ScriptInfoFooter({
   scriptId,
   isAuthor,
   updatedAt,
 }: ScriptInfoFooterProps) {
+  const strings = await getServerStrings(SCRIPT_STRINGS_PACK)
+  const locale = await getServerLocale()
+
   return (
     <Box className='ui-stack mt-auto gap-3'>
       <Divider />
       <Box className='ui-cluster items-end justify-between gap-2'>
         <dl>
-          <ScriptDetailItem label={SCRIPT_STRINGS.info.updated}>
-            {new Date(updatedAt).toLocaleDateString()}
+          <ScriptDetailItem label={strings.info.updated}>
+            {new Date(updatedAt).toLocaleDateString(
+              locale === 'mk' ? 'mk-MK' : 'en-GB'
+            )}
           </ScriptDetailItem>
         </dl>
         {!isAuthor && (
           <FlagReportButton
             targetType='script'
             targetId={scriptId}
-            triggerLabel={SCRIPT_STRINGS.info.reportTrigger}
+            triggerLabel={strings.info.reportTrigger}
             triggerClassName='button button-sm cp-warning-int shrink-0 gap-1.5 px-3 py-1.5 font-medium'
           />
         )}
         {isAuthor && (
           <Badge colorPalette='cp-brand' className='ui-label h-full'>
-            {SCRIPT_STRINGS.info.yourScript}
+            {strings.info.yourScript}
           </Badge>
         )}
       </Box>

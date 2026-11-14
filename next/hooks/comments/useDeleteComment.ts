@@ -1,11 +1,13 @@
 'use client'
 
-import { COMMENT_STRINGS } from '@shared/strings/comments-strings'
+import { COMMENT_STRINGS_PACK } from '@shared/strings/comments-strings'
 import { useState } from 'react'
 import { useCommentsServices } from '@/components/comments/CommentsProvider'
+import { useStrings } from '@/providers/locale/use-strings'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 
 export function useDeleteComment(commentId: string) {
+  const strings = useStrings(COMMENT_STRINGS_PACK)
   const { api, removeComment } = useCommentsServices()
   const { addToast } = useToast()
   const [isDeleting, setIsDeleting] = useState(false)
@@ -21,8 +23,8 @@ export function useDeleteComment(commentId: string) {
       setIsDeleting(false)
       addToast({
         type: 'error',
-        title: COMMENT_STRINGS.deletion.error,
-        description: COMMENT_STRINGS.general.tryAgain,
+        title: strings.deletion.error,
+        description: strings.general.tryAgain,
       })
     }
   }

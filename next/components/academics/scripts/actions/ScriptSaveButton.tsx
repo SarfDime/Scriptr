@@ -1,13 +1,14 @@
 'use client'
 
 import BookmarkIcon from '@sanity/icons/Bookmark'
-import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
+import { SCRIPT_STRINGS_PACK } from '@shared/strings/scripts-strings'
 import { useState } from 'react'
 import { Button } from '@/components/common/Button'
 import { Text } from '@/components/typography/Text'
 import { useRequireSignIn } from '@/hooks/useRequireSignIn'
 import { addFavorite, removeFavorite } from '@/lib/api/favorites-api'
 import { cn } from '@/lib/common-utils'
+import { useStrings } from '@/providers/locale/use-strings'
 import { useMyProfileActions } from '@/providers/ProfileProvider'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 
@@ -35,6 +36,7 @@ export function ScriptSaveButton({
   const [saved, setSaved] = useState(initialSaved)
   const [isPending, setIsPending] = useState(false)
   const { addToast } = useToast()
+  const strings = useStrings(SCRIPT_STRINGS_PACK)
   const requireSignIn = useRequireSignIn()
   const { reload: reloadProfile } = useMyProfileActions()
 
@@ -55,9 +57,9 @@ export function ScriptSaveButton({
       addToast({
         type: 'error',
         title: wasSaved
-          ? SCRIPT_STRINGS.favorite.failedTitleRemove
-          : SCRIPT_STRINGS.favorite.failedTitleAdd,
-        description: SCRIPT_STRINGS.favorite.failedDescription,
+          ? strings.favorite.failedTitleRemove
+          : strings.favorite.failedTitleAdd,
+        description: strings.favorite.failedDescription,
       })
     } finally {
       setIsPending(false)
@@ -69,9 +71,7 @@ export function ScriptSaveButton({
       onClick={handleClick}
       disabled={disabled || isPending}
       aria-pressed={saved}
-      aria-label={
-        saved ? SCRIPT_STRINGS.favorite.remove : SCRIPT_STRINGS.favorite.add
-      }
+      aria-label={saved ? strings.favorite.remove : strings.favorite.add}
       className={cn(
         'button subtle button-sm gap-1.5',
         saved && 'cp-yellow',
@@ -79,7 +79,7 @@ export function ScriptSaveButton({
       )}
     >
       <BookmarkIcon className={cn(saved && 'fill-current')} />
-      <Text>{SCRIPT_STRINGS.favorite.favorite}</Text>
+      <Text>{strings.favorite.favorite}</Text>
     </Button>
   )
 }

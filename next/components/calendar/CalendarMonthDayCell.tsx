@@ -1,10 +1,11 @@
 'use client'
 
-import { CALENDAR_STRINGS } from '@shared/strings/calendar-strings'
+import { CALENDAR_STRINGS_PACK } from '@shared/strings/calendar-strings'
 import { Box } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
 import { Text } from '@/components/typography/Text'
 import { cn } from '@/lib/common-utils'
+import { useStrings } from '@/providers/locale/use-strings'
 import type { CalendarDay } from '@/types/components/Calendar.types'
 import { Divider } from '../ui/Divider'
 import { CalendarEventChip } from './CalendarEventChip'
@@ -22,6 +23,7 @@ const MAX_CELL_CHIPS = 3
  * events). The cell is a client component only because of its notes.
  */
 export const CalendarMonthDayCell = ({ day }: { day: CalendarDay }) => {
+  const strings = useStrings(CALENDAR_STRINGS_PACK)
   const hasEvents = day.events.length > 0
   const hiddenChips = day.events.length - MAX_CELL_CHIPS
 
@@ -57,7 +59,7 @@ export const CalendarMonthDayCell = ({ day }: { day: CalendarDay }) => {
 
         {hasEvents && hiddenChips > 0 && (
           <Text as='span' className='ui-small-label text-fg-muted min-w-max'>
-            {CALENDAR_STRINGS.moreEvents(hiddenChips)}
+            {strings.moreEvents(hiddenChips)}
           </Text>
         )}
       </Text>
@@ -84,10 +86,7 @@ export const CalendarMonthDayCell = ({ day }: { day: CalendarDay }) => {
       {hasEvents && (
         <NextLink
           href={day.weekHref}
-          aria-label={CALENDAR_STRINGS.dayCellLabel(
-            day.label,
-            day.events.length
-          )}
+          aria-label={strings.dayCellLabel(day.label, day.events.length)}
           className='absolute inset-0 rounded-lg'
         />
       )}

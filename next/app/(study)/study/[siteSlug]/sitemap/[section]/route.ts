@@ -3,15 +3,20 @@ import { SITEMAP_CONTENT_TYPE, toSitemapUrlsetXml } from '@/lib/sitemap-xml'
 import { studySiteOrigin } from '@/lib/study-origin'
 import { getStudySiteOrNotFound } from '@/lib/study-site'
 import {
+  buildStudySitemapIndex,
   buildStudySitemapSection,
   listStudySitemapSections,
   listStudySites,
+  STUDY_SITEMAP_INDEX_SECTION,
 } from '@/lib/study-sitemap'
 
 /**
  * One file of a study's sitemap: its pages, or one page of its scripts. The
  * study's `/sitemap.xml` indexes these, and every URL in them is on the study's
  * own host.
+ *
+ * Like the index beside it, this sits outside `app/[locale]`: a sitemap entry
+ * carries both languages, so the address has none.
  */
 export const revalidate = false
 
@@ -25,6 +30,12 @@ export const generateStaticParams = async (): Promise<
   const params: Array<{ siteSlug: string; section: string }> = []
 
   for (const siteSlug of await listStudySites()) {
+    // The index is a section of the route, not of the sitemap it publishes.
+    params.push({
+      siteSlug,
+      section: `${STUDY_SITEMAP_INDEX_SECTION}${XML_SUFFIX}`,
+    })
+
     for (const section of await listStudySitemapSections(siteSlug)) {
       params.push({ siteSlug, section: `${section.id}${XML_SUFFIX}` })
     }
@@ -45,10 +56,16 @@ export async function GET(
     return new NextResponse(null, { status: 404 })
   }
 
-  const entries = await buildStudySitemapSection(
-    siteSlug,
-    section.slice(0, -XML_SUFFIX.length)
-  )
+  const id = section.slice(0, -XML_SUFFIX.length)
+  if (id === STUDY_SITEMAP_INDEX_SECTION) {
+    const index = await buildStudySitemapIndex(siteSlug)
+    return new NextResponse(index || null, {
+      status: index ? 200 : 404,
+      headers: { 'Content-Type': SITEMAP_CONTENT_TYPE },
+    })
+  }
+
+  const entries = await buildStudySitemapSection(siteSlug, id)
 
   return new NextResponse(toSitemapUrlsetXml(entries), {
     headers: { 'Content-Type': SITEMAP_CONTENT_TYPE },

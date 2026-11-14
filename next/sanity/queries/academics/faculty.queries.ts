@@ -1,5 +1,10 @@
 import { groq } from 'next-sanity'
 import { sanityFunctionQueries } from '../functions.queries'
+import {
+  localizedBlocksProjection,
+  localizedProjection,
+  localizedValue,
+} from '../localized.queries'
 import { minimalProfessorQuery } from './professor.queries'
 import { minimalStudyQuery } from './study.queries'
 
@@ -13,47 +18,47 @@ ${sanityFunctionQueries}
 ][0] {
   _id,
   "slug": slug.current,
-  name,
-  description,
+  ${localizedProjection('name', 'localizedName')},
+  ${localizedBlocksProjection('description', 'localizedDescription')},
 }
 `
 
 const minimalFacultyQuery = /* groq */ `
 _id,
 "slug": slug.current,
-name,
+${localizedProjection('name', 'localizedName')},
 studentCount,
 "picture": sanityImage::full(picture),
 "logo": sanityImage::full(logo),
 dean->{
   _id,
-  name,
-  title,
+  ${localizedProjection('name', 'localizedName')},
+  ${localizedProjection('title', 'localizedTitle')},
   "picture": sanityImage::full(picture)
 },
 secretary->{
   _id,
-  name,
-  title,
+  ${localizedProjection('name', 'localizedName')},
+  ${localizedProjection('title', 'localizedTitle')},
   "picture": sanityImage::full(picture)
 },
 viceDeans[]->{
   _id,
-  name,
-  title,
+  ${localizedProjection('name', 'localizedName')},
+  ${localizedProjection('title', 'localizedTitle')},
   "picture": sanityImage::full(picture)
 },
 university->{
   _id,
   "slug": slug.current,
-  name
+  ${localizedProjection('name', 'localizedName')}
 },
 "studyCount": count(*[_type == "study" && references(^._id) && dbId != null]),
 "professorCount": count(*[_type == "professor" && references(^._id) && dbId != null]),
-"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(name asc) {
+"professors": *[_type == "professor" && references(^._id) && dbId != null] | order(${localizedValue('localizedName')} asc) {
   ${minimalProfessorQuery}
 },
-"studies": *[_type == "study" && references(^._id) && dbId != null] | order(name asc) {
+"studies": *[_type == "study" && references(^._id) && dbId != null] | order(${localizedValue('localizedName')} asc) {
   ${minimalStudyQuery}
 },
 `
@@ -80,7 +85,7 @@ ${sanityFunctionQueries}
 ][0] {
   ${minimalFacultyQuery}
   _type,
-  description,
+  ${localizedBlocksProjection('description', 'localizedDescription')},
   streetAddress,
   telephone,
   email,

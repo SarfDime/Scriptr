@@ -1,28 +1,34 @@
-import { UI_STRINGS } from '@shared/config/strings'
+import { UI_STRINGS_PACK } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { EntityCard } from '@/components/common/EntityCard'
 import { NextImage } from '@/components/common/NextImage'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
-import { Card } from '@/components/ui/Card'
 import { getAcademicPath } from '@/lib/academic-routes'
+import { getServerLocale, getServerStrings } from '@/lib/server-strings'
 import { IMAGE_SIZES } from '@/styles/style'
 import type { MinimalStudy } from '@/types/academics/study.types'
 
 type StudyExplorerProps = {
   studies: Array<MinimalStudy>
-  title: string
-  emptyMessage: string
+  /** Defaults to the section's own heading and empty state. */
+  title?: string
+  emptyMessage?: string
 }
 
-export const StudyExplorer = ({
+export const StudyExplorer = async ({
   studies,
   title,
   emptyMessage,
 }: StudyExplorerProps) => {
+  const locale = await getServerLocale()
+  const ui = await getServerStrings(UI_STRINGS_PACK)
   return (
-    <Card className='ui-stack ui-above'>
-      <SectionHeader title={title} count={studies.length} />
+    <Box className='ui-stack ui-above'>
+      <SectionHeader
+        title={title ?? ui.academics.studiesTitle}
+        count={studies.length}
+      />
 
       {studies.length > 0 ? (
         <Box className='ui-grid-split'>
@@ -35,13 +41,16 @@ export const StudyExplorer = ({
             return (
               <EntityCard
                 key={study._id}
-                href={getAcademicPath({
-                  type: 'study',
-                  siteSlug: study.siteSlug,
-                  universitySlug,
-                  facultySlug,
-                  studySlug: study.slug,
-                })}
+                href={getAcademicPath(
+                  {
+                    type: 'study',
+                    siteSlug: study.siteSlug,
+                    universitySlug,
+                    facultySlug,
+                    studySlug: study.slug,
+                  },
+                  locale
+                )}
                 media={
                   study.logo ? (
                     <NextImage
@@ -55,7 +64,7 @@ export const StudyExplorer = ({
                   ) : undefined
                 }
                 title={study.name}
-                subtitle={UI_STRINGS.academics.studySummary(
+                subtitle={ui.academics.studySummary(
                   study.subjectCount,
                   study.professorCount
                 )}
@@ -65,8 +74,10 @@ export const StudyExplorer = ({
           })}
         </Box>
       ) : (
-        <Text className='ui-caption ui-above-inside'>{emptyMessage}</Text>
+        <Text className='ui-caption ui-above-inside'>
+          {emptyMessage ?? ui.academics.noStudies}
+        </Text>
       )}
-    </Card>
+    </Box>
   )
 }

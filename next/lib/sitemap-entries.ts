@@ -1,5 +1,10 @@
+import {
+  DEFAULT_LOCALE,
+  type LocaleId,
+} from '@shared/config/localization-constants'
 import { createAcademicStaticParams } from '@/lib/academic-detail-page'
 import { getAcademicPath } from '@/lib/academic-routes'
+import { languageAlternates } from '@/lib/localized-metadata'
 import { ACADEMIC_CATALOG_TAGS } from '@/lib/sanity-tags'
 import { CATALOG_SECTION, hasSiteOrigin } from '@/lib/sitemap-sections'
 import type { SitemapEntry } from '@/lib/sitemap-xml'
@@ -33,8 +38,19 @@ const readParams = <TParams extends Record<string, string>>(
     ACADEMIC_CATALOG_TAGS
   )().then((rows) => rows.filter(isComplete))
 
-const toCatalogEntries = async (
+/** One entry per page: the address a crawler should read plus each language's
+ * address as an alternate. */
+const toEntry = (
+  path: string,
   toUrl: (path: string) => string
+): SitemapEntry => {
+  const url = toUrl(path)
+  return { url, alternates: languageAlternates(url) }
+}
+
+const toCatalogEntries = async (
+  toUrl: (path: string) => string,
+  locale: LocaleId
 ): Promise<Array<SitemapEntry>> => {
   // Every study is a site of its own with its own sitemap, so the catalog lists
   // only the levels above it — a study URL here would publish a second address
@@ -55,17 +71,17 @@ const toCatalogEntries = async (
   ])
 
   return [
-    { url: toUrl('/') },
-    { url: toUrl('/search') },
-    ...universities.map((params) => ({
-      url: toUrl(getAcademicPath({ type: 'university', ...params })),
-    })),
-    ...faculties.map((params) => ({
-      url: toUrl(getAcademicPath({ type: 'faculty', ...params })),
-    })),
-    ...professors.map((params) => ({
-      url: toUrl(getAcademicPath({ type: 'professor', ...params })),
-    })),
+    toEntry('/', toUrl),
+    toEntry('/search', toUrl),
+    ...universities.map((params) =>
+      toEntry(getAcademicPath({ type: 'university', ...params }, locale), toUrl)
+    ),
+    ...faculties.map((params) =>
+      toEntry(getAcademicPath({ type: 'faculty', ...params }, locale), toUrl)
+    ),
+    ...professors.map((params) =>
+      toEntry(getAcademicPath({ type: 'professor', ...params }, locale), toUrl)
+    ),
   ]
 }
 
@@ -78,9 +94,13 @@ const toCatalogEntries = async (
  * `lib/study-sitemap.ts`.
  */
 export const buildSitemapSection = async (
-  id: string
+  id: string,
+  locale: LocaleId = DEFAULT_LOCALE
 ): Promise<Array<SitemapEntry>> => {
   if (!hasSiteOrigin() || id !== CATALOG_SECTION) return []
 
-  return toCatalogEntries((path) => new URL(path, websiteDomain).toString())
+  return toCatalogEntries(
+    (path) => new URL(path, websiteDomain).toString(),
+    locale
+  )
 }

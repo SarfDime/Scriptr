@@ -1,6 +1,5 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import type { StudyPickerQueryResult } from '@shared/types/sanity.types'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -10,6 +9,8 @@ import { NextLink } from '@/components/common/NextLink'
 import { OnboardingSelectStep } from '@/components/onboarding/OnboardingSelectStep'
 import { Text } from '@/components/typography/Text'
 import { getStudySetupUrl } from '@/lib/academic-routes'
+import { useLocale } from '@/providers/locale/LocaleProvider'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { useSession } from '@/providers/SessionProvider'
 
 export type StudyPickerCatalog = NonNullable<StudyPickerQueryResult>
@@ -27,6 +28,8 @@ export type StudyPickerCatalog = NonNullable<StudyPickerQueryResult>
  * the setup page it would land on is the one that updates it.
  */
 export const StudyPicker = ({ catalog }: { catalog: StudyPickerCatalog }) => {
+  const { locale } = useLocale()
+  const ui = useUIStrings()
   const router = useRouter()
   const { session } = useSession()
   const [universityId, setUniversityId] = useState<string | null>(null)
@@ -63,19 +66,17 @@ export const StudyPicker = ({ catalog }: { catalog: StudyPickerCatalog }) => {
     if (!selectedStudy?.siteSlug || isJoined) return
     // The setup page belongs to the study's own site, which the picker is
     // not on: this has to be the study's address, not a path here.
-    router.push(getStudySetupUrl(selectedStudy.siteSlug))
+    router.push(getStudySetupUrl(selectedStudy.siteSlug, locale))
   }
 
   if (catalog.studies.length === 0) {
-    return (
-      <p className='ui-caption'>{UI_STRINGS.onboarding.studySelection.empty}</p>
-    )
+    return <p className='ui-caption'>{ui.onboarding.studySelection.empty}</p>
   }
 
   return (
     <Box className='ui-stack ui-above'>
       <OnboardingSelectStep
-        title={UI_STRINGS.onboarding.universityTitle}
+        title={ui.onboarding.universityTitle}
         options={catalog.universities.map((university) => ({
           id: university._id,
           name: university.name,
@@ -84,7 +85,7 @@ export const StudyPicker = ({ catalog }: { catalog: StudyPickerCatalog }) => {
         onSelect={chooseUniversity}
       />
       <OnboardingSelectStep
-        title={UI_STRINGS.onboarding.facultyTitle}
+        title={ui.onboarding.facultyTitle}
         options={faculties.map((faculty) => ({
           id: faculty._id,
           name: faculty.name,
@@ -92,11 +93,11 @@ export const StudyPicker = ({ catalog }: { catalog: StudyPickerCatalog }) => {
         selectedId={facultyId}
         onSelect={chooseFaculty}
         disabledReason={
-          universityId ? undefined : UI_STRINGS.onboarding.selectUniversityFirst
+          universityId ? undefined : ui.onboarding.selectUniversityFirst
         }
       />
       <OnboardingSelectStep
-        title={UI_STRINGS.onboarding.studyTitle}
+        title={ui.onboarding.studyTitle}
         options={studies.map((study) => ({
           id: study._id,
           name: study.name,
@@ -104,7 +105,7 @@ export const StudyPicker = ({ catalog }: { catalog: StudyPickerCatalog }) => {
         selectedId={studyId}
         onSelect={setStudyId}
         disabledReason={
-          facultyId ? undefined : UI_STRINGS.onboarding.selectFacultyFirst
+          facultyId ? undefined : ui.onboarding.selectFacultyFirst
         }
       />
       {/* One wrapping row: the reason sits beside Continue and drops under it
@@ -115,16 +116,16 @@ export const StudyPicker = ({ catalog }: { catalog: StudyPickerCatalog }) => {
           disabled={!selectedStudy?.siteSlug || isJoined}
           onClick={enter}
         >
-          {UI_STRINGS.onboarding.continue}
+          {ui.onboarding.continue}
         </Button>
         {isJoined && selectedStudy?.siteSlug && (
           <Text className='ui-caption'>
-            {UI_STRINGS.onboarding.studySelection.alreadyAdded}{' '}
+            {ui.onboarding.studySelection.alreadyAdded}{' '}
             <NextLink
-              href={getStudySetupUrl(selectedStudy.siteSlug)}
+              href={getStudySetupUrl(selectedStudy.siteSlug, locale)}
               className='text-brand underline-offset-2 hover:underline'
             >
-              {UI_STRINGS.onboarding.studySelection.alreadyAddedEdit}
+              {ui.onboarding.studySelection.alreadyAddedEdit}
             </NextLink>
           </Text>
         )}

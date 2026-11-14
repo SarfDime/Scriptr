@@ -3,8 +3,7 @@
 import CollapseIcon from '@sanity/icons/Collapse'
 import ExpandIcon from '@sanity/icons/Expand'
 import EyeOpen from '@sanity/icons/EyeOpen'
-import { UI_STRINGS } from '@shared/config/strings'
-import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
+import { SCRIPT_STRINGS_PACK } from '@shared/strings/scripts-strings'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
 import type { ScriptFile } from '@shared/types/scripts.types'
 import { useEffect, useState } from 'react'
@@ -20,6 +19,7 @@ import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
 import { formatFileSize, getPreviewableKind } from '@/lib/file-preview'
 import { getScriptFileLabel, getScriptFileName } from '@/lib/script-file-name'
+import { useStrings, useUIStrings } from '@/providers/locale/use-strings'
 import { ScriptDownloadButton } from './actions/ScriptDownloadButton'
 import { StoredFilePreviewContent } from './FilePreviewContent'
 import { ScriptPanel } from './ScriptPanel'
@@ -46,6 +46,8 @@ export function PreviewScriptModal({
   isOpen,
   onClose,
 }: PreviewScriptModalProps) {
+  const strings = useStrings(SCRIPT_STRINGS_PACK)
+  const ui = useUIStrings()
   const [isFullscreen, setIsFullscreen] = useState(false)
 
   const firstPreviewableFile = files.find((file) =>
@@ -90,8 +92,8 @@ export function PreviewScriptModal({
             onClick={() => setIsFullscreen((current) => !current)}
             aria-label={
               isFullscreen
-                ? SCRIPT_STRINGS.preview.exitFullscreen
-                : SCRIPT_STRINGS.preview.enterFullscreen
+                ? strings.preview.exitFullscreen
+                : strings.preview.enterFullscreen
             }
             className='button ghost p-1'
           >
@@ -123,7 +125,7 @@ export function PreviewScriptModal({
 
         {files.length === 0 ? (
           <Text className='ui-caption'>
-            {UI_STRINGS.scripts.actions.noFilesAttached}
+            {ui.scripts.actions.noFilesAttached}
           </Text>
         ) : (
           <Box
@@ -146,20 +148,20 @@ export function PreviewScriptModal({
                     className={cn('ui-label', isFullscreen && 'hidden')}
                     aria-live='polite'
                   >
-                    {SCRIPT_STRINGS.preview.previewing(
-                      getScriptFileName(selectedFile)
+                    {strings.preview.previewing(
+                      getScriptFileName(selectedFile, strings)
                     )}
                   </Text>
                   <StoredFilePreviewContent
                     fileKey={selectedFile.file_url}
                     kind={selectedFileKind}
-                    fileName={getScriptFileName(selectedFile)}
+                    fileName={getScriptFileName(selectedFile, strings)}
                     fillHeight={isFullscreen}
                   />
                 </>
               ) : (
                 <Text className='ui-caption'>
-                  {SCRIPT_STRINGS.preview.noPreviewSelected}
+                  {strings.preview.noPreviewSelected}
                 </Text>
               )}
             </ScriptPanel>
@@ -169,10 +171,10 @@ export function PreviewScriptModal({
             >
               <Box className='ui-stack gap-1'>
                 <Title as='h3' className='ui-title'>
-                  {SCRIPT_STRINGS.preview.filesTitle}
+                  {strings.preview.filesTitle}
                 </Title>
                 <Text className='ui-caption'>
-                  {SCRIPT_STRINGS.preview.filesSubtitle}
+                  {strings.preview.filesSubtitle}
                 </Text>
               </Box>
 
@@ -204,7 +206,9 @@ function PreviewFileRow({
   isSelected: boolean
   onPreview: () => void
 }) {
-  const fileName = getScriptFileName(file)
+  const strings = useStrings(SCRIPT_STRINGS_PACK)
+  const ui = useUIStrings()
+  const fileName = getScriptFileName(file, strings)
   const kind = getPreviewableKind(file.file_type)
   const color = getColorPalette({ type: 'seed', value: file.file_type })
 
@@ -216,7 +220,7 @@ function PreviewFileRow({
     >
       <Box className='ui-cluster min-w-0 items-center gap-2'>
         <Text className='ui-label min-w-0 max-w-full truncate'>
-          {getScriptFileLabel(file)}
+          {getScriptFileLabel(file, strings)}
         </Text>
         <Badge colorPalette={color}>{file.file_type.toUpperCase()}</Badge>
         <Text className='ui-caption'>
@@ -224,18 +228,18 @@ function PreviewFileRow({
         </Text>
       </Box>
       <Text className='ui-caption'>
-        {SCRIPT_STRINGS.file.summary(file.file_type, Boolean(kind))}
+        {strings.file.summary(file.file_type, Boolean(kind))}
       </Text>
       <Box className='ui-cluster gap-2'>
         {kind && (
           <Button
             onClick={onPreview}
-            aria-label={SCRIPT_STRINGS.preview.previewFile(fileName)}
+            aria-label={strings.preview.previewFile(fileName)}
             aria-pressed={isSelected}
             className='button button-sm hollow grow'
           >
             <EyeOpen className='overwrite size-4 shrink-0' />
-            {UI_STRINGS.scripts.actions.preview}
+            {ui.scripts.actions.preview}
           </Button>
         )}
         <ScriptDownloadButton
@@ -243,7 +247,7 @@ function PreviewFileRow({
           file={file}
           className='button-sm subtle grow'
         >
-          {UI_STRINGS.scripts.actions.download}
+          {ui.scripts.actions.download}
         </ScriptDownloadButton>
       </Box>
     </ScriptPanel>

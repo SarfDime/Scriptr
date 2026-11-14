@@ -1,7 +1,7 @@
 import { portableTextToPlainText } from '@shared/utils/portable-text.utils'
-import { defineField, defineType } from 'sanity'
+import { defineType } from 'sanity'
 import { headerSchemaFields } from '../common/headerFields'
-import { validationRules } from '../validation'
+import { localizedField } from '../common/localeFields'
 
 /** Sanity-only content: no `dbId`, no Create/Sync actions, no internal API
  * call. The site shows one published tip per day in the navbar. */
@@ -11,12 +11,18 @@ export const StudyTip = defineType({
   type: 'document',
   preview: {
     select: {
-      title: 'title',
-      content: 'content',
+      title: 'localizedTitle.en',
+      titleMk: 'localizedTitle.mk',
+      content: 'localizedContent.en',
+      contentMk: 'localizedContent.mk',
     },
-    prepare: ({ title, content }) => ({
-      title: portableTextToPlainText(title) || 'Untitled study tip',
-      subtitle: portableTextToPlainText(content),
+    prepare: ({ title, titleMk, content, contentMk }) => ({
+      title:
+        portableTextToPlainText(title) ||
+        portableTextToPlainText(titleMk) ||
+        'Untitled study tip',
+      subtitle:
+        portableTextToPlainText(content) || portableTextToPlainText(contentMk),
     }),
   },
   fields: [
@@ -26,13 +32,13 @@ export const StudyTip = defineType({
       isRequired: true,
       description: 'The heading of the study tip, shown in the navigation.',
     }),
-    defineField({
-      name: 'content',
+    localizedField({
+      name: 'localizedContent',
       title: 'Tip content',
-      type: 'richTextLite',
       description:
         'The tip itself, shown under the title. One published tip is shown per day.',
-      validation: (rule) => validationRules.descriptionValidation(rule, true),
+      valueType: 'richTextLite',
+      isRequired: true,
     }),
   ],
 })

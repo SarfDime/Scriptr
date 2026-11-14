@@ -1,7 +1,7 @@
 'use client'
 
 import CogIcon from '@sanity/icons/Cog'
-import { PREFERENCES_STRINGS } from '@shared/strings/preferences-strings'
+import { PREFERENCES_STRINGS_PACK } from '@shared/strings/preferences-strings'
 import type {
   AchievementNotificationPreference,
   ProfilePreferences,
@@ -18,47 +18,25 @@ import { Field } from '@/components/ui/field/Field'
 import { Select } from '@/components/ui/select/Select'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 import { usePreferencesForm } from '@/hooks/profile/usePreferencesForm'
+import { useStrings } from '@/providers/locale/use-strings'
 import type { SelectOptionType } from '@/types/components/Select.types'
 import { Divider } from '../ui/Divider'
 import { CalendarNotesSyncSection } from './CalendarNotesSyncSection'
 
 type ToastPreference = 'on' | 'off'
 
-const TOAST_OPTIONS: Array<SelectOptionType<ToastPreference>> = [
-  { id: 'on', value: 'on', label: PREFERENCES_STRINGS.notifications.toastsOn },
-  {
-    id: 'off',
-    value: 'off',
-    label: PREFERENCES_STRINGS.notifications.toastsOff,
-  },
-]
-
-const ACHIEVEMENT_OPTIONS: Array<
-  SelectOptionType<AchievementNotificationPreference>
-> = [
-  {
-    id: 'show',
-    value: 'show',
-    label: PREFERENCES_STRINGS.notifications.achievementsShow,
-  },
-  {
-    id: 'hide',
-    value: 'hide',
-    label: PREFERENCES_STRINGS.notifications.achievementsHide,
-  },
-]
-
 /** Gear trigger plus the global preferences modal. The modal only mounts
  * while open, so each opening loads the saved preferences afresh. */
 export const PreferencesButton = () => {
   const [isOpen, setIsOpen] = useState(false)
+  const strings = useStrings(PREFERENCES_STRINGS_PACK)
 
   return (
     <>
       <Button
         onClick={() => setIsOpen(true)}
-        aria-label={PREFERENCES_STRINGS.openLabel}
-        title={PREFERENCES_STRINGS.openLabel}
+        aria-label={strings.openLabel}
+        title={strings.openLabel}
         className='button button-sm subtle'
       >
         <CogIcon />
@@ -71,6 +49,7 @@ export const PreferencesButton = () => {
 const PreferencesDialog = ({ onClose }: { onClose: () => void }) => {
   const { draft, dirty, loadError, saving, load, updateNotifications, save } =
     usePreferencesForm()
+  const strings = useStrings(PREFERENCES_STRINGS_PACK)
 
   const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -82,7 +61,7 @@ const PreferencesDialog = ({ onClose }: { onClose: () => void }) => {
       as='section'
       isOpen
       hideTrigger
-      title={PREFERENCES_STRINGS.title}
+      title={strings.title}
       onClose={onClose}
       placement='center'
       dialogProps={{
@@ -93,10 +72,8 @@ const PreferencesDialog = ({ onClose }: { onClose: () => void }) => {
         <Card.Body className='ui-stack gap-4 p-4'>
           <Box className='ui-stack'>
             <SectionHeader
-              title={PREFERENCES_STRINGS.notifications.title}
-              subtitle={
-                PREFERENCES_STRINGS.notifications.moderationAlwaysDelivered
-              }
+              title={strings.notifications.title}
+              subtitle={strings.notifications.moderationAlwaysDelivered}
             />
             <PreferencesFields
               draft={draft}
@@ -109,9 +86,9 @@ const PreferencesDialog = ({ onClose }: { onClose: () => void }) => {
           <CalendarNotesSyncSection />
         </Card.Body>
         <DialogFooter
-          secondaryLabel={PREFERENCES_STRINGS.cancel}
+          secondaryLabel={strings.cancel}
           onSecondary={onClose}
-          primaryLabel={PREFERENCES_STRINGS.save}
+          primaryLabel={strings.save}
           primaryDisabled={!dirty}
           primaryLoading={saving}
         />
@@ -133,14 +110,27 @@ const PreferencesFields = ({
   onRetry,
   onChange,
 }: PreferencesFieldsProps) => {
+  const strings = useStrings(PREFERENCES_STRINGS_PACK)
+  const { notifications } = strings
+  const toastOptions: Array<SelectOptionType<ToastPreference>> = [
+    { id: 'on', value: 'on', label: notifications.toastsOn },
+    { id: 'off', value: 'off', label: notifications.toastsOff },
+  ]
+  const achievementOptions: Array<
+    SelectOptionType<AchievementNotificationPreference>
+  > = [
+    { id: 'show', value: 'show', label: notifications.achievementsShow },
+    { id: 'hide', value: 'hide', label: notifications.achievementsHide },
+  ]
+
   if (loadError) {
     return (
       <Box role='alert' className='ui-cluster gap-3'>
         <Box as='p' className='ui-subtitle'>
-          {PREFERENCES_STRINGS.loadError}
+          {strings.loadError}
         </Box>
         <Button onClick={onRetry} className='button button-sm subtle'>
-          {PREFERENCES_STRINGS.retry}
+          {strings.retry}
         </Button>
       </Box>
     )
@@ -150,31 +140,31 @@ const PreferencesFields = ({
 
   return (
     <>
-      <Field label={PREFERENCES_STRINGS.notifications.toastsLabel}>
+      <Field label={notifications.toastsLabel}>
         <Select<ToastPreference>
-          options={TOAST_OPTIONS}
+          options={toastOptions}
           defaultOption={
-            draft.notifications.toasts ? TOAST_OPTIONS[0] : TOAST_OPTIONS[1]
+            draft.notifications.toasts ? toastOptions[0] : toastOptions[1]
           }
           setSelectedValue={(value) => onChange({ toasts: value === 'on' })}
           className='ui-above-reverse'
           triggerProps={{
-            'aria-label': PREFERENCES_STRINGS.notifications.toastsLabel,
+            'aria-label': notifications.toastsLabel,
           }}
         />
       </Field>
-      <Field label={PREFERENCES_STRINGS.notifications.achievementsLabel}>
+      <Field label={notifications.achievementsLabel}>
         <Select<AchievementNotificationPreference>
-          options={ACHIEVEMENT_OPTIONS}
+          options={achievementOptions}
           defaultOption={
             draft.notifications.achievements === 'show'
-              ? ACHIEVEMENT_OPTIONS[0]
-              : ACHIEVEMENT_OPTIONS[1]
+              ? achievementOptions[0]
+              : achievementOptions[1]
           }
           className='ui-above-reverse'
           setSelectedValue={(achievements) => onChange({ achievements })}
           triggerProps={{
-            'aria-label': PREFERENCES_STRINGS.notifications.achievementsLabel,
+            'aria-label': notifications.achievementsLabel,
           }}
         />
       </Field>

@@ -2,7 +2,7 @@
 
 import AddIcon from '@sanity/icons/Add'
 import { CALENDAR_NOTES_PER_DAY } from '@shared/config/calendar'
-import { CALENDAR_STRINGS } from '@shared/strings/calendar-strings'
+import { CALENDAR_STRINGS_PACK } from '@shared/strings/calendar-strings'
 import type { CalendarNote } from '@shared/types/calendar-notes.types'
 import { useState } from 'react'
 import { Box } from '@/components/common/Box'
@@ -10,6 +10,7 @@ import { Button } from '@/components/common/Button'
 import { Text } from '@/components/typography/Text'
 import { cn } from '@/lib/common-utils'
 import { useCalendarNotes } from '@/providers/calendar-notes/CalendarNotesProvider'
+import { useStrings } from '@/providers/locale/use-strings'
 import { CalendarNoteChip } from './CalendarNoteChip'
 import { CalendarNoteEditorDialog } from './CalendarNoteEditorDialog'
 
@@ -41,6 +42,7 @@ export const CalendarNoteDayControl = ({
   hasEvents,
   className,
 }: CalendarNoteDayControlProps) => {
+  const strings = useStrings(CALENDAR_STRINGS_PACK)
   const { ready, notesForDay, canAddNote } = useCalendarNotes()
   const [editing, setEditing] = useState<CalendarNote | 'new' | null>(null)
   const notes = ready ? notesForDay(day) : []
@@ -53,7 +55,7 @@ export const CalendarNoteDayControl = ({
       {notes.length > 0 && (
         <Box
           as='ul'
-          aria-label={CALENDAR_STRINGS.note.dayCount(notes.length)}
+          aria-label={strings.note.dayCount(notes.length)}
           className='flex min-w-0 flex-wrap gap-1'
         >
           {notes.map((note) => (
@@ -64,7 +66,7 @@ export const CalendarNoteDayControl = ({
                 <Button
                   onClick={() => setEditing(note)}
                   className='p-0 min-w-0 text-left'
-                  aria-label={`${CALENDAR_STRINGS.note.type[note.type]}: ${note.title}`}
+                  aria-label={`${strings.note.type[note.type]}: ${note.title}`}
                 >
                   <CalendarNoteChip interactive note={note} />
                 </Button>
@@ -78,7 +80,7 @@ export const CalendarNoteDayControl = ({
         <Button
           onClick={() => setEditing('new')}
           disabled={atCap}
-          aria-label={CALENDAR_STRINGS.note.addOnDay(dayLabel)}
+          aria-label={strings.note.addOnDay(dayLabel)}
           className={cn(
             'button ghost button-sm mt-1 gap-1',
             isCell &&
@@ -89,7 +91,7 @@ export const CalendarNoteDayControl = ({
         >
           <AddIcon aria-hidden='true' className='size-4 overwrite' />
           <Text as='span' className='ui-caption'>
-            {CALENDAR_STRINGS.note.add}
+            {strings.note.add}
           </Text>
         </Button>
       )}

@@ -1,5 +1,7 @@
-import { UI_STRINGS } from '@shared/config/strings'
+'use client'
+
 import { cn } from '@/lib/common-utils'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import type { SubjectsSidebarProps } from '@/types/academics/subject.types'
 import { Box } from '../../common/Box'
 import { SectionHeader } from '../../common/SectionHeader'
@@ -14,14 +16,15 @@ const LIST_MAX_HEIGHT = 'max-h-[36rem]'
  * when there are none) and, when one is given, the study tip. */
 export const SubjectsSidebar = ({
   subjects,
-  title = UI_STRINGS.subjects.sidebarTitle,
+  title,
   subtitle,
-  emptyMessage = UI_STRINGS.subjects.emptyState,
+  emptyMessage,
   toolbar,
   headerProps,
   className,
   ...props
 }: SubjectsSidebarProps) => {
+  const ui = useUIStrings()
   const hasSubjects = subjects.length > 0
 
   return (
@@ -31,8 +34,10 @@ export const SubjectsSidebar = ({
       {...props}
     >
       <SectionHeader
-        title={title}
-        subtitle={hasSubjects ? subtitle : emptyMessage}
+        title={title ?? ui.subjects.sidebarTitle}
+        subtitle={
+          hasSubjects ? subtitle : (emptyMessage ?? ui.subjects.emptyState)
+        }
         {...headerProps}
       />
 

@@ -1,41 +1,50 @@
 'use client'
 
-import { COMMENT_STRINGS } from '@shared/strings/comments-strings'
+import { COMMENT_STRINGS_PACK } from '@shared/strings/comments-strings'
+import type { ResolvedStrings } from '@shared/types/localization.types'
 import { portableTextToPlainText } from '@shared/utils/portable-text.utils'
 import { Text } from '@/components/typography/Text'
 import { useProtectedAction } from '@/hooks/useProtectedAction'
 import { validateCommentContent } from '@/lib/comment-validation'
+import { useLocale } from '@/providers/locale/LocaleProvider'
+import { useStrings } from '@/providers/locale/use-strings'
 import { CommentEditor } from './CommentEditor'
 import { useCommentsServices } from './CommentsProvider'
 
-const COMPOSER_ACTION_LABELS = {
-  clear: COMMENT_STRINGS.composer.clear,
-  preview: COMMENT_STRINGS.composer.showPreview,
-  hidePreview: COMMENT_STRINGS.composer.hidePreview,
-  cancel: COMMENT_STRINGS.composer.cancel,
-  save: COMMENT_STRINGS.composer.submit,
-}
+/** Built in the render, not at module scope: copy read once at import time
+ * would keep the first language for the life of the page. */
+const composerActionLabels = (
+  strings: ResolvedStrings<typeof COMMENT_STRINGS_PACK>
+) => ({
+  clear: strings.composer.clear,
+  preview: strings.composer.showPreview,
+  hidePreview: strings.composer.hidePreview,
+  cancel: strings.composer.cancel,
+  save: strings.composer.submit,
+})
 
 /** Editor card for a new top-level comment. Mounted only while composing, so
  * closing it discards the draft by unmounting. */
 export function CommentComposer({ onClose }: { onClose: () => void }) {
+  const strings = useStrings(COMMENT_STRINGS_PACK)
   const { target, api, addComment } = useCommentsServices()
+  const { locale } = useLocale()
   const { run } = useProtectedAction(api.postComment, {
-    errorTitle: COMMENT_STRINGS.composer.postError,
+    errorTitle: strings.composer.postError,
   })
 
   return (
     <CommentEditor
-      ariaLabel={COMMENT_STRINGS.composer.editorAriaLabel}
+      ariaLabel={strings.composer.editorAriaLabel}
       editorClassName='bg-background-250'
       autoFocus
       actions={['clear', 'preview', 'cancel', 'save']}
-      actionLabels={COMPOSER_ACTION_LABELS}
+      actionLabels={composerActionLabels(strings)}
       confirmCancelWhenDirty
-      validate={validateCommentContent}
+      validate={(value) => validateCommentContent(value, locale)}
       renderMeta={(value) => (
         <Text className='ui-caption'>
-          {COMMENT_STRINGS.composer.characterCount(
+          {strings.composer.characterCount(
             portableTextToPlainText(value).trim().length
           )}
         </Text>

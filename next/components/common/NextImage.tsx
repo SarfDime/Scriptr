@@ -1,10 +1,10 @@
 'use client'
 
 import { IMAGE_QUALITY } from '@shared/config/next-constants'
-import { UI_STRINGS } from '@shared/config/strings'
 import type { SanityImageType } from '@shared/types/sanity-transform.types'
 import Image, { type ImageProps } from 'next/image'
 import { useState } from 'react'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import type { SkeletonBoxProps } from '@/types/components/Skeleton.types'
 import type {
   ImageObjectFitType,
@@ -63,6 +63,7 @@ export function NextImage({
   sizes,
   ...rest
 }: NextImageProps) {
+  const ui = useUIStrings()
   const [isLoading, setIsLoading] = useState(true)
 
   return (
@@ -85,7 +86,7 @@ export function NextImage({
               objectPosition: objectPositionProp ?? 'center',
             }}
             quality={quality ?? IMAGE_QUALITY.MAXIMUM}
-            alt={alt || UI_STRINGS.general.dataUnavailable}
+            alt={alt || ui.general.dataUnavailable}
             src={src || urlFor({ asset, crop, hotspot }).url()}
             fill={Boolean(fillProp)}
             sizes={sizes}

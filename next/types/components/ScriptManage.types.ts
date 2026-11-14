@@ -1,17 +1,17 @@
-import type { ScriptSummary } from '@shared/types/scripts.types'
+import type {
+  LocalizedScriptText,
+  ScriptSummary,
+} from '@shared/types/scripts.types'
 
-/** The fields `PATCH /scripts/:id` accepts. */
+/** The fields `PATCH /scripts/:id` accepts — what the edit form starts from: the *stored* values, per language — not the
+ *  ones resolved for the reader, since the author edits every language. */
 export type ScriptEditableFields = Pick<
   ScriptSummary,
-  | 'title'
-  | 'description'
-  | 'additional_reading'
-  | 'exam_session'
-  | 'exam_year'
-  /** Shown read-only in the edit form: the address never changes with the
-   * title, which is what the form says next to it. */
-  | 'slug'
->
+  'additional_reading' | 'exam_session' | 'exam_year' | 'slug'
+> & {
+  title: LocalizedScriptText
+  description: LocalizedScriptText | null
+}
 
 export type ScriptManageActionsProps = {
   scriptId: string

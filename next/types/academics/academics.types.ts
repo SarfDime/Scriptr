@@ -5,12 +5,11 @@ import type {
   SubjectStaticParamsQueryResult,
   UniversityStaticParamsQueryResult,
 } from '@shared/types/sanity.types'
+import type { LocalePageProps } from '@/types/localization.types'
 
 export type AcademicDetailPageProps<
   TParams extends Record<string, string> = { slug: string },
-> = {
-  params: Promise<TParams>
-}
+> = LocalePageProps<TParams>
 
 /**
  * The params each academic route is served at, taken from the Sanity

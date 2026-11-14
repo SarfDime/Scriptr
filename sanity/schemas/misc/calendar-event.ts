@@ -69,12 +69,13 @@ export const CalendarEvent = defineType({
   ],
   preview: {
     select: {
-      title: 'stringTitle',
+      title: 'localizedTitle.en',
+      titleMk: 'localizedTitle.mk',
       date: 'date',
       type: 'type',
     },
-    prepare: ({ title, date, type }: Record<string, string>) => ({
-      title: title || 'Untitled event',
+    prepare: ({ title, titleMk, date, type }: Record<string, string>) => ({
+      title: title || titleMk || 'Untitled event',
       subtitle: [
         type ? CALENDAR_STRINGS.eventType[type as CalendarEventType] : null,
         date ? dateTimeFormatter.format(new Date(date)) : null,

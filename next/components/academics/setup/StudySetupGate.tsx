@@ -1,6 +1,5 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useSyncExternalStore } from 'react'
 import { Box } from '@/components/common/Box'
@@ -13,6 +12,8 @@ import {
   type StudySetupRecord,
   subscribeToStudySetup,
 } from '@/lib/study-setup-storage'
+import { useLocale } from '@/providers/locale/LocaleProvider'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { useSession } from '@/providers/SessionProvider'
 
 /** A stable snapshot: `useSyncExternalStore` compares these by identity. */
@@ -35,6 +36,8 @@ export const StudySetupGate = ({
   siteSlug: string
   studyId: string
 }) => {
+  const { locale } = useLocale()
+  const ui = useUIStrings()
   const router = useRouter()
   const { session } = useSession()
   const subscribe = useCallback(
@@ -52,7 +55,7 @@ export const StudySetupGate = ({
   const hasAccountProfile =
     isSignedIn && session.user.selected_study_ids.includes(studyId)
   const isReady = session.status !== 'loading'
-  const setupPath = getStudySetupUrl(siteSlug)
+  const setupPath = getStudySetupUrl(siteSlug, locale)
 
   const needsSetup =
     isReady &&
@@ -77,13 +80,13 @@ export const StudySetupGate = ({
   return (
     <Box key={snapshot} className='ui-stack ui-above-inside gap-2 p-3'>
       <Text className='ui-body-strong'>
-        {UI_STRINGS.onboarding.academicSetup.resumeTitle}
+        {ui.onboarding.academicSetup.resumeTitle}
       </Text>
       <Text className='ui-caption'>
-        {UI_STRINGS.onboarding.academicSetup.resumeBody}
+        {ui.onboarding.academicSetup.resumeBody}
       </Text>
       <NextLink href={setupPath} className='button button-sm w-fit'>
-        {UI_STRINGS.onboarding.academicSetup.resume}
+        {ui.onboarding.academicSetup.resume}
       </NextLink>
     </Box>
   )

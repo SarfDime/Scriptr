@@ -1,18 +1,19 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import { Button } from '@/components/common/Button'
 import { FormContainer } from '@/components/typography/FormContainer'
 import { InputWrapper } from '@/components/typography/InputWrapper'
 import { Text } from '@/components/typography/Text'
 import { Card } from '@/components/ui/Card'
 import { useRegisterForm } from '@/hooks/auth/useRegisterForm'
+import { useUIStrings } from '@/providers/locale/use-strings'
 
 export type RegisterFormProps = {
   onSwitchToLogin: () => void
 }
 
 export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
+  const ui = useUIStrings()
   const {
     values,
     setField,
@@ -31,7 +32,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           onClick={onSwitchToLogin}
           className='button subtle w-full justify-center'
         >
-          {UI_STRINGS.auth.register.switchToLogin}
+          {ui.auth.register.switchToLogin}
         </Button>
       </Card.Body>
     )
@@ -41,7 +42,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     <FormContainer onSubmit={handleSubmit}>
       <Card.Body className='ui-stack gap-4'>
         <InputWrapper
-          label={UI_STRINGS.auth.register.fullNameLabel}
+          label={ui.auth.register.fullNameLabel}
           inputProps={{
             id: 'register-full-name',
             type: 'text',
@@ -59,7 +60,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         />
 
         <InputWrapper
-          label={UI_STRINGS.auth.register.usernameLabel}
+          label={ui.auth.register.usernameLabel}
           inputProps={{
             id: 'register-username',
             type: 'text',
@@ -77,7 +78,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         />
 
         <InputWrapper
-          label={UI_STRINGS.auth.register.emailLabel}
+          label={ui.auth.register.emailLabel}
           inputProps={{
             id: 'register-email',
             type: 'email',
@@ -95,7 +96,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         />
 
         <InputWrapper
-          label={UI_STRINGS.auth.register.passwordLabel}
+          label={ui.auth.register.passwordLabel}
           inputProps={{
             id: 'register-password',
             type: 'password',
@@ -114,7 +115,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
         {isBusy && (
           <Text className='ui-caption'>
-            {UI_STRINGS.auth.register.statuses.submitting}
+            {ui.auth.register.statuses.submitting}
           </Text>
         )}
       </Card.Body>
@@ -125,14 +126,14 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           disabled={!canSubmit}
           className='button solid w-full justify-center'
         >
-          {UI_STRINGS.auth.register.submitButtonLabel}
+          {ui.auth.register.submitButtonLabel}
         </Button>
         <Button
           onClick={onSwitchToLogin}
           disabled={isBusy}
           className='button basic w-full justify-center'
         >
-          {UI_STRINGS.auth.register.switchToLogin}
+          {ui.auth.register.switchToLogin}
         </Button>
       </Card.Footer>
     </FormContainer>

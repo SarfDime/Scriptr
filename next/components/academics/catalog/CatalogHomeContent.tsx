@@ -1,9 +1,10 @@
 import Book from '@sanity/icons/Book'
 import Component from '@sanity/icons/Component'
 import EarthGlobe from '@sanity/icons/EarthGlobe'
-import { UI_STRINGS } from '@shared/config/strings'
+import { UI_STRINGS_PACK } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { getAcademicPath } from '@/lib/academic-routes'
+import { getServerLocale, getServerStrings } from '@/lib/server-strings'
 import type {
   CatalogHomeContentProps,
   CatalogSectionProps,
@@ -23,7 +24,11 @@ import { CatalogSection } from './CatalogSection'
  * A failed catalog read leaves the lists empty and says so, rather than
  * taking the page down: the navigation and the study picker still work.
  */
-export const CatalogHomeContent = ({ catalog }: CatalogHomeContentProps) => {
+export const CatalogHomeContent = async ({
+  catalog,
+}: CatalogHomeContentProps) => {
+  const locale = await getServerLocale()
+  const strings = await getServerStrings(UI_STRINGS_PACK, locale)
   // A missing slug has no page, so it is dropped rather than linked to `/`.
   const universities = catalog.universities.flatMap((university) =>
     university.slug ? [{ ...university, slug: university.slug }] : []
@@ -61,43 +66,49 @@ export const CatalogHomeContent = ({ catalog }: CatalogHomeContentProps) => {
 
   const sections: Array<Omit<CatalogSectionProps, 'priority'>> = [
     {
-      title: UI_STRINGS.home.universitiesTitle,
-      subtitle: UI_STRINGS.home.universitiesSubtitle,
-      empty: UI_STRINGS.home.noUniversities,
+      title: strings.home.universitiesTitle,
+      subtitle: strings.home.universitiesSubtitle,
+      empty: strings.home.noUniversities,
       icon: EarthGlobe,
       colorPalette: 'cp-rose',
 
       cards: universities.map((university) => ({
         key: university._id,
-        href: getAcademicPath({
-          type: 'university',
-          universitySlug: university.slug,
-        }),
-        eyebrow: UI_STRINGS.academics.entity.university,
+        href: getAcademicPath(
+          {
+            type: 'university',
+            universitySlug: university.slug,
+          },
+          locale
+        ),
+        eyebrow: strings.academics.entity.university,
         title: university.name,
-        caption: UI_STRINGS.home.facultyCount(university.facultyCount),
+        caption: strings.home.facultyCount(university.facultyCount),
         picture: university.picture,
         logo: university.logo,
         colorPalette: 'cp-rose',
       })),
     },
     {
-      title: UI_STRINGS.home.facultiesTitle,
-      subtitle: UI_STRINGS.home.facultiesSubtitle,
-      empty: UI_STRINGS.home.noFaculties,
+      title: strings.home.facultiesTitle,
+      subtitle: strings.home.facultiesSubtitle,
+      empty: strings.home.noFaculties,
       icon: Component,
       colorPalette: 'cp-brand',
 
       cards: faculties.map((faculty) => ({
         key: faculty._id,
-        href: getAcademicPath({
-          type: 'faculty',
-          universitySlug: faculty.universitySlug,
-          facultySlug: faculty.slug,
-        }),
-        eyebrow: UI_STRINGS.academics.entity.faculty,
+        href: getAcademicPath(
+          {
+            type: 'faculty',
+            universitySlug: faculty.universitySlug,
+            facultySlug: faculty.slug,
+          },
+          locale
+        ),
+        eyebrow: strings.academics.entity.faculty,
         title: faculty.name,
-        subtitle: UI_STRINGS.home.facultySummary(
+        subtitle: strings.home.facultySummary(
           faculty.studyCount,
           faculty.professorCount
         ),
@@ -108,28 +119,31 @@ export const CatalogHomeContent = ({ catalog }: CatalogHomeContentProps) => {
       })),
     },
     {
-      title: UI_STRINGS.home.studiesTitle,
-      subtitle: UI_STRINGS.home.studiesSubtitle,
-      empty: UI_STRINGS.home.noStudies,
+      title: strings.home.studiesTitle,
+      subtitle: strings.home.studiesSubtitle,
+      empty: strings.home.noStudies,
       icon: Book,
       colorPalette: 'cp-amber',
 
       cards: studies.map((study) => ({
         key: study._id,
-        href: getAcademicPath({
-          type: 'study',
-          siteSlug: study.siteSlug,
-          universitySlug: study.universitySlug,
-          facultySlug: study.facultySlug,
-          studySlug: study.studySlug,
-        }),
-        eyebrow: UI_STRINGS.academics.entity.study,
+        href: getAcademicPath(
+          {
+            type: 'study',
+            siteSlug: study.siteSlug,
+            universitySlug: study.universitySlug,
+            facultySlug: study.facultySlug,
+            studySlug: study.studySlug,
+          },
+          locale
+        ),
+        eyebrow: strings.academics.entity.study,
         title: study.name,
-        subtitle: UI_STRINGS.academics.studySummary(
+        subtitle: strings.academics.studySummary(
           study.subjectCount,
           study.professorCount
         ),
-        caption: UI_STRINGS.home.studyPath(
+        caption: strings.home.studyPath(
           study.faculty.name,
           study.faculty.university.name
         ),

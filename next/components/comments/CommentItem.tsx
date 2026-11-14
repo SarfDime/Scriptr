@@ -1,7 +1,7 @@
 'use client'
 
 import { MAX_THREAD_DEPTH } from '@shared/config/shared-constants'
-import { COMMENT_STRINGS } from '@shared/strings/comments-strings'
+import { COMMENT_STRINGS_PACK } from '@shared/strings/comments-strings'
 import { useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
@@ -10,6 +10,7 @@ import { Text } from '@/components/typography/Text'
 import { useRequireSignIn } from '@/hooks/useRequireSignIn'
 import { getAuthorDisplayName } from '@/lib/comments/comment-author'
 import { cn } from '@/lib/common-utils'
+import { useStrings } from '@/providers/locale/use-strings'
 import type { CommentEntity } from '@/types/components/comments/Comments.types'
 import type { CommentItemProps } from '@/types/components/comments/CommentThread.types'
 import { CommentActions } from './CommentActions'
@@ -33,6 +34,7 @@ export function CommentItem({
   parentAuthorName,
   showNestedReplies = false,
 }: CommentItemProps) {
+  const strings = useStrings(COMMENT_STRINGS_PACK)
   const [isReplyOpen, setIsReplyOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [areRepliesExpanded, setAreRepliesExpanded] = useState(false)
@@ -50,7 +52,7 @@ export function CommentItem({
     isRoot && !areRepliesExpanded
       ? replies.slice(0, initialRepliesCount)
       : replies
-  const authorName = getAuthorDisplayName(comment.author)
+  const authorName = getAuthorDisplayName(comment.author, strings)
   const isFlattened = depth > MAX_THREAD_DEPTH
   const hasMoreInThread = (current: CommentEntity): boolean =>
     Boolean(
@@ -154,8 +156,8 @@ export function CommentItem({
                     disabled={isLoadingInThread(comment)}
                   >
                     {isLoadingInThread(comment)
-                      ? COMMENT_STRINGS.general.loadingReplies
-                      : COMMENT_STRINGS.general.showMoreReplies}
+                      ? strings.general.loadingReplies
+                      : strings.general.showMoreReplies}
                   </Button>
                 )}
                 {isRoot && areRepliesExpanded && (
@@ -168,8 +170,8 @@ export function CommentItem({
                         disabled={isLoadingInThread(comment)}
                       >
                         {isLoadingInThread(comment)
-                          ? COMMENT_STRINGS.general.loadingReplies
-                          : COMMENT_STRINGS.general.showMoreReplies}
+                          ? strings.general.loadingReplies
+                          : strings.general.showMoreReplies}
                       </Button>
                     )}
                     <Button
@@ -178,7 +180,7 @@ export function CommentItem({
                       onClick={() => setAreRepliesExpanded(false)}
                       aria-expanded={areRepliesExpanded}
                     >
-                      {COMMENT_STRINGS.general.hideReplies}
+                      {strings.general.hideReplies}
                     </Button>
                   </Box>
                 )}

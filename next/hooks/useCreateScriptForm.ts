@@ -21,7 +21,7 @@ import type { SelectOptionType } from '@/types/components/Select.types'
 const UPLOAD_TASK_KEY = 'script-upload'
 
 /** A pristine create form: nothing picked, nothing typed. */
-const EMPTY_TEXT: ScriptTextValues = { title: [], description: [] }
+const EMPTY_TEXT: ScriptTextValues = { title: {}, description: {} }
 const EMPTY_SESSION: ScriptSessionValues = {
   session: null,
   isChosen: false,
@@ -87,6 +87,9 @@ export function useCreateScriptForm({
     subjectId.length > 0 &&
     professorId.length > 0 &&
     sessionFields.isChosen
+  // Only busy work disables the button: an invalid form stays clickable so the
+  // click can point at every missing field (see `handleSubmit`).
+  const submitDisabled = isBusy
 
   function resetForm() {
     textFields.reset(EMPTY_TEXT)
@@ -114,14 +117,13 @@ export function useCreateScriptForm({
       // Surface every validation error instead of silently doing nothing.
       textFields.touchAll()
       readingLinks.touchAll()
+      sessionFields.touchAll()
       return
     }
 
     await upload({
-      title: textFields.title,
-      description: textFields.descriptionHasContent
-        ? textFields.description
-        : undefined,
+      title: textFields.titlePayload,
+      description: textFields.descriptionPayload ?? undefined,
       subjectId,
       professorId,
       examSession: sessionFields.session,
@@ -143,6 +145,7 @@ export function useCreateScriptForm({
     isBusy,
     busyStage,
     canSubmit,
+    submitDisabled,
     handleSubmit,
     reset: resetForm,
   }

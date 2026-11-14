@@ -1,6 +1,7 @@
 import { UserIcon } from '@sanity/icons/User'
 import { defineType } from 'sanity'
 
+import { localizedField } from '../common/localeFields'
 import { validationRules } from '../validation'
 
 export const Person = defineType({
@@ -10,10 +11,17 @@ export const Person = defineType({
   icon: UserIcon,
   preview: {
     select: {
-      title: 'name',
+      name: 'localizedName.en',
+      nameMk: 'localizedName.mk',
       media: 'picture',
-      subtitle: 'title',
+      personTitle: 'localizedTitle.en',
+      personTitleMk: 'localizedTitle.mk',
     },
+    prepare: ({ name, nameMk, media, personTitle, personTitleMk }) => ({
+      title: name || nameMk || 'Untitled person',
+      subtitle: personTitle || personTitleMk || undefined,
+      media,
+    }),
   },
   fields: [
     {
@@ -24,19 +32,19 @@ export const Person = defineType({
         hotspot: true,
       },
     },
-    {
-      name: 'name',
+    localizedField({
+      name: 'localizedName',
       title: `Person's name and surname`,
       description: 'The full name and surname of the person.',
-      type: 'string',
-      validation: validationRules.isRequired,
-    },
-    {
-      name: 'title',
+      valueType: 'string',
+      isRequired: true,
+    }),
+    localizedField({
+      name: 'localizedTitle',
       title: `Person's title`,
-      type: 'string',
-      validation: validationRules.isRequired,
-    },
+      valueType: 'string',
+      isRequired: true,
+    }),
     {
       name: 'email',
       title: `Person's email`,
@@ -58,10 +66,10 @@ export const Person = defineType({
       type: 'url',
       validation: validationRules.isRequired,
     },
-    {
-      name: 'description',
+    localizedField({
+      name: 'localizedDescription',
       title: `Person's description`,
-      type: 'richTextLite',
-    },
+      valueType: 'richTextLite',
+    }),
   ],
 })

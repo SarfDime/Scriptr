@@ -1,6 +1,5 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import { useEffect } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
@@ -9,6 +8,8 @@ import { ProfilePage } from '@/components/profile/ProfilePage'
 import { Text } from '@/components/typography/Text'
 import { useProfileStats } from '@/hooks/useProfileStats'
 import { buildProfileAcademics } from '@/lib/profile-academic-links'
+import { useLocale } from '@/providers/locale/LocaleProvider'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { useMyProfile, useMyProfileActions } from '@/providers/ProfileProvider'
 import type { MyProfilePageViewModel } from '@/types/components/ProfilePage.types'
 
@@ -19,6 +20,8 @@ import type { MyProfilePageViewModel } from '@/types/components/ProfilePage.type
  * names and links resolved from the server-read catalog.
  */
 export function MyProfilePage({ catalog, subjects }: MyProfilePageViewModel) {
+  const ui = useUIStrings()
+  const { locale } = useLocale()
   const profileState = useMyProfile()
   const { refresh, reload } = useMyProfileActions()
   const statsState = useProfileStats(
@@ -41,11 +44,11 @@ export function MyProfilePage({ catalog, subjects }: MyProfilePageViewModel) {
           <Text className='ui-body text-center'>
             {profileState.status === 'error'
               ? profileState.message
-              : UI_STRINGS.profile.loadingLabel}
+              : ui.profile.loadingLabel}
           </Text>
           {profileState.status === 'error' && (
             <Button className='button button-sm subtle' onClick={refresh}>
-              {UI_STRINGS.profile.retryLabel}
+              {ui.profile.retryLabel}
             </Button>
           )}
         </Box>
@@ -60,7 +63,8 @@ export function MyProfilePage({ catalog, subjects }: MyProfilePageViewModel) {
     ? buildProfileAcademics(
         catalog,
         profile.selected_faculties,
-        profile.selected_studies
+        profile.selected_studies,
+        locale
       )
     : { universities: [], faculties: [], studies: [] }
 

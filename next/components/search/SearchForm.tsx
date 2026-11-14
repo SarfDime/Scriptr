@@ -1,7 +1,6 @@
 'use client'
 
 import { INPUT_MAX_LENGTH } from '@shared/config/next-constants'
-import { UI_STRINGS } from '@shared/config/strings'
 import { type Ref, type SubmitEvent, useId, useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
@@ -13,6 +12,7 @@ import {
   SEARCH_PAGE_PATH,
   SEARCH_QUERY_PARAM,
 } from '@/lib/script-search'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { FormContainer } from '../typography/FormContainer'
 
 type SearchFormProps = {
@@ -39,12 +39,14 @@ type SearchFormProps = {
 export const SearchForm = ({
   query = '',
   compact = false,
-  ariaLabel = UI_STRINGS.scripts.search.formAriaLabel,
+  ariaLabel,
   onValidSubmit,
   inputRef,
   errorClassName,
   className,
 }: SearchFormProps) => {
+  const ui = useUIStrings()
+  const searchLabel = ariaLabel ?? ui.scripts.search.formAriaLabel
   const errorId = useId()
   const [invalid, setInvalid] = useState(false)
 
@@ -67,7 +69,7 @@ export const SearchForm = ({
     <SearchBar
       // The sr-only label follows the same copy as the aria-label, so the two
       // never disagree on what this field searches.
-      label={ariaLabel}
+      label={searchLabel}
       invalid={invalid}
       inputOnChange={() => {
         if (invalid) setInvalid(false)
@@ -76,9 +78,9 @@ export const SearchForm = ({
         ref: inputRef,
         name: SEARCH_QUERY_PARAM,
         type: 'search',
-        placeholder: UI_STRINGS.scripts.search.placeholder,
+        placeholder: ui.scripts.search.placeholder,
         defaultValue: query,
-        'aria-label': ariaLabel,
+        'aria-label': searchLabel,
         'aria-invalid': invalid,
         'aria-describedby': invalid ? errorId : undefined,
       }}
@@ -86,7 +88,7 @@ export const SearchForm = ({
   )
 
   return (
-    <search aria-label={ariaLabel} className={className}>
+    <search aria-label={searchLabel} className={className}>
       <FormContainer
         action={SEARCH_PAGE_PATH}
         method='get'
@@ -100,7 +102,7 @@ export const SearchForm = ({
           <Box className='ui-above ui-cluster items-stretch gap-3'>
             {searchBar}
             <Button type='submit' className='button solid px-4'>
-              {UI_STRINGS.scripts.search.submit}
+              {ui.scripts.search.submit}
             </Button>
           </Box>
         )}
@@ -110,7 +112,7 @@ export const SearchForm = ({
             role='alert'
             className={cn('ui-caption text-error-red pt-2', errorClassName)}
           >
-            {UI_STRINGS.scripts.search.invalidQuery(INPUT_MAX_LENGTH)}
+            {ui.scripts.search.invalidQuery(INPUT_MAX_LENGTH)}
           </Text>
         )}
       </FormContainer>

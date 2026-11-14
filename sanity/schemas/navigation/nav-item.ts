@@ -3,8 +3,8 @@ import { Link } from 'sanity/router'
 import { headerSchemaFields } from '../common/headerFields'
 import { linkSelector } from '../common/link-selector'
 import {
-  generateLinkSelectorPreview,
-  LinkSelectorPreviewSelect,
+  generateLocalizedHeaderPreview,
+  LocalizedHeaderPreviewSelect,
 } from '../util-functions/utilFunctions'
 
 export const NavItem = defineType({
@@ -13,8 +13,8 @@ export const NavItem = defineType({
   type: 'document',
   icon: Link,
   preview: {
-    select: { ...LinkSelectorPreviewSelect, title: 'stringTitle' },
-    prepare: generateLinkSelectorPreview,
+    select: LocalizedHeaderPreviewSelect,
+    prepare: generateLocalizedHeaderPreview,
   },
   fields: [
     ...headerSchemaFields({

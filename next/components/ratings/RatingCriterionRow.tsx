@@ -1,7 +1,7 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
-import { RATING_STRINGS } from '@shared/strings/ratings-strings'
+import { RATING_STRINGS_PACK } from '@shared/strings/ratings-strings'
+import type { ResolvedStrings } from '@shared/types/localization.types'
 import type {
   RatingStat,
   RatingTarget,
@@ -16,32 +16,38 @@ import {
   useProtectedAction,
 } from '@/hooks/useProtectedAction'
 import { deleteRating, postRating } from '@/lib/api/ratings-api'
+import { useStrings, useUIStrings } from '@/providers/locale/use-strings'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 import { RatingScoreInput } from './RatingScoreInput'
+
+type RatingStrings = ResolvedStrings<typeof RATING_STRINGS_PACK>
 
 /** The text beside the label. A pending save/remove replaces the aggregate in
  * place, so the row doesn't change while a request is in flight. */
 function getCaption(
+  strings: RatingStrings,
   saving: boolean,
   removing: boolean,
   stat: RatingStat | undefined
 ) {
-  if (saving) return RATING_STRINGS.saving
-  if (removing) return RATING_STRINGS.removing
+  if (saving) return strings.saving
+  if (removing) return strings.removing
   if (stat && stat.count > 0) {
-    return RATING_STRINGS.summary(stat.average, stat.count)
+    return strings.summary(stat.average, stat.count)
   }
-  return RATING_STRINGS.noRatingsYet
+  return strings.noRatingsYet
 }
 
 function getErrorMessage(
+  strings: RatingStrings,
+  restriction: string,
   saveStatus: ProtectedActionState['status'],
   removeFailed: boolean,
   label: string
 ) {
-  if (saveStatus === 'restricted') return UI_STRINGS.general.restrictedAction
-  if (saveStatus === 'error') return RATING_STRINGS.saveFailed(label)
-  if (removeFailed) return RATING_STRINGS.removeFailed(label)
+  if (saveStatus === 'restricted') return restriction
+  if (saveStatus === 'error') return strings.saveFailed(label)
+  if (removeFailed) return strings.removeFailed(label)
   return null
 }
 
@@ -68,6 +74,8 @@ export function RatingCriterionRow({
   onScoreChange,
 }: RatingCriterionRowProps) {
   const { addToast } = useToast()
+  const ui = useUIStrings()
+  const strings = useStrings(RATING_STRINGS_PACK)
   const [removing, setRemoving] = useState(false)
   const [removeFailed, setRemoveFailed] = useState(false)
   const save = useProtectedAction((score: number) =>
@@ -86,7 +94,7 @@ export function RatingCriterionRow({
     const result = await save.run(score)
     if (!result.ok) return
     onScoreChange(ratingType.id, score)
-    addToast({ type: 'success', title: RATING_STRINGS.saved(label) })
+    addToast({ type: 'success', title: strings.saved(label) })
   }
 
   const handleRemove = async () => {
@@ -97,7 +105,7 @@ export function RatingCriterionRow({
     try {
       await deleteRating(target, ratingType.id)
       onScoreChange(ratingType.id, null)
-      addToast({ type: 'success', title: RATING_STRINGS.removed(label) })
+      addToast({ type: 'success', title: strings.removed(label) })
     } catch {
       setRemoveFailed(true)
     } finally {
@@ -105,8 +113,14 @@ export function RatingCriterionRow({
     }
   }
 
-  const caption = getCaption(saving, removing, stat)
-  const errorMessage = getErrorMessage(save.state.status, removeFailed, label)
+  const caption = getCaption(strings, saving, removing, stat)
+  const errorMessage = getErrorMessage(
+    strings,
+    ui.general.restrictedAction,
+    save.state.status,
+    removeFailed,
+    label
+  )
 
   return (
     <Box as='li' className='ui-stack gap-0.5' aria-busy={busy || undefined}>
@@ -125,12 +139,12 @@ export function RatingCriterionRow({
             {myScore !== undefined && (
               <Button
                 className='button button-sm danger'
-                aria-label={RATING_STRINGS.removeAria(label)}
+                aria-label={strings.removeAria(label)}
                 isLoading={removing}
                 disabled={busy}
                 onClick={handleRemove}
               >
-                {RATING_STRINGS.remove}
+                {strings.remove}
               </Button>
             )}
             <RatingScoreInput

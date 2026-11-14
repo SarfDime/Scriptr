@@ -4,9 +4,11 @@ import DashboardIcon from '@sanity/icons/Dashboard'
 import { ADMIN_STRINGS } from '@shared/strings/admin-strings'
 import { NextLink } from '@/components/common/NextLink'
 import { catalogUrl } from '@/lib/study-origin'
+import { useLocale } from '@/providers/locale/LocaleProvider'
 import { useSession } from '@/providers/SessionProvider'
 
 export const AdminNavLink = () => {
+  const { locale } = useLocale()
   const { session } = useSession()
   if (session.status !== 'authenticated') return null
 
@@ -15,7 +17,7 @@ export const AdminNavLink = () => {
   if (!canEnter) return null
   return (
     <NextLink
-      href={catalogUrl('/admin')}
+      href={catalogUrl('/admin', locale)}
       className='button subtle shrink-0 gap-1.5 rounded-lg px-3 py-2 text-sm'
     >
       <DashboardIcon />

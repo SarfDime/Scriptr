@@ -1,8 +1,8 @@
-import { UI_STRINGS } from '@shared/config/strings'
+import { UI_STRINGS_PACK } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { SectionHeader } from '@/components/common/SectionHeader'
-import { Card } from '@/components/ui/Card'
 import { Divider } from '@/components/ui/Divider'
+import { getServerStrings } from '@/lib/server-strings'
 import type { UniversityDetail } from '@/types/academics/university.types'
 import { AdministrationCard } from '../AdministrationCard'
 
@@ -11,15 +11,16 @@ type UniversityAdministrationCardProps = Pick<
   'rector' | 'viceRectors'
 >
 
-export const UniversityAdministrationCard = ({
+export const UniversityAdministrationCard = async ({
   rector,
   viceRectors,
 }: UniversityAdministrationCardProps) => {
+  const ui = await getServerStrings(UI_STRINGS_PACK)
   if (!rector && (!viceRectors || viceRectors.length === 0)) return null
 
   return (
-    <Card className='ui-stack ui-above'>
-      <SectionHeader as='h3' title={UI_STRINGS.academics.administration} />
+    <Box className='ui-stack ui-above'>
+      <SectionHeader as='h3' title={ui.academics.administration} />
       {rector && (
         <AdministrationCard
           name={rector.name}
@@ -42,6 +43,6 @@ export const UniversityAdministrationCard = ({
           ))}
         </Box>
       )}
-    </Card>
+    </Box>
   )
 }

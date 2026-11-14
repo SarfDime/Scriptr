@@ -2,7 +2,6 @@
 
 import AddCircle from '@sanity/icons/AddCircle'
 import User from '@sanity/icons/User'
-import { UI_STRINGS } from '@shared/config/strings'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { SubjectCard } from '@/components/academics/subject/SubjectCard'
@@ -13,6 +12,7 @@ import { Field } from '@/components/ui/field/Field'
 import { Select } from '@/components/ui/select/Select'
 import { useCreateScriptForm } from '@/hooks/useCreateScriptForm'
 import { useRequireSignIn } from '@/hooks/useRequireSignIn'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import type { MinimalSubject } from '@/types/academics/subject.types'
 import { ScriptDetailsFields } from './form/ScriptDetailsFields'
 import { ScriptFormDialog } from './form/ScriptFormDialog'
@@ -38,8 +38,9 @@ export type CreateScriptModalProps = {
 export function CreateScriptModal({
   subject,
   onCreated,
-  triggerLabel = UI_STRINGS.scripts.uploadModal.triggerLabel,
+  triggerLabel,
 }: CreateScriptModalProps) {
+  const ui = useUIStrings()
   const router = useRouter()
   const requireSignIn = useRequireSignIn()
   const [isOpen, setIsOpen] = useState(false)
@@ -83,19 +84,19 @@ export function CreateScriptModal({
         className='button solid gap-1 p-2 md:grow-0 grow'
       >
         <AddCircle />
-        {triggerLabel}
+        {triggerLabel ?? ui.scripts.uploadModal.triggerLabel}
       </Button>
 
       <ScriptFormDialog
-        title={UI_STRINGS.scripts.uploadModal.title}
+        title={ui.scripts.uploadModal.title}
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         onSecondaryAction={handleClear}
-        secondaryActionLabel={UI_STRINGS.scripts.uploadModal.cancelButtonLabel}
-        submitLabel={UI_STRINGS.scripts.uploadModal.submitButtonLabel}
+        secondaryActionLabel={ui.scripts.uploadModal.cancelButtonLabel}
+        submitLabel={ui.scripts.uploadModal.submitButtonLabel}
         onSubmit={form.handleSubmit}
         isBusy={form.isBusy}
-        canSubmit={form.canSubmit}
+        submitDisabled={form.submitDisabled}
       >
         <ScriptDetailsFields fields={form.textFields} resetKey={formKey} />
 
@@ -106,7 +107,7 @@ export function CreateScriptModal({
           <Field
             className='min-w-0'
             grouped
-            label={UI_STRINGS.scripts.uploadModal.subjectLabel}
+            label={ui.scripts.uploadModal.subjectLabel}
             labelProps={SCRIPT_FIELD_LABEL_PROPS}
           >
             <SubjectCard {...subject} />
@@ -120,13 +121,12 @@ export function CreateScriptModal({
           <Box className='ui-stack min-w-0 gap-5'>
             <Field
               className='min-w-0'
-              label={UI_STRINGS.scripts.uploadModal.professorLabel}
+              label={ui.scripts.uploadModal.professorLabel}
               labelProps={SCRIPT_FIELD_LABEL_PROPS}
               errorText={
                 hasProfessorOptions
-                  ? UI_STRINGS.scripts.uploadModal.fieldErrors
-                      .professorsUnavailable
-                  : UI_STRINGS.scripts.uploadModal.fieldErrors.noProfessors
+                  ? ui.scripts.uploadModal.fieldErrors.professorsUnavailable
+                  : ui.scripts.uploadModal.fieldErrors.noProfessors
               }
               required
               valid={hasProfessors}
@@ -135,7 +135,7 @@ export function CreateScriptModal({
               <Select
                 // Remounted on clear so it shows the reset professor again.
                 key={`professor-${formKey}`}
-                className='w-full bg-background-200'
+                className='w-full'
                 disabled={isProfessorFixed}
                 // Read back from the form's value, so the trigger cannot show a
                 // professor the form is not actually submitting.
@@ -149,7 +149,7 @@ export function CreateScriptModal({
                 options={form.professors}
                 setSelectedValue={form.setProfessorId}
                 triggerProps={{
-                  'aria-label': UI_STRINGS.scripts.uploadModal.professorLabel,
+                  'aria-label': ui.scripts.uploadModal.professorLabel,
                 }}
                 icon={<User />}
               />

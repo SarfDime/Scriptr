@@ -2,7 +2,7 @@
 
 import NoteIcon from '@sanity/icons/Edit'
 import { CALENDAR_NOTE_SCHEMES } from '@shared/config/calendar'
-import { CALENDAR_STRINGS } from '@shared/strings/calendar-strings'
+import { CALENDAR_STRINGS_PACK } from '@shared/strings/calendar-strings'
 import type { CalendarNote } from '@shared/types/calendar-notes.types'
 import { useState } from 'react'
 import { Box } from '@/components/common/Box'
@@ -12,6 +12,8 @@ import { Popover } from '@/components/ui/Popover'
 import { formatCalendarDateShort, formatCalendarDay } from '@/lib/calendar'
 import { cn } from '@/lib/common-utils'
 import { useCalendarNotes } from '@/providers/calendar-notes/CalendarNotesProvider'
+import { useLocale } from '@/providers/locale/LocaleProvider'
+import { useStrings } from '@/providers/locale/use-strings'
 import { CalendarNoteEditorDialog } from './CalendarNoteEditorDialog'
 
 /**
@@ -26,6 +28,8 @@ import { CalendarNoteEditorDialog } from './CalendarNoteEditorDialog'
  * own: which note is being edited.
  */
 export const CalendarNotesTimeline = () => {
+  const { locale } = useLocale()
+  const strings = useStrings(CALENDAR_STRINGS_PACK)
   const { ready, notes } = useCalendarNotes()
   const [editing, setEditing] = useState<CalendarNote | null>(null)
 
@@ -52,22 +56,22 @@ export const CalendarNotesTimeline = () => {
         innerWrapperClass='bg-background-200 rounded-xl p-1.5 max-h-[22rem] overflow-y-auto w-80 max-w-[calc(100vw-2rem)] max-sm:left-0 max-sm:right-0 max-sm:w-auto max-sm:max-w-none shadow-xl border border-background-600'
         trigger={
           <Button
-            aria-label={CALENDAR_STRINGS.note.openTimeline}
+            aria-label={strings.note.openTimeline}
             className='button button-sm subtle gap-1 max-md:px-1.5'
           >
             <NoteIcon className='size-5 overwrite md:size-6' />
             <Text as='span' className='ui-caption max-md:hidden'>
-              {CALENDAR_STRINGS.note.timelineTitle}
+              {strings.note.timelineTitle}
             </Text>
             <Text as='span' className='ui-caption md:hidden'>
-              {CALENDAR_STRINGS.note.timelineTitleCompact}
+              {strings.note.timelineTitleCompact}
             </Text>
           </Button>
         }
       >
         {live.length === 0 ? (
           <Text className='ui-caption text-fg-muted'>
-            {CALENDAR_STRINGS.note.timelineEmpty}
+            {strings.note.timelineEmpty}
           </Text>
         ) : (
           <Box as='ul' className='ui-stack gap-1'>
@@ -78,7 +82,7 @@ export const CalendarNotesTimeline = () => {
                   className='button ghost rounded-md w-full flex-wrap justify-between gap-0.5 p-1 px-1.5 text-left bg-background-300/80'
                 >
                   <Text as='span' className='ui-small-label text-fg-muted'>
-                    {formatCalendarDateShort(note.day)}
+                    {formatCalendarDateShort(note.day, locale)}
                   </Text>
                   <Text
                     as='span'
@@ -87,7 +91,7 @@ export const CalendarNotesTimeline = () => {
                       CALENDAR_NOTE_SCHEMES[note.type].chip
                     )}
                   >
-                    {CALENDAR_STRINGS.note.type[note.type]}
+                    {strings.note.type[note.type]}
                   </Text>
                   <Text
                     as='span'
@@ -105,7 +109,7 @@ export const CalendarNotesTimeline = () => {
       {editing && (
         <CalendarNoteEditorDialog
           day={editing.day}
-          dayLabel={formatCalendarDay(editing.day)}
+          dayLabel={formatCalendarDay(editing.day, locale)}
           note={editing}
           onClose={() => setEditing(null)}
         />

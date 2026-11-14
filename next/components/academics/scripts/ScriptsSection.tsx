@@ -1,13 +1,13 @@
 'use client'
 
 import ChevronDownIcon from '@sanity/icons/ChevronDown'
-import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
 import { useScriptExplorer } from '@/hooks/useScriptExplorer'
 import { cn } from '@/lib/common-utils'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import type { ScriptsSectionProps } from '@/types/components/Scripts.types'
 import { SearchBar } from '../../typography/SearchBar'
 import { CreateScriptModal } from './CreateScriptModal'
@@ -19,15 +19,16 @@ const VISIBLE_LIMIT = 5
 /** A component that renders a section displaying a list of scripts with search and filter functionality. */
 export const ScriptsSection = ({
   scripts,
-  title = UI_STRINGS.scripts.sectionTitle,
+  title,
   className,
   parentSubject,
   scriptsUnavailable = false,
   showControls = { all: true, search: true, filters: true, create: true },
-  emptyMessage = UI_STRINGS.scripts.emptyState,
+  emptyMessage,
   headerActions,
   ...rest
 }: ScriptsSectionProps) => {
+  const ui = useUIStrings()
   const {
     query,
     setQuery,
@@ -49,7 +50,7 @@ export const ScriptsSection = ({
       {...rest}
     >
       <SectionHeader
-        title={title}
+        title={title ?? ui.scripts.sectionTitle}
         titleVariant='subHeading'
         count={scriptsUnavailable ? undefined : visibleScripts.length}
         actions={headerActions}
@@ -82,15 +83,18 @@ export const ScriptsSection = ({
 
       {scriptsUnavailable ? (
         <Text className='ui-above-inside ui-subtitle border-dashed px-6 py-14 text-center'>
-          {UI_STRINGS.scripts.loadFailed}
+          {ui.scripts.loadFailed}
         </Text>
       ) : (
-        <ScriptList scripts={shownScripts} emptyMessage={emptyMessage} />
+        <ScriptList
+          scripts={shownScripts}
+          emptyMessage={emptyMessage ?? ui.scripts.emptyState}
+        />
       )}
 
       {hasMore && (
         <Button className='button subtle w-full gap-2 py-3 ui-body'>
-          <Text>{UI_STRINGS.scripts.browseAll}</Text> <ChevronDownIcon />
+          <Text>{ui.scripts.browseAll}</Text> <ChevronDownIcon />
         </Button>
       )}
     </Box>

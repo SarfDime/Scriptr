@@ -1,6 +1,10 @@
+'use client'
+
 import Menu from '@sanity/icons/Menu'
-import { UI_STRINGS } from '@shared/config/strings'
+import type { LocaleId } from '@shared/config/localization-constants'
 import { cn } from '@/lib/common-utils'
+import { useLocale } from '@/providers/locale/LocaleProvider'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import type { CalendarAlertData } from '@/types/components/Calendar.types'
 import { Box } from '../common/Box'
 import { Text } from '../typography/Text'
@@ -9,12 +13,23 @@ import { HeaderActions } from './HeaderActions'
 import { NavLogo } from './NavLogo'
 import { NavToggle } from './NavToggle'
 
-const getHeaderDateLabel = (date: Date) => {
-  const dateLabel = new Intl.DateTimeFormat('en', {
+/** Built once per language: the date is chrome, so it reads in the same
+ * language as the rest of the header. */
+const HEADER_DATE_FORMAT = {
+  en: new Intl.DateTimeFormat('en', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
-  }).format(date)
+  }),
+  mk: new Intl.DateTimeFormat('mk-MK', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  }),
+} satisfies Record<LocaleId, Intl.DateTimeFormat>
+
+const getHeaderDateLabel = (date: Date, locale: LocaleId) => {
+  const dateLabel = HEADER_DATE_FORMAT[locale].format(date)
   const academicYearStart = new Date(
     date.getFullYear() - (date.getMonth() < 9 ? 1 : 0),
     9,
@@ -29,16 +44,23 @@ const getHeaderDateLabel = (date: Date) => {
 }
 
 /**
- * Server Component. The header is global chrome, so it knows nothing about
- * studies: the calendar alert is per study and lives in the study's own frame
+ * The header is global chrome, so it knows nothing about studies: the calendar
+ * alert is per study and lives in the study's own frame
  * (`app/(study)/study/[siteSlug]/layout.tsx`), which can read it on the server.
+ *
+ * A Client Component because `PageLayout` renders it and a client page
+ * (`ProfilePage`) imports `PageLayout` — in that graph `next/root-params` has no
+ * exports, so `getServerStrings` would fail the build. `useUIStrings()` is the
+ * route's language, handed down from the layout.
  */
-export const Header = async ({
+export const Header = ({
   calendarAlert,
 }: {
   calendarAlert?: CalendarAlertData
 }) => {
-  const { dateLabel, week } = getHeaderDateLabel(new Date())
+  const { locale } = useLocale()
+  const strings = useUIStrings()
+  const { dateLabel, week } = getHeaderDateLabel(new Date(), locale)
 
   return (
     <header
@@ -65,7 +87,7 @@ export const Header = async ({
         <NavToggle
           action='open'
           className='flex items-center justify-center'
-          aria-label={UI_STRINGS.navigation.openNavigation}
+          aria-label={strings.navigation.openNavigation}
           aria-controls='site-navigation'
         >
           <Menu />
@@ -75,8 +97,14 @@ export const Header = async ({
       {/* The calendar sits with the header's own date, not with the account
           actions: it is about the academic calendar those dates come from. */}
       <Box className='ui-cluster min-w-0 gap-2'>
-        <Text className='ui-caption hidden lg:block'>
-          {dateLabel} <span className='mx-2 text-grey-400'>/</span> Week {week}
+        {/* Suppressed: the label is "now", so a render that straddles midnight
+            legitimately differs between the server and the client. */}
+        <Text
+          className='ui-caption hidden lg:block capitalize'
+          suppressHydrationWarning
+        >
+          {dateLabel} <span className='mx-2 text-grey-400'>/</span>{' '}
+          {strings.navigation.week(week)}
         </Text>
         {calendarAlert && (
           <CalendarAlert

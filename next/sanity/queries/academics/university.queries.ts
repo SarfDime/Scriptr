@@ -1,17 +1,22 @@
 import { groq } from 'next-sanity'
 import { sanityFunctionQueries } from '../functions.queries'
+import {
+  localizedBlocksProjection,
+  localizedProjection,
+  localizedValue,
+} from '../localized.queries'
 import { minimalFacultyQuery } from './faculty.queries'
 
 /** Minimal listing query for the unified hierarchical gallery page */
 export const universityGalleryQuery = groq`
-*[_type == "university" && dbId != null] | order(name asc) {
+*[_type == "university" && dbId != null] | order(${localizedValue('localizedName')} asc) {
   _id,
   "slug": slug.current,
-  name,
-  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {
+  ${localizedProjection('name', 'localizedName')},
+  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(${localizedValue('localizedName')} asc) {
     _id,
     "slug": slug.current,
-    name,
+    ${localizedProjection('name', 'localizedName')},
   }
 }
 `
@@ -21,8 +26,8 @@ export const universitySeoQuery = groq`
 *[_type == "university" && (slug.current == $universitySlug || _id == $universitySlug || _id == "drafts." + $universitySlug || dbId == $universitySlug)][0] {
   _id,
   "slug": slug.current,
-  name,
-  description,
+  ${localizedProjection('name', 'localizedName')},
+  ${localizedBlocksProjection('description', 'localizedDescription')},
 }
 `
 
@@ -34,8 +39,8 @@ ${sanityFunctionQueries}
   _id,
   "slug": slug.current,
   _type,
-  name,
-  description,
+  ${localizedProjection('name', 'localizedName')},
+  ${localizedBlocksProjection('description', 'localizedDescription')},
   "picture": sanityImage::full(picture),
   "logo": sanityImage::full(logo),
   streetAddress,
@@ -44,17 +49,17 @@ ${sanityFunctionQueries}
   website,
   rector->{
     _id,
-    name,
-    title,
+    ${localizedProjection('name', 'localizedName')},
+    ${localizedProjection('title', 'localizedTitle')},
     "picture": sanityImage::full(picture)
   },
   viceRectors[]->{
     _id,
-    name,
-    title,
+    ${localizedProjection('name', 'localizedName')},
+    ${localizedProjection('title', 'localizedTitle')},
     "picture": sanityImage::full(picture)
   },
-  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(name asc) {
+  "faculties": *[_type == "faculty" && references(^._id) && dbId != null] | order(${localizedValue('localizedName')} asc) {
     ${minimalFacultyQuery}
   }
 }

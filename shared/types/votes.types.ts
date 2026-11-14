@@ -1,5 +1,5 @@
 import type { Tables } from './database.types'
-import type { PortableTextValue } from './portable-text.types'
+import type { LocalizedScriptText } from './scripts.types'
 
 // -----------------------------------------------------------------------------
 // API Response Shapes (hono/src/routes/votes.ts)
@@ -20,14 +20,14 @@ export type VoteUserSummary = {
 
 /** Matches `script:scripts(title)` — used only by `GET /` (list all votes). */
 export type VoteScriptTitleOnly = {
-  title: PortableTextValue | null
+  title: LocalizedScriptText | null
 }
 
 /** Matches `script:scripts(id, title, subject:subjects(name))` — used by
  * `/user/:userId` and `/my-votes` via `VOTE_WITH_SCRIPT_SELECT`. */
 export type VoteScriptSummary = {
   id: string
-  title: PortableTextValue
+  title: LocalizedScriptText
   subject: { name: string } | null
 }
 

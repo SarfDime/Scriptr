@@ -1,18 +1,19 @@
 /** biome-ignore-all lint/style/useNamingConvention: <Ignore> */
 import type { FileType } from '@shared/types/api.types'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
+import type { LocalizedScriptText } from '@shared/types/scripts.types'
 import type { Database as GenDatabase } from './supabase'
 
 type Override<T, U> = Omit<T, keyof U> & U
 
 type ScriptOverrides = {
-  title: PortableTextValue
-  description: PortableTextValue | null
+  title: LocalizedScriptText
+  description: LocalizedScriptText | null
 }
 
 type ScriptOverridesUpdate = {
-  title?: PortableTextValue | null
-  description?: PortableTextValue | null
+  title?: LocalizedScriptText | null
+  description?: LocalizedScriptText | null
 }
 
 type CommentOverrides = {

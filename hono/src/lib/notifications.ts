@@ -1,5 +1,5 @@
 import type { Context } from 'hono'
-import { NOTIFICATIONS_STRINGS } from '../../../shared/strings/notifications-strings'
+import { NOTIFICATION_ROW_STRINGS } from '../../../shared/strings/notifications-strings'
 import type { FlagTargetType } from '../../../shared/types/api.types'
 import type { Json } from '../../../shared/types/database.types'
 import type { NotificationKind } from '../../../shared/types/notifications.types'
@@ -146,8 +146,8 @@ export const notifyAdminsAtFlagThreshold = async (
     const alreadyNotified = new Set(
       (existing ?? []).map((notification) => notification.profile_id)
     )
-    const title = NOTIFICATIONS_STRINGS.flagThresholdTitle
-    const body = NOTIFICATIONS_STRINGS.flagThresholdBody(
+    const title = NOTIFICATION_ROW_STRINGS.flagThresholdTitle
+    const body = NOTIFICATION_ROW_STRINGS.flagThresholdBody(
       reporterCount,
       targetType
     )

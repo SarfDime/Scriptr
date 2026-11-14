@@ -3,7 +3,10 @@ import type { ProfilePreferences } from '@shared/types/profile-preferences.types
 import type { ComponentColorPalettes } from './components/ColorPalettes.types'
 
 export type NotificationAction = {
-  label: string
+  /** The button's text. Absent on a notification mapped from a stored row: its
+   * label would have been frozen in the language the row was written in, so
+   * `NotificationRow` renders the reader's own wording instead. */
+  label?: string
   kind: 'link'
   /** Where the action goes. A notification stored before actions were links
    * only may still carry no href; `NotificationRow` skips those. */

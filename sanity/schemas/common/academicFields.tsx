@@ -1,5 +1,6 @@
 import type { AcademicEntityType } from '@shared/config/api'
 import { GROUPING_KEYS } from '@shared/config/sanity-constants'
+import { firstFilledLocalizedText } from '@shared/utils/localized-strings'
 import type { ElementType, ReactNode } from 'react'
 import {
   defineField,
@@ -67,47 +68,40 @@ export const academicGrouping = (
 export const academicPreview = <T extends Record<string, string>>({
   selectExtra,
   formatSubtitle,
-  subtitle: legacySubtitleField,
   icon,
   isSubject = false,
   pictureField = 'picture',
 }: {
   selectExtra?: T
   formatSubtitle?: (selection: Record<string, unknown>) => string | undefined
-  subtitle?: string
   icon?: ElementType
   isSubject?: boolean
   pictureField?: string
 } = {}) => ({
   preview: {
     select: {
-      title: 'name',
+      // A preview cannot resolve a localized object the way a projection does,
+      // so both languages are selected and the default one wins.
+      title: 'localizedName.en',
+      titleMk: 'localizedName.mk',
       dbId: 'dbId',
       year: 'year',
       semester: 'semester',
       elective: 'elective',
       imageUrl: `${pictureField}`,
-      ...(legacySubtitleField ? { legacySubtitle: legacySubtitleField } : {}),
       ...(selectExtra ?? {}),
     },
     prepare: (selection: Record<string, unknown>): PreviewValue => {
-      const {
-        title,
-        dbId,
-        year,
-        semester,
-        elective,
-        imageUrl,
-        legacySubtitle,
-      } = selection as {
-        title?: string
-        dbId?: string
-        year?: number
-        semester?: number
-        elective?: boolean
-        imageUrl?: { asset?: { _ref?: string } }
-        legacySubtitle?: string
-      }
+      const { title, titleMk, dbId, year, semester, elective, imageUrl } =
+        selection as {
+          title?: string
+          titleMk?: string
+          dbId?: string
+          year?: number
+          semester?: number
+          elective?: boolean
+          imageUrl?: { asset?: { _ref?: string } }
+        }
 
       let customMedia: ReactNode
 
@@ -130,17 +124,9 @@ export const academicPreview = <T extends Record<string, string>>({
         )
       }
 
-      let subtitle: string | undefined
-
-      if (formatSubtitle) {
-        subtitle = formatSubtitle(selection) ?? undefined
-      } else if (legacySubtitle) {
-        subtitle = String(legacySubtitle)
-      }
-
       return {
-        title: title ?? 'Untitled',
-        subtitle,
+        title: title || titleMk || 'Untitled',
+        subtitle: formatSubtitle?.(selection) ?? undefined,
         ...(customMedia ? { media: customMedia } : {}),
       }
     },
@@ -155,39 +141,37 @@ export const academicPreview = <T extends Record<string, string>>({
 export const academicNameField = ({
   grouping = 'information',
 }: AcademicFieldOptions): FieldDefinition =>
-  defineField({
-    name: 'name',
+  localizedField({
+    name: 'localizedName',
     title: 'Name',
-    type: 'string',
-    validation: (rule) => rule.required(),
-    fieldset: grouping,
+    valueType: 'string',
     group: grouping,
+    fieldset: grouping,
+    isRequired: true,
   })
 
 export const academicTitleField = ({
   grouping = 'information',
 }: AcademicFieldOptions): FieldDefinition =>
-  defineField({
-    name: 'title',
+  localizedField({
+    name: 'localizedTitle',
     title: 'Academic Title',
-    type: 'string',
-    fieldset: grouping,
+    valueType: 'string',
     group: grouping,
+    fieldset: grouping,
   })
 
 export const academicDescriptionField = ({
   grouping = 'information',
   required = false,
 }: AcademicFieldOptions & { required?: boolean }): FieldDefinition =>
-  defineField({
-    name: 'description',
+  localizedField({
+    name: 'localizedDescription',
     title: 'Description',
-    type: 'richTextLite',
-    fieldset: grouping,
+    valueType: 'richTextLite',
     group: grouping,
-    validation: required
-      ? (rule) => validationRules.descriptionValidation(rule)
-      : undefined,
+    fieldset: grouping,
+    isRequired: required,
   })
 
 export const databaseIdField = ({
@@ -225,15 +209,14 @@ export const academicKeywordsField = ({
   grouping = 'information',
   required = false,
 }: AcademicFieldOptions & { required?: boolean }): FieldDefinition =>
-  defineField({
-    name: 'keywords',
+  localizedField({
+    name: 'localizedKeywords',
     title: 'Keywords',
     description: 'Keywords or tags associated with the subject.',
-    type: 'array',
-    of: [{ type: 'string' }],
-    fieldset: grouping,
+    valueType: 'stringArray',
     group: grouping,
-    validation: required ? (rule) => rule.required() : undefined,
+    fieldset: grouping,
+    isRequired: required,
   })
 
 type AcademicBioOptions = AcademicFieldOptions & {
@@ -250,30 +233,15 @@ export const academicBioField = (
     type: 'richTextLite',
     required: false,
   }
-): FieldDefinition => {
-  const title = type === 'string' ? 'Short Biography' : 'Bio'
-
-  // 'string' goes through defineField's dedicated string overload, which
-  // demands a StringRule-typed validator; richTextLite has no such overload,
-  // so the generic Rule-typed validationRules.isRequired fits it directly.
-  return type === 'string'
-    ? defineField({
-        name: 'bio',
-        title,
-        type: 'string',
-        fieldset: grouping,
-        group: grouping,
-        validation: required ? stringValidation : undefined,
-      })
-    : defineField({
-        name: 'bio',
-        title,
-        type: 'richTextLite',
-        fieldset: grouping,
-        group: grouping,
-        validation: required ? validationRules.isRequired : undefined,
-      })
-}
+): FieldDefinition =>
+  localizedField({
+    name: 'localizedBio',
+    title: type === 'string' ? 'Short Biography' : 'Bio',
+    valueType: type,
+    group: grouping,
+    fieldset: grouping,
+    isRequired: required,
+  })
 
 export const academicStudentCountField = ({
   grouping = 'information',
@@ -380,7 +348,8 @@ export const academicSlugField = ({
       'URL-friendly version of the name. Click generate to create it automatically.',
     type: 'slug',
     options: {
-      source: 'name',
+      source: (document: Record<string, unknown>) =>
+        firstFilledLocalizedText(document.localizedName),
       slugify: (value) => sanitizeSlug(value),
     },
     validation: (rule: SlugRule) =>
@@ -492,65 +461,6 @@ const FIELD_BUILDERS: Record<
     databaseIdField({ grouping, ...overrides.dbId }),
 }
 
-/**
- * Localized duplicates for the text fields that have one value per language.
- * They render next to the legacy single-language field until the frontend is
- * switched over, then the legacy entry here is deleted.
- */
-const LOCALIZED_FIELD_BUILDERS: Partial<
-  Record<AcademicFieldKey, (context: AcademicFieldContext) => FieldDefinition>
-> = {
-  name: ({ grouping, overrides }) =>
-    localizedField({
-      name: 'localizedName',
-      title: 'Name (localized)',
-      valueType: 'string',
-      group: overrides.name?.grouping ?? grouping ?? 'information',
-      fieldset: overrides.name?.grouping ?? grouping ?? 'information',
-      isRequired: true,
-    }),
-  title: ({ grouping, overrides }) =>
-    localizedField({
-      name: 'localizedTitle',
-      title: 'Academic Title (localized)',
-      valueType: 'string',
-      group: overrides.title?.grouping ?? grouping ?? 'information',
-      fieldset: overrides.title?.grouping ?? grouping ?? 'information',
-    }),
-  description: ({ grouping, overrides }) =>
-    localizedField({
-      name: 'localizedDescription',
-      title: 'Description (localized)',
-      valueType: 'richTextLite',
-      group: overrides.description?.grouping ?? grouping ?? 'information',
-      fieldset: overrides.description?.grouping ?? grouping ?? 'information',
-      isRequired: overrides.description?.required,
-    }),
-  keywords: ({ grouping, overrides }) =>
-    localizedField({
-      name: 'localizedKeywords',
-      title: 'Keywords (localized)',
-      description: 'Keywords or tags associated with the subject.',
-      valueType: 'stringArray',
-      group: overrides.keywords?.grouping ?? grouping ?? 'information',
-      fieldset: overrides.keywords?.grouping ?? grouping ?? 'information',
-      isRequired: overrides.keywords?.required,
-    }),
-  bio: ({ grouping, overrides }) => {
-    const type = overrides.bio?.type ?? 'richTextLite'
-
-    return localizedField({
-      name: 'localizedBio',
-      title:
-        type === 'string' ? 'Short Biography (localized)' : 'Bio (localized)',
-      valueType: type,
-      group: overrides.bio?.grouping ?? grouping ?? 'information',
-      fieldset: overrides.bio?.grouping ?? grouping ?? 'information',
-      isRequired: overrides.bio?.required,
-    })
-  },
-}
-
 export function academicFields(
   entity: AcademicEntityType,
   keys: Array<AcademicFieldKey>,
@@ -562,11 +472,5 @@ export function academicFields(
     overrides?: AcademicFieldsOverrides
   } = {}
 ): Array<FieldDefinition> {
-  return keys.flatMap((key) => {
-    const context = { entity, grouping, overrides }
-    const legacyField = FIELD_BUILDERS[key](context)
-    const localized = LOCALIZED_FIELD_BUILDERS[key]?.(context)
-
-    return localized ? [legacyField, localized] : [legacyField]
-  })
+  return keys.map((key) => FIELD_BUILDERS[key]({ entity, grouping, overrides }))
 }

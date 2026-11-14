@@ -4,6 +4,7 @@ import Trash from '@sanity/icons/Trash'
 import { useToast } from '@sanity/ui/toast'
 import type { AcademicEntityType } from '@shared/config/api'
 import { apiUrl, getDatabaseAcademicEndpoints } from '@shared/utils/api.utils'
+import { firstFilledLocalizedText } from '@shared/utils/localized-strings'
 
 import { useState } from 'react'
 import {
@@ -122,8 +123,19 @@ async function buildDatabasePayload(
   sanityId: string,
   client: SanityClient
 ): Promise<Record<string, unknown>> {
-  if (!doc?.name) {
-    throw new Error('Set a name before linking to the database.')
+  if (!doc) {
+    throw new Error('Open the document before linking it to the database.')
+  }
+
+  // Postgres keeps one name per row: the default language, else whichever one
+  // the editor filled. The Studio is where a document is authored, so the row
+  // is created from whatever exists rather than refused.
+  const name = firstFilledLocalizedText(doc.localizedName)
+
+  if (!name) {
+    throw new Error(
+      'Add a name in at least one language before linking to the database.'
+    )
   }
 
   const parentField = parentFieldFor(entityType)
@@ -134,7 +146,7 @@ async function buildDatabasePayload(
   }
 
   const body: Record<string, unknown> = {
-    name: doc.name,
+    name,
     sanity_id: sanityId,
   }
 

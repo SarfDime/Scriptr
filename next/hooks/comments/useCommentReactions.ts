@@ -1,10 +1,11 @@
 'use client'
 
-import { COMMENT_STRINGS } from '@shared/strings/comments-strings'
+import { COMMENT_STRINGS_PACK } from '@shared/strings/comments-strings'
 import type { ReactionType } from '@shared/types/comments.types'
 import { useState } from 'react'
 import { useCommentsServices } from '@/components/comments/CommentsProvider'
 import { useProtectedAction } from '@/hooks/useProtectedAction'
+import { useStrings } from '@/providers/locale/use-strings'
 import type { CommentReactionsProps } from '@/types/components/comments/CommentThread.types'
 
 /** A comment's reaction counts and the viewer's own reactions, kept in sync
@@ -14,11 +15,12 @@ export function useCommentReactions({
   initialMine,
   initialCounts,
 }: CommentReactionsProps) {
+  const strings = useStrings(COMMENT_STRINGS_PACK)
   const { api } = useCommentsServices()
   const [myReactions, setMyReactions] = useState(initialMine)
   const [reactionsByType, setReactionsByType] = useState(initialCounts)
   const { state, run } = useProtectedAction(api.postReaction, {
-    errorTitle: COMMENT_STRINGS.reactions.updateError,
+    errorTitle: strings.reactions.updateError,
   })
 
   const react = async (reactionType: ReactionType) => {

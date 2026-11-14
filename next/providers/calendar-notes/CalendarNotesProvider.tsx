@@ -5,8 +5,9 @@ import {
   type CalendarNoteType,
   DEFAULT_CALENDAR_NOTE_TYPE,
 } from '@shared/config/calendar'
-import { CALENDAR_STRINGS } from '@shared/strings/calendar-strings'
+import { CALENDAR_STRINGS_PACK } from '@shared/strings/calendar-strings'
 import type { CalendarNote } from '@shared/types/calendar-notes.types'
+import type { ResolvedStrings } from '@shared/types/localization.types'
 import {
   canAddNoteOnDay,
   groupNotesByDay,
@@ -37,6 +38,7 @@ import {
   writeCalendarNotesSyncMarker,
   writeLocalCalendarNotes,
 } from '@/lib/calendar-notes-storage'
+import { useStrings } from '@/providers/locale/use-strings'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 import { useSession } from '../SessionProvider'
 
@@ -85,12 +87,14 @@ const newNoteId = () =>
     ? crypto.randomUUID()
     : `note-${Date.now()}-${Math.floor(Math.random() * 1e6)}`
 
+type CalendarStrings = ResolvedStrings<typeof CALENDAR_STRINGS_PACK>
+
 /** A refusal from the API is already reader copy; anything else keeps the
  * generic line. */
-const syncErrorMessage = (error: unknown) =>
+const syncErrorMessage = (strings: CalendarStrings, error: unknown) =>
   error instanceof ApiError && (error.status === 429 || error.status === 403)
     ? error.message
-    : CALENDAR_STRINGS.note.syncFailed
+    : strings.note.syncFailed
 
 /**
  * Owns the reader's calendar notes: the browser copy, the edits, and the two
@@ -106,6 +110,7 @@ export const CalendarNotesProvider = ({
 }: {
   children: ReactNode
 }) => {
+  const strings = useStrings(CALENDAR_STRINGS_PACK)
   const { session } = useSession()
   const { addToast } = useToast()
   const mounted = useMounted()
@@ -163,7 +168,7 @@ export const CalendarNotesProvider = ({
     if (!canAddNoteOnDay(notes, day)) {
       addToast({
         type: 'warning',
-        title: CALENDAR_STRINGS.note.limitReached(CALENDAR_NOTES_PER_DAY),
+        title: strings.note.limitReached(CALENDAR_NOTES_PER_DAY),
       })
       return false
     }
@@ -219,7 +224,7 @@ export const CalendarNotesProvider = ({
       const { notes: remote } = await getMyCalendarNotes()
       return remote
     } catch (error) {
-      addToast({ type: 'error', title: syncErrorMessage(error) })
+      addToast({ type: 'error', title: syncErrorMessage(strings, error) })
       return null
     } finally {
       setSyncing(false)
@@ -239,7 +244,7 @@ export const CalendarNotesProvider = ({
 
   const pushNotes = async (): Promise<boolean> => {
     if (!userId) {
-      addToast({ type: 'info', title: CALENDAR_STRINGS.note.requiresSignIn })
+      addToast({ type: 'info', title: strings.note.requiresSignIn })
       return false
     }
 
@@ -256,7 +261,7 @@ export const CalendarNotesProvider = ({
       markCalendarNotesFetched(userId)
       return true
     } catch (error) {
-      addToast({ type: 'error', title: syncErrorMessage(error) })
+      addToast({ type: 'error', title: syncErrorMessage(strings, error) })
       return false
     } finally {
       setSyncing(false)

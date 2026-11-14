@@ -1,4 +1,4 @@
-import { UI_STRINGS } from '@shared/config/strings'
+import { UI_STRINGS_PACK } from '@shared/config/strings'
 import { ScriptsSection } from '@/components/academics/scripts/ScriptsSection'
 import { SubjectHighlightsCard } from '@/components/academics/subject/SubjectHighlightsCard'
 import { SubjectOverviewCard } from '@/components/academics/subject/SubjectOverviewCard'
@@ -9,6 +9,7 @@ import { RatingsSection } from '@/components/ratings/RatingsSection'
 import { getAcademicPath } from '@/lib/academic-routes'
 import { getScriptsBySubject } from '@/lib/api/scripts-api'
 import { toScriptSummaryDetails } from '@/lib/script-display'
+import { getServerLocale, getServerStrings } from '@/lib/server-strings'
 import type { SubjectDetail } from '@/types/academics/subject.types'
 
 export type SubjectDetailContentProps = {
@@ -33,30 +34,35 @@ export const SubjectDetailContent = async ({
   studyPath,
   fallback,
 }: SubjectDetailContentProps) => {
+  const ui = await getServerStrings(UI_STRINGS_PACK)
+  const locale = await getServerLocale()
   const study = subject.study
   const subjectScripts = subject.dbId
     ? await getScriptsBySubject(subject.dbId)
     : []
-  const scripts = toScriptSummaryDetails(subjectScripts ?? [])
+  const scripts = toScriptSummaryDetails(subjectScripts ?? [], locale)
 
   return (
     <PageLayout
       header={{
-        greeting: study?.name ?? UI_STRINGS.academics.entity.subject,
+        greeting: study?.name ?? ui.academics.entity.subject,
         title: subject.name,
         actions: study?.faculty && (
           <>
             <BackLink
               href={studyPath}
-              label={study.name ?? UI_STRINGS.academics.entity.study}
+              label={study.name ?? ui.academics.entity.study}
             />
             <BackLink
-              href={getAcademicPath({
-                type: 'faculty',
-                universitySlug:
-                  study.faculty.university?.slug ?? fallback.universitySlug,
-                facultySlug: study.faculty.slug ?? fallback.facultySlug,
-              })}
+              href={getAcademicPath(
+                {
+                  type: 'faculty',
+                  universitySlug:
+                    study.faculty.university?.slug ?? fallback.universitySlug,
+                  facultySlug: study.faculty.slug ?? fallback.facultySlug,
+                },
+                locale
+              )}
               label={study.faculty.name}
               backLevel='twoBack'
             />

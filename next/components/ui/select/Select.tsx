@@ -1,8 +1,8 @@
 'use client'
 
 import { ChevronDownIcon } from '@sanity/icons/ChevronDown'
-import { UI_STRINGS } from '@shared/config/strings'
 import { type CSSProperties, type MouseEvent, useState } from 'react'
+import { useUIStrings } from '@/providers/locale/use-strings'
 
 import { cn } from '../../../lib/common-utils'
 import type {
@@ -70,7 +70,7 @@ function getListStyle(trigger: HTMLElement): CSSProperties {
  */
 export const Select = <T = string>({
   options,
-  placeholder = UI_STRINGS.general.selectPlaceholder,
+  placeholder,
   clearable = false,
   hideChevron,
   selectListProps,
@@ -82,6 +82,8 @@ export const Select = <T = string>({
   disabled = false,
   ...rest
 }: SelectProps<T>) => {
+  const ui = useUIStrings()
+  const placeholderLabel = placeholder ?? ui.general.selectPlaceholder
   const control = useFieldControl(
     triggerProps?.id,
     triggerProps?.['aria-describedby']
@@ -142,7 +144,7 @@ export const Select = <T = string>({
       >
         {icon && icon}
         <span className='min-w-0 flex-1 truncate'>
-          {selectedOption ? selectedOption.label : placeholder}
+          {selectedOption ? selectedOption.label : placeholderLabel}
         </span>
         {!hideChevron && (
           <ChevronDownIcon

@@ -1,3 +1,4 @@
+import type { LocaleId } from '@shared/config/localization-constants'
 import type {
   FacultyWithUniversity,
   StudyWithFacultyAndUniversity,
@@ -23,7 +24,8 @@ import type { OnboardingCatalog } from '@/types/onboarding.types'
 export const buildProfileAcademics = (
   catalog: OnboardingCatalog,
   selectedFaculties: Array<{ faculty: FacultyWithUniversity | null }>,
-  selectedStudies: Array<{ study: StudyWithFacultyAndUniversity | null }>
+  selectedStudies: Array<{ study: StudyWithFacultyAndUniversity | null }>,
+  locale: LocaleId
 ): ProfileAcademics => {
   const faculties = selectedFaculties.flatMap(({ faculty }) =>
     faculty ? [faculty] : []
@@ -34,10 +36,11 @@ export const buildProfileAcademics = (
     const university = findByDbId(catalog.universities, dbId)
     if (!university?.slug) return null
     return catalogUrl(
-      getAcademicPath({
-        type: 'university',
-        universitySlug: university.slug,
-      })
+      getAcademicPath(
+        { type: 'university', universitySlug: university.slug },
+        locale
+      ),
+      locale
     )
   }
 
@@ -48,11 +51,15 @@ export const buildProfileAcademics = (
     )
     if (!faculty?.slug || !university?.slug) return null
     return catalogUrl(
-      getAcademicPath({
-        type: 'faculty',
-        universitySlug: university.slug,
-        facultySlug: faculty.slug,
-      })
+      getAcademicPath(
+        {
+          type: 'faculty',
+          universitySlug: university.slug,
+          facultySlug: faculty.slug,
+        },
+        locale
+      ),
+      locale
     )
   }
 
@@ -65,13 +72,16 @@ export const buildProfileAcademics = (
       (item) => item._id === faculty?.universityId
     )
     if (!study?.slug || !faculty?.slug || !university?.slug) return null
-    return getAcademicPath({
-      type: 'study',
-      siteSlug: study.siteSlug,
-      universitySlug: university.slug,
-      facultySlug: faculty.slug,
-      studySlug: study.slug,
-    })
+    return getAcademicPath(
+      {
+        type: 'study',
+        siteSlug: study.siteSlug,
+        universitySlug: university.slug,
+        facultySlug: faculty.slug,
+        studySlug: study.slug,
+      },
+      locale
+    )
   }
 
   const toEntry = (

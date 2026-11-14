@@ -1,7 +1,6 @@
 'use client'
 
 import Heart from '@sanity/icons/Heart'
-import { UI_STRINGS } from '@shared/config/strings'
 import { useState } from 'react'
 import { Button } from '@/components/common/Button'
 import { Text } from '@/components/typography/Text'
@@ -9,6 +8,7 @@ import { Divider } from '@/components/ui/Divider'
 import { useProtectedAction } from '@/hooks/useProtectedAction'
 import { useRequireSignIn } from '@/hooks/useRequireSignIn'
 import { cn } from '@/lib/common-utils'
+import { useUIStrings } from '@/providers/locale/use-strings'
 
 export type VoteResult = {
   voted: boolean
@@ -51,12 +51,13 @@ export function VoteButton({
   className,
   disabled = false,
 }: VoteButtonProps) {
+  const ui = useUIStrings()
   const [voted, setVoted] = useState(initialVoted)
   const [count, setCount] = useState(initialCount)
   const lowerLabel = label.toLowerCase()
   const requireSignIn = useRequireSignIn()
   const { state, run } = useProtectedAction(action, {
-    errorTitle: UI_STRINGS.general.couldNotUpdate(lowerLabel),
+    errorTitle: ui.general.couldNotUpdate(lowerLabel),
   })
 
   const handleClick = async () => {
@@ -80,8 +81,8 @@ export function VoteButton({
   }
 
   const ariaLabel = voted
-    ? UI_STRINGS.general.removeVote(label, noun, count)
-    : UI_STRINGS.general.addVote(label, noun, count)
+    ? ui.general.removeVote(label, noun, count)
+    : ui.general.addVote(label, noun, count)
 
   if (variant === 'compact') {
     return (

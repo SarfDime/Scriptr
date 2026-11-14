@@ -2,6 +2,7 @@ import { SANITY_CACHE_TAGS } from '@shared/config/cache-tags'
 import type { StudySiteQueryResult } from '@shared/types/sanity.types'
 import { notFound } from 'next/navigation'
 import { cache } from 'react'
+import { getServerLocale } from '@/lib/server-strings'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { studySiteQuery } from '@/sanity/queries/academics/study.queries'
 
@@ -22,6 +23,7 @@ export const getStudySite = cache(
     fetchSanityData<StudySiteQueryResult>({
       query: studySiteQuery,
       params: { siteSlug },
+      locale: await getServerLocale(),
       fetchOrigin: `study-site-${siteSlug}`,
       tags: [SANITY_CACHE_TAGS.study],
     })

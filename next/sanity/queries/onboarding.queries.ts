@@ -1,11 +1,12 @@
 import { groq } from 'next-sanity'
+import { localizedProjection, localizedValue } from './localized.queries'
 
 const onboardingSidebarSubjectQuery = /* groq */ `
   _id,
   dbId,
   "slug": slug.current,
-  name,
-  code,
+  ${localizedProjection('name', 'localizedName')},
+  ${localizedProjection('code', 'localizedCode')},
   credits,
   year,
   semester,
@@ -13,28 +14,28 @@ const onboardingSidebarSubjectQuery = /* groq */ `
   "faculty": study->faculty->{
     _id,
     "slug": slug.current,
-    name,
+    ${localizedProjection('name', 'localizedName')},
     dbId,
     university->{
       _id,
       "slug": slug.current,
-      name,
+      ${localizedProjection('name', 'localizedName')},
     },
   },
   study->{
     _id,
     "slug": slug.current,
     "siteSlug": siteSlug.current,
-    name,
+    ${localizedProjection('name', 'localizedName')},
     dbId,
     faculty->{
       _id,
       "slug": slug.current,
-      name,
+      ${localizedProjection('name', 'localizedName')},
       university->{
         _id,
         "slug": slug.current,
-        name,
+        ${localizedProjection('name', 'localizedName')},
       },
     },
   },
@@ -42,19 +43,19 @@ const onboardingSidebarSubjectQuery = /* groq */ `
     _id,
     dbId,
     "slug": slug.current,
-    name,
-    title,
+    ${localizedProjection('name', 'localizedName')},
+    ${localizedProjection('title', 'localizedTitle')},
   },
 `
 
 export const onboardingCatalogQuery = groq`
 {
-  "universities": *[_type == "university" && dbId != null]{ _id, dbId, name, "slug": slug.current },
-  "faculties": *[_type == "faculty" && university._ref != null && dbId != null]{ _id, dbId, name, "slug": slug.current, "universityId": university._ref },
+  "universities": *[_type == "university" && dbId != null]{ _id, dbId, ${localizedProjection('name', 'localizedName')}, "slug": slug.current },
+  "faculties": *[_type == "faculty" && university._ref != null && dbId != null]{ _id, dbId, ${localizedProjection('name', 'localizedName')}, "slug": slug.current, "universityId": university._ref },
   "studies": *[_type == "study" && faculty._ref != null && dbId != null]{
     _id,
     dbId,
-    name,
+    ${localizedProjection('name', 'localizedName')},
     "slug": slug.current,
     "siteSlug": siteSlug.current,
     "facultyId": faculty._ref,
@@ -62,8 +63,8 @@ export const onboardingCatalogQuery = groq`
         && _id == (*[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(_id asc)[0]._id)
       ] | order(year asc){
       year,
-      "subjects": *[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(name asc){
-        _id, dbId, name, year, elective, "studyId": study._ref
+      "subjects": *[_type == "subject" && study._ref == ^.study._ref && dbId != null && year == ^.year] | order(${localizedValue('localizedName')} asc){
+        _id, dbId, ${localizedProjection('name', 'localizedName')}, year, elective, "studyId": study._ref
       }
     },
   },

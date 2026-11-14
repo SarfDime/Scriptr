@@ -1,7 +1,10 @@
-import { PREFERENCES_STRINGS } from '@shared/strings/preferences-strings'
+'use client'
+
+import { PREFERENCES_STRINGS_PACK } from '@shared/strings/preferences-strings'
 import type { ProfilePreferences } from '@shared/types/profile-preferences.types'
 import { useState } from 'react'
 import { updateMyProfilePreferences } from '@/lib/api/profile-api'
+import { useStrings } from '@/providers/locale/use-strings'
 import { useNotifications } from '@/providers/notification/NotificationProvider'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 
@@ -18,6 +21,7 @@ export const usePreferencesForm = () => {
     refresh,
     applyPreferences,
   } = useNotifications()
+  const strings = useStrings(PREFERENCES_STRINGS_PACK)
   const [edits, setEdits] = useState<NotificationEdits>({})
   const [saving, setSaving] = useState(false)
   const { addToast } = useToast()
@@ -46,13 +50,11 @@ export const usePreferencesForm = () => {
       notifications: draft.notifications,
     })
       .then(({ preferences: saved }) => {
-        addToast({ type: 'success', title: PREFERENCES_STRINGS.saved })
+        addToast({ type: 'success', title: strings.saved })
         applyPreferences({ ...draft, ...saved })
         onSaved()
       })
-      .catch(() =>
-        addToast({ type: 'error', title: PREFERENCES_STRINGS.saveError })
-      )
+      .catch(() => addToast({ type: 'error', title: strings.saveError }))
       .finally(() => setSaving(false))
   }
 

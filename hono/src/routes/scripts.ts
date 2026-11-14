@@ -2,12 +2,13 @@ import { zValidator } from '@hono/zod-validator'
 import type { Context } from 'hono'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { NOTIFICATIONS_STRINGS } from '../../../shared/strings/notifications-strings'
+import { DEFAULT_LOCALE } from '../../../shared/config/localization-constants'
+import { NOTIFICATION_ROW_STRINGS } from '../../../shared/strings/notifications-strings'
 import type { ExamSession } from '../../../shared/types/academic.types'
 import type { ScriptFileInput } from '../../../shared/types/api.types'
-import type { PortableTextValue } from '../../../shared/types/portable-text.types'
 import type {
   DownloadResponse,
+  LocalizedScriptText,
   MyScriptSummary,
   ScriptAttachFilesResponse,
   ScriptDeleteResponse,
@@ -18,11 +19,13 @@ import type {
 } from '../../../shared/types/scripts.types'
 import { isOwner, isScriptFileInput } from '../../../shared/utils/api.utils'
 import {
-  isPortableTextValue,
-  isScriptDescriptionPortableTextValue,
-  isScriptTitlePortableTextValue,
-  portableTextToPlainText,
-} from '../../../shared/utils/portable-text.utils'
+  filledTextLanguages,
+  isLocalizedScriptDescription,
+  isLocalizedScriptTitle,
+  localizedPortableTextSearchText,
+  pickLocalizedPortableText,
+} from '../../../shared/utils/localized-portable-text'
+import { portableTextToPlainText } from '../../../shared/utils/portable-text.utils'
 import {
   isExamSession,
   isValidScriptYear,
@@ -166,8 +169,21 @@ function fuzzyScore(query: string, value: string) {
   )
 }
 
+/** Everything a script says, in every language it says it in: a script authored
+ *  only in Macedonian is found by the Macedonian words a reader can see on it,
+ *  whoever is reading. */
+function hasUnsupportedScriptIn(value: LocalizedScriptText) {
+  return filledTextLanguages(value).some((locale) =>
+    hasUnsupportedScript(portableTextToPlainText(value[locale]))
+  )
+}
+
 function toSearchableText(value: unknown) {
-  return isPortableTextValue(value) ? portableTextToPlainText(value) : ''
+  return localizedPortableTextSearchText(
+    typeof value === 'object' && value !== null
+      ? (value as LocalizedScriptText)
+      : null
+  )
 }
 
 function levenshteinDistance(left: string, right: string) {
@@ -230,14 +246,14 @@ const createScriptSchema = z
     },
     z
       .object({
-        title: z.custom<PortableTextValue>(isScriptTitlePortableTextValue, {
+        title: z.custom<LocalizedScriptText>(isLocalizedScriptTitle, {
           message:
-            'title must contain text and use supported Portable Text within 2 KB',
+            'title must hold at least one language of text and use supported Portable Text within 2 KB per language',
         }),
         description: z
-          .custom<PortableTextValue>(isScriptDescriptionPortableTextValue, {
+          .custom<LocalizedScriptText>(isLocalizedScriptDescription, {
             message:
-              'description must use supported Portable Text within 50 KB',
+              'description must hold at least one language of supported Portable Text within 50 KB per language',
           })
           .nullable(),
         subjectId: z.string().min(1, 'subjectId is required'),
@@ -268,18 +284,13 @@ const createScriptSchema = z
         }
       )
   )
-  .refine((body) => portableTextToPlainText(body.title).length > 0, {
-    message: 'Title cannot be empty',
+  .refine((body) => !hasUnsupportedScriptIn(body.title), {
+    message: UNSUPPORTED_SCRIPT_MESSAGE,
     path: ['title'],
   })
   .refine(
-    (body) => !hasUnsupportedScript(portableTextToPlainText(body.title)),
-    { message: UNSUPPORTED_SCRIPT_MESSAGE, path: ['title'] }
-  )
-  .refine(
     (body) =>
-      body.description === null ||
-      !hasUnsupportedScript(portableTextToPlainText(body.description)),
+      body.description === null || !hasUnsupportedScriptIn(body.description),
     { message: UNSUPPORTED_SCRIPT_MESSAGE, path: ['description'] }
   )
 
@@ -743,7 +754,14 @@ scripts.post(
     // be derived from it in the same insert: the suffix is what makes two
     // identically titled scripts distinct, and the slug is never rewritten.
     const scriptId = crypto.randomUUID()
-    const scriptSlug = buildScriptSlug(portableTextToPlainText(title), scriptId)
+    // Minted once, from the default language when it has one and otherwise from
+    // whichever language does — and never rewritten after this.
+    const scriptSlug = buildScriptSlug(
+      portableTextToPlainText(
+        pickLocalizedPortableText(title, DEFAULT_LOCALE) ?? undefined
+      ),
+      scriptId
+    )
 
     const { data, error } = await supabase
       .from('scripts')
@@ -1035,22 +1053,23 @@ scripts.patch('/:id', authMiddleware, async (c) => {
   const { title, description, additional_reading, exam_session, exam_year } =
     await c.req.json()
 
-  const writtenText: Array<unknown> = [title, description]
+  const writtenText = [title, description].filter(
+    (value): value is LocalizedScriptText =>
+      value !== undefined && value !== null
+  )
   if (
-    writtenText.some(
-      (value) =>
-        isPortableTextValue(value) &&
-        hasUnsupportedScript(portableTextToPlainText(value))
-    )
+    (title !== undefined && !isLocalizedScriptTitle(title)) ||
+    (description !== undefined &&
+      description !== null &&
+      !isLocalizedScriptDescription(description))
   ) {
+    return c.json({ error: 'Invalid script update' }, 400)
+  }
+  if (writtenText.some((value) => hasUnsupportedScriptIn(value))) {
     return c.json({ error: UNSUPPORTED_SCRIPT_MESSAGE }, 400)
   }
 
   if (
-    (title !== undefined && !isScriptTitlePortableTextValue(title)) ||
-    (description !== undefined &&
-      description !== null &&
-      !isScriptDescriptionPortableTextValue(description)) ||
     (additional_reading !== undefined &&
       (!Array.isArray(additional_reading) ||
         !additional_reading.every((url) => typeof url === 'string'))) ||
@@ -1230,13 +1249,14 @@ scripts.delete('/:id', authMiddleware, async (c) => {
   }
 
   if (canModerate && script.author_id !== user.id) {
-    const title = isPortableTextValue(script.title)
-      ? portableTextToPlainText(script.title).trim() || 'Script'
-      : 'Script'
+    const title =
+      portableTextToPlainText(
+        pickLocalizedPortableText(script.title, DEFAULT_LOCALE) ?? undefined
+      ).trim() || 'Script'
     await notifyProfileBestEffort(c, script.author_id, {
       type: 'content_removed',
-      title: NOTIFICATIONS_STRINGS.contentRemovedTitle(title),
-      body: NOTIFICATIONS_STRINGS.contentRemovedBody('script'),
+      title: NOTIFICATION_ROW_STRINGS.contentRemovedTitle(title),
+      body: NOTIFICATION_ROW_STRINGS.contentRemovedBody('script'),
       data: { target_kind: 'script', title },
       studyId: script.study_id,
     })

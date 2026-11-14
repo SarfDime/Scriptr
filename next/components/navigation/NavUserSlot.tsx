@@ -1,9 +1,10 @@
 'use client'
 
 import User from '@sanity/icons/User'
-import { UI_STRINGS } from '@shared/config/strings'
 import { getDisplayName } from '@/lib/profile-display'
 import { catalogUrl } from '@/lib/study-origin'
+import { useLocale } from '@/providers/locale/LocaleProvider'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { useNotifications } from '@/providers/notification/NotificationProvider'
 import { useMyProfile } from '@/providers/ProfileProvider'
 import { useSession } from '@/providers/SessionProvider'
@@ -17,6 +18,8 @@ import { UserCard } from './UserCard'
 
 /** Session-dependent footer of the navbar: sign-in link or the user card. */
 export const NavUserSlot = () => {
+  const strings = useUIStrings()
+  const { locale } = useLocale()
   const { session } = useSession()
   const profileState = useMyProfile()
   const { restrictionNotice } = useNotifications()
@@ -24,11 +27,11 @@ export const NavUserSlot = () => {
   if (session.status === 'unauthenticated') {
     return (
       <NextLink
-        href={catalogUrl('/auth')}
+        href={catalogUrl('/auth', locale)}
         className='button subtle w-full rounded-lg'
       >
         <User />
-        <Text className='ui-label'>{UI_STRINGS.navigation.signIn}</Text>
+        <Text className='ui-label'>{strings.navigation.signIn}</Text>
       </NextLink>
     )
   }
@@ -44,7 +47,7 @@ export const NavUserSlot = () => {
               ? getDisplayName(profile)
               : (session.user.username ??
                 session.user.email ??
-                UI_STRINGS.navigation.account)
+                strings.navigation.account)
           }
           avatarUrl={profile?.avatar_url ?? undefined}
           restricted={restrictionNotice !== null}

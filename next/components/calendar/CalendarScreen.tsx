@@ -1,4 +1,4 @@
-import { CALENDAR_STRINGS } from '@shared/strings/calendar-strings'
+import { CALENDAR_STRINGS_PACK } from '@shared/strings/calendar-strings'
 import type { ReactNode } from 'react'
 import { Box } from '@/components/common/Box'
 import { PageLayout } from '@/components/layout/PageLayout'
@@ -60,8 +60,8 @@ export const CalendarScreen = (viewModel: CalendarPageViewModel) => {
   return (
     <PageLayout
       header={{
-        title: CALENDAR_STRINGS.pageTitle,
-        subtitle: CALENDAR_STRINGS.pageSubtitle,
+        title: CALENDAR_STRINGS_PACK.pageTitle,
+        subtitle: CALENDAR_STRINGS_PACK.pageSubtitle,
       }}
       className='min-h-full'
     >

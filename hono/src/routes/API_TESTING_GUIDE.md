@@ -843,7 +843,7 @@ curl -s -b cookies-student.txt -X POST $BASE/achievement-definitions \
   -H "Content-Type: application/json" \
   -d '{"id":"script_stack","metric":"scripts_uploaded","threshold":3,"rarity":"uncommon"}' | jq .
 
-# An id with no code entry — expect 400 naming ACHIEVEMENT_COPY
+# An id with no code entry — expect 400 naming ACHIEVEMENTS_STRINGS_PACK.copy
 curl -s -b cookies-admin.txt -X POST $BASE/achievement-definitions \
   -H "Content-Type: application/json" \
   -d '{"id":"not_in_the_catalogue","metric":"scripts_uploaded","threshold":1,"rarity":"common"}' | jq .

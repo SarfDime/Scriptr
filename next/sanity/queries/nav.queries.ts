@@ -1,5 +1,6 @@
 import { groq } from 'next-sanity'
 import { linkSelectorFunction, sanityImageFunction } from './functions.queries'
+import { localizedProjection } from './localized.queries'
 
 const navMenuQuery = groq`
 ${sanityImageFunction}
@@ -10,8 +11,8 @@ ${linkSelectorFunction}
     defined(title) => {title},
     defined(websiteLogo)=>{ "websiteLogo": sanityImage::full(websiteLogo) },
     navItems[]->{
-      stringTitle,
-      stringSubtitle,
+      ${localizedProjection('stringTitle', 'localizedTitle')},
+      ${localizedProjection('stringSubtitle', 'localizedSubtitle')},
       ...linkSelector::full(@),
       defined(new) => {new},
       defined(comingSoon) => {comingSoon},

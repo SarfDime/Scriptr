@@ -1,11 +1,13 @@
+'use client'
+
 import Documents from '@sanity/icons/Documents'
 import Refresh from '@sanity/icons/Refresh'
 import Sort from '@sanity/icons/Sort'
-import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { Select } from '@/components/ui/select/Select'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import type {
   ScriptFiltersProps,
   ScriptSortOption,
@@ -20,11 +22,12 @@ export const ScriptFilters = ({
   onSubjectChange,
   onSortChange,
 }: ScriptFiltersProps) => {
+  const ui = useUIStrings()
   const iconClass = 'rounded-md'
   const subjectOptions: Array<SelectOptionType> = [
     {
       id: 'all-subjects',
-      label: UI_STRINGS.scripts.filters.allSubjects,
+      label: ui.scripts.filters.allSubjects,
       value: '',
       icon: (
         <Documents
@@ -52,13 +55,13 @@ export const ScriptFilters = ({
   const sortOptions: Array<SelectOptionType<ScriptSortOption>> = [
     {
       id: 'recently-updated',
-      label: UI_STRINGS.scripts.filters.recentlyUpdated,
+      label: ui.scripts.filters.recentlyUpdated,
       value: 'Recently updated',
       icon: <Refresh className={iconClass} />,
     },
     {
       id: 'title-a-z',
-      label: UI_STRINGS.scripts.filters.titleAZ,
+      label: ui.scripts.filters.titleAZ,
       value: 'Title A-Z',
       icon: <Sort className={iconClass} />,
     },
@@ -88,7 +91,7 @@ export const ScriptFilters = ({
         }
         setSelectedValue={(value) => onSubjectChange(value || '')}
         triggerProps={{
-          'aria-label': UI_STRINGS.scripts.filters.subjectLabel,
+          'aria-label': ui.scripts.filters.subjectLabel,
         }}
       />
       <Select<ScriptSortOption>
@@ -99,7 +102,7 @@ export const ScriptFilters = ({
         options={sortOptions}
         setSelectedValue={onSortChange}
         triggerProps={{
-          'aria-label': UI_STRINGS.scripts.filters.sortLabel,
+          'aria-label': ui.scripts.filters.sortLabel,
         }}
         icon={
           sort === 'Title A-Z' ? (

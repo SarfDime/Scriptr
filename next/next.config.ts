@@ -1,4 +1,5 @@
 import bundleAnalyzer from '@next/bundle-analyzer'
+import { DEFAULT_LOCALE, LOCALES } from '@shared/config/localization-constants'
 import type { NextConfig } from 'next'
 
 // Initialize bundle analyzer with type safety
@@ -76,17 +77,97 @@ const onOurHosts = [{ type: 'host' as const, value: OUR_HOSTS }]
  * asset or a catalog page, so it is not rewritten — a catch-all would swallow
  * `/_next` and `/api`. Each one is rewritten by prefixing the study tree onto
  * the same path, so `lbe.scriptr.uk/scripts/x` is served by
- * `/study/[siteSlug]/scripts/[scriptSlug]` with the URL unchanged.
+ * `/[locale]/study/[siteSlug]/scripts/[scriptSlug]` with the URL unchanged.
+ *
+ * The list is written once and registered in both shapes: unprefixed (the
+ * default language) and under every non-default prefix (`/mk/scripts/x`). A
+ * study host is a site of its own, so a reader who chose Macedonian must not be
+ * thrown back to English by following a link there.
  */
 const STUDY_OWNED_PATHS = [
   '/scripts/:path*',
   '/subject/:path*',
   '/calendar',
   '/academic-setup',
-  '/sitemap/:path*',
   '/user/:username/:path*',
   '/user/:username',
 ]
+
+/**
+ * The study tree's sitemap handlers stay outside `[locale]`: a sitemap carries
+ * every language's alternates in one entry, its URL is not one a reader picks a
+ * language for, and a study host rewrites `/sitemap.xml` straight onto it. So
+ * these map onto the tree without a locale segment.
+ */
+const STUDY_SITEMAP_PATHS = ['/sitemap/:path*']
+
+/** The section name the sitemap index is served under — kept in step with
+ * `lib/study-sitemap.ts`. */
+const STUDY_SITEMAP_INDEX_SECTION = 'index'
+
+/** Every non-default language, so the rules below are generated rather than
+ * written twice. */
+const NON_DEFAULT_LOCALES = LOCALES.filter(
+  (locale) => locale !== DEFAULT_LOCALE
+)
+
+/**
+ * The default language keeps the addresses it had before localization: an
+ * unprefixed request is served by the `[locale]` tree as `en` without changing
+ * the URL. The exclusion only decides what is rewritten — `mk` and `en` are
+ * real segments, `_next` and `api` belong to the app, and a path carrying a
+ * dot is a file. It runs last in `beforeFiles`, so a study host's own paths are
+ * mapped first.
+ */
+const DEFAULT_LOCALE_REWRITE = [
+  {
+    source: '/:path((?!mk|en|api|_next|.*\\..*).*)',
+    destination: '/en/:path*',
+  },
+]
+
+/**
+ * `/en/…` is the same page as the unprefixed address, which is the canonical
+ * one, so the alias redirects rather than serving a second copy. The exact
+ * `/en` rule is not redundant: a `:path*` that matches nothing produces an
+ * empty `Location`.
+ */
+const DEFAULT_LOCALE_ALIAS = [
+  { source: '/en', destination: '/', permanent: false },
+  { source: '/en/:path*', destination: '/:path*', permanent: false },
+]
+
+/**
+ * The remembered language sends a reader who enters at a root to the language
+ * they last used. `scriptr-language` is a cookie, not just the `localStorage`
+ * entry it used to be: a config redirect can only read a cookie, and the value
+ * here is a preference, never authorisation.
+ *
+ * Two roots answer this: the catalog's, and a study host's — which now serves
+ * `/mk/…` too, so sending a Macedonian reader to `/mk` lands on that study in
+ * their language rather than on a 404 or on English.
+ */
+const LANGUAGE_PREFERENCE_REDIRECTS = NON_DEFAULT_LOCALES.flatMap((locale) => {
+  const has = [
+    { type: 'cookie' as const, key: 'scriptr-language', value: locale },
+  ]
+
+  return [
+    {
+      source: '/',
+      has,
+      missing: onStudyHost,
+      destination: `/${locale}`,
+      permanent: false,
+    },
+    {
+      source: '/',
+      has: [...onStudyHost, ...has],
+      destination: `/${locale}`,
+      permanent: false,
+    },
+  ]
+})
 
 /**
  * Paths that are the catalog's even when requested on a study host. `/user` is
@@ -141,9 +222,13 @@ const nextConfig = {
    * destination's `:label` is filled from the host pattern's named group.
    */
   async redirects() {
-    if (!STUDY_HOSTS) return []
+    if (!STUDY_HOSTS) {
+      return [...LANGUAGE_PREFERENCE_REDIRECTS, ...DEFAULT_LOCALE_ALIAS]
+    }
 
     return [
+      ...LANGUAGE_PREFERENCE_REDIRECTS,
+      ...DEFAULT_LOCALE_ALIAS,
       {
         source: '/study/:label/:path*',
         has: onOurHosts,
@@ -156,6 +241,22 @@ const nextConfig = {
         destination: SITE_ORIGIN,
         permanent: true,
       },
+      // The same two addresses under a language prefix: the prefix survives the
+      // hop, so `/mk/study/lbe` lands on the study's site in Macedonian.
+      ...NON_DEFAULT_LOCALES.flatMap((locale) => [
+        {
+          source: `/${locale}/study/:label/:path*`,
+          has: onOurHosts,
+          destination: `${siteUrl.protocol}//:label.${SITE_HOST_WITH_PORT}/${locale}/:path*`,
+          permanent: true,
+        },
+        {
+          source: `/${locale}/study`,
+          has: onOurHosts,
+          destination: `${SITE_ORIGIN}/${locale}`,
+          permanent: true,
+        },
+      ]),
       // A study host serves its study, not the rest of the platform: a catalog
       // page opened there belongs on the catalog host.
       //
@@ -175,6 +276,17 @@ const nextConfig = {
         destination: `${SITE_ORIGIN}${source}`,
         permanent: false,
       })),
+      // A catalog page opened on a study host in a non-default language goes to
+      // the same page on the catalog host, prefix and all.
+      ...NON_DEFAULT_LOCALES.flatMap((locale) =>
+        CATALOG_OWNED_PATHS.map((source) => ({
+          source: `/${locale}${source}`,
+          has: onStudyHost,
+          missing: [{ type: 'query' as const, key: '_rsc' }],
+          destination: `${SITE_ORIGIN}/${locale}${source}`,
+          permanent: false,
+        }))
+      ),
     ]
   },
 
@@ -182,7 +294,11 @@ const nextConfig = {
    * URL the reader sees. */
   async rewrites() {
     if (!STUDY_HOSTS) {
-      return { beforeFiles: [], afterFiles: [], fallback: [] }
+      return {
+        beforeFiles: [...DEFAULT_LOCALE_REWRITE],
+        afterFiles: [],
+        fallback: [],
+      }
     }
 
     return {
@@ -190,22 +306,45 @@ const nextConfig = {
         {
           source: '/',
           has: onStudyHost,
-          destination: '/study/:label',
+          destination: `/${DEFAULT_LOCALE}/study/:label`,
         },
-        // The study's sitemap index lives at `sitemap/route.ts`, not
-        // `sitemap.xml/route.ts`: Next ignores `generateStaticParams` on a
-        // segment ending in a dot and prerenders it with `-` as the handle,
-        // which every study host would then be served.
+        // A study host's root in a non-default language: `/mk` serves the
+        // study's overview in Macedonian, at that address.
+        ...NON_DEFAULT_LOCALES.map((locale) => ({
+          source: `/${locale}`,
+          has: onStudyHost,
+          destination: `/${locale}/study/:label`,
+        })),
+        // A study's sitemap index is served by the section handler under a
+        // reserved name: `generateStaticParams` is ignored on a segment ending
+        // in a dot (so `/sitemap.xml` cannot be the route), and an
+        // extension-less route handler path is shadowed by the `[locale]`
+        // catch-all. `index.xml` is neither.
         {
           source: '/sitemap.xml',
           has: onStudyHost,
-          destination: '/study/:label/sitemap',
+          destination: `/study/:label/sitemap/${STUDY_SITEMAP_INDEX_SECTION}.xml`,
         },
         ...STUDY_OWNED_PATHS.map((source) => ({
           source,
           has: onStudyHost,
+          destination: `/${DEFAULT_LOCALE}/study/:label${source}`,
+        })),
+        // The same paths under a language prefix, which is the shape a reader
+        // in that language follows from a link the app renders.
+        ...NON_DEFAULT_LOCALES.flatMap((locale) =>
+          STUDY_OWNED_PATHS.map((source) => ({
+            source: `/${locale}${source}`,
+            has: onStudyHost,
+            destination: `/${locale}/study/:label${source}`,
+          }))
+        ),
+        ...STUDY_SITEMAP_PATHS.map((source) => ({
+          source,
+          has: onStudyHost,
           destination: `/study/:label${source}`,
         })),
+        ...DEFAULT_LOCALE_REWRITE,
       ],
       afterFiles: [],
       fallback: [],

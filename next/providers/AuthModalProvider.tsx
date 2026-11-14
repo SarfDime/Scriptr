@@ -1,12 +1,12 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import { createContext, type ReactNode, useContext, useState } from 'react'
 import { LoginForm } from '@/components/auth/LoginForm'
 import { RegisterForm } from '@/components/auth/RegisterForm'
 import { Box } from '@/components/common/Box'
 import { Text } from '@/components/typography/Text'
 import { Dialog } from '@/components/ui/Dialog'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { useSession } from '@/providers/SessionProvider'
 
 // Narrower than the dialog default: `md:min-w-0` cancels its minimum width,
@@ -36,6 +36,7 @@ const AuthModalContext = createContext<AuthModalContextValue | null>(null)
  * resets `isOpen`, so it can't pop back up after a later logout).
  */
 export function AuthModalProvider({ children }: { children: ReactNode }) {
+  const ui = useUIStrings()
   const { session } = useSession()
   const [isOpen, setIsOpen] = useState(false)
   const [mode, setMode] = useState<AuthMode>('login')
@@ -52,11 +53,7 @@ export function AuthModalProvider({ children }: { children: ReactNode }) {
       {children}
       <Dialog
         hideTrigger
-        title={
-          mode === 'login'
-            ? UI_STRINGS.auth.login.title
-            : UI_STRINGS.auth.register.title
-        }
+        title={mode === 'login' ? ui.auth.login.title : ui.auth.register.title}
         dialogProps={{ className: AUTH_DIALOG_CLASS }}
         isOpen={isVisible}
         onClose={() => setIsOpen(false)}
@@ -64,9 +61,7 @@ export function AuthModalProvider({ children }: { children: ReactNode }) {
         {/* Mounted only while visible, so the forms start fresh every time. */}
         {isVisible && (
           <Box className='ui-stack gap-4 p-5'>
-            <Text className='ui-body text-fg-muted'>
-              {UI_STRINGS.auth.subtitle}
-            </Text>
+            <Text className='ui-body text-fg-muted'>{ui.auth.subtitle}</Text>
             <Box className={AUTH_PANEL_CLASS}>
               {mode === 'login' ? (
                 <LoginForm onSwitchToRegister={() => setMode('register')} />

@@ -1,12 +1,13 @@
 'use client'
 
 import DocumentTextIcon from '@sanity/icons/DocumentText'
-import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
+import { SCRIPT_STRINGS_PACK } from '@shared/strings/scripts-strings'
 import { Box } from '@/components/common/Box'
 import { NextImage } from '@/components/common/NextImage'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 import { cn } from '@/lib/common-utils'
 import type { getPreviewableKind } from '@/lib/file-preview'
+import { useStrings } from '@/providers/locale/use-strings'
 import { IMAGE_SIZES } from '@/styles/style'
 import { useStoredFileUrl } from './FilePreviewContent'
 
@@ -31,6 +32,7 @@ export function ScriptFileThumbnail({
   color,
   onPreview,
 }: ScriptFileThumbnailProps) {
+  const strings = useStrings(SCRIPT_STRINGS_PACK)
   const content =
     kind === 'image' ? (
       <ImageThumbnail fileKey={fileKey} fileName={fileName} color={color} />
@@ -44,7 +46,7 @@ export function ScriptFileThumbnail({
     <button
       type='button'
       onClick={onPreview}
-      aria-label={SCRIPT_STRINGS.file.previewAriaLabel(fileName)}
+      aria-label={strings.file.previewAriaLabel(fileName)}
       className='block h-full w-full cursor-zoom-in rounded-md transition-opacity hover:opacity-90 focus-visible:opacity-90'
     >
       {content}
@@ -79,6 +81,7 @@ function ImageThumbnail({
   color: string
 }) {
   const state = useStoredFileUrl(fileKey)
+  const strings = useStrings(SCRIPT_STRINGS_PACK)
 
   if (state.status === 'loading') {
     return <Skeleton loading className='h-full w-full rounded-md' />
@@ -96,7 +99,7 @@ function ImageThumbnail({
           matches the card's widest thumbnail (20rem). */}
       <NextImage
         src={state.url}
-        alt={SCRIPT_STRINGS.file.thumbnailAlt(fileName)}
+        alt={strings.file.thumbnailAlt(fileName)}
         fillProp
         objectFitProp='cover'
         sizes={IMAGE_SIZES.SCRIPT_THUMBNAIL}

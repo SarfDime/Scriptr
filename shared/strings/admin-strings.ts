@@ -141,9 +141,9 @@ export const ADMIN_STRINGS = {
     'Use 2 to 60 lowercase letters, numbers or underscores.',
   achievementCopyField: 'Wording',
   achievementCopyManaged:
-    'Titles and descriptions live in ACHIEVEMENT_COPY (shared/config/achievements.ts), so the badge, the admin list and notifications all change with the code.',
+    'Titles and descriptions live in ACHIEVEMENTS_STRINGS_PACK.copy (shared/strings/achievements-strings.ts), so the badge, the admin list and notifications all change with the code.',
   achievementCopyMissing:
-    'This id has no wording yet. Add it to ACHIEVEMENT_COPY in shared/config/achievements.ts first, otherwise it cannot be created.',
+    'This id has no wording yet. Add it to ACHIEVEMENTS_STRINGS_PACK.copy in shared/strings/achievements-strings.ts first, otherwise it cannot be created.',
   achievementMetric: 'Metric',
   achievementMetricNames: {
     scripts_uploaded: 'Scripts uploaded',

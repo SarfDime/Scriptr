@@ -222,7 +222,7 @@ The three non-session surfaces (`/api/sanity/*`, `/api/admin/*`, `/api/sitemap/s
 
 1. **`scriptr-web`** — it verifies the new signed `/api/revalidate` calls, so deploying it first means the old API's unsigned calls are simply rejected (cache stays stale for a few minutes) instead of the reverse.
 2. **`scriptr-api`** — this is the switchover. Until it lands, `/api/sanity/*` and `/api/admin/*` do not exist; after it lands, `/api/internal/*` is gone, so an open Studio tab running the old bundle fails its sync/delete actions. Reload the Studio once the API is Healthy.
-3. **Sanity Studio** (`corepack pnpm deploy:sanity`) — the bundle no longer contains any secret, so this must be re-published for the TOTP flow to reach the operator.
+3. **Sanity Studio** (`corepack pnpm --filter scriptr-sanity deploy`) — the bundle no longer contains any secret, so this must be re-published for the TOTP flow to reach the operator.
 
 Environment changes required by the deploy:
 

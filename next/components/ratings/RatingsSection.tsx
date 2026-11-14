@@ -1,8 +1,7 @@
 'use client'
 
 import type { RatingTargetType } from '@shared/config/api'
-import { UI_STRINGS } from '@shared/config/strings'
-import { RATING_STRINGS } from '@shared/strings/ratings-strings'
+import { RATING_STRINGS_PACK } from '@shared/strings/ratings-strings'
 import type { RatingTarget } from '@shared/types/ratings.types'
 import { useId } from 'react'
 import { Box } from '@/components/common/Box'
@@ -12,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 import { useRatings } from '@/hooks/useRatings'
 import { cn } from '@/lib/common-utils'
 import { useAuthModal } from '@/providers/AuthModalProvider'
+import { useStrings, useUIStrings } from '@/providers/locale/use-strings'
 import { RatingCriterionRow } from './RatingCriterionRow'
 
 /**
@@ -45,6 +45,8 @@ const RATING_PLACEHOLDER_MIN_HEIGHT: Record<RatingTargetType, string> = {
  */
 export function RatingsSection({ targetType, targetId }: RatingTarget) {
   const headingId = useId()
+  const ui = useUIStrings()
+  const strings = useStrings(RATING_STRINGS_PACK)
   const { open: openAuthModal } = useAuthModal()
   const { catalog, viewer, retryCatalog, retryViewer, setScore } = useRatings({
     targetType,
@@ -67,26 +69,24 @@ export function RatingsSection({ targetType, targetId }: RatingTarget) {
        * the rows below any height of their own. */}
       <Box className='ui-cluster justify-between gap-x-3 gap-y-1'>
         <Text id={headingId} className='ui-label'>
-          {RATING_STRINGS.title}
+          {strings.title}
         </Text>
         {catalog.status === 'loaded' && catalog.types.length > 0 && (
           <>
             {viewer.status === 'guest' && (
               <Box className='ui-cluster gap-2'>
-                <Text className='ui-caption'>
-                  {RATING_STRINGS.signInPrompt}
-                </Text>
+                <Text className='ui-caption'>{strings.signInPrompt}</Text>
                 <Button
                   className='button button-sm subtle'
                   onClick={() => openAuthModal()}
                 >
-                  {RATING_STRINGS.signIn}
+                  {strings.signIn}
                 </Button>
               </Box>
             )}
             {viewer.status === 'checking' && (
               <Text className='ui-caption' role='status'>
-                {RATING_STRINGS.checkingAccess}
+                {strings.checkingAccess}
               </Text>
             )}
           </>
@@ -99,7 +99,7 @@ export function RatingsSection({ targetType, targetId }: RatingTarget) {
         // when the catalog arrived.
         <>
           <Text className='sr-only' role='status'>
-            {RATING_STRINGS.loading}
+            {strings.loading}
           </Text>
           <Box
             as='ul'
@@ -126,16 +126,16 @@ export function RatingsSection({ targetType, targetId }: RatingTarget) {
       {catalog.status === 'error' && (
         <Box className='ui-cluster gap-2'>
           <Text className='ui-caption' role='alert'>
-            {RATING_STRINGS.loadError}
+            {strings.loadError}
           </Text>
           <Button className='button button-sm subtle' onClick={retryCatalog}>
-            {RATING_STRINGS.retry}
+            {strings.retry}
           </Button>
         </Box>
       )}
 
       {catalog.status === 'loaded' && catalog.types.length === 0 && (
-        <Text className='ui-caption'>{RATING_STRINGS.empty}</Text>
+        <Text className='ui-caption'>{strings.empty}</Text>
       )}
 
       {catalog.status === 'loaded' && catalog.types.length > 0 && (
@@ -145,16 +145,16 @@ export function RatingsSection({ targetType, targetId }: RatingTarget) {
           {viewer.status === 'error' && (
             <Box className='ui-cluster gap-2'>
               <Text className='ui-caption' role='alert'>
-                {RATING_STRINGS.loadMineError}
+                {strings.loadMineError}
               </Text>
               <Button className='button button-sm subtle' onClick={retryViewer}>
-                {RATING_STRINGS.retry}
+                {strings.retry}
               </Button>
             </Box>
           )}
           {restricted && (
             <Text className='ui-caption' role='note'>
-              {UI_STRINGS.general.restrictedAction}
+              {ui.general.restrictedAction}
             </Text>
           )}
 

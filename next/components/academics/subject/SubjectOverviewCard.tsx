@@ -1,5 +1,5 @@
 import Book from '@sanity/icons/Book'
-import { UI_STRINGS } from '@shared/config/strings'
+import { UI_STRINGS_PACK } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { PortableTextContent } from '@/components/typography/PortableTextContent'
 import { Text } from '@/components/typography/Text'
@@ -9,15 +9,18 @@ import { Divider } from '@/components/ui/Divider'
 import { getAcademicPath } from '@/lib/academic-routes'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn, createPersonSummaries } from '@/lib/common-utils'
+import { getServerLocale, getServerStrings } from '@/lib/server-strings'
 import { catalogUrl } from '@/lib/study-origin'
 import type { SubjectDetail } from '@/types/academics/subject.types'
 
-export const SubjectOverviewCard = ({
+export const SubjectOverviewCard = async ({
   _id,
   description,
   study,
   professors,
 }: SubjectDetail) => {
+  const locale = await getServerLocale()
+  const ui = await getServerStrings(UI_STRINGS_PACK)
   const color = getColorPalette({ type: 'seed', value: _id, variant: 'nb' })
   const colorBorder = getColorPalette({ type: 'seed', value: _id })
 
@@ -30,40 +33,54 @@ export const SubjectOverviewCard = ({
   const administrators = createPersonSummaries(
     {
       target: professors,
-      title: UI_STRINGS.academics.entity.professor,
+      title: ui.academics.entity.professor,
       getHref: (professor) =>
         catalogUrl(
-          getAcademicPath({
-            type: 'professor',
-            professorSlug: professor.slug ?? professor._id,
-          })
+          getAcademicPath(
+            {
+              type: 'professor',
+              professorSlug: professor.slug ?? professor._id,
+            },
+            locale
+          ),
+          locale
         ),
     },
     {
       target: study,
-      title: UI_STRINGS.academics.entity.study,
+      title: ui.academics.entity.study,
       getHref: () =>
-        getAcademicPath({
-          type: 'study',
-          siteSlug: study?.siteSlug,
-          universitySlug,
-          facultySlug,
-          studySlug,
-        }),
+        getAcademicPath(
+          {
+            type: 'study',
+            siteSlug: study?.siteSlug,
+            universitySlug,
+            facultySlug,
+            studySlug,
+          },
+          locale
+        ),
     },
     {
       target: faculty,
-      title: UI_STRINGS.academics.entity.faculty,
+      title: ui.academics.entity.faculty,
       getHref: () =>
         catalogUrl(
-          getAcademicPath({ type: 'faculty', universitySlug, facultySlug })
+          getAcademicPath(
+            { type: 'faculty', universitySlug, facultySlug },
+            locale
+          ),
+          locale
         ),
     },
     {
       target: university,
-      title: UI_STRINGS.academics.entity.university,
+      title: ui.academics.entity.university,
       getHref: () =>
-        catalogUrl(getAcademicPath({ type: 'university', universitySlug })),
+        catalogUrl(
+          getAcademicPath({ type: 'university', universitySlug }, locale),
+          locale
+        ),
     }
   )
 
@@ -72,7 +89,7 @@ export const SubjectOverviewCard = ({
       <Box className='ui-cluster items-start justify-between gap-5'>
         <Box className='ui-stack gap-2'>
           <Text className='ui-label-modern'>
-            {UI_STRINGS.academics.subject.overview}
+            {ui.academics.subject.overview}
           </Text>
           {description && (
             <PortableTextContent>{description}</PortableTextContent>

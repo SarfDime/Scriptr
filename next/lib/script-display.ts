@@ -1,5 +1,7 @@
+import type { LocaleId } from '@shared/config/localization-constants'
 import type { ProfileScriptSummary } from '@shared/types/profile.types'
 import type { ScriptSummary } from '@shared/types/scripts.types'
+import { pickLocalizedPortableText } from '@shared/utils/localized-portable-text'
 import type { ScriptDetail } from '@/types/components/Scripts.types'
 
 /**
@@ -22,11 +24,15 @@ import type { ScriptDetail } from '@/types/components/Scripts.types'
  * optional on ScriptDetail, and every other script-list endpoint in this
  * app already omits them for the same reason.
  */
-export const toScriptDetail = (script: ProfileScriptSummary): ScriptDetail => ({
+export const toScriptDetail = (
+  script: ProfileScriptSummary,
+  locale: LocaleId
+): ScriptDetail => ({
   id: script.id,
   slug: script.slug,
-  title: script.title,
-  description: script.description ?? undefined,
+  title: pickLocalizedPortableText(script.title, locale) ?? [],
+  description:
+    pickLocalizedPortableText(script.description, locale) ?? undefined,
   subject: script.subject?.name ?? '',
   author: script.author?.full_name || script.author?.username || '',
   updatedAt: new Date(script.updated_at),
@@ -36,19 +42,23 @@ export const toScriptDetail = (script: ProfileScriptSummary): ScriptDetail => ({
 })
 
 export const toScriptDetails = (
-  scripts: Array<ProfileScriptSummary>
-): Array<ScriptDetail> => scripts.map(toScriptDetail)
+  scripts: Array<ProfileScriptSummary>,
+  locale: LocaleId
+): Array<ScriptDetail> =>
+  scripts.map((script) => toScriptDetail(script, locale))
 
 /** Adapts the shared scripts-list response for the interactive script section. */
 export const toScriptSummaryDetails = (
-  scripts: Array<ScriptSummary>
+  scripts: Array<ScriptSummary>,
+  locale: LocaleId
 ): Array<ScriptDetail> =>
   scripts.map((script) => ({
     id: script.id,
     slug: script.slug,
     siteSlug: script.subject?.study?.site_slug ?? null,
-    title: script.title,
-    description: script.description ?? undefined,
+    title: pickLocalizedPortableText(script.title, locale) ?? [],
+    description:
+      pickLocalizedPortableText(script.description, locale) ?? undefined,
     subject: script.subject?.name ?? '',
     author: script.author?.full_name || script.author?.username || '',
     updatedAt: new Date(script.updated_at),

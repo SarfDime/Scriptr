@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { getAcademicPath } from '@/lib/academic-routes'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
+import { getServerLocale } from '@/lib/server-strings'
 import { catalogUrl } from '@/lib/study-origin'
 import type { MinimalProfessor } from '@/types/academics/professor.types'
 import type { ComponentColorPalettes } from '@/types/components/ColorPalettes.types'
@@ -60,7 +61,7 @@ const AdministrationCardBody = ({
 
 const ADMINISTRATION_ITEM_WRAPPER_CLASS = ' items-start ui-above-inside p-2'
 
-export const AdministrationCard = ({
+export const AdministrationCard = async ({
   color,
   name,
   subtitle,
@@ -69,6 +70,7 @@ export const AdministrationCard = ({
   id,
   children,
 }: AdministrationItemProps) => {
+  const locale = await getServerLocale()
   const colorPalette =
     color ?? getColorPalette({ type: 'seed', value: id ?? slug ?? name })
 
@@ -77,10 +79,14 @@ export const AdministrationCard = ({
       {slug ? (
         <ClickableCard
           href={catalogUrl(
-            getAcademicPath({
-              type: 'professor',
-              professorSlug: slug,
-            })
+            getAcademicPath(
+              {
+                type: 'professor',
+                professorSlug: slug,
+              },
+              locale
+            ),
+            locale
           )}
           className={cn(ADMINISTRATION_ITEM_WRAPPER_CLASS, 'button group')}
         >

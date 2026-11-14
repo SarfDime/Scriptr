@@ -1,5 +1,7 @@
-import { UI_STRINGS } from '@shared/config/strings'
+import type { LocaleId } from '@shared/config/localization-constants'
+import { UI_STRINGS_PACK } from '@shared/config/strings'
 import type { StagedUpload } from '@shared/types/file-upload.types'
+import { getStrings } from '@shared/utils/localized-strings'
 import { UserFacingError } from '@/lib/user-facing-error'
 import { ApiError } from './next-api'
 
@@ -9,7 +11,8 @@ import { ApiError } from './next-api'
  * signature, so the file has to be sent exactly as it was declared. */
 export const putToStaging = async (
   { url, contentType }: StagedUpload,
-  file: File
+  file: File,
+  locale: LocaleId
 ): Promise<void> => {
   const response = await fetch(url, {
     method: 'PUT',
@@ -18,7 +21,8 @@ export const putToStaging = async (
   })
   if (!response.ok) {
     throw new UserFacingError(
-      UI_STRINGS.scripts.uploadModal.fileErrors.stagingFailed
+      getStrings(UI_STRINGS_PACK, locale).scripts.uploadModal.fileErrors
+        .stagingFailed
     )
   }
 }

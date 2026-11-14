@@ -10,6 +10,10 @@ import {
   WEEK_STARTS_ON,
   WEEK_VIEW_ANCHOR_OFFSET,
 } from '@shared/config/calendar'
+import {
+  DEFAULT_LOCALE,
+  type LocaleId,
+} from '@shared/config/localization-constants'
 
 /**
  * Pure calendar arithmetic and matching — no fetching and no request APIs, so
@@ -26,68 +30,99 @@ export const MS_PER_DAY = 86_400_000
 
 const DAY_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
-const dayKeyFormatter = new Intl.DateTimeFormat('en-CA', {
-  timeZone: CALENDAR_TIME_ZONE,
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-})
+/** The reader's language decides the month and weekday names, so every display
+ * formatter is built per language and cached: an `Intl.DateTimeFormat` is not
+ * cheap to construct, and a page formats dozens of days. */
+const FORMATTER_LOCALE: Record<LocaleId, string> = {
+  en: 'en-GB',
+  mk: 'mk-MK',
+}
 
-const dayLabelFormatter = new Intl.DateTimeFormat('en-GB', {
-  weekday: 'long',
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-  timeZone: 'UTC',
-})
+const WEEKDAY_TIME_ZONE = 'UTC'
 
-const dayShortFormatter = new Intl.DateTimeFormat('en-GB', {
-  day: 'numeric',
-  month: 'short',
-  timeZone: 'UTC',
-})
+type CalendarFormatters = {
+  dayKey: Intl.DateTimeFormat
+  dayLabel: Intl.DateTimeFormat
+  dayShort: Intl.DateTimeFormat
+  dateShort: Intl.DateTimeFormat
+  monthLabel: Intl.DateTimeFormat
+  monthShortLabel: Intl.DateTimeFormat
+  dayOfMonth: Intl.DateTimeFormat
+  weekdayShort: Intl.DateTimeFormat
+  time: Intl.DateTimeFormat
+}
 
-const dateShortFormatter = new Intl.DateTimeFormat('en-GB', {
-  weekday: 'short',
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric',
-  timeZone: 'UTC',
-})
+const formattersByLocale = new Map<LocaleId, CalendarFormatters>()
 
-const monthLabelFormatter = new Intl.DateTimeFormat('en-GB', {
-  month: 'long',
-  year: 'numeric',
-  timeZone: 'UTC',
-})
+const buildFormatters = (locale: LocaleId): CalendarFormatters => {
+  const intlLocale = FORMATTER_LOCALE[locale]
 
-const monthShortLabelFormatter = new Intl.DateTimeFormat('en-GB', {
-  month: 'short',
-  year: 'numeric',
-  timeZone: 'UTC',
-})
+  return {
+    dayKey: new Intl.DateTimeFormat('en-CA', {
+      timeZone: CALENDAR_TIME_ZONE,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }),
+    dayLabel: new Intl.DateTimeFormat(intlLocale, {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone: WEEKDAY_TIME_ZONE,
+    }),
+    dayShort: new Intl.DateTimeFormat(intlLocale, {
+      day: 'numeric',
+      month: 'short',
+      timeZone: WEEKDAY_TIME_ZONE,
+    }),
+    dateShort: new Intl.DateTimeFormat(intlLocale, {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      timeZone: WEEKDAY_TIME_ZONE,
+    }),
+    monthLabel: new Intl.DateTimeFormat(intlLocale, {
+      month: 'long',
+      year: 'numeric',
+      timeZone: WEEKDAY_TIME_ZONE,
+    }),
+    monthShortLabel: new Intl.DateTimeFormat(intlLocale, {
+      month: 'short',
+      year: 'numeric',
+      timeZone: WEEKDAY_TIME_ZONE,
+    }),
+    dayOfMonth: new Intl.DateTimeFormat(intlLocale, {
+      day: 'numeric',
+      timeZone: WEEKDAY_TIME_ZONE,
+    }),
+    weekdayShort: new Intl.DateTimeFormat(intlLocale, {
+      weekday: 'short',
+      timeZone: WEEKDAY_TIME_ZONE,
+    }),
+    time: new Intl.DateTimeFormat(intlLocale, {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: CALENDAR_TIME_ZONE,
+    }),
+  }
+}
 
-const dayOfMonthFormatter = new Intl.DateTimeFormat('en-GB', {
-  day: 'numeric',
-  timeZone: 'UTC',
-})
+const formattersFor = (locale: LocaleId): CalendarFormatters => {
+  const cached = formattersByLocale.get(locale)
+  if (cached) return cached
 
-const weekdayShortFormatter = new Intl.DateTimeFormat('en-GB', {
-  weekday: 'short',
-  timeZone: 'UTC',
-})
-
-const timeFormatter = new Intl.DateTimeFormat('en-GB', {
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: false,
-  timeZone: CALENDAR_TIME_ZONE,
-})
+  const built = buildFormatters(locale)
+  formattersByLocale.set(locale, built)
+  return built
+}
 
 /** `YYYY-MM-DD` for an instant, in `CALENDAR_TIME_ZONE`. */
 export const calendarDayKey = (value: string | number | Date): string => {
   const date = value instanceof Date ? value : new Date(value)
-  const parts = dayKeyFormatter.formatToParts(date)
+  const parts = formattersFor(DEFAULT_LOCALE).dayKey.formatToParts(date)
   const read = (type: string) =>
     parts.find((part) => part.type === type)?.value ?? ''
 
@@ -231,23 +266,35 @@ export const buildCalendarGrid = (
   return { days, weeks, startKey, endKey }
 }
 
-export const formatCalendarDay = (dayKey: string): string =>
-  dayLabelFormatter.format(new Date(dayKeyToUtc(dayKey)))
+export const formatCalendarDay = (dayKey: string, locale: LocaleId): string =>
+  formattersFor(locale).dayLabel.format(new Date(dayKeyToUtc(dayKey)))
 
-export const formatCalendarDayShort = (dayKey: string): string =>
-  dayShortFormatter.format(new Date(dayKeyToUtc(dayKey)))
+export const formatCalendarDayShort = (
+  dayKey: string,
+  locale: LocaleId
+): string =>
+  formattersFor(locale).dayShort.format(new Date(dayKeyToUtc(dayKey)))
 
-export const formatCalendarDateShort = (dayKey: string): string =>
-  dateShortFormatter.format(new Date(dayKeyToUtc(dayKey)))
+export const formatCalendarDateShort = (
+  dayKey: string,
+  locale: LocaleId
+): string =>
+  formattersFor(locale).dateShort.format(new Date(dayKeyToUtc(dayKey)))
 
-export const formatCalendarWeekday = (dayKey: string): string =>
-  weekdayShortFormatter.format(new Date(dayKeyToUtc(dayKey)))
+export const formatCalendarWeekday = (
+  dayKey: string,
+  locale: LocaleId
+): string =>
+  formattersFor(locale).weekdayShort.format(new Date(dayKeyToUtc(dayKey)))
 
-export const formatCalendarMonth = (dayKey: string): string =>
-  monthLabelFormatter.format(new Date(dayKeyToUtc(dayKey)))
+export const formatCalendarMonth = (dayKey: string, locale: LocaleId): string =>
+  formattersFor(locale).monthLabel.format(new Date(dayKeyToUtc(dayKey)))
 
-export const formatCalendarMonthShort = (dayKey: string): string =>
-  monthShortLabelFormatter.format(new Date(dayKeyToUtc(dayKey)))
+export const formatCalendarMonthShort = (
+  dayKey: string,
+  locale: LocaleId
+): string =>
+  formattersFor(locale).monthShortLabel.format(new Date(dayKeyToUtc(dayKey)))
 
 /**
  * Heading for the visible range. The month comes from the anchor, not from the
@@ -258,22 +305,25 @@ export const formatCalendarPeriod = (
   view: CalendarView,
   grid: CalendarGrid,
   anchorKey: string,
+  locale: LocaleId,
   compact = false
 ): string => {
-  if (view === 'month') return formatCalendarMonth(anchorKey)
+  const { dayOfMonth } = formattersFor(locale)
+
+  if (view === 'month') return formatCalendarMonth(anchorKey, locale)
   if (grid.startKey.slice(0, 7) === grid.endKey.slice(0, 7)) {
     // `4 – 10 November 2026`, or `4 – 10 Nov 2026` where the heading shares its
     // row with the arrows.
     const month = compact
-      ? formatCalendarMonthShort(grid.startKey)
-      : formatCalendarMonth(grid.startKey)
-    return `${dayOfMonthFormatter.format(new Date(dayKeyToUtc(grid.startKey)))} – ${dayOfMonthFormatter.format(new Date(dayKeyToUtc(grid.endKey)))} ${month}`
+      ? formatCalendarMonthShort(grid.startKey, locale)
+      : formatCalendarMonth(grid.startKey, locale)
+    return `${dayOfMonth.format(new Date(dayKeyToUtc(grid.startKey)))} – ${dayOfMonth.format(new Date(dayKeyToUtc(grid.endKey)))} ${month}`
   }
-  return `${formatCalendarDayShort(grid.startKey)} – ${formatCalendarDayShort(grid.endKey)}`
+  return `${formatCalendarDayShort(grid.startKey, locale)} – ${formatCalendarDayShort(grid.endKey, locale)}`
 }
 
-export const formatCalendarTime = (date: string): string =>
-  timeFormatter.format(new Date(date))
+export const formatCalendarTime = (date: string, locale: LocaleId): string =>
+  formattersFor(locale).time.format(new Date(date))
 
 export type CalendarAlertCandidate = {
   id: string

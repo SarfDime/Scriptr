@@ -1,7 +1,8 @@
-import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
+import { SCRIPT_STRINGS_PACK } from '@shared/strings/scripts-strings'
 import { ScriptManageActions } from '@/components/academics/scripts/manage/ScriptManageActions'
 import { ScriptPanel } from '@/components/academics/scripts/ScriptPanel'
 import { Divider } from '@/components/ui/Divider'
+import { getServerStrings } from '@/lib/server-strings'
 import type { ScriptDetailViewModel } from '@/types/components/ScriptDetail.types'
 import { ScriptAuthorCard } from './ScriptAuthorCard'
 import { ScriptEngagementActions } from './ScriptEngagementActions'
@@ -11,10 +12,17 @@ import { ScriptMetaList } from './ScriptMetaList'
 /** The script's identity and metadata: who uploaded it, vote/save, details,
  * and last-updated/report. Shares its row with the additional reading panel
  * and stretches to the same height. */
-export function ScriptInfoPanel({ detail }: { detail: ScriptDetailViewModel }) {
+export async function ScriptInfoPanel({
+  detail,
+}: {
+  detail: ScriptDetailViewModel
+}) {
+  const strings = await getServerStrings(SCRIPT_STRINGS_PACK)
   const {
     scriptId,
     script,
+    localizedTitle,
+    localizedDescription,
     voteScore,
     hasVoted,
     isSaved,
@@ -26,7 +34,7 @@ export function ScriptInfoPanel({ detail }: { detail: ScriptDetailViewModel }) {
 
   return (
     <ScriptPanel
-      aria-label={SCRIPT_STRINGS.info.ariaLabel}
+      aria-label={strings.info.ariaLabel}
       className='min-w-0 grow basis-[16rem]'
     >
       <ScriptAuthorCard author={script.author} />
@@ -45,8 +53,8 @@ export function ScriptInfoPanel({ detail }: { detail: ScriptDetailViewModel }) {
           scriptId={scriptId}
           subjectId={script.subject_id}
           script={{
-            title: script.title,
-            description: script.description,
+            title: localizedTitle,
+            description: localizedDescription,
             additional_reading: script.additional_reading,
             exam_session: script.exam_session,
             exam_year: script.exam_year,

@@ -1,11 +1,12 @@
 'use client'
 
-import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
+import { SCRIPT_STRINGS_PACK } from '@shared/strings/scripts-strings'
 import { useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { Divider } from '@/components/ui/Divider'
 import { useEditScriptForm } from '@/hooks/useEditScriptForm'
+import { useStrings } from '@/providers/locale/use-strings'
 import type { EditScriptModalProps } from '@/types/components/ScriptManage.types'
 import { ScriptDetailsFields } from '../form/ScriptDetailsFields'
 import { ScriptFormDialog } from '../form/ScriptFormDialog'
@@ -22,6 +23,7 @@ export function EditScriptModal({
   script,
 }: EditScriptModalProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const strings = useStrings(SCRIPT_STRINGS_PACK)
 
   return (
     <>
@@ -29,7 +31,7 @@ export function EditScriptModal({
         onClick={() => setIsOpen(true)}
         className='button button-sm hollow grow'
       >
-        {SCRIPT_STRINGS.manage.edit}
+        {strings.manage.edit}
       </Button>
       {isOpen && (
         <EditScriptDialog
@@ -54,6 +56,7 @@ function EditScriptDialog({
   script,
   onClose,
 }: EditScriptModalProps & { onClose: () => void }) {
+  const strings = useStrings(SCRIPT_STRINGS_PACK)
   const form = useEditScriptForm({
     scriptId,
     subjectId,
@@ -63,15 +66,15 @@ function EditScriptDialog({
 
   return (
     <ScriptFormDialog
-      title={SCRIPT_STRINGS.manage.editDialogTitle}
+      title={strings.manage.editDialogTitle}
       isOpen
       onClose={onClose}
       onSecondaryAction={onClose}
-      secondaryActionLabel={SCRIPT_STRINGS.manage.cancel}
-      submitLabel={SCRIPT_STRINGS.manage.save}
+      secondaryActionLabel={strings.manage.cancel}
+      submitLabel={strings.manage.save}
       onSubmit={form.handleSubmit}
       isBusy={form.isBusy}
-      canSubmit={form.canSubmit}
+      submitDisabled={form.submitDisabled}
     >
       <ScriptDetailsFields
         fields={form.textFields}
@@ -99,7 +102,7 @@ function EditScriptDialog({
       <ScriptFilesInput
         files={form.files.files}
         disabled={form.isBusy}
-        note={SCRIPT_STRINGS.manage.addFilesNote}
+        note={strings.manage.addFilesNote}
         onAdd={form.files.addFiles}
         onRemove={form.files.removeFile}
       />

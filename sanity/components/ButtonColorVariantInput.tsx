@@ -1,4 +1,5 @@
 import { BUTTON_VARIANTS } from '@shared/config/shared-pt-config'
+import { firstFilledLocalizedText } from '@shared/utils/localized-strings'
 import { useFormValue } from 'sanity'
 import type { ButtonColorVariantInputProps } from '../types/button.types'
 import { VariantListInput } from './VariantListInput'
@@ -12,7 +13,9 @@ const DEFAULT_BUTTON_VARIANTS = BUTTON_VARIANTS.map((variant) => ({
 export function ButtonColorVariantInput(props: ButtonColorVariantInputProps) {
   const { schemaType, value, onChange } = props
   const options = schemaType?.options?.list ?? DEFAULT_BUTTON_VARIANTS
-  const buttonLabel = useFormValue(['stringTitle']) as string
+  // The button's label is localized, so the preview shows the first filled
+  // language rather than a field that no longer exists.
+  const buttonLabel = firstFilledLocalizedText(useFormValue(['localizedTitle']))
 
   return (
     <VariantListInput

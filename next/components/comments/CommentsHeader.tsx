@@ -1,11 +1,12 @@
 'use client'
 
-import { COMMENT_STRINGS } from '@shared/strings/comments-strings'
+import { COMMENT_STRINGS_PACK } from '@shared/strings/comments-strings'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { useRequireSignIn } from '@/hooks/useRequireSignIn'
 import { cn } from '@/lib/common-utils'
+import { useStrings } from '@/providers/locale/use-strings'
 import { Divider } from '../ui/Divider'
 import { useCommentsState } from './CommentsProvider'
 
@@ -20,6 +21,7 @@ export function CommentsHeader({
   headingId: string
   onWriteClick: () => void
 }) {
+  const strings = useStrings(COMMENT_STRINGS_PACK)
   const { commentCount, setSort, sort } = useCommentsState()
   const requireSignIn = useRequireSignIn()
 
@@ -30,7 +32,7 @@ export function CommentsHeader({
   return (
     <Box className='ui-stack gap-2'>
       <SectionHeader
-        title={COMMENT_STRINGS.general.title}
+        title={strings.general.title}
         count={commentCount}
         titleVariant='title'
         titleProps={{ id: headingId }}
@@ -40,7 +42,7 @@ export function CommentsHeader({
               onClick={handleWriteClick}
               className='button solid button-sm'
             >
-              {COMMENT_STRINGS.composer.openButton}
+              {strings.composer.openButton}
             </Button>
           )
         }
@@ -49,7 +51,7 @@ export function CommentsHeader({
         <Box
           className='ui-cluster gap-2'
           role='group'
-          aria-label={COMMENT_STRINGS.general.sortComments}
+          aria-label={strings.general.sortComments}
         >
           <Button
             type='button'
@@ -61,7 +63,7 @@ export function CommentsHeader({
             isActive={sort === 'newest'}
             onClick={() => setSort('newest')}
           >
-            {COMMENT_STRINGS.general.newest}
+            {strings.general.newest}
           </Button>
           <Button
             type='button'
@@ -73,7 +75,7 @@ export function CommentsHeader({
             isActive={sort === 'top'}
             onClick={() => setSort('top')}
           >
-            {COMMENT_STRINGS.general.top}
+            {strings.general.top}
           </Button>
           <Divider className='mt-3' colorScheme='dark' />
         </Box>

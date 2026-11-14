@@ -1,7 +1,6 @@
 'use client'
 
 import WarningIcon from '@sanity/icons/WarningOutline'
-import { UI_STRINGS } from '@shared/config/strings'
 import type { FlagRow, FlagTargetType } from '@shared/types/api.types'
 import { useState } from 'react'
 import { Box } from '@/components/common/Box'
@@ -9,6 +8,7 @@ import { Button } from '@/components/common/Button'
 import { useProtectedAction } from '@/hooks/useProtectedAction'
 import { useRequireSignIn } from '@/hooks/useRequireSignIn'
 import { getMyFlags, submitFlag } from '@/lib/api/common-api'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 import { TextArea } from '../typography/TextArea'
 import { Dialog } from './Dialog'
@@ -36,9 +36,10 @@ export function FlagReportButton({
   targetType,
   targetId,
   canReport = true,
-  triggerLabel = UI_STRINGS.flags.report,
+  triggerLabel,
   triggerClassName = 'button button-sm cp-warning-int',
 }: FlagReportButtonProps) {
+  const strings = useUIStrings()
   const [reason, setReason] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const [hasPendingFlag, setHasPendingFlag] = useState<boolean | null>(null)
@@ -46,11 +47,11 @@ export function FlagReportButton({
   const requireSignIn = useRequireSignIn()
   const { addToast } = useToast()
   const { state, run, reset } = useProtectedAction(submitFlag, {
-    errorTitle: UI_STRINGS.flags.submitError,
+    errorTitle: strings.flags.submitError,
   })
 
   const isReasonValid =
-    reason.trim().length >= UI_STRINGS.flags.minimumReasonLength
+    reason.trim().length >= strings.flags.minimumReasonLength
 
   const handleSubmit = async () => {
     if (!isReasonValid) return
@@ -60,8 +61,8 @@ export function FlagReportButton({
       handleClose()
       addToast({
         type: 'success',
-        title: UI_STRINGS.flags.reportSubmitted,
-        description: UI_STRINGS.flags.submitted,
+        title: strings.flags.reportSubmitted,
+        description: strings.flags.submitted,
       })
     }
   }
@@ -80,8 +81,8 @@ export function FlagReportButton({
     if (hasPendingFlag) {
       addToast({
         type: 'info',
-        title: UI_STRINGS.flags.alreadyReportedTitle,
-        description: UI_STRINGS.flags.alreadyReportedDescription,
+        title: strings.flags.alreadyReportedTitle,
+        description: strings.flags.alreadyReportedDescription,
       })
       return
     }
@@ -100,8 +101,8 @@ export function FlagReportButton({
       if (alreadyReported) {
         addToast({
           type: 'info',
-          title: UI_STRINGS.flags.alreadyReportedTitle,
-          description: UI_STRINGS.flags.alreadyReportedDescription,
+          title: strings.flags.alreadyReportedTitle,
+          description: strings.flags.alreadyReportedDescription,
         })
         return
       }
@@ -110,8 +111,8 @@ export function FlagReportButton({
     } catch {
       addToast({
         type: 'error',
-        title: UI_STRINGS.flags.checkStatusError,
-        description: UI_STRINGS.general.tryAgain,
+        title: strings.flags.checkStatusError,
+        description: strings.general.tryAgain,
       })
     } finally {
       setIsCheckingFlag(false)
@@ -134,26 +135,26 @@ export function FlagReportButton({
         className={triggerClassName}
       >
         <WarningIcon />
-        {triggerLabel}
+        {triggerLabel ?? strings.flags.report}
       </Button>
       {isOpen && (
         <Dialog
-          title={UI_STRINGS.flags.reportContent}
+          title={strings.flags.reportContent}
           hideTrigger
           isOpen={isOpen}
           onClose={handleClose}
         >
           <Box className='ui-stack gap-3 p-5'>
             <p className='ui-subtitle'>
-              {UI_STRINGS.flags.description(targetType)}
+              {strings.flags.description(targetType)}
             </p>
             <TextArea
               value={reason}
               inputOnChange={(event) => setReason(event.target.value)}
-              placeholder={UI_STRINGS.flags.reasonPlaceholder}
+              placeholder={strings.flags.reasonPlaceholder}
               className='ui-card p-2 w-full'
               rows={4}
-              aria-label={UI_STRINGS.flags.reasonLabel}
+              aria-label={strings.flags.reasonLabel}
             />
             <Box className='ui-cluster gap-2 justify-end'>
               <Button
@@ -161,7 +162,7 @@ export function FlagReportButton({
                 disabled={!isReasonValid || state.status === 'pending'}
                 className='button solid'
               >
-                {UI_STRINGS.flags.submit}
+                {strings.flags.submit}
               </Button>
             </Box>
           </Box>

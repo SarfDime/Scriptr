@@ -4,7 +4,7 @@ What is left to do. The system as it stands is described in
 [`ARCHITECTURE.md`](ARCHITECTURE.md); this file only tracks work, so finished
 features are not repeated here.
 
-Last reconciled: 2026-11-12. Tags: **[bug]**, **[decision]** (needs a call
+Last reconciled: 2026-11-14. Tags: **[bug]**, **[decision]** (needs a call
 before anyone builds it), **[deferred]** (recorded so it is not rediscovered,
 not queued).
 
@@ -58,10 +58,28 @@ are still open:
   record of the last automatic sync — a real limit, unlike the explicit-sync
   allowance, which is per warmed serverless instance — and a strictly rate
   limited route on top of the existing 3-per-half-hour / 12-per-day allowance.
-- **Localization:** localize project strings plus script titles and
-  descriptions. Comments stay as they are. Until it lands, titles are
-  Macedonian, which is why a script's URL transliterates its title
-  (`docs/ARCHITECTURE-SCRIPTS-UPLOADS.md`).
+- **Localization — in review as #73.** Both languages are wired end to end:
+  every collection and every area of `UI_STRINGS` is `{ en, mk }`, the page tree
+  is `app/[locale]`, English keeps its unprefixed URLs, and both content
+  surfaces carry one value per language. What is left belongs to the merge
+  rather than to the code: the schema reaches the hosted Studio through
+  `deploy-sanity.yaml`, which runs when the change lands on `main-sanity` with
+  `-s-` in the commit message (or by hand through `deploy-sanity-force`, which
+  allows breaking GraphQL changes). Until then the deployed Studio is the older
+  schema, while the dataset and the API are already on the new one. The admin
+  surface stays in the default language by decision — see
+  [Out of Scope](ARCHITECTURE-OUT-OF-SCOPE.md).
+- **A 404's initial HTML is Next's error shell [deferred, upstream].** With
+  `[locale]` as the root layout, `notFound()` answers the first response with
+  `<html id="__next_error__">` and an empty body; the localized page arrives in
+  the flight payload (verified in a browser, status 404). It is
+  [`vercel/next.js#100596`](https://github.com/vercel/next.js/issues/100596), open
+  and reproduced outside this repo, and not specific to `[locale]`.
+  **Decided 2026-11-14: keep the localized 404 and re-test when that issue
+  closes.** Four alternatives were measured and rejected: dropping the
+  catch-all, the `global-not-found` hybrid, a root layout above `[locale]`, and
+  a proxy. `next/app/[locale]/[...notFound]/page.tsx` is the shim to delete
+  once the fix lands.
 
 ## Correctness and quality
 
@@ -112,17 +130,6 @@ are still open:
   verify the live hook in
   [`useSanityFetch.ts`](../sanity/sanity-hooks/useSanityFetch.ts) against the
   production fetch flow.
-- **Localized content:** the `localizedString`, `localizedRichText`,
-  `localizedRichTextLite` and `localizedStringArray` object types are registered.
-  Header fields carry a `localizedTitle`/`localizedSubtitle` duplicate next to
-  their legacy field ([`headerFields.ts`](../sanity/schemas/common/headerFields.ts)),
-  and the academic entities carry `localizedName`, `localizedTitle`,
-  `localizedDescription`, `localizedKeywords` and `localizedBio`
-  ([`academicFields.tsx`](../sanity/schemas/common/academicFields.tsx)).
-  Nothing reads the localized values yet — the frontend and the database sync
-  still consume the legacy fields, and hand-written fields such as
-  `subject.code` have no localized duplicate. Switch the queries, sync and
-  components over, then delete the legacy fields and the duplication.
 - **Shared field builders:** decide whether the string `bio` variant stays in
   [`academicFields.tsx`](../sanity/schemas/common/academicFields.tsx)
   (`AcademicBioOptions`). `academicGrouping` already takes the grouping keys as
@@ -230,7 +237,7 @@ the card/dialog/navbar edges) and darker chrome on the nav/header/footer — as 
   (`/study/[siteSlug]`) links forward to the scripts with a header action, and
   the feed links back with an "Overview" one; the calendar is only reachable from
   the header's calendar alert or a nav item. A study sub-nav in
-  `app/(study)/study/[siteSlug]/layout.tsx` (Feed · Overview · Calendar) would
+  `app/[locale]/(study)/study/[siteSlug]/layout.tsx` (Feed · Overview · Calendar) would
   make the three pages one surface and let the Sanity nav drop its study-specific
   `customLink` — worth doing once a study has a fourth page of its own.
 - **Write scoping is enforced in the API, not in RLS.** Phase 5 gates script,
@@ -298,7 +305,7 @@ the card/dialog/navbar edges) and darker chrome on the nav/header/footer — as 
   document to the queries it affects — a large feature with no current need.
   `fetchSanityData` keeps one `sanity` tag as the eventual hook.
 - **Visual editing and draft preview:** switched off for now.
-  [`next/app/layout.tsx`](../next/app/layout.tsx) no longer renders
+  [`next/app/[locale]/layout.tsx`](../next/app/[locale]/layout.tsx) no longer renders
   `SanityLive`, `VisualEditing` or `DisableDraft`, and the Studio's iframe
   "Preview" view is gone (`iframeBuilder`/`getDocumentSlug` targeted
   `/api/draft?secret=…`, which was never implemented); `defaultDocumentNode`

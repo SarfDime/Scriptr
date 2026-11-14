@@ -1,5 +1,5 @@
-import { UI_STRINGS } from '@shared/config/strings'
-import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
+import { UI_STRINGS_PACK } from '@shared/config/strings'
+import { SCRIPT_STRINGS_PACK } from '@shared/strings/scripts-strings'
 import type { ScriptFile } from '@shared/types/scripts.types'
 import { ScriptFileCard } from '@/components/academics/scripts/ScriptFileCard'
 import { ScriptSurface } from '@/components/academics/scripts/ScriptSurface'
@@ -8,6 +8,7 @@ import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
 import { cn } from '@/lib/common-utils'
 import { getPreviewableKind } from '@/lib/file-preview'
+import { getServerStrings } from '@/lib/server-strings'
 
 export type ScriptFilesSectionProps = {
   scriptId: string
@@ -21,11 +22,13 @@ export type ScriptFilesSectionProps = {
  * space in the overview row and wraps below the info group first when that
  * row is too narrow. A script's only file, when it can be rendered inline,
  * fills the whole surface and is previewed in place. */
-export function ScriptFilesSection({
+export async function ScriptFilesSection({
   scriptId,
   files,
   canManage = false,
 }: ScriptFilesSectionProps) {
+  const strings = await getServerStrings(SCRIPT_STRINGS_PACK)
+  const ui = await getServerStrings(UI_STRINGS_PACK)
   const [soleFile, ...otherFiles] = files
   const previewsSoleFile =
     soleFile !== undefined &&
@@ -34,10 +37,10 @@ export function ScriptFilesSection({
 
   return (
     <ScriptSurface className='ui-stack min-w-0 grow-100 basis-[24rem] gap-3'>
-      <SectionHeader title={SCRIPT_STRINGS.files.title} count={files.length} />
+      <SectionHeader title={strings.files.title} count={files.length} />
       {files.length === 0 ? (
         <Text className='ui-subtitle'>
-          {UI_STRINGS.scripts.actions.noFilesAttached}
+          {ui.scripts.actions.noFilesAttached}
         </Text>
       ) : (
         // Columns come from the available width, not the viewport: as many

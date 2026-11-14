@@ -2,11 +2,12 @@
 
 import CloseCircle from '@sanity/icons/CloseCircle'
 import Spinner from '@sanity/icons/Spinner'
-import { NOTIFICATIONS_STRINGS } from '@shared/strings/notifications-strings'
+import { NOTIFICATIONS_STRINGS_PACK } from '@shared/strings/notifications-strings'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { Text } from '@/components/typography/Text'
 import { cn } from '@/lib/common-utils'
+import { useStrings } from '@/providers/locale/use-strings'
 import { useNotifications } from '@/providers/notification/NotificationProvider'
 import { Dialog } from '../ui/Dialog'
 import { Divider } from '../ui/Divider'
@@ -24,6 +25,7 @@ export const NotificationsAside = () => {
     error,
     refresh,
   } = useNotifications()
+  const strings = useStrings(NOTIFICATIONS_STRINGS_PACK)
   const hasDismissible = notifications.some(
     (notification) => !notification.persistent
   )
@@ -31,15 +33,15 @@ export const NotificationsAside = () => {
   return (
     <Dialog
       as='aside'
-      aria-label={NOTIFICATIONS_STRINGS.openNotifications}
+      aria-label={strings.openNotifications}
       isOpen={trayOpen}
       title={
         <Box
           className='ui-cluster'
           aria-live='polite'
-          aria-description={NOTIFICATIONS_STRINGS.loading}
+          aria-description={strings.loading}
         >
-          {NOTIFICATIONS_STRINGS.trayTitle}
+          {strings.trayTitle}
           {loading && <Spinner className={'h-4 w-4 animate-spin'} />}
         </Box>
       }
@@ -63,7 +65,7 @@ export const NotificationsAside = () => {
         <>
           <Button onClick={dismissAll} className='button button-sm subtle'>
             <CloseCircle />
-            {NOTIFICATIONS_STRINGS.dismissAll}
+            {strings.dismissAll}
           </Button>
           <Divider />
         </>
@@ -73,7 +75,7 @@ export const NotificationsAside = () => {
         <Box role='alert' className='ui-cluster justify-between'>
           <Text className='ui-caption'>{error}</Text>
           <Button onClick={refresh} className='button subtle px-3 py-1'>
-            {NOTIFICATIONS_STRINGS.retry}
+            {strings.retry}
           </Button>
         </Box>
       )}
@@ -87,9 +89,7 @@ export const NotificationsAside = () => {
           ))}
         </Box>
       ) : (
-        !loading && (
-          <Text className='ui-caption'>{NOTIFICATIONS_STRINGS.empty}</Text>
-        )
+        !loading && <Text className='ui-caption'>{strings.empty}</Text>
       )}
     </Dialog>
   )

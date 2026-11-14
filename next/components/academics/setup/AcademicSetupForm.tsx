@@ -1,6 +1,5 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import { useRouter } from 'next/navigation'
 import { useCallback, useState, useSyncExternalStore } from 'react'
 import { Box } from '@/components/common/Box'
@@ -21,6 +20,8 @@ import {
   subscribeToStudySetup,
   writeStudySetup,
 } from '@/lib/study-setup-storage'
+import { useLocale } from '@/providers/locale/LocaleProvider'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { useSession } from '@/providers/SessionProvider'
 import type { OnboardingSubject } from '@/types/onboarding.types'
 
@@ -87,6 +88,8 @@ export const AcademicSetupForm = ({
   hasProfile = false,
   accountCompletedSubjectIds = [],
 }: AcademicSetupFormProps) => {
+  const { locale } = useLocale()
+  const ui = useUIStrings()
   const router = useRouter()
   const { session, refresh } = useSession()
   const [isSaving, setIsSaving] = useState(false)
@@ -150,7 +153,7 @@ export const AcademicSetupForm = ({
   )
 
   // Setup exists to shape the feed, so it hands the reader to the feed.
-  const studyPath = getStudyFeedPath(siteSlug)
+  const studyPath = getStudyFeedPath(siteSlug, locale)
   const isSignedIn = session.status === 'authenticated'
 
   const dbSubjectIds = completedSubjectIds.flatMap((sanityId) => {
@@ -233,13 +236,13 @@ export const AcademicSetupForm = ({
 
       {!isSignedIn && (
         <Text className='ui-caption'>
-          {UI_STRINGS.onboarding.academicSetup.guestNote}
+          {ui.onboarding.academicSetup.guestNote}
         </Text>
       )}
 
       {hasError && (
         <Text className='ui-caption' role='alert'>
-          {UI_STRINGS.onboarding.saveFailed}
+          {ui.onboarding.saveFailed}
         </Text>
       )}
 
@@ -249,7 +252,7 @@ export const AcademicSetupForm = ({
           disabled={isSaving}
           onClick={skip}
         >
-          {UI_STRINGS.onboarding.academicSetup.skip}
+          {ui.onboarding.academicSetup.skip}
         </Button>
         <Button
           className='button solid w-full min-h-11 sm:w-auto sm:min-h-0'
@@ -258,8 +261,8 @@ export const AcademicSetupForm = ({
           onClick={save}
         >
           {hasProfile
-            ? UI_STRINGS.onboarding.academicSetup.saveChanges
-            : UI_STRINGS.onboarding.academicSetup.submit}
+            ? ui.onboarding.academicSetup.saveChanges
+            : ui.onboarding.academicSetup.submit}
         </Button>
       </Box>
     </Box>

@@ -1,3 +1,4 @@
+import { localizedPath } from '@shared/utils/localized-path'
 import { notFound, redirect } from 'next/navigation'
 import { getSession, getSessionRequired } from '@/lib/api/auth-api'
 import { getRequestCookieHeader } from '@/lib/api/next-api'
@@ -11,6 +12,7 @@ import {
   getOnboardingCatalog,
   getProfileSubjectSections,
 } from '@/lib/profile-subjects'
+import { getServerLocale } from '@/lib/server-strings'
 import type {
   MyProfilePageViewModel,
   PublicProfilePageViewModel,
@@ -25,7 +27,8 @@ import type {
 export const loadMyProfilePage = async (): Promise<MyProfilePageViewModel> => {
   const cookie = await getRequestCookieHeader()
   const session = await getSessionRequired(cookie)
-  if (!session?.user) redirect('/auth')
+  const locale = await getServerLocale()
+  if (!session?.user) redirect(localizedPath('/auth', locale))
 
   const [profile, catalog] = await Promise.all([
     getMyProfile(cookie),
@@ -75,7 +78,7 @@ export const loadPublicProfilePage = async (
   const isOwnUsername =
     session?.user?.username?.toLowerCase() === username.toLowerCase()
   if (isOwnUsername && !options.studyId) {
-    redirect('/user')
+    redirect(localizedPath('/user', await getServerLocale()))
   }
 
   const profile = await getPublicProfileByUsername(username)
@@ -87,7 +90,7 @@ export const loadPublicProfilePage = async (
   if (options.studyId && !memberStudyIds.includes(options.studyId)) notFound()
 
   const studyIds = options.studyId ? [options.studyId] : memberStudyIds
-  const [stats, catalog, subjects] = await Promise.all([
+  const [stats, catalog, subjects, locale] = await Promise.all([
     getProfileStats(profile.id),
     getOnboardingCatalog(),
     // The catalog profile page lists what someone studies nowhere: their
@@ -96,6 +99,7 @@ export const loadPublicProfilePage = async (
     options.studyId
       ? getProfileSubjectSections(studyIds, profile.subjects)
       : Promise.resolve(undefined),
+    getServerLocale(),
   ])
 
   return {
@@ -107,7 +111,8 @@ export const loadPublicProfilePage = async (
         ? profile.selected_studies.filter(
             ({ study }) => study?.id === options.studyId
           )
-        : profile.selected_studies
+        : profile.selected_studies,
+      locale
     ),
     subjects,
     authoredCount: stats?.scripts_uploaded,

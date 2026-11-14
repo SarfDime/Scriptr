@@ -1,8 +1,10 @@
 import CloseIcon from '@sanity/icons/Close'
-import { UI_STRINGS } from '@shared/config/strings'
+import { UI_STRINGS_PACK } from '@shared/config/strings'
 import { cn } from '@/lib/common-utils'
+import { getServerStrings } from '@/lib/server-strings'
 import type { NavBarProps } from '@/types/components/Nav.types'
 import { Box } from '../common/Box'
+import { LanguageToggle } from '../locale/LanguageToggle'
 import { Divider } from '../ui/Divider'
 import { SimpleModeToggle } from '../ui/SimpleModeToggle'
 import { ThemeToggle } from '../ui/ThemeToggle'
@@ -22,64 +24,73 @@ import { NavUserSlot } from './NavUserSlot'
  * collapsed. Hidden states are also `invisible` so the links leave the tab
  * order.
  */
-export const NavBar = ({ navItems, studyLogos, studyTip }: NavBarProps) => (
-  <>
-    <NavToggle
-      action='close'
-      tabIndex={-1}
-      aria-label={UI_STRINGS.navigation.closeNavigation}
-      className={cn(
-        'fixed inset-0 z-15 bg-background-200/85',
-        'hidden max-xl:group-data-[nav-open=true]/nav:block'
-      )}
-    />
-    <nav
-      id='site-navigation'
-      aria-label={UI_STRINGS.navigation.mainNavigation}
-      className={cn(
-        'fixed inset-y-0 left-0 z-20 w-(--nav-width)',
-        'ui-stack p-2.5 pt-0',
-        'ui-above-nav gap-3',
-        'transition-[translate,visibility] duration-300',
-        'max-xl:invisible max-xl:-translate-x-full',
-        'max-xl:group-data-[nav-open=true]/nav:visible',
-        'max-xl:group-data-[nav-open=true]/nav:translate-x-0',
-        'xl:group-data-[nav-collapsed=true]/nav:invisible',
-        'xl:group-data-[nav-collapsed=true]/nav:-translate-x-full'
-      )}
-    >
-      <Box className='ui-cluster justify-between h-16 px-3 ui-groove-b'>
-        <NavLogo />
-        <NavToggle
-          action='close'
-          aria-label={UI_STRINGS.navigation.closeNavigation}
-        >
-          <CloseIcon />
-        </NavToggle>
-      </Box>
+export const NavBar = async ({
+  navItems,
+  studyLogos,
+  studyTip,
+}: NavBarProps) => {
+  const strings = await getServerStrings(UI_STRINGS_PACK)
 
-      {navItems && (
-        <>
-          <NavigationLinks navItems={navItems} /> <Divider />
-        </>
-      )}
-
-      <NavStudies studyLogos={studyLogos} />
-
-      <NavFavorites />
-
-      {studyTip && <NavStudyTip {...studyTip} />}
-
-      <Box className={cn('ui-stack gap-3', !studyTip && 'mt-auto')}>
-        <Divider />
-        <ThemeToggle className='w-full flex-row' />
-        <Box className='ui-cluster flex-nowrap gap-2'>
-          <SimpleModeToggle className='min-w-0 flex-1' />
-          <AdminNavLink />
+  return (
+    <>
+      <NavToggle
+        action='close'
+        tabIndex={-1}
+        aria-label={strings.navigation.closeNavigation}
+        className={cn(
+          'fixed inset-0 z-15 bg-background-200/85',
+          'hidden max-xl:group-data-[nav-open=true]/nav:block'
+        )}
+      />
+      <nav
+        id='site-navigation'
+        aria-label={strings.navigation.mainNavigation}
+        className={cn(
+          'fixed inset-y-0 left-0 z-20 w-(--nav-width)',
+          'ui-stack p-2.5 pt-0',
+          'ui-above-nav gap-3',
+          'transition-[translate,visibility] duration-300',
+          'max-xl:invisible max-xl:-translate-x-full',
+          'max-xl:group-data-[nav-open=true]/nav:visible',
+          'max-xl:group-data-[nav-open=true]/nav:translate-x-0',
+          'xl:group-data-[nav-collapsed=true]/nav:invisible',
+          'xl:group-data-[nav-collapsed=true]/nav:-translate-x-full'
+        )}
+      >
+        <Box className='ui-cluster justify-between h-16 px-3 ui-groove-b'>
+          <NavLogo />
+          <NavToggle
+            action='close'
+            aria-label={strings.navigation.closeNavigation}
+          >
+            <CloseIcon />
+          </NavToggle>
         </Box>
-        <Divider />
-        <NavUserSlot />
-      </Box>
-    </nav>
-  </>
-)
+
+        {navItems && (
+          <>
+            <NavigationLinks navItems={navItems} /> <Divider />
+          </>
+        )}
+
+        <NavStudies studyLogos={studyLogos} />
+
+        <NavFavorites />
+
+        {studyTip && <NavStudyTip {...studyTip} />}
+
+        <Box className={cn('ui-stack gap-3', !studyTip && 'mt-auto')}>
+          <Divider />
+          <ThemeToggle className='w-full flex-row' />
+          <LanguageToggle className='w-full flex-row' />
+          <Box className='ui-cluster flex-nowrap gap-2'>
+            <SimpleModeToggle className='min-w-0 flex-1' />
+            <AdminNavLink />
+          </Box>
+          <Divider />
+          <NavUserSlot />
+        </Box>
+      </nav>
+    </>
+  )
+}

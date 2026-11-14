@@ -1,4 +1,8 @@
 import { SANITY_CACHE_TAGS } from '@shared/config/cache-tags'
+import {
+  DEFAULT_LOCALE,
+  type LocaleId,
+} from '@shared/config/localization-constants'
 import type { QueryParams } from 'next-sanity'
 import type { LivePerspective } from 'next-sanity/live'
 import { isProd, isStaging } from '@/config/env'
@@ -25,6 +29,11 @@ export type FetchSanityLiveProps = {
 export type FetchSanityDataParams = {
   query: string
   params?: QueryParams & { slug?: string | null }
+  /** The reader's language, which every localized projection in the query
+   * resolves `$locale` through. Omitted by a read that has no reader (a
+   * `generateStaticParams` or route-handler pass, where `next/root-params` is
+   * out of reach), and then the query answers in the default language. */
+  locale?: LocaleId
   fetchOrigin: string
   /** The Sanity document types this query renders, so the publish webhook can
    * invalidate it without flushing the whole dataset (see `SANITY_TYPE_TAGS`).
@@ -41,6 +50,7 @@ export type FetchSanityDataParams = {
 async function fetchSanityData<QueryResponse>({
   query,
   params = {},
+  locale,
   fetchOrigin,
   perspective = 'drafts',
   stega = true,
@@ -54,7 +64,15 @@ async function fetchSanityData<QueryResponse>({
       pageType: 'page',
       pageTypes: ['page', 'aiPage'],
     }
-    const mergedParams = { ...defaultParams, ...rest }
+    // A detail page hands its route params straight through, and those carry
+    // the `[locale]` segment, so `locale` can arrive from either side. The
+    // option wins: the reader's language has one source (`getServerLocale`),
+    // and an incidental param cannot quietly outvote it.
+    const mergedParams = {
+      ...defaultParams,
+      ...rest,
+      locale: locale ?? rest.locale ?? DEFAULT_LOCALE,
+    }
 
     const mergedQuery = sanityFunctionQueries + query
 

@@ -1,5 +1,7 @@
 import { getScriptSitemapEntries } from '@/lib/api/sitemap-api'
+import { languageAlternates } from '@/lib/localized-metadata'
 import { ACADEMIC_CATALOG_TAGS } from '@/lib/sanity-tags'
+import { toSitemapIndexXml } from '@/lib/sitemap-xml'
 import { studySiteOrigin } from '@/lib/study-origin'
 import { studyStaticParamsQuery } from '@/sanity/queries/academics/study.queries'
 import { subjectStaticParamsQuery } from '@/sanity/queries/academics/subject.queries'
@@ -20,6 +22,9 @@ import type { SitemapEntry } from './sitemap-xml'
  * A study host's sitemap: everything served by `lbe.scriptr.uk` and nothing
  * else. The catalog publishes its own index, so neither host lists the other's
  * pages — one address per page is the point of giving a study a hostname.
+ *
+ * One entry per page, publishing the other language as an `alternate` — the
+ * study's host serves both shapes, so both addresses resolve.
  */
 
 /**
@@ -45,6 +50,17 @@ export const listStudySites = async (): Promise<Array<string>> => {
   ]
 }
 
+/** One entry per page: the address on the study's host plus each language's
+ * address. */
+const toEntry = (
+  path: string,
+  toUrl: (path: string) => string,
+  lastModified?: string
+): SitemapEntry => {
+  const url = toUrl(path)
+  return { url, lastModified, alternates: languageAlternates(url) }
+}
+
 /** A study's own pages, in one file: its overview, its feed and its subjects. */
 const toStudyEntries = async (
   siteSlug: string,
@@ -57,11 +73,11 @@ const toStudyEntries = async (
   )().catch(() => [])
 
   return [
-    { url: toUrl('/') },
-    { url: toUrl('/scripts') },
+    toEntry('/', toUrl),
+    toEntry('/scripts', toUrl),
     ...(subjects ?? [])
       .filter((params) => params.siteSlug === siteSlug && params.subjectSlug)
-      .map((params) => ({ url: toUrl(`/subject/${params.subjectSlug}`) })),
+      .map((params) => toEntry(`/subject/${params.subjectSlug}`, toUrl)),
   ]
 }
 
@@ -78,10 +94,9 @@ const toScriptEntries = async (
   return (scripts ?? [])
     .filter((script) => script.study_site_slug === siteSlug)
     .slice(offset, offset + MAX_URLS_PER_SITEMAP)
-    .map((script) => ({
-      url: toUrl(`/scripts/${script.slug}`),
-      lastModified: script.updated_at,
-    }))
+    .map((script) =>
+      toEntry(`/scripts/${script.slug}`, toUrl, script.updated_at)
+    )
 }
 
 const scriptSectionCount = async (siteSlug: string): Promise<number> => {
@@ -107,6 +122,32 @@ export const listStudySitemapSections = async (
   }
 
   return sections
+}
+
+/** The name the index is served under. It goes through the section route
+ * because a study host's `/sitemap.xml` has to be rewritten onto a path an app
+ * route handler owns: an extension-less handler path is shadowed by the
+ * `[locale]` catch-all, while a `<section>.xml` path resolves to this route
+ * directly. */
+export const STUDY_SITEMAP_INDEX_SECTION = 'index'
+
+/**
+ * A study's sitemap index: one entry point a crawler can submit, listing this
+ * study's sections on its own host.
+ */
+export const buildStudySitemapIndex = async (
+  siteSlug: string
+): Promise<string> => {
+  const origin = studySiteOrigin(siteSlug)
+  if (!origin) return ''
+
+  const sections = await listStudySitemapSections(siteSlug)
+
+  return toSitemapIndexXml(
+    sections.map((section) =>
+      new URL(`/sitemap/${section.id}.xml`, origin).toString()
+    )
+  )
 }
 
 /** One section of a study's sitemap, with every URL on the study's own host. */

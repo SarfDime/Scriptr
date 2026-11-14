@@ -1,8 +1,11 @@
+'use client'
+
 import { AcademicBadge } from '@/components/academics/AcademicBadge'
 import { Box } from '@/components/common/Box'
 import { EntityCard } from '@/components/common/EntityCard'
 import { ClickableCard } from '@/components/ui/Card'
 import { getAcademicPath } from '@/lib/academic-routes'
+import { useLocale } from '@/providers/locale/LocaleProvider'
 import type { SubjectSidebarItem } from '@/types/academics/subject.types'
 
 /** A subject in a list: the entity overview card, narrowed to the fields a
@@ -18,6 +21,7 @@ export const SubjectCard = ({
   professors,
   study,
 }: SubjectSidebarItem) => {
+  const { locale } = useLocale()
   const [firstProfessor, ...restProfessors] = professors ?? []
 
   const universitySlug = study?.faculty?.university?.slug ?? ''
@@ -27,14 +31,17 @@ export const SubjectCard = ({
   const universityName = study?.faculty?.university?.name
   const facultyName = study?.faculty?.name
 
-  const href = getAcademicPath({
-    type: 'subject',
-    siteSlug: study?.siteSlug,
-    universitySlug,
-    facultySlug,
-    studySlug,
-    subjectSlug: slug ?? '',
-  })
+  const href = getAcademicPath(
+    {
+      type: 'subject',
+      siteSlug: study?.siteSlug,
+      universitySlug,
+      facultySlug,
+      studySlug,
+      subjectSlug: slug ?? '',
+    },
+    locale
+  )
 
   return (
     <EntityCard

@@ -1,6 +1,6 @@
 'use client'
 
-import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
+import { SCRIPT_STRINGS_PACK } from '@shared/strings/scripts-strings'
 import { useEffect, useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { NextImage } from '@/components/common/NextImage'
@@ -9,6 +9,7 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { getScriptFileUrl } from '@/lib/api/scripts-api'
 import { cn } from '@/lib/common-utils'
 import type { PreviewableFileKind } from '@/lib/file-preview'
+import { useStrings } from '@/providers/locale/use-strings'
 import { IMAGE_SIZES } from '@/styles/style'
 
 export type FilePreviewContentProps = {
@@ -140,13 +141,14 @@ export function StoredFilePreviewContent({
   fillHeight,
 }: Omit<FilePreviewContentProps, 'url'> & { fileKey: string }) {
   const state = useStoredFileUrl(fileKey)
+  const strings = useStrings(SCRIPT_STRINGS_PACK)
 
   if (state.status === 'loading') return <LoadingSpinner />
 
   if (state.status === 'error') {
     return (
       <Text className='ui-caption cp-danger-nb'>
-        {SCRIPT_STRINGS.preview.loadFailed(fileName)}
+        {strings.preview.loadFailed(fileName)}
       </Text>
     )
   }
@@ -180,6 +182,7 @@ function TextFilePreview({
   cacheKey: string
   fillHeight: boolean
 }) {
+  const strings = useStrings(SCRIPT_STRINGS_PACK)
   const [state, setState] = useState<TextFilePreviewState>({
     status: 'loading',
   })
@@ -221,7 +224,7 @@ function TextFilePreview({
   if (state.status === 'error') {
     return (
       <Text className='ui-caption cp-danger-nb'>
-        {SCRIPT_STRINGS.preview.loadFailed(fileName)}
+        {strings.preview.loadFailed(fileName)}
       </Text>
     )
   }

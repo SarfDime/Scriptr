@@ -1,8 +1,8 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import { useEffect } from 'react'
 import { useLoading } from '@/providers/loading/LoadingProvider'
+import { useUIStrings } from '@/providers/locale/use-strings'
 
 /** The stages a script form can spend real time in. */
 export type ScriptFormStage = 'uploading' | 'optimizing' | 'creating'
@@ -18,13 +18,15 @@ export function useScriptFormLoader(
   stage: ScriptFormStage | null
 ) {
   const { startTask, finishTask } = useLoading()
+  const ui = useUIStrings()
+  const { statuses, progress } = ui.scripts.uploadModal
 
   useEffect(() => {
     if (stage === null) return undefined
     startTask(taskKey, {
-      message: UI_STRINGS.scripts.uploadModal.statuses[stage],
-      hint: `${UI_STRINGS.scripts.uploadModal.progress.qualityWarning} ${UI_STRINGS.scripts.uploadModal.progress.qualityAdvice}`,
+      message: statuses[stage],
+      hint: `${progress.qualityWarning} ${progress.qualityAdvice}`,
     })
     return () => finishTask(taskKey)
-  }, [stage, taskKey, startTask, finishTask])
+  }, [stage, taskKey, startTask, finishTask, statuses, progress])
 }

@@ -1,6 +1,5 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import type { RegisterConflictField } from '@shared/types/auth.types'
 import {
   validateEmailAddress,
@@ -15,6 +14,7 @@ import {
   useTouchedFields,
 } from '@/hooks/auth/useTouchedFields'
 import { applyStoredStudySetup } from '@/lib/study-setup-sync'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { useSession } from '@/providers/SessionProvider'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 
@@ -34,6 +34,7 @@ const REGISTER_FIELDS: ReadonlyArray<RegisterField> = [
 ]
 
 export function useRegisterForm() {
+  const ui = useUIStrings()
   const { register, refresh } = useSession()
   const { addToast } = useToast()
   const { touch, touchAll, isTouched } = useTouchedFields<RegisterField>()
@@ -69,12 +70,12 @@ export function useRegisterForm() {
     username:
       validateUsername(values.username) ??
       (isTaken('username', values.username)
-        ? UI_STRINGS.auth.register.fieldErrors.usernameTaken
+        ? ui.auth.register.fieldErrors.usernameTaken
         : null),
     email:
       validateEmailAddress(values.email) ??
       (isTaken('email', values.email)
-        ? UI_STRINGS.auth.register.fieldErrors.emailTaken
+        ? ui.auth.register.fieldErrors.emailTaken
         : null),
     password: validateNewPassword(values.password),
   }
@@ -97,10 +98,10 @@ export function useRegisterForm() {
       const message =
         REGISTER_FIELDS.map((field) => errors[field]).find(
           (error): error is string => error !== null
-        ) ?? UI_STRINGS.auth.register.statuses.incompleteForm
+        ) ?? ui.auth.register.statuses.incompleteForm
       setState({ status: 'error', message })
       addToast({
-        title: UI_STRINGS.auth.register.statuses.errorTitle,
+        title: ui.auth.register.statuses.errorTitle,
         description: message,
         type: 'error',
       })
@@ -131,7 +132,7 @@ export function useRegisterForm() {
     if (!result.ok) {
       setState({ status: 'error', message: result.message })
       addToast({
-        title: UI_STRINGS.auth.register.statuses.errorTitle,
+        title: ui.auth.register.statuses.errorTitle,
         description: result.message,
         type: 'error',
       })
@@ -143,7 +144,7 @@ export function useRegisterForm() {
     if (result.requiresEmailConfirmation) {
       setState({ status: 'awaiting-confirmation', message: result.message })
       addToast({
-        title: UI_STRINGS.auth.register.statuses.successTitle,
+        title: ui.auth.register.statuses.successTitle,
         description: result.message,
         type: 'success',
       })
@@ -158,8 +159,8 @@ export function useRegisterForm() {
     await refresh()
 
     addToast({
-      title: UI_STRINGS.auth.register.statuses.successTitle,
-      description: UI_STRINGS.auth.register.statuses.successDescription,
+      title: ui.auth.register.statuses.successTitle,
+      description: ui.auth.register.statuses.successDescription,
       type: 'success',
     })
     setState({ status: 'idle' })

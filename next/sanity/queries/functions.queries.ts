@@ -1,3 +1,5 @@
+import { localizedProjection, localizedValue } from './localized.queries'
+
 const sanityImageFunction = /* groq */ `
 fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altText};
 `
@@ -5,8 +7,8 @@ fn sanityImage::full($image) = $image{ asset, crop, hotspot, "alt": asset->altTe
 const personQueryFunction = /* groq */ `
 fn person::full($person) = $person{
     _id,
-    name,
-    title,
+    ${localizedProjection('name', 'localizedName')},
+    ${localizedProjection('title', 'localizedTitle')},
     "picture": sanityImage::full(picture)
 };
 `
@@ -21,7 +23,7 @@ fn linkSelector::full($link) = $link{
 
 const sanityButtonFunction = /* groq */ `
 fn sanityButton::full($button) = $button{
-    "buttonLabel": stringTitle,
+    "buttonLabel": ${localizedValue('localizedTitle')},
     _id,
     defined(buttonColorVariant) => {"buttonColorVariant": buttonColorVariant},
     ...linkSelector::full(@),

@@ -2,6 +2,7 @@ import { SANITY_CACHE_TAGS } from '@shared/config/cache-tags'
 import type { StudyTipsQueryResult } from '@shared/types/sanity.types'
 import type { WithResolvedSanityData } from '@shared/types/sanity-transform.types'
 import { dayNumber } from '@/lib/daily-pick'
+import { getServerLocale } from '@/lib/server-strings'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { studyTipsQuery } from '@/sanity/queries/study-tip.queries'
 import type { StudyTipRotation } from '@/types/components/StudyTip.types'
@@ -19,6 +20,7 @@ export const getStudyTipRotation = async (): Promise<StudyTipRotation> => {
       WithResolvedSanityData<StudyTipsQueryResult>
     >({
       query: studyTipsQuery,
+      locale: await getServerLocale(),
       fetchOrigin: 'getStudyTipRotation()',
       tags: [SANITY_CACHE_TAGS.studyTip],
     })

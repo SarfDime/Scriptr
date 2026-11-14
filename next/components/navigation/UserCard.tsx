@@ -1,5 +1,6 @@
+import { localizedPath } from '@shared/utils/localized-path'
 import { cn } from '@/lib/common-utils'
-import { catalogUrl } from '@/lib/study-origin'
+import { useLocale } from '@/providers/locale/LocaleProvider'
 import { Box } from '../common/Box'
 import { NextLink } from '../common/NextLink'
 import { Text } from '../typography/Text'
@@ -20,35 +21,39 @@ export const UserCard = ({
   name,
   userRole,
   avatarUrl,
-  href = catalogUrl('/user'),
+  href,
   restricted = false,
-}: UserCardProps) => (
-  <NextLink
-    href={href}
-    className={cn(
-      'button justify-start w-full gap-2 p-2 grow h-full',
-      restricted ? 'danger' : 'subtle'
-    )}
-  >
-    <Avatar
-      name={name}
-      picture={
-        avatarUrl
-          ? {
-              src: avatarUrl,
-              className: 'h-6 w-6 rounded-full shadow-sm',
-            }
-          : undefined
-      }
-      initialsIconProps={{
-        className: 'h-6 w-6 rounded-full shadow-sm',
-      }}
-    />
-    <Box className='text-left'>
-      <Text className={cn('ui-label', !restricted && 'text-fg-700')}>
-        {name}
-      </Text>
-      {userRole && <Text className='ui-caption'>{userRole}</Text>}
-    </Box>
-  </NextLink>
-)
+}: UserCardProps) => {
+  const { locale } = useLocale()
+
+  return (
+    <NextLink
+      href={href ?? localizedPath('/user', locale)}
+      className={cn(
+        'button justify-start w-full gap-2 p-2 grow h-full',
+        restricted ? 'danger' : 'subtle'
+      )}
+    >
+      <Avatar
+        name={name}
+        picture={
+          avatarUrl
+            ? {
+                src: avatarUrl,
+                className: 'h-6 w-6 rounded-full shadow-sm',
+              }
+            : undefined
+        }
+        initialsIconProps={{
+          className: 'h-6 w-6 rounded-full shadow-sm',
+        }}
+      />
+      <Box className='text-left'>
+        <Text className={cn('ui-label', !restricted && 'text-fg-700')}>
+          {name}
+        </Text>
+        {userRole && <Text className='ui-caption'>{userRole}</Text>}
+      </Box>
+    </NextLink>
+  )
+}

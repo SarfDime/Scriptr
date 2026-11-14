@@ -1,4 +1,4 @@
-import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
+import { SCRIPT_STRINGS_PACK } from '@shared/strings/scripts-strings'
 import type { ScriptSummary } from '@shared/types/scripts.types'
 import { Box } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
@@ -6,15 +6,20 @@ import { Text } from '@/components/typography/Text'
 import { Avatar } from '@/components/ui/Avatar'
 import { cn } from '@/lib/common-utils'
 import { getAuthorDisplay } from '@/lib/script-detail'
+import { getServerStrings } from '@/lib/server-strings'
 
 /** The script's uploader, given more weight than the other details: avatar,
  * name and handle in a raised block that links to their profile. */
-export function ScriptAuthorCard({
+export async function ScriptAuthorCard({
   author,
 }: {
   author: ScriptSummary['author']
 }) {
-  const { name, username, avatarUrl, profileHref } = getAuthorDisplay(author)
+  const strings = await getServerStrings(SCRIPT_STRINGS_PACK)
+  const { name, username, avatarUrl, profileHref } = getAuthorDisplay(
+    author,
+    strings
+  )
   const className = 'flex items-center gap-3 rounded-lg p-3'
   const content = (
     <>
@@ -36,7 +41,7 @@ export function ScriptAuthorCard({
       </Box>
       <Box className='ui-stack min-w-0 gap-0.5'>
         <Text className='ui-caption group-hover:text-brand'>
-          {SCRIPT_STRINGS.info.uploadedBy}
+          {strings.info.uploadedBy}
         </Text>
         <Text className='ui-label truncate group-hover:text-brand-350'>
           {name}

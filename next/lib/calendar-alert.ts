@@ -1,5 +1,6 @@
 import { SANITY_CACHE_TAGS } from '@shared/config/cache-tags'
 import { nextLogs } from '@/lib/logger'
+import { getServerLocale } from '@/lib/server-strings'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { studyAlertSubjectsQuery } from '@/sanity/queries/academics/study.queries'
 import type {
@@ -53,6 +54,7 @@ export const getCalendarAlertSubjects = async (
     const subjects = await fetchSanityData<Array<CalendarAlertSubject>>({
       query: studyAlertSubjectsQuery,
       params: { siteSlug },
+      locale: await getServerLocale(),
       fetchOrigin: `study-alert-subjects-${siteSlug}`,
       tags: [SANITY_CACHE_TAGS.subject],
     })

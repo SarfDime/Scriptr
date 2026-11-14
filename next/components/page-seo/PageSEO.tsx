@@ -1,5 +1,6 @@
 import { generatePath } from '@shared/utils/common-utils'
 import type { Metadata } from 'next'
+import { languageAlternates } from '@/lib/localized-metadata'
 import { websiteDomain } from '@/sanity/env'
 
 const isAbsoluteUrl = (value: string): boolean => {
@@ -26,10 +27,12 @@ type PageSEOProps = {
   twitterSite?: string
   openGraphType?: OpenGraphType
   keywords?: Array<string>
-  /** The page's own address, built with `getAcademicPath`: a site-relative path
-   * for a catalog page, an absolute URL for a page inside a study's site. It
-   * becomes the canonical and the Open Graph URL, so it has to be the URL the
-   * page is actually served at — the study's own host included. */
+  /** The page's own address in the language being served, built with
+   * `getAcademicPath`: a site-relative path for a catalog page, an absolute URL
+   * for a page inside a study's site. It becomes the canonical and the Open
+   * Graph URL, so it has to be the URL the page is actually served at — the
+   * study's own host and the language prefix included. The other language's
+   * address is derived from it for `alternates.languages`. */
   pagePath: string
 }
 
@@ -59,6 +62,10 @@ export function PageSEO({
     ? pagePath
     : new URL(canonicalPath, baseUrl).toString()
 
+  // hreflang must be absolute, and a study's page is already absolute.
+  const toAbsolute = (path: string): string =>
+    isAbsoluteUrl(path) ? path : new URL(path, baseUrl).toString()
+
   const images = seoImage
     ? [
         {
@@ -75,6 +82,7 @@ export function PageSEO({
     description: seoDescription,
     alternates: {
       canonical: url,
+      languages: languageAlternates(pagePath, toAbsolute),
     },
     openGraph: {
       type: openGraphType,

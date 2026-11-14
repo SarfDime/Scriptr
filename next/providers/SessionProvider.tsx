@@ -1,6 +1,6 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
+import { UI_STRINGS_PACK } from '@shared/config/strings'
 import type {
   CallbackRequest,
   LoginRequest,
@@ -8,6 +8,7 @@ import type {
   RegisterRequest,
   SessionUser,
 } from '@shared/types/auth.types'
+import type { ResolvedStrings } from '@shared/types/localization.types'
 import { useRouter } from 'next/navigation'
 import {
   createContext,
@@ -25,6 +26,7 @@ import {
   registerUser,
 } from '@/lib/api/auth-api'
 import { ApiError } from '@/lib/api/next-api'
+import { useStrings } from '@/providers/locale/use-strings'
 
 type SessionState =
   | { status: 'loading' }
@@ -56,9 +58,12 @@ const SessionContext = createContext<SessionContextValue | null>(null)
  * throws a 503 naming the endpoint when the API is unreachable — so it falls
  * back to the generic line.
  */
-function extractErrorMessage(error: unknown): string {
-  if (!(error instanceof ApiError)) return UI_STRINGS.general.unexpectedError
-  return error.status < 500 ? error.message : UI_STRINGS.general.apiUnavailable
+function extractErrorMessage(
+  error: unknown,
+  strings: ResolvedStrings<typeof UI_STRINGS_PACK>
+): string {
+  if (!(error instanceof ApiError)) return strings.general.unexpectedError
+  return error.status < 500 ? error.message : strings.general.apiUnavailable
 }
 
 /** The unique field a register `409` names, if the error is one. */
@@ -108,18 +113,20 @@ async function fetchSession(
  * which endpoint/payload gets there. */
 async function applySessionResult(
   request: () => Promise<{ user: SessionUser }>,
-  setSession: (state: SessionState) => void
+  setSession: (state: SessionState) => void,
+  strings: ResolvedStrings<typeof UI_STRINGS_PACK>
 ): Promise<AuthActionResult> {
   try {
     const result = await request()
     setSession({ status: 'authenticated', user: result.user })
     return { ok: true }
   } catch (error) {
-    return { ok: false, message: extractErrorMessage(error) }
+    return { ok: false, message: extractErrorMessage(error, strings) }
   }
 }
 
 export function SessionProvider({ children }: { children: ReactNode }) {
+  const strings = useStrings(UI_STRINGS_PACK)
   const router = useRouter()
   const [session, setSession] = useState<SessionState>({ status: 'loading' })
 
@@ -143,7 +150,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   ): Promise<AuthActionResult> => {
     const result = await applySessionResult(
       () => loginUser(credentials),
-      setSession
+      setSession,
+      strings
     )
     if (result.ok) refreshServerState()
     return result
@@ -154,7 +162,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   ): Promise<AuthActionResult> => {
     const result = await applySessionResult(
       () => completeAuthCallback(tokens),
-      setSession
+      setSession,
+      strings
     )
     if (result.ok) refreshServerState()
     return result
@@ -175,7 +184,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       return {
         ok: false,
-        message: extractErrorMessage(error),
+        message: extractErrorMessage(error, strings),
         field: getConflictField(error),
       }
     }

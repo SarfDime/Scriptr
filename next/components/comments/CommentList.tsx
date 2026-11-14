@@ -1,16 +1,18 @@
 'use client'
 
-import { COMMENT_STRINGS } from '@shared/strings/comments-strings'
+import { COMMENT_STRINGS_PACK } from '@shared/strings/comments-strings'
 import { Fragment } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { Text } from '@/components/typography/Text'
+import { useStrings } from '@/providers/locale/use-strings'
 import { CommentDivider } from './CommentDivider'
 import { CommentItem } from './CommentItem'
 import { useCommentsState } from './CommentsProvider'
 
 /** All threads in one card, a divider between them (or the empty state). */
 export function CommentList() {
+  const strings = useStrings(COMMENT_STRINGS_PACK)
   const {
     comments,
     commentsError,
@@ -22,9 +24,7 @@ export function CommentList() {
   } = useCommentsState()
 
   if (comments.length === 0 && !isLoadingComments && !commentsError) {
-    return (
-      <Text className='ui-subtitle'>{COMMENT_STRINGS.general.emptyState}</Text>
-    )
+    return <Text className='ui-subtitle'>{strings.general.emptyState}</Text>
   }
 
   return (
@@ -38,7 +38,7 @@ export function CommentList() {
         ))}
       {isLoadingComments && (
         <Text className='ui-caption' role='status'>
-          {COMMENT_STRINGS.general.loadingComments}
+          {strings.general.loadingComments}
         </Text>
       )}
       {commentsError && (
@@ -49,7 +49,7 @@ export function CommentList() {
             className='button outline'
             onClick={() => setSort(sort)}
           >
-            {COMMENT_STRINGS.general.tryAgain}
+            {strings.general.tryAgain}
           </Button>
         </Box>
       )}
@@ -61,8 +61,8 @@ export function CommentList() {
           disabled={isLoadingComments}
         >
           {isLoadingComments
-            ? COMMENT_STRINGS.general.loadingComments
-            : COMMENT_STRINGS.general.showMoreComments}
+            ? strings.general.loadingComments
+            : strings.general.showMoreComments}
         </Button>
       )}
     </Box>

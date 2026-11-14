@@ -1,7 +1,15 @@
+import type { LocaleId } from '../config/localization-constants'
 import type { ExamSession } from './academic.types'
 import type { FileType, ScriptFileInput } from './api.types'
 import type { Tables } from './database.types'
 import type { PortableTextValue } from './portable-text.types'
+
+/**
+ * One script text field, per language. At least one language is filled and any
+ * subset is allowed — a script can be uploaded in Macedonian only, and a reader
+ * of the other language falls back (see `pickLocalizedPortableText`).
+ */
+export type LocalizedScriptText = Partial<Record<LocaleId, PortableTextValue>>
 
 /** Matches `script_files(id, file_url, file_type, file_size_bytes, bucket, position, file_name, created_at)`. */
 export type ScriptFile = {
@@ -75,8 +83,8 @@ export type ScriptSummary = {
   /** Address segment: the title folded to ASCII plus the first id characters
    * (`buildScriptSlug`). Minted once, at creation, so links survive a retitle. */
   slug: string
-  title: PortableTextValue
-  description: PortableTextValue | null
+  title: LocalizedScriptText
+  description: LocalizedScriptText | null
   subject_id: string
   professor_id: string
   author_id: string
@@ -122,16 +130,16 @@ type ScriptStudyNameOnly = {
 }
 
 /** `Tables<'scripts'>` with `title`/`description` narrowed from raw `Json`
- * to `PortableTextValue` — every endpoint below that selects full script
+ * to `LocalizedScriptText` — every endpoint below that selects full script
  * columns (`MyScriptSummary`, `ScriptPatchResult`, `ScriptFlaggedSummary`)
  * needs this, for the same reason `ScriptSummary` hand-writes those two
  * fields instead of inheriting them from `Tables<'scripts'>` directly. */
-type ScriptRowWithPortableText = Omit<
+type ScriptRowWithLocalizedText = Omit<
   Tables<'scripts'>,
   'title' | 'description'
 > & {
-  title: PortableTextValue
-  description: PortableTextValue | null
+  title: LocalizedScriptText
+  description: LocalizedScriptText | null
 }
 
 /**
@@ -140,7 +148,7 @@ type ScriptRowWithPortableText = Omit<
  * plus the shallow `subject` join above, and no `author`/`files` join at
  * all. Response is wrapped: `{ scripts: [...] }`.
  */
-export type MyScriptSummary = ScriptRowWithPortableText & {
+export type MyScriptSummary = ScriptRowWithLocalizedText & {
   subject: ScriptStudyNameOnly | null
 }
 
@@ -149,7 +157,7 @@ export type MyScriptSummary = ScriptRowWithPortableText & {
  * `author:profiles(username, full_name)` and the shallow `subject` join
  * above. Response is wrapped: `{ success, script }`.
  */
-export type ScriptPatchResult = ScriptRowWithPortableText & {
+export type ScriptPatchResult = ScriptRowWithLocalizedText & {
   author: ScriptAuthorSummary | null
   subject: ScriptStudyNameOnly | null
 }
@@ -159,7 +167,7 @@ export type ScriptPatchResult = ScriptRowWithPortableText & {
  * author/subject (same shallow join as `ScriptPatchResult`) and every flag
  * against it, each with its reporter's username.
  */
-export type ScriptFlaggedSummary = ScriptRowWithPortableText & {
+export type ScriptFlaggedSummary = ScriptRowWithLocalizedText & {
   author: ScriptAuthorSummary | null
   subject: ScriptStudyNameOnly | null
   flags: Array<
@@ -177,8 +185,8 @@ export type ScriptPatchResponse = {
  * the general (all sessions) option and `exam_year: null` the general (all
  * years) one. */
 export type ScriptUpdateInput = {
-  title: PortableTextValue
-  description: PortableTextValue | null
+  title: LocalizedScriptText
+  description: LocalizedScriptText | null
   additional_reading: Array<string>
   exam_session: ExamSession | null
   exam_year: number | null

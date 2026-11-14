@@ -1,16 +1,21 @@
 'use client'
 
 import Bolt from '@sanity/icons/Bolt'
-import { UI_STRINGS } from '@shared/config/strings'
 import { cn } from '../../lib/common-utils'
+import { useCopy } from '../../providers/locale/use-strings'
 import { useTheme } from '../../providers/theme/ThemeProvider'
 import { Button } from '../common/Button'
 
 /** Switches simple mode (no transparency, animations or animated
  * background) on and off. Meant to sit next to the ThemeToggle.
+ *
+ * Copy as strings rather than nodes: `title` is an attribute, which an island
+ * cannot set.
  */
 export function SimpleModeToggle({ className }: { className?: string }) {
   const { simpleMode, setSimpleMode } = useTheme()
+  const label = useCopy('navigation.simpleMode')
+  const description = useCopy('navigation.simpleModeDescription')
 
   return (
     <Button
@@ -20,11 +25,11 @@ export function SimpleModeToggle({ className }: { className?: string }) {
       )}
       isActive={simpleMode}
       aria-pressed={simpleMode}
-      title={UI_STRINGS.navigation.simpleModeDescription}
+      title={description}
       onClick={() => setSimpleMode(!simpleMode)}
     >
       <Bolt />
-      {UI_STRINGS.navigation.simpleMode}
+      {label}
     </Button>
   )
 }

@@ -1,10 +1,11 @@
-import { UI_STRINGS } from '@shared/config/strings'
+import { UI_STRINGS_PACK } from '@shared/config/strings'
 import type { ReactNode } from 'react'
 import { Box } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
 import { Text } from '@/components/typography/Text'
 import { Avatar } from '@/components/ui/Avatar'
 import { Divider } from '@/components/ui/Divider'
+import { getServerStrings } from '@/lib/server-strings'
 import { IMAGE_SIZES } from '@/styles/style'
 import type { ProfessorDetail } from '@/types/academics/professor.types'
 
@@ -16,7 +17,7 @@ type ProfessorContactCardProps = Pick<
   children?: ReactNode
 }
 
-export const ProfessorContactCard = ({
+export const ProfessorContactCard = async ({
   office,
   telephone,
   email,
@@ -25,6 +26,7 @@ export const ProfessorContactCard = ({
   name,
   children,
 }: ProfessorContactCardProps) => {
+  const ui = await getServerStrings(UI_STRINGS_PACK)
   if (!office && !telephone && !email && !website && !children) return null
 
   return (
@@ -43,25 +45,19 @@ export const ProfessorContactCard = ({
         <Box className='ui-stack gap-2'>
           {office && (
             <Box className='ui-stack gap-0.5'>
-              <Text className='ui-label'>
-                {UI_STRINGS.academics.professor.office}
-              </Text>
+              <Text className='ui-label'>{ui.academics.professor.office}</Text>
               <Text className='ui-body'>{office}</Text>
             </Box>
           )}
           {telephone && (
             <Box className='ui-stack gap-0.5'>
-              <Text className='ui-label'>
-                {UI_STRINGS.academics.professor.phone}
-              </Text>
+              <Text className='ui-label'>{ui.academics.professor.phone}</Text>
               <Text className='ui-body'>{telephone}</Text>
             </Box>
           )}
           {email && (
             <Box className='ui-stack gap-0.5'>
-              <Text className='ui-label'>
-                {UI_STRINGS.academics.professor.email}
-              </Text>
+              <Text className='ui-label'>{ui.academics.professor.email}</Text>
               <NextLink
                 href={`mailto:${email}`}
                 className='ui-body break-all button link w-fit'
@@ -72,9 +68,7 @@ export const ProfessorContactCard = ({
           )}
           {website && (
             <Box className='ui-stack gap-0.5'>
-              <Text className='ui-label'>
-                {UI_STRINGS.academics.professor.website}
-              </Text>
+              <Text className='ui-label'>{ui.academics.professor.website}</Text>
               <NextLink
                 href={website}
                 className='ui-body break-all text-brand hover:underline'

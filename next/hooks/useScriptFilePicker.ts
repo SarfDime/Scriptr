@@ -1,19 +1,23 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
+import type { UI_STRINGS_PACK } from '@shared/config/strings'
+import type { ResolvedStrings } from '@shared/types/localization.types'
 import {
   getFileExtension,
   getMaxUploadBytes,
   isFileType,
 } from '@shared/utils/api.utils'
 import { useState } from 'react'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import type { FileWithError } from '@/types/components/ScriptFilesInput.types'
 
-const { fileErrors } = UI_STRINGS.scripts.uploadModal
+type ScriptFileErrors = ResolvedStrings<
+  typeof UI_STRINGS_PACK
+>['scripts']['uploadModal']['fileErrors']
 
 /** The same checks the API makes, from the same shared limits, so a file the
  * form accepts is one the upload will accept (and vice versa). */
-function validateFile(file: File): string | null {
+function validateFile(file: File, fileErrors: ScriptFileErrors): string | null {
   const extension = getFileExtension(file.name)
   if (!isFileType(extension)) return fileErrors.unsupportedType(extension)
 
@@ -28,6 +32,8 @@ function validateFile(file: File): string | null {
  * files stay listed (with their error) but are left out of `validFiles`.
  */
 export function useScriptFilePicker() {
+  const ui = useUIStrings()
+  const { fileErrors } = ui.scripts.uploadModal
   const [files, setFiles] = useState<Array<FileWithError>>([])
 
   const validFiles = files.filter((entry) => entry.error === null)
@@ -37,7 +43,7 @@ export function useScriptFilePicker() {
     if (!incoming) return
     const next = Array.from(incoming).map((file) => ({
       file,
-      error: validateFile(file),
+      error: validateFile(file, fileErrors),
     }))
     setFiles((prev) => [...prev, ...next])
   }

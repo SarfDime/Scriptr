@@ -1,4 +1,5 @@
 import { SANITY_CACHE_TAGS } from '@shared/config/cache-tags'
+import { getServerLocale } from '@/lib/server-strings'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { calendarEventsQuery } from '@/sanity/queries/calendar.queries'
 import type { CalendarEventRecord } from '@/types/components/Calendar.types'
@@ -20,6 +21,7 @@ export const loadCalendarEvents = async (
   const events = await fetchSanityData<Array<CalendarEventRecord>>({
     query: calendarEventsQuery,
     params: { ...calendarMarginWindow(), siteSlug },
+    locale: await getServerLocale(),
     fetchOrigin: `calendar-events-${siteSlug}`,
     tags: [SANITY_CACHE_TAGS.calendar],
   })

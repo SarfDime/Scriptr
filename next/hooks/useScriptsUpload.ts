@@ -1,9 +1,10 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import { useState } from 'react'
 import { useProtectedAction } from '@/hooks/useProtectedAction'
 import { createScript, uploadScriptFiles } from '@/lib/api/scripts-api'
+import { useLocale } from '@/providers/locale/LocaleProvider'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 import type {
   ScriptUploadInput,
@@ -11,6 +12,9 @@ import type {
 } from '@/types/components/Scripts.types'
 
 export function useScriptUpload() {
+  const { locale } = useLocale()
+  const ui = useUIStrings()
+  const { statuses } = ui.scripts.uploadModal
   const [state, setState] = useState<ScriptUploadState>({ status: 'idle' })
   const { addToast } = useToast()
   const { run: runProtected } = useProtectedAction(
@@ -19,8 +23,11 @@ export function useScriptUpload() {
 
       const files =
         input.files.length > 0
-          ? await uploadScriptFiles(input.subjectId, input.files, (stage) =>
-              setState({ status: stage })
+          ? await uploadScriptFiles(
+              input.subjectId,
+              input.files,
+              locale,
+              (stage) => setState({ status: stage })
             )
           : []
 
@@ -29,12 +36,12 @@ export function useScriptUpload() {
       setState({ status: 'success', scriptId: script.id })
       addToast({
         type: 'success',
-        title: UI_STRINGS.scripts.uploadModal.statuses.success,
-        description: UI_STRINGS.scripts.uploadModal.statuses.successDescription,
+        title: statuses.success,
+        description: statuses.successDescription,
       })
       return script.id
     },
-    { errorTitle: UI_STRINGS.scripts.uploadModal.statuses.error }
+    { errorTitle: statuses.error }
   )
 
   const upload = async (input: ScriptUploadInput) => {

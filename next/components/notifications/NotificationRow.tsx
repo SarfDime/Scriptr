@@ -2,10 +2,7 @@
 
 import Checkmark from '@sanity/icons/Checkmark'
 import CloseIcon from '@sanity/icons/Close'
-import {
-  NOTIFICATION_TYPE_STRINGS,
-  NOTIFICATIONS_STRINGS,
-} from '@shared/strings/notifications-strings'
+import { NOTIFICATIONS_STRINGS_PACK } from '@shared/strings/notifications-strings'
 import { formatDate } from '@shared/utils/common-utils'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
@@ -13,6 +10,8 @@ import { NextLink } from '@/components/common/NextLink'
 import { Text } from '@/components/typography/Text'
 import { cn } from '@/lib/common-utils'
 import { studyUrlFromPath } from '@/lib/study-origin'
+import { useLocale } from '@/providers/locale/LocaleProvider'
+import { useStrings } from '@/providers/locale/use-strings'
 import { useNotifications } from '@/providers/notification/NotificationProvider'
 import {
   type AppNotification,
@@ -25,6 +24,8 @@ export const NotificationRow = ({
 }: {
   notification: AppNotification
 }) => {
+  const { locale } = useLocale()
+  const strings = useStrings(NOTIFICATIONS_STRINGS_PACK)
   const { dismiss, markRead } = useNotifications()
   const palette = NOTIFICATION_PALETTE[notification.type ?? 'info']
 
@@ -39,11 +40,7 @@ export const NotificationRow = ({
       <Box className='ui-cluster items-center gap-0.5'>
         {notification.sourceType ? (
           <Text className='ui-small-label mr-auto'>
-            {
-              NOTIFICATION_TYPE_STRINGS[
-                notification.sourceType ?? 'announcement'
-              ]
-            }
+            {strings.typeNames[notification.sourceType ?? 'announcement']}
           </Text>
         ) : (
           <Text className='ui-body-strong mr-auto'>{notification.title}</Text>
@@ -52,7 +49,7 @@ export const NotificationRow = ({
         {!notification.read && !notification.persistent && (
           <Button
             onClick={() => markRead(notification.id)}
-            aria-label={NOTIFICATIONS_STRINGS.markAsRead}
+            aria-label={strings.markAsRead}
             className='button button-sm ghost p-0.75'
           >
             <Checkmark className='h-5.5 w-5.5 overwrite' />
@@ -61,7 +58,7 @@ export const NotificationRow = ({
         {!notification.persistent && (
           <Button
             onClick={() => dismiss(notification.id)}
-            aria-label={NOTIFICATIONS_STRINGS.dismiss}
+            aria-label={strings.dismiss}
             className='button button-sm ghost p-0.75'
           >
             <CloseIcon className='h-5.5 w-5.5 overwrite' />
@@ -81,11 +78,11 @@ export const NotificationRow = ({
 
       <Box className='ui-cluster justify-between'>
         <Text className='ui-small-label tracking-[.15rem]'>
-          {formatDate(notification.createdAt)}
+          {formatDate(notification.createdAt, locale)}
         </Text>
         {notification.action?.kind === 'link' && notification.action.href && (
           <NextLink
-            href={studyUrlFromPath(notification.action.href)}
+            href={studyUrlFromPath(notification.action.href, locale)}
             onClick={() => markRead(notification.id)}
             className={cn(
               'button button-sm w-fit',
@@ -94,7 +91,7 @@ export const NotificationRow = ({
               'py-0.5'
             )}
           >
-            {notification.action.label}
+            {notification.action.label ?? strings.openTarget}
           </NextLink>
         )}
       </Box>

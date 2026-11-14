@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { DEFAULT_LOCALE } from '../../../shared/config/localization-constants'
 import {
   DOWNLOAD_REVIEW_ACCOUNT_SORT_OPTIONS,
   DOWNLOAD_REVIEW_SCRIPT_SORT_OPTIONS,
@@ -10,8 +11,18 @@ import type {
   DownloadReviewListResponse,
   DownloadReviewScript,
 } from '../../../shared/types/download-review.types'
+import type { LocalizedScriptText } from '../../../shared/types/scripts.types'
+import { pickLocalizedPortableText } from '../../../shared/utils/localized-portable-text'
 import { portableTextToPlainText } from '../../../shared/utils/portable-text.utils'
 import { isUuid } from '../../../shared/utils/slug.utils'
+
+/** The script's title for an admin list: the server has no reader, so the
+ *  default language, else whichever one is filled. */
+const scriptTitle = (title: LocalizedScriptText): string => {
+  const value = pickLocalizedPortableText(title, DEFAULT_LOCALE)
+  return value ? portableTextToPlainText(value) : ''
+}
+
 import { requireAdminAccess } from '../lib/admin-access'
 import {
   aggregateDownloadReview,
@@ -113,9 +124,7 @@ const readWindow = async (
         full_name: row.profile?.full_name ?? null,
         script_slug: row.script?.slug ?? null,
         script_site_slug: row.script?.study?.site_slug ?? null,
-        script_title: row.script
-          ? portableTextToPlainText(row.script.title)
-          : null,
+        script_title: row.script ? scriptTitle(row.script.title) : null,
         study_id: row.script?.study_id ?? null,
       }))
     )
@@ -282,7 +291,7 @@ downloadReview.get('/events', requireAdminAccess, async (c) => {
     script_id: row.script_id,
     script_slug: row.script?.slug ?? null,
     script_site_slug: row.script?.study?.site_slug ?? null,
-    script_title: row.script ? portableTextToPlainText(row.script.title) : null,
+    script_title: row.script ? scriptTitle(row.script.title) : null,
     profile_id: row.user_id,
     username: row.profile?.username ?? null,
     full_name: row.profile?.full_name ?? null,

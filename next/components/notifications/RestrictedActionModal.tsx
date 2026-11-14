@@ -1,16 +1,17 @@
 'use client'
 
-import { UI_STRINGS } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { Text } from '@/components/typography/Text'
 import { Dialog } from '@/components/ui/Dialog'
+import { useUIStrings } from '@/providers/locale/use-strings'
 import { useNotifications } from '@/providers/notification/NotificationProvider'
 
 /** Shown when a restricted user attempts a restricted action. The reason and
  * end date come from the persistent restriction notice, which loads right
  * after the rejection, so the body fills in a moment after the modal opens. */
 export const RestrictedActionModal = () => {
+  const ui = useUIStrings()
   const { restrictedModalOpen, closeRestrictedModal, restrictionNotice } =
     useNotifications()
 
@@ -18,7 +19,7 @@ export const RestrictedActionModal = () => {
 
   return (
     <Dialog
-      title={UI_STRINGS.general.restrictedModalTitle}
+      title={ui.general.restrictedModalTitle}
       hideTrigger
       isOpen
       onClose={closeRestrictedModal}
@@ -28,14 +29,14 @@ export const RestrictedActionModal = () => {
     >
       <Box className='ui-stack gap-3 p-5' role='alertdialog'>
         <Text className='ui-body-strong'>
-          {UI_STRINGS.general.restrictedModalIntro}
+          {ui.general.restrictedModalIntro}
         </Text>
         {restrictionNotice && (
           <Text className='ui-body'>{restrictionNotice.body}</Text>
         )}
         <Box className='ui-cluster justify-end'>
           <Button onClick={closeRestrictedModal} className='button solid'>
-            {UI_STRINGS.general.restrictedModalClose}
+            {ui.general.restrictedModalClose}
           </Button>
         </Box>
       </Box>

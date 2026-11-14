@@ -1,6 +1,6 @@
 'use client'
 
-import { SCRIPT_STRINGS } from '@shared/strings/scripts-strings'
+import { SCRIPT_STRINGS_PACK } from '@shared/strings/scripts-strings'
 import type { ScriptUpdateInput } from '@shared/types/scripts.types'
 import { isExamSession } from '@shared/utils/script-session.utils'
 import { useRouter } from 'next/navigation'
@@ -16,6 +16,8 @@ import {
   type UploadStage,
   updateScript,
 } from '@/lib/api/scripts-api'
+import { useLocale } from '@/providers/locale/LocaleProvider'
+import { useStrings } from '@/providers/locale/use-strings'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 import type { EditScriptModalProps } from '@/types/components/ScriptManage.types'
 
@@ -36,15 +38,17 @@ export function useEditScriptForm({
   script,
   onSaved,
 }: EditScriptModalProps & { onSaved: () => void }) {
+  const strings = useStrings(SCRIPT_STRINGS_PACK)
+  const { locale } = useLocale()
   const router = useRouter()
   const { addToast } = useToast()
   const { run: runUpdate, state: updateState } = useProtectedAction(
     updateScript,
-    { errorTitle: SCRIPT_STRINGS.manage.saveFailed }
+    { errorTitle: strings.manage.saveFailed }
   )
   const { run: runAddFiles, state: addFilesState } = useProtectedAction(
     addScriptFiles,
-    { errorTitle: SCRIPT_STRINGS.manage.addFilesFailed }
+    { errorTitle: strings.manage.addFilesFailed }
   )
   const files = useScriptFilePicker()
   // Attaching files uploads and optimizes them first, which can take a while.
@@ -52,7 +56,7 @@ export function useEditScriptForm({
 
   const textFields = useScriptTextFields({
     title: script.title,
-    description: script.description ?? [],
+    description: script.description ?? {},
   })
   // A script saved before sessions existed has no session; an unknown legacy
   // value is shown as "general" rather than blocking the edit.
@@ -67,12 +71,11 @@ export function useEditScriptForm({
   const isBusy = updateState.status === 'pending' || isAddingFiles
   useScriptFormLoader(ADD_FILES_TASK_KEY, isAddingFiles ? uploadStage : null)
 
-  // An emptied description is sent as `null`, which clears it.
+  // An emptied description is sent as `null`, which clears it; an untouched
+  // language is dropped instead of sent as empty.
   const payload: ScriptUpdateInput = {
-    title: textFields.title,
-    description: textFields.descriptionHasContent
-      ? textFields.description
-      : null,
+    title: textFields.titlePayload,
+    description: textFields.descriptionPayload,
     additional_reading: readingLinks.toPayload(),
     exam_session: sessionFields.session,
     exam_year: sessionFields.year,
@@ -88,6 +91,9 @@ export function useEditScriptForm({
     textFields.isValid &&
     !readingLinks.hasErrors &&
     (hasFieldChanges || hasNewFiles)
+  // Disabled only while working or when there is nothing to save: an invalid
+  // form stays clickable so the click can point at what is wrong.
+  const submitDisabled = isBusy || (!hasFieldChanges && !hasNewFiles)
 
   const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -113,6 +119,7 @@ export function useEditScriptForm({
         scriptId,
         subjectId,
         files.validFiles.map((entry) => entry.file),
+        locale,
         setUploadStage
       )
       if (!result.ok) return
@@ -120,7 +127,7 @@ export function useEditScriptForm({
       router.refresh()
     }
 
-    addToast({ type: 'success', title: SCRIPT_STRINGS.manage.saved })
+    addToast({ type: 'success', title: strings.manage.saved })
     onSaved()
   }
 
@@ -131,6 +138,7 @@ export function useEditScriptForm({
     files,
     isBusy,
     canSubmit,
+    submitDisabled,
     handleSubmit,
   }
 }

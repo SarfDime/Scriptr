@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, use, useEffect, useState } from 'react'
+import { subscribeToStorage } from '@/lib/storage-events'
 import { useLoading } from '../loading/LoadingProvider'
 
 export type ThemeMode = 'auto' | 'light' | 'dark'
@@ -17,6 +18,17 @@ const ThemeContext = createContext<ThemeContextType | null>(null)
 const storageKey = 'scriptr-theme'
 const simpleModeStorageKey = 'scriptr-simple-mode'
 
+/** Mirrors the mode onto `<html data-theme>`, where CSS picks it up; `auto`
+ * leaves the attribute off so the system preference applies. */
+const applyMode = (mode: ThemeMode) => {
+  const root = document.documentElement
+  if (mode === 'auto') {
+    root.removeAttribute('data-theme')
+  } else {
+    root.dataset.theme = mode
+  }
+}
+
 /** Mirrors simple mode onto <html data-simple> so CSS can react to it. */
 const applySimpleMode = (enabled: boolean) => {
   const root = document.documentElement
@@ -27,6 +39,9 @@ const applySimpleMode = (enabled: boolean) => {
   }
 }
 
+const isThemeMode = (value: string | null): value is ThemeMode =>
+  value === 'light' || value === 'dark' || value === 'auto'
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>('auto')
   const [simpleMode, setSimpleModeState] = useState(false)
@@ -34,12 +49,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const setMode = (newMode: ThemeMode) => {
     setModeState(newMode)
-    const root = document.documentElement
-    if (newMode === 'auto') {
-      root.removeAttribute('data-theme')
-    } else {
-      root.dataset.theme = newMode
-    }
+    applyMode(newMode)
     window.localStorage.setItem(storageKey, newMode)
   }
 
@@ -52,14 +62,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     startTask('theme')
 
-    const savedMode = window.localStorage.getItem(
-      storageKey
-    ) as ThemeMode | null
-    if (savedMode === 'light' || savedMode === 'dark' || savedMode === 'auto') {
+    const savedMode = window.localStorage.getItem(storageKey)
+    if (isThemeMode(savedMode)) {
       setModeState(savedMode)
-      if (savedMode !== 'auto') {
-        document.documentElement.dataset.theme = savedMode
-      }
+      applyMode(savedMode)
     }
 
     if (window.localStorage.getItem(simpleModeStorageKey) === 'true') {
@@ -69,6 +75,27 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     finishTask('theme')
   }, [startTask, finishTask])
+
+  // Another tab changed a preference: follow it here too, without writing the
+  // value back (a write would be a no-op, but the tidy path is to just apply).
+  useEffect(() => {
+    const stopMode = subscribeToStorage(storageKey, (value) => {
+      const next = isThemeMode(value) ? value : 'auto'
+      setModeState(next)
+      applyMode(next)
+    })
+
+    const stopSimpleMode = subscribeToStorage(simpleModeStorageKey, (value) => {
+      const enabled = value === 'true'
+      setSimpleModeState(enabled)
+      applySimpleMode(enabled)
+    })
+
+    return () => {
+      stopMode()
+      stopSimpleMode()
+    }
+  }, [])
 
   return (
     <ThemeContext value={{ mode, setMode, simpleMode, setSimpleMode }}>

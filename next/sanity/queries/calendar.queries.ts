@@ -1,21 +1,22 @@
 import { groq } from 'next-sanity'
+import { localizedProjection, localizedValue } from './localized.queries'
 
 /** Shared projection for a calendar event. `title`/`description` are aliases of
- * the schema's `stringTitle`/`stringSubtitle` (see `headerSchemaFields`), and
- * the subject/professor slugs use the same `coalesce(slug.current, _id)`
- * fallback as `subjectPathQuery`, so a projected path is exactly the one the
- * route resolves. */
+ * the schema's localized header fields (see `headerSchemaFields`), and the
+ * subject/professor slugs use the same `coalesce(slug.current, _id)` fallback as
+ * `subjectPathQuery`, so a projected path is exactly the one the route
+ * resolves. */
 const calendarEventProjection = /* groq */ `
   _id,
-  "title": stringTitle,
-  "description": stringSubtitle,
+  "title": ${localizedValue('localizedTitle')},
+  "description": ${localizedValue('localizedSubtitle')},
   date,
   type,
   importance,
   "subject": subject->{
     _id,
     dbId,
-    name,
+    ${localizedProjection('name', 'localizedName')},
     "slug": coalesce(slug.current, _id),
     "studySlug": coalesce(study->slug.current, study->_id),
     "siteSlug": study->siteSlug.current,
@@ -25,7 +26,7 @@ const calendarEventProjection = /* groq */ `
   "professors": professors[]->{
     _id,
     dbId,
-    name,
+    ${localizedProjection('name', 'localizedName')},
     "slug": coalesce(slug.current, _id)
   }
 `

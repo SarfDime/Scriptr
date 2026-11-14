@@ -1,12 +1,13 @@
 'use client'
 
 import type { CommentSort } from '@shared/config/shared-constants'
-import { COMMENT_STRINGS } from '@shared/strings/comments-strings'
+import { COMMENT_STRINGS_PACK } from '@shared/strings/comments-strings'
 import type { CommentPage } from '@shared/types/comments.types'
 import { canModerateStudy } from '@shared/utils/api.utils'
 import { createContext, useContext, useState } from 'react'
 import * as defaultCommentsApi from '@/lib/api/comments-api'
 import { countComments, removeComment } from '@/lib/comments/comment-tree'
+import { useStrings } from '@/providers/locale/use-strings'
 import { useSession } from '@/providers/SessionProvider'
 import type { CommentEntity } from '@/types/components/comments/Comments.types'
 import type {
@@ -131,6 +132,7 @@ export function CommentsProvider({
   api = defaultCommentsApi,
   children,
 }: CommentsProviderProps) {
+  const strings = useStrings(COMMENT_STRINGS_PACK)
   const initialPage: CachedCommentPage = {
     ...initialComments,
     items: prepareComments(initialComments.items),
@@ -185,7 +187,7 @@ export function CommentsProvider({
     } catch {
       setSortErrors((current) => ({
         ...current,
-        [sort]: COMMENT_STRINGS.general.loadMoreCommentsError,
+        [sort]: strings.general.loadMoreCommentsError,
       }))
     } finally {
       setLoadingSorts((current) => {
@@ -218,7 +220,7 @@ export function CommentsProvider({
     } catch {
       setSortErrors((current) => ({
         ...current,
-        [nextSort]: COMMENT_STRINGS.general.loadCommentsError,
+        [nextSort]: strings.general.loadCommentsError,
       }))
     } finally {
       setLoadingSorts((current) => {
@@ -264,7 +266,7 @@ export function CommentsProvider({
     } catch {
       setReplyErrors((current) => ({
         ...current,
-        [commentId]: COMMENT_STRINGS.general.loadRepliesError,
+        [commentId]: strings.general.loadRepliesError,
       }))
     } finally {
       setLoadingReplyIds((current) => {

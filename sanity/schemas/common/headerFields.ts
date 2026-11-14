@@ -1,15 +1,12 @@
 import { defineField, type FieldDefinition } from 'sanity'
-import {
-  imageValidation,
-  stringValidation,
-  validationRules,
-} from '../validation'
+import { imageValidation } from '../validation'
 import { localizedField } from './localeFields'
 
 type TextFieldType = 'string' | 'richText' | 'richTextLite'
 
 type TitleAndDescription = {
   title?: string
+  /** Image options for `icon`; a localized text field takes none. */
   options?: Record<string, unknown>
   description?: string
   group?: string
@@ -24,48 +21,26 @@ type HeaderFieldsProps = {
 } & TitleAndDescription
 
 /**
- * Creates the legacy single-language text field next to a localized duplicate.
- * The legacy field stays until the frontend reads localized values, so both are
- * edited side by side in the meantime.
+ * One header text field, in every language. A document carries `localizedTitle`
+ * (and `localizedSubtitle` when the schema asks for one), so the renderer picks
+ * the reader's language and a Studio editor fills one at a time.
  */
-const createTextFieldPair = (
+const headerTextField = (
   baseName: 'title' | 'subtitle',
   { title, type = 'richText', isRequired, ...rest }: TitleAndDescription
-): Array<FieldDefinition> => {
+): FieldDefinition => {
   const suffix = baseName === 'title' ? 'Title' : 'Subtitle'
-  const fieldTitle =
-    title ?? (baseName === 'title' ? 'Section title' : 'Section subtitle')
-  const name = type === 'string' ? `string${suffix}` : baseName
 
-  const legacyField =
-    type === 'string'
-      ? defineField({
-          ...rest,
-          title: fieldTitle,
-          name,
-          type: 'string',
-          validation: isRequired ? stringValidation : undefined,
-        })
-      : defineField({
-          ...rest,
-          title: fieldTitle,
-          name,
-          type,
-          validation: isRequired ? validationRules.isRequired : undefined,
-        })
-
-  return [
-    legacyField,
-    localizedField({
-      name: `localized${suffix}`,
-      title: `${fieldTitle} (localized)`,
-      valueType: type,
-      description: rest.description,
-      group: rest.group,
-      fieldset: rest.fieldset,
-      isRequired,
-    }),
-  ]
+  return localizedField({
+    name: `localized${suffix}`,
+    title:
+      title ?? (baseName === 'title' ? 'Section title' : 'Section subtitle'),
+    valueType: type,
+    description: rest.description,
+    group: rest.group,
+    fieldset: rest.fieldset,
+    isRequired,
+  })
 }
 
 export function headerSchemaFields({
@@ -80,15 +55,14 @@ export function headerSchemaFields({
 
   if (title) {
     headerInfo.push(
-      ...createTextFieldPair('title', { title, type, isRequired, ...rest })
+      headerTextField('title', { title, type, isRequired, ...rest })
     )
   }
 
   if (subtitle?.showSubtitle) {
     headerInfo.push(
-      ...createTextFieldPair('subtitle', {
+      headerTextField('subtitle', {
         title: subtitle.title,
-        options: subtitle.options,
         description: subtitle.description,
         group: subtitle.group,
         fieldset: subtitle.fieldset,

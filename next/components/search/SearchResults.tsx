@@ -1,31 +1,28 @@
-import { UI_STRINGS } from '@shared/config/strings'
+import { UI_STRINGS_PACK } from '@shared/config/strings'
+import type { ReactNode } from 'react'
 import { Box } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
+import { getServerStrings } from '@/lib/server-strings'
 import type {
   SearchPageViewModel,
   SearchResultGroups,
   SearchResultItem,
 } from '@/types/components/Search.types'
 
-const search = UI_STRINGS.scripts.search
-
-const GROUPS: ReadonlyArray<{
-  key: keyof SearchResultGroups
-  label: string
-}> = [
-  { key: 'universities', label: UI_STRINGS.academics.entity.university },
-  { key: 'faculties', label: UI_STRINGS.academics.entity.faculty },
-  { key: 'studies', label: UI_STRINGS.academics.entity.study },
-  { key: 'professors', label: UI_STRINGS.academics.entity.professor },
+const groupKeys: ReadonlyArray<keyof SearchResultGroups> = [
+  'universities',
+  'faculties',
+  'studies',
+  'professors',
 ]
 
 const ResultGroup = ({
   label,
   items,
 }: {
-  label: string
+  label: ReactNode
   items: Array<SearchResultItem>
 }) => {
   if (items.length === 0) return null
@@ -50,37 +47,61 @@ const ResultGroup = ({
 }
 
 /** Results for a submitted query, or a prompt while there isn't one yet.
- * Catalog entities only — a study's own content is searched inside that study. */
-export const SearchResults = ({
+ * Catalog entities only — a study's own content is searched inside that study.
+ *
+ * A Server Component: the result list and its messages are rendered in the
+ * route's language on the server, so nothing here is hydrated. */
+export const SearchResults = async ({
   query,
   results,
   failed,
 }: SearchPageViewModel) => {
+  const UI_STRINGS = await getServerStrings(UI_STRINGS_PACK)
+
+  const groupLabels: Record<keyof SearchResultGroups, string> = {
+    universities: UI_STRINGS.academics.entity.university,
+    faculties: UI_STRINGS.academics.entity.faculty,
+    studies: UI_STRINGS.academics.entity.study,
+    professors: UI_STRINGS.academics.entity.professor,
+  }
+
   if (!query)
-    return <Text className='ui-above ui-subtitle'>{search.prompt}</Text>
+    return (
+      <Text className='ui-above ui-subtitle'>
+        {UI_STRINGS.scripts.search.prompt}
+      </Text>
+    )
 
   if (failed)
     return (
       <Box as='section' role='alert' className='ui-stack ui-above h-fit'>
-        <Text className='ui-subtitle'>{search.loadFailed}</Text>
+        <Text className='ui-subtitle'>
+          {UI_STRINGS.scripts.search.loadFailed}
+        </Text>
       </Box>
     )
 
-  const total = GROUPS.reduce((sum, { key }) => sum + results[key].length, 0)
+  const total = groupKeys.reduce((sum, key) => sum + results[key].length, 0)
 
   return (
     <Box as='section' className='ui-stack ui-above h-fit'>
       <SectionHeader
-        title={search.resultsTitle}
-        subtitle={search.resultsSubtitle(query)}
+        title={UI_STRINGS.scripts.search.resultsTitle}
+        subtitle={UI_STRINGS.scripts.search.resultsSubtitle(query)}
         count={total}
       />
       {total === 0 ? (
-        <Text className='ui-subtitle'>{search.noResults(query)}</Text>
+        <Text className='ui-subtitle'>
+          {UI_STRINGS.scripts.search.noResults(query)}
+        </Text>
       ) : (
         <Box className='ui-stack gap-4'>
-          {GROUPS.map(({ key, label }) => (
-            <ResultGroup key={key} label={label} items={results[key]} />
+          {groupKeys.map((key) => (
+            <ResultGroup
+              key={key}
+              label={groupLabels[key]}
+              items={results[key]}
+            />
           ))}
         </Box>
       )}

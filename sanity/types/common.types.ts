@@ -18,9 +18,11 @@ type CommonPreviewProps = {
   media?: string | ReactNode
 }
 
-type LinkSelectorPreviewProps = {
+/** A document whose list title is a localized header: both languages are
+ *  selected, because a preview cannot resolve the object the way a query does. */
+type LocalizedHeaderPreviewProps = {
   customLink?: string
-  variant?: ButtonVariantType
+  titleMk?: string | BlockArrayType
 } & Pick<CommonPreviewProps, 'title' | 'media'>
 
 /**
@@ -73,7 +75,7 @@ export type {
   BlockArrayType,
   CommonPreviewProps,
   ComponentProps,
-  LinkSelectorPreviewProps,
+  LocalizedHeaderPreviewProps,
   OnChange,
   PreviewPrepareProps,
   StructureToolTypes,

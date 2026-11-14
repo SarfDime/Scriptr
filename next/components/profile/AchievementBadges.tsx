@@ -1,7 +1,9 @@
 'use client'
 
 import { getAchievementCopy } from '@shared/config/achievements'
-import { ACHIEVEMENTS_STRINGS } from '@shared/strings/achievements-strings'
+import type { LocaleId } from '@shared/config/localization-constants'
+import { ACHIEVEMENTS_STRINGS_PACK } from '@shared/strings/achievements-strings'
+import type { ResolvedStrings } from '@shared/types/localization.types'
 import type { ProfileAchievement } from '@shared/types/profile.types'
 import { Box } from '@/components/common/Box'
 import { Text } from '@/components/typography/Text'
@@ -13,13 +15,21 @@ import {
   sortAchievements,
 } from '@/lib/achievement-display'
 import { cn } from '@/lib/common-utils'
+import { useLocale } from '@/providers/locale/LocaleProvider'
+import { useStrings } from '@/providers/locale/use-strings'
 import { Button } from '../common/Button'
 import { Badge } from '../ui/Badge'
 import { Divider } from '../ui/Divider'
 
-/** Fixed locale and time zone so server and client render the same text. */
-const formatEarnedDate = (earnedAt: string) =>
-  new Date(earnedAt).toLocaleDateString('en-GB', {
+/** A date format per language, and a fixed time zone, so server and client
+ * render the same text and the month name matches the sentence around it. */
+const EARNED_DATE_LOCALE: Record<LocaleId, string> = {
+  en: 'en-GB',
+  mk: 'mk-MK',
+}
+
+const formatEarnedDate = (earnedAt: string, locale: LocaleId) =>
+  new Date(earnedAt).toLocaleDateString(EARNED_DATE_LOCALE[locale], {
     dateStyle: 'medium',
     timeZone: 'UTC',
   })
@@ -42,12 +52,18 @@ type BadgeModel = {
   studyName: string | null
 }
 
-const toBadge = (entry: ProfileAchievement): BadgeModel | null => {
+type AchievementStrings = ResolvedStrings<typeof ACHIEVEMENTS_STRINGS_PACK>
+
+const toBadge = (
+  strings: AchievementStrings,
+  entry: ProfileAchievement,
+  locale: LocaleId
+): BadgeModel | null => {
   const { achievement } = entry
   if (!achievement) return null
 
   const rarity = resolveAchievementRarity(achievement.rarity)
-  const copy = getAchievementCopy(entry.achievement_id, achievement)
+  const copy = getAchievementCopy(entry.achievement_id, achievement, locale)
 
   return {
     id: entry.achievement_id,
@@ -56,7 +72,7 @@ const toBadge = (entry: ProfileAchievement): BadgeModel | null => {
     description: copy.description,
     earnedAt: entry.earned_at,
     rarity,
-    rarityLabel: ACHIEVEMENTS_STRINGS.rarity[rarity],
+    rarityLabel: strings.rarity[rarity],
     icon: getAchievementIcon(entry.achievement_id, achievement.metric),
     studyName: achievement.study?.name ?? null,
   }
@@ -71,14 +87,14 @@ const BadgeButton = ({
   ariaLabel?: string
   className?: string
 }) => {
+  const strings = useStrings(ACHIEVEMENTS_STRINGS_PACK)
   const Icon = badge.icon
 
   return (
     <Button
       type='button'
       aria-label={
-        ariaLabel ??
-        ACHIEVEMENTS_STRINGS.badgeLabel(badge.title, badge.rarityLabel)
+        ariaLabel ?? strings.badgeLabel(badge.title, badge.rarityLabel)
       }
       className={cn(
         'button',
@@ -93,44 +109,49 @@ const BadgeButton = ({
 }
 
 /** One badge with its detail popover. */
-const AchievementBadge = ({ badge }: { badge: BadgeModel }) => (
-  <Popover placement='left' trigger={<BadgeButton badge={badge} />}>
-    <Box className='ui-above-inside ui-stack w-56 gap-1.5 bg-background-200 p-3'>
-      <Text
-        className={cn(
-          'ui-title font-bold',
-          `${ACHIEVEMENT_RARITY_PALETTES[badge.rarity]}-nb`,
-          'bg-transparent!'
-        )}
-      >
-        {badge.title}
-      </Text>
+const AchievementBadge = ({ badge }: { badge: BadgeModel }) => {
+  const { locale } = useLocale()
+  const strings = useStrings(ACHIEVEMENTS_STRINGS_PACK)
 
-      {badge.description && (
-        <Text className='ui-large-caption'>{badge.description}</Text>
-      )}
-      <Divider />
-
-      <Text className='ui-caption'>
-        {ACHIEVEMENTS_STRINGS.earnedOn(formatEarnedDate(badge.earnedAt))}
-      </Text>
-      {badge.studyName && (
-        <Text className='ui-caption'>
-          {ACHIEVEMENTS_STRINGS.earnedIn(badge.studyName)}
-        </Text>
-      )}
-      <Text className='ui-caption ui-cluster gap-1'>
-        {ACHIEVEMENTS_STRINGS.rarityLabel}
-        <Badge
-          className='ui-caption'
-          colorPalette={ACHIEVEMENT_RARITY_PALETTES[badge.rarity]}
+  return (
+    <Popover placement='left' trigger={<BadgeButton badge={badge} />}>
+      <Box className='ui-above-inside ui-stack w-56 gap-1.5 bg-background-200 p-3'>
+        <Text
+          className={cn(
+            'ui-title font-bold',
+            `${ACHIEVEMENT_RARITY_PALETTES[badge.rarity]}-nb`,
+            'bg-transparent!'
+          )}
         >
-          {badge.rarityLabel}
-        </Badge>
-      </Text>
-    </Box>
-  </Popover>
-)
+          {badge.title}
+        </Text>
+
+        {badge.description && (
+          <Text className='ui-large-caption'>{badge.description}</Text>
+        )}
+        <Divider />
+
+        <Text className='ui-caption'>
+          {strings.earnedOn(formatEarnedDate(badge.earnedAt, locale))}
+        </Text>
+        {badge.studyName && (
+          <Text className='ui-caption'>
+            {strings.earnedIn(badge.studyName)}
+          </Text>
+        )}
+        <Text className='ui-caption ui-cluster gap-1'>
+          {strings.rarityLabel}
+          <Badge
+            className='ui-caption'
+            colorPalette={ACHIEVEMENT_RARITY_PALETTES[badge.rarity]}
+          >
+            {badge.rarityLabel}
+          </Badge>
+        </Text>
+      </Box>
+    </Popover>
+  )
+}
 
 /**
  * A type's badges as one tile: the best of them, plus a count. Hovering or
@@ -138,6 +159,7 @@ const AchievementBadge = ({ badge }: { badge: BadgeModel }) => (
  * badge shows its own popover.
  */
 const AchievementStack = ({ badges }: { badges: Array<BadgeModel> }) => {
+  const strings = useStrings(ACHIEVEMENTS_STRINGS_PACK)
   const best = badges[0]
   if (!best) return null
   const rest = badges.slice(1)
@@ -146,7 +168,7 @@ const AchievementStack = ({ badges }: { badges: Array<BadgeModel> }) => {
     <Box className='group/stack relative'>
       <BadgeButton
         badge={best}
-        ariaLabel={ACHIEVEMENTS_STRINGS.stackLabel(best.title, rest.length)}
+        ariaLabel={strings.stackLabel(best.title, rest.length)}
       />
       <Text
         aria-hidden
@@ -157,7 +179,7 @@ const AchievementStack = ({ badges }: { badges: Array<BadgeModel> }) => {
           'transition-opacity group-hover/stack:opacity-0 group-focus-within/stack:opacity-0'
         )}
       >
-        {ACHIEVEMENTS_STRINGS.stackCount(rest.length)}
+        {strings.stackCount(rest.length)}
       </Text>
       <Box
         className={cn(
@@ -223,7 +245,10 @@ type BadgeScope = {
 
 /** Platform-wide achievements first, then one scope per study, each keeping the
  * order `sortAchievements` gave it. */
-const groupByScope = (badges: Array<BadgeModel>): Array<BadgeScope> => {
+const groupByScope = (
+  strings: AchievementStrings,
+  badges: Array<BadgeModel>
+): Array<BadgeScope> => {
   const byStudy = new Map<string, Array<BadgeModel>>()
   const global: Array<BadgeModel> = []
   for (const badge of badges) {
@@ -241,7 +266,7 @@ const groupByScope = (badges: Array<BadgeModel>): Array<BadgeScope> => {
   if (global.length > 0) {
     scopes.push({
       key: 'global',
-      label: onlyGlobal ? null : ACHIEVEMENTS_STRINGS.scopeGlobal,
+      label: onlyGlobal ? null : strings.scopeGlobal,
       badges: global,
     })
   }
@@ -275,22 +300,19 @@ export const AchievementBadges = ({
   // Re-sorted here as well as by the caller so a stack is led by the rarest
   // badge of its type — the placeholders are appended, not ordered — and the
   // tile that stays visible is the most valuable one.
+  const strings = useStrings(ACHIEVEMENTS_STRINGS_PACK)
+  const { locale } = useLocale()
   const badges = sortAchievements(achievements)
-    .map(toBadge)
+    .map((entry) => toBadge(strings, entry, locale))
     .filter((badge): badge is BadgeModel => badge !== null)
 
   if (badges.length === 0) return null
 
-  const scopes = groupByScope(badges)
+  const scopes = groupByScope(strings, badges)
   const single = scopes.length === 1 ? scopes[0] : null
 
   if (single?.label === null) {
-    return (
-      <BadgeList
-        badges={single.badges}
-        label={ACHIEVEMENTS_STRINGS.groupLabel}
-      />
-    )
+    return <BadgeList badges={single.badges} label={strings.groupLabel} />
   }
 
   return (
@@ -299,7 +321,7 @@ export const AchievementBadges = ({
         <Box key={scope.key} className='ui-stack gap-1'>
           <BadgeList
             badges={scope.badges}
-            label={`${ACHIEVEMENTS_STRINGS.groupLabel} — ${scope.label}`}
+            label={`${strings.groupLabel} — ${scope.label}`}
           />
         </Box>
       ))}

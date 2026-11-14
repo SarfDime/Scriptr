@@ -1,6 +1,6 @@
 import { isOwner } from '@shared/utils/api.utils'
 import { Hono } from 'hono'
-import { NOTIFICATIONS_STRINGS } from '../../../shared/strings/notifications-strings'
+import { NOTIFICATION_ROW_STRINGS } from '../../../shared/strings/notifications-strings'
 import type {
   LiftedRestrictionItem,
   MyRestriction,
@@ -286,8 +286,8 @@ restrictions.put('/:profileId', requireAdminAccess, async (c) => {
 
   await notifyProfileBestEffort(c, profileId, {
     type: 'restriction_applied',
-    title: NOTIFICATIONS_STRINGS.restrictionAppliedTitle,
-    body: NOTIFICATIONS_STRINGS.restrictionAppliedBody(
+    title: NOTIFICATION_ROW_STRINGS.restrictionAppliedTitle,
+    body: NOTIFICATION_ROW_STRINGS.restrictionAppliedBody(
       normalizedReason,
       expiresAt
     ),
@@ -351,8 +351,8 @@ restrictions.delete('/:profileId', requireAdminAccess, async (c) => {
   if (active) {
     await notifyProfileBestEffort(c, profileId, {
       type: 'restriction_lifted',
-      title: NOTIFICATIONS_STRINGS.restrictionLiftedTitle,
-      body: NOTIFICATIONS_STRINGS.restrictionLiftedBody,
+      title: NOTIFICATION_ROW_STRINGS.restrictionLiftedTitle,
+      body: NOTIFICATION_ROW_STRINGS.restrictionLiftedBody,
       data: null,
     })
   }

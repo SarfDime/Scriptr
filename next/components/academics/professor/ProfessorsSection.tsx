@@ -1,9 +1,10 @@
-import { UI_STRINGS } from '@shared/config/strings'
+import { UI_STRINGS_PACK } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
+import { getServerStrings } from '@/lib/server-strings'
 import type { ProfessorsSectionProps } from '@/types/academics/professor.types'
 import { AdministrationCard } from '../AdministrationCard'
 
@@ -12,13 +13,16 @@ import { AdministrationCard } from '../AdministrationCard'
  * rest of the sidebar. The count badge says how many there are in total. */
 const LIST_MAX_HEIGHT = 'max-h-[18.5rem]'
 
-export const ProfessorsSection = ({ professors }: ProfessorsSectionProps) => {
+export const ProfessorsSection = async ({
+  professors,
+}: ProfessorsSectionProps) => {
+  const strings = await getServerStrings(UI_STRINGS_PACK)
   const professorList = professors ?? []
 
   return (
     <Box as='section' className='ui-stack ui-above'>
       <SectionHeader
-        title={UI_STRINGS.navigation.professors}
+        title={strings.navigation.professors}
         count={professorList.length}
       />
 
@@ -41,7 +45,7 @@ export const ProfessorsSection = ({ professors }: ProfessorsSectionProps) => {
         </Box>
       ) : (
         <Text className='ui-caption ui-above-inside'>
-          {UI_STRINGS.academics.noProfessorsAssigned}
+          {strings.academics.noProfessorsAssigned}
         </Text>
       )}
     </Box>

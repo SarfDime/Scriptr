@@ -10,6 +10,7 @@ import { NextLink } from '@/components/common/NextLink'
 import { Text } from '@/components/typography/Text'
 import { convertDateToClientLocale } from '@/lib/common-utils'
 import { studyUrlFromPath } from '@/lib/study-origin'
+import { useLocale } from '@/providers/locale/LocaleProvider'
 import { DownloadReviewEvents } from './DownloadReviewEvents'
 
 /** One script in the review: its volume split between signed-in accounts and
@@ -21,6 +22,7 @@ export const DownloadReviewScriptItem = ({
   script: DownloadReviewScript
   study: string | null
 }) => {
+  const { locale } = useLocale()
   const [open, setOpen] = useState(false)
   const name =
     script.title ?? script.slug ?? ADMIN_STRINGS.downloadReviewUnknownScript
@@ -35,7 +37,8 @@ export const DownloadReviewScriptItem = ({
                 getScriptSitePath({
                   siteSlug: script.site_slug,
                   slug: script.slug,
-                })
+                }),
+                locale
               )}
             >
               {name}

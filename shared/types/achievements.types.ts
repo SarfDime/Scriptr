@@ -15,8 +15,8 @@ export type AchievementDefinition = Tables<'achievement_definitions'>
  * study, `null` (the default) makes it platform-wide.
  *
  * Title and description are not client input: the id has to have an entry in
- * `ACHIEVEMENT_COPY` (`shared/config/achievements.ts`), and the API stores that
- * copy on the row as the fallback snapshot.
+ * `ACHIEVEMENTS_STRINGS_PACK.copy` (`shared/strings/achievements-strings.ts`),
+ * and the API stores that copy on the row as the fallback snapshot.
  */
 export type AchievementDefinitionInput = {
   id: string

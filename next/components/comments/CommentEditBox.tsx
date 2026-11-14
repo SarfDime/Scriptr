@@ -1,16 +1,13 @@
 'use client'
 
-import { COMMENT_STRINGS } from '@shared/strings/comments-strings'
+import { COMMENT_STRINGS_PACK } from '@shared/strings/comments-strings'
 import { useProtectedAction } from '@/hooks/useProtectedAction'
 import { validateCommentContent } from '@/lib/comment-validation'
+import { useLocale } from '@/providers/locale/LocaleProvider'
+import { useStrings } from '@/providers/locale/use-strings'
 import type { CommentEntity } from '@/types/components/comments/Comments.types'
 import { CommentEditor } from './CommentEditor'
 import { useCommentsServices } from './CommentsProvider'
-
-const EDIT_ACTION_LABELS = {
-  cancel: COMMENT_STRINGS.reply.cancel,
-  save: COMMENT_STRINGS.composer.saveEdit,
-}
 
 export function CommentEditBox({
   comment,
@@ -19,20 +16,25 @@ export function CommentEditBox({
   comment: CommentEntity
   onClose: () => void
 }) {
+  const strings = useStrings(COMMENT_STRINGS_PACK)
   const { api, updateComment } = useCommentsServices()
+  const { locale } = useLocale()
   const { run } = useProtectedAction(api.patchComment, {
-    errorTitle: COMMENT_STRINGS.composer.editError,
+    errorTitle: strings.composer.editError,
   })
 
   return (
     <CommentEditor
       initialContent={comment.content}
-      ariaLabel={COMMENT_STRINGS.composer.editorAriaLabel}
+      ariaLabel={strings.composer.editorAriaLabel}
       editorClassName='min-h-24'
       autoFocus
       actions={['cancel', 'save']}
-      actionLabels={EDIT_ACTION_LABELS}
-      validate={validateCommentContent}
+      actionLabels={{
+        cancel: strings.reply.cancel,
+        save: strings.composer.saveEdit,
+      }}
+      validate={(value) => validateCommentContent(value, locale)}
       onSave={async (value) => {
         const result = await run(comment.id, value)
         if (result.ok) updateComment(result.data.comment)

@@ -1,7 +1,6 @@
 'use client'
 
 import UserIcon from '@sanity/icons/User'
-import { UI_STRINGS } from '@shared/config/strings'
 import type { MyProfileResponse } from '@shared/types/profile.types'
 import { useState } from 'react'
 import { Button } from '@/components/common/Button'
@@ -14,11 +13,13 @@ import { DialogFooter } from '@/components/ui/DialogFooter'
 import { useEditProfileForm } from '@/hooks/profile/useEditProfileForm'
 import { useDeviceType } from '@/hooks/useDeviceType'
 import { getDisplayName } from '@/lib/profile-display'
+import { useUIStrings } from '@/providers/locale/use-strings'
 
 /** Trigger plus the edit dialog. The dialog (and its form state) is only
  * mounted while open, so every opening starts from the saved values and
  * there is no reset logic to keep in sync. */
 export function EditProfileButton({ profile }: { profile: MyProfileResponse }) {
+  const ui = useUIStrings()
   const [isOpen, setIsOpen] = useState(false)
 
   return (
@@ -28,7 +29,7 @@ export function EditProfileButton({ profile }: { profile: MyProfileResponse }) {
         className='button button-sm subtle ui-cluster gap-1.5'
       >
         <UserIcon />
-        {UI_STRINGS.profile.editProfileLabel}
+        {ui.profile.editProfileLabel}
       </Button>
       {isOpen && (
         <EditProfileDialog profile={profile} onClose={() => setIsOpen(false)} />
@@ -47,6 +48,7 @@ function EditProfileDialog({
   profile: MyProfileResponse
   onClose: () => void
 }) {
+  const ui = useUIStrings()
   const isMobile = useDeviceType() === 'mobile'
   const {
     values,
@@ -63,7 +65,7 @@ function EditProfileDialog({
 
   return (
     <Dialog
-      title={UI_STRINGS.profile.edit.title}
+      title={ui.profile.edit.title}
       hideTrigger
       isOpen
       onClose={onClose}
@@ -90,7 +92,7 @@ function EditProfileDialog({
           />
 
           <InputWrapper
-            label={UI_STRINGS.profile.edit.fullNameLabel}
+            label={ui.profile.edit.fullNameLabel}
             inputProps={{
               id: 'edit-profile-full-name',
               type: 'text',
@@ -108,7 +110,7 @@ function EditProfileDialog({
           />
 
           <InputWrapper
-            label={UI_STRINGS.profile.edit.usernameLabel}
+            label={ui.profile.edit.usernameLabel}
             inputProps={{
               id: 'edit-profile-username',
               type: 'text',
@@ -127,10 +129,10 @@ function EditProfileDialog({
         </Card.Body>
 
         <DialogFooter
-          secondaryLabel={UI_STRINGS.profile.edit.cancel}
+          secondaryLabel={ui.profile.edit.cancel}
           onSecondary={onClose}
           secondaryDisabled={isBusy}
-          primaryLabel={UI_STRINGS.profile.edit.save}
+          primaryLabel={ui.profile.edit.save}
           primaryDisabled={!canSubmit}
         />
       </FormContainer>

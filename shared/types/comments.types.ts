@@ -1,6 +1,7 @@
 import type { REACTION_TYPES } from '../config/shared-constants'
 import type { Tables } from './database.types'
 import type { PortableTextValue } from './portable-text.types'
+import type { LocalizedScriptText } from './scripts.types'
 
 /** The columns `PUBLIC_COMMENT_COLUMNS` selects — every list/detail/create
  * endpoint's non-relational fields. Excludes `is_flagged` (internal
@@ -31,7 +32,7 @@ export type CommentProfessorSummary = {
 
 /** Matches `script:scripts(title)`. */
 export type CommentScriptTitleSummary = {
-  title: PortableTextValue
+  title: LocalizedScriptText
 }
 
 /** Engagement counts and the current viewer's own status. */

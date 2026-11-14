@@ -1,11 +1,24 @@
 'use client'
 
-import { COMMENT_STRINGS } from '@shared/strings/comments-strings'
+import { COMMENT_STRINGS_PACK } from '@shared/strings/comments-strings'
 import dynamic from 'next/dynamic'
 import { Box } from '@/components/common/Box'
 import { RESTRICTED_EDITOR_OPTIONS } from '@/components/typography/portable-text/toolbar/editor-options'
 import { cn } from '@/lib/common-utils'
+import { useStrings } from '@/providers/locale/use-strings'
 import type { PortableTextEditorSectionProps } from '@/types/components/PortableTextEditor.types'
+
+/** Its own component so the placeholder reads the reader's language: the copy
+ * cannot sit at module scope or inside the `dynamic()` options. */
+const EditorLoading = () => {
+  const strings = useStrings(COMMENT_STRINGS_PACK)
+
+  return (
+    <Box role='status' aria-busy='true' className='min-h-24 ui-above-inside'>
+      {strings.general.loadingEditor}
+    </Box>
+  )
+}
 
 const PortableTextEditorSection = dynamic(
   () =>
@@ -14,11 +27,7 @@ const PortableTextEditorSection = dynamic(
     ).then((module) => module.PortableTextEditorSection),
   {
     ssr: false,
-    loading: () => (
-      <Box role='status' aria-busy='true' className='min-h-24 ui-above-inside'>
-        {COMMENT_STRINGS.general.loadingEditor}
-      </Box>
-    ),
+    loading: () => <EditorLoading />,
   }
 )
 

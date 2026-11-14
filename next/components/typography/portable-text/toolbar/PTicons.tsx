@@ -1,3 +1,5 @@
+'use client'
+
 import Bold from '@sanity/icons/Bold'
 import Checkmark from '@sanity/icons/Checkmark'
 import ChevronDown from '@sanity/icons/ChevronDown'
@@ -16,49 +18,53 @@ import {
   FONT_SIZE_STYLES,
   WEIGHT_DECORATORS,
 } from '@shared/config/shared-pt-config'
-import { UI_STRINGS } from '@shared/config/strings'
 import type { ComponentType, SVGProps } from 'react'
 import { cn } from '@/lib/common-utils'
+import { useUIStrings } from '@/providers/locale/use-strings'
 
 export type PTIconComponent = ComponentType<{ className?: string }>
 
 type AlignTextProps = SVGProps<SVGSVGElement> & { alignment: AlignmentType }
 
-const AlignText = ({ alignment, ...props }: AlignTextProps) => (
-  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' {...props}>
-    <title>{UI_STRINGS.editor.alignText(alignment)}</title>
-    {alignment === 'left' && (
-      <path
-        fill='none'
-        stroke='currentColor'
-        strokeLinecap='round'
-        strokeLinejoin='round'
-        strokeWidth='1.5'
-        d='M9 4.5h10m-10 5h5m-5 5h10m-10 5h5M5 3v18'
-      />
-    )}
-    {alignment === 'center' && (
-      <path
-        fill='none'
-        stroke='currentColor'
-        strokeLinecap='round'
-        strokeLinejoin='round'
-        strokeWidth='1.5'
-        d='M3 3h18M8 9h8M3 15h18M8 21h8'
-      />
-    )}
-    {alignment === 'right' && (
-      <path
-        fill='none'
-        stroke='currentColor'
-        strokeLinecap='round'
-        strokeLinejoin='round'
-        strokeWidth='1.5'
-        d='M5 4.5h10m-5 5h5m-10 5h10m-5 5h5M19 3v18'
-      />
-    )}
-  </svg>
-)
+const AlignText = ({ alignment, ...props }: AlignTextProps) => {
+  const strings = useUIStrings()
+
+  return (
+    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' {...props}>
+      <title>{strings.editor.alignText(alignment)}</title>
+      {alignment === 'left' && (
+        <path
+          fill='none'
+          stroke='currentColor'
+          strokeLinecap='round'
+          strokeLinejoin='round'
+          strokeWidth='1.5'
+          d='M9 4.5h10m-10 5h5m-5 5h10m-10 5h5M5 3v18'
+        />
+      )}
+      {alignment === 'center' && (
+        <path
+          fill='none'
+          stroke='currentColor'
+          strokeLinecap='round'
+          strokeLinejoin='round'
+          strokeWidth='1.5'
+          d='M3 3h18M8 9h8M3 15h18M8 21h8'
+        />
+      )}
+      {alignment === 'right' && (
+        <path
+          fill='none'
+          stroke='currentColor'
+          strokeLinecap='round'
+          strokeLinejoin='round'
+          strokeWidth='1.5'
+          d='M5 4.5h10m-5 5h5m-10 5h10m-5 5h5M19 3v18'
+        />
+      )}
+    </svg>
+  )
+}
 
 /** Filled circle tinted with the decorator's real color. */
 const ColorSwatch = ({
@@ -68,6 +74,7 @@ const ColorSwatch = ({
   color: ColorsType
   className?: string
 }) => {
+  const strings = useUIStrings()
   const colorClass: Record<ColorsType, string> = {
     brand: 'text-brand',
     muted: 'text-grey',
@@ -80,7 +87,7 @@ const ColorSwatch = ({
       viewBox='0 0 24 24'
       className={cn(className, colorClass[color], 'fill-current stroke-fg')}
     >
-      <title>{UI_STRINGS.editor.colorSwatch(color)}</title>
+      <title>{strings.editor.colorSwatch(color)}</title>
       <circle cx='12' cy='12' r='9' fill='currentColor' />
     </svg>
   )
