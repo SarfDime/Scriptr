@@ -5,8 +5,8 @@
   "git": {
     "deploymentEnabled": {
       "**": false,
-      "main": true,
-      "staging": true,
+      "main": false,
+      "staging": false,
       "main-api": true,
       "main-sanity": false
     }

@@ -197,19 +197,21 @@ The `scriptr-web` project has Vercel's **Auto-assign Custom Production Domains**
 setting enabled. Vercel assigns `scriptr.uk` to each new production deployment;
 no separate alias workflow or GitHub token is required.
 
-Both projects use `git.deploymentEnabled` in their project-root `vercel.json`:
-Git deployments are enabled only from `main` (production) and `staging` (a
-Vercel Preview deployment); every other branch is disabled, so a feature branch
-builds nothing. The API project also builds `main-api`, which is its
-**Production Branch** (`scriptr-api` → Settings → Git): pushing `staging` onto
-it releases the API on its own, without waiting for the web's `main`. That one
-dashboard setting is what makes the deployment production — Vercel's REST API
-does not expose a production branch, so it cannot be set from here. The web
-project deliberately leaves `main-api` disabled.
+Both projects use `git.deploymentEnabled` in their project-root `vercel.json`,
+and each allows exactly the branches it deploys from. The web builds from `main`
+(production) and `staging` (a Vercel Preview deployment). The API builds from
+`main-api` alone, which is `scriptr-api`'s **Production Branch**
+(`scriptr-api` → Settings → Git): an API release is a push there and never rides
+along with a web deploy, and `main`/`staging` are disabled by name so a web
+release cannot start an API build. That dashboard setting is what makes the push
+production — Vercel's REST API does not expose a production branch, so it cannot
+be set from here. Everything else is disabled by the `**` fallback, so a feature
+branch builds nothing and `main-api` deploys nothing on the web project.
 
-`main-sanity` is also disabled by name, not just by the `**` fallback: it only
-exists to trigger `deploy-sanity.yaml`, and the API/web have nothing to deploy
-for it, so a stray edit to `**` must not silently start building it.
+`main-sanity` is disabled by name for the same reason, not just by the `**`
+fallback: it only exists to trigger `deploy-sanity.yaml`, and the API/web have
+nothing to deploy for it, so a stray edit to `**` must not silently start
+building it.
 
 A branch can still be previewed on demand with the Vercel CLI
 (`vercel` from `hono/` or `next/`), which bypasses the allowlist. The
