@@ -1,3 +1,5 @@
+'use client'
+
 import { cn } from '../../../lib/common-utils'
 import type { SelectOptionProps } from '../../../types/components/Select.types'
 import { Box } from '../../common/Box'

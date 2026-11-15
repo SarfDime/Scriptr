@@ -1,3 +1,5 @@
+'use client'
+
 import type { AcademicSelections } from '@/types/onboarding.types'
 
 /**

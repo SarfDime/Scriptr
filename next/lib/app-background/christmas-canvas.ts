@@ -1,3 +1,5 @@
+'use client'
+
 import {
   CHRISTMAS_DEFAULTS,
   type ChristmasColorRole,

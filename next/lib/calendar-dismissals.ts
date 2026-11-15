@@ -1,3 +1,5 @@
+'use client'
+
 import { calendarDayKey } from './calendar'
 
 /**

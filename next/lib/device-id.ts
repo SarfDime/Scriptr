@@ -1,3 +1,5 @@
+'use client'
+
 const DEVICE_ID_KEY = 'scriptr:device-id'
 
 /**

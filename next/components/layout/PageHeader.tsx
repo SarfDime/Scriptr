@@ -1,12 +1,10 @@
-'use client'
-
 import type { LocaleId } from '@shared/config/localization-constants'
 import type { LocalizedMessage } from '@shared/types/localization.types'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
 import { resolveLocalizedText } from '@shared/utils/localized-strings'
 import { isPortableTextValue } from '@shared/utils/portable-text.utils'
 import type { ReactNode } from 'react'
-import { useLocale } from '@/providers/locale/LocaleProvider'
+import { getServerLocale } from '@/lib/server-strings'
 import { Box } from '../common/Box'
 import { Text } from '../typography/Text'
 import { Title } from '../typography/Title'
@@ -35,13 +33,19 @@ const resolveTitle = (
     : resolveLocalizedText(value, locale)
 }
 
-export const PageHeader = ({
+/** A page's heading, with a slot for its actions.
+ *
+ * A Server Component: it reads the route's language itself (`getServerLocale`),
+ * so it resolves a passed `{ en, mk }` entry without a page having to read a
+ * collection, and the copy it renders never reaches the client bundle. A Client
+ * Component therefore cannot render it — pass it the resolved string instead. */
+export const PageHeader = async ({
   greeting,
   title,
   subtitle,
   children,
 }: PageHeaderProps) => {
-  const { locale } = useLocale()
+  const locale = await getServerLocale()
 
   const greetingText =
     greeting === undefined ? undefined : resolveLocalizedText(greeting, locale)

@@ -1,3 +1,5 @@
+'use client'
+
 import { useEditor } from '@portabletext/editor'
 import { defineBehavior } from '@portabletext/editor/behaviors'
 import {

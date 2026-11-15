@@ -1,6 +1,5 @@
-'use client'
-
 import BookIcon from '@sanity/icons/Book'
+import { UI_STRINGS_PACK } from '@shared/config/strings'
 import { ScriptsSection } from '@/components/academics/scripts/ScriptsSection'
 import { ActivityStats } from '@/components/common/ActivityStats'
 import { Box } from '@/components/common/Box'
@@ -17,24 +16,26 @@ import { getStudySetupUrl } from '@/lib/academic-routes'
 import { sortAchievements } from '@/lib/achievement-display'
 import { getDisplayName } from '@/lib/profile-display'
 import { toScriptDetails } from '@/lib/script-display'
+import { getServerLocale, getServerStrings } from '@/lib/server-strings'
 import { catalogUrl } from '@/lib/study-origin'
-import { useLocale } from '@/providers/locale/LocaleProvider'
-import { useUIStrings } from '@/providers/locale/use-strings'
 import type { ProfilePageProps } from '@/types/components/ProfilePage.types'
 
 /**
  * One profile layout for both the signed-in user's own page (`/user`) and
- * anyone's public page (`/user/[username]`). It is presentational: how the
- * data is loaded differs (the own page reads the shared profile state and
- * can be refreshed after edits; the public one is fetched on the server),
- * so the callers load it and pass it in. `isOwner` adds the edit actions.
+ * anyone's public page (`/user/[username]`). It is presentational: the pages
+ * load the data and pass it in. `isOwner` adds the edit actions.
  *
  * The subject list is optional: the signed-in user's own page and the study
  * site's profile page pass it, while a public catalog profile
  * (`/user/[username]`) leaves it out — identity, affiliations and activity
  * only.
+ *
+ * A Server Component: every string here is resolved once, and the interactive
+ * leaves (`AchievementBadges`, `ScriptsSection`, the dialogs) are the only
+ * client components. The language comes from the route (`getServerLocale`), so
+ * callers pass no locale.
  */
-export const ProfilePage = ({
+export const ProfilePage = async ({
   profile,
   academics,
   subjects,
@@ -42,8 +43,8 @@ export const ProfilePage = ({
   commentCount,
   isOwner = false,
 }: ProfilePageProps) => {
-  const { locale } = useLocale()
-  const ui = useUIStrings()
+  const locale = await getServerLocale()
+  const ui = await getServerStrings(UI_STRINGS_PACK, locale)
   const displayName = getDisplayName(profile)
   const username = profile.username
 

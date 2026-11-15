@@ -6,11 +6,3 @@ export type StudyTipData = {
   title: PortableTextValue
   content: PortableTextValue
 }
-
-/** The navbar's tip rotation: every published tip plus the UTC day the layout
- * rendered, so the client can match the server's HTML before switching to its
- * own clock. */
-export type StudyTipRotation = {
-  tips: Array<StudyTipData>
-  serverDay: number
-}

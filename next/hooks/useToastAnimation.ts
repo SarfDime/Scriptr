@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useRef, useState } from 'react'
 
 import type { ToastAnimationProps } from '../types/components/Toast.types'

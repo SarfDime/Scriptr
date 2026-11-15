@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { MainLayout } from '@/components/layout/PageLayout'
+import { MainLayout } from '@/components/layout/MainLayout'
 
 /**
  * The catalog's chrome: the same header, main column and footer every page had,

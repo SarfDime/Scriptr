@@ -1,48 +1,39 @@
-'use client'
-
 import Sparkles from '@sanity/icons/Sparkles'
-import { useSyncExternalStore } from 'react'
+import { UI_STRINGS_PACK } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { PortableTextContent } from '@/components/typography/PortableTextContent'
 import { Text } from '@/components/typography/Text'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
-import { dayNumber, pickByDay } from '@/lib/daily-pick'
-import { useUIStrings } from '@/providers/locale/use-strings'
+import { getServerStrings } from '@/lib/server-strings'
 import type { StudyTipData } from '@/types/components/StudyTip.types'
 
-const subscribeToDay = () => () => {
-  // The pick only moves at UTC midnight, which a page load or a new render
-  // handles; there is no external store to subscribe to.
-}
-const getClientDay = () => dayNumber(Date.now())
-
-type NavStudyTipProps = {
+/** Any of the published tips, so a reader who comes back sees a different one.
+ * The choice is per render, not per day: nothing here has to outlive the
+ * response, and a cached page simply keeps the tip its render picked. */
+const pickTip = (
   tips: ReadonlyArray<StudyTipData>
-  /** The day the server rendered. Cached pages can be older than today, so the
-   * first client render matches the HTML and then switches to the browser's
-   * clock — the same deterministic pick, never a hydration mismatch. */
-  serverDay: number
-}
+): StudyTipData | undefined =>
+  tips.length > 0 ? tips[Math.floor(Math.random() * tips.length)] : undefined
 
 /**
- * One study tip per UTC day, rotating through the published tips. The list is
- * fetched once by the root layout (cached Sanity content); the day is picked
- * here so a static or ISR page does not freeze on the day it was built.
+ * One of the published study tips. A Server Component — the tip is picked and
+ * rendered with the rest of the page, so neither the copy nor the picker's
+ * markup reaches the browser.
  */
-export const NavStudyTip = ({ tips, serverDay }: NavStudyTipProps) => {
-  const strings = useUIStrings()
-  const day = useSyncExternalStore(
-    subscribeToDay,
-    getClientDay,
-    () => serverDay
-  )
-  const tip = pickByDay(tips, day)
+export const NavStudyTip = async ({
+  tips,
+}: {
+  tips: ReadonlyArray<StudyTipData>
+}) => {
+  const strings = await getServerStrings(UI_STRINGS_PACK)
+  const tip = pickTip(tips)
+  if (!tip) return null
+
   const colorPalette = getColorPalette({
     type: 'seed',
-    value: `${tip?.title.length}`,
+    value: `${tip.title.length}`,
   })
-  if (!tip) return null
 
   return (
     <Box

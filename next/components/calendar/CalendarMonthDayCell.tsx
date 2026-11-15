@@ -1,11 +1,9 @@
-'use client'
-
 import { CALENDAR_STRINGS_PACK } from '@shared/strings/calendar-strings'
 import { Box } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
 import { Text } from '@/components/typography/Text'
 import { cn } from '@/lib/common-utils'
-import { useStrings } from '@/providers/locale/use-strings'
+import { getServerStrings } from '@/lib/server-strings'
 import type { CalendarDay } from '@/types/components/Calendar.types'
 import { Divider } from '../ui/Divider'
 import { CalendarEventChip } from './CalendarEventChip'
@@ -20,10 +18,11 @@ const MAX_CELL_CHIPS = 3
  * the chips inside stay plain labels — to the week view with that day as the
  * week's third day. An empty day is not a link, so it can carry the note button
  * that appears on hover (notes are added from the week view once a day has
- * events). The cell is a client component only because of its notes.
+ * events). A Server Component: only the note control it renders is interactive,
+ * and that carries its own `'use client'`.
  */
-export const CalendarMonthDayCell = ({ day }: { day: CalendarDay }) => {
-  const strings = useStrings(CALENDAR_STRINGS_PACK)
+export const CalendarMonthDayCell = async ({ day }: { day: CalendarDay }) => {
+  const strings = await getServerStrings(CALENDAR_STRINGS_PACK)
   const hasEvents = day.events.length > 0
   const hiddenChips = day.events.length - MAX_CELL_CHIPS
 

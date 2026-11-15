@@ -1,3 +1,5 @@
+'use client'
+
 import type { DetailedHTMLProps, FormHTMLAttributes, SubmitEvent } from 'react'
 
 type FormContainerProps = {

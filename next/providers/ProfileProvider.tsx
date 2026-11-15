@@ -76,9 +76,9 @@ async function reloadProfile(
  * provider.
  *
  * 'idle' (not authenticated, nothing to fetch) is derived from
- * session.status at render rather than set via the effect — see
- * useProfileStats.ts's comment for why an early-return guard clause that
- * also calls setState trips useReactCompiler. The 'loading' transition
+ * session.status at render rather than set via the effect: an early-return
+ * guard clause that also calls setState trips the React Compiler lint, and
+ * there is nothing to fetch without a session. The 'loading' transition
  * inside the effect is deferred through Promise.resolve().then(), same
  * idiom as the original useMyProfile.ts, so re-authenticating as a
  * different user doesn't flash the *previous* user's stale profile while

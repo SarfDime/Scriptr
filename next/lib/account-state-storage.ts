@@ -1,3 +1,5 @@
+'use client'
+
 import { isProfilePreferences } from '@shared/config/profile-preferences'
 import type { ProfilePreferences } from '@shared/types/profile-preferences.types'
 import type { MyRestriction } from '@shared/types/restrictions.types'

@@ -2,6 +2,7 @@
 
 import type { MyProfileResponse } from '@shared/types/profile.types'
 import { validateFullName, validateUsername } from '@shared/utils/api.utils'
+import { useRouter } from 'next/navigation'
 import { type SubmitEvent, useState } from 'react'
 import {
   type FieldFeedback,
@@ -46,6 +47,7 @@ export function useEditProfileForm({
 }) {
   const { locale } = useLocale()
   const ui = useUIStrings()
+  const router = useRouter()
   const { reload } = useMyProfileActions()
   const { refresh: refreshSession } = useSession()
   const { addToast } = useToast()
@@ -108,8 +110,13 @@ export function useEditProfileForm({
     })
 
   // The profile page updates in place; the session carries the username
-  // too (account card, auth page), so it is re-read as well.
-  const refreshViews = () => Promise.all([reload(), refreshSession()])
+  // too (account card, auth page), so it is re-read as well. The route is
+  // refreshed last: `/user` renders its profile on the server, so the page
+  // itself needs a new render to show what was just saved.
+  const refreshViews = async () => {
+    await Promise.all([reload(), refreshSession()])
+    router.refresh()
+  }
 
   const saveFields = async (): Promise<boolean> => {
     const next: EditProfileValues = {

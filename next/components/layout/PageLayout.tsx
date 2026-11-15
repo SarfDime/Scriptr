@@ -1,10 +1,7 @@
 import React, { type ReactNode } from 'react'
 import { cn } from '@/lib/common-utils'
-import type { CalendarAlertData } from '@/types/components/Calendar.types'
 import { Box, type BoxProps } from '../common/Box'
-import { Header } from '../navigation/Header'
 import { Divider, type DividerProps } from '../ui/Divider'
-import { Footer } from './Footer'
 import { PageHeader, type PageHeaderProps } from './PageHeader'
 
 /** The `header` shorthand: `PageHeader`'s own props, plus `actions` where its
@@ -36,37 +33,12 @@ const isHeaderConfig = (
   )
 }
 
-export type MainLayoutProps = BoxProps & {
-  /** Only the study tree passes these: a calendar belongs to a study, and its
-   * layout is the only place that knows which one on the server. */
-  calendarAlert?: CalendarAlertData
-}
-
-export const MainLayout = ({
-  children,
-  className,
-  calendarAlert,
-  ...rest
-}: MainLayoutProps) => {
-  return (
-    <Box
-      as='main'
-      id='main'
-      className={cn('ui-container flex flex-col', className)}
-      {...rest}
-    >
-      <Header calendarAlert={calendarAlert} />
-      {/* The container grows to full width while the navbar is collapsed (so the
-          header spans the screen); page content keeps its docked-navbar width
-          and is centered. `grow` pushes the footer to the bottom of short pages. */}
-      <Box className='mx-auto w-full grow xl:max-w-(--nav-width-offset)'>
-        {children}
-      </Box>
-      <Footer />
-    </Box>
-  )
-}
-
+/** A page's content column — an optional heading, a main column and a sidebar.
+ * The chrome around it is `MainLayout`, which its group layout renders.
+ *
+ * A Server Component, like `PageHeader`: header copy can be passed as an
+ * `{ en, mk }` entry and is resolved below, so a page does not have to read a
+ * whole string collection to render a title. */
 export const PageLayout = ({
   header,
   sidebar,

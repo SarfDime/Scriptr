@@ -1,5 +1,3 @@
-'use client'
-
 import { getAchievementCopy } from '@shared/config/achievements'
 import type { LocaleId } from '@shared/config/localization-constants'
 import { ACHIEVEMENTS_STRINGS_PACK } from '@shared/strings/achievements-strings'
@@ -16,8 +14,7 @@ import {
   sortAchievements,
 } from '@/lib/achievement-display'
 import { cn } from '@/lib/common-utils'
-import { useLocale } from '@/providers/locale/LocaleProvider'
-import { useStrings } from '@/providers/locale/use-strings'
+import { getServerLocale, getServerStrings } from '@/lib/server-strings'
 import { Button } from '../common/Button'
 import { Badge } from '../ui/Badge'
 import { Divider } from '../ui/Divider'
@@ -47,6 +44,14 @@ type BadgeModel = {
 
 type AchievementStrings = ResolvedStrings<typeof ACHIEVEMENTS_STRINGS_PACK>
 
+/** Copy and language, resolved once by `AchievementBadges` and threaded down:
+ * only the popovers' behaviour is client-side, so nothing below re-reads a
+ * collection. */
+type AchievementCopy = {
+  strings: AchievementStrings
+  locale: LocaleId
+}
+
 const toBadge = (
   strings: AchievementStrings,
   entry: ProfileAchievement,
@@ -75,12 +80,12 @@ const BadgeButton = ({
   badge,
   ariaLabel,
   className,
+  strings,
 }: {
   badge: BadgeModel
   ariaLabel?: string
   className?: string
-}) => {
-  const strings = useStrings(ACHIEVEMENTS_STRINGS_PACK)
+} & Pick<AchievementCopy, 'strings'>) => {
   const Icon = badge.icon
 
   return (
@@ -102,12 +107,20 @@ const BadgeButton = ({
 }
 
 /** One badge with its detail popover. */
-const AchievementBadge = ({ badge }: { badge: BadgeModel }) => {
-  const { locale } = useLocale()
-  const strings = useStrings(ACHIEVEMENTS_STRINGS_PACK)
+const AchievementBadge = ({
+  badge,
+  copy,
+}: {
+  badge: BadgeModel
+  copy: AchievementCopy
+}) => {
+  const { strings, locale } = copy
 
   return (
-    <Popover placement='left' trigger={<BadgeButton badge={badge} />}>
+    <Popover
+      placement='left'
+      trigger={<BadgeButton badge={badge} strings={strings} />}
+    >
       <Box className='ui-above-inside ui-stack w-56 gap-1.5 bg-background-200 p-3'>
         <Text
           className={cn(
@@ -151,8 +164,14 @@ const AchievementBadge = ({ badge }: { badge: BadgeModel }) => {
  * focusing the tile opens a tray with the whole type beside it, where every
  * badge shows its own popover.
  */
-const AchievementStack = ({ badges }: { badges: Array<BadgeModel> }) => {
-  const strings = useStrings(ACHIEVEMENTS_STRINGS_PACK)
+const AchievementStack = ({
+  badges,
+  copy,
+}: {
+  badges: Array<BadgeModel>
+  copy: AchievementCopy
+}) => {
+  const { strings } = copy
   const best = badges[0]
   if (!best) return null
   const rest = badges.slice(1)
@@ -162,6 +181,7 @@ const AchievementStack = ({ badges }: { badges: Array<BadgeModel> }) => {
       <BadgeButton
         badge={best}
         ariaLabel={strings.stackLabel(best.title, rest.length)}
+        strings={strings}
       />
       <Text
         aria-hidden
@@ -182,7 +202,7 @@ const AchievementStack = ({ badges }: { badges: Array<BadgeModel> }) => {
         )}
       >
         {badges.map((badge) => (
-          <AchievementBadge key={badge.id} badge={badge} />
+          <AchievementBadge key={badge.id} badge={badge} copy={copy} />
         ))}
       </Box>
     </Box>
@@ -194,9 +214,11 @@ const AchievementStack = ({ badges }: { badges: Array<BadgeModel> }) => {
 const BadgeList = ({
   badges,
   label,
+  copy,
 }: {
   badges: Array<BadgeModel>
   label: string
+  copy: AchievementCopy
 }) => {
   const groups = new Map<string, Array<BadgeModel>>()
   if (badges.length > MAX_FLAT_BADGES) {
@@ -217,9 +239,9 @@ const BadgeList = ({
         return (
           <Box as='li' key={key}>
             {single ? (
-              <AchievementBadge badge={single} />
+              <AchievementBadge badge={single} copy={copy} />
             ) : (
-              <AchievementStack badges={group} />
+              <AchievementStack badges={group} copy={copy} />
             )}
           </Box>
         )
@@ -278,14 +300,15 @@ const groupByScope = (
 /**
  * A profile's earned achievements, as badges with a hover/focus popover.
  * Renders nothing when there are none. Callers pass them already ordered (see
- * `sortAchievements`), so the first badge of a type is its rarest. A client
- * leaf only because the popover tracks hover and focus.
+ * `sortAchievements`), so the first badge of a type is its rarest. A Server
+ * Component: it resolves the copy once and renders the badges, and only the
+ * `Popover` that tracks hover and focus is client-side.
  *
  * Achievements are earned either platform-wide or inside one study, and the two
  * are shown apart — a study's badge is not the platform's, and a reader should
  * be able to tell which is which without opening every popover.
  */
-export const AchievementBadges = ({
+export const AchievementBadges = async ({
   achievements,
 }: {
   achievements: Array<ProfileAchievement>
@@ -293,8 +316,9 @@ export const AchievementBadges = ({
   // Re-sorted here as well as by the caller so a stack is led by the rarest
   // badge of its type — the placeholders are appended, not ordered — and the
   // tile that stays visible is the most valuable one.
-  const strings = useStrings(ACHIEVEMENTS_STRINGS_PACK)
-  const { locale } = useLocale()
+  const locale = await getServerLocale()
+  const strings = await getServerStrings(ACHIEVEMENTS_STRINGS_PACK, locale)
+  const copy: AchievementCopy = { strings, locale }
   const badges = sortAchievements(achievements)
     .map((entry) => toBadge(strings, entry, locale))
     .filter((badge): badge is BadgeModel => badge !== null)
@@ -305,7 +329,13 @@ export const AchievementBadges = ({
   const single = scopes.length === 1 ? scopes[0] : null
 
   if (single?.label === null) {
-    return <BadgeList badges={single.badges} label={strings.groupLabel} />
+    return (
+      <BadgeList
+        badges={single.badges}
+        label={strings.groupLabel}
+        copy={copy}
+      />
+    )
   }
 
   return (
@@ -315,6 +345,7 @@ export const AchievementBadges = ({
           <BadgeList
             badges={scope.badges}
             label={`${strings.groupLabel} — ${scope.label}`}
+            copy={copy}
           />
         </Box>
       ))}

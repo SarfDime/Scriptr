@@ -1,7 +1,7 @@
 import { UI_STRINGS_PACK } from '@shared/config/strings'
 import { localizedPath } from '@shared/utils/localized-path'
 import Link from 'next/link'
-import { MainLayout } from '@/components/layout/PageLayout'
+import { MainLayout } from '@/components/layout/MainLayout'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { getServerLocale, getServerStrings } from '@/lib/server-strings'
 

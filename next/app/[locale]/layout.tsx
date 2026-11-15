@@ -12,7 +12,7 @@ import { AppBackground } from '@/components/ui/app-background/AppBackground'
 import { ToastContainer } from '@/components/ui/toast/ToastContainer'
 import { fetchWebsiteSeoSettings, toOrigin } from '@/lib/academic-detail-page'
 import { getServerStrings } from '@/lib/server-strings'
-import { getStudyTipRotation } from '@/lib/study-tip'
+import { getStudyTips } from '@/lib/study-tip'
 import { NavProvider } from '@/providers/nav/NavProvider'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { navMenuQuery, studyLogosQuery } from '@/sanity/queries/nav.queries'
@@ -81,7 +81,7 @@ export default async function RootLayout({
   const { locale } = await params
   if (!isLocaleId(locale)) notFound()
 
-  const [navMenu, background, studyLogos, studyTip] = await Promise.all([
+  const [navMenu, background, studyLogos, studyTips] = await Promise.all([
     fetchSanityData<NavMenuType>({
       query: navMenuQuery,
       locale,
@@ -98,7 +98,7 @@ export default async function RootLayout({
       fetchOrigin: 'studyLogosQuery',
       tags: [SANITY_CACHE_TAGS.study],
     }),
-    getStudyTipRotation(),
+    getStudyTips(),
   ])
 
   // The enrolled-studies list in the navbar carries Postgres rows, which have
@@ -123,7 +123,7 @@ export default async function RootLayout({
             <NavBar
               {...navMenu}
               studyLogos={studyLogosBySite}
-              studyTip={studyTip}
+              studyTips={studyTips}
             />
             {children}
           </NavProvider>

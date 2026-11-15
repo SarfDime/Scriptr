@@ -1,3 +1,5 @@
+'use client'
+
 import type { CalendarNote } from '@shared/types/calendar-notes.types'
 import { sanitizeCalendarNotes } from '@shared/utils/calendar-notes.utils'
 

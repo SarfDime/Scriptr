@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { MainLayout } from '@/components/layout/PageLayout'
+import { MainLayout } from '@/components/layout/MainLayout'
 
 /** The account and admin surfaces keep the catalog's chrome: they have no study
  * of their own, so no calendar alert. */

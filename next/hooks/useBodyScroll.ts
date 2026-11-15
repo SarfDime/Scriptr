@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect } from 'react'
 
 /** Hook to lock or unlock body scroll based on the isLocked parameter.

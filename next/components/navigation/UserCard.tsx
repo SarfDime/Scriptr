@@ -1,3 +1,5 @@
+'use client'
+
 import { localizedPath } from '@shared/utils/localized-path'
 import { cn } from '@/lib/common-utils'
 import { useLocale } from '@/providers/locale/LocaleProvider'

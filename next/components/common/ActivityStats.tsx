@@ -1,9 +1,8 @@
-'use client'
-
 import Comment from '@sanity/icons/Comment'
 import DocumentText from '@sanity/icons/DocumentText'
 import Heart from '@sanity/icons/Heart'
-import { useUIStrings } from '@/providers/locale/use-strings'
+import { UI_STRINGS_PACK } from '@shared/config/strings'
+import { getServerStrings } from '@/lib/server-strings'
 import { Text } from '../typography/Text'
 import { Box } from './Box'
 import { Button } from './Button'
@@ -18,14 +17,14 @@ interface ActivityStatsProps {
   subtitle?: string
 }
 
-export const ActivityStats = ({
+export const ActivityStats = async ({
   savedCount,
   authoredCount,
   commentCount,
   title,
   subtitle,
 }: ActivityStatsProps) => {
-  const ui = useUIStrings()
+  const ui = await getServerStrings(UI_STRINGS_PACK)
   const stats = [
     ...(savedCount === undefined
       ? []

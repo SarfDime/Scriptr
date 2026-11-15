@@ -13,12 +13,12 @@ export const PT_STRINGS = {
     em: 'Italic',
     underline: 'Underline',
     'strike-through': 'Strikethrough',
-  } as Record<string, string>,
+  } as const,
   weightLabels: {
     semibold: 'Semibold',
     strong: 'Bold',
     black: 'Black',
-  } as Record<string, string>,
+  } as const,
   editor: {
     preview: 'Preview',
     hidePreview: 'Hide preview',
@@ -37,7 +37,7 @@ export const PT_STRINGS = {
     notConfigured: 'This field is not configured for inline editing yet.',
     saveFailed: 'Unable to save content.',
     saveFailedTitle: 'Couldn’t save',
-  },
+  } as const,
   demo: {
     eyebrow: 'Component demo',
     title: 'Portable Text editor',
@@ -45,5 +45,5 @@ export const PT_STRINGS = {
       'This page is local-only. Preview uses your current draft without writing to Sanity.',
     editContent: 'Edit content',
     previewTitle: 'Rendered preview',
-  },
+  } as const,
 } as const

@@ -1,3 +1,5 @@
+'use client'
+
 import { ADMIN_STRINGS } from '@shared/strings/admin-strings'
 import type {
   LiftedRestrictionItem,

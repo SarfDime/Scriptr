@@ -1,3 +1,5 @@
+'use client'
+
 import type { ToastData } from '../../../types/components/Toast.types'
 import { Button } from '../../common/Button'
 import { NextLink } from '../../common/NextLink'

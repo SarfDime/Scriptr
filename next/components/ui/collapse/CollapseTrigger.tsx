@@ -1,3 +1,5 @@
+'use client'
+
 import { ChevronDownIcon } from '@sanity/icons/ChevronDown'
 
 import { cn } from '../../../lib/common-utils'

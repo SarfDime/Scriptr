@@ -1,3 +1,5 @@
+'use client'
+
 import type { AppNotification } from '@/types/notifications.types'
 
 const STORAGE_KEY = 'scriptr:local-notifications'

@@ -1,3 +1,5 @@
+'use client'
+
 import type { LocaleId } from '@shared/config/localization-constants'
 
 /**

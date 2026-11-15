@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * Calls `onChange` when another tab writes `key` — the persisted preferences
  * (language, theme, simple mode, navbar) all stay in step that way.

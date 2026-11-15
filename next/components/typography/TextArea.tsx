@@ -1,3 +1,5 @@
+'use client'
+
 import type { ChangeEvent } from 'react'
 import type { AdditionalComponentAttributes } from '@/types/component.types'
 import { cn } from '../../lib/common-utils'

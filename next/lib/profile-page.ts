@@ -13,18 +13,17 @@ import {
   getProfileSubjectSections,
 } from '@/lib/profile-subjects'
 import { getServerLocale } from '@/lib/server-strings'
-import type {
-  MyProfilePageViewModel,
-  PublicProfilePageViewModel,
-} from '@/types/components/ProfilePage.types'
+import type { ProfilePageViewModel } from '@/types/components/ProfilePage.types'
 
 /**
- * Loads what the signed-in user's own page (`/user`) needs from the server. The
- * profile itself is not read here — that page renders from the shared provider
- * so an edit shows up in place — but the subjects and the tip are per-request
- * reads, and the redirect has to happen before anything renders.
+ * Loads everything the signed-in user's own page (`/user`) renders: the session
+ * redirect, the profile, the affiliations' names and links (which resolve
+ * through the catalog — Postgres holds ids, the routes use slugs), its stats and
+ * every study's subjects. The page renders `ProfilePage` from it on the server;
+ * an edit shows up because the profile form refreshes the route (see
+ * `useEditProfileForm`).
  */
-export const loadMyProfilePage = async (): Promise<MyProfilePageViewModel> => {
+export const loadMyProfilePage = async (): Promise<ProfilePageViewModel> => {
   const cookie = await getRequestCookieHeader()
   const session = await getSessionRequired(cookie)
   const locale = await getServerLocale()
@@ -41,9 +40,24 @@ export const loadMyProfilePage = async (): Promise<MyProfilePageViewModel> => {
     study ? [study.id] : []
   )
 
+  const [subjects, stats] = await Promise.all([
+    getProfileSubjectSections(studyIds, profile.subjects),
+    getProfileStats(profile.id),
+  ])
+
   return {
-    catalog,
-    subjects: await getProfileSubjectSections(studyIds, profile.subjects),
+    profile,
+    academics: buildProfileAcademics(
+      catalog,
+      profile.selected_faculties,
+      profile.selected_studies,
+      locale
+    ),
+    subjects,
+    // The authored list is the count shown: `scripts_uploaded` also counts
+    // scripts that were since removed from the list.
+    authoredCount: profile.scripts.length,
+    commentCount: stats?.comments_made,
   }
 }
 
@@ -73,7 +87,7 @@ export const loadPublicProfilePage = async (
    * and nothing about their other studies. Used by the study site's profile
    * page, which 404s when the person is not a member. */
   options: { studyId?: string } = {}
-): Promise<PublicProfilePageViewModel> => {
+): Promise<ProfilePageViewModel> => {
   const session = await getSession(await getRequestCookieHeader())
   const isOwnUsername =
     session?.user?.username?.toLowerCase() === username.toLowerCase()

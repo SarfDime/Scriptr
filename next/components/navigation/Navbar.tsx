@@ -27,7 +27,7 @@ import { NavUserSlot } from './NavUserSlot'
 export const NavBar = async ({
   navItems,
   studyLogos,
-  studyTip,
+  studyTips,
 }: NavBarProps) => {
   const strings = await getServerStrings(UI_STRINGS_PACK)
 
@@ -77,9 +77,9 @@ export const NavBar = async ({
 
         <NavFavorites />
 
-        {studyTip && <NavStudyTip {...studyTip} />}
+        {studyTips && studyTips.length > 0 && <NavStudyTip tips={studyTips} />}
 
-        <Box className={cn('ui-stack gap-3', !studyTip && 'mt-auto')}>
+        <Box className={cn('ui-stack gap-3', !studyTips?.length && 'mt-auto')}>
           <Divider />
           <ThemeToggle className='w-full flex-row' />
           <LanguageToggle className='w-full flex-row' />

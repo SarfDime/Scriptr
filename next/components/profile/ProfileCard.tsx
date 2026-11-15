@@ -1,8 +1,7 @@
-'use client'
-
 import Book from '@sanity/icons/Book'
 import Home from '@sanity/icons/Home'
 import Users from '@sanity/icons/Users'
+import { UI_STRINGS_PACK } from '@shared/config/strings'
 import type { ReactNode } from 'react'
 import { Box, type BoxPropsWithoutChildren } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
@@ -11,7 +10,7 @@ import { Avatar } from '@/components/ui/Avatar'
 import { Card } from '@/components/ui/Card'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
-import { useUIStrings } from '@/providers/locale/use-strings'
+import { getServerStrings } from '@/lib/server-strings'
 import type {
   ProfileAcademicEntry,
   ProfileAcademics,
@@ -36,7 +35,7 @@ const AcademicEntryLink = ({ entry }: { entry: ProfileAcademicEntry }) =>
     <Text className='ui-body'>{entry.name}</Text>
   )
 
-export const ProfileCard = ({
+export const ProfileCard = async ({
   name,
   academics,
   picture,
@@ -44,7 +43,7 @@ export const ProfileCard = ({
   className,
   ...props
 }: ProfileCardProps) => {
-  const ui = useUIStrings()
+  const ui = await getServerStrings(UI_STRINGS_PACK)
   const color = getColorPalette({ type: 'seed', value: name })
   const { universities, faculties, studies } = academics
 

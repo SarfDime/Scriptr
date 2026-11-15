@@ -1,6 +1,5 @@
 import type { ProfileCore } from '@shared/types/profile.types'
 import type { SubjectById } from '@/types/academics/subject.types'
-import type { OnboardingCatalog } from '@/types/onboarding.types'
 import type { ProfileAcademics } from './ProfileCard.types'
 
 /** The two lists behind a profile's subjects section. */
@@ -30,18 +29,7 @@ export type ProfilePageProps = {
   isOwner?: boolean
 }
 
-/** What `loadPublicProfilePage` hands the `/user/[username]` page: the shared
- * profile view model without `isOwner`, since an owner is redirected to
- * `/user` before anything is loaded. */
-export type PublicProfilePageViewModel = Omit<ProfilePageProps, 'isOwner'>
-
-/** What `loadMyProfilePage` hands the `/user` page. The profile itself is not
- * here: that page reads the shared profile state so an edit shows up in place.
- * The catalog is, because the affiliations' names and links resolve through it
- * (Postgres holds ids and names, not slugs) and reading it on the server keeps
- * the catalog out of the client bundle's data fetches. */
-export type MyProfilePageViewModel = {
-  catalog: OnboardingCatalog | null
-  /** Every study's subjects, filtered in place by the sidebar. */
-  subjects: ProfileSubjectSections
-}
+/** What both profile loaders hand their page: the shared view model without
+ * `isOwner`, which the page adds — `/user` is always the owner, and the public
+ * page redirects an owner to `/user` before loading anything. */
+export type ProfilePageViewModel = Omit<ProfilePageProps, 'isOwner'>

@@ -1,54 +1,30 @@
-'use client'
-
 import Menu from '@sanity/icons/Menu'
-import type { LocaleId } from '@shared/config/localization-constants'
-import { formatWeekdayDayMonth } from '@shared/utils/date-format.utils'
+import { UI_STRINGS_PACK } from '@shared/config/strings'
 import { cn } from '@/lib/common-utils'
-import { useLocale } from '@/providers/locale/LocaleProvider'
-import { useUIStrings } from '@/providers/locale/use-strings'
+import { getServerStrings } from '@/lib/server-strings'
 import type { CalendarAlertData } from '@/types/components/Calendar.types'
 import { Box } from '../common/Box'
-import { Text } from '../typography/Text'
 import { CalendarAlert } from './CalendarAlert'
 import { HeaderActions } from './HeaderActions'
+import { HeaderDate } from './HeaderDate'
 import { NavLogo } from './NavLogo'
 import { NavToggle } from './NavToggle'
-
-const getHeaderDateLabel = (date: Date, locale: LocaleId) => {
-  // From the shared tables rather than `Intl`: a browser without Macedonian
-  // data fell back to English here, inside an otherwise Macedonian header.
-  const dateLabel = formatWeekdayDayMonth(date, locale)
-  const academicYearStart = new Date(
-    date.getFullYear() - (date.getMonth() < 9 ? 1 : 0),
-    9,
-    1
-  )
-  const week =
-    Math.floor(
-      (date.getTime() - academicYearStart.getTime()) / (7 * 24 * 60 * 60 * 1000)
-    ) + 1
-
-  return { dateLabel, week }
-}
 
 /**
  * The header is global chrome, so it knows nothing about studies: the calendar
  * alert is per study and lives in the study's own frame
  * (`app/(study)/study/[siteSlug]/layout.tsx`), which can read it on the server.
  *
- * A Client Component because `PageLayout` renders it and a client page
- * (`ProfilePage`) imports `PageLayout` — in that graph `next/root-params` has no
- * exports, so `getServerStrings` would fail the build. `useUIStrings()` is the
- * route's language, handed down from the layout.
- */
-export const Header = ({
+ * A Server Component: the copy is resolved from the route's language here. The
+ * clock is the one thing that cannot be — a server render would freeze the date
+ * and the academic week on any prerendered page — so it is the `HeaderDate`
+ * client leaf. */
+export const Header = async ({
   calendarAlert,
 }: {
   calendarAlert?: CalendarAlertData
 }) => {
-  const { locale } = useLocale()
-  const strings = useUIStrings()
-  const { dateLabel, week } = getHeaderDateLabel(new Date(), locale)
+  const strings = await getServerStrings(UI_STRINGS_PACK)
 
   return (
     <header
@@ -85,15 +61,7 @@ export const Header = ({
       {/* The calendar sits with the header's own date, not with the account
           actions: it is about the academic calendar those dates come from. */}
       <Box className='ui-cluster min-w-0 gap-2'>
-        {/* Suppressed: the label is "now", so a render that straddles midnight
-            legitimately differs between the server and the client. */}
-        <Text
-          className='ui-caption hidden lg:block capitalize'
-          suppressHydrationWarning
-        >
-          {dateLabel} <span className='mx-2 text-grey-400'>/</span>{' '}
-          {strings.navigation.week(week)}
-        </Text>
+        <HeaderDate />
         {calendarAlert && (
           <CalendarAlert
             className='hidden lg:flex'

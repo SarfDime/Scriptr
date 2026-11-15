@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { MainLayout } from '@/components/layout/PageLayout'
+import { MainLayout } from '@/components/layout/MainLayout'
 import { getStudySiteUrl } from '@/lib/academic-routes'
 import {
   getCalendarAlertEvents,
