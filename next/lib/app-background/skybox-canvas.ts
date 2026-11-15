@@ -1,15 +1,39 @@
 import type { SkyState } from '@shared/types/skybox.types'
-import { TAU } from '@/lib/star-canvas'
+import { createColorResolver, TAU } from '@/lib/star-canvas'
+import { paintSun } from './skybox-sun'
 
 // Drawing for the shared sky (components/ui/app-background/SkyboxCanvas.tsx). Flat shapes
-// like the Christmas scenery: a plain disc with a soft glow for the sun, a disc with
-// craters and darker seas for the moon, and stacked flat puffs for the clouds. The
-// sky gradient is the only smooth thing in the picture.
+// like the Christmas scenery: a cut-paper sun (skybox-sun.ts), a disc with craters and
+// darker seas for the moon, and stacked flat puffs for the clouds. The sky gradient is
+// the only smooth thing in the picture.
 //
 // The sky itself is painted at most twice a second normally and at the effects frame
 // cap in immersive mode; stars and clouds are drawn live at that cap.
 
 export const rgba = (rgb: string, alpha = 1) => `rgba(${rgb}, ${alpha})`
+
+/**
+ * The theme color resolver with its answers kept: a lookup builds a DOM node and
+ * reads a pixel back, and the sky asks for the same few dozen keys every frame.
+ * Make a new one after a theme change.
+ */
+export const createSkyColorResolver = () => {
+  const resolve = createColorResolver()
+  const cache = new Map<string, string>()
+  return (key: string) => {
+    const known = cache.get(key)
+    if (known !== undefined) return known
+    const value = resolve(key)
+    cache.set(key, value)
+    return value
+  }
+}
+
+/** Brightness of an "r, g, b" string, 0 to 1. */
+const lumaOf = (rgb: string) => {
+  const [r = 0, g = 0, b = 0] = rgb.split(',').map(Number)
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
+}
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value))
@@ -198,18 +222,16 @@ export const paintSky = (
   // The glow breathes a little, so a still sky does not look like a screenshot.
   const breath = 0.9 + 0.1 * Math.sin(clock * 0.0009)
 
-  // The sun: one plain disc with a soft glow. No facet, no rays, no spin.
-  // Two glows — a tight bright halo and a wide soft one — so it reads as glowing.
+  // The sun: two soft glows, then the flat disc. The additive layers are toned down
+  // on a bright sky so a pale theme is not washed to white.
   if (state.sun.visible) {
     const sx = state.sun.x * w
     const sy = state.sun.y * h
     const r = state.sun.radius * min
-    paintGlow(ctx, sx, sy, r * 5.5, state.sun.glow, 0.42 * breath)
-    paintGlow(ctx, sx, sy, r * 1.9, state.sun.glow, 0.75 * breath)
-    ctx.beginPath()
-    ctx.arc(sx, sy, r, 0, TAU)
-    ctx.fillStyle = rgba(state.sun.color)
-    ctx.fill()
+    paintGlow(ctx, sx, sy, r * 4.8, state.sun.glow, 0.34 * breath)
+    paintGlow(ctx, sx, sy, r * 1.85, state.sun.glow, 0.62 * breath)
+    const skyLuma = (lumaOf(state.skyTop) + lumaOf(state.skyBottom)) / 2
+    paintSun(ctx, sx, sy, r, state.sun, 1 - 0.55 * skyLuma)
   }
 
   if (state.moon.opacity > 0.04) {

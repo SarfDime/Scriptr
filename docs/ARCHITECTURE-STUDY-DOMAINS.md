@@ -64,7 +64,10 @@ Everything else is left alone, which is the point:
 * Catalog-owned paths (`/search`, `/start`, `/auth*`, `/admin*`, `/university/*`,
   `/professor/*`, `/user`) redirect to the catalog host, so a study host never
   pretends to own the platform. They are `307`s: structural today, but not
-  promised forever.
+  promised forever. `/search` searches the catalog only, so a study's header bar
+  submits to that study's own `/scripts?q=…` instead: the study layout hands the
+  handle down to `HeaderSearch` as a prop, which keeps this out of the client
+  (no host read) and out of the catalog tree.
 * `/study/<label>/*` redirects to `<label>.scriptr.uk` with a `308`, on any of our
   hosts. That is what makes `scriptr.uk/study/lbe` — the address the API, old
   bookmarks and a Sanity nav item still mint — resolve to the study's canonical

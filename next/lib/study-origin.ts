@@ -1,5 +1,6 @@
 import type { LocaleId } from '@shared/config/localization-constants'
 import { localizedPath } from '@shared/utils/localized-path'
+import { getStudySitePath } from '@shared/utils/site-paths'
 import { SITE_URL, STUDY_HOSTS } from '@/config/env'
 
 /**
@@ -91,4 +92,23 @@ export const studySiteOrigin = (
   if (!slug || !url || !host) return ''
 
   return `${url.protocol}//${slug}.${host}`
+}
+
+/**
+ * A path on a study's own site, in the shape this build serves it: `/scripts`
+ * when the study has a host (the rewrite maps it onto the study tree, so the
+ * path the reader sees names nothing), `/study/<label>/scripts` when studies
+ * are reached by path. The host is a build-time fact (`studySiteHost`), not a
+ * per-request one, so this needs no host read and stays usable from a Client
+ * Component.
+ */
+export const studySitePath = (
+  siteSlug: string,
+  path: string,
+  locale: LocaleId
+): string => {
+  if (studySiteHost()) return localizedPath(path, locale)
+
+  const site = cleanSiteSlug(siteSlug)
+  return localizedPath(`${getStudySitePath(site)}${path}`, locale)
 }

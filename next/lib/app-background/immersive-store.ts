@@ -22,5 +22,14 @@ export const setImmersive = (next: boolean) => {
 
 export const getImmersive = () => immersive
 
+const ignoreFullscreenError = () => undefined
+
+/** Leaves fullscreen (if it is on) and immersive mode. Escape and the exit button both use it. */
+export const exitImmersive = () => {
+  if (document.fullscreenElement)
+    document.exitFullscreen().catch(ignoreFullscreenError)
+  setImmersive(false)
+}
+
 export const useImmersive = () =>
   useSyncExternalStore(subscribe, getImmersive, () => false)

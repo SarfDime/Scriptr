@@ -31,10 +31,7 @@ export const ScriptCard = ({
 
   return (
     <Card
-      className={cn(
-        'group transition-colors hover:border-brand-300/50',
-        className
-      )}
+      className={cn('ui-card-clickable cp-vars group', className, color)}
       {...props}
     >
       <NextLink
@@ -60,7 +57,7 @@ export const ScriptCard = ({
 
         <Box className='ui-stack grow gap-1'>
           <Box className='ui-cluster gap-1 grow justify-between'>
-            <PortableTextContent className='ui-title'>
+            <PortableTextContent className='ui-title group-hover:cp-text'>
               {script.title}
             </PortableTextContent>
             {script.tag && <Badge colorPalette={color}>{script.tag}</Badge>}
@@ -77,7 +74,7 @@ export const ScriptCard = ({
         </Box>
       </NextLink>
 
-      <Card.Footer className='ui-cluster flex-wrap items-center gap-2 transition-colors duration-300 group-hover:border-t-brand-300'>
+      <Card.Footer className='ui-cluster flex-wrap items-center gap-2 transition-colors duration-300 group-hover:cp-border'>
         <ScriptActions
           id={script.id}
           slug={script.slug}

@@ -90,13 +90,13 @@ function LoadingContent({
       </Box>
 
       {details.message && (
-        <Text role='status' aria-live='polite' className='ui-subtitle'>
+        <Text role='status' aria-live='polite' className='ui-title-modern'>
           {details.message}
         </Text>
       )}
 
       {details.hint && (
-        <Text className='ui-subtitle max-w-prose'>{details.hint}</Text>
+        <Text className='ui-label-modern max-w-prose'>{details.hint}</Text>
       )}
     </Box>
   )
@@ -186,6 +186,16 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
 
   const isVisible = phase !== 'hidden'
   useBodyScrollLock({ isLocked: isVisible })
+
+  // `loading.module.css` keeps the veil fully opaque until this attribute shows
+  // up: the server-rendered stand-in must not show the page behind it, and
+  // hydration is the point where the theme and simple mode have settled — so
+  // that is when the fade to the resting translucency starts. It is never
+  // removed, so a later task opening the overlay does not replay the fade.
+  useEffect(() => {
+    if (!isClient) return
+    document.documentElement.dataset.loaderReady = ''
+  }, [isClient])
 
   // The dialog only paints once it is modal, and it cannot be made modal until
   // after hydration — so something has to cover the first frames. A plain

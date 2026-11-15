@@ -113,6 +113,7 @@ export default async function RootLayout({
     <html
       lang={locale}
       data-scroll-behavior='smooth'
+      data-surface='ice'
       className={`${antiqueOlive.variable} ${antiqueOliveCond.variable} ${matter.variable} antialiased`}
     >
       <body>

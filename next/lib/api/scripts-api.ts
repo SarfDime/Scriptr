@@ -188,16 +188,19 @@ export const getScript = (scriptId: string) =>
 /** Never cached regardless — search results must always reflect the live
  * dataset. Public and unscoped, so no cookie is sent.
  *
+ * `studyId` scopes the read to one study, which is what its site's header
+ * search asks for; without it the whole platform is searched.
+ *
  * Returns `null` when the API is unreachable or rejects the request, instead
- * of falling back to an empty list: on this page an empty list is a real
+ * of falling back to an empty list: on a search page an empty list is a real
  * answer ("nothing matched"), so substituting one for a failure told the
  * reader their query had no results when the search never ran. The
- * fallback-to-empty variants are for reads that a build must survive; `/search`
+ * fallback-to-empty variants are for reads that a build must survive; search
  * renders per request. */
-export const searchScripts = async (query: string) => {
+export const searchScripts = async (query: string, studyId?: string | null) => {
   try {
     return await apiFetch<Array<ScriptSummary>>(
-      apiRoutes.scripts.search(query),
+      apiRoutes.scripts.search(query, studyId ?? undefined),
       { cache: 'no-store' }
     )
   } catch (error) {

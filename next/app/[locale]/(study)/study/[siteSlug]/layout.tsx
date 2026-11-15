@@ -10,7 +10,7 @@ import { getStudySiteOrNotFound } from '@/lib/study-site'
 
 /**
  * The frame of one study's site — chrome included, so the header can carry that
- * study's calendar alert.
+ * study's calendar alert and scope its search to the study's own scripts.
  *
  * A calendar belongs to a study, and this layout is the nearest place that knows
  * which one: it resolves the handle and reads the study's events on the server,
@@ -38,6 +38,7 @@ export default async function StudySiteLayout({
 
   return (
     <MainLayout
+      studySiteSlug={siteSlug}
       calendarAlert={{
         events: calendarAlertEvents,
         subjects: calendarAlertSubjects,

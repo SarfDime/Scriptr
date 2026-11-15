@@ -7,7 +7,7 @@ import { FooterCopyright } from './FooterCopyright'
  * leaf, so nothing else here needs the browser. */
 export const Footer = () => {
   return (
-    <footer className='ui-above-opaque ui-sheen-horizontal rounded-none h-(--footer-height) w-full shrink-0 border-b-0 border-l-0 border-r-0 ui-cluster justify-between'>
+    <footer className='content-auto ui-above-opaque ui-sheen-horizontal rounded-none h-(--footer-height) w-full shrink-0 border-b-0 border-l-0 border-r-0 ui-cluster justify-between'>
       <NavLogo />
       <small className='ui-caption'>
         <FooterCopyright />

@@ -3,6 +3,84 @@
    canvas color, so nothing is hardcoded in the drawing code.
    Imported from next/styles/main.css, next to colors.module.css. */
 @layer colors {
+  /* Original palette, used in immersive (full-screen) mode. It is the same set of
+     keys as below under a `sky-original-` prefix and does not change with
+     data-theme or prefers-color-scheme: no rule further down redefines these
+     names, so light and dark both read it as is. No copy is on screen in immersive
+     mode, so it is neither pastel (light) nor muted (dark): a deep blue noon, a
+     warm orange-red sunrise and sunset, rose and violet dawn and dusk, clouds lit
+     in the sun's color, and a true night that the cream stars read against.
+     Saturation is held back a step from the first pass — full-strength magenta and
+     scarlet read as a gradient test rather than a sky. The model deepens the night
+     further while the moon is at its highest (see skybox-model.ts). */
+  :root {
+    --color-sky-original-night-top: #02030f;
+    --color-sky-original-night-bottom: #0b1438;
+    --color-sky-original-night-sun: #ffd9a0;
+    --color-sky-original-night-sun-glow: #ffbe6b;
+    --color-sky-original-night-moon: #f4f6ff;
+    --color-sky-original-night-cloud: #1d2852;
+    --color-sky-original-night-cloud-shade: #0a0f2a;
+
+    --color-sky-original-dawn-top: #241a52;
+    --color-sky-original-dawn-bottom: #b8486f;
+    --color-sky-original-dawn-sun: #ffb877;
+    --color-sky-original-dawn-sun-glow: #e8704f;
+    --color-sky-original-dawn-moon: #e4e6f8;
+    --color-sky-original-dawn-cloud: #d98aa4;
+    --color-sky-original-dawn-cloud-shade: #5a2a5e;
+
+    --color-sky-original-sunrise-top: #33306e;
+    --color-sky-original-sunrise-bottom: #e9633a;
+    --color-sky-original-sunrise-sun: #ffb04a;
+    --color-sky-original-sunrise-sun-glow: #e6613a;
+    --color-sky-original-sunrise-moon: #dfe2f0;
+    --color-sky-original-sunrise-cloud: #e7a077;
+    --color-sky-original-sunrise-cloud-shade: #6f3359;
+
+    --color-sky-original-morning-top: #2a72c6;
+    --color-sky-original-morning-bottom: #9cc8e8;
+    --color-sky-original-morning-sun: #fff1a8;
+    --color-sky-original-morning-sun-glow: #f5c96a;
+    --color-sky-original-morning-moon: #cdd3e6;
+    --color-sky-original-morning-cloud: #fff6e6;
+    --color-sky-original-morning-cloud-shade: #8fa5c4;
+
+    --color-sky-original-noon-top: #1a56b5;
+    --color-sky-original-noon-bottom: #5ba3dd;
+    --color-sky-original-noon-sun: #fffbe0;
+    --color-sky-original-noon-sun-glow: #f7d987;
+    --color-sky-original-noon-moon: #c3c9dd;
+    --color-sky-original-noon-cloud: #ffffff;
+    --color-sky-original-noon-cloud-shade: #86a1c6;
+
+    --color-sky-original-afternoon-top: #2367bf;
+    --color-sky-original-afternoon-bottom: #86b5dd;
+    --color-sky-original-afternoon-sun: #fff0a0;
+    --color-sky-original-afternoon-sun-glow: #f0c266;
+    --color-sky-original-afternoon-moon: #cbd1e4;
+    --color-sky-original-afternoon-cloud: #fff3de;
+    --color-sky-original-afternoon-cloud-shade: #8ba3c2;
+
+    --color-sky-original-sunset-top: #3a2a66;
+    --color-sky-original-sunset-bottom: #e26244;
+    --color-sky-original-sunset-sun: #f5943f;
+    --color-sky-original-sunset-sun-glow: #d9523c;
+    --color-sky-original-sunset-moon: #f0e6f8;
+    --color-sky-original-sunset-cloud: #de7f61;
+    --color-sky-original-sunset-cloud-shade: #66305d;
+
+    --color-sky-original-dusk-top: #1a1240;
+    --color-sky-original-dusk-bottom: #74357f;
+    --color-sky-original-dusk-sun: #ef8468;
+    --color-sky-original-dusk-sun-glow: #c2506a;
+    --color-sky-original-dusk-moon: #f4f0ff;
+    --color-sky-original-dusk-cloud: #9c5288;
+    --color-sky-original-dusk-cloud-shade: #35204d;
+
+    --color-sky-original-star: #fff1c9;
+  }
+
   /* Light theme: exaggerated, not photorealistic. The day phases are a light,
      airy blue; sunrise and sunset carry the warm saturation. The dark phases are
      moonlit pastels rather than true night, because the page's copy is dark and

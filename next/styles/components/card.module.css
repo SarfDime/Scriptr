@@ -1,0 +1,56 @@
+@utility ui-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  gap: 1rem;
+  border: 1px solid var(--color-grey-300);
+  border-radius: 0.75rem;
+  /* Longhand on purpose: the `background` shorthand reset the sheen image when
+   * a card also carried `ui-above`. */
+  background-color: var(--color-background-100);
+  color: var(--color-fg-700);
+  box-shadow:
+    inset 0 1px 0 var(--ui-lit-edge),
+    var(--shadow-sm);
+  @apply ui-above-inside;
+}
+
+@utility ui-card-clickable {
+  @apply ui-card;
+  @apply hover:shadow-button-hover;
+  transition:
+    background-color 0.2s ease,
+    background-image 0.2s ease,
+    outline-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+@utility ui-card-header {
+  padding-block: 1rem;
+  padding-top: 0;
+  border-bottom: 1px solid var(--divider-cut);
+  @apply ui-groove-b;
+}
+
+@utility ui-card-body {
+  flex: 1;
+}
+
+@utility ui-card-footer {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--divider-cut);
+  color: var(--color-fg-muted);
+  @apply ui-groove-t;
+}
+
+@utility ui-badge {
+  @apply inline-flex items-center px-2.5 py-0.5 font-medium text-xs rounded-xl w-fit;
+}
+
+@utility ui-badge-fixed {
+  @apply inline-flex items-center px-1 py-0.5 gap-1 justify-center font-medium text-xs rounded-xl w-fit;
+  svg {
+    @apply w-5 h-5;
+  }
+}

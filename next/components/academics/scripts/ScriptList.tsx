@@ -13,11 +13,7 @@ export const ScriptList = ({ scripts, emptyMessage }: ScriptListProps) =>
   scripts.length > 0 ? (
     <Box className='ui-card-grid [--grid-min:22rem]'>
       {scripts.map((script) => (
-        <ScriptCard
-          key={script.id}
-          script={script}
-          className='ui-above-inside'
-        />
+        <ScriptCard key={script.id} script={script} />
       ))}
     </Box>
   ) : (

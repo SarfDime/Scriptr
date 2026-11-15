@@ -28,7 +28,7 @@ export const CardRootClickable = ({
   ...rest
 }: NextLinkProps) => {
   return (
-    <NextLink className={cn('ui-card', className)} {...rest}>
+    <NextLink className={cn('ui-card-clickable', className)} {...rest}>
       {children}
     </NextLink>
   )

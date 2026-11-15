@@ -55,6 +55,10 @@ export type SkySun = {
   /** Fraction of the viewport's smaller side. */
   radius: number
   visible: boolean
+  /** 0 on and below the horizon, 1 once the sun is clear of it; smooth between. */
+  visibility: number
+  /** How high the sun is: 0 on the horizon, 1 at its highest (noon). */
+  elevation: number
   color: string
   glow: string
 }

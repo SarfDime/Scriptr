@@ -99,11 +99,18 @@ export const UI_STRINGS_PACK = {
       mk: 'Податоците не се достапни',
     },
     loading: { en: 'Loading', mk: 'Се вчитува' },
+    /** What Santa calls from the sleigh when it passes. */
+    hoHoHo: { en: 'Ho ho ho!', mk: 'Хо хо хо!' },
     /** Names the language switch in the navbar. */
     language: { en: 'Language', mk: 'Јазик' },
     themeLight: { en: 'Light', mk: 'Ден' },
     themeAuto: { en: 'Auto', mk: 'Ауто' },
     themeDark: { en: 'Dark', mk: 'Ноќ' },
+    /** Names the button that leaves the full-screen background view. */
+    exitImmersive: {
+      en: 'Exit full screen',
+      mk: 'Излези од цел екран',
+    },
   },
   flags: {
     report: { en: 'Report', mk: 'Пријави' },
@@ -249,6 +256,17 @@ export const UI_STRINGS_PACK = {
         en: 'Top scripts from every subject in this study.',
         mk: 'Најдобрите скрипти од сите предмети во овој смер.',
       },
+      // What the header search lands on: the study's own scripts, filtered by
+      // the query it carried.
+      searchTitle: (query: string): LocalizedText => ({
+        en: `Scripts matching “${query}”`,
+        mk: `Скрипти што одговараат на „${query}“`,
+      }),
+      searchEmpty: (query: string): LocalizedText => ({
+        en: `No scripts in this study match “${query}”. Try different keywords or check the spelling.`,
+        mk: `Нема скрипти во овој смер што одговараат на „${query}“. Пробај со други клучни зборови или провери го правописот.`,
+      }),
+      clearSearch: { en: 'Clear search', mk: 'Исчисти пребарување' },
       // The feed is a page of its own beside the study's overview, so it titles
       // itself after its content instead of repeating the study's own title.
       metadataTitle: (studyName: string): LocalizedText => ({
@@ -273,6 +291,16 @@ export const UI_STRINGS_PACK = {
       placeholder: {
         en: 'Search universities, faculties, studies or professors...',
         mk: 'Пребарај универзитети, факултети, смерови или професори...',
+      },
+      // On a study's own site the same bar searches that study's scripts, so it
+      // names the scripts instead of the catalog.
+      scriptsLabel: {
+        en: 'Search scripts in this study',
+        mk: 'Пребарај скрипти во овој смер',
+      },
+      scriptsPlaceholder: {
+        en: 'Search this study’s scripts...',
+        mk: 'Пребарај скрипти во овој смер...',
       },
       submit: { en: 'Search', mk: 'Пребарај' },
       resultsTitle: { en: 'Results', mk: 'Резултати' },

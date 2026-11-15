@@ -21,5 +21,10 @@ export const isValidSearchQuery = (raw: string): boolean => {
   return length > 0 && length <= INPUT_MAX_LENGTH
 }
 
-export const buildSearchHref = (query: string): string =>
-  `${SEARCH_PAGE_PATH}?${new URLSearchParams({ [SEARCH_QUERY_PARAM]: query }).toString()}`
+/** `basePath` is where the query is answered: the catalog's `/search`, or — on
+ * a study's own site — that study's script feed, which searches its scripts. */
+export const buildSearchHref = (
+  query: string,
+  basePath: string = SEARCH_PAGE_PATH
+): string =>
+  `${basePath}?${new URLSearchParams({ [SEARCH_QUERY_PARAM]: query }).toString()}`

@@ -1,50 +1,3 @@
-@utility ui-card {
-  display: flex;
-  flex-direction: column;
-  padding: 1rem;
-  gap: 1rem;
-  border: 1px solid var(--color-grey-300);
-  border-radius: 0.75rem;
-  /* Longhand on purpose: the `background` shorthand reset the sheen image when
-   * a card also carried `ui-above`. */
-  background-color: var(--color-background-100);
-  color: var(--color-fg-700);
-  box-shadow:
-    inset 0 1px 0 var(--ui-lit-edge),
-    var(--shadow-sm);
-  @apply ui-sheen;
-}
-
-@utility ui-card-header {
-  padding-block: 1rem;
-  padding-top: 0;
-  border-bottom: 1px solid var(--divider-cut);
-  @apply ui-groove-b;
-}
-
-@utility ui-card-body {
-  flex: 1;
-}
-
-@utility ui-card-footer {
-  margin-top: auto;
-  padding-top: 1rem;
-  border-top: 1px solid var(--divider-cut);
-  color: var(--color-fg-muted);
-  @apply ui-groove-t;
-}
-
-@utility ui-badge {
-  @apply inline-flex items-center px-2.5 py-0.5 font-medium text-xs rounded-xl w-fit;
-}
-
-@utility ui-badge-fixed {
-  @apply inline-flex items-center px-1 py-0.5 gap-1 justify-center font-medium text-xs rounded-xl w-fit;
-  svg {
-    @apply w-5 h-5;
-  }
-}
-
 /* Light catching the top edge. The per-surface knobs are the alpha
  * (`--ui-sheen`), the colour (`--ui-sheen-color`, white unless a palette wants
  * its own hue) and the band height (`--ui-sheen-length`), so a panel and an
@@ -213,62 +166,71 @@
 }
 
 /* ==========================================================================
- * SURFACE THEME SWITCH
- * The app only ever uses `ui-above*`. To change the look, comment out one
- * block and uncomment the other. Each alias points straight at its own
- * variant (not through `ui-above`), so nav/header/drawer keep their own
- * radius, border and ramp values.
+ * SURFACE THEME
+ * The app only ever uses `ui-above*`. Each alias is the classic surface, with
+ * the ice surface layered on top through the `ice` variant below, which only
+ * matches when `<html data-surface="ice">` is set and simple mode is off. To
+ * change the look, change that attribute; nothing here is commented in or out,
+ * and there is nothing to reset on the way back, because the ice declarations
+ * are never emitted outside the variant.
+ *
+ * It is `data-surface`, not `data-theme`: `data-theme` is already the light /
+ * dark mode (`ThemeProvider`, `colors-dark`, the canvases), and the ice tokens
+ * themselves follow it.
+ *
+ * Each alias points straight at its own variant (not through `ui-above`), so
+ * nav/header/drawer keep their own radius, border and ramp values.
  *
  * Declared after every surface above and before the `ui-sheen-*` directions
  * and `no-gradient`, so those still win on source order.
  * ========================================================================== */
 
-/* --- ICE --- */
-@utility ui-above {
-  @apply ice-above;
-}
-@utility ui-above-opaque {
-  @apply ice-above-opaque;
-}
-@utility ui-above-nav {
-  @apply ice-above-nav;
-}
-@utility ui-above-header {
-  @apply ice-above-header;
-}
-@utility ui-above-drawer {
-  @apply ice-above-drawer;
-}
-@utility ui-above-inside {
-  @apply ice-above-inside;
-}
-@utility ui-above-reverse {
-  @apply ice-above-reverse;
-}
+/* The variant is `:where()`-wrapped so it adds no specificity: an ice surface
+ * still loses to `p-6`, `no-gradient` and the rest exactly as before. */
+@custom-variant ice (:where(:root[data-surface="ice"]:not([data-simple])) &);
 
-/* --- CLASSIC ---
 @utility ui-above {
   @apply classic-above;
+  @variant ice {
+    @apply ice-above;
+  }
 }
 @utility ui-above-opaque {
   @apply classic-above-opaque;
+  @variant ice {
+    @apply ice-above-opaque;
+  }
 }
 @utility ui-above-nav {
   @apply classic-above-nav;
+  @variant ice {
+    @apply ice-above-nav;
+  }
 }
 @utility ui-above-header {
   @apply classic-above-header;
+  @variant ice {
+    @apply ice-above-header;
+  }
 }
 @utility ui-above-drawer {
   @apply classic-above-drawer;
+  @variant ice {
+    @apply ice-above-drawer;
+  }
 }
 @utility ui-above-inside {
   @apply classic-above-inside;
+  @variant ice {
+    @apply ice-above-inside;
+  }
 }
 @utility ui-above-reverse {
   @apply classic-above-reverse;
+  @variant ice {
+    @apply ice-above-reverse;
+  }
 }
-*/
 
 /* Where the light comes from. Each one keeps the band, colour, strength and
  * length and only moves the direction, so a surface changes its lighting
@@ -393,12 +355,11 @@
   }
 }
 
-/* Simple mode is flat: every panel drops the ice imagery (fractures, streaks,
- * grain and the lit-to-shaded ramp), the ice box-shadow — the 1px edge ring,
- * the rim light and the coloured inset depth — and the `--ice-edge` border,
- * keeping only the classic `--ui-lit-edge` hairline, the drop shadow and a
- * neutral border. The flat fill below is then the whole surface. The snow cap is
- * switched off through `--snow-cap-display` in `snow-cap.module.css`. */
+/* Simple mode is flat. The ice surfaces are not active here (the `ice` variant
+ * excludes `[data-simple]`), so these rules flatten the classic surfaces: no
+ * gradient, a neutral border, the `--ui-lit-edge` hairline and the drop shadow,
+ * and the solid fill below as the whole surface. The snow cap is switched off
+ * through `--snow-cap-display` in `snow-cap.module.css`. */
 :root[data-simple]
 :is(
   .ui-above,

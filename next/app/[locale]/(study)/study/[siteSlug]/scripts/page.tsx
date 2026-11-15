@@ -1,6 +1,8 @@
 import { UI_STRINGS_PACK } from '@shared/config/strings'
 import type { StudySeoQueryResult } from '@shared/types/sanity.types'
 import type { WithResolvedSanityData } from '@shared/types/sanity-transform.types'
+import type { ScriptSummary } from '@shared/types/scripts.types'
+import type { ReactNode } from 'react'
 import { ScriptFeedToggle } from '@/components/academics/scripts/ScriptFeedToggle'
 import { ScriptsSection } from '@/components/academics/scripts/ScriptsSection'
 import { StudySetupGate } from '@/components/academics/setup/StudySetupGate'
@@ -13,13 +15,21 @@ import { createAcademicMetadata } from '@/lib/academic-metadata'
 import { getStudyFeedPath, getStudySiteUrl } from '@/lib/academic-routes'
 import { getSession } from '@/lib/api/auth-api'
 import { getRequestCookieHeader } from '@/lib/api/next-api'
-import { getTopScripts, getTopScriptsForSubjects } from '@/lib/api/scripts-api'
+import {
+  getTopScripts,
+  getTopScriptsForSubjects,
+  searchScripts,
+} from '@/lib/api/scripts-api'
 import {
   getIncompleteSubjectIdsForStudies,
   getIncompleteSubjectsForStudies,
 } from '@/lib/profile-subjects'
 import { ACADEMIC_PAGE_TAGS } from '@/lib/sanity-tags'
 import { toScriptSummaryDetails } from '@/lib/script-display'
+import {
+  normalizeSearchQuery,
+  type SearchQueryParam,
+} from '@/lib/script-search'
 import { getServerStrings } from '@/lib/server-strings'
 import { getStudySite, getStudySiteOrNotFound } from '@/lib/study-site'
 import { studySeoQuery } from '@/sanity/queries/academics/study.queries'
@@ -69,12 +79,16 @@ export const generateMetadata = createAcademicMetadata<
  * guest sees the study's top scripts), and the study's scripts come from the API
  * with a cookie the cache must not share. The Sanity reads behind the names are
  * still cached by tag.
+ *
+ * `?q=` turns it into this study's search results: the study's own header bar
+ * submits here, because `/search` in the catalog is the catalog's — universities
+ * and professors — and never a study's scripts.
  */
 export default async function StudyScriptsPage({
   params,
   searchParams,
 }: LocalePageProps<StudySiteRouteParams> & {
-  searchParams: Promise<{ scripts?: string }>
+  searchParams: Promise<{ scripts?: string; q?: SearchQueryParam }>
 }) {
   const [{ siteSlug, locale }, query, cookie] = await Promise.all([
     params,
@@ -84,6 +98,10 @@ export default async function StudyScriptsPage({
   const site = await getStudySiteOrNotFound(siteSlug)
   const UI_STRINGS = await getServerStrings(UI_STRINGS_PACK, locale)
   const showAllScripts = query.scripts === ALL_SCRIPTS_PARAM
+  // The study's header search lands here with `?q=`: the catalog's `/search`
+  // never carries a study's content, so the study's own feed answers it.
+  const searchQuery = normalizeSearchQuery(query.q)
+  const searching = searchQuery.length > 0
 
   const session = await getSession(cookie)
 
@@ -102,15 +120,53 @@ export default async function StudyScriptsPage({
   // Curated by default: the reader's unfinished subjects in this study. The
   // study's top scripts are the fallback and the explicit choice behind the
   // switch, so a guest — or someone with nothing left to take — still lands on
-  // something to read.
+  // something to read. A search is neither: the API matches the query against
+  // every script in the study.
   const isCurated = !showAllScripts && incompleteSubjectIds.length > 0
-  const feedScripts = isCurated
-    ? await getTopScriptsForSubjects(incompleteSubjectIds)
-    : await getTopScripts(undefined, studyId)
+
+  let feedScripts: Array<ScriptSummary> | null
+  if (searching) {
+    feedScripts = studyId ? await searchScripts(searchQuery, studyId) : null
+  } else if (isCurated) {
+    feedScripts = await getTopScriptsForSubjects(incompleteSubjectIds)
+  } else {
+    feedScripts = await getTopScripts(undefined, studyId)
+  }
   const scripts = toScriptSummaryDetails(feedScripts ?? [], locale)
 
   const feedPath = getStudyFeedPath(siteSlug, locale)
   const overviewPath = getStudySiteUrl(siteSlug, locale)
+
+  // A search result list is already filtered by the server, so the feed's own
+  // search and subject filters would only narrow it again; the header bar is
+  // where a new query is typed.
+  const searchControls = { all: true, search: false, filters: false }
+
+  let feedTitle: string | undefined
+  let feedSubtitle: string | undefined
+  let emptyMessage: string | undefined
+  if (searching) {
+    feedTitle = UI_STRINGS.scripts.feed.searchTitle(searchQuery)
+    emptyMessage = UI_STRINGS.scripts.feed.searchEmpty(searchQuery)
+  } else if (showAllScripts) {
+    feedTitle = UI_STRINGS.scripts.feed.allTitle
+    feedSubtitle = UI_STRINGS.scripts.feed.allSubtitle
+  }
+
+  let headerActions: ReactNode
+  if (searching) {
+    headerActions = (
+      <NextLink href={feedPath} className='button button-sm subtle'>
+        {UI_STRINGS.scripts.feed.clearSearch}
+      </NextLink>
+    )
+  } else if (user && incompleteSubjectIds.length > 0) {
+    // Only worth offering when there is a curated feed to switch away from; a
+    // guest (or someone with nothing left to take) has one list.
+    headerActions = (
+      <ScriptFeedToggle showAll={showAllScripts} basePath={feedPath} />
+    )
+  }
 
   return (
     <PageLayout
@@ -137,17 +193,11 @@ export default async function StudyScriptsPage({
         <ScriptsSection
           scripts={scripts}
           scriptsUnavailable={feedScripts === null}
-          title={showAllScripts ? UI_STRINGS.scripts.feed.allTitle : undefined}
-          subtitle={
-            showAllScripts ? UI_STRINGS.scripts.feed.allSubtitle : undefined
-          }
-          // Only worth offering when there is a curated feed to switch away
-          // from; a guest (or someone with nothing left to take) has one list.
-          headerActions={
-            user && incompleteSubjectIds.length > 0 ? (
-              <ScriptFeedToggle showAll={showAllScripts} basePath={feedPath} />
-            ) : undefined
-          }
+          title={feedTitle}
+          subtitle={feedSubtitle}
+          showControls={searching ? searchControls : undefined}
+          emptyMessage={emptyMessage}
+          headerActions={headerActions}
         />
         {user && <StudySubjectsPanel subjects={subjects} />}
       </Box>

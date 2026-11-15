@@ -20,7 +20,10 @@ const API_BASE_PATH = '/api'
 const QUERY_CONFIG: Record<string, { args: string; paramsObj: string }> = {
   '/api/scripts/top': { args: 'limit?: number', paramsObj: '{ limit }' },
   '/api/scripts/popular': { args: 'limit?: number', paramsObj: '{ limit }' },
-  '/api/scripts/search': { args: 'query: string', paramsObj: '{ q: query }' },
+  '/api/scripts/search': {
+    args: 'query: string, study?: string',
+    paramsObj: '{ q: query, study }',
+  },
   '/api/ratings/types': {
     args: 'target_type: RatingTargetType',
     paramsObj: '{ target_type: target_type }',

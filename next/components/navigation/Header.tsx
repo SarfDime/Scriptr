@@ -11,9 +11,10 @@ import { NavLogo } from './NavLogo'
 import { NavToggle } from './NavToggle'
 
 /**
- * The header is global chrome, so it knows nothing about studies: the calendar
- * alert is per study and lives in the study's own frame
- * (`app/(study)/study/[siteSlug]/layout.tsx`), which can read it on the server.
+ * The header is global chrome: the calendar alert is per study and lives in the
+ * study's own frame (`app/(study)/study/[siteSlug]/layout.tsx`), which can read
+ * it on the server. The same layout hands down the study's handle so the search
+ * bar can search that study's scripts; the header itself never reads a host.
  *
  * A Server Component: the copy is resolved from the route's language here. The
  * clock is the one thing that cannot be — a server render would freeze the date
@@ -21,8 +22,10 @@ import { NavToggle } from './NavToggle'
  * client leaf. */
 export const Header = async ({
   calendarAlert,
+  studySiteSlug,
 }: {
   calendarAlert?: CalendarAlertData
+  studySiteSlug?: string | null
 }) => {
   const strings = await getServerStrings(UI_STRINGS_PACK)
 
@@ -72,7 +75,7 @@ export const Header = async ({
         )}
       </Box>
       <NavLogo className='lg:hidden' />
-      <HeaderActions>
+      <HeaderActions studySiteSlug={studySiteSlug}>
         {calendarAlert && (
           <CalendarAlert
             className='lg:hidden'

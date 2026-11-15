@@ -16,6 +16,11 @@ html {
   }
 }
 
+@utility content-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+
 @utility vertical-text {
   writing-mode: vertical-lr;
   text-orientation: mixed;

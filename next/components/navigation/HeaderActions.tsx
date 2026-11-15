@@ -10,12 +10,19 @@ import { Badge } from '../ui/Badge'
 import { HeaderProfileLink } from './HeaderProfileLink'
 import { HeaderSearch } from './HeaderSearch'
 
-export const HeaderActions = ({ children }: { children?: React.ReactNode }) => {
+export const HeaderActions = ({
+  children,
+  studySiteSlug,
+}: {
+  children?: React.ReactNode
+  /** Set by a study's layout so the search bar scopes to that study. */
+  studySiteSlug?: string | null
+}) => {
   const { unreadCount, setTrayOpen } = useNotifications()
   const strings = useStrings(NOTIFICATIONS_STRINGS_PACK)
   return (
     <Box className='ml-auto flex items-center gap-2'>
-      <HeaderSearch />
+      <HeaderSearch studySiteSlug={studySiteSlug} />
       <Button
         onClick={() => setTrayOpen(true)}
         aria-label={strings.openNotifications}

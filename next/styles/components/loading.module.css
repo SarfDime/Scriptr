@@ -1,30 +1,35 @@
-/* The veil behind the loading screen eases from opaque to its resting
- * translucency, so a theme or simple-mode applied after paint never shows as a
- * visible shift.
+/* The veil behind the loading screen is fully opaque while the page is still
+ * server-rendered and eases down to 60% once `LoadingProvider` marks the
+ * document hydrated — so the stand-in never shows the page behind it, and by the
+ * time the fade runs the theme, simple mode and the loader's own copy have
+ * settled under it.
  *
- * It is animated on the document rather than on the overlay element because the
- * overlay changes element a few hundred milliseconds into the page load: the
- * server-rendered stand-in is replaced by the modal dialog, and an animation on
- * either of them restarts at the swap. Inherited from `:root`, one run covers
- * both. `from` only — the resting value is the variable's own. */
-@property --ui-loading-veil {
-  syntax: "<number>";
-  inherits: true;
-  initial-value: 0.7;
-}
-
+ * It is its own layer rather than the overlay's background, so the fade is the
+ * opacity of a plain `--color-background-100` fill and the wordmark drawn above
+ * it stays fully opaque. `data-loader-ready` is set once, after hydration, and is
+ * never removed, so a later task opening the overlay does not replay the fade. */
 @keyframes ui-loading-veil-in {
   from {
-    --ui-loading-veil: 1;
+    opacity: 1;
+  }
+  to {
+    opacity: 0.6;
   }
 }
 
-:root {
-  --ui-loading-veil: 0.7;
+.ui-loading-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* Behind the wordmark: an absolutely positioned box would otherwise paint over
+   * the unpositioned content. */
+  z-index: -1;
+  background-color: var(--color-background-100);
+  opacity: 1;
 }
 
-/* Matches for the whole session: the dialog is always mounted. */
-:root:has(.ui-loading-overlay) {
+:root[data-loader-ready] .ui-loading-overlay::before {
+  opacity: 0.6;
   animation: ui-loading-veil-in 1.5s ease-out;
 }
 
@@ -41,12 +46,19 @@
    * scrollbar's strip: 100% resolves against the viewport without it, which
    * would leave a column of page showing down the right side. A fixed element
    * does not add scrollable overflow, so the extra width is safe. */
-  @apply fixed inset-0 z-100 m-0 h-dvh w-screen max-w-none max-h-none border-0 border-none p-0 text-fg outline-none backdrop-blur-xl transition-all duration-500 ease-in-out;
-  background-color: color-mix(
-    in oklab,
-    var(--color-background-100) calc(var(--ui-loading-veil) * 100%),
-    transparent
-  );
+  @apply fixed inset-0 z-100 m-0 h-dvh w-screen max-w-none max-h-none border-0 border-none p-0 text-fg outline-none backdrop-blur-xl duration-500 ease-in-out;
+  transition-property: opacity, transform;
+  /* The veil is the `::before` above; the overlay itself only hosts it, and the
+   * user-agent background of a dialog has to be cleared for that to show. */
+  background-color: transparent;
+}
+
+/* A modal dialog gets the user-agent's `rgba(0, 0, 0, 0.1)` backdrop, which
+ * would appear as a step darker only once the stand-in is promoted to the top
+ * layer. The veil above is the only dimming this screen wants, and it is already
+ * opaque where it should be. */
+.ui-loading-overlay::backdrop {
+  background-color: transparent;
 }
 
 /* A closed <dialog> is `display: none`, so the centering layout has to hang off
@@ -60,13 +72,12 @@
   @apply scale-105 opacity-0;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  :root:has(.ui-loading-overlay) {
-    animation: none;
-  }
-}
+/* The veil fade is deliberately left on under `prefers-reduced-motion`: it is an
+ * opacity change rather than motion, and switching it off makes the veil jump
+ * from opaque to translucent the moment the page hydrates. */
 
-/* Without blur the 70% overlay would reveal the page behind it. */
-:root[data-simple] .ui-loading-overlay {
-  background-color: var(--color-background-100);
+/* Without blur the 60% veil would reveal the page behind it. */
+:root[data-simple] .ui-loading-overlay::before {
+  opacity: 1;
+  animation: none;
 }

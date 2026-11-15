@@ -1,9 +1,11 @@
 'use client'
 
 import type { WebsiteBackground } from '@shared/types/app-background.types'
+import { useImmersive } from '@/lib/app-background/immersive-store'
 import { useTheme } from '@/providers/theme/ThemeProvider'
 import { CustomStarCanvas } from '../StarCanvas'
 import { ChristmasCanvas } from './ChristmasCanvas'
+import { ImmersiveExitButton } from './ImmersiveExitButton'
 import { SimpleBackground } from './SimpleBackground'
 import { SkyboxCanvas } from './SkyboxCanvas'
 
@@ -18,6 +20,7 @@ export const AppBackground = ({
   background?: WebsiteBackground | null
 }) => {
   const { simpleMode } = useTheme()
+  const immersive = useImmersive()
 
   if (simpleMode || !background) return <SimpleBackground />
   if (background._type === 'christmasCanvas') {
@@ -25,6 +28,7 @@ export const AppBackground = ({
       <div id='app-background'>
         <SkyboxCanvas />
         <ChristmasCanvas sanityData={background} />
+        {immersive && <ImmersiveExitButton />}
       </div>
     )
   }

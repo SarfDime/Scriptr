@@ -19,6 +19,10 @@
 
   /* Fallback if a theme block forgot --ice-crack */
   --ice-crack: var(--ice-crack-img-dark);
+
+  /* Backdrop for ice-above: soft frost over whatever is behind. `none` makes
+   * it a plain tinted pane (cheapest). */
+  --ice-backdrop: blur(2px) saturate(1.4);
 }
 
 @utility ice-above {
@@ -32,8 +36,10 @@
     corner-shape: scoop;
   }
 
-  /* 97% fill, no blur. */
-  background-color: rgb(var(--ice-base) / 0.97);
+  /* Semi-transparent glass. --ice-glass-a is per theme; the fallback keeps the
+   * old near-opaque look if a theme forgot it. */
+  background-color: rgb(var(--ice-base) / var(--ice-glass-a, 0.95));
+  backdrop-filter: var(--ice-backdrop);
   /* Own light instead of ui-sheen. Top to bottom: corner light, streaks,
    * two offset fracture tiles, grain, depth ramp. */
   background-image:
@@ -47,12 +53,15 @@
       transparent 0 18%,
       rgb(255 255 255 / var(--ice-streak-a)) 23%,
       transparent 29%,
-      transparent 56%,
+      rgb(var(--ice-depth) / calc(var(--ice-shade-a) * 0.5)) 41%,
+      transparent 49%,
       rgb(255 255 255 / calc(var(--ice-streak-a) * 0.6)) 61%,
-      transparent 67%
+      transparent 67%,
+      rgb(var(--ice-depth) / calc(var(--ice-shade-a) * 0.35)) 80%,
+      transparent 90%
     ),
     var(--ice-crack), var(--ice-crack-b),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .7 -.3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .42 -.18'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),
     linear-gradient(
       to bottom,
       rgb(var(--ice-lit) / calc(var(--ice-lit-a) * var(--ice-light-k, 1))) 0,
@@ -94,12 +103,12 @@
 @utility ice-above-inside {
   /* The `subtle` chip at panel size: the same corner light, lit-to-shaded ramp,
    * top rim and foot shade, so a nested pane is that chip a shade darker rather
-   * than a separate material. No grain and no fracture tiles, as on the chip.
+   * than a separate material. No grain; only one faint fracture tile (see below).
    *
    * The fill is `--ice-inside` lifted most of the way to `--ice-base`: a full
    * step darker than the chip read as saturated blue on a panel and cost
    * body-text readability in light mode, so it keeps just enough separation
-   * from the slab to stay a layer. Opaque on purpose — the old 0.7 alpha let the
+   * from the slab to stay a layer. Only 12% see-through, because the old 0.7 alpha let the
    * slab's own lit ramp through and pulled the pane back up to chip brightness.
    *
    * The light is damped to half the chip's for the same reason: a chip only
@@ -116,8 +125,8 @@
 
   background-color: color-mix(
     in oklab,
-    rgb(var(--ice-inside)) 35%,
-    rgb(var(--ice-base))
+    color-mix(in oklab, rgb(var(--ice-inside)) 35%, rgb(var(--ice-base))) 83%,
+    transparent
   );
   background-image:
     linear-gradient(
@@ -125,14 +134,35 @@
       rgb(255 255 255 / calc(var(--ice-sheen-a) * 0.5)) 0,
       transparent min(var(--ui-sheen-length, 96px), 60%)
     ),
+    /* Faint ice, kept well below text strength: one soft streak at a third of
+     * the slab's alpha, and the second (thin, low-alpha) fracture tile. */
+    linear-gradient(
+      115deg,
+      transparent 0 30%,
+      rgb(255 255 255 / calc(var(--ice-streak-a) * 0.35)) 36%,
+      transparent 43%,
+      transparent 66%,
+      rgb(255 255 255 / calc(var(--ice-streak-a) * 0.25)) 71%,
+      transparent 77%
+    ),
+    var(--ice-crack-b),
     linear-gradient(
       to bottom,
       rgb(var(--ice-lit) / calc(var(--ice-lit-a) * 0.35)) 0,
       transparent var(--ice-mid, 45%),
       rgb(var(--ice-depth) / calc(var(--ice-shade-a) * 0.6)) 100%
     );
-  background-size: auto, auto;
-  background-repeat: no-repeat, no-repeat;
+  background-size:
+    auto,
+    auto,
+    710px 460px,
+    auto;
+  background-position:
+    0 0,
+    0 0,
+    60px 140px,
+    0 0;
+  background-repeat: no-repeat, no-repeat, repeat, no-repeat;
 
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / var(--ice-rim-a)),
@@ -147,6 +177,8 @@
 @utility ice-above-opaque {
   @apply ice-above;
   background-color: rgb(var(--ice-base));
+  /* Nothing shows through, so don't pay for a backdrop filter. */
+  backdrop-filter: none;
 }
 
 @utility ice-above-nav {

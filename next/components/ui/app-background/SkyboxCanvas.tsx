@@ -10,8 +10,13 @@ import { getSkyState } from '@shared/utils/skybox-model'
 import { useEffect, useRef, useSyncExternalStore } from 'react'
 import { useImmersive } from '@/lib/app-background/immersive-store'
 import {
+  createLensFlare,
+  LENS_FLARE_GHOST_COUNT,
+} from '@/lib/app-background/lens-flare'
+import {
   buildClouds,
   buildStars,
+  createSkyColorResolver,
   paintClouds,
   paintSky,
   paintStars,
@@ -21,7 +26,6 @@ import {
 } from '@/lib/app-background/skybox-canvas'
 import { setSkyState } from '@/lib/app-background/skybox-store'
 import {
-  createColorResolver,
   getIsMobile,
   getIsMobileOnServer,
   subscribeToMobile,
@@ -45,8 +49,10 @@ const FPS_CAP = 30
 const MIN_FRAME_MS = 1000 / FPS_CAP
 const MAX_DPR = 2
 const MOBILE_MAX_DPR = 1.5
-const IMMERSIVE_DAY_MINUTES = 7
+const IMMERSIVE_DAY_MINUTES = 3
 const IMMERSIVE_RAMP_MS = 10_000
+// The crossfade between the themed palette and the immersive one.
+const PALETTE_FADE_MS = 1500
 
 /** "HH:MM" -> hours (0-24), or null when the value is not a clock time. */
 const parseClock = (value: string | null | undefined): number | null => {
@@ -71,6 +77,11 @@ export const SkyboxCanvas = ({
 }) => {
   const skyRef = useRef<HTMLCanvasElement>(null)
   const fxRef = useRef<HTMLCanvasElement>(null)
+  // The lens-flare overlay exists only while immersive.
+  const flareRef = useRef<HTMLCanvasElement>(null)
+  // 0 = themed palette, 1 = the immersive one. A ref, so it survives the effect
+  // re-running when `immersive` flips and the fade carries on instead of snapping.
+  const paletteMixRef = useRef(0)
   const isMobile = useSyncExternalStore(
     subscribeToMobile,
     getIsMobile,
@@ -83,12 +94,16 @@ export const SkyboxCanvas = ({
     const fxCanvas = fxRef.current
     const skyCtx = skyCanvas?.getContext('2d')
     const fx = fxCanvas?.getContext('2d')
+    const flareCanvas = flareRef.current
+    const flareCtx = flareCanvas?.getContext('2d') ?? null
     if (!skyCanvas || !skyCtx || !fxCanvas || !fx) return
 
     const cfg: SkyboxConfig = { ...SKYBOX_DEFAULTS, ...config }
     const reducedMotion = window.matchMedia(
       '(prefers-reduced-motion: reduce)'
     ).matches
+    // No animation to carry a fade, so the palette just switches.
+    if (reducedMotion) paletteMixRef.current = immersive ? 1 : 0
     const params = new URLSearchParams(window.location.search)
 
     // A pinned time wins over the visitor's clock; a speed sweeps the day.
@@ -106,7 +121,7 @@ export const SkyboxCanvas = ({
         return now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600
       })()
 
-    let toRGB = createColorResolver()
+    let toRGB = createSkyColorResolver()
     let stars: Array<SkyStar> = []
     let clouds: Array<SkyCloud> = []
     let w = 0
@@ -135,6 +150,22 @@ export const SkyboxCanvas = ({
       return (((baseHours + progressedHours) % 24) + 24) % 24
     }
 
+    // Eased, so the crossfade starts and ends gently.
+    const originalMix = () => {
+      const m = paletteMixRef.current
+      return m * m * (3 - 2 * m)
+    }
+    const skyAt = (elapsed: number) =>
+      getSkyState(hoursAt(elapsed), cfg, toRGB, originalMix())
+
+    // Lens flares: immersive only, never with reduced motion. Touch has no cursor,
+    // so only a mouse or pen moves them.
+    const flare =
+      immersive && !reducedMotion && flareCtx
+        ? createLensFlare(scaleForMobile(LENS_FLARE_GHOST_COUNT, cfg, isMobile))
+        : null
+    let flareDrawn = false
+
     const build = () => {
       stars = buildStars(
         scaleForMobile(cfg.starCount, cfg, isMobile),
@@ -146,6 +177,14 @@ export const SkyboxCanvas = ({
       )
     }
 
+    const targets: Array<
+      readonly [HTMLCanvasElement, CanvasRenderingContext2D]
+    > = [
+      [skyCanvas, skyCtx],
+      [fxCanvas, fx],
+    ]
+    if (flareCanvas && flareCtx) targets.push([flareCanvas, flareCtx])
+
     const layout = () => {
       w = window.innerWidth
       h = window.innerHeight
@@ -153,10 +192,7 @@ export const SkyboxCanvas = ({
         window.devicePixelRatio || 1,
         isMobile ? MOBILE_MAX_DPR : MAX_DPR
       )
-      for (const [canvas, ctx] of [
-        [skyCanvas, skyCtx],
-        [fxCanvas, fx],
-      ] as const) {
+      for (const [canvas, ctx] of targets) {
         canvas.width = Math.round(w * dpr)
         canvas.height = Math.round(h * dpr)
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
@@ -165,13 +201,13 @@ export const SkyboxCanvas = ({
     }
 
     const paintSkyLayer = (elapsed: number) => {
-      const state = getSkyState(hoursAt(elapsed), cfg, toRGB)
+      const state = skyAt(elapsed)
       paintSky(skyCtx, w, h, state, clock)
       return state
     }
 
     const drawEffects = (elapsed: number) => {
-      const state = getSkyState(hoursAt(elapsed), cfg, toRGB)
+      const state = skyAt(elapsed)
       fx.setTransform(dpr, 0, 0, dpr, 0, 0)
       fx.clearRect(0, 0, w, h)
       paintStars(fx, w, h, stars, state, clock)
@@ -181,11 +217,11 @@ export const SkyboxCanvas = ({
 
     build()
     layout()
-    setSkyState(getSkyState(baseHours, cfg, toRGB))
+    setSkyState(skyAt(0))
 
     // Re-resolve the colors when the theme changes or the OS color scheme changes.
     const onThemeChange = () => {
-      toRGB = createColorResolver()
+      toRGB = createSkyColorResolver()
       lastSkyPaint = Number.NEGATIVE_INFINITY
       if (reducedMotion) {
         paintSkyLayer(0)
@@ -209,6 +245,15 @@ export const SkyboxCanvas = ({
     }
     window.addEventListener('resize', onResize)
 
+    const onPointerMove = (event: PointerEvent) => {
+      if (event.pointerType === 'touch') return
+      flare?.setPointer(
+        (event.clientX / w) * 2 - 1,
+        (event.clientY / h) * 2 - 1
+      )
+    }
+    if (flare) window.addEventListener('pointermove', onPointerMove)
+
     let raf = 0
     if (reducedMotion) {
       // One still frame: the sky, and the stars at their full-night alpha.
@@ -225,13 +270,31 @@ export const SkyboxCanvas = ({
         last = now
         clock += delta
 
-        const skyRepaintInterval = immersive ? MIN_FRAME_MS : SKY_REPAINT_MS
+        // Ease the palette toward the current mode; repaint every frame while it
+        // moves, or the fade out of immersive would step at the slow repaint rate.
+        const target = immersive ? 1 : 0
+        const mix = paletteMixRef.current
+        const stepMix = delta / PALETTE_FADE_MS
+        if (mix !== target) {
+          paletteMixRef.current =
+            mix < target
+              ? Math.min(target, mix + stepMix)
+              : Math.max(target, mix - stepMix)
+        }
+        const fading = paletteMixRef.current !== target
+
+        const skyRepaintInterval =
+          immersive || fading ? MIN_FRAME_MS : SKY_REPAINT_MS
         if (now - lastSkyPaint >= skyRepaintInterval) {
           lastSkyPaint = now
           paintSkyLayer(elapsed)
         }
         const state = drawEffects(elapsed)
 
+        if (flare && flareCtx) {
+          if (flareDrawn) flareCtx.clearRect(0, 0, w, h)
+          flareDrawn = flare.paint(flareCtx, w, h, state, delta, clock)
+        }
         // Other canvases read the sky, at most once a second.
         if (now - lastStoreUpdate > 1000) {
           lastStoreUpdate = now
@@ -243,6 +306,7 @@ export const SkyboxCanvas = ({
 
     return () => {
       window.removeEventListener('resize', onResize)
+      window.removeEventListener('pointermove', onPointerMove)
       colorScheme.removeEventListener('change', onThemeChange)
       themeObserver.disconnect()
       cancelAnimationFrame(raf)
@@ -261,6 +325,14 @@ export const SkyboxCanvas = ({
         aria-hidden
         className='pointer-events-none fixed inset-0 z-[-1] h-full w-full'
       />
+      {immersive && (
+        <canvas
+          ref={flareRef}
+          data-lens-flare
+          aria-hidden
+          className='pointer-events-none fixed inset-0 z-[-1] h-full w-full'
+        />
+      )}
     </>
   )
 }

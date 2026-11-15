@@ -1,4 +1,5 @@
 import {
+  originalSkyKey,
   SKY_ANCHORS,
   SKY_COLORS,
   SKY_STAR_COLOR,
@@ -37,6 +38,13 @@ const mixRGB = (a: string, b: string, t: number) => {
   const mix = (from: number, to: number) => Math.round(from + (to - from) * t)
   return `${mix(ar, br)}, ${mix(ag, bg)}, ${mix(ab, bb)}`
 }
+
+/** Scales an "r, g, b" string toward black; `k` is the share that is kept. */
+const dimRGB = (rgb: string, k: number) =>
+  rgb
+    .split(',')
+    .map((channel) => Math.round(Number(channel) * k))
+    .join(', ')
 
 /**
  * Places the keyframes on the clock from the configured sunrise and sunset, so a
@@ -96,11 +104,15 @@ export const moonHours = (hours: number) => (hours + 12) % 24
  * The sky at `hours` (local time, 0-24). `toRGB` resolves a theme color key to an
  * "r, g, b" string — the canvas passes the theme resolver, the tests a stub — which
  * keeps this file free of the DOM while still blending real colors smoothly.
+ *
+ * `originalMix` blends from the themed palette (0) to the theme-independent
+ * immersive one (1); the canvas animates it to crossfade.
  */
 export const getSkyState = (
   hours: number,
   config: SkyboxConfig = SKYBOX_DEFAULTS,
-  toRGB: (key: string) => string = () => '128, 128, 128'
+  toRGB: (key: string) => string = () => '128, 128, 128',
+  originalMix = 0
 ): SkyState => {
   const time = ((hours % 24) + 24) % 24
   const frames = buildSkyKeyframes(config)
@@ -109,8 +121,21 @@ export const getSkyState = (
   // Smoothstep on the blend, so the slope is 0 at a keyframe and the sky never
   // changes direction with a visible kink.
   const w = smoothstep(0, 1, t)
-  const colour = (key: keyof SkyKeyframe) =>
-    mixRGB(toRGB(from[key] as string), toRGB(to[key] as string), w)
+  const mix = clamp(originalMix, 0, 1)
+  const blend = (resolve: (key: string) => string, key: keyof SkyKeyframe) =>
+    mixRGB(resolve(from[key] as string), resolve(to[key] as string), w)
+  const original = (key: string) => toRGB(originalSkyKey(key))
+  // Only the palettes in play are resolved: a color lookup touches the DOM.
+  const colour = (key: keyof SkyKeyframe) => {
+    if (mix <= 0) return blend(toRGB, key)
+    if (mix >= 1) return blend(original, key)
+    return mixRGB(blend(toRGB, key), blend(original, key), mix)
+  }
+  const starColour = (() => {
+    if (mix <= 0) return toRGB(SKY_STAR_COLOR)
+    if (mix >= 1) return original(SKY_STAR_COLOR)
+    return mixRGB(toRGB(SKY_STAR_COLOR), original(SKY_STAR_COLOR), mix)
+  })()
 
   const phase = t < 0.5 ? from.phase : to.phase
 
@@ -121,8 +146,10 @@ export const getSkyState = (
   const daylight = smoothstep(-0.05, 0.35, elevation)
 
   // Sun: an arc from the sunrise x to the sunset x, its centre on the horizon at
-  // both ends. Big, saturated and low near the horizon; smaller and paler at noon
-  // (the color comes from the keyframes, which already run orange to pale yellow).
+  // both ends. Saturated and a touch bigger near the horizon, paler at noon (the
+  // color comes from the keyframes, which already run orange to pale yellow). Its
+  // disc is only a little larger than the moon's: the two are meant to read as a pair
+  // of cut-paper shapes, not as a cartoon sun with a smaller moon beside it.
   const sunX = lerp(SKY_ANCHORS.sunriseX, SKY_ANCHORS.sunsetX, clamp(u, 0, 1))
   const sunY = SKY_ANCHORS.horizon - day * (SKY_ANCHORS.horizon - 0.1)
 
@@ -137,6 +164,11 @@ export const getSkyState = (
     SKY_ANCHORS.horizon -
     clamp(moonElevation, 0, 1) * (SKY_ANCHORS.horizon - 0.12)
 
+  // Immersive mode only: the sky deepens as the moon climbs, so the middle of its
+  // cycle (its highest point, at midnight) is the darkest point of the night. The
+  // themed palette keeps its own night, which has to stay readable under page copy.
+  const moonDarkening = 1 - 0.38 * mix * smoothstep(0, 0.85, moonElevation)
+
   return {
     phase,
     hours: time,
@@ -144,8 +176,10 @@ export const getSkyState = (
     sun: {
       x: sunX,
       y: sunY,
-      radius: 0.09 - 0.028 * day,
+      radius: 0.1 - 0.008 * day,
       visible: elevation >= 0,
+      visibility: smoothstep(0, 0.14, elevation),
+      elevation: day,
       color: colour('sun'),
       glow: colour('sunGlow'),
     },
@@ -157,10 +191,10 @@ export const getSkyState = (
       color: colour('moon'),
     },
     starVisibility: 1 - smoothstep(-0.2, 0.1, elevation),
-    skyTop: colour('skyTop'),
-    skyBottom: colour('skyBottom'),
-    star: toRGB(SKY_STAR_COLOR),
+    skyTop: dimRGB(colour('skyTop'), moonDarkening),
+    skyBottom: dimRGB(colour('skyBottom'), moonDarkening),
+    star: starColour,
     cloud: colour('cloud'),
-    cloudShade: colour('cloudShade'),
+    cloudShade: dimRGB(colour('cloudShade'), moonDarkening),
   }
 }

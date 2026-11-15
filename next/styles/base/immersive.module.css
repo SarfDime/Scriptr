@@ -10,4 +10,11 @@
     z-index: 40;
     pointer-events: auto;
   }
+
+  /* The lens-flare overlay: above the scenery canvases (same z-index, later in the
+     DOM would not be enough, the sky canvases come first), never catches a click. */
+  html.is-immersive #app-background canvas[data-lens-flare] {
+    z-index: 41;
+    pointer-events: none;
+  }
 }

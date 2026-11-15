@@ -24,15 +24,19 @@ type SearchFormProps = {
   /** Receives the trimmed query. When given, the form submits through it
    * (the header uses the router) instead of the native GET navigation. */
   onValidSubmit?: (query: string) => void
+  /** Overrides the catalog placeholder, for the header's study variant. */
+  placeholder?: string
   inputRef?: Ref<HTMLInputElement>
   errorClassName?: string
   className?: string
 }
 
 /** Plain GET form: submitting navigates to `/search?q=…`, so the page stays a
- * Server Component and results are shareable by URL. Without JS it behaves as
- * a normal form; with JS an invalid query (empty, whitespace-only, too long)
- * is stopped on submit and an inline message is shown.
+ * Server Component and results are shareable by URL. The header passes
+ * `onValidSubmit` and navigates itself — to the study's `/scripts?q=…` when it
+ * is in a study. Without JS it behaves as a normal form; with JS an invalid
+ * query (empty, whitespace-only, too long) is stopped on submit and an inline
+ * message is shown.
  *
  * Client component only for that guard; it receives plain props, so the
  * `/search` page itself is still a Server Component. */
@@ -40,6 +44,7 @@ export const SearchForm = ({
   query = '',
   compact = false,
   ariaLabel,
+  placeholder,
   onValidSubmit,
   inputRef,
   errorClassName,
@@ -47,6 +52,7 @@ export const SearchForm = ({
 }: SearchFormProps) => {
   const ui = useUIStrings()
   const searchLabel = ariaLabel ?? ui.scripts.search.formAriaLabel
+  const searchPlaceholder = placeholder ?? ui.scripts.search.placeholder
   const errorId = useId()
   const [invalid, setInvalid] = useState(false)
 
@@ -78,7 +84,7 @@ export const SearchForm = ({
         ref: inputRef,
         name: SEARCH_QUERY_PARAM,
         type: 'search',
-        placeholder: ui.scripts.search.placeholder,
+        placeholder: searchPlaceholder,
         defaultValue: query,
         'aria-label': searchLabel,
         'aria-invalid': invalid,

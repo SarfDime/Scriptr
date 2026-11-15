@@ -119,6 +119,14 @@ export const SKY_COLORS: Record<
   },
 }
 
+/**
+ * The immersive (full-screen) palette: the same keys as SKY_COLORS under a
+ * `sky-original-` prefix (`sky-noon-top` -> `sky-original-noon-top`). Those tokens
+ * do not change with the theme, because no copy is on screen to stay readable.
+ */
+export const originalSkyKey = (key: string) =>
+  key.replace(/^sky-/, 'sky-original-')
+
 /** Theme key for the stars (one color; the twinkle is done with alpha). */
 export const SKY_STAR_COLOR = 'sky-star'
 

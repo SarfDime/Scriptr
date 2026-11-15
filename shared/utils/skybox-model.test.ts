@@ -98,3 +98,48 @@ test('sunElevation follows the configured sunrise and sunset', () => {
   assert.ok(sunElevation(12, SKYBOX_DEFAULTS) > 0.99)
   assert.ok(sunElevation(0, SKYBOX_DEFAULTS) < 0)
 })
+
+// The stub resolver maps a key to a color by hash, so the original palette's
+// keys give different colors from the themed ones.
+test('originalMix 0 is the themed palette and 1 the original one', () => {
+  const themed = getSkyState(12, SKYBOX_DEFAULTS, toRGB, 0)
+  const original = getSkyState(12, SKYBOX_DEFAULTS, toRGB, 1)
+  assert.equal(themed.skyTop, at(12).skyTop)
+  assert.notEqual(original.skyTop, themed.skyTop)
+  assert.equal(original.skyTop, toRGB('sky-original-noon-top'))
+  assert.equal(original.star, toRGB('sky-original-star'))
+
+  const half = getSkyState(12, SKYBOX_DEFAULTS, toRGB, 0.5)
+  assert.notEqual(half.skyTop, themed.skyTop)
+  assert.notEqual(half.skyTop, original.skyTop)
+})
+
+test('immersive mode deepens the night while the moon is at its highest', () => {
+  const brightness = (rgb: string) =>
+    rgb.split(',').reduce((sum, channel) => sum + Number(channel), 0)
+
+  // Midnight is the middle of the moon's cycle: it is at its highest and the sky
+  // is deeper than the palette alone.
+  const midnight = getSkyState(0, SKYBOX_DEFAULTS, toRGB, 1)
+  assert.ok(
+    brightness(midnight.skyTop) < brightness(toRGB('sky-original-night-top'))
+  )
+  assert.ok(
+    brightness(midnight.skyBottom) <
+      brightness(toRGB('sky-original-night-bottom'))
+  )
+
+  // At noon the moon sits on the horizon, so the palette is untouched, and the
+  // themed palette is never deepened by the moon.
+  const noon = getSkyState(12, SKYBOX_DEFAULTS, toRGB, 1)
+  assert.equal(noon.skyBottom, toRGB('sky-original-noon-bottom'))
+  assert.equal(at(0).skyBottom, toRGB('sky-night-bottom'))
+})
+
+test('the sun fades in over the horizon and is gone below it', () => {
+  assert.equal(at(0).sun.visibility, 0)
+  assert.ok(at(SKYBOX_DEFAULTS.sunriseHour).sun.visibility < 0.01)
+  assert.ok(at(12).sun.visibility > 0.99)
+  const rising = at(SKYBOX_DEFAULTS.sunriseHour + 0.25).sun.visibility
+  assert.ok(rising > 0 && rising < 1)
+})

@@ -218,7 +218,8 @@ export const apiRoutes = {
       `/api/scripts/study/${studyId}` as const,
     top: (limit?: number) => withQuery('/api/scripts/top', { limit }),
     popular: (limit?: number) => withQuery('/api/scripts/popular', { limit }),
-    search: (query: string) => withQuery('/api/scripts/search', { q: query }),
+    search: (query: string, study?: string) =>
+      withQuery('/api/scripts/search', { q: query, study }),
     myScripts: '/api/scripts/my-scripts',
     filesByScriptIdAndFileId: (
       scriptId: string | number,

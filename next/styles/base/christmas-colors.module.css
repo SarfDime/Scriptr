@@ -1,0 +1,38 @@
+/* Immersive colors for the Christmas scenery
+   (next/lib/app-background/christmas-canvas.ts, resolveImmersiveChristmasColors).
+   Read through the theme resolver like every other canvas color, so nothing is
+   hardcoded in the drawing code.
+
+   These are the same names under a `christmas-original-` prefix, defined once and
+   never redefined by data-theme or prefers-color-scheme: in immersive mode the
+   scenery drops both the theme's muted palette and the colors picked in Sanity, so
+   it looks the same in the light and the dark theme. No copy is on screen there, so
+   the snow is clean white, the pines are deep brand green and the sleigh is the
+   red-and-gold one the scene is drawn for. Shades, stripes and highlights are mixed
+   from these in christmas-canvas.ts. */
+@layer colors {
+  :root {
+    --color-christmas-original-snow: #f2f8ff;
+    --color-christmas-original-snow-shade: #c9dcf2;
+    --color-christmas-original-pine: #0f6b4a;
+    --color-christmas-original-pine-light: #1c8a60;
+    --color-christmas-original-pine-dark: #08422e;
+    --color-christmas-original-rock-far: #557ba6;
+    --color-christmas-original-rock-near: #33547d;
+    --color-christmas-original-hill-back: #2f78b8;
+    --color-christmas-original-hill-village: #eaf4ff;
+    --color-christmas-original-hill-band: #1f5f96;
+    --color-christmas-original-hill-front: #f4faff;
+    --color-christmas-original-wall: #e9ae63;
+    --color-christmas-original-roof: #52281c;
+    --color-christmas-original-window: #ffd45e;
+    --color-christmas-original-chimney: #7d3a2b;
+    --color-christmas-original-red: #e03131;
+    --color-christmas-original-gold: #ffcc04;
+    --color-christmas-original-jade: #22b573;
+    --color-christmas-original-ice: #8fd8ff;
+    --color-christmas-original-skin: #f6c9a0;
+    --color-christmas-original-deer: #a5703f;
+    --color-christmas-original-smoke: #dbe7f5;
+  }
+}

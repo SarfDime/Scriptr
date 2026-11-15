@@ -36,6 +36,7 @@
     --ice-lit-a: 0.55;
     --ice-sheen-a: 0.5;
     --ice-streak-a: 0.22;
+    --ice-glass-a: 0.42;
     --ice-crack: var(--ice-crack-img-light);
   }
 }
@@ -58,6 +59,7 @@
   --ice-lit-a: 0.2;
   --ice-sheen-a: 0.14;
   --ice-streak-a: 0.07;
+  --ice-glass-a: 0.5;
   --ice-crack: var(--ice-crack-img-dark);
 }
 
@@ -81,6 +83,7 @@
     --ice-lit-a: 0.2;
     --ice-sheen-a: 0.14;
     --ice-streak-a: 0.07;
+    --ice-glass-a: 0.5;
     --ice-crack: var(--ice-crack-img-dark);
   }
 }

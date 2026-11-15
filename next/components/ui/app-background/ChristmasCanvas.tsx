@@ -19,11 +19,13 @@ import {
   clamp,
   lerp,
   paintChristmasScene,
+  paintPokeBurst,
   paintReindeer,
   REINDEER_COUNT,
   reindeerX,
   reindeerY,
   resolveChristmasColors,
+  resolveImmersiveChristmasColors,
   rgba,
   SLEIGH_HAND,
   SLEIGH_PART_WIDTH,
@@ -31,28 +33,37 @@ import {
   withChristmasDefaults,
 } from '@/lib/app-background/christmas-canvas'
 import {
+  exitImmersive,
   getImmersive,
   setImmersive,
+  useImmersive,
 } from '@/lib/app-background/immersive-store'
 import {
   getIsMobile,
   getIsMobileOnServer,
   subscribeToMobile,
   TAU,
+  WHITE,
 } from '@/lib/star-canvas'
+import { useUIStrings } from '@/providers/locale/use-strings'
 
 // Procedurally drawn Christmas scenery: flat, layered vector hills, striped pines,
 // snow-capped mountains and a snowy village (some of it with Christmas lights), with
-// Santa's sleigh flying by now and then. There is no sky: the canvases are transparent
-// above the mountains, so a shared skybox can sit behind them later.
+// Santa's sleigh flying by now and then, calling out as it passes. There is no sky:
+// the canvases are transparent above the mountains, so the shared skybox sits behind
+// them.
 //
-// Two canvases keep the per-frame work small:
+// Three canvases keep the per-frame work small:
 //  - the scene canvas holds the still scenery (lib/app-background/christmas-canvas.ts),
 //    painted once and again only when the screen size or the theme changes;
+//  - the immersive scene canvas holds the same scenery in the immersive palette, and is
+//    only painted when that palette is actually shown; switching to it is a fade;
 //  - the effects canvas is cleared and redrawn every frame with the cheap moving
-//    parts: snow, chimney smoke, window glow, twinkling lights and the sleigh.
-// Colors come from the theme variables (colors.module.css), like StarCanvas, so the
-// scenery switches between its light and dark versions with the theme.
+//    parts: snow, chimney smoke, window glow, twinkling lights, the sleigh and the
+//    sparkle bursts a clicked reindeer leaves behind.
+// Colors come from the theme variables (colors.module.css) and the colors picked in
+// Sanity, like StarCanvas; both are dropped in immersive mode, which uses the
+// theme-independent palette from christmas-colors.module.css.
 
 const MS_PER_FRAME = 16.667
 const SNOW_AREA_PER_FLAKE = 12000 // px² of screen per flake at density 1
@@ -66,6 +77,13 @@ const NOSE_FLASH_RATE = 0.008 // radians per ms: Rudolph's nose pulses about eve
 // One flight, or two flights if all four clicks land within six seconds.
 const DEER_WINDOW_MS = 6000
 const DEER_HIT_RADIUS = 24
+// How long a clicked reindeer hops, and the sparkle burst it answers with.
+const POKE_MS = 650
+const POKE_BURST_MS = 720
+const POKE_BURST_SIZE = 26
+// How long Santa calls out on each pass, as a share of the flight.
+const CALL_FROM = 0.08
+const CALL_TO = 0.5
 const SKIP_CLICK =
   'a, button, input, textarea, select, [role="button"], [role="link"]'
 const ignoreFullscreenError = () => undefined
@@ -78,6 +96,35 @@ const SNOW_LAYERS = [
   { share: 0.15, radius: 4.2, line: 1.5, alpha: 0.95, speed: 1.3 },
 ] as const
 
+/** How long the scenery takes to crossfade into its immersive colors, matching the sky. */
+const PALETTE_FADE_MS = 1500
+
+/** Smoothstep on a 0-1 value, for the fades that have to start and end gently. */
+const smoothstep01 = (value: number) => {
+  const t = clamp(value, 0, 1)
+  return t * t * (3 - 2 * t)
+}
+
+/** A class's resolved font stack, for canvas text (a CSS variable is not usable there). */
+const resolveFont = (className: string) => {
+  const probe = document.createElement('span')
+  probe.className = className
+  document.body.appendChild(probe)
+  const family = getComputedStyle(probe).fontFamily
+  probe.remove()
+  return family || 'sans-serif'
+}
+
+/** One palette and the sprites built from it: the theme's, or the immersive one. */
+type ChristmasLook = {
+  colors: ChristmasColors
+  windowGlow: HTMLCanvasElement
+  smoke: HTMLCanvasElement
+  noseGlow: HTMLCanvasElement
+  lightGlows: Array<HTMLCanvasElement>
+  sleigh: HTMLCanvasElement | null
+}
+
 export const ChristmasCanvas = ({
   sanityData,
   config,
@@ -88,7 +135,12 @@ export const ChristmasCanvas = ({
   config?: Partial<ChristmasCanvasConfig>
 }) => {
   const sceneRef = useRef<HTMLCanvasElement>(null)
+  // The same scenery painted in the immersive palette, faded in over the themed one.
+  const immersiveSceneRef = useRef<HTMLCanvasElement>(null)
   const effectsRef = useRef<HTMLCanvasElement>(null)
+  const immersive = useImmersive()
+  const ui = useUIStrings()
+  const hoHoHo = ui.general.hoHoHo
   const isMobile = useSyncExternalStore(
     subscribeToMobile,
     getIsMobile,
@@ -97,8 +149,10 @@ export const ChristmasCanvas = ({
 
   useEffect(() => {
     const sceneCanvas = sceneRef.current
+    const immersiveSceneCanvas = immersiveSceneRef.current
     const effectsCanvas = effectsRef.current
     const sceneCtx = sceneCanvas?.getContext('2d')
+    const immersiveSceneCtx = immersiveSceneCanvas?.getContext('2d')
     const fx = effectsCanvas?.getContext('2d')
     if (!sceneCanvas || !sceneCtx || !effectsCanvas || !fx) return
 
@@ -115,7 +169,7 @@ export const ChristmasCanvas = ({
     ).matches
     // Santa does not fly with reduced motion, so the reindeer hit areas stay empty.
 
-    let colors: ChristmasColors = resolveChristmasColors(colorSettings)
+    let themedColors: ChristmasColors = resolveChristmasColors(colorSettings)
     let scene: ChristmasScene | null = null
     let w = 0
     let h = 0
@@ -123,32 +177,43 @@ export const ChristmasCanvas = ({
     let layoutPending = false
     let clock = 0 // ms of animation time (stops while the tab is hidden)
 
-    // ── Sprites (rebuilt on theme change) ─────────────────────────────────────────────
-    let windowGlow: HTMLCanvasElement | null = null
-    let smoke: HTMLCanvasElement | null = null
-    let noseGlow: HTMLCanvasElement | null = null
-    let lightGlows: Array<HTMLCanvasElement> = []
-    let sleighSprite: HTMLCanvasElement | null = null
+    // ── Palettes and sprites ──────────────────────────────────────────────────────────
+    // Two palettes: the theme's (with the colors picked in Sanity on top) and the
+    // immersive one, which ignores both. The scenery is painted twice as a result; the
+    // immersive copy is a second scene canvas that fades in over the first, and the
+    // sprites and the sleigh follow whichever palette is on.
+    const buildLook = (palette: ChristmasColors): ChristmasLook => ({
+      colors: palette,
+      windowGlow: buildRadialSprite(64, palette.house.window, 0.8, 2),
+      smoke: buildRadialSprite(64, palette.smoke, 0.7, 1.5),
+      noseGlow: buildRadialSprite(64, palette.santa.nose, 0.9, 1.6),
+      lightGlows: palette.lights.map((rgb) =>
+        buildRadialSprite(32, rgb, 0.9, 1.8)
+      ),
+      sleigh: null,
+    })
+
+    let themedLook = buildLook(themedColors)
+    const immersiveLook = buildLook(resolveImmersiveChristmasColors())
+    const look = () => (getImmersive() ? immersiveLook : themedLook)
+    // The immersive scene is only painted once it is actually shown, so a visitor who
+    // never enters immersive mode pays nothing for it.
+    let immersiveSceneDirty = true
     let sleighWidth = 0 // on-screen size of the whole sleigh team
     let sleighHeight = 0
     // Scratch canvas for glows that have scenery in front of them (see drawGlows)
     const glowCanvas = document.createElement('canvas')
     const glowCtx = glowCanvas.getContext('2d')
 
-    const buildSprites = () => {
-      windowGlow = buildRadialSprite(64, colors.house.window, 0.8, 2)
-      smoke = buildRadialSprite(64, colors.smoke, 0.7, 1.5)
-      noseGlow = buildRadialSprite(64, colors.santa.nose, 0.9, 1.6)
-      lightGlows = colors.lights.map((rgb) =>
-        buildRadialSprite(32, rgb, 0.9, 1.8)
-      )
-    }
-
     const buildSleigh = () => {
       sleighWidth = clamp(w * 0.17, 150, 380)
       const scale = sleighWidth / SLEIGH_SIZE.width
       sleighHeight = SLEIGH_SIZE.height * scale
-      sleighSprite = buildSleighSprite(colors, scale * dpr)
+      themedLook.sleigh = buildSleighSprite(themedLook.colors, scale * dpr)
+      immersiveLook.sleigh = buildSleighSprite(
+        immersiveLook.colors,
+        scale * dpr
+      )
     }
 
     // ── Snow ────────────────────────────────────────────────────────────────────────
@@ -207,6 +272,11 @@ export const ChristmasCanvas = ({
     const deerHits: Array<{ x: number; y: number; r: number } | null> =
       Array.from({ length: REINDEER_COUNT }, () => null)
     const deerClickedAt: Array<number> = Array(REINDEER_COUNT).fill(0)
+    // When each reindeer was last clicked, so it can answer with a hop
+    const deerPokedAt: Array<number> = Array(REINDEER_COUNT).fill(
+      Number.NEGATIVE_INFINITY
+    )
+    const pokeBursts: Array<{ x: number; y: number; at: number }> = []
     let sparkleTimer = 0
     let sparkleHead = 0
     // Fixed pool of trail sparkles, reused so nothing is allocated while flying
@@ -247,7 +317,23 @@ export const ChristmasCanvas = ({
 
     // ── Layout ─────────────────────────────────────────────────────────────────────────
     const paintScene = () => {
-      scene = paintChristmasScene(sceneCtx, w, h, colors, cfg, isMobile)
+      scene = paintChristmasScene(sceneCtx, w, h, themedColors, cfg, isMobile)
+      immersiveSceneDirty = true
+    }
+
+    // The same scene in the immersive palette, painted into the canvas that fades in
+    // over the themed one. Only ever painted while immersive is on.
+    const paintImmersiveScene = () => {
+      if (!immersiveSceneCtx) return
+      paintChristmasScene(
+        immersiveSceneCtx,
+        w,
+        h,
+        immersiveLook.colors,
+        cfg,
+        isMobile
+      )
+      immersiveSceneDirty = false
     }
 
     // Resizing clears a canvas, so the scene is painted again in the same task
@@ -259,11 +345,18 @@ export const ChristmasCanvas = ({
       const prevH = h
       w = window.innerWidth
       h = window.innerHeight
-      for (const canvas of [sceneCanvas, effectsCanvas, glowCanvas]) {
+      for (const canvas of [
+        sceneCanvas,
+        immersiveSceneCanvas,
+        effectsCanvas,
+        glowCanvas,
+      ]) {
+        if (!canvas) continue
         canvas.width = Math.round(w * dpr)
         canvas.height = Math.round(h * dpr)
       }
       sceneCtx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      immersiveSceneCtx?.setTransform(dpr, 0, 0, dpr, 0, 0)
       fx.setTransform(dpr, 0, 0, dpr, 0, 0)
       glowCtx?.setTransform(dpr, 0, 0, dpr, 0, 0)
 
@@ -278,6 +371,9 @@ export const ChristmasCanvas = ({
       fitSnow()
       paintScene()
       buildSleigh()
+      // A resize clears the immersive copy too, and with reduced motion there is no
+      // frame loop to paint it again.
+      if (getImmersive()) paintImmersiveScene()
     }
 
     // ── Drawing the moving parts ───────────────────────────────────────────
@@ -288,9 +384,11 @@ export const ChristmasCanvas = ({
       group: ChristmasGlowGroup,
       now: number
     ) => {
+      const active = look()
       ctx.globalCompositeOperation = 'lighter'
-      if (windowGlow && cfg.enableWindowGlow) {
-        const base = colors.isDark ? 0.9 : 0.4
+      if (cfg.enableWindowGlow) {
+        const { windowGlow } = active
+        const base = active.colors.isDark ? 0.9 : 0.4
         for (const win of group.windows) {
           ctx.globalAlpha =
             base * (0.8 + 0.2 * Math.sin(now * win.rate + win.phase))
@@ -303,9 +401,9 @@ export const ChristmasCanvas = ({
           )
         }
       }
-      const lightBase = colors.isDark ? 0.9 : 0.55
+      const lightBase = active.colors.isDark ? 0.9 : 0.55
       for (const bulb of group.lights) {
-        const sprite = lightGlows[bulb.colorIndex]
+        const sprite = active.lightGlows[bulb.colorIndex]
         if (!sprite) continue
         ctx.globalAlpha =
           lightBase * (0.55 + 0.45 * Math.sin(now * bulb.rate + bulb.phase))
@@ -385,6 +483,7 @@ export const ChristmasCanvas = ({
       now: number,
       wind: number
     ) => {
+      const { smoke, colors } = look()
       if (!smoke) return
       for (let k = 0; k < SMOKE_PUFFS; k++) {
         const age = (now * SMOKE_RATE + chimney.phase + k / SMOKE_PUFFS) % 1
@@ -401,14 +500,96 @@ export const ChristmasCanvas = ({
     }
 
     const drawSmoke = (now: number, wind: number, current: ChristmasScene) => {
-      if (!smoke || !cfg.enableSmoke) return
+      if (!look().smoke || !cfg.enableSmoke) return
       for (const chimney of current.chimneys) {
         drawCovered(chimney, 'source-over', drawChimneySmoke, now, wind)
       }
     }
 
+    // ── Santa's call ─────────────────────────────────────────────────────────────
+    // A speech bubble over Santa's head while the team passes. It is drawn in screen
+    // coordinates, outside the team's transform: the team is mirrored when it flies
+    // right to left, which would flip the text.
+    const bubbleFont = resolveFont('font-olive')
+
+    const drawSantaCall = (t: number, headX: number, headY: number) => {
+      const fade =
+        smoothstep01((t - CALL_FROM) / 0.08) *
+        (1 - smoothstep01((t - CALL_TO) / 0.08))
+      if (fade <= 0.01) return
+
+      const { colors } = look()
+      const size = clamp(sleighWidth * 0.055, 15, 26)
+      fx.font = `800 ${size}px ${bubbleFont}`
+      fx.textAlign = 'center'
+      fx.textBaseline = 'middle'
+      const textWidth = fx.measureText(hoHoHo).width
+
+      const padX = size * 0.72
+      const padY = size * 0.5
+      const boxW = textWidth + padX * 2
+      const boxH = size + padY * 2
+      const tail = size * 1.1
+      const boxX = clamp(headX - boxW / 2, 8, Math.max(8, w - boxW - 8))
+      const boxY = clamp(
+        headY - boxH - tail * 0.7,
+        8,
+        Math.max(8, h - boxH - 8)
+      )
+      const radius = boxH * 0.5
+      const tailBase = clamp(
+        headX,
+        boxX + radius * 0.9,
+        boxX + boxW - radius * 0.9
+      )
+
+      fx.save()
+      fx.globalAlpha = fade
+      // A slow tilt keeps the bubble from looking stamped onto the picture.
+      const cx = boxX + boxW / 2
+      const cy = boxY + boxH / 2
+      fx.translate(cx, cy)
+      fx.rotate(Math.sin(clock * 0.0016) * 0.04)
+      fx.translate(-cx, -cy)
+
+      fx.beginPath()
+      fx.moveTo(boxX + radius, boxY)
+      fx.lineTo(boxX + boxW - radius, boxY)
+      fx.quadraticCurveTo(boxX + boxW, boxY, boxX + boxW, boxY + radius)
+      fx.lineTo(boxX + boxW, boxY + boxH - radius)
+      fx.quadraticCurveTo(
+        boxX + boxW,
+        boxY + boxH,
+        boxX + boxW - radius,
+        boxY + boxH
+      )
+      fx.lineTo(tailBase + radius * 0.35, boxY + boxH)
+      fx.lineTo(headX, headY)
+      fx.lineTo(tailBase - radius * 0.35, boxY + boxH)
+      fx.lineTo(boxX + radius, boxY + boxH)
+      fx.quadraticCurveTo(boxX, boxY + boxH, boxX, boxY + boxH - radius)
+      fx.lineTo(boxX, boxY + radius)
+      fx.quadraticCurveTo(boxX, boxY, boxX + radius, boxY)
+      fx.closePath()
+      // Pure white rather than a palette color: a speech bubble is paper, not snow,
+      // and it has to read the same over any sky.
+      fx.fillStyle = rgba(WHITE)
+      fx.fill()
+      fx.lineJoin = 'round'
+      fx.lineWidth = Math.max(2, size * 0.13)
+      fx.strokeStyle = rgba(colors.santa.body)
+      fx.stroke()
+
+      fx.fillStyle = rgba(colors.santa.body)
+      fx.fillText(hoHoHo, cx, cy + size * 0.04)
+      fx.restore()
+
+      fx.textAlign = 'start'
+      fx.textBaseline = 'alphabetic'
+    }
+
     const drawSanta = (ms: number) => {
-      if (!sleighSprite) return
+      if (!look().sleigh) return
       if (!flight.active) {
         deerHits.fill(null)
         if (clock < nextFlightAt) return
@@ -448,6 +629,8 @@ export const ChristmasCanvas = ({
         spark.life = 1
         spark.size = 1.2 + Math.random() * 2
       }
+      const active = look()
+      const { colors } = active
       fx.fillStyle = rgba(colors.sparkle)
       for (const spark of sparkles) {
         if (spark.life <= 0) continue
@@ -476,7 +659,7 @@ export const ChristmasCanvas = ({
       fx.translate(55, 50 + sleighBob)
       fx.rotate(sleighTilt)
       fx.drawImage(
-        sleighSprite,
+        active.sleigh as HTMLCanvasElement,
         -55,
         -50,
         SLEIGH_PART_WIDTH,
@@ -508,6 +691,10 @@ export const ChristmasCanvas = ({
       // Each reindeer gallops, bobs and tilts on its own; the lead one's nose flashes
       const flash = 0.5 + 0.5 * Math.sin(clock * NOSE_FLASH_RATE)
       for (const [i, motion] of deer.entries()) {
+        // A click makes that deer hop, so the visitor can tell it is clickable
+        const pokeAge = clock - (deerPokedAt[i] ?? Number.NEGATIVE_INFINITY)
+        const poke = pokeAge >= 0 && pokeAge < POKE_MS ? pokeAge / POKE_MS : 0
+
         fx.save()
         fx.translate(reindeerX(i), reindeerY(i) + bobOf(i))
         fx.rotate(
@@ -520,7 +707,8 @@ export const ChristmasCanvas = ({
           clock * motion.gallopRate + motion.phase,
           colors.santa,
           i === REINDEER_COUNT - 1 ? flash : undefined,
-          noseGlow
+          active.noseGlow,
+          poke
         )
         const m = fx.getTransform()
         deerHits[i] = {
@@ -531,13 +719,38 @@ export const ChristmasCanvas = ({
         fx.restore()
       }
       fx.restore()
+
+      // Santa's head in screen coordinates: the sprite's local (58, 14) put through
+      // the same translate, mirror, scale and rotate as the team.
+      const localX = (58 - SLEIGH_SIZE.width / 2) * scale
+      const localY = (14 - SLEIGH_SIZE.height / 2) * scale
+      const mirroredX = flight.dir < 0 ? -localX : localX
+      const headX = x + mirroredX * Math.cos(angle) - localY * Math.sin(angle)
+      const headY = y + mirroredX * Math.sin(angle) + localY * Math.cos(angle)
+      drawSantaCall(t, headX, headY)
+    }
+
+    /** The flat sparkle bursts a clicked reindeer left behind, fading out. */
+    const drawPokes = () => {
+      if (pokeBursts.length === 0) return
+      const rgb = look().colors.sparkle
+      for (let i = pokeBursts.length - 1; i >= 0; i--) {
+        const burst = pokeBursts[i]
+        if (!burst) continue
+        const t = (clock - burst.at) / POKE_BURST_MS
+        if (t >= 1) {
+          pokeBursts.splice(i, 1)
+          continue
+        }
+        paintPokeBurst(fx, burst.x, burst.y, POKE_BURST_SIZE, t, rgb)
+      }
     }
 
     // Each flake is three crossed lines (a six-armed snowflake) that slowly turns
     const drawSnow = (now: number, dt: number, wind: number) => {
       if (!cfg.enableSnow) return
       fx.lineCap = 'round'
-      fx.strokeStyle = rgba(colors.snowfall)
+      fx.strokeStyle = rgba(look().colors.snowfall)
       for (const { spec, flakes } of snow) {
         const r = spec.radius
         fx.beginPath()
@@ -581,6 +794,7 @@ export const ChristmasCanvas = ({
     // `dt` is in frames at 60fps, so speeds match on 60/120/144Hz screens.
     const draw = (now: number, dt: number) => {
       if (!scene) return
+      if (getImmersive() && immersiveSceneDirty) paintImmersiveScene()
       const ms = dt * MS_PER_FRAME
       clock += ms
       fx.setTransform(dpr, 0, 0, dpr, 0, 0)
@@ -594,20 +808,14 @@ export const ChristmasCanvas = ({
       drawGlows(now, scene)
       drawSmoke(now, wind, scene)
       if (cfg.enableSanta && !reducedMotion) drawSanta(ms)
+      drawPokes()
       drawSnow(now, dt, wind)
     }
 
-    const leaveImmersive = () => {
-      if (document.fullscreenElement)
-        document.exitFullscreen().catch(ignoreFullscreenError)
-      setImmersive(false)
-    }
-
     const onDeerClick = (event: PointerEvent) => {
-      if (getImmersive()) {
-        leaveImmersive()
-        return
-      }
+      // A click no longer leaves immersive mode (Escape, the fullscreen exit and the
+      // exit button do), and the deer must not run: they would ask for fullscreen again.
+      if (getImmersive()) return
       if (event.target instanceof Element && event.target.closest(SKIP_CLICK))
         return
 
@@ -617,6 +825,12 @@ export const ChristmasCanvas = ({
           Math.hypot(event.clientX - hit.x, event.clientY - hit.y) <= hit.r
       )
       if (i < 0) return
+
+      // The reaction: this deer hops and leaves a sparkle burst, so a visitor can tell
+      // the reindeer are clickable before working out what clicking all four does.
+      deerPokedAt[i] = clock
+      const hit = deerHits[i]
+      if (hit) pokeBursts.push({ x: hit.x, y: hit.y, at: clock })
 
       const now = performance.now()
       const oldestClick = deerClickedAt.reduce(
@@ -639,9 +853,33 @@ export const ChristmasCanvas = ({
       }
     }
 
+    // A hand cursor over a reindeer is the quiet half of the affordance; the hop on
+    // click is the loud half. Only the bare background counts, since a deer behind page
+    // content cannot be clicked there either.
+    let pointerCursor = false
+    const onPointerMove = (event: PointerEvent) => {
+      if (event.pointerType === 'touch') return
+      const target = event.target
+      const onBackground =
+        target === document.body ||
+        target === document.documentElement ||
+        target instanceof HTMLCanvasElement
+      const overDeer =
+        !getImmersive() &&
+        onBackground &&
+        deerHits.some(
+          (hit) =>
+            hit !== null &&
+            Math.hypot(event.clientX - hit.x, event.clientY - hit.y) <= hit.r
+        )
+      if (overDeer === pointerCursor) return
+      pointerCursor = overDeer
+      document.body.style.cursor = overDeer ? 'pointer' : ''
+    }
+
     const onImmersiveKey = (event: KeyboardEvent) => {
       if (!getImmersive()) return
-      if (event.key === 'Escape') leaveImmersive()
+      if (event.key === 'Escape') exitImmersive()
       else if (event.key === 'Tab') event.preventDefault()
     }
 
@@ -650,7 +888,6 @@ export const ChristmasCanvas = ({
     }
 
     // ── Setup ─────────────────────────────────────────────────────────────────────────
-    buildSprites()
     layout()
 
     const redrawIfStatic = () => {
@@ -678,8 +915,8 @@ export const ChristmasCanvas = ({
     // Re-resolve the colors when the theme changes (data-theme/class on <html>, or the
     // OS color scheme when no manual theme is set)
     const onThemeChange = () => {
-      colors = resolveChristmasColors(colorSettings)
-      buildSprites()
+      themedColors = resolveChristmasColors(colorSettings)
+      themedLook = buildLook(themedColors)
       paintScene()
       buildSleigh()
       redrawIfStatic()
@@ -691,8 +928,22 @@ export const ChristmasCanvas = ({
     })
     const colorScheme = window.matchMedia('(prefers-color-scheme: dark)')
     colorScheme.addEventListener('change', onThemeChange)
+
+    // The immersive copy has to be painted before its fade starts. The frame loop
+    // covers that when it runs; this also covers reduced motion, which has no loop.
+    const onImmersiveClass = () => {
+      if (!document.documentElement.classList.contains('is-immersive')) return
+      if (immersiveSceneDirty) paintImmersiveScene()
+      if (reducedMotion) draw(performance.now(), 0)
+    }
+    const immersiveObserver = new MutationObserver(onImmersiveClass)
+    immersiveObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    })
     window.addEventListener('resize', onResize)
     window.addEventListener('pointerdown', onDeerClick)
+    window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('keydown', onImmersiveKey)
     document.addEventListener('fullscreenchange', onFullscreenChange)
 
@@ -718,13 +969,16 @@ export const ChristmasCanvas = ({
     return () => {
       window.removeEventListener('resize', onResize)
       window.removeEventListener('pointerdown', onDeerClick)
+      window.removeEventListener('pointermove', onPointerMove)
+      document.body.style.cursor = ''
       window.removeEventListener('keydown', onImmersiveKey)
       document.removeEventListener('fullscreenchange', onFullscreenChange)
       colorScheme.removeEventListener('change', onThemeChange)
       themeObserver.disconnect()
+      immersiveObserver.disconnect()
       cancelAnimationFrame(raf)
     }
-  }, [sanityData, config, isMobile])
+  }, [sanityData, config, isMobile, hoHoHo])
 
   return (
     <>
@@ -732,6 +986,18 @@ export const ChristmasCanvas = ({
         ref={sceneRef}
         aria-hidden
         className='pointer-events-none fixed inset-0 z-[-1] h-full w-full'
+      />
+      {/* The same scenery in the immersive palette. It is painted once, not per
+          frame: switching palettes is only a fade, so the costly scene paint stays
+          out of the animation. */}
+      <canvas
+        ref={immersiveSceneRef}
+        aria-hidden
+        className='pointer-events-none fixed inset-0 z-[-1] h-full w-full transition-opacity ease-out motion-reduce:transition-none'
+        style={{
+          opacity: immersive ? 1 : 0,
+          transitionDuration: `${PALETTE_FADE_MS}ms`,
+        }}
       />
       <canvas
         ref={effectsRef}
