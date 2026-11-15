@@ -119,7 +119,8 @@ export const ADMIN_STRINGS = {
   professorRatingTypes: 'Professor ratings',
   subjectRatingTypes: 'Subject ratings',
   subject: 'Subject',
-  label: 'Label',
+  labelEnglish: 'Label (English)',
+  labelMacedonian: 'Label (Macedonian)',
   save: 'Save',
   cancel: 'Cancel',
   rename: 'Rename',
@@ -129,7 +130,10 @@ export const ADMIN_STRINGS = {
     `Delete “${label}”? This action cannot be undone.`,
   ratingTypeIdValidation:
     'Use 2 to 40 lowercase letters, numbers or underscores.',
-  labelValidation: 'Enter a label between 2 and 60 characters.',
+  labelValidation:
+    'Enter a label of 2 to 60 characters in at least one language.',
+  ratingTypeLanguagesNote:
+    'Fill in at least one language; readers see the label in theirs.',
   ratingTypeInUse:
     'This rating type cannot be deleted because existing ratings still reference it.',
   emptyAchievementDefinitions: 'No achievements have been created.',

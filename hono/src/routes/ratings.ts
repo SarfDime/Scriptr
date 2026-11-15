@@ -6,6 +6,10 @@ import type {
   RatingType,
   RatingUpsertResponse,
 } from '../../../shared/types/ratings.types'
+import {
+  isLocalizedRatingLabel,
+  trimRatingLabel,
+} from '../../../shared/utils/rating-label.utils'
 import { requireAdminAccess } from '../lib/admin-access'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
 import {
@@ -130,20 +134,18 @@ ratings.post('/types', authMiddleware, requireAdminAccess, async (c) => {
     return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 
-  const { id, target_type, label } = await readJsonBody(c)
+  const { id, target_type, labels } = await readJsonBody(c)
 
   if (
     typeof id !== 'string' ||
     !/^[a-z0-9_]{2,40}$/.test(id) ||
     !isRatingTargetType(target_type) ||
-    typeof label !== 'string' ||
-    label.length < 2 ||
-    label.length > 60
+    !isLocalizedRatingLabel(labels)
   ) {
     return c.json(
       {
         error:
-          'id (lowercase snake_case), target_type ("professor"|"subject"), and label (2-60 chars) are required',
+          'id (lowercase snake_case), target_type ("professor"|"subject"), and labels ({ "en"?: string, "mk"?: string }, each 2-60 chars, at least one filled) are required',
       },
       400
     )
@@ -151,7 +153,7 @@ ratings.post('/types', authMiddleware, requireAdminAccess, async (c) => {
 
   const { data, error } = await supabase
     .from('rating_types')
-    .insert({ id, target_type, label })
+    .insert({ id, target_type, labels: trimRatingLabel(labels) })
     .select()
     .single()
 
@@ -167,7 +169,7 @@ ratings.post('/types', authMiddleware, requireAdminAccess, async (c) => {
   return c.json({ success: true, rating_type: data })
 })
 
-/** Update a rating type's label (admin only) */
+/** Update a rating type's labels (admin only) */
 ratings.patch('/types/:id', authMiddleware, requireAdminAccess, async (c) => {
   const user = c.get('user')
   const id = requiredParam(c, 'id')
@@ -177,15 +179,21 @@ ratings.patch('/types/:id', authMiddleware, requireAdminAccess, async (c) => {
     return c.json({ error: 'Unauthorized: Admin access required' }, 403)
   }
 
-  const { label } = await readJsonBody(c)
+  const { labels } = await readJsonBody(c)
 
-  if (typeof label !== 'string' || label.length < 2 || label.length > 60) {
-    return c.json({ error: 'label must be between 2 and 60 characters' }, 400)
+  if (!isLocalizedRatingLabel(labels)) {
+    return c.json(
+      {
+        error:
+          'labels must be an object keyed by language (at least one of "en"/"mk", each 2-60 characters)',
+      },
+      400
+    )
   }
 
   const { data, error } = await supabase
     .from('rating_types')
-    .update({ label })
+    .update({ labels: trimRatingLabel(labels) })
     .eq('id', id)
     .select()
     .single()
@@ -239,7 +247,7 @@ ratings.get('/professor/:professorId', async (c) => {
 
   const { data, error } = await supabase
     .from('professor_ratings')
-    .select('*, rating_type:rating_types(id, label), user:profiles(username)')
+    .select('*, rating_type:rating_types(id, labels), user:profiles(username)')
     .eq('professor_id', professorId)
     .order('created_at', { ascending: false })
 
@@ -269,7 +277,7 @@ ratings.get('/professor/:professorId/my-ratings', authMiddleware, async (c) => {
 
   const { data, error } = await supabase
     .from('professor_ratings')
-    .select('*, rating_type:rating_types(id, label)')
+    .select('*, rating_type:rating_types(id, labels)')
     .eq('professor_id', professorId)
     .eq('user_id', user.id)
 
@@ -298,7 +306,7 @@ ratings.post('/professor/:professorId', authMiddleware, async (c) => {
       { professor_id: professorId, user_id: user.id, rating_type_id, score },
       { onConflict: 'professor_id,user_id,rating_type_id' }
     )
-    .select('*, rating_type:rating_types(id, label)')
+    .select('*, rating_type:rating_types(id, labels)')
     .single()
 
   if (error) {
@@ -347,7 +355,7 @@ ratings.get('/subject/:subjectId', async (c) => {
 
   const { data, error } = await supabase
     .from('subject_ratings')
-    .select('*, rating_type:rating_types(id, label), user:profiles(username)')
+    .select('*, rating_type:rating_types(id, labels), user:profiles(username)')
     .eq('subject_id', subjectId)
     .order('created_at', { ascending: false })
 
@@ -377,7 +385,7 @@ ratings.get('/subject/:subjectId/my-ratings', authMiddleware, async (c) => {
 
   const { data, error } = await supabase
     .from('subject_ratings')
-    .select('*, rating_type:rating_types(id, label)')
+    .select('*, rating_type:rating_types(id, labels)')
     .eq('subject_id', subjectId)
     .eq('user_id', user.id)
 
@@ -413,7 +421,7 @@ ratings.post('/subject/:subjectId', authMiddleware, async (c) => {
       { subject_id: subjectId, user_id: user.id, rating_type_id, score },
       { onConflict: 'subject_id,user_id,rating_type_id' }
     )
-    .select('*, rating_type:rating_types(id, label)')
+    .select('*, rating_type:rating_types(id, labels)')
     .single()
 
   if (error) {

@@ -1,6 +1,7 @@
 'use client'
 
 import DocumentTextIcon from '@sanity/icons/DocumentText'
+import { formatDate } from '@shared/utils/common-utils'
 import { Box } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
 import { PortableTextContent } from '@/components/typography/PortableTextContent'
@@ -9,7 +10,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { getAcademicPath } from '@/lib/academic-routes'
 import { getColorPalette } from '@/lib/color-pallette-gen'
-import { cn, formatUpdated } from '@/lib/common-utils'
+import { cn } from '@/lib/common-utils'
 import { useLocale } from '@/providers/locale/LocaleProvider'
 import { useUIStrings } from '@/providers/locale/use-strings'
 import type { ScriptCardProps } from '@/types/components/Scripts.types'
@@ -67,10 +68,11 @@ export const ScriptCard = ({
           <Text className='ui-caption'>
             {script.subject}
             {script.professor && ` • ${script.professor}`}
-            {script.year !== undefined && ` • Year ${script.year}`}
+            {script.year !== undefined && ` • ${ui.general.year(script.year)}`}
           </Text>
           <Text className='ui-caption'>
-            {script.author} • {formatUpdated(script.updatedAt)}
+            {script.author} •{' '}
+            {formatDate(script.updatedAt.toISOString(), locale)}
           </Text>
         </Box>
       </NextLink>

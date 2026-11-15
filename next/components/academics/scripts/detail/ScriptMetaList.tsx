@@ -11,25 +11,31 @@ export type ScriptMetaListProps = {
   >
   /** `null` renders the subject as plain text. */
   subjectHref: string | null
+  /** The subject's name in the reader's language. The script payload carries a
+   *  single name — the one the row was linked with — so it is only a fallback
+   *  for a Sanity read that failed. */
+  subjectName: string | null
 }
 
 /** Subject, exam session/year and download count; absent fields are skipped. */
 export async function ScriptMetaList({
   script,
   subjectHref,
+  subjectName,
 }: ScriptMetaListProps) {
   const strings = await getServerStrings(SCRIPT_STRINGS_PACK)
+  const name = subjectName ?? script.subject?.name
 
   return (
     <dl className='ui-stack gap-3'>
-      {script.subject && (
+      {script.subject && name && (
         <ScriptDetailItem label={strings.info.subject}>
           {subjectHref ? (
             <NextLink href={subjectHref} className='hover:text-brand'>
-              {script.subject.name}
+              {name}
             </NextLink>
           ) : (
-            script.subject.name
+            name
           )}
         </ScriptDetailItem>
       )}

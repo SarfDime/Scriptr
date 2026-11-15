@@ -1,9 +1,14 @@
-import { DEFAULT_LOCALE } from '../config/localization-constants'
+import { DEFAULT_LOCALE, type LocaleId } from '../config/localization-constants'
 import type { LocalizedText } from '../types/localization.types'
 import type { NotificationKind } from '../types/notifications.types'
+import { formatNumericDate } from '../utils/date-format.utils'
 import { getStrings, mkCount } from '../utils/localized-strings'
 
-const formatDate = (value: string) => new Date(value).toLocaleDateString()
+/** The date inside a sentence is written in that sentence's language, not the
+ *  runtime's: `toLocaleDateString()` with no argument put the machine's format
+ *  into both copies. */
+const formatDate = (value: string, locale: LocaleId) =>
+  formatNumericDate(new Date(value), locale)
 
 /**
  * The word a flag sentence names its target with. The API passes the raw
@@ -59,8 +64,8 @@ export const NOTIFICATIONS_STRINGS_PACK = {
     reason: string,
     expiresAt: string | null
   ): LocalizedText => ({
-    en: `${reason} ${expiresAt ? `Restricted until ${formatDate(expiresAt)}.` : 'This restriction is permanent.'}`,
-    mk: `${reason} ${expiresAt ? `Ограничувањето трае до ${formatDate(expiresAt)}.` : 'Ограничувањето е трајно.'}`,
+    en: `${reason} ${expiresAt ? `Restricted until ${formatDate(expiresAt, 'en')}.` : 'This restriction is permanent.'}`,
+    mk: `${reason} ${expiresAt ? `Ограничувањето трае до ${formatDate(expiresAt, 'mk')}.` : 'Ограничувањето е трајно.'}`,
   }),
   row: {
     achievementTitle: (title: string): LocalizedText => ({
@@ -75,8 +80,8 @@ export const NOTIFICATIONS_STRINGS_PACK = {
       reason: string,
       expiresAt: string | null
     ): LocalizedText => ({
-      en: `Reason: ${reason}. ${expiresAt ? `Restricted until ${formatDate(expiresAt)}.` : 'This restriction is permanent.'}`,
-      mk: `Причина: ${reason}. ${expiresAt ? `Ограничувањето трае до ${formatDate(expiresAt)}.` : 'Ограничувањето е трајно.'}`,
+      en: `Reason: ${reason}. ${expiresAt ? `Restricted until ${formatDate(expiresAt, 'en')}.` : 'This restriction is permanent.'}`,
+      mk: `Причина: ${reason}. ${expiresAt ? `Ограничувањето трае до ${formatDate(expiresAt, 'mk')}.` : 'Ограничувањето е трајно.'}`,
     }),
     restrictionLiftedTitle: {
       en: 'Account restriction lifted',

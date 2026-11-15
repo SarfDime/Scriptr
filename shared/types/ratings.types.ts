@@ -1,8 +1,21 @@
 import type { RatingTargetType } from '../config/api'
+import type { LocaleId } from '../config/localization-constants'
 import type { Tables } from './database.types'
 
-/** A rating criterion. `GET /api/ratings/types` returns the full row. */
-export type RatingType = Tables<'rating_types'>
+/** A criterion's name per language — `rating_types.labels` in Postgres, which
+ *  is `jsonb` and already narrowed by the API's write validation
+ *  (`isLocalizedRatingLabel`). At least one language is filled. */
+export type RatingLabel = Partial<Record<LocaleId, string>>
+
+/** A rating criterion. `GET /api/ratings/types` returns the full row.
+ *
+ * `labels` is hand-narrowed from the generated `jsonb`: it is the column the
+ * API validates on write and the check constraint enforces, so the row read
+ * back is always this shape (the same reason `ScriptSummary` hand-writes
+ * `title`). */
+export type RatingType = Omit<Tables<'rating_types'>, 'labels'> & {
+  labels: RatingLabel
+}
 
 /** One entry of `GET /api/ratings/{professor,subject}/:id/stats`. The route
  * only returns criteria that have at least one rating. */

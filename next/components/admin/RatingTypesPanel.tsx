@@ -2,7 +2,7 @@
 
 import type { RatingTargetType } from '@shared/config/api'
 import { ADMIN_STRINGS } from '@shared/strings/admin-strings'
-import type { RatingType } from '@shared/types/ratings.types'
+import type { RatingLabel, RatingType } from '@shared/types/ratings.types'
 import { useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { SectionHeader } from '@/components/common/SectionHeader'
@@ -63,9 +63,9 @@ export const RatingTypesPanel = ({
       )
     )
 
-  const rename = (id: string, label: string) =>
+  const rename = (id: string, labels: RatingLabel) =>
     mutate(() =>
-      renameRatingType(id, label).then(({ rating_type: updated }) =>
+      renameRatingType(id, labels).then(({ rating_type: updated }) =>
         setItems((current) =>
           current.map((item) => (item.id === id ? updated : item))
         )
@@ -108,7 +108,7 @@ export const RatingTypesPanel = ({
                     key={ratingType.id}
                     ratingType={ratingType}
                     saving={saving}
-                    onRename={(label) => rename(ratingType.id, label)}
+                    onRename={(labels) => rename(ratingType.id, labels)}
                     onDelete={() => remove(ratingType.id)}
                   />
                 ))}

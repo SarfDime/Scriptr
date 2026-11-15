@@ -135,7 +135,8 @@ export const subjectPathQuery = groq`
   "studySlug": coalesce(study->slug.current, study->_id),
   "facultySlug": coalesce(study->faculty->slug.current, study->faculty->_id),
   "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id),
-  "siteSlug": study->siteSlug.current
+  "siteSlug": study->siteSlug.current,
+  ${localizedProjection('name', 'localizedName')},
 }
 `
 

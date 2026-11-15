@@ -772,9 +772,15 @@ One rating per user per type per entity — posting again updates the score.
 **Rating types** — public read, owner-only write (`is_owner()` RLS, no service
 secret involved):
 `GET /ratings/types` (optional `?target_type=`), `GET /ratings/types/:id`,
-`POST /ratings/types` (`{ id, target_type, label }`, `id` matches
-`^[a-z0-9_]{2,40}$`), `PATCH /ratings/types/:id` (`{ label }`),
+`POST /ratings/types` (`{ id, target_type, labels }`, `id` matches
+`^[a-z0-9_]{2,40}$`), `PATCH /ratings/types/:id` (`{ labels }`),
 `DELETE /ratings/types/:id` (409 if any rating still references it).
+
+`labels` is `{ "en"?: string, "mk"?: string }` — every language present 2–60
+characters, at least one filled (`isLocalizedRatingLabel`,
+`shared/utils/rating-label.utils.ts`). The name lives with the criterion so a
+Macedonian reader sees the Macedonian label; the UI resolves it with the
+reader's locale.
 
 **Professor/subject ratings** — identical shape, scoped by path:
 

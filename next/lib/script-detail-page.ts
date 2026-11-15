@@ -13,7 +13,7 @@ import { EMPTY_COMMENT_PAGE } from '@/lib/comments/empty-comment-page'
 import { nextLogs } from '@/lib/logger'
 import { sortFilesByPosition } from '@/lib/script-detail'
 import { getServerLocale } from '@/lib/server-strings'
-import { getSubjectPath } from '@/lib/subject-path'
+import { getSubjectRef } from '@/lib/subject-ref'
 import type { ScriptDetailViewModel } from '@/types/components/ScriptDetail.types'
 
 export type ScriptDetailPageData = {
@@ -116,7 +116,7 @@ export const loadScriptDetailPage = async (
     message: `Script detail auth diagnostic: script=${scriptId} incomingAuthCookie=${authCookie !== undefined} sessionExpiresAt=${sessionExpiresAt ?? 'unknown'} secondsUntilExpiry=${secondsUntilExpiry ?? 'unknown'}`,
   })
 
-  const [voteStats, commentsResult, myVote, myFavorite, session, subjectHref] =
+  const [voteStats, commentsResult, myVote, myFavorite, session, subjectRef] =
     await Promise.all([
       getScriptVoteStats(scriptId),
       getScriptComments(scriptId, cookieHeader)
@@ -133,9 +133,10 @@ export const loadScriptDetailPage = async (
         null
       ),
       readForViewer(cookieHeader, getSessionRequired, null),
-      // Resolves the subject's real slug chain from Sanity; `null` (plain
-      // text, no link) if anything is missing or Sanity is unavailable.
-      getSubjectPath(script.subject?.sanity_id ?? null),
+      // Resolves the subject's real slug chain and its localized name from
+      // Sanity; `null` (plain text, and the name the API already carries) if
+      // anything is missing or Sanity is unavailable.
+      getSubjectRef(script.subject?.sanity_id ?? null),
     ])
 
   const viewerDataFailed = myVote.failed || myFavorite.failed || session.failed
@@ -164,7 +165,11 @@ export const loadScriptDetailPage = async (
         canModerateStudy(session.value?.user, script.study_id),
       isSaved: myFavorite.value !== null,
       viewerDataFailed,
-      subjectHref,
+      /** `null` renders the subject as plain text. */
+      subjectHref: subjectRef?.href ?? null,
+      /** The subject's name in this reader's language; `null` falls back to
+       *  the single name the API carries. */
+      subjectName: subjectRef?.name ?? null,
     },
     comments: commentsResult.comments,
     commentsUnavailable: commentsResult.unavailable,

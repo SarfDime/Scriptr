@@ -1,7 +1,9 @@
 'use client'
 
 import { ADMIN_STRINGS } from '@shared/strings/admin-strings'
-import type { RatingType } from '@shared/types/ratings.types'
+import type { RatingLabel, RatingType } from '@shared/types/ratings.types'
+import { firstFilledLocalizedText } from '@shared/utils/localized-strings'
+import { trimRatingLabel } from '@shared/utils/rating-label.utils'
 import { type SubmitEvent, useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
@@ -10,16 +12,21 @@ import { InputWrapper } from '@/components/typography/InputWrapper'
 import { Text } from '@/components/typography/Text'
 import { ConfirmAction } from '@/components/ui/ConfirmAction'
 import { getFieldFeedback } from '@/hooks/auth/useTouchedFields'
-import { validateRatingTypeLabel } from '@/lib/admin-validation'
+import {
+  validateRatingTypeLabel,
+  validateRatingTypeLabels,
+} from '@/lib/admin-validation'
 
 type RatingTypeItemProps = {
   ratingType: RatingType
   saving: boolean
-  /** Resolves to whether the new label was saved. */
-  onRename: (label: string) => Promise<boolean>
+  /** Resolves to whether the new labels were saved. */
+  onRename: (labels: RatingLabel) => Promise<boolean>
   onDelete: () => void
 }
 
+/** The admin screens have no reader of their own, so the name shown is the
+ *  English one, or the Macedonian one when that is all the criterion has. */
 export const RatingTypeItem = ({
   ratingType,
   saving,
@@ -27,18 +34,23 @@ export const RatingTypeItem = ({
   onDelete,
 }: RatingTypeItemProps) => {
   const [isEditing, setIsEditing] = useState(false)
-  const [label, setLabel] = useState(ratingType.label)
-  const error = validateRatingTypeLabel(label)
+  const [labels, setLabels] = useState<RatingLabel>(ratingType.labels)
+  const labelsError = validateRatingTypeLabels(labels)
+  const name = firstFilledLocalizedText(ratingType.labels)
 
   const startEditing = () => {
-    setLabel(ratingType.label)
+    setLabels(ratingType.labels)
     setIsEditing(true)
+  }
+
+  const setLabel = (locale: 'en' | 'mk', value: string) => {
+    setLabels((current) => ({ ...current, [locale]: value }))
   }
 
   const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (error) return
-    onRename(label.trim()).then((renamed) => {
+    if (labelsError) return
+    onRename(trimRatingLabel(labels)).then((renamed) => {
       if (renamed) setIsEditing(false)
     })
   }
@@ -48,23 +60,45 @@ export const RatingTypeItem = ({
       {isEditing ? (
         <FormContainer onSubmit={handleSubmit} className='ui-stack gap-3'>
           <InputWrapper
-            label={ADMIN_STRINGS.label}
-            labelProps={{ htmlFor: `rating-type-${ratingType.id}-label` }}
+            label={ADMIN_STRINGS.labelEnglish}
+            labelProps={{ htmlFor: `rating-type-${ratingType.id}-label-en` }}
             inputProps={{
-              id: `rating-type-${ratingType.id}-label`,
+              id: `rating-type-${ratingType.id}-label-en`,
               autoComplete: 'off',
-              required: true,
               disabled: saving,
             }}
-            inputVal={label}
-            inputOnChange={(event) => setLabel(event.target.value)}
-            {...getFieldFeedback(error, true)}
+            inputVal={labels.en ?? ''}
+            inputOnChange={(event) => setLabel('en', event.target.value)}
+            {...getFieldFeedback(
+              validateRatingTypeLabel(labels.en ?? ''),
+              true
+            )}
           />
+          <InputWrapper
+            label={ADMIN_STRINGS.labelMacedonian}
+            labelProps={{ htmlFor: `rating-type-${ratingType.id}-label-mk` }}
+            inputProps={{
+              id: `rating-type-${ratingType.id}-label-mk`,
+              autoComplete: 'off',
+              disabled: saving,
+            }}
+            inputVal={labels.mk ?? ''}
+            inputOnChange={(event) => setLabel('mk', event.target.value)}
+            {...getFieldFeedback(
+              validateRatingTypeLabel(labels.mk ?? ''),
+              true
+            )}
+          />
+          {labelsError ? (
+            <Text className='ui-caption' role='alert'>
+              {labelsError}
+            </Text>
+          ) : null}
           <Box className='ui-cluster gap-2'>
             <Button
               type='submit'
               isLoading={saving}
-              disabled={saving || error !== null}
+              disabled={saving || labelsError !== null}
               className='button button-sm solid'
             >
               {ADMIN_STRINGS.save}
@@ -81,7 +115,7 @@ export const RatingTypeItem = ({
       ) : (
         <Box className='ui-cluster items-start justify-between gap-3'>
           <Box className='ui-stack min-w-0 gap-1'>
-            <Text className='ui-body-strong'>{ratingType.label}</Text>
+            <Text className='ui-body-strong'>{name}</Text>
             <Text className='ui-caption'>{ratingType.id}</Text>
           </Box>
         </Box>
@@ -98,9 +132,7 @@ export const RatingTypeItem = ({
           </Button>
           <ConfirmAction
             title={ADMIN_STRINGS.confirmDeleteRatingTypeTitle}
-            description={ADMIN_STRINGS.confirmDeleteRatingType(
-              ratingType.label
-            )}
+            description={ADMIN_STRINGS.confirmDeleteRatingType(name)}
             confirmLabel={ADMIN_STRINGS.delete}
             cancelLabel={ADMIN_STRINGS.cancel}
             onConfirm={onDelete}

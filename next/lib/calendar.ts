@@ -14,6 +14,14 @@ import {
   DEFAULT_LOCALE,
   type LocaleId,
 } from '@shared/config/localization-constants'
+import {
+  formatDayMonthShort,
+  formatMonthShortYear,
+  formatMonthYear,
+  formatWeekdayDayMonthYear,
+  formatWeekdayShort,
+  formatWeekdayShortDayMonthYear,
+} from '@shared/utils/date-format.utils'
 
 /**
  * Pure calendar arithmetic and matching — no fetching and no request APIs, so
@@ -30,25 +38,18 @@ export const MS_PER_DAY = 86_400_000
 
 const DAY_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
-/** The reader's language decides the month and weekday names, so every display
- * formatter is built per language and cached: an `Intl.DateTimeFormat` is not
- * cheap to construct, and a page formats dozens of days. */
+/** The reader's language decides the month and weekday names, so the display
+ * formatters are built per language and cached: an `Intl.DateTimeFormat` is not
+ * cheap to construct, and a page formats dozens of days. Only the two numeric
+ * ones use `Intl`; the names come from `shared/utils/date-format.utils.ts`,
+ * which does not depend on the runtime's locale data. */
 const FORMATTER_LOCALE: Record<LocaleId, string> = {
   en: 'en-GB',
   mk: 'mk-MK',
 }
 
-const WEEKDAY_TIME_ZONE = 'UTC'
-
 type CalendarFormatters = {
   dayKey: Intl.DateTimeFormat
-  dayLabel: Intl.DateTimeFormat
-  dayShort: Intl.DateTimeFormat
-  dateShort: Intl.DateTimeFormat
-  monthLabel: Intl.DateTimeFormat
-  monthShortLabel: Intl.DateTimeFormat
-  dayOfMonth: Intl.DateTimeFormat
-  weekdayShort: Intl.DateTimeFormat
   time: Intl.DateTimeFormat
 }
 
@@ -63,43 +64,6 @@ const buildFormatters = (locale: LocaleId): CalendarFormatters => {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
-    }),
-    dayLabel: new Intl.DateTimeFormat(intlLocale, {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      timeZone: WEEKDAY_TIME_ZONE,
-    }),
-    dayShort: new Intl.DateTimeFormat(intlLocale, {
-      day: 'numeric',
-      month: 'short',
-      timeZone: WEEKDAY_TIME_ZONE,
-    }),
-    dateShort: new Intl.DateTimeFormat(intlLocale, {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      timeZone: WEEKDAY_TIME_ZONE,
-    }),
-    monthLabel: new Intl.DateTimeFormat(intlLocale, {
-      month: 'long',
-      year: 'numeric',
-      timeZone: WEEKDAY_TIME_ZONE,
-    }),
-    monthShortLabel: new Intl.DateTimeFormat(intlLocale, {
-      month: 'short',
-      year: 'numeric',
-      timeZone: WEEKDAY_TIME_ZONE,
-    }),
-    dayOfMonth: new Intl.DateTimeFormat(intlLocale, {
-      day: 'numeric',
-      timeZone: WEEKDAY_TIME_ZONE,
-    }),
-    weekdayShort: new Intl.DateTimeFormat(intlLocale, {
-      weekday: 'short',
-      timeZone: WEEKDAY_TIME_ZONE,
     }),
     time: new Intl.DateTimeFormat(intlLocale, {
       hour: '2-digit',
@@ -266,35 +230,38 @@ export const buildCalendarGrid = (
   return { days, weeks, startKey, endKey }
 }
 
+/** A day key as the date it names, for the shared formatters. */
+const dayKeyDate = (dayKey: string): Date => new Date(dayKeyToUtc(dayKey))
+
+/** `1` for `2026-11-01` — the day cell's own number. */
+const dayOfMonth = (dayKey: string): string =>
+  String(dayKeyDate(dayKey).getUTCDate())
+
 export const formatCalendarDay = (dayKey: string, locale: LocaleId): string =>
-  formattersFor(locale).dayLabel.format(new Date(dayKeyToUtc(dayKey)))
+  formatWeekdayDayMonthYear(dayKeyDate(dayKey), locale, 'utc')
 
 export const formatCalendarDayShort = (
   dayKey: string,
   locale: LocaleId
-): string =>
-  formattersFor(locale).dayShort.format(new Date(dayKeyToUtc(dayKey)))
+): string => formatDayMonthShort(dayKeyDate(dayKey), locale, 'utc')
 
 export const formatCalendarDateShort = (
   dayKey: string,
   locale: LocaleId
-): string =>
-  formattersFor(locale).dateShort.format(new Date(dayKeyToUtc(dayKey)))
+): string => formatWeekdayShortDayMonthYear(dayKeyDate(dayKey), locale, 'utc')
 
 export const formatCalendarWeekday = (
   dayKey: string,
   locale: LocaleId
-): string =>
-  formattersFor(locale).weekdayShort.format(new Date(dayKeyToUtc(dayKey)))
+): string => formatWeekdayShort(dayKeyDate(dayKey), locale, 'utc')
 
 export const formatCalendarMonth = (dayKey: string, locale: LocaleId): string =>
-  formattersFor(locale).monthLabel.format(new Date(dayKeyToUtc(dayKey)))
+  formatMonthYear(dayKeyDate(dayKey), locale, 'utc')
 
 export const formatCalendarMonthShort = (
   dayKey: string,
   locale: LocaleId
-): string =>
-  formattersFor(locale).monthShortLabel.format(new Date(dayKeyToUtc(dayKey)))
+): string => formatMonthShortYear(dayKeyDate(dayKey), locale, 'utc')
 
 /**
  * Heading for the visible range. The month comes from the anchor, not from the
@@ -308,8 +275,6 @@ export const formatCalendarPeriod = (
   locale: LocaleId,
   compact = false
 ): string => {
-  const { dayOfMonth } = formattersFor(locale)
-
   if (view === 'month') return formatCalendarMonth(anchorKey, locale)
   if (grid.startKey.slice(0, 7) === grid.endKey.slice(0, 7)) {
     // `4 – 10 November 2026`, or `4 – 10 Nov 2026` where the heading shares its
@@ -317,7 +282,7 @@ export const formatCalendarPeriod = (
     const month = compact
       ? formatCalendarMonthShort(grid.startKey, locale)
       : formatCalendarMonth(grid.startKey, locale)
-    return `${dayOfMonth.format(new Date(dayKeyToUtc(grid.startKey)))} – ${dayOfMonth.format(new Date(dayKeyToUtc(grid.endKey)))} ${month}`
+    return `${dayOfMonth(grid.startKey)} – ${dayOfMonth(grid.endKey)} ${month}`
   }
   return `${formatCalendarDayShort(grid.startKey, locale)} – ${formatCalendarDayShort(grid.endKey, locale)}`
 }

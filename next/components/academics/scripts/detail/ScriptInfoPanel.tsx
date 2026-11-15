@@ -30,6 +30,7 @@ export async function ScriptInfoPanel({
     canManage,
     viewerDataFailed,
     subjectHref,
+    subjectName,
   } = detail
 
   return (
@@ -47,7 +48,11 @@ export async function ScriptInfoPanel({
         viewerDataFailed={viewerDataFailed}
       />
       <Divider />
-      <ScriptMetaList script={script} subjectHref={subjectHref} />
+      <ScriptMetaList
+        script={script}
+        subjectHref={subjectHref}
+        subjectName={subjectName}
+      />
       {canManage && (
         <ScriptManageActions
           scriptId={scriptId}

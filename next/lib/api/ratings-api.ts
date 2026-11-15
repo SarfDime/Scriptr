@@ -3,6 +3,7 @@ import { apiRoutes } from '@shared/config/api-routes'
 import { RATING_CACHE_TAGS } from '@shared/config/cache-tags'
 import type {
   MyRating,
+  RatingLabel,
   RatingStat,
   RatingTarget,
   RatingType,
@@ -18,6 +19,20 @@ import {
 /** Ratings are read in the browser, after mount, so the professor and subject
  * pages stay static. The viewer's own scores are never cached. */
 const NO_STORE = { cache: 'no-store' } as const
+
+/**
+ * Versions the cached criteria lists. It rides along as a query parameter, so
+ * bumping it changes the fetch URL and every cached body is bypassed: a
+ * criterion used to carry one English `label` and now carries `labels` per
+ * language, and an entry from before that has no name to resolve. Raised to 2
+ * with `20261115013000_rating_type_labels.sql`.
+ */
+const RATING_TYPES_PAYLOAD_VERSION = 2
+
+const ratingTypesPath = (targetType: RatingTargetType) =>
+  `${apiRoutes.ratings.types(
+    targetType
+  )}&ratingTypesVersion=${RATING_TYPES_PAYLOAD_VERSION}` as const
 
 /** The criteria and the aggregates are the same for every viewer, so a
  * server-side read is a tagged Data Cache entry. The browser always reads them
@@ -57,7 +72,7 @@ const ratingPaths = ({ targetType, targetId }: RatingTarget) =>
 /** Public. The criteria are data (`rating_types`), never hardcoded. */
 export const getRatingTypes = (targetType: RatingTargetType) =>
   apiFetchRequired<Array<RatingType>>(
-    apiRoutes.ratings.types(targetType),
+    ratingTypesPath(targetType),
     ratingRead([RATING_CACHE_TAGS.types()])
   )
 
@@ -68,14 +83,8 @@ export const getRatingTypes = (targetType: RatingTargetType) =>
 export const getAllRatingTypes = async () => {
   const options = ratingRead([RATING_CACHE_TAGS.types()])
   const [professorTypes, subjectTypes] = await Promise.all([
-    apiFetchRequired<Array<RatingType>>(
-      apiRoutes.ratings.types('professor'),
-      options
-    ),
-    apiFetchRequired<Array<RatingType>>(
-      apiRoutes.ratings.types('subject'),
-      options
-    ),
+    apiFetchRequired<Array<RatingType>>(ratingTypesPath('professor'), options),
+    apiFetchRequired<Array<RatingType>>(ratingTypesPath('subject'), options),
   ])
   return [...professorTypes, ...subjectTypes]
 }
@@ -83,7 +92,7 @@ export const getAllRatingTypes = async () => {
 export const createRatingType = (input: {
   id: string
   target_type: RatingTargetType
-  label: string
+  labels: RatingLabel
 }) =>
   apiFetchRequired<RatingTypeMutationResponse>(
     apiRoutes.ratings.types('professor'),
@@ -93,12 +102,12 @@ export const createRatingType = (input: {
     }
   )
 
-export const renameRatingType = (id: string, label: string) =>
+export const renameRatingType = (id: string, labels: RatingLabel) =>
   apiFetchRequired<RatingTypeMutationResponse>(
     apiRoutes.ratings.typesById(id),
     {
       method: 'PATCH',
-      body: { label },
+      body: { labels },
     }
   )
 

@@ -38,4 +38,7 @@ export type ScriptDetailViewModel = {
   viewerDataFailed: boolean
   /** `null` renders the subject as plain text. */
   subjectHref: string | null
+  /** The subject's localized name from Sanity; `null` when it could not be
+   *  read, and the component falls back to `script.subject.name`. */
+  subjectName: string | null
 }

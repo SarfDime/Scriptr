@@ -80,8 +80,13 @@ export const getMyProfile = (cookie?: string) =>
  * `hono/src/routes/profiles.ts`. A copy cached before that has no `slug` on the
  * profile's scripts, and `getAcademicPath` threw on `undefined.startsWith`,
  * taking the whole profile page down.
+ *
+ * Raised to 3 with the per-language script text
+ * (`20261114193000_script_text_per_language.sql`): `PROFILE_SCRIPT_FIELDS`
+ * still embeds `scripts.title`, and a body from before the `{ en, mk }` shape
+ * left every script on a profile page with a blank title.
  */
-const PROFILE_PAYLOAD_VERSION = 2
+const PROFILE_PAYLOAD_VERSION = 3
 
 /**
  * Public — no auth, no cookie forwarding needed (the response is the same

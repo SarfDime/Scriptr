@@ -1,4 +1,5 @@
 import { SCRIPT_STRINGS_PACK } from '@shared/strings/scripts-strings'
+import { formatNumericDate } from '@shared/utils/date-format.utils'
 import { Box } from '@/components/common/Box'
 import { Badge } from '@/components/ui/Badge'
 import { Divider } from '@/components/ui/Divider'
@@ -29,9 +30,7 @@ export async function ScriptInfoFooter({
       <Box className='ui-cluster items-end justify-between gap-2'>
         <dl>
           <ScriptDetailItem label={strings.info.updated}>
-            {new Date(updatedAt).toLocaleDateString(
-              locale === 'mk' ? 'mk-MK' : 'en-GB'
-            )}
+            {formatNumericDate(new Date(updatedAt), locale)}
           </ScriptDetailItem>
         </dl>
         {!isAuthor && (

@@ -2,6 +2,7 @@
 
 import Menu from '@sanity/icons/Menu'
 import type { LocaleId } from '@shared/config/localization-constants'
+import { formatWeekdayDayMonth } from '@shared/utils/date-format.utils'
 import { cn } from '@/lib/common-utils'
 import { useLocale } from '@/providers/locale/LocaleProvider'
 import { useUIStrings } from '@/providers/locale/use-strings'
@@ -13,23 +14,10 @@ import { HeaderActions } from './HeaderActions'
 import { NavLogo } from './NavLogo'
 import { NavToggle } from './NavToggle'
 
-/** Built once per language: the date is chrome, so it reads in the same
- * language as the rest of the header. */
-const HEADER_DATE_FORMAT = {
-  en: new Intl.DateTimeFormat('en', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  }),
-  mk: new Intl.DateTimeFormat('mk-MK', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  }),
-} satisfies Record<LocaleId, Intl.DateTimeFormat>
-
 const getHeaderDateLabel = (date: Date, locale: LocaleId) => {
-  const dateLabel = HEADER_DATE_FORMAT[locale].format(date)
+  // From the shared tables rather than `Intl`: a browser without Macedonian
+  // data fell back to English here, inside an otherwise Macedonian header.
+  const dateLabel = formatWeekdayDayMonth(date, locale)
   const academicYearStart = new Date(
     date.getFullYear() - (date.getMonth() < 9 ? 1 : 0),
     9,

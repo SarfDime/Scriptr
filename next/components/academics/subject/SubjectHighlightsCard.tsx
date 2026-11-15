@@ -3,7 +3,6 @@ import { UI_STRINGS_PACK } from '@shared/config/strings'
 import type { ReactNode } from 'react'
 import { Box } from '@/components/common/Box'
 import { Text } from '@/components/typography/Text'
-import { Card } from '@/components/ui/Card'
 import { DetailLink } from '@/components/ui/DetailLink'
 import { Divider } from '@/components/ui/Divider'
 import { getColorPalette } from '@/lib/color-pallette-gen'
@@ -26,7 +25,7 @@ export const SubjectHighlightsCard = async ({
   const color = getColorPalette({ type: 'seed', value: _id, variant: 'nb' })
   const colorBorder = getColorPalette({ type: 'seed', value: _id })
   return (
-    <Card className='ui-stack ui-above'>
+    <Box className='ui-stack ui-above'>
       <Text className='ui-label-modern'>
         {ui.academics.subject.curriculumDetails}
       </Text>
@@ -65,6 +64,6 @@ export const SubjectHighlightsCard = async ({
           />
         </>
       )}
-    </Card>
+    </Box>
   )
 }

@@ -3,7 +3,6 @@ import { Box } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
-import { Card } from '@/components/ui/Card'
 import { getAcademicPath } from '@/lib/academic-routes'
 import { getServerLocale, getServerStrings } from '@/lib/server-strings'
 import type { ProfessorDetail } from '@/types/academics/professor.types'
@@ -18,7 +17,7 @@ export const ProfessorAffiliationsCard = async ({
   if (!faculties?.length) return null
 
   return (
-    <Card className='ui-stack gap-4 ui-above'>
+    <Box className='ui-stack gap-4 ui-above'>
       <SectionHeader
         as='h3'
         title={ui.academics.professor.affiliatedFaculties}
@@ -50,6 +49,6 @@ export const ProfessorAffiliationsCard = async ({
           )
         })}
       </Box>
-    </Card>
+    </Box>
   )
 }

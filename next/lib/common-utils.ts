@@ -31,14 +31,6 @@ export const compactStats = (
     )
     .map(([label, value]) => ({ label, value }))
 
-/** Formats a given date into a human-readable string indicating how long ago it was updated. */
-export const formatUpdated = (date: Date) => {
-  const days = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24))
-  if (days <= 0) return 'Today'
-  if (days === 1) return 'Yesterday'
-  return `${days} days ago`
-}
-
 type SummaryTarget = Summarizable & { slug?: string | null }
 
 /**

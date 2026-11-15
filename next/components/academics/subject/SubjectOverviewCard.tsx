@@ -4,7 +4,6 @@ import { Box } from '@/components/common/Box'
 import { PortableTextContent } from '@/components/typography/PortableTextContent'
 import { Text } from '@/components/typography/Text'
 import { AdministratorList } from '@/components/ui/AdministratorList'
-import { Card } from '@/components/ui/Card'
 import { Divider } from '@/components/ui/Divider'
 import { getAcademicPath } from '@/lib/academic-routes'
 import { getColorPalette } from '@/lib/color-pallette-gen'
@@ -85,7 +84,7 @@ export const SubjectOverviewCard = async ({
   )
 
   return (
-    <Card className='ui-stack ui-above'>
+    <Box className='ui-stack ui-above'>
       <Box className='ui-cluster items-start justify-between gap-5'>
         <Box className='ui-stack gap-2'>
           <Text className='ui-label-modern'>
@@ -115,6 +114,6 @@ export const SubjectOverviewCard = async ({
           className: color,
         }}
       />
-    </Card>
+    </Box>
   )
 }

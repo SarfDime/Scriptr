@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/style/useNamingConvention: <Ignore> */
 import type { FileType } from '@shared/types/api.types'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
+import type { RatingLabel } from '@shared/types/ratings.types'
 import type { LocalizedScriptText } from '@shared/types/scripts.types'
 import type { Database as GenDatabase } from './supabase'
 
@@ -22,6 +23,10 @@ type CommentOverrides = {
 
 type FileOverrides = {
   file_type: FileType
+}
+
+type RatingTypeOverrides = {
+  labels: RatingLabel
 }
 
 export type Database = Override<
@@ -100,6 +105,25 @@ export type Database = Override<
                 Update: Override<
                   GenDatabase['public']['Tables']['script_files']['Update'],
                   Partial<FileOverrides>
+                >
+              }
+            >
+
+            // Override the rating_types table
+            rating_types: Override<
+              GenDatabase['public']['Tables']['rating_types'],
+              {
+                Row: Override<
+                  GenDatabase['public']['Tables']['rating_types']['Row'],
+                  RatingTypeOverrides
+                >
+                Insert: Override<
+                  GenDatabase['public']['Tables']['rating_types']['Insert'],
+                  RatingTypeOverrides
+                >
+                Update: Override<
+                  GenDatabase['public']['Tables']['rating_types']['Update'],
+                  Partial<RatingTypeOverrides>
                 >
               }
             >

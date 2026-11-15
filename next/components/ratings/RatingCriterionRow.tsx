@@ -7,6 +7,7 @@ import type {
   RatingTarget,
   RatingType,
 } from '@shared/types/ratings.types'
+import { resolveRatingLabel } from '@shared/utils/rating-label.utils'
 import { useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
@@ -16,6 +17,7 @@ import {
   useProtectedAction,
 } from '@/hooks/useProtectedAction'
 import { deleteRating, postRating } from '@/lib/api/ratings-api'
+import { useLocale } from '@/providers/locale/LocaleProvider'
 import { useStrings, useUIStrings } from '@/providers/locale/use-strings'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 import { RatingScoreInput } from './RatingScoreInput'
@@ -74,6 +76,7 @@ export function RatingCriterionRow({
   onScoreChange,
 }: RatingCriterionRowProps) {
   const { addToast } = useToast()
+  const { locale } = useLocale()
   const ui = useUIStrings()
   const strings = useStrings(RATING_STRINGS_PACK)
   const [removing, setRemoving] = useState(false)
@@ -82,7 +85,9 @@ export function RatingCriterionRow({
     postRating(target, ratingType.id, score)
   )
 
-  const label = ratingType.label
+  // The criterion's name is data, stored per language; every sentence around it
+  // reads it as the reader's own.
+  const label = resolveRatingLabel(ratingType.labels, locale)
   const saving = save.state.status === 'pending'
   // A 403 on save means the restriction landed after this page loaded.
   const isRestricted = restricted || save.state.status === 'restricted'

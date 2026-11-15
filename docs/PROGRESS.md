@@ -83,6 +83,12 @@ are still open:
 
 ## Correctness and quality
 
+- **Drop the old `rating_types.label` [decision, after deploy]:**
+  `20261115013000_rating_type_labels.sql` adds `labels` (`{ en, mk }`,
+  backfilled from `label`) and leaves the English-only `label` column nullable
+  so a deployment that still reads it keeps working. Nothing reads or writes it
+  any more; drop it in a follow-up migration once the build that reads `labels`
+  is live everywhere.
 - **Scrollbar layout shift (Chromium) [bug, deferred]:** locking body scroll
   removes the classic scrollbar, and the page jumps by its width when it
   returns. `scrollbar-gutter: stable` on `html` and a measured

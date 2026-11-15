@@ -56,8 +56,15 @@ import {
  * while `scriptMutationTags` only expired the id key: a copy from before the
  * script's study was wired up kept failing the site's `study_id` check and made
  * a live script 404 under its study site, with no deploy able to clear it.
+ *
+ * Raised to 5 when `title`/`description` became `{ en, mk }` maps
+ * (`20261114193000_script_text_per_language.sql`). A body cached before that
+ * still holds the bare Portable Text array, which `pickLocalizedPortableText`
+ * reads as "no language is filled": every cached script rendered an empty
+ * heading, an empty card title and a blank edit form. Same failure as above —
+ * an entry only expires by tag, and a deploy does not touch it.
  */
-const SCRIPT_COMMENT_COUNT_CACHE_VERSION = 4
+const SCRIPT_COMMENT_COUNT_CACHE_VERSION = 5
 
 /** Scripts for one subject. Public and unscoped, so the response is shared.
  *

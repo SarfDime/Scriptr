@@ -2,12 +2,15 @@
 
 import type { RatingTargetType } from '@shared/config/api'
 import { ADMIN_STRINGS } from '@shared/strings/admin-strings'
+import type { RatingLabel } from '@shared/types/ratings.types'
+import { trimRatingLabel } from '@shared/utils/rating-label.utils'
 import { type SubmitEvent, useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { FormContainer } from '@/components/typography/FormContainer'
 import { InputWrapper } from '@/components/typography/InputWrapper'
+import { Text } from '@/components/typography/Text'
 import { Field } from '@/components/ui/field/Field'
 import { Select } from '@/components/ui/select/Select'
 import {
@@ -17,10 +20,11 @@ import {
 import {
   validateRatingTypeId,
   validateRatingTypeLabel,
+  validateRatingTypeLabels,
 } from '@/lib/admin-validation'
 import type { SelectOptionType } from '@/types/components/Select.types'
 
-type RatingTypeField = 'id' | 'label'
+type RatingTypeField = 'id' | 'labels'
 
 const TARGET_OPTIONS: Array<SelectOptionType<RatingTargetType>> = [
   { id: 'professor', value: 'professor', label: ADMIN_STRINGS.professor },
@@ -29,7 +33,7 @@ const TARGET_OPTIONS: Array<SelectOptionType<RatingTargetType>> = [
 
 export type NewRatingType = {
   id: string
-  label: string
+  labels: RatingLabel
   target_type: RatingTargetType
 }
 
@@ -43,27 +47,34 @@ export const RatingTypeForm = ({
   onCreate: (ratingType: NewRatingType) => Promise<boolean>
 }) => {
   const [id, setId] = useState('')
-  const [label, setLabel] = useState('')
+  const [labels, setLabels] = useState<RatingLabel>({})
   const [targetType, setTargetType] = useState<RatingTargetType>('professor')
   const { touch, touchAll, isTouched } = useTouchedFields<RatingTypeField>()
 
-  const errors: Record<RatingTypeField, string | null> = {
-    id: validateRatingTypeId(id),
-    label: validateRatingTypeLabel(label),
+  const idError = validateRatingTypeId(id)
+  // One language may stay empty; at least one has to be written.
+  const labelsError = validateRatingTypeLabels(labels)
+  const showLabelsError = labelsError !== null && isTouched('labels')
+
+  const setLabel = (locale: 'en' | 'mk', value: string) => {
+    setLabels((current) => ({ ...current, [locale]: value }))
+    touch('labels')
   }
 
   const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
-    touchAll(['id', 'label'])
-    if (errors.id || errors.label) return
+    touchAll(['id', 'labels'])
+    if (idError || labelsError) return
 
-    onCreate({ id, label: label.trim(), target_type: targetType }).then(
-      (created) => {
-        if (!created) return
-        setId('')
-        setLabel('')
-      }
-    )
+    onCreate({
+      id,
+      labels: trimRatingLabel(labels),
+      target_type: targetType,
+    }).then((created) => {
+      if (!created) return
+      setId('')
+      setLabels({})
+    })
   }
 
   return (
@@ -78,8 +89,7 @@ export const RatingTypeForm = ({
             autoComplete: 'off',
             required: true,
             disabled: saving,
-            'aria-invalid': getFieldFeedback(errors.id, isTouched('id'))
-              .invalid,
+            'aria-invalid': getFieldFeedback(idError, isTouched('id')).invalid,
             onBlur: () => touch('id'),
           }}
           inputVal={id}
@@ -87,27 +97,49 @@ export const RatingTypeForm = ({
             setId(event.target.value)
             touch('id')
           }}
-          {...getFieldFeedback(errors.id, isTouched('id'))}
+          {...getFieldFeedback(idError, isTouched('id'))}
         />
-        <InputWrapper
-          label={ADMIN_STRINGS.label}
-          labelProps={{ htmlFor: 'rating-type-label' }}
-          inputProps={{
-            id: 'rating-type-label',
-            autoComplete: 'off',
-            required: true,
-            disabled: saving,
-            'aria-invalid': getFieldFeedback(errors.label, isTouched('label'))
-              .invalid,
-            onBlur: () => touch('label'),
-          }}
-          inputVal={label}
-          inputOnChange={(event) => {
-            setLabel(event.target.value)
-            touch('label')
-          }}
-          {...getFieldFeedback(errors.label, isTouched('label'))}
-        />
+        <Box className='ui-stack gap-3'>
+          <InputWrapper
+            label={ADMIN_STRINGS.labelEnglish}
+            labelProps={{ htmlFor: 'rating-type-label-en' }}
+            inputProps={{
+              id: 'rating-type-label-en',
+              autoComplete: 'off',
+              disabled: saving,
+            }}
+            inputVal={labels.en ?? ''}
+            inputOnChange={(event) => setLabel('en', event.target.value)}
+            {...getFieldFeedback(
+              validateRatingTypeLabel(labels.en ?? ''),
+              true
+            )}
+          />
+          <InputWrapper
+            label={ADMIN_STRINGS.labelMacedonian}
+            labelProps={{ htmlFor: 'rating-type-label-mk' }}
+            inputProps={{
+              id: 'rating-type-label-mk',
+              autoComplete: 'off',
+              disabled: saving,
+            }}
+            inputVal={labels.mk ?? ''}
+            inputOnChange={(event) => setLabel('mk', event.target.value)}
+            {...getFieldFeedback(
+              validateRatingTypeLabel(labels.mk ?? ''),
+              true
+            )}
+          />
+          {showLabelsError ? (
+            <Text className='ui-caption' role='alert'>
+              {labelsError}
+            </Text>
+          ) : (
+            <Text className='ui-caption'>
+              {ADMIN_STRINGS.ratingTypeLanguagesNote}
+            </Text>
+          )}
+        </Box>
         <Field label={ADMIN_STRINGS.targetType}>
           <Select<RatingTargetType>
             defaultOption={TARGET_OPTIONS[0]}

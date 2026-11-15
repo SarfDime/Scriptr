@@ -5,6 +5,7 @@ import type { LocaleId } from '@shared/config/localization-constants'
 import { ACHIEVEMENTS_STRINGS_PACK } from '@shared/strings/achievements-strings'
 import type { ResolvedStrings } from '@shared/types/localization.types'
 import type { ProfileAchievement } from '@shared/types/profile.types'
+import { formatDayMonthShortYear } from '@shared/utils/date-format.utils'
 import { Box } from '@/components/common/Box'
 import { Text } from '@/components/typography/Text'
 import { Popover } from '@/components/ui/Popover'
@@ -21,18 +22,10 @@ import { Button } from '../common/Button'
 import { Badge } from '../ui/Badge'
 import { Divider } from '../ui/Divider'
 
-/** A date format per language, and a fixed time zone, so server and client
- * render the same text and the month name matches the sentence around it. */
-const EARNED_DATE_LOCALE: Record<LocaleId, string> = {
-  en: 'en-GB',
-  mk: 'mk-MK',
-}
-
+/** A fixed time zone and the shared name tables, so server and client render
+ * the same text and the month name matches the sentence around it. */
 const formatEarnedDate = (earnedAt: string, locale: LocaleId) =>
-  new Date(earnedAt).toLocaleDateString(EARNED_DATE_LOCALE[locale], {
-    dateStyle: 'medium',
-    timeZone: 'UTC',
-  })
+  formatDayMonthShortYear(new Date(earnedAt), locale, 'utc')
 
 const MAX_FLAT_BADGES = 4
 
