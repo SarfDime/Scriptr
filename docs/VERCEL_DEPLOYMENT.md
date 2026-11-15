@@ -200,12 +200,13 @@ no separate alias workflow or GitHub token is required.
 Both projects use `git.deploymentEnabled` in their project-root `vercel.json`,
 and each allows exactly the branches it deploys from. The web builds from `main`
 (production) and `staging` (a Vercel Preview deployment). The API builds from
-`main-api` alone, which is `scriptr-api`'s **Production Branch**
-(`scriptr-api` → Settings → Git): an API release is a push there and never rides
-along with a web deploy, and `main`/`staging` are disabled by name so a web
-release cannot start an API build. That dashboard setting is what makes the push
-production — Vercel's REST API does not expose a production branch, so it cannot
-be set from here. Everything else is disabled by the `**` fallback, so a feature
+`main-api` alone, which is `scriptr-api`'s production branch: **Settings →
+Environments → Production → Branch Tracking** (not the Git page — Vercel moved
+it there). An API release is a push to `main-api` and never rides along with a
+web deploy, and `main`/`staging` are disabled by name so a web release cannot
+start an API build. That dashboard setting is what makes the push production —
+Vercel's REST API does not expose a production branch, so it cannot be set from
+the CLI. Everything else is disabled by the `**` fallback, so a feature
 branch builds nothing and `main-api` deploys nothing on the web project.
 
 `main-sanity` is disabled by name for the same reason, not just by the `**`
