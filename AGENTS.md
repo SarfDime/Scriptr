@@ -10,7 +10,7 @@ its own guide in `docs/`. Start with [Read First](#read-first), then open the
 * `next/` — Next.js frontend (`scriptr-next`), Server Components, shared UI.
 * `sanity/` — Sanity Studio (`scriptr-sanity`) and schema tooling.
 * `optimizer/` — file optimizer (`@scriptr/optimizer`, sharp/Ghostscript), called by the API from `/file-ops/finalize`.
-* `shared/` — types, config, strings and utils that all of the above import.
+* `shared/` — types, config, strings and utils that all of the above import, plus the few React icons more than one workspace draws (`shared/components/`, e.g. the language flags).
 
 ## Read First
 

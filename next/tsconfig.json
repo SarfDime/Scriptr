@@ -19,6 +19,7 @@
   },
   "include": [
     "../shared/**/*.ts",
+    "../shared/**/*.tsx",
     "types/env.d.ts",
     "next-env.d.ts",
     "**/*.ts",

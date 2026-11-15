@@ -71,8 +71,11 @@
   @apply text-sm text-fg-muted;
 }
 
+/* Nav section captions sit on the chrome, not the page, so they take the
+ * chrome ink: `fg-muted` is calibrated against the page and only reached 3.4:1
+ * on the light ice. */
 @utility ui-nav-caption {
-  @apply text-xs text-fg-muted uppercase tracking-[.15rem];
+  @apply text-xs text-fg-on-chrome uppercase tracking-[.15rem];
 }
 
 @utility ui-stat {

@@ -10,6 +10,6 @@
       "@shared/*": ["../shared/*"]
     }
   },
-  "include": ["../shared/**/*.ts", "**/*.ts", "**/*.tsx"],
+  "include": ["../shared/**/*.ts", "../shared/**/*.tsx", "**/*.ts", "**/*.tsx"],
   "exclude": [".sanity", "node_modules", "dist"]
 }

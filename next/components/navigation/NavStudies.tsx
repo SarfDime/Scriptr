@@ -67,7 +67,9 @@ export const NavStudies = ({ studyLogos }: { studyLogos?: NavStudyLogos }) => {
               ) : (
                 <BookIcon aria-hidden='true' className='h-6 w-6 shrink-0' />
               )}
-              <Text className='ui-large-caption truncate'>{study.name}</Text>
+              <Text className='ui-large-caption truncate text-fg-on-chrome'>
+                {study.name}
+              </Text>
             </NextLink>
             <NextLink
               href={getStudyFeedPath(study.site_slug, locale)}

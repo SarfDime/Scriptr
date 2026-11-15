@@ -394,11 +394,11 @@
 }
 
 /* Simple mode is flat: every panel drops the ice imagery (fractures, streaks,
- * grain and the lit-to-shaded ramp) and the ice box-shadow — the 1px edge ring,
- * the rim light and the coloured inset depth — keeping only the classic
- * `--ui-lit-edge` hairline and the drop shadow. The flat fill below is then the
- * whole surface. The snow cap is switched off through `--snow-cap-display` in
- * `snow-cap.module.css`. */
+ * grain and the lit-to-shaded ramp), the ice box-shadow — the 1px edge ring,
+ * the rim light and the coloured inset depth — and the `--ice-edge` border,
+ * keeping only the classic `--ui-lit-edge` hairline, the drop shadow and a
+ * neutral border. The flat fill below is then the whole surface. The snow cap is
+ * switched off through `--snow-cap-display` in `snow-cap.module.css`. */
 :root[data-simple]
 :is(
   .ui-above,
@@ -409,6 +409,9 @@
   .ui-above-reverse
 ) {
   background-image: none;
+  /* The ice edge is near-white in light mode and pale blue in dark, which reads
+   * as a glow once the fill behind it is flat; the neutral step replaces it. */
+  border-color: var(--color-background-300);
   box-shadow:
     inset 0 1px 0 var(--ui-lit-edge, rgb(255 255 255 / 0.2)),
     var(--tw-inset-shadow, 0 0 #0000),
@@ -418,9 +421,15 @@
     var(--ui-above-shadow, var(--shadow-above));
 }
 
-/* The inner layer has its own, smaller drop. */
+/* The inner layer has its own, smaller drop, and takes the same neutral border
+ * one shade lighter than the panel's. */
 :root[data-simple] .ui-above-inside {
   background-image: none;
+  border-color: color-mix(
+    in oklab,
+    var(--color-background-300) 70%,
+    transparent
+  );
   box-shadow:
     inset 0 1px 0 var(--ui-lit-edge, rgb(255 255 255 / 0.2)),
     var(--tw-inset-shadow, 0 0 #0000),

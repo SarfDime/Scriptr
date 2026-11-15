@@ -20,7 +20,7 @@ export async function ScriptAuthorCard({
     author,
     strings
   )
-  const className = 'flex items-center gap-3 rounded-lg p-3'
+  const className = 'flex items-center gap-3 rounded-lg p-3 ui-above-reverse'
   const content = (
     <>
       <Box className='relative h-12 w-12 shrink-0 overflow-hidden rounded-full'>

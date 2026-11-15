@@ -1,17 +1,6 @@
-import type {
-  SupportedLanguage,
-  SupportedLanguageId,
-} from '@shared/config/localization-constants'
-import type { ComponentType, SVGProps } from 'react'
+import { LANGUAGE_FLAGS } from '@shared/components/language-flags'
+import type { SupportedLanguage } from '@shared/config/localization-constants'
 import type { FieldProps, ObjectInputProps } from 'sanity'
-import { LangEnUsIcon, LangMkIcon } from './Icons'
-
-type FlagIcon = ComponentType<SVGProps<SVGSVGElement>>
-
-const LANGUAGE_FLAGS: Record<SupportedLanguageId, FlagIcon> = {
-  en: LangEnUsIcon,
-  mk: LangMkIcon,
-}
 
 type TranslateFieldWrapperProps = FieldProps & {
   language: SupportedLanguage

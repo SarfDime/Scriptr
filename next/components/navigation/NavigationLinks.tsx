@@ -30,7 +30,9 @@ const NavItem = async ({ stringTitle, icon, ...rest }: NavItemType) => {
           sizes={IMAGE_SIZES.LINK_LOGO}
         />
       )}
-      <Text className='ui-large-caption truncate'>{stringTitle}</Text>
+      <Text className='ui-large-caption truncate text-fg-on-chrome'>
+        {stringTitle}
+      </Text>
     </NextLink>
   )
 }

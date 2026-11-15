@@ -7,10 +7,14 @@
     "@sanity/icons": "^5.2.3"
   },
   "peerDependencies": {
+    "react": "^19.3.1",
     "@sanity/client": "^8.9.0"
   },
   "peerDependenciesMeta": {
     "@sanity/client": {
+      "optional": true
+    },
+    "react": {
       "optional": true
     }
   },
@@ -19,12 +23,19 @@
       "types": "./*.ts",
       "import": "./*.ts",
       "default": "./*.ts"
+    },
+    "./components/*": {
+      "types": "./components/*.tsx",
+      "import": "./components/*.tsx",
+      "default": "./components/*.tsx"
     }
   },
   "scripts": {
     "test": "tsx --test \"utils/**/*.test.ts\""
   },
   "devDependencies": {
+    "@types/react": "^19.3.0",
+    "react": "^19.3.1",
     "tsx": "^4.23.15"
   }
 }

@@ -83,6 +83,7 @@ monotonic and flip in dark mode).
 | `ui-body-strong` | 16px            | semibold | `fg`       | Entity and person names.     |
 | `ui-label`       | 12px            | semibold | `fg-muted` | Field labels, names.         |
 | `ui-caption`     | 12px            | normal   | `fg-muted` | Metadata, help text.         |
+| `ui-nav-caption` | 12px uppercase  | normal   | `fg-on-chrome` | Section caption in the nav chrome. |
 | `ui-stat`        | 24px            | medium   | `fg-700`   | Numeric activity/stat value. |
 
 The responsive `font-size-*` classes belong to authored rich text
@@ -159,7 +160,10 @@ The preferred component APIs are `Box`, `Card`, `Button`, `Badge`, and
 ## Layered surfaces
 
 Content on the script pages and in dialogs sits on two layers: an outer
-translucent surface and, inside it, a lighter fill where the text is shown.
+translucent surface and, inside it, the same ice a shade darker where the text
+is shown. `ui-above-inside` is the `subtle` chip recipe at panel size (see
+[the filled recipe](#the-filled-recipe)), filled with `--ice-inside` lifted
+most of the way to `--ice-base` so it stays a shade below the chip.
 
 | Layer | Classes                                                 | Component       |
 | ----- | ------------------------------------------------------- | --------------- |
@@ -242,11 +246,13 @@ or a filled button needs no extra class.
 **Simple mode** is the flat material and drops every ice effect, with no
 component changes: the panels lose their fracture, streak, grain and ramp
 imagery and the ice box-shadow (the edge ring, rim light and coloured depth
-give way to the classic `--ui-lit-edge` hairline plus the drop), the chrome
-moves from the ice tint to the opaque neutral fill, the snow cap and its frost
-are switched off by `--snow-cap-display`, and the dividers and edge grooves
-fall back to their plain lines (see [Buttons](#buttons) for the chip,
-[Dividers and grooves](#dividers-and-grooves) for the ridges).
+give way to the classic `--ui-lit-edge` hairline plus the drop), the
+`--ice-edge` border steps out for the neutral `background-300` (70% of it on
+the inner layer, since a white or pale-blue edge reads as a glow over a flat
+fill), the chrome moves from the ice tint to the opaque neutral fill, the snow
+cap and its frost are switched off by `--snow-cap-display`, and the dividers
+and edge grooves fall back to their plain lines (see [Buttons](#buttons) for
+the chip, [Dividers and grooves](#dividers-and-grooves) for the ridges).
 
 ### Chrome edges
 
@@ -544,7 +550,10 @@ when the action is not obvious from a familiar icon.
   follows both themes with the panels. Its ink is `fg-700` rather than the
   flipping `fg-muted` because ice is a light fill in light mode and a deep one in
   dark; hover mixes the fill 15% toward `--color-background-1000`, which darkens
-  it in light mode and lightens it in dark.
+  it in light mode and lightens it in dark. `ui-above-inside`
+  (`ice-surfaces.module.css`) reuses the recipe at panel size with the fill
+  mostly `--ice-base` and a little `--ice-inside`, so an inner pane is the same
+  chip a shade darker.
 
 **Disabled.** `:disabled` renders a control at `opacity: .55` with
 `filter: grayscale(1)`. A container that only borrows `.button` for its look —
@@ -636,7 +645,15 @@ The `fg-*` and `grey-*` scales are not monotonic (for example `fg-400` is
 lighter than `fg-350`, and `grey-200` is lighter than `grey-150`) and they flip
 direction in dark mode. Reordering them would shift colors across the app, so
 they are left as is. For secondary text use `text-fg-muted` rather than
-picking a step.
+picking a step. The exception is text on the chrome: `fg-muted` is measured
+against the page and drops to 3.4:1 on the light ice, and the slab's grain and
+fractures take something off even a passing ratio, so chrome text uses
+`--color-fg-on-chrome` (`fg-650` light, `fg-500` dark) — 8.1:1 on the ice in
+light mode, 10.5:1 in dark, 11.3/12.8:1 over simple mode's neutral chrome.
+`ui-nav-caption` carries it already; a nav label in another utility (the
+`ui-large-caption` item titles in `NavStudies` and `NavigationLinks`) adds
+`text-fg-on-chrome` at the call site, since `ui-large-caption` is also used on
+page content.
 
 ### Simple mode
 

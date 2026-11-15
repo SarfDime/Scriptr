@@ -5,7 +5,7 @@
  * alpha: rgb(var(--ice-base) / .97). The "-a" tokens are alphas.
  *
  *   --ice-base       fill of ice-above and its chrome variants
- *   --ice-inside     fill of ice-above-inside     (--ice-inside-a: its alpha)
+ *   --ice-inside     fill of ice-above-inside (mixed toward --ice-depth)
  *   --ice-reverse    fill of ice-above-reverse
  *   --ice-edge       border / inner edge colour   (--ice-edge-a)
  *   --ice-rim-a      alpha of the white highlight on the lit edge
@@ -25,7 +25,6 @@
     /* Ice: bright, sunlit glacier */
     --ice-base: 172 218 246;
     --ice-inside: 150 200 236;
-    --ice-inside-a: 0.7;
     --ice-reverse: 140 192 232;
     --ice-edge: 255 255 255;
     --ice-edge-a: 0.65;
@@ -48,7 +47,6 @@
   /* Ice: deep, dark glacier */
   --ice-base: 12 40 74;
   --ice-inside: 4 18 40;
-  --ice-inside-a: 0.78;
   --ice-reverse: 10 36 68;
   --ice-edge: 150 205 245;
   --ice-edge-a: 0.3;
@@ -72,7 +70,6 @@
     /* Ice: deep, dark glacier */
     --ice-base: 12 40 74;
     --ice-inside: 4 18 40;
-    --ice-inside-a: 0.78;
     --ice-reverse: 10 36 68;
     --ice-edge: 150 205 245;
     --ice-edge-a: 0.3;
