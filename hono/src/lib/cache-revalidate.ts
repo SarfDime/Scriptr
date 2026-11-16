@@ -52,6 +52,11 @@ export async function revalidateCacheTags(
     // replayable forever.
     const body = JSON.stringify({ tags })
     const timestamp = String(Date.now())
+    // The web project's deployment aliases sit behind Vercel Authentication,
+    // which answers 401 before the route runs; the bypass token is what lets a
+    // server-to-server call through without unprotecting every deployment URL.
+    // `set-cookie: false` keeps the function from planting a bypass cookie.
+    const bypass = env.VERCEL_AUTOMATION_BYPASS_SECRET
     const response = await fetch(revalidateUrl, {
       method: 'POST',
       headers: {
@@ -62,6 +67,12 @@ export async function revalidateCacheTags(
           timestamp,
           body
         ),
+        ...(bypass
+          ? {
+              'x-vercel-protection-bypass': bypass,
+              'x-vercel-set-bypass-cookie': 'false',
+            }
+          : {}),
       },
       body,
     })

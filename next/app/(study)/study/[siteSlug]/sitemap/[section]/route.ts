@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server'
 import { SITEMAP_CONTENT_TYPE, toSitemapUrlsetXml } from '@/lib/sitemap-xml'
 import { studySiteOrigin } from '@/lib/study-origin'
-import { getStudySiteOrNotFound } from '@/lib/study-site'
+import { getStudySiteOrNotFound, listStudySites } from '@/lib/study-site'
 import {
   buildStudySitemapIndex,
   buildStudySitemapSection,
   listStudySitemapSections,
-  listStudySites,
   STUDY_SITEMAP_INDEX_SECTION,
 } from '@/lib/study-sitemap'
 

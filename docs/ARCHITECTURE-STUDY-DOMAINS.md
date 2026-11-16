@@ -168,6 +168,11 @@ Attaching and detaching on handle assignment is not automated; it is these three
   renaming needs a hostname redirect as well as a path one.
 - **`robots.txt` is Vercel's**, so a per-host one needs that injection turned off first.
 - **A study's sitemap is built, not rendered** — see above.
+- **A study's content is built per site, its interaction is not.** The overview and every
+  subject are prerendered per study (`generateStaticParams` from `listStudySites()` and
+  `subjectStaticParamsQuery`) and held until a publish tag invalidates them. The feed, the
+  calendar, academic setup, a script's page and a member's profile read `searchParams` or the
+  session, so they render per request — a segment config cannot make those static.
 - **A cross-origin redirect of the router's own fetch is a CORS error.** The catalog-owned
   redirects therefore skip `?_rsc=` requests: a page request still redirects, while a client
   navigation renders on the study host and the next full load lands on the catalog. Rendered
@@ -179,8 +184,8 @@ Attaching and detaching on handle assignment is not automated; it is these three
 ## Not chosen
 
 - **A second deployment per route group.** `next build` cannot build a subset of `app/`,
-  the trees are not disjoint, and it buys nothing: the study tree is dynamic (`ƒ`), so the
-  build cost is the catalog's `generateStaticParams` and the sitemaps.
+  the trees are not disjoint, and it buys nothing: one build already prerenders both the
+  catalog and the study tree's per-site pages, beside the sitemaps.
 - **A Cloudflare Worker or Origin Rules.** Both hide the real hostname from Vercel, forcing a
   forwarded header that is attacker-controlled and would need validating per request. A
   proxied `CNAME` already gives edge protection while forwarding `Host`.

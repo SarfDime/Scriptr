@@ -82,8 +82,11 @@ From [`hono/.env.example`](../hono/.env.example); in Production:
 - `NEXT_REVALIDATE_URL` must be the web project's **Vercel alias**,
   `https://scriptr-web-team-slug.vercel.app/api/revalidate`, not the public hostname:
   Cloudflare does not pass the API's server-to-server request through to Vercel, so the
-  webhook silently never runs and mutations leave the cache stale. Vercel aliases are
-  DNS-only and accept it.
+  webhook silently never runs and mutations leave the cache stale.
+- `VERCEL_AUTOMATION_BYPASS_SECRET` is how that alias is reachable at all: Vercel
+  Authentication answers `401` on a deployment URL before the route runs. Set it to the web
+  project's Protection Bypass for Automation secret (Project Settings → Deployment
+  Protection); unset, every revalidation is a `401` and no cached read ever expires.
 - `REVALIDATE_SECRET` must match the web project and must not be the `.env.example` value
   (the startup report and `revalidateCacheTags` both flag it in production).
 - `OPTIMIZER_URL` and `OPTIMIZER_SECRET` are optional but set together; the secret must

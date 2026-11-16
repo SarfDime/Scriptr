@@ -101,6 +101,12 @@ const ENV_REQUIREMENTS: Array<EnvVarRequirement> = [
     purpose: 'POST /api/revalidate rejects the web app',
   },
   {
+    name: 'VERCEL_AUTOMATION_BYPASS_SECRET',
+    required: false,
+    purpose:
+      'revalidation is answered 401 by Vercel Authentication when the web URL is a deployment alias',
+  },
+  {
     name: 'OPTIMIZER_URL',
     required: false,
     purpose: '/file-ops/finalize uses the in-process stand-in',

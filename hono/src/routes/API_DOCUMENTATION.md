@@ -102,8 +102,9 @@ Read-only lookups for the Studio: `GET /sanity/{universities,faculties,studies,p
   file landed, because a key no longer implies a bucket.
 - Bucket setup: CORS allowing `PUT` from the site origin with `Content-Type`, and a
   lifecycle rule expiring `staging/` after a day. R2 enforces the signed length (mismatch →
-  `403`). `AllowedOrigins` takes exact strings plus one `*` — no `https://*.vercel.app`
-  wildcard — and only `PUT` is needed.
+  `403`). An `AllowedOrigins` entry holds one `*`, which spans periods —
+  `https://*.scriptr.uk` covers every study host but not the apex, so list
+  `https://scriptr.uk` beside it. Only `PUT` is needed.
 
 ## Scripts
 

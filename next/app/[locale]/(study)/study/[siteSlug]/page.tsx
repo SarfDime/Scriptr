@@ -5,7 +5,11 @@ import { getStudySiteUrl } from '@/lib/academic-routes'
 import { getTopScripts } from '@/lib/api/scripts-api'
 import { ACADEMIC_PAGE_TAGS } from '@/lib/sanity-tags'
 import { toScriptSummaryDetails } from '@/lib/script-display'
-import { getStudySite, getStudySiteOrNotFound } from '@/lib/study-site'
+import {
+  getStudySite,
+  getStudySiteOrNotFound,
+  listStudySites,
+} from '@/lib/study-site'
 import { studyDetailQuery } from '@/sanity/queries/academics/study.queries'
 import type { StudySiteRouteParams } from '@/types/academics/academics.types'
 import type { StudyDetail } from '@/types/academics/study.types'
@@ -21,10 +25,16 @@ const SIDEBAR_SCRIPT_LIMIT = 7
  * a study reads the same way as a university and a faculty; the scripts its
  * students share are the sub-page beside it (`…/scripts`).
  *
- * Prerendered on the first request and held until the publish webhook
- * invalidates it (`revalidate = false`): editorial content, no clock.
+ * Built once per study that owns a site, and held until the publish webhook
+ * invalidates it: editorial content, no clock. A study added between two deploys
+ * is not in the list, so it renders on demand instead of 404ing.
  */
+export const dynamic = 'force-static'
 export const revalidate = false
+
+export const generateStaticParams = async (): Promise<
+  Array<StudySiteRouteParams>
+> => (await listStudySites()).map((siteSlug) => ({ siteSlug }))
 
 export const generateMetadata = createAcademicMetadata<
   StudyDetail,

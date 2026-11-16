@@ -1,19 +1,49 @@
 import { SubjectDetailContent } from '@/components/academics/subject/SubjectDetailContent'
-import { fetchAcademicDetailOrNotFound } from '@/lib/academic-detail-page'
+import {
+  createAcademicStaticParams,
+  fetchAcademicDetailOrNotFound,
+} from '@/lib/academic-detail-page'
 import { createAcademicMetadata } from '@/lib/academic-metadata'
 import { getStudySiteUrl } from '@/lib/academic-routes'
 import { ACADEMIC_PAGE_TAGS } from '@/lib/sanity-tags'
 import { getStudySite, getStudySiteOrNotFound } from '@/lib/study-site'
-import { subjectDetailQuery } from '@/sanity/queries/academics/subject.queries'
-import type { SubjectSiteRouteParams } from '@/types/academics/academics.types'
+import {
+  subjectDetailQuery,
+  subjectStaticParamsQuery,
+} from '@/sanity/queries/academics/subject.queries'
+import type {
+  SubjectRouteParams,
+  SubjectSiteRouteParams,
+} from '@/types/academics/academics.types'
 import type { SubjectDetail } from '@/types/academics/subject.types'
 import type { LocalePageProps } from '@/types/localization.types'
 
 /**
  * A subject inside one study's site. Same caching contract as the study
- * overview: rendered on demand, held until the publish webhook invalidates it.
+ * overview: built once per subject that belongs to a study with a site handle,
+ * and held until the publish webhook invalidates it.
  */
+export const dynamic = 'force-static'
 export const revalidate = false
+
+/**
+ * A subject whose study has no site handle belongs to no site, so it is only
+ * reachable in the catalog — it is left out rather than prerendered under a
+ * placeholder handle.
+ */
+export const generateStaticParams = async (): Promise<
+  Array<SubjectSiteRouteParams>
+> => {
+  const subjects = await createAcademicStaticParams<SubjectRouteParams>(
+    subjectStaticParamsQuery,
+    'subject-site-static-params',
+    ACADEMIC_PAGE_TAGS.subject
+  )()
+
+  return subjects.flatMap(({ siteSlug, subjectSlug }) =>
+    siteSlug ? [{ siteSlug, subjectSlug }] : []
+  )
+}
 
 export const generateMetadata = createAcademicMetadata<
   SubjectDetail,

@@ -2,9 +2,15 @@ import { SANITY_CACHE_TAGS } from '@shared/config/cache-tags'
 import type { StudySiteQueryResult } from '@shared/types/sanity.types'
 import { notFound } from 'next/navigation'
 import { cache } from 'react'
+import { createAcademicStaticParams } from '@/lib/academic-detail-page'
+import { ACADEMIC_CATALOG_TAGS } from '@/lib/sanity-tags'
 import { getServerLocale } from '@/lib/server-strings'
 import { fetchSanityData } from '@/sanity/lib/utils'
-import { studySiteQuery } from '@/sanity/queries/academics/study.queries'
+import {
+  studySiteQuery,
+  studyStaticParamsQuery,
+} from '@/sanity/queries/academics/study.queries'
+import type { StudyRouteParams } from '@/types/academics/academics.types'
 
 /** The catalog identity behind one site handle: the slug tuple the shared
  * academic queries take, so a `/study/[siteSlug]` route can reuse them. */
@@ -28,6 +34,28 @@ export const getStudySite = cache(
       tags: [SANITY_CACHE_TAGS.study],
     })
 )
+
+/**
+ * The studies that own a site, i.e. the handles that get a hostname of their own.
+ *
+ * Read at build time to list the study tree's static params and the study
+ * sitemaps. The sitemap route handler must not leave it out: without it Next
+ * prerenders that route once with `-` as the parameter, and every study host is
+ * served the placeholder's body.
+ */
+export const listStudySites = async (): Promise<Array<string>> => {
+  const studies = await createAcademicStaticParams<StudyRouteParams>(
+    studyStaticParamsQuery,
+    'study-sites',
+    ACADEMIC_CATALOG_TAGS
+  )()
+
+  return [
+    ...new Set(
+      studies.flatMap((study) => (study.siteSlug ? [study.siteSlug] : []))
+    ),
+  ]
+}
 
 export const getStudySiteOrNotFound = async (
   siteSlug: string
