@@ -56,7 +56,7 @@ export async function revalidateCacheTags(
     // which answers 401 before the route runs; the bypass token is what lets a
     // server-to-server call through without unprotecting every deployment URL.
     // `set-cookie: false` keeps the function from planting a bypass cookie.
-    const bypass = env.VERCEL_AUTOMATION_BYPASS_SECRET
+    const bypass = env.WEB_PROTECTION_BYPASS_SECRET
     const response = await fetch(revalidateUrl, {
       method: 'POST',
       headers: {
@@ -78,8 +78,10 @@ export async function revalidateCacheTags(
     })
 
     if (!response.ok) {
+      // Says whether this process held the bypass token: a 401 with a token is
+      // the route rejecting the signature, without one it is Vercel's edge.
       reportFailure(
-        `Cache revalidation failed with status ${response.status} for ${revalidateUrl}`,
+        `Cache revalidation failed with status ${response.status} for ${revalidateUrl} (${bypass ? 'bypass token sent' : 'no bypass token'})`,
         tags
       )
     }

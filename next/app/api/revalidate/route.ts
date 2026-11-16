@@ -7,6 +7,7 @@ import { verifyRequest } from '@shared/utils/request-signature'
 import { revalidateTag } from 'next/cache'
 import { NextResponse } from 'next/server'
 import { clientIp } from '@/lib/client-ip'
+import { nextLogs } from '@/lib/logger'
 
 /**
  * Called by the Hono API after a script is created, updated, or deleted so the
@@ -66,6 +67,16 @@ export async function POST(request: Request) {
   })
 
   if (!isAuthentic) {
+    // Vercel Authentication answers 401 before this route when the caller omits
+    // the protection-bypass header, so a request that reaches this line got past
+    // the edge and failed the signature itself — a different fault, and the one
+    // a mismatched REVALIDATE_SECRET produces. Logged at error level because
+    // production drops everything quieter.
+    nextLogs({
+      logLevel: 'error',
+      message:
+        'Revalidation rejected: the signature or its timestamp did not verify.',
+    })
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

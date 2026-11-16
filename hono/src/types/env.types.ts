@@ -33,7 +33,7 @@ export type Env = {
   /** The web project's Protection Bypass for Automation secret. Needed because
    * `NEXT_REVALIDATE_URL` is a Vercel deployment alias, which Vercel
    * Authentication answers `401` on before the route runs. */
-  VERCEL_AUTOMATION_BYPASS_SECRET?: string
+  WEB_PROTECTION_BYPASS_SECRET?: string
   /** Base URL and shared secret of the file optimizer service. Both or neither:
    * with neither set, the in-process stand-in runs. */
   OPTIMIZER_URL?: string
