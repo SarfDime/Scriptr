@@ -171,7 +171,7 @@ export const CalendarAlert = ({
           <Button
             onClick={() => dismissCalendarEvents(matching)}
             aria-label={strings.alert.dismiss}
-            className='button button-sm hollow p-0.5 rounded-lg'
+            className='button button-sm subtle p-0.5 rounded-lg'
           >
             <CloseIcon className='w-5 h-5 overwrite' />
           </Button>

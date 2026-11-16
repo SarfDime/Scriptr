@@ -110,7 +110,6 @@ ratings.get('/types', async (c) => {
   return c.json<Array<RatingType>>(data)
 })
 
-/** Get a single rating type */
 ratings.get('/types/:id', async (c) => {
   const id = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)
@@ -125,7 +124,6 @@ ratings.get('/types/:id', async (c) => {
   return c.json(data)
 })
 
-/** Create a rating type (admin only) */
 ratings.post('/types', authMiddleware, requireAdminAccess, async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)
@@ -269,7 +267,6 @@ ratings.get('/professor/:professorId/stats', async (c) => {
   return c.json<Array<RatingStat>>(aggregateStats(data ?? []))
 })
 
-/** Get the current user's ratings for a professor */
 ratings.get('/professor/:professorId/my-ratings', authMiddleware, async (c) => {
   const user = c.get('user')
   const professorId = requiredParam(c, 'professorId')
@@ -377,7 +374,6 @@ ratings.get('/subject/:subjectId/stats', async (c) => {
   return c.json<Array<RatingStat>>(aggregateStats(data ?? []))
 })
 
-/** Get the current user's ratings for a subject */
 ratings.get('/subject/:subjectId/my-ratings', authMiddleware, async (c) => {
   const user = c.get('user')
   const subjectId = requiredParam(c, 'subjectId')

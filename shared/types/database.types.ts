@@ -593,6 +593,7 @@ export type Database = {
           deleted: boolean
           note_id: string
           profile_id: string
+          study_id: string
           synced_at: string
           title: string
           type: string
@@ -604,6 +605,7 @@ export type Database = {
           deleted?: boolean
           note_id: string
           profile_id: string
+          study_id: string
           synced_at?: string
           title: string
           type?: string
@@ -615,6 +617,7 @@ export type Database = {
           deleted?: boolean
           note_id?: string
           profile_id?: string
+          study_id?: string
           synced_at?: string
           title?: string
           type?: string
@@ -625,6 +628,36 @@ export type Database = {
             foreignKeyName: 'profile_calendar_notes_profile_id_fkey'
             columns: ['profile_id']
             isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'profile_calendar_notes_study_id_fkey'
+            columns: ['study_id']
+            isOneToOne: false
+            referencedRelation: 'studies'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      profile_calendar_notes_syncs: {
+        Row: {
+          auto_synced_at: string
+          profile_id: string
+        }
+        Insert: {
+          auto_synced_at?: string
+          profile_id: string
+        }
+        Update: {
+          auto_synced_at?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'profile_calendar_notes_syncs_profile_id_fkey'
+            columns: ['profile_id']
+            isOneToOne: true
             referencedRelation: 'profiles'
             referencedColumns: ['id']
           },
@@ -894,21 +927,18 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          label: string | null
           labels: Json
           target_type: string
         }
         Insert: {
           created_at?: string
           id: string
-          label?: string | null
           labels: Json
           target_type: string
         }
         Update: {
           created_at?: string
           id?: string
-          label?: string | null
           labels?: Json
           target_type?: string
         }
@@ -1343,6 +1373,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_calendar_notes_auto_sync: {
+        Args: { p_window_days: number }
+        Returns: {
+          claimed: boolean
+          last_auto_sync: string
+        }[]
+      }
       flag_study_id: {
         Args: { target_comment: string; target_script: string }
         Returns: string
@@ -1377,6 +1414,24 @@ export type Database = {
       is_moderator: { Args: { uid: string }; Returns: boolean }
       is_owner: { Args: { uid: string }; Returns: boolean }
       is_restricted: { Args: { uid: string }; Returns: boolean }
+      sync_profile_selections: {
+        Args: { p_input: Json; p_profile_id: string }
+        Returns: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          role: string
+          updated_at: string
+          username: string
+        }
+        SetofOptions: {
+          from: '*'
+          to: 'profiles'
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       toggle_vote: {
         Args: { p_script_id: string }
         Returns: {

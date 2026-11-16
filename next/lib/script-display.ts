@@ -30,6 +30,9 @@ export const toScriptDetail = (
 ): ScriptDetail => ({
   id: script.id,
   slug: script.slug,
+  /** A script page belongs to its study's site; without this the card links to
+   * the catalog path, which only redirects there. */
+  siteSlug: script.study?.site_slug ?? null,
   title: pickLocalizedPortableText(script.title, locale) ?? [],
   description:
     pickLocalizedPortableText(script.description, locale) ?? undefined,

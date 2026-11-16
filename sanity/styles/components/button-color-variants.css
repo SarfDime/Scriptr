@@ -50,12 +50,6 @@
   width: max-content;
 }
 
-.button-variant-preview.hollow {
-  color: #1a4b9a;
-  outline: 2px solid rgba(26, 75, 154, 0.8);
-  background: transparent;
-}
-
 .button-variant-preview.solid {
   color: #fff;
   background: linear-gradient(135deg, #1a4b9a, #2f6bd8);

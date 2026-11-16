@@ -124,10 +124,7 @@ const PROFILE_SCRIPT_FIELDS =
  * Left unqualified, both are valid paths and PostgREST rejects the embed
  * as ambiguous ("more than one relationship was found for 'profiles' and
  * 'scripts'") — this pins it to the direct authored-scripts FK
- * specifically. This was a pre-existing latent bug on /:id and
- * /username/:username too (they already had an unqualified
- * `scripts:scripts(...)` embed before this file's academic-selections
- * change), just not yet hit.
+ * specifically.
  */
 const PROFILE_SCRIPTS_SELECT = `scripts:scripts!author_id(${PROFILE_SCRIPT_FIELDS})`
 
@@ -293,124 +290,6 @@ async function parseProfileUpdate(
   }
 }
 
-/** Which ids to insert and which to delete to turn `current` into `next`. */
-function diffSelections(
-  current: ReadonlyArray<string>,
-  next: ReadonlyArray<string>
-) {
-  const currentIds = new Set(current)
-  const nextIds = new Set(next)
-  return {
-    toAdd: [...nextIds].filter((id) => !currentIds.has(id)),
-    toRemove: [...currentIds].filter((id) => !nextIds.has(id)),
-  }
-}
-
-async function syncFacultySelections(
-  supabase: ReturnType<typeof createSupabaseClient>,
-  profileId: string,
-  facultyIds: Array<string>
-): Promise<DatabaseError | null> {
-  const { data, error } = await supabase
-    .from('profile_faculties')
-    .select('faculty_id')
-    .eq('profile_id', profileId)
-  if (error) return error
-
-  const { toAdd, toRemove } = diffSelections(
-    data.map((row) => row.faculty_id),
-    facultyIds
-  )
-
-  if (toAdd.length > 0) {
-    const { error: insertError } = await supabase
-      .from('profile_faculties')
-      .insert(
-        toAdd.map((facultyId) => ({
-          profile_id: profileId,
-          faculty_id: facultyId,
-        }))
-      )
-    if (insertError) return insertError
-  }
-
-  if (toRemove.length > 0) {
-    const { error: deleteError } = await supabase
-      .from('profile_faculties')
-      .delete()
-      .eq('profile_id', profileId)
-      .in('faculty_id', toRemove)
-    if (deleteError) return deleteError
-  }
-
-  return null
-}
-
-async function syncStudySelections(
-  supabase: ReturnType<typeof createSupabaseClient>,
-  profileId: string,
-  studyIds: Array<string>
-): Promise<DatabaseError | null> {
-  const { data, error } = await supabase
-    .from('profile_studies')
-    .select('study_id')
-    .eq('profile_id', profileId)
-  if (error) return error
-
-  const { toAdd, toRemove } = diffSelections(
-    data.map((row) => row.study_id),
-    studyIds
-  )
-
-  if (toAdd.length > 0) {
-    const { error: insertError } = await supabase
-      .from('profile_studies')
-      .insert(
-        toAdd.map((studyId) => ({ profile_id: profileId, study_id: studyId }))
-      )
-    if (insertError) return insertError
-  }
-
-  if (toRemove.length > 0) {
-    const { error: deleteError } = await supabase
-      .from('profile_studies')
-      .delete()
-      .eq('profile_id', profileId)
-      .in('study_id', toRemove)
-    if (deleteError) return deleteError
-  }
-
-  return null
-}
-
-/**
- * Replaces the selections a PATCH body included. Rows are diffed, with
- * inserts before deletes, so a failure part-way leaves a profile with extra
- * selections rather than none. Not atomic across the two tables — that
- * would need an RPC.
- */
-async function syncSelections(
-  supabase: ReturnType<typeof createSupabaseClient>,
-  profileId: string,
-  input: ProfileUpdateInput
-): Promise<DatabaseError | null> {
-  if (input.facultyIds) {
-    const error = await syncFacultySelections(
-      supabase,
-      profileId,
-      input.facultyIds
-    )
-    if (error) return error
-  }
-
-  if (input.studyIds) {
-    const error = await syncStudySelections(supabase, profileId, input.studyIds)
-    if (error) return error
-  }
-
-  return null
-}
-
 const usernameTakenResponse = (c: Context<HonoEnv>) =>
   c.json<ProfileUpdateConflictResponse>(
     { error: 'Username already taken', field: 'username' },
@@ -420,8 +299,6 @@ const usernameTakenResponse = (c: Context<HonoEnv>) =>
 /** Postgres errors → clean HTTP codes for the profile + selection writes. */
 function profileWriteErrorResponse(c: Context<HonoEnv>, error: DatabaseError) {
   switch (error.code) {
-    case 'PGRST116':
-      return c.json({ error: 'User not found' }, 404)
     case '23503':
       return c.json(
         { error: 'A selected faculty or study does not exist' },
@@ -435,16 +312,14 @@ function profileWriteErrorResponse(c: Context<HonoEnv>, error: DatabaseError) {
 }
 
 /**
- * Shared body of PATCH /me and PATCH /:id. The profiles row goes through
- * the session client either way (its UPDATE policy is `id = auth.uid()` or
- * `is_owner()`). The selection tables' policies are `profile_id =
- * auth.uid()` with no admin override, so an admin editing someone else's
- * selections has no RLS path and needs the service-role client — the
- * caller's admin check happens before this runs.
+ * Shared body of PATCH /me and PATCH /:id. One RPC writes the profile row and
+ * both selection tables, so a bad faculty or study id rolls the username back
+ * with it.
  *
- * The profile row is written first; if the selection sync then fails the
- * profile fields are already saved, so cache tags are revalidated either
- * way before the error is returned.
+ * The session client is the boundary: the function runs as the caller, so RLS
+ * and the `(username, full_name)` column grant still apply. The selection
+ * tables have no admin RLS path, so an admin editing someone else passes the
+ * service-role client after the caller's owner check above.
  */
 async function updateProfile(
   c: Context<HonoEnv>,
@@ -468,24 +343,31 @@ async function updateProfile(
   if (!usernameLookup.ok) return databaseErrorResponse(c, usernameLookup.error)
   if (usernameLookup.taken) return usernameTakenResponse(c)
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .update({ username: input.username, full_name: input.fullName })
-    .eq('id', targetId)
-    .select()
-    .single()
+  const writeClient =
+    selectionAccess === 'admin' ? createInternalSupabaseClient(c) : supabase
+  const { data, error } = await writeClient.rpc('sync_profile_selections', {
+    p_profile_id: targetId,
+    // Only the keys the body carried: an absent one leaves the stored value.
+    p_input: {
+      username: input.username,
+      ...(input.fullName === undefined ? {} : { full_name: input.fullName }),
+      ...(input.facultyIds === undefined
+        ? {}
+        : { selected_faculty_ids: input.facultyIds }),
+      ...(input.studyIds === undefined
+        ? {}
+        : { selected_study_ids: input.studyIds }),
+    },
+  })
 
   if (error) {
     if (error.code === '23505') return usernameTakenResponse(c)
     return profileWriteErrorResponse(c, error)
   }
-
-  const selectionClient =
-    selectionAccess === 'admin' ? createInternalSupabaseClient(c) : supabase
-  const selectionError = await syncSelections(selectionClient, targetId, input)
+  // A composite RPC answers an unmatched UPDATE with a row of nulls, not null.
+  if (!data?.id) return c.json({ error: 'User not found' }, 404)
 
   await revalidateCacheTags(c.env, profileMutationTags(targetId))
-  if (selectionError) return profileWriteErrorResponse(c, selectionError)
 
   return c.json<ProfileUpdateResponse>({ success: true, profile: data })
 }
@@ -830,7 +712,6 @@ profiles.post(
   }
 )
 
-/** Get a specific user profile by username (public — same shape as /:id) */
 profiles.get('/username/:username', async (c) => {
   const username = requiredParam(c, 'username')
   const supabase = createSupabaseClient(c)
@@ -864,7 +745,6 @@ profiles.get('/username/:username', async (c) => {
   return c.json({ ...data, scripts, favorite_scripts: favoriteScripts })
 })
 
-/** Get a specific user profile by ID (public — same shape as /username/:username) */
 profiles.get('/:id', async (c) => {
   const userId = requiredParam(c, 'id')
   const supabase = createSupabaseClient(c)

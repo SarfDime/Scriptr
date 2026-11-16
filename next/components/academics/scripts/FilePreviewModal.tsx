@@ -103,7 +103,7 @@ export function FilePreviewModal({
             if (!event.defaultPrevented) setIsOpen(true)
           }}
           className={cn(
-            'button button-sm hollow px-3 py-1.5',
+            'button button-sm subtle px-3 py-1.5',
             buttonProps.className
           )}
         >

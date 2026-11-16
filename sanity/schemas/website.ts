@@ -142,9 +142,17 @@ export const Website = defineType({
       title: 'Background',
       name: 'background',
       type: 'reference',
-      to: [{ type: 'starCanvas' }, { type: 'christmasCanvas' }],
+      to: [{ type: 'christmasCanvas' }],
       description:
-        'The animated site background: a Star Canvas or a Christmas Canvas document, each adapting its own colors to the theme. Empty falls back to the static gradient.',
+        'The animated site background: a Christmas Canvas document, which adapts its own colors to the theme. Empty falls back to the static gradient.',
+    },
+    {
+      title: 'Skybox',
+      name: 'skybox',
+      type: 'reference',
+      to: [{ type: 'skybox' }],
+      description:
+        'Time of day, stars, clouds and the sky colors. Used behind the animated background; empty keeps the built-in sky.',
     },
     ...WebsiteContent,
   ],

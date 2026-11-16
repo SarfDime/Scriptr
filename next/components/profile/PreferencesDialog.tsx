@@ -58,7 +58,6 @@ const PreferencesDialog = ({ onClose }: { onClose: () => void }) => {
 
   return (
     <Dialog
-      as='section'
       isOpen
       hideTrigger
       title={strings.title}

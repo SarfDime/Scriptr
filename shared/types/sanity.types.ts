@@ -103,6 +103,979 @@ export type LocalizedRichTextLite = {
   mk?: RichTextLite
 }
 
+export type SkyboxColors = {
+  _type: 'skyboxColors'
+  nightSkyTop?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  nightSkyBottom?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  nightSun?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  nightSunGlow?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  nightMoon?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  nightCloud?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  nightCloudShade?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  dawnSkyTop?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  dawnSkyBottom?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  dawnSun?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  dawnSunGlow?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  dawnMoon?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  dawnCloud?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  dawnCloudShade?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  sunriseSkyTop?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  sunriseSkyBottom?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  sunriseSun?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  sunriseSunGlow?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  sunriseMoon?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  sunriseCloud?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  sunriseCloudShade?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  morningSkyTop?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  morningSkyBottom?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  morningSun?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  morningSunGlow?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  morningMoon?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  morningCloud?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  morningCloudShade?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  noonSkyTop?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  noonSkyBottom?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  noonSun?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  noonSunGlow?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  noonMoon?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  noonCloud?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  noonCloudShade?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  afternoonSkyTop?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  afternoonSkyBottom?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  afternoonSun?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  afternoonSunGlow?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  afternoonMoon?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  afternoonCloud?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  afternoonCloudShade?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  sunsetSkyTop?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  sunsetSkyBottom?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  sunsetSun?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  sunsetSunGlow?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  sunsetMoon?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  sunsetCloud?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  sunsetCloudShade?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  duskSkyTop?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  duskSkyBottom?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  duskSun?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  duskSunGlow?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  duskMoon?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  duskCloud?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  duskCloudShade?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+  star?:
+    | 'brand'
+    | 'brand-300'
+    | 'brand-850'
+    | 'sky'
+    | 'jade'
+    | 'lavender'
+    | 'rose-pink'
+    | 'amber'
+    | 'golden-yellow'
+    | 'yellow'
+    | 'error-red'
+    | 'background-50'
+    | 'grey-200'
+    | 'grey-300'
+    | 'grey-800'
+    | 'background-1000'
+}
+
 export type ChristmasColors = {
   _type: 'christmasColors'
   mountainFar?:
@@ -796,18 +1769,18 @@ export type Button = {
     | 'error'
 }
 
-export type StarCanvasReference = {
-  _ref: string
-  _type: 'reference'
-  _weak?: boolean
-  [internalGroqTypeReferenceTo]?: 'starCanvas'
-}
-
 export type ChristmasCanvasReference = {
   _ref: string
   _type: 'reference'
   _weak?: boolean
   [internalGroqTypeReferenceTo]?: 'christmasCanvas'
+}
+
+export type SkyboxReference = {
+  _ref: string
+  _type: 'reference'
+  _weak?: boolean
+  [internalGroqTypeReferenceTo]?: 'skybox'
 }
 
 export type Website = {
@@ -822,7 +1795,8 @@ export type Website = {
   defaultSeoTitle?: string
   defaultSeoDescription?: string
   defaultKeywords?: Array<string>
-  background?: StarCanvasReference | ChristmasCanvasReference
+  background?: ChristmasCanvasReference
+  skybox?: SkyboxReference
   navAndFooterFields?: string
   navMenu?: NavMenuReference
   pagesFields?: string
@@ -831,6 +1805,32 @@ export type Website = {
       _key: string
     } & UniversityReference
   >
+}
+
+export type Skybox = {
+  _id: string
+  _type: 'skybox'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  sunriseHour?: number
+  sunsetHour?: number
+  timeSpeed?: number
+  sunRadius?: number
+  moonRadius?: number
+  starCount?: number
+  starSize?: number
+  cloudCount?: number
+  cloudSpeed?: number
+  mobileScale?: number
+  immersiveEnabled?: boolean
+  immersiveDayMinutes?: number
+  immersiveRampSeconds?: number
+  immersiveFadeMs?: number
+  immersiveDarkening?: number
+  immersiveFlare?: boolean
+  lightColors?: SkyboxColors
+  darkColors?: SkyboxColors
 }
 
 export type ChristmasCanvas = {
@@ -843,7 +1843,6 @@ export type ChristmasCanvas = {
   treeDecorationChance?: number
   houseDecorationChance?: number
   enableSmoke?: boolean
-  enableWindowGlow?: boolean
   enableSnow?: boolean
   snowDensity?: number
   snowSpeed?: number
@@ -853,336 +1852,6 @@ export type ChristmasCanvas = {
   santaMaxGapSeconds?: number
   lightColors?: ChristmasColors
   darkColors?: ChristmasColors
-}
-
-export type StarCanvas = {
-  _id: string
-  _type: 'starCanvas'
-  _createdAt: string
-  _updatedAt: string
-  _rev: string
-  starCount?: number
-  starColors?: Array<
-    | 'brand'
-    | 'brand-300'
-    | 'brand-850'
-    | 'sky'
-    | 'jade'
-    | 'lavender'
-    | 'rose-pink'
-    | 'amber'
-    | 'golden-yellow'
-    | 'yellow'
-    | 'error-red'
-    | 'background-50'
-    | 'grey-200'
-    | 'grey-300'
-    | 'grey-800'
-    | 'background-1000'
-  >
-  starMinSize?: number
-  starMaxSize?: number
-  starDriftSpeed?: number
-  enableBackgroundHaze?: boolean
-  backgroundHazeColor?:
-    | 'brand'
-    | 'brand-300'
-    | 'brand-850'
-    | 'sky'
-    | 'jade'
-    | 'lavender'
-    | 'rose-pink'
-    | 'amber'
-    | 'golden-yellow'
-    | 'yellow'
-    | 'error-red'
-    | 'background-50'
-    | 'grey-200'
-    | 'grey-300'
-    | 'grey-800'
-    | 'background-1000'
-  backgroundHazeOpacity?: number
-  backgroundHazeRadius?: number
-  shootingStarChance?: number
-  shootingStarColor?:
-    | 'brand'
-    | 'brand-300'
-    | 'brand-850'
-    | 'sky'
-    | 'jade'
-    | 'lavender'
-    | 'rose-pink'
-    | 'amber'
-    | 'golden-yellow'
-    | 'yellow'
-    | 'error-red'
-    | 'background-50'
-    | 'grey-200'
-    | 'grey-300'
-    | 'grey-800'
-    | 'background-1000'
-  enableBlackHole?: boolean
-  blackHolePresetPosition?: 'center' | 'top-right' | 'bottom-right' | 'custom'
-  blackHoleXRatio?: number
-  blackHoleYRatio?: number
-  blackHoleRadius?: number
-  blackHoleGlowRadius?: number
-  enableBlackHoleAscension?: boolean
-  blackHoleAscensionClicks?: number
-  blackHoleAscensionIntensity?: number
-  blackHoleClickSwell?: number
-  blackHoleClickSwellMax?: number
-  blackHoleClickSettleSeconds?: number
-  blackHoleClickBlob?: number
-  blackHoleGravityRadius?: number
-  blackHoleGravityForce?: number
-  blackHoleHoverReachMultiplier?: number
-  blackHoleHoverGravityMultiplier?: number
-  blackHoleSmokeWisps?: number
-  blackHoleSmokeIntensity?: number
-  blackHoleSmokeSpeed?: number
-  blackHoleEdgeRipple?: number
-  blackHoleHoverRipple?: number
-  blackHoleCoronaWidth?: number
-  enableBlackHoleFlare?: boolean
-  blackHoleFlare?: number
-  blackHoleFlareSpin?: number
-  blackHoleRingGlow?: number
-  planetColors?: Array<
-    | 'brand'
-    | 'brand-300'
-    | 'brand-850'
-    | 'sky'
-    | 'jade'
-    | 'lavender'
-    | 'rose-pink'
-    | 'amber'
-    | 'golden-yellow'
-    | 'yellow'
-    | 'error-red'
-    | 'background-50'
-    | 'grey-200'
-    | 'grey-300'
-    | 'grey-800'
-    | 'background-1000'
-  >
-  planetMinSize?: number
-  planetMaxSize?: number
-  planetRingChance?: number
-  planetSizeRarity?: number
-  enablePlanets?: boolean
-  planetCount?: number
-  planetOrbitMinRatio?: number
-  planetOrbitMaxRatio?: number
-  planetOrbitTilt?: number
-  planetSpeed?: number
-  planetHoverChaos?: number
-  freePlanetCount?: number
-  freePlanetDriftSpeed?: number
-  enableGalaxy?: boolean
-  galaxyPosition?:
-    | 'top-left'
-    | 'top-right'
-    | 'bottom-left'
-    | 'bottom-right'
-    | 'left'
-    | 'right'
-    | 'center'
-    | 'random'
-    | 'custom'
-  galaxyXRatio?: number
-  galaxyYRatio?: number
-  galaxyMinSize?: number
-  galaxyMaxSize?: number
-  galaxyTilt?: number
-  galaxyDriftFactor?: number
-  galaxyDriftDirection?:
-    | 'up-left'
-    | 'up'
-    | 'up-right'
-    | 'left'
-    | 'right'
-    | 'down-left'
-    | 'down'
-    | 'down-right'
-  galaxyOpacity?: number
-  galaxyWidthScale?: number
-  galaxyHeightScale?: number
-  galaxyDensity?: number
-  galaxyCenterDensity?: number
-  galaxyEndDensity?: number
-  galaxyCoreColor?:
-    | 'brand'
-    | 'brand-300'
-    | 'brand-850'
-    | 'sky'
-    | 'jade'
-    | 'lavender'
-    | 'rose-pink'
-    | 'amber'
-    | 'golden-yellow'
-    | 'yellow'
-    | 'error-red'
-    | 'background-50'
-    | 'grey-200'
-    | 'grey-300'
-    | 'grey-800'
-    | 'background-1000'
-  galaxyArmColor?:
-    | 'brand'
-    | 'brand-300'
-    | 'brand-850'
-    | 'sky'
-    | 'jade'
-    | 'lavender'
-    | 'rose-pink'
-    | 'amber'
-    | 'golden-yellow'
-    | 'yellow'
-    | 'error-red'
-    | 'background-50'
-    | 'grey-200'
-    | 'grey-300'
-    | 'grey-800'
-    | 'background-1000'
-  galaxyAccentColor?:
-    | 'brand'
-    | 'brand-300'
-    | 'brand-850'
-    | 'sky'
-    | 'jade'
-    | 'lavender'
-    | 'rose-pink'
-    | 'amber'
-    | 'golden-yellow'
-    | 'yellow'
-    | 'error-red'
-    | 'background-50'
-    | 'grey-200'
-    | 'grey-300'
-    | 'grey-800'
-    | 'background-1000'
-  enableAurora?: boolean
-  auroraColors?: Array<
-    | 'brand'
-    | 'brand-300'
-    | 'brand-850'
-    | 'sky'
-    | 'jade'
-    | 'lavender'
-    | 'rose-pink'
-    | 'amber'
-    | 'golden-yellow'
-    | 'yellow'
-    | 'error-red'
-    | 'background-50'
-    | 'grey-200'
-    | 'grey-300'
-    | 'grey-800'
-    | 'background-1000'
-  >
-  auroraPosition?: 'top' | 'middle' | 'bottom' | 'custom'
-  auroraYRatio?: number
-  auroraHeight?: number
-  auroraIntensity?: number
-  auroraCurtains?: number
-  auroraSpeed?: number
-  auroraWaviness?: number
-  blackHoleCoreColor?:
-    | 'brand'
-    | 'brand-300'
-    | 'brand-850'
-    | 'sky'
-    | 'jade'
-    | 'lavender'
-    | 'rose-pink'
-    | 'amber'
-    | 'golden-yellow'
-    | 'yellow'
-    | 'error-red'
-    | 'background-50'
-    | 'grey-200'
-    | 'grey-300'
-    | 'grey-800'
-    | 'background-1000'
-  blackHolePhotonRingColor?:
-    | 'brand'
-    | 'brand-300'
-    | 'brand-850'
-    | 'sky'
-    | 'jade'
-    | 'lavender'
-    | 'rose-pink'
-    | 'amber'
-    | 'golden-yellow'
-    | 'yellow'
-    | 'error-red'
-    | 'background-50'
-    | 'grey-200'
-    | 'grey-300'
-    | 'grey-800'
-    | 'background-1000'
-  blackHoleBaseGlowColor?:
-    | 'brand'
-    | 'brand-300'
-    | 'brand-850'
-    | 'sky'
-    | 'jade'
-    | 'lavender'
-    | 'rose-pink'
-    | 'amber'
-    | 'golden-yellow'
-    | 'yellow'
-    | 'error-red'
-    | 'background-50'
-    | 'grey-200'
-    | 'grey-300'
-    | 'grey-800'
-    | 'background-1000'
-  blackHoleCoronaColor?:
-    | 'brand'
-    | 'brand-300'
-    | 'brand-850'
-    | 'sky'
-    | 'jade'
-    | 'lavender'
-    | 'rose-pink'
-    | 'amber'
-    | 'golden-yellow'
-    | 'yellow'
-    | 'error-red'
-    | 'background-50'
-    | 'grey-200'
-    | 'grey-300'
-    | 'grey-800'
-    | 'background-1000'
-  mobileScale?: number
-  mobileEnableBlackHole?: boolean
-  mobileBlackHolePresetPosition?:
-    | 'desktop'
-    | 'center'
-    | 'top-right'
-    | 'bottom-right'
-    | 'custom'
-  mobileBlackHoleXRatio?: number
-  mobileBlackHoleYRatio?: number
-  mobileEnableGalaxy?: boolean
-  mobileGalaxyPosition?:
-    | 'desktop'
-    | 'top-left'
-    | 'top-right'
-    | 'bottom-left'
-    | 'bottom-right'
-    | 'left'
-    | 'right'
-    | 'center'
-    | 'random'
-    | 'custom'
-  mobileGalaxyXRatio?: number
-  mobileGalaxyYRatio?: number
-  mobileEnableAurora?: boolean
-  mobileAuroraPosition?: 'desktop' | 'top' | 'middle' | 'bottom' | 'custom'
-  mobileAuroraYRatio?: number
 }
 
 export type Person = {
@@ -1402,6 +2071,7 @@ export type AllSanitySchemaTypes =
   | LocalizedString
   | StudyTip
   | LocalizedRichTextLite
+  | SkyboxColors
   | ChristmasColors
   | NavMenuReference
   | StudySiteSettings
@@ -1425,11 +2095,11 @@ export type AllSanitySchemaTypes =
   | RichTextLite
   | RichText
   | Button
-  | StarCanvasReference
   | ChristmasCanvasReference
+  | SkyboxReference
   | Website
+  | Skybox
   | ChristmasCanvas
-  | StarCanvas
   | Person
   | SubMenuItem
   | NavItem
@@ -3249,362 +3919,55 @@ export type WebsiteSeoQueryResult =
 // Source: ../next/sanity/queries/website.queries.ts
 // Variable: websiteBackgroundQuery
 // Query: *[_id == $WEBSITE][0].background->{...}
-export type WebsiteBackgroundQueryResult =
-  | {
-      _id: string
-      _type: 'christmasCanvas'
-      _createdAt: string
-      _updatedAt: string
-      _rev: string
-      seed?: number
-      treeDecorationChance?: number
-      houseDecorationChance?: number
-      enableSmoke?: boolean
-      enableWindowGlow?: boolean
-      enableSnow?: boolean
-      snowDensity?: number
-      snowSpeed?: number
-      enableSanta?: boolean
-      santaFirstDelaySeconds?: number
-      santaMinGapSeconds?: number
-      santaMaxGapSeconds?: number
-      lightColors?: ChristmasColors
-      darkColors?: ChristmasColors
-    }
-  | {
-      _id: string
-      _type: 'starCanvas'
-      _createdAt: string
-      _updatedAt: string
-      _rev: string
-      starCount?: number
-      starColors?: Array<
-        | 'amber'
-        | 'background-1000'
-        | 'background-50'
-        | 'brand-300'
-        | 'brand-850'
-        | 'brand'
-        | 'error-red'
-        | 'golden-yellow'
-        | 'grey-200'
-        | 'grey-300'
-        | 'grey-800'
-        | 'jade'
-        | 'lavender'
-        | 'rose-pink'
-        | 'sky'
-        | 'yellow'
-      >
-      starMinSize?: number
-      starMaxSize?: number
-      starDriftSpeed?: number
-      enableBackgroundHaze?: boolean
-      backgroundHazeColor?:
-        | 'amber'
-        | 'background-1000'
-        | 'background-50'
-        | 'brand-300'
-        | 'brand-850'
-        | 'brand'
-        | 'error-red'
-        | 'golden-yellow'
-        | 'grey-200'
-        | 'grey-300'
-        | 'grey-800'
-        | 'jade'
-        | 'lavender'
-        | 'rose-pink'
-        | 'sky'
-        | 'yellow'
-      backgroundHazeOpacity?: number
-      backgroundHazeRadius?: number
-      shootingStarChance?: number
-      shootingStarColor?:
-        | 'amber'
-        | 'background-1000'
-        | 'background-50'
-        | 'brand-300'
-        | 'brand-850'
-        | 'brand'
-        | 'error-red'
-        | 'golden-yellow'
-        | 'grey-200'
-        | 'grey-300'
-        | 'grey-800'
-        | 'jade'
-        | 'lavender'
-        | 'rose-pink'
-        | 'sky'
-        | 'yellow'
-      enableBlackHole?: boolean
-      blackHolePresetPosition?:
-        | 'bottom-right'
-        | 'center'
-        | 'custom'
-        | 'top-right'
-      blackHoleXRatio?: number
-      blackHoleYRatio?: number
-      blackHoleRadius?: number
-      blackHoleGlowRadius?: number
-      enableBlackHoleAscension?: boolean
-      blackHoleAscensionClicks?: number
-      blackHoleAscensionIntensity?: number
-      blackHoleClickSwell?: number
-      blackHoleClickSwellMax?: number
-      blackHoleClickSettleSeconds?: number
-      blackHoleClickBlob?: number
-      blackHoleGravityRadius?: number
-      blackHoleGravityForce?: number
-      blackHoleHoverReachMultiplier?: number
-      blackHoleHoverGravityMultiplier?: number
-      blackHoleSmokeWisps?: number
-      blackHoleSmokeIntensity?: number
-      blackHoleSmokeSpeed?: number
-      blackHoleEdgeRipple?: number
-      blackHoleHoverRipple?: number
-      blackHoleCoronaWidth?: number
-      enableBlackHoleFlare?: boolean
-      blackHoleFlare?: number
-      blackHoleFlareSpin?: number
-      blackHoleRingGlow?: number
-      planetColors?: Array<
-        | 'amber'
-        | 'background-1000'
-        | 'background-50'
-        | 'brand-300'
-        | 'brand-850'
-        | 'brand'
-        | 'error-red'
-        | 'golden-yellow'
-        | 'grey-200'
-        | 'grey-300'
-        | 'grey-800'
-        | 'jade'
-        | 'lavender'
-        | 'rose-pink'
-        | 'sky'
-        | 'yellow'
-      >
-      planetMinSize?: number
-      planetMaxSize?: number
-      planetRingChance?: number
-      planetSizeRarity?: number
-      enablePlanets?: boolean
-      planetCount?: number
-      planetOrbitMinRatio?: number
-      planetOrbitMaxRatio?: number
-      planetOrbitTilt?: number
-      planetSpeed?: number
-      planetHoverChaos?: number
-      freePlanetCount?: number
-      freePlanetDriftSpeed?: number
-      enableGalaxy?: boolean
-      galaxyPosition?:
-        | 'bottom-left'
-        | 'bottom-right'
-        | 'center'
-        | 'custom'
-        | 'left'
-        | 'random'
-        | 'right'
-        | 'top-left'
-        | 'top-right'
-      galaxyXRatio?: number
-      galaxyYRatio?: number
-      galaxyMinSize?: number
-      galaxyMaxSize?: number
-      galaxyTilt?: number
-      galaxyDriftFactor?: number
-      galaxyDriftDirection?:
-        | 'down-left'
-        | 'down-right'
-        | 'down'
-        | 'left'
-        | 'right'
-        | 'up-left'
-        | 'up-right'
-        | 'up'
-      galaxyOpacity?: number
-      galaxyWidthScale?: number
-      galaxyHeightScale?: number
-      galaxyDensity?: number
-      galaxyCenterDensity?: number
-      galaxyEndDensity?: number
-      galaxyCoreColor?:
-        | 'amber'
-        | 'background-1000'
-        | 'background-50'
-        | 'brand-300'
-        | 'brand-850'
-        | 'brand'
-        | 'error-red'
-        | 'golden-yellow'
-        | 'grey-200'
-        | 'grey-300'
-        | 'grey-800'
-        | 'jade'
-        | 'lavender'
-        | 'rose-pink'
-        | 'sky'
-        | 'yellow'
-      galaxyArmColor?:
-        | 'amber'
-        | 'background-1000'
-        | 'background-50'
-        | 'brand-300'
-        | 'brand-850'
-        | 'brand'
-        | 'error-red'
-        | 'golden-yellow'
-        | 'grey-200'
-        | 'grey-300'
-        | 'grey-800'
-        | 'jade'
-        | 'lavender'
-        | 'rose-pink'
-        | 'sky'
-        | 'yellow'
-      galaxyAccentColor?:
-        | 'amber'
-        | 'background-1000'
-        | 'background-50'
-        | 'brand-300'
-        | 'brand-850'
-        | 'brand'
-        | 'error-red'
-        | 'golden-yellow'
-        | 'grey-200'
-        | 'grey-300'
-        | 'grey-800'
-        | 'jade'
-        | 'lavender'
-        | 'rose-pink'
-        | 'sky'
-        | 'yellow'
-      enableAurora?: boolean
-      auroraColors?: Array<
-        | 'amber'
-        | 'background-1000'
-        | 'background-50'
-        | 'brand-300'
-        | 'brand-850'
-        | 'brand'
-        | 'error-red'
-        | 'golden-yellow'
-        | 'grey-200'
-        | 'grey-300'
-        | 'grey-800'
-        | 'jade'
-        | 'lavender'
-        | 'rose-pink'
-        | 'sky'
-        | 'yellow'
-      >
-      auroraPosition?: 'bottom' | 'custom' | 'middle' | 'top'
-      auroraYRatio?: number
-      auroraHeight?: number
-      auroraIntensity?: number
-      auroraCurtains?: number
-      auroraSpeed?: number
-      auroraWaviness?: number
-      blackHoleCoreColor?:
-        | 'amber'
-        | 'background-1000'
-        | 'background-50'
-        | 'brand-300'
-        | 'brand-850'
-        | 'brand'
-        | 'error-red'
-        | 'golden-yellow'
-        | 'grey-200'
-        | 'grey-300'
-        | 'grey-800'
-        | 'jade'
-        | 'lavender'
-        | 'rose-pink'
-        | 'sky'
-        | 'yellow'
-      blackHolePhotonRingColor?:
-        | 'amber'
-        | 'background-1000'
-        | 'background-50'
-        | 'brand-300'
-        | 'brand-850'
-        | 'brand'
-        | 'error-red'
-        | 'golden-yellow'
-        | 'grey-200'
-        | 'grey-300'
-        | 'grey-800'
-        | 'jade'
-        | 'lavender'
-        | 'rose-pink'
-        | 'sky'
-        | 'yellow'
-      blackHoleBaseGlowColor?:
-        | 'amber'
-        | 'background-1000'
-        | 'background-50'
-        | 'brand-300'
-        | 'brand-850'
-        | 'brand'
-        | 'error-red'
-        | 'golden-yellow'
-        | 'grey-200'
-        | 'grey-300'
-        | 'grey-800'
-        | 'jade'
-        | 'lavender'
-        | 'rose-pink'
-        | 'sky'
-        | 'yellow'
-      blackHoleCoronaColor?:
-        | 'amber'
-        | 'background-1000'
-        | 'background-50'
-        | 'brand-300'
-        | 'brand-850'
-        | 'brand'
-        | 'error-red'
-        | 'golden-yellow'
-        | 'grey-200'
-        | 'grey-300'
-        | 'grey-800'
-        | 'jade'
-        | 'lavender'
-        | 'rose-pink'
-        | 'sky'
-        | 'yellow'
-      mobileScale?: number
-      mobileEnableBlackHole?: boolean
-      mobileBlackHolePresetPosition?:
-        | 'bottom-right'
-        | 'center'
-        | 'custom'
-        | 'desktop'
-        | 'top-right'
-      mobileBlackHoleXRatio?: number
-      mobileBlackHoleYRatio?: number
-      mobileEnableGalaxy?: boolean
-      mobileGalaxyPosition?:
-        | 'bottom-left'
-        | 'bottom-right'
-        | 'center'
-        | 'custom'
-        | 'desktop'
-        | 'left'
-        | 'random'
-        | 'right'
-        | 'top-left'
-        | 'top-right'
-      mobileGalaxyXRatio?: number
-      mobileGalaxyYRatio?: number
-      mobileEnableAurora?: boolean
-      mobileAuroraPosition?: 'bottom' | 'custom' | 'desktop' | 'middle' | 'top'
-      mobileAuroraYRatio?: number
-    }
-  | null
+export type WebsiteBackgroundQueryResult = {
+  _id: string
+  _type: 'christmasCanvas'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  seed?: number
+  treeDecorationChance?: number
+  houseDecorationChance?: number
+  enableSmoke?: boolean
+  enableSnow?: boolean
+  snowDensity?: number
+  snowSpeed?: number
+  enableSanta?: boolean
+  santaFirstDelaySeconds?: number
+  santaMinGapSeconds?: number
+  santaMaxGapSeconds?: number
+  lightColors?: ChristmasColors
+  darkColors?: ChristmasColors
+} | null
+
+// Source: ../next/sanity/queries/website.queries.ts
+// Variable: websiteSkyboxQuery
+// Query: *[_id == $WEBSITE][0].skybox->{...}
+export type WebsiteSkyboxQueryResult = {
+  _id: string
+  _type: 'skybox'
+  _createdAt: string
+  _updatedAt: string
+  _rev: string
+  sunriseHour?: number
+  sunsetHour?: number
+  timeSpeed?: number
+  sunRadius?: number
+  moonRadius?: number
+  starCount?: number
+  starSize?: number
+  cloudCount?: number
+  cloudSpeed?: number
+  mobileScale?: number
+  immersiveEnabled?: boolean
+  immersiveDayMinutes?: number
+  immersiveRampSeconds?: number
+  immersiveFadeMs?: number
+  immersiveDarkening?: number
+  immersiveFlare?: boolean
+  lightColors?: SkyboxColors
+  darkColors?: SkyboxColors
+} | null
 
 // Query TypeMap
 declare global {
@@ -3643,6 +4006,7 @@ declare global {
     '\n*[_type == "studyTip" && length(coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk))) > 0 && length(coalesce(select($locale == "en" && length(localizedContent.en) > 0 => localizedContent.en, $locale == "mk" && length(localizedContent.mk) > 0 => localizedContent.mk), select(length(localizedContent.en) > 0 => localizedContent.en, length(localizedContent.mk) > 0 => localizedContent.mk))) > 0] | order(_createdAt asc, _id asc) {\n  _id,\n  "title": coalesce(select($locale == "en" && length(localizedTitle.en) > 0 => localizedTitle.en, $locale == "mk" && length(localizedTitle.mk) > 0 => localizedTitle.mk), select(length(localizedTitle.en) > 0 => localizedTitle.en, length(localizedTitle.mk) > 0 => localizedTitle.mk)),\n  "content": coalesce(select($locale == "en" && length(localizedContent.en) > 0 => localizedContent.en, $locale == "mk" && length(localizedContent.mk) > 0 => localizedContent.mk), select(length(localizedContent.en) > 0 => localizedContent.en, length(localizedContent.mk) > 0 => localizedContent.mk))\n}\n': StudyTipsQueryResult
     '\n*[_id == $WEBSITE][0]{\n  "siteName": coalesce(siteName, websiteTitle, "Scriptr"),\n  "siteUrl": coalesce(siteUrl, ""),\n  "defaultSeoTitle": coalesce(defaultSeoTitle, websiteTitle, "Scriptr"),\n  "defaultSeoDescription": coalesce(defaultSeoDescription, ""),\n  "defaultKeywords": defaultKeywords[]\n}\n': WebsiteSeoQueryResult
     '\n*[_id == $WEBSITE][0].background->{...}\n': WebsiteBackgroundQueryResult
+    '\n*[_id == $WEBSITE][0].skybox->{...}\n': WebsiteSkyboxQueryResult
   }
 }
 // Lets @sanity/client releases that predate the global registry read it too

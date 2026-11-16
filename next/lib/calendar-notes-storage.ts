@@ -21,6 +21,8 @@ const LOCAL_SCOPE = 'local'
 
 const notesKey = (scope: string) => `${PREFIX}:${scope}`
 const syncKey = (scope: string) => `${PREFIX}-sync:${scope}`
+const autoSyncKey = (scope: string) => `${PREFIX}-auto-sync:${scope}`
+const digestKey = (scope: string) => `${PREFIX}-digest:${scope}`
 const fetchedKey = (userId: string) => `${PREFIX}-fetched:${userId}`
 
 const EMPTY: Array<CalendarNote> = []
@@ -126,6 +128,51 @@ export const writeCalendarNotesSyncMarker = (
 }
 
 /**
+ * The earliest instant this browser may try an automatic push, as the API last
+ * answered. The week itself is the profile's, in the database; this only keeps
+ * a browser from asking while it already knows the answer.
+ */
+export const readCalendarNotesAutoSyncAt = (
+  userId: string | null | undefined
+): string | null => {
+  const raw = readRaw(autoSyncKey(scopeOf(userId)))
+  return raw && Number.isFinite(Date.parse(raw)) ? raw : null
+}
+
+export const writeCalendarNotesAutoSyncAt = (
+  userId: string | null | undefined,
+  nextAutoSyncAt: string
+) => {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(autoSyncKey(scopeOf(userId)), nextAutoSyncAt)
+  } catch {
+    // Without the marker the browser asks once more; the API still knows.
+  }
+}
+
+/**
+ * The digest of the copy the profile held the last time this browser read it.
+ * When the local copy still hashes to it, an automatic push has nothing to send
+ * and is not attempted at all.
+ */
+export const readCalendarNotesDigest = (
+  userId: string | null | undefined
+): string | null => readRaw(digestKey(scopeOf(userId)))
+
+export const writeCalendarNotesDigest = (
+  userId: string | null | undefined,
+  digest: string
+) => {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(digestKey(scopeOf(userId)), digest)
+  } catch {
+    // Without it the next load compares nothing and asks the API instead.
+  }
+}
+
+/**
  * Whether this profile's notes were fetched in this browser already. The fetch
  * happens once per login per browser, not on every page load.
  */
@@ -148,6 +195,45 @@ export const clearCalendarNotesFetched = (userId: string) => {
   } catch {
     // Nothing to clear when storage is unavailable.
   }
+}
+
+/**
+ * Notes written before notes were study-scoped carry no `studyId`. The first
+ * calendar opened claims them for its study: their profile and day are right,
+ * and there is no other study to choose between. The claim bumps `updatedAt`,
+ * so the next sync writes the chosen study over the migration's guess.
+ */
+export const adoptUnassignedCalendarNotes = (
+  userId: string | null | undefined,
+  studyId: string
+) => {
+  if (typeof window === 'undefined') return
+
+  const key = notesKey(scopeOf(userId))
+  const raw = readRaw(key)
+  if (!raw) return
+
+  const parsed = parseJson(raw)
+  if (!Array.isArray(parsed)) return
+
+  let claimed = false
+  const patched = parsed.map((item) => {
+    if (!item || typeof item !== 'object') return item
+    const note = item as Record<string, unknown>
+    if (typeof note.studyId === 'string' && note.studyId.length > 0) return item
+    claimed = true
+    return { ...note, studyId, updatedAt: new Date().toISOString() }
+  })
+  if (!claimed) return
+
+  try {
+    window.localStorage.setItem(key, JSON.stringify(patched))
+  } catch {
+    // Without the write the legacy notes stay unassigned; nothing else changes.
+    return
+  }
+  cachedRaw = undefined
+  notify()
 }
 
 /**

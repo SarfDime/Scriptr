@@ -9,8 +9,7 @@ import { PreviewScriptModal } from '../PreviewScriptModal'
 
 /** Preview action for a single script — opens `PreviewScriptModal`, which
  * shows the title/description and either an inline single-file preview or
- * a per-file download list. Was previously a stub with a "wire up a
- * preview mode" TODO; this is that wiring. */
+ * a per-file download list. */
 export const ScriptPreviewButton = ({
   id,
   title,

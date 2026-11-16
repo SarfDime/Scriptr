@@ -21,8 +21,10 @@ import { Divider } from '../ui/Divider'
 
 export const NotificationRow = ({
   notification,
+  className,
 }: {
   notification: AppNotification
+  className?: string
 }) => {
   const { locale } = useLocale()
   const strings = useStrings(NOTIFICATIONS_STRINGS_PACK)
@@ -34,7 +36,8 @@ export const NotificationRow = ({
       className={cn(
         'ui-stack rounded-lg border p-3 border-l-4',
         'ui-above-inside gap-1.5',
-        !notification.read
+        !notification.read,
+        className
       )}
     >
       <Box className='ui-cluster items-center gap-0.5'>

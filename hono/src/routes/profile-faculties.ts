@@ -27,7 +27,6 @@ profileFaculties.get('/', async (c) => {
   return c.json<Array<ProfileFacultySelection>>(data ?? [])
 })
 
-/** Get the current user's selection record for a faculty, or null */
 profileFaculties.get('/:facultyId', async (c) => {
   const user = c.get('user')
   const facultyId = requiredParam(c, 'facultyId')

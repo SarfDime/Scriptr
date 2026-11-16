@@ -24,9 +24,9 @@ export const RowButton = ({
     className={cn(
       'flex w-full items-center justify-start',
       'text-left capitalize',
-      'button button-sm subtle justify-start rounded border-0 text-left shadow-none outline-0 pl-1 pr-2 py-1',
-      active && 'solid'
+      'button button-sm subtle justify-start rounded border-0 text-left shadow-none outline-0 pl-1 pr-2 py-1'
     )}
+    isActive={active}
   >
     {Icon ? (
       <Icon

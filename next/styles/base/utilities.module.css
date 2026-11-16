@@ -16,9 +16,14 @@ html {
   }
 }
 
+/* Skips layout and paint for an element that is off-screen. `auto <length>`
+ * remembers the size it last rendered at once it has been seen, so the length
+ * only stands in for a card nobody has scrolled to yet — set it per list with
+ * `[--content-auto-size:10rem]` to the real card height, or the page jumps as
+ * rows render. */
 @utility content-auto {
   content-visibility: auto;
-  contain-intrinsic-size: auto 500px;
+  contain-intrinsic-size: auto var(--content-auto-size, 500px);
 }
 
 @utility vertical-text {

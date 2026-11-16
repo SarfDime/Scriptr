@@ -1,49 +1,66 @@
-# Scriptr Agent Guide
+# Scriptr
 
-How to work in this monorepo: the shared rules live here, and each workspace has
-its own guide in `docs/`. Start with [Read First](#read-first), then open the
-[App Guide](#app-guides) for the workspace you are about to touch.
+Monorepo: `hono/` Hono API (`@scriptr/api`), `next/` Next.js app (`scriptr-next`),
+`sanity/` Studio (`scriptr-sanity`), `optimizer/` file optimizer
+(`@scriptr/optimizer`), `shared/` types, config, strings and utils the others import.
 
-## Workspaces
+Workspace rules live with the workspace — read that guide before working there:
 
-* `hono/` — Hono API (`@scriptr/api`): Supabase, R2 file operations, route docs.
-* `next/` — Next.js frontend (`scriptr-next`), Server Components, shared UI.
-* `sanity/` — Sanity Studio (`scriptr-sanity`) and schema tooling.
-* `optimizer/` — file optimizer (`@scriptr/optimizer`, sharp/Ghostscript), called by the API from `/file-ops/finalize`.
-* `shared/` — types, config, strings and utils that all of the above import, plus the few React icons more than one workspace draws (`shared/components/`, e.g. the language flags).
+| Workspace | Guide |
+| --- | --- |
+| `hono/` and Supabase | [`hono/AGENTS.md`](hono/AGENTS.md) |
+| `next/` | [`next/AGENTS.md`](next/AGENTS.md) |
+| `sanity/` | [`sanity/AGENTS.md`](sanity/AGENTS.md) |
+| `optimizer/` | [`optimizer/AGENTS.md`](optimizer/AGENTS.md) |
 
-## Read First
+## Read first
 
-* `docs/ARCHITECTURE.md` (how the system works) and `docs/PROGRESS.md` (outstanding work only — never propose something already listed there as done, and don't re-add finished features to it). Plus the target workspace's README before working in it.
-* `hono/src/routes/API_DOCUMENTATION.md` before touching a route: it records the real RLS/client model per table, which is not what the route file implies.
-* `docs/ARCHITECTURE-STUDY-DOMAINS.md` before touching how a study is addressed — a hostname, `next/next.config.ts` rewrites and redirects, a canonical, a sitemap, or anything that mints a study URL.
-* Where docs and code disagree, trust the code and flag the drift rather than working around it.
+* `docs/ARCHITECTURE.md` — index; open only the section for the area you touch.
+* `docs/PROGRESS.md` — outstanding work. Never re-propose something listed as done.
+* `hono/src/routes/API_DOCUMENTATION.md` — before touching a route; it records the
+  real RLS/client model per table, which the route file does not show.
+* `docs/ARCHITECTURE-STUDY-DOMAINS.md` — before minting a study URL, hostname,
+  canonical or sitemap entry.
+* `docs/CANVAS.md` — before touching a background canvas in `next/`.
 
-## Global Rules
+Where a doc and the code disagree, trust the code and fix the doc.
 
-* Strict TypeScript, no `any`. SOLID, composition over inheritance.
-* DRY only at 2+ real usages — don't add abstractions speculatively.
-* KISS - keep it simple and avoid overengineering.
-* Types live in `shared/types/` (preferred), `next/types/`, or `hono/src/types/`. In-file types only if <3 fields and strictly local. **Anything a `hono/` route imports must live under `shared/`, never `next/types/`.**
-* **User-facing strings** live in `shared/strings/<area>-strings.ts` or `UI_STRINGS` (`shared/config/strings.ts`), never inline in components. Copy that depends on a value is a function on the strings object. Reuse before adding. A translated entry is `{ en, mk }`; the collection's `_PACK` export is the source of truth and its historical export is the English view, so un-migrated imports keep working. Client Components read collections through `useUIStrings`/`useStrings`, Server Components through `getServerStrings` (`next/lib/server-strings.ts`) — never a collection at module scope, and never a hook in `shared/`. Macedonian translations are **short and natural, not literal**: prefer the shorter noun over the adjective (the theme options are `Ден` / `Ауто` / `Ноќ`, not `Светла` / `Автоматска` / `Темна`), and check the widest control with the Macedonian string. See [`docs/AGENTS-FRONTEND.md`](docs/AGENTS-FRONTEND.md).
-* Academic entity types (faculty/study/subject/etc.) derive from the Sanity TypeGen query result via `WithResolvedSanityData<...>` (`shared/types/sanity-transform.types.ts`), not hand-written; hand-write only where no query-result type exists.
-* **Never hand-edit generated files:** `shared/types/database.types.ts`, `shared/types/sanity.types.ts`, `sanity/schema.json`, `hono/src/types/supabase.ts`, `shared/config/api-routes.ts`.
-  * Postgres schema change → `corepack pnpm gen:api-types`; Sanity schema change → `corepack pnpm sanity:typegen`.
-  * `shared/config/api-routes.ts` is generated from the mounted Hono `app.routes` (`shared/config/api.ts` only supplies the `QUERY_CONFIG` query-param helpers), so register and mount the route, then run `corepack pnpm gen:api-endpoints` — it does not regenerate on `dev`.
-  * A schema change isn't done until dead references are removed across `hono/`, `next/` and `sanity/` and a full `corepack pnpm check-types` passes.
-* **Every workspace logs an environment checklist on start** (`ENV_REQUIREMENTS` in `hono/src/server.ts`, `next/lib/startup-report.ts`, `sanity/lib/startup-report.ts`, `optimizer/src/server.ts`, built by `shared/utils/env-report.ts`). A new env var gets an entry there in the same change; it lists names and consequences only, never values.
-* Secrets only in `.env` — never in docs, fixtures, or commits. Service-to-service secrets (`SITEMAP_SECRET` and the like) never get a `NEXT_PUBLIC_` prefix and never reach browser code or user-triggered client calls; see `docs/AGENTS-FRONTEND.md`. **Never put a secret in a `SANITY_STUDIO_*` variable** — Vite inlines them into the public Studio bundle; the Studio authenticates with a TOTP code instead (see `docs/AGENTS-SANITY.md`).
-* From the root: `corepack pnpm dev:{hono|next|sanity|optimizer}` (bare `dev` runs all four), `check-types` (`--filter <package>` to scope), `test` (`tsx --test` on `node:test`, `*.test.ts` beside the code — API and optimizer), `format` (Biome; it is the linter, so don't run a separate one).
-* Validate the smallest affected workspace and keep changes scoped — no unrelated refactors riding along. When a feature or route changes, update `docs/PROGRESS.md` (remove what the change finishes, add what it leaves open) and, if the design changed, `docs/ARCHITECTURE.md`. Doc filenames stay uppercase.
+## Rules
 
-## App Guides
+* Strict TypeScript, no `any`. SOLID and composition; KISS; DRY only at 2+ real usages.
+* Types in `shared/types/` (preferred), `next/types/` or `hono/src/types/`; in-file
+  only for fewer than three strictly local fields. A `hono/` route imports its types
+  from `shared/`, never from `next/types/`.
+* User-facing copy lives in `shared/strings/*` or `UI_STRINGS` — never inline in a
+  component. Mechanics and traps: [`next/AGENTS.md`](next/AGENTS.md#localization).
+* **Never hand-edit generated files**: `shared/types/database.types.ts`,
+  `shared/types/sanity.types.ts`, `sanity/schema.json`, `hono/src/types/supabase.ts`,
+  `shared/config/api-routes.ts`. Postgres change → `corepack pnpm gen:api-types`;
+  Sanity change → `corepack pnpm sanity:typegen`; route change →
+  `corepack pnpm gen:api-endpoints`. A schema change is done only once dead
+  references are gone and a full `corepack pnpm check-types` passes.
+* Secrets only in `.env` — never in docs, fixtures or commits. Every workspace logs
+  its env checklist on start (`ENV_REQUIREMENTS`); a new variable gets an entry in the
+  same change, naming the consequence, never the value.
+* Commands, from the root: `corepack pnpm dev:{hono|next|sanity|optimizer}`,
+  `check-types` (`--filter <package>`), `test` (`tsx --test`, `node:test`,
+  `*.test.ts` beside the code), `format` (Biome — it is also the linter).
+* Validate the smallest affected workspace and keep the change scoped; no unrelated
+  refactors riding along.
+* A finished feature updates `docs/PROGRESS.md` (remove what is done, add what is
+  left); a design change also updates the matching `docs/ARCHITECTURE*.md`. Doc
+  filenames stay uppercase.
 
-The Global Rules above apply everywhere; the per-app guides add rules for one workspace. Open the one you are about to work in.
+## Writing
 
-| Doc | Workspace | Read before touching |
-| --- | --- | --- |
-| [`docs/AGENTS-DATABASE.md`](docs/AGENTS-DATABASE.md) | Supabase (used by `hono/`) | any query, RLS policy, migration or Supabase client choice |
-| [`docs/AGENTS-BACKEND.md`](docs/AGENTS-BACKEND.md) | `hono/` | any route, response type, route mount or restriction check |
-| [`docs/AGENTS-FRONTEND.md`](docs/AGENTS-FRONTEND.md) | `next/` | any page, component, API call, cache tag or styling |
-| [`docs/AGENTS-SANITY.md`](docs/AGENTS-SANITY.md) | `sanity/` | any Studio schema, database sync, or publish/delete behaviour |
-| [`optimizer/README.md`](optimizer/README.md) | `optimizer/` | the file optimizer (no separate rules file; the README is the guide) |
+Docs, comments, commit messages and PR bodies follow one rule: write the least a
+reader needs.
+
+* One line over a paragraph; a table or list over prose. Delete any sentence that does
+  not change a decision.
+* State what is true of the code now. No history of the change, no narration of a bug
+  that is fixed, no restating a signature or a type name.
+* A comment earns its place only by explaining why, or a constraint the code cannot
+  show (RLS/grant model, cache tags and what invalidates them, a security decision).
+  Conventions belong in the workspace guide, not repeated in code.
+* Before adding to a doc, cut something from it.

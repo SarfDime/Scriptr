@@ -94,9 +94,7 @@ type SupabaseInstance = ReturnType<typeof createSupabaseClient>
 /**
  * Shared by /login and /session — both need the same app-shaped user
  * (username/role/subjects/faculty & study selections), not Supabase's
- * raw auth user. Previously duplicated inline in /session only; /login
- * returned `data.user` unmodified, which is why the Next client used to
- * have to refetch /session right after logging in.
+ * raw auth user.
  */
 async function buildSessionUser(
   supabase: SupabaseInstance,

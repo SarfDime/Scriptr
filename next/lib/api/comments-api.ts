@@ -113,10 +113,8 @@ export const getCommentReplies = (
   )
 
 /** `POST /` (hono/src/routes/comments.ts) wraps its `CommentCreateResult`
- * as `{ success, comment }` — moved here from CommentSection.tsx, and
- * corrected from the bare `{ comment }` it was (unverifiedly) typed as
- * before. Restriction-checked (is_restricted()), so callers should run
- * this through useProtectedAction. */
+ * as `{ success, comment }`. Restriction-checked (is_restricted()), so callers
+ * should run this through useProtectedAction. */
 export const postComment = (
   target: CommentTarget,
   content: PortableTextValue
@@ -138,10 +136,7 @@ export const patchComment = (commentId: string, content: PortableTextValue) =>
     }
   )
 
-/** `POST /:commentId/replies` wraps as `{ success, reply }` — moved here
- * from CommentSection.tsx, and corrected from `{ comment }` (the actual
- * key is `reply`; CommentSection was reading `.comment` off this call's
- * result too, which would have been `undefined` at runtime). */
+/** `POST /:commentId/replies` wraps as `{ success, reply }`. */
 export const postReply = (commentId: string, content: PortableTextValue) =>
   apiFetchRequired<{ success: true; reply: CommentCreateResult }>(
     apiRoutes.comments.repliesByCommentId(commentId),

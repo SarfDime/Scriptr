@@ -33,7 +33,11 @@ export function CommentList() {
         comments.map((comment, index) => (
           <Fragment key={comment.id}>
             {index > 0 && <CommentDivider />}
-            <CommentItem comment={comment} depth={0} />
+            <CommentItem
+              comment={comment}
+              depth={0}
+              className='content-auto [--content-auto-size:9.5rem]'
+            />
           </Fragment>
         ))}
       {isLoadingComments && (

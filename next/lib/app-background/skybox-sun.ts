@@ -1,7 +1,7 @@
 'use client'
 
 import type { SkySun } from '@shared/types/skybox.types'
-import { mixRGB, TAU, WHITE } from '@/lib/star-canvas'
+import { mixRGB, TAU, WHITE } from '@/lib/app-background/canvas-primitives'
 
 // The sun, drawn as a cut-paper shape like the rest of the scenery: one flat disc,
 // one flat shade along the bottom-right and one flat highlight on the top-left.

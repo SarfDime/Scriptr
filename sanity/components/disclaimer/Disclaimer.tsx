@@ -16,7 +16,7 @@ const wrapperStyling = {
   boxShadow: '0px 0px 5px rgba(0, 0, 0, 0.199)',
 } as const
 
-/** Renders a disclaimer text inside a box container. Accepts a level (info, warning, error, success).
+/** A boxed disclaimer; `level` picks the palette (info, warning, error, success).
  * - **disclaimerText is deprecated use title and subtitle instead**
  */
 export function Disclaimer({

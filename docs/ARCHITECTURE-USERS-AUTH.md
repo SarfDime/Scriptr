@@ -1,15 +1,177 @@
 # Users, Auth, Roles & Access
 
-* **Auth:** Supabase Auth via a cookie; no Bearer-token path. The web app (`scriptr.uk`) and API (`api.scriptr.uk`) are same-site: the API sets `sb-auth-token` with `Domain=${COOKIE_DOMAIN}` (`.scriptr.uk`), `SameSite=Lax`, `Secure`, `httpOnly`, so the browser and Server Components (which forward it explicitly, `getRequestCookieHeader`) both receive it. `COOKIE_DOMAIN` is unset locally (`localhost` ports share cookies). `*.vercel.app` preview deployments are cross-site and won't receive the cookie. Access tokens are configured for the maximum one-week lifetime to reduce refreshes (`hono/supabase/config.toml`; hosted Supabase projects must use the same Auth setting). Routes: register, login, logout, session, and `/auth/callback`, which the frontend (`useAuthCallback`) calls with tokens extracted from the email-confirmation URL fragment (implicit flow, no PKCE). `/login`, `/callback`, and `/session` return the same app-shaped session user (id, email, username, role, subjects, selected faculty/study ids), so the client doesn't refetch the session after login. `/session` refreshes tokens only when they expire within 60 seconds; protected client actions that receive a 401 refresh the session and retry once, then sign out and notify the user if authentication still fails. A DB trigger creates the profile on signup.
-* **Academic setup:** an academic profile belongs to one study, so setup runs inside one. `/start` picks university → faculty → study and hands off to `/study/[siteSlug]/academic-setup`, which asks only for that study's years and subjects; the studies a signed-in reader already belongs to stay selectable in the picker but cannot be continued into — Continue is disabled, and the note beside it links to that study's setup, which is where they edit it (`studyPickerQuery` carries `dbId` so studies can be matched against `selected_study_ids`). A signed-in reader's answers persist to `profile_studies` / `profile_subjects`; a guest's live in this browser, keyed by the study's database id (`lib/study-setup-storage.ts`), and `lib/study-setup-sync.ts` applies them to the account after register or sign-in. The setup page is the one study surface that reads the session (every other study page stays static and asks client-side): a member of the study is *updating* the profile it holds, so the heading changes, the form opens on the completed subjects the session carries, a year counts as finished when all of its subjects are, and the save applies the diff — new ticks are written and unticked subjects the account had completed are deleted (`removeProfileSubject`), so editing can take a completion away. Its header carries **Set up another study**, the only route from inside one study to the catalog picker, and the profile's **Edit academics** opens the newest study's setup (`getStudySetupUrl`). There is no onboarding modal and no global academic editor — registration carries no academic profile. The year/subject completion logic (`useSubjectCompletion`) is shared with the setup form, and copy lives in `UI_STRINGS.onboarding`. Account creation still generates a notification.
-* **Roles:** `profiles.role` is `student`, `moderator`, or `admin`. Only `admin` carries elevated privilege (full CRUD on scripts/comments/profiles, flag resolution, rating types, restrictions, the moderation UI, the user manager and announcements). The admin layout returns 404 for non-admin sessions and the nav entry is hidden; API authorization and RLS remain the boundary. `role` is the one profile column with no `authenticated` grant, so a change goes through the service-role client on the admin surface (`PATCH /api/admin/profiles/:id/role`) — granting it back would let a user promote themselves. `moderator` has no elevated access.
-* **Guests:** can browse, preview, and download. Upload, like, comment, save, rate, and flag require auth.
-* **Restrictions:** `profile_restrictions` has one row per user and is active while `expires_at` is `null` or later than now; existing null rows remain permanent. `is_restricted()` ignores expired rows. Each application is recorded in `profile_restriction_history`; ladder count is history not lifted early: 14 days, one calendar month, then permanent. Reapplying to an active restriction updates only its reason. Lifting an active restriction marks its latest history row `lifted_early_at`; removing an expired row does not affect the ladder. Restricted users are blocked from creating/updating scripts, comments, flags, comment reactions/likes, votes, and ratings, but can still delete their own content. Favorites are exempt.
-* **Profile selections:** `profile_id = auth.uid()` RLS tables. `PATCH /profiles/me` replaces faculty/study selections (diffed, errors checked; admins editing another user use the service-role client since the tables have no admin RLS path; an admin delete removes the profile, its avatar and, through Supabase's admin API, the Auth login, so the account cannot sign in with no profile); subject selection carries a status (`completed` | `currently_taking`) and is written per subject. Stored `currently_taking` rows are not relied on for display (the per-study setup writes only completed subjects): profile pages derive "currently taking" as the non-completed subjects of the selected studies.
-* **Profile pages:** `ProfilePage` is the one layout for `/user` and `/user/[username]`, and a Server Component on both: each page's loader reads the profile, its stats, its affiliations and its subjects, and passes them in (`isOwner` adds the edit actions on `/user`). The public page redirects to `/user` for the viewer's own username. `/user` shows an edit because the profile form calls `router.refresh()` after saving (`useEditProfileForm`), which re-runs the loader — the shared `ProfileProvider` still feeds the navbar. Favorites and subjects are public: `script_favorites` is publicly readable and the public profile endpoint returns subjects. Academic links are built from Sanity slugs via the catalog (`buildProfileAcademics`), not Postgres ids; a favorited or authored script links to its study's site (`getScriptSitePath`), because scripts no longer have a catalog address.
-* **Avatars:** `profiles.avatar_url` is a full public URL, not an R2 key, because it is used directly as an image `src` on cached pages (comments, script cards, the header, the profile page) and a signed URL there would expire inside the cache. An upload is two calls, mirroring a script file upload: `POST /profiles/me/avatar/upload-url` presigns a PUT into `staging/{userId}/`, the browser sends the photo straight to R2, and `POST /profiles/me/avatar` runs it through the optimizer's avatar profile (EXIF-oriented, cropped square around the most interesting region at 320 px, metadata stripped, WebP at ≤200 KB, aiming for 100 KB; limits in `shared/config/avatar.ts`). The result is stored in the **same bucket as script files**, at `avatars/{userId}.webp` — one key per user, overwritten on every change — and the profile stores `${R2_PUBLIC_URL}/avatars/{userId}.webp?v={version}`. The `?v=` is what makes that safe: the key never changes, so each upload needs a new URL for browser and CDN caches, and R2 ignores the query when resolving the object. Account deletion removes the one key. Serving avatars this way means the bucket needs a public domain, so script objects become readable by key (they stay random UUIDs and are only handed out with a script); the URL is rendered with `next/image`'s `unoptimized` so the image optimizer's per-image quota isn't spent on it, which also removes the `remotePatterns` host allow-list as a backstop — so the column grant is the real boundary: `avatar_url` is written only with the service-role client, and `authenticated` has no `INSERT`/`UPDATE` grant on it. Without `R2_PUBLIC_URL`, avatar uploads answer `503` rather than storing an uncropped photo.
-* **Preferences:** `profile_preferences` is an own-row RLS table, separate from publicly readable `profiles`. Its versioned v1 shape controls optional toast delivery and achievement notifications; missing rows use defaults. Restriction and moderation notices are never user-configurable.
-* **Achievements:** `achievement_definitions` (entity type — only `profile` — metric, threshold, `rarity`, optional `study_id`; new achievements are a data insert) plus `profile_achievements` (one row per profile per achievement). `rarity` is one of five ordered tiers (`common`, `uncommon`, `rare`, `epic`, `legendary`; `ACHIEVEMENT_RARITIES` in `shared/config/achievements.ts`, mirrored by a DB CHECK). An award-check helper runs on vote, download, and comment mutations, and on script creation. A definition with `study_id` is measured inside that study ("5 scripts here") while a global one (`study_id` null) is measured across the platform ("10 scripts anywhere"); a mutation inside a study evaluates both groups, one outside a study evaluates only the global ones. The admin editor chooses a definition's scope — platform-wide or one study — from the studies the operator can see; a study definition counts inside its study only, and every definition authored before scoping existed was moved onto LBE, the one study with content. The seeded catalogue gives every metric one achievement per rarity tier — four metrics × five tiers, twenty definitions — with thresholds climbing inside each metric and a distinct icon per achievement in `ACHIEVEMENT_ICON_OVERRIDES`. Title and description live in code (`ACHIEVEMENT_COPY` in `shared/config/achievements.ts`, resolved with `getAchievementCopy`), so a wording change is a reviewable commit that updates badges, the admin list and the notification together; metric, threshold and rarity stay as data because the award helper and the admin editor read them. An id with no catalogue entry cannot be created: `POST /achievement-definitions` rejects it, so an admin adding an achievement starts by adding its wording to the catalogue. The row keeps a copy of that text purely as a snapshot for anything that reads the table directly. Awards are permanent: nothing recomputes or revokes them, and deleting scripts never removes one (an admin can still delete a row through the RLS DELETE policy; there is no endpoint). Definitions apply retroactively only on a user's next qualifying mutation of that metric — a new or lowered definition awards on the next action, with no backfill. Hiding achievement notifications never suppresses awards.
-* **Achievement badges:** every profile payload (`/me`, `/:id`, `/username/:username`, and the list) embeds each earned achievement with its definition (title, description, metric, threshold, rarity) and that definition's study, so a study badge can be told apart from a platform-wide one and named. Badges are grouped by scope — platform-wide first, then one group per study, headed by the study's name — and the single-scope case keeps the plain unlabelled row. `ProfileCard` takes a `badges` slot, so it stays unaware of achievements; `ProfilePage` fills it with `AchievementBadges`, ordered by `sortAchievements` (rarest first, then newest). Colour comes from the rarity (`ACHIEVEMENT_RARITY_PALETTES`) and the icon from the metric, with per-achievement overrides (`next/lib/achievement-display.ts`). Badges sit below the avatar from `lg` and beside it below `lg`.
-* **Notifications:** `notifications` (`profile_id`, `type`, `title`, `body`, `data jsonb`, `is_read`, `study_id`). `study_id` names the study a content notification belongs to (a study achievement, a removed script or comment, a flag alert, a study announcement) and stays null for account-wide ones; links minted for notifications use it to point at `/study/<site_slug>/…` rather than the old top-level script path. `GET /notifications` returns each row's study site handle, and the tray on a study site shows that study's rows plus the platform-wide ones — elsewhere it shows everything, so nothing is unreachable. An announcement is addressed to everyone or to one study: the latter reaches that study's students, its admins and moderators, and owners, and the insert policy lets a study admin write only rows that name a study they administer. `type` is unconstrained so new kinds need no migration. Users can list (filter by read state), count unread, mark one/all read, and delete their own. Kinds include account creation, achievements, restrictions applied/lifted, content removed by an admin, announcements, and admin alerts when five distinct reporters flag the same target. The tray merges server rows with per-user local notifications, sorts unread first, caps its list, and refetches on mount and tray open, the tray refetch throttled to once per 15 s and the API limiting each user to 15 notification requests per minute (no polling, realtime or focus refetch); the restriction notice and preferences are cached in local storage (`next/lib/account-state-storage.ts`), read from the API once on login, rewritten on save, refetched only when a cached restriction lapses or a newer restriction notification appears, and cleared on logout (`/restrictions/me` and `/profiles/me/preferences` are limited to 15 requests per minute per user). A non-dismissible restriction notice comes from `GET /restrictions/me`, so deleting notification rows cannot hide it. While it is shown, the dismissible `restriction_applied` row is hidden from the tray so the notice is the single, non-dismissible copy.
-* **Ratings:** professors and subjects are rated on extensible types via `rating_types` (public read, admin write; each criterion's name is stored per language in `labels` and rendered in the reader's). One rating per user per type per entity, score 1–5, a trigger rejects target mismatches; restricted users can't create/change, removal stays allowed. On the frontend, `RatingsSection` renders inside the professor About card and the subject details card, loading criteria, stats and the viewer's own scores in the browser (the pages stay static); the viewer's restriction comes from `GET /restrictions/me`, with a 403 on save as the fallback. Server-side reads of the criteria and stats are tagged Data Cache entries (`ratings:types`, `ratings:professor:<id>`, `ratings:subject:<id>`) that only a rating mutation invalidates; the browser always reads them fresh so the averages update right after a score changes.
+## Auth
+
+* Supabase Auth through a cookie; no Bearer path. `scriptr.uk` and `api.scriptr.uk` are
+  same-site: the API sets `sb-auth-token` with `Domain=${COOKIE_DOMAIN}` (`.scriptr.uk`),
+  `SameSite=Lax`, `Secure`, `HttpOnly`, so the browser and Server Components (which forward
+  it with `getRequestCookieHeader`) both see it. Unset locally; `*.vercel.app` previews are
+  cross-site and get no cookie.
+* Access tokens use the one-week maximum lifetime (`hono/supabase/config.toml`; hosted
+  projects need the same Auth setting).
+* Routes: register, login, logout, session, and `/auth/callback`, which `useAuthCallback`
+  calls with tokens from the email-confirmation fragment (implicit flow, no PKCE).
+  `/login`, `/callback` and `/session` return one app-shaped user (id, email, username,
+  role, subjects, selected faculty/study ids), so the client never refetches the session
+  after login. `/session` refreshes only when the token expires within 60 s; a protected
+  client action that gets a 401 refreshes and retries once, then signs out with a notice.
+  A DB trigger creates the profile on signup.
+
+## Academic setup
+
+* A profile is per study, so setup runs inside one: `/start` picks university → faculty →
+  study and hands off to `/study/[siteSlug]/academic-setup`, which asks for that study's
+  years and subjects only. A study the reader already belongs to stays selectable but
+  cannot be continued into — Continue is disabled and the note links to that study's setup
+  (`studyPickerQuery` carries `dbId` to match `selected_study_ids`).
+* A signed-in reader's answers persist to `profile_studies`/`profile_subjects`; a guest's
+  live in `lib/study-setup-storage.ts` keyed by study id, and `lib/study-setup-sync.ts`
+  applies them after register or sign-in.
+* The setup page is the only study surface that reads the session (every other study page
+  is static and asks client-side): a member is *updating* the profile, so the heading
+  changes, completed subjects are pre-ticked, a year is finished when all its subjects are,
+  and saving applies a diff — new ticks are written and unticked completed subjects are
+  deleted (`removeProfileSubject`). Its header carries **Set up another study** (the only
+  route from inside a study to the catalog picker); **Edit academics** opens the newest
+  study's setup (`getStudySetupUrl`). No onboarding modal, no global editor; registration
+  carries no academic profile. `useSubjectCompletion` is shared with the form; copy is
+  `UI_STRINGS.onboarding`. Signup still generates a notification.
+
+## Roles and restrictions
+
+* `profiles.role` is `student`, `moderator` or `admin`. Only `admin` is privileged: full CRUD
+  on scripts/comments/profiles, flag resolution, rating types, restrictions, the moderation
+  UI, the user manager, announcements. The admin layout 404s a non-admin and hides the nav
+  entry; API authorization and RLS remain the boundary.
+* `role` has no `authenticated` grant, so it changes only through the service-role client
+  (`PATCH /api/admin/profiles/:id/role`); granting it back would let a user promote
+  themselves. Moderators have no elevated access.
+* Guests browse, preview and download. Upload, like, comment, save, rate and flag need auth.
+* `profile_restrictions` has one row per user, active while `expires_at` is `null` or later;
+  `is_restricted()` ignores expired rows. Each application is recorded in
+  `profile_restriction_history`; the ladder (14 days, one calendar month, then permanent)
+  counts history that was not lifted early. Reapplying to an active restriction updates
+  only its reason; lifting marks the latest history row `lifted_early_at`; removing an
+  expired row does not affect the ladder.
+* A restricted user cannot create or update scripts, comments, flags, comment
+  reactions/likes, votes or ratings, but can delete their own content. Favorites are exempt.
+
+## Profile data
+
+* `profile_id = auth.uid()` RLS tables. `PATCH /profiles/me` writes the row and both
+  selection lists through `sync_profile_selections`, one transaction; an admin editing
+  another user uses the service-role client (those tables have no admin RLS path), and an
+  admin delete removes the profile, its avatar and, through Supabase's admin API, the Auth
+  login.
+* Subject selection carries a status (`completed` | `currently_taking`) and is written per
+  subject. `currently_taking` rows are not relied on for display: profile pages derive
+  "currently taking" from the non-completed subjects of the selected studies.
+* `ProfilePage` is the one layout for `/user` and `/user/[username]`, a Server Component on
+  both: the loader reads profile, stats, affiliations and subjects and passes them in
+  (`isOwner` adds edit actions). The public page redirects to `/user` for the viewer's own
+  username; `/user` shows an edit because the form calls `router.refresh()` after saving
+  (`useEditProfileForm`), and `ProfileProvider` still feeds the navbar.
+* Favorites and subjects are public: `script_favorites` is publicly readable and the
+  public profile endpoint returns subjects. Academic links are built from Sanity slugs
+  through the catalog (`buildProfileAcademics`), not Postgres ids; a favorited or authored
+  script links to its study's site (`getScriptSitePath`).
+
+## Avatars
+
+* `profiles.avatar_url` is a full public URL, not an R2 key: it is used directly as an
+  image `src` on cached pages, where a signed URL would expire inside the cache.
+* Upload is two calls: `POST /profiles/me/avatar/upload-url` presigns a PUT into
+  `staging/{userId}/`, the browser sends the photo straight to R2, and
+  `POST /profiles/me/avatar` runs the optimizer's avatar profile (EXIF-oriented, cropped
+  square around the most interesting region at 320 px, metadata stripped, WebP ≤200 KB,
+  aiming for 100 KB; `shared/config/avatar.ts`).
+* Stored in the **same bucket as script files** at `avatars/{userId}.webp` — one key per
+  user, overwritten each change — while the profile stores
+  `${R2_PUBLIC_URL}/avatars/{userId}.webp?v={version}`. The key never changes, so `?v=`
+  gives browser and CDN caches a new URL; R2 ignores the query. Account deletion removes
+  the key.
+* A public bucket domain means script objects are readable by key (they stay random UUIDs,
+  only handed out with a script). The URL renders with `next/image`'s `unoptimized`, so the
+  image quota is not spent and `remotePatterns` is not the backstop — the column grant is:
+  `avatar_url` is written only with the service-role client, and `authenticated` has no
+  `INSERT`/`UPDATE` on it. Without `R2_PUBLIC_URL`, avatar uploads answer `503` rather than
+  storing an uncropped photo.
+
+## Preferences
+
+`profile_preferences` is an own-row RLS table, separate from the publicly readable
+`profiles`: a versioned v1 shape controlling optional toast delivery and achievement
+notifications, defaults when the row is missing. Restriction and moderation notices are
+never configurable.
+
+## Achievements
+
+* `achievement_definitions` (entity type — only `profile` — metric, threshold, `rarity`,
+  optional `study_id`) plus `profile_achievements` (one row per profile per achievement).
+  `rarity` is one of five ordered tiers (`ACHIEVEMENT_RARITIES`, mirrored by a DB CHECK).
+* An award check runs on vote, download, comment and script creation. A definition with
+  `study_id` counts inside that study; a global one counts platform-wide; a mutation inside
+  a study evaluates both, one outside evaluates only global definitions.
+* The admin editor picks a definition's scope from the studies the operator can see. Every
+  definition authored before scoping existed was moved onto LBE.
+* The seeded catalogue is four metrics × five tiers, with thresholds climbing inside each
+  metric and a distinct icon in `ACHIEVEMENT_ICON_OVERRIDES`.
+* Title and description live in code (`ACHIEVEMENT_COPY`, resolved by `getAchievementCopy`),
+  so a wording change updates badges, admin list and notification together; metric,
+  threshold and rarity stay data. An id with no catalogue entry cannot be created
+  (`POST /achievement-definitions` rejects it). The row keeps a copy of the text as a
+  snapshot for readers of the table.
+* Awards are permanent: nothing recomputes or revokes them, and deleting a script never
+  removes one (an admin can delete a row through the RLS DELETE policy; there is no
+  endpoint). A new or lowered definition awards on the user's next qualifying mutation, with
+  no backfill. Hiding achievement notifications never suppresses awards.
+* Every profile payload (`/me`, `/:id`, `/username/:username`, the list) embeds each earned
+  achievement with its definition and that definition's study. Badges group by scope —
+  platform-wide first, then one group per study headed by its name — and a single scope
+  keeps the plain unlabelled row. `ProfileCard` takes a `badges` slot; `ProfilePage` fills
+  it with `AchievementBadges` ordered by `sortAchievements` (rarest first, then newest).
+  Colour comes from `ACHIEVEMENT_RARITY_PALETTES`, the icon from the metric with
+  `next/lib/achievement-display.ts` overrides. Badges sit below the avatar from `lg`, beside
+  it below.
+
+## Notifications
+
+* `notifications` (`profile_id`, `type`, `title`, `body`, `data jsonb`, `is_read`,
+  `study_id`). `study_id` names the study a content notification belongs to (study
+  achievement, removed script or comment, flag alert, study announcement) and stays null
+  for account-wide ones; links minted for notifications use it to point at
+  `/study/<site_slug>/…`.
+* `GET /notifications` returns each row's study site handle. The tray on a study site shows
+  that study's rows plus platform-wide ones; elsewhere it shows everything, so nothing is
+  unreachable.
+* An announcement addresses everyone or one study; the study variant reaches that study's
+  students, admins, moderators and owners, and the insert policy lets a study admin write
+  only rows naming a study they administer. `type` is unconstrained.
+* Users list (filter by read state), count unread, mark one or all read, and delete their
+  own. Kinds: account creation, achievements, restrictions applied/lifted, content removed,
+  announcements, and admin alerts at five distinct reporters.
+* The tray merges server rows with per-user local notifications, sorts unread first, caps
+  its list, and refetches on mount and open (throttled to once per 15 s; the API allows 15
+  requests per minute per user; no polling, realtime or focus refetch).
+* The restriction notice and preferences cache in local storage
+  (`next/lib/account-state-storage.ts`): read once on login, rewritten on save, refetched
+  only when a cached restriction lapses or a newer restriction notification appears, and
+  cleared on logout (`/restrictions/me` and `/profiles/me/preferences` are limited to 15
+  requests per minute per user).
+* The non-dismissible restriction notice comes from `GET /restrictions/me`, so deleting
+  notification rows cannot hide it; while it is shown the dismissible `restriction_applied`
+  row is hidden from the tray.
+
+## Ratings
+
+* Professors and subjects are rated on extensible types in `rating_types` (public read,
+  admin write; each criterion's name is stored per language in `labels` and rendered in the
+  reader's). One rating per user per type per entity, score 1–5, with a trigger rejecting
+  target mismatches. Restricted users cannot create or change one; removal stays allowed.
+* `RatingsSection` renders in the professor About card and the subject details card,
+  loading criteria, stats and the viewer's scores in the browser so the pages stay static.
+  The viewer's restriction comes from `GET /restrictions/me`, with a 403 on save as the
+  fallback.
+* Server-side criteria and stats are tagged Data Cache entries (`ratings:types`,
+  `ratings:professor:<id>`, `ratings:subject:<id>`) invalidated only by a rating mutation;
+  the browser always reads them fresh so averages update right after a score.

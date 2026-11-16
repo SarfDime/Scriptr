@@ -16,11 +16,11 @@ import { matchesSecret } from './secret'
 /**
  * Access control for the admin surface the Sanity Studio calls.
  *
- * The Studio runs in a browser, so anything it is given is public: the old
- * shared header secret was inlined into its bundle by Vite and could be read by
- * anyone who loaded the Studio. Instead the operator proves possession of a
- * TOTP secret that only the API holds, and exchanges a code for a signed token
- * that expires in twenty minutes.
+ * The Studio runs in a browser, so anything it is given is public: a shared
+ * header secret would be inlined into its bundle by Vite and readable by anyone
+ * who loaded the Studio. Instead the operator proves possession of a TOTP
+ * secret that only the API holds, and exchanges a code for a signed token that
+ * expires in twenty minutes.
  */
 
 const TOTP_STEP_SECONDS = ACCESS_CODE_STEP_SECONDS

@@ -2,21 +2,17 @@ import localFont from 'next/font/local'
 
 /**
  * Every font the app declares — Matter for body copy, Antique Olive (and its
- * condensed cut) for display type. A Bricolage Grotesque declaration used to sit
- * here too: nothing styled with it, so it cost a Google Fonts request on every
- * page for no glyph.
+ * condensed cut) for display type. This lives beside the woff2 files so the
+ * paths stay local to the module, and out of the root layout, which only needs
+ * the class names the faces expose.
  *
- * Every font the app declares. This lives beside the woff2 files so the paths
- * stay local to the module, and out of the root layout, which only needs the
- * class names the faces expose.
- *
- * `preload: false` on the four local families is deliberate. `next/font`
- * preloads every declared file, so a page loaded 22 woff2 files while using
- * five faces (measured on `/university/ukim`: antiqueOlive 700/900, matter
- * 400/500/600). Without the preload links the browser fetches only the faces the
- * page actually renders, and `display: 'swap'` keeps the fallback visible in the
- * meantime. Which weights the UI still needs is a separate question — declared
- * weights are not all used, and trimming them is a UI audit (docs/PROGRESS.md).
+ * `preload: false` on the four local families is deliberate: `next/font`
+ * preloads every declared file, so a page would load 22 woff2 files to render
+ * five faces (on `/university/ukim`: antiqueOlive 700/900, matter 400/500/600).
+ * Without the preload links the browser fetches only the faces the page renders,
+ * and `display: 'swap'` keeps the fallback visible in the meantime. Which
+ * weights the UI still needs is a separate question — declared weights are not
+ * all used, and trimming them is a UI audit (docs/PROGRESS.md).
  */
 // 1. Matter - Standard geometric font with straightforward weights
 export const matter = localFont({

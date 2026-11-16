@@ -35,14 +35,14 @@ export const hasValidAccessToken = (): boolean =>
 
 /** Raised when a request needs a fresh code, so callers can prompt for one
  * instead of reporting a failure. */
-export class AccessCodeRequiredError extends Error {
+class AccessCodeRequiredError extends Error {
   constructor(message = 'Enter your access code to continue.') {
     super(message)
     this.name = 'AccessCodeRequiredError'
   }
 }
 
-export function clearAccessToken(): void {
+function clearAccessToken(): void {
   accessToken = null
 }
 

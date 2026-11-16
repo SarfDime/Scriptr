@@ -189,7 +189,7 @@ export async function apiFetchPublicRead<T>(
  * Deliberately NOT called automatically inside apiFetch above. `cookies()`
  * (from next/headers) marks the *entire calling route* as dynamic — it
  * opts the route out of static generation. apiFetch is the one fetch
- * wrapper used for every API call in the app (`docs/AGENTS-FRONTEND.md`), so
+ * wrapper used for every API call in the app, so
  * making cookie reads automatic there would silently force every page that
  * calls it — including statically-generated pages with no session-dependent
  * data at all — into full dynamic rendering. Call sites that genuinely need

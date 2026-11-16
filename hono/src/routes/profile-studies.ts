@@ -27,7 +27,6 @@ profileStudies.get('/', async (c) => {
   return c.json<Array<ProfileStudySelection>>(data ?? [])
 })
 
-/** Get the current user's selection record for a study, or null */
 profileStudies.get('/:studyId', async (c) => {
   const user = c.get('user')
   const studyId = requiredParam(c, 'studyId')

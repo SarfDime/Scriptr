@@ -3,6 +3,7 @@ import { describe, it } from 'node:test'
 import { CALENDAR_NOTE_TITLE_MAX } from '../config/calendar'
 import type { CalendarNote } from '../types/calendar-notes.types'
 import {
+  calendarNotesDigest,
   canAddNoteOnDay,
   countNotesLostByPull,
   countNotesOnDay,
@@ -11,12 +12,17 @@ import {
   mergeCalendarNotes,
   notesChangedSince,
   notesDifferFrom,
+  notesMissingFrom,
   sanitizeCalendarNote,
   sanitizeCalendarNotes,
 } from './calendar-notes.utils'
 
+const STUDY = '11111111-1111-4111-8111-111111111111'
+const OTHER_STUDY = '22222222-2222-4222-8222-222222222222'
+
 const note = (overrides: Partial<CalendarNote> = {}): CalendarNote => ({
   id: 'n1',
+  studyId: STUDY,
   day: '2026-11-06',
   type: 'note',
   title: 'Read chapter 4',
@@ -48,6 +54,8 @@ describe('sanitizeCalendarNote', () => {
     assert.equal(sanitizeCalendarNote(note({ day: '2026-13-01' })), null)
     assert.equal(sanitizeCalendarNote({ ...note(), type: 'birthday' }), null)
     assert.equal(sanitizeCalendarNote(note({ title: '  ' })), null)
+    assert.equal(sanitizeCalendarNote({ ...note(), studyId: undefined }), null)
+    assert.equal(sanitizeCalendarNote(note({ studyId: 'not-a-uuid' })), null)
   })
 
   it('clamps a long title instead of dropping the note', () => {
@@ -76,11 +84,15 @@ describe('sanitizeCalendarNotes', () => {
 
 describe('groupNotesByDay', () => {
   it('drops tombstones and orders a day newest edit first', () => {
-    const grouped = groupNotesByDay([
-      note({ id: 'a', updatedAt: '2026-11-01T09:00:00.000Z' }),
-      note({ id: 'b', updatedAt: '2026-11-02T09:00:00.000Z' }),
-      note({ id: 'c', deleted: true }),
-    ])
+    const grouped = groupNotesByDay(
+      [
+        note({ id: 'a', updatedAt: '2026-11-01T09:00:00.000Z' }),
+        note({ id: 'b', updatedAt: '2026-11-02T09:00:00.000Z' }),
+        note({ id: 'c', deleted: true }),
+        note({ id: 'd', studyId: OTHER_STUDY }),
+      ],
+      STUDY
+    )
 
     assert.deepEqual(
       grouped['2026-11-06']?.map((item) => item.id),
@@ -100,10 +112,22 @@ describe('daily cap', () => {
       note({ id: 'e', day: '2026-11-07' }),
     ]
 
-    assert.equal(countNotesOnDay(notes, '2026-11-06'), 3)
-    assert.equal(canAddNoteOnDay(notes, '2026-11-06'), false)
-    assert.equal(canAddNoteOnDay(notes, '2026-11-06', 'a'), true)
-    assert.equal(canAddNoteOnDay(notes, '2026-11-07'), true)
+    assert.equal(countNotesOnDay(notes, STUDY, '2026-11-06'), 3)
+    assert.equal(canAddNoteOnDay(notes, STUDY, '2026-11-06'), false)
+    assert.equal(canAddNoteOnDay(notes, STUDY, '2026-11-06', 'a'), true)
+    assert.equal(canAddNoteOnDay(notes, STUDY, '2026-11-07'), true)
+  })
+
+  it('counts each study separately on the same day', () => {
+    const notes = [
+      note({ id: 'a' }),
+      note({ id: 'b' }),
+      note({ id: 'c' }),
+      note({ id: 'd', studyId: OTHER_STUDY }),
+    ]
+
+    assert.equal(canAddNoteOnDay(notes, STUDY, '2026-11-06'), false)
+    assert.equal(canAddNoteOnDay(notes, OTHER_STUDY, '2026-11-06'), true)
   })
 })
 
@@ -181,5 +205,85 @@ describe('pull safety', () => {
       notesDifferFrom([note({ id: 'a', title: 'edited' })], remote),
       true
     )
+  })
+})
+
+describe('notesMissingFrom', () => {
+  const remote = [note({ id: 'a' }), note({ id: 'b', deleted: true })]
+
+  it('sends nothing when the profile already holds the local copy', () => {
+    assert.deepEqual(notesMissingFrom(remote, remote), [])
+  })
+
+  it('sends a note the profile does not have, and an edited one', () => {
+    const missing = notesMissingFrom(remote, [
+      ...remote,
+      note({ id: 'c', title: 'local only' }),
+      note({ id: 'a', title: 'edited here' }),
+    ])
+
+    assert.deepEqual(missing.map((item) => item.id).sort(), ['a', 'c'])
+  })
+
+  it('sends a deletion the profile still holds as live', () => {
+    assert.deepEqual(
+      notesMissingFrom(remote, [note({ id: 'a', deleted: true })]).map(
+        (item) => item.id
+      ),
+      ['a']
+    )
+  })
+
+  it('leaves out a note the profile holds identically despite a newer local edit stamp', () => {
+    assert.deepEqual(
+      notesMissingFrom(remote, [
+        note({ id: 'b', deleted: true, updatedAt: '2026-11-02T00:00:00.000Z' }),
+      ]),
+      []
+    )
+  })
+})
+
+describe('calendarNotesDigest', () => {
+  it('is stable across order and edit stamps', () => {
+    const first = note({ id: 'a' })
+    const second = note({ id: 'b', title: 'Another' })
+
+    assert.equal(
+      calendarNotesDigest([first, second]),
+      calendarNotesDigest([
+        { ...second, updatedAt: '2026-11-05T00:00:00.000Z' },
+        first,
+      ])
+    )
+  })
+
+  it('changes when any note content changes', () => {
+    const notes = [note({ id: 'a' }), note({ id: 'b' })]
+
+    assert.notEqual(
+      calendarNotesDigest(notes),
+      calendarNotesDigest([note({ id: 'a' }), note({ id: 'b', body: 'new' })])
+    )
+    assert.notEqual(
+      calendarNotesDigest(notes),
+      calendarNotesDigest([note({ id: 'a' })])
+    )
+    assert.notEqual(
+      calendarNotesDigest(notes),
+      calendarNotesDigest([note({ id: 'a' }), note({ id: 'b', deleted: true })])
+    )
+    assert.notEqual(
+      calendarNotesDigest(notes),
+      calendarNotesDigest([
+        note({ id: 'a' }),
+        note({ id: 'b', studyId: OTHER_STUDY }),
+      ])
+    )
+  })
+
+  it('gives the empty list its own value', () => {
+    assert.equal(calendarNotesDigest([]), calendarNotesDigest([]))
+    assert.notEqual(calendarNotesDigest([]), calendarNotesDigest([note()]))
   })
 })

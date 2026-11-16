@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { Box } from '@/components/common/Box'
 import { PageLayout } from '@/components/layout/PageLayout'
 import { Divider } from '@/components/ui/Divider'
+import { CalendarStudyProvider } from '@/providers/calendar-notes/CalendarStudyProvider'
 import type { CalendarPageViewModel } from '@/types/components/Calendar.types'
 import { CalendarDataNotice } from './CalendarDataNotice'
 import { CalendarDayList } from './CalendarDayList'
@@ -30,6 +31,7 @@ export const CalendarScreen = (viewModel: CalendarPageViewModel) => {
     eventCount,
     dataRange,
     isOutsideData,
+    studyId,
     links,
   } = viewModel
 
@@ -58,31 +60,33 @@ export const CalendarScreen = (viewModel: CalendarPageViewModel) => {
   }
 
   return (
-    <PageLayout
-      header={{
-        title: CALENDAR_STRINGS_PACK.pageTitle,
-        subtitle: CALENDAR_STRINGS_PACK.pageSubtitle,
-      }}
-      className='min-h-full'
-    >
-      <Box className='ui-stack ui-above grow'>
-        <CalendarToolbar
-          view={view}
-          isAtToday={isAtToday}
-          periodLabel={viewModel.periodLabel}
-          periodLabelShort={viewModel.periodLabelShort}
-          links={links}
-        />
-        <Divider />
+    <CalendarStudyProvider studyId={studyId}>
+      <PageLayout
+        header={{
+          title: CALENDAR_STRINGS_PACK.pageTitle,
+          subtitle: CALENDAR_STRINGS_PACK.pageSubtitle,
+        }}
+        className='min-h-full'
+      >
+        <Box className='ui-stack ui-above grow'>
+          <CalendarToolbar
+            view={view}
+            isAtToday={isAtToday}
+            periodLabel={viewModel.periodLabel}
+            periodLabelShort={viewModel.periodLabelShort}
+            links={links}
+          />
+          <Divider />
 
-        {isOutsideData && <CalendarDataNotice dataRange={dataRange} />}
+          {isOutsideData && <CalendarDataNotice dataRange={dataRange} />}
 
-        {eventCount === 0 && !isOutsideData && (
-          <CalendarEmptyState period={view} todayHref={links.today} />
-        )}
+          {eventCount === 0 && !isOutsideData && (
+            <CalendarEmptyState period={view} todayHref={links.today} />
+          )}
 
-        {content}
-      </Box>
-    </PageLayout>
+          {content}
+        </Box>
+      </PageLayout>
+    </CalendarStudyProvider>
   )
 }

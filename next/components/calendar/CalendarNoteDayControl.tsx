@@ -10,6 +10,7 @@ import { Button } from '@/components/common/Button'
 import { Text } from '@/components/typography/Text'
 import { cn } from '@/lib/common-utils'
 import { useCalendarNotes } from '@/providers/calendar-notes/CalendarNotesProvider'
+import { useCalendarStudyId } from '@/providers/calendar-notes/CalendarStudyProvider'
 import { useStrings } from '@/providers/locale/use-strings'
 import { CalendarNoteChip } from './CalendarNoteChip'
 import { CalendarNoteEditorDialog } from './CalendarNoteEditorDialog'
@@ -43,12 +44,18 @@ export const CalendarNoteDayControl = ({
   className,
 }: CalendarNoteDayControlProps) => {
   const strings = useStrings(CALENDAR_STRINGS_PACK)
+  const studyId = useCalendarStudyId()
   const { ready, notesForDay, canAddNote } = useCalendarNotes()
   const [editing, setEditing] = useState<CalendarNote | 'new' | null>(null)
-  const notes = ready ? notesForDay(day) : []
+  const notes = ready && studyId ? notesForDay(studyId, day) : []
   const isCell = variant === 'cell'
-  const canAdd = allowAdd && ready && notes.length < CALENDAR_NOTES_PER_DAY
-  const atCap = !canAddNote(day)
+  // A study without a database row has no key to store a note under.
+  const canAdd =
+    allowAdd &&
+    ready &&
+    studyId !== null &&
+    notes.length < CALENDAR_NOTES_PER_DAY
+  const atCap = studyId === null || !canAddNote(studyId, day)
 
   return (
     <Box className={cn('min-w-0', className)}>

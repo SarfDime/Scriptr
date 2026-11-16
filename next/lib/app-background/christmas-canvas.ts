@@ -4,6 +4,7 @@ import {
   CHRISTMAS_DEFAULTS,
   type ChristmasColorRole,
 } from '@shared/config/christmas-canvas'
+import { SKY_ANCHORS } from '@shared/config/skybox'
 import type {
   ChristmasBounds,
   ChristmasCanvasConfig,
@@ -24,10 +25,11 @@ import type {
 import {
   addFalloff,
   createColorResolver,
+  luminance,
   mixRGB,
   TAU,
   WHITE,
-} from '@/lib/star-canvas'
+} from '@/lib/app-background/canvas-primitives'
 
 // Procedural Christmas scenery, drawn in a flat, layered vector style: snow-capped
 // mountains, wavy hills with crescent "swoosh" highlights, stripe-banded conical
@@ -39,10 +41,10 @@ import {
 // returns. The reindeer are the exception: they are drawn live (paintReindeer) so
 // each one can move on its own.
 //
-// Glows (lit windows, Christmas lights) are drawn live on top of the whole picture, so
-// while painting, every hill, tree and house also records its outline (`occlude`).
-// Each glowing house or tree then knows which later-painted shapes are in front of it
-// and the animated layer cuts those out of its glow.
+// Glows (the Christmas lights of decorated trees) are drawn live on top of the whole
+// picture, so while painting, every hill, tree and house also records its outline
+// (`occlude`). Each decorated tree then knows which later-painted shapes are in front
+// of it, and the animated layer cuts those out of its glow.
 
 const BLACK = '0, 0, 0'
 
@@ -74,11 +76,6 @@ const mulberry32 = (seed: number) => {
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296
   }
-}
-
-const luminance = (rgb: string) => {
-  const [r = 0, g = 0, b = 0] = rgb.split(',').map(Number)
-  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
 }
 
 /** A shade (`k` toward black) or a tint (`t` toward white) of an "r, g, b" string. */
@@ -123,7 +120,7 @@ export const buildRadialSprite = (
 // ── Colors ──────────────────────────────────────────────────────────────────
 
 /**
- * Reads the theme colors (the same way StarCanvas does) and builds the scenery palette.
+ * Reads the theme colors and builds the scenery palette.
  * The scenery follows the theme: blues and navy pines in the light theme, moonlit
  * night tones with the brand green on the pines in the dark theme. Call again after a
  * theme change. The colors picked in Sanity are applied on top (see
@@ -356,8 +353,8 @@ export const resolveChristmasColors = (
  * in christmas-colors.module.css and do not change with the theme, so the picture is
  * the same in the light and the dark theme.
  *
- * `isDark` is true so the lights and windows glow at their nighttime strength and the
- * mountains keep their full shading; this palette is about color, not about daylight.
+ * `isDark` is true so the lights glow at their nighttime strength and the mountains
+ * keep their full shading; this palette is about color, not about daylight.
  */
 export const resolveImmersiveChristmasColors = (): ChristmasColors => {
   const c = createColorResolver()
@@ -670,7 +667,7 @@ const paintRange = (
     ctx.stroke()
 
     // Two flat rock facets down the shaded face. The jitter comes from the peak index
-    // rather than `rng`, so the shared scene layout is exactly what it was before.
+    // rather than `rng`, so the shared scene layout stays stable across renders.
     for (let k = 0; k < 2; k++) {
       const jitter = (((i * 13 + k * 7) % 9) / 9) * 0.08
       const t = 0.26 + k * 0.28 + jitter
@@ -925,10 +922,8 @@ const paintGrove = (
 const rollHouse = (rng: () => number): ChristmasHouseRolls => {
   const side = rng()
   const chimneyPhase = rng()
-  const first = { phase: rng(), rate: rng() }
-  const second = { phase: rng(), rate: rng() }
   const litDoor = rng()
-  return { side, chimneyPhase, windows: [first, second], litDoor }
+  return { side, chimneyPhase, litDoor }
 }
 
 /**
@@ -1137,14 +1132,24 @@ const paintHouse = (
   ctx.stroke()
 
   // Windows, following the variant's layout
-  for (const [i, spec] of variant.windows.entries()) {
-    const roll = rolls.windows[i % rolls.windows.length]
+  for (const spec of variant.windows) {
     const windowWidth = width * 0.15 * spec.scale
     const windowHeight = windowWidth * 1.25
     const wx = x + flip * width * spec.dx - windowWidth / 2
     const windowY = eaveY + wallHeight * spec.dy
     const border = Math.max(1, windowWidth * 0.1)
     const bar = Math.max(1, windowWidth * 0.08)
+
+    // A faint halo around the lit window, painted with the house: it is light on the
+    // wall, so it does not have to move with the bulbs. Fainter in the light theme,
+    // where a bright wall has less room for it.
+    const glowX = wx + windowWidth / 2
+    const glowY = windowY + windowHeight / 2
+    const glowR = windowWidth * 1.9
+    const glow = ctx.createRadialGradient(glowX, glowY, 0, glowX, glowY, glowR)
+    addFalloff(glow, c.window, colors.isDark ? 0.3 : 0.16, 2.2)
+    ctx.fillStyle = glow
+    ctx.fillRect(glowX - glowR, glowY - glowR, glowR * 2, glowR * 2)
 
     // Frame, then the glass in it
     ctx.fillStyle = rgba(c.frame)
@@ -1169,13 +1174,6 @@ const paintHouse = (
       windowWidth + border * 3.2,
       Math.max(1, border * 1.2)
     )
-    env.glow().windows.push({
-      x: wx + windowWidth / 2,
-      y: windowY + windowHeight / 2,
-      r: windowWidth * 2.4,
-      phase: (roll?.phase ?? 0) * TAU,
-      rate: 0.0008 + (roll?.rate ?? 0) * 0.0012,
-    })
   }
 
   // Door: a frame, the recessed door, a shadow down its inner edge, two panels, a
@@ -1324,7 +1322,9 @@ const paintHouse = (
           width * 0.035 +
           Math.abs(Math.sin(t * Math.PI * 3)) * width * 0.02,
         bulb,
-        k
+        k,
+        // The bulb is part of the scenery; its halo would sit on top of the house.
+        false
       )
     }
     const wreathX = doorX + doorWidth / 2
@@ -1392,7 +1392,6 @@ export const paintChristmasScene = (
   const glow = () => {
     if (!current) {
       current = {
-        windows: [],
         lights: [],
         bounds: { x: 0, y: 0, w: 0, h: 0 },
         cover: [],
@@ -1428,13 +1427,14 @@ export const paintChristmasScene = (
 
   ctx.clearRect(0, 0, w, h)
 
-  // Mountains: a far and a near range, behind the first hill
+  // Mountains: a far and a near range, behind the first hill, standing on the same
+  // horizon as the sky's sun and moon (SKY_ANCHORS), so they set behind the ridge.
   paintRange(
     ctx,
     w,
     h,
     vh,
-    h * 0.66,
+    h * (SKY_ANCHORS.horizon - 0.02),
     [0.16, 0.3],
     colors.mountains.far,
     colors.mountains.farCap,
@@ -1446,7 +1446,7 @@ export const paintChristmasScene = (
     w,
     h,
     vh,
-    h * 0.68,
+    h * SKY_ANCHORS.horizon,
     [0.08, 0.17],
     colors.mountains.near,
     colors.mountains.nearCap,
@@ -1595,7 +1595,7 @@ export const paintChristmasScene = (
     let y0 = Number.POSITIVE_INFINITY
     let x1 = Number.NEGATIVE_INFINITY
     let y1 = Number.NEGATIVE_INFINITY
-    for (const glowSpot of [...group.windows, ...group.lights]) {
+    for (const glowSpot of group.lights) {
       x0 = Math.min(x0, glowSpot.x - glowSpot.r)
       y0 = Math.min(y0, glowSpot.y - glowSpot.r)
       x1 = Math.max(x1, glowSpot.x + glowSpot.r)

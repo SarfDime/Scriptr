@@ -19,7 +19,6 @@ export type CommentsApi = Pick<
   | 'toggleLike'
 >
 
-/** What readers of the tree need. */
 export type CommentsStateValue = {
   comments: Array<CommentEntity>
   commentCount: number
@@ -35,7 +34,6 @@ export type CommentsStateValue = {
   loadMoreThreadReplies: (commentId: string) => void
 }
 
-/** What writers need: the target, the API, who's viewing, and the tree mutations. */
 export type CommentsServicesValue = {
   target: CommentSectionProps['target']
   api: CommentsApi
@@ -62,6 +60,7 @@ export type CommentItemProps = {
   /** Name of the comment this one replies to; only shown once replies are flattened. */
   parentAuthorName?: string
   showNestedReplies?: boolean
+  className?: string
 }
 
 export type CommentAuthorAvatarProps = {

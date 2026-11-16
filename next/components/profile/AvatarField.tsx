@@ -65,7 +65,7 @@ export function AvatarField({
         <label
           htmlFor={inputId}
           className={cn(
-            'button button-sm hollow w-fit cursor-pointer',
+            'button button-sm subtle w-fit cursor-pointer',
             'peer-focus-visible:outline-2 peer-disabled:pointer-events-none peer-disabled:opacity-50'
           )}
         >

@@ -1,11 +1,11 @@
 // Types for the procedurally drawn Christmas canvas background
 // (next/components/ui/app-background/ChristmasCanvas.tsx,
 // next/lib/app-background/christmas-canvas.ts).
-// Every color is an "r, g, b" string (like StarCanvas), so it can be mixed and
-// given an alpha when it is used.
+// Every color is an "r, g, b" string, so it can be mixed and given an alpha when
+// it is used.
 
 import type { ChristmasColorRole } from '../config/christmas-canvas'
-import type { Point } from './star-canvas.types'
+import type { Point } from './canvas.types'
 
 /** Tunables for the scene. Defaults live in CHRISTMAS_DEFAULTS (next/lib/app-background/christmas-canvas.ts). */
 export type ChristmasCanvasConfig = {
@@ -21,7 +21,6 @@ export type ChristmasCanvasConfig = {
   santaMinGapSeconds: number
   santaMaxGapSeconds: number
   enableSmoke: boolean
-  enableWindowGlow: boolean
   /** Chance (0-1) that a mid or near pine wears lights and baubles. */
   treeDecorationChance: number
   /** Chance (0-1) that a house has lights along its roof and a wreath. */
@@ -132,13 +131,13 @@ export type ChristmasOccluder = {
 }
 
 /**
- * The glowing parts of one house or decorated tree: its lit windows and Christmas light
- * bulbs (`r` is the size of the glow, `colorIndex` points into colors.lights). Glows
- * are drawn on top of the whole picture, so `cover` holds the shapes painted in front
- * of this group, which have to be cut out of its glow.
+ * The glowing parts of one decorated tree: its Christmas light bulbs (`r` is the size
+ * of the glow, `colorIndex` points into colors.lights). Glows are drawn on top of the
+ * whole picture, so `cover` holds the shapes painted in front of this group, which have
+ * to be cut out of its glow. Houses have no glow of their own: their windows and bulbs
+ * are painted into the scenery.
  */
 export type ChristmasGlowGroup = {
-  windows: Array<Point & { r: number; phase: number; rate: number }>
   lights: Array<
     Point & { r: number; colorIndex: number; phase: number; rate: number }
   >
@@ -153,7 +152,6 @@ export type ChristmasGlowGroup = {
 export type ChristmasHouseRolls = {
   side: number
   chimneyPhase: number
-  windows: Array<{ phase: number; rate: number }>
   litDoor: number
 }
 
@@ -162,7 +160,9 @@ export type ChristmasLightPainter = (
   x: number,
   y: number,
   r: number,
-  index: number
+  index: number,
+  /** `false` paints the bulb without registering a glow (the houses' eave lights). */
+  withGlow?: boolean
 ) => void
 
 /** What the scenery pieces use to take part in the glow and cover bookkeeping. */

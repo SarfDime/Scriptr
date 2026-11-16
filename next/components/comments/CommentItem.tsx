@@ -33,6 +33,7 @@ export function CommentItem({
   depth,
   parentAuthorName,
   showNestedReplies = false,
+  className,
 }: CommentItemProps) {
   const strings = useStrings(COMMENT_STRINGS_PACK)
   const [isReplyOpen, setIsReplyOpen] = useState(false)
@@ -81,7 +82,7 @@ export function CommentItem({
   }
 
   return (
-    <Box className='ui-stack gap-2'>
+    <Box className={cn('ui-stack gap-2', className)}>
       <Box className={cn('ui-stack gap-4', !isRoot && 'pt-2')}>
         <CommentHeader
           author={comment.author}

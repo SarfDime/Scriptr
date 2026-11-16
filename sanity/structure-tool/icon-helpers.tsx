@@ -1,6 +1,6 @@
 import type { ComponentType, CSSProperties } from 'react'
 
-export const structureToolIconColors = {
+const structureToolIconColors = {
   hero: 'var(--info-blue)',
   contact: 'var(--jade-green)',
   info: 'var(--rose-pink)',

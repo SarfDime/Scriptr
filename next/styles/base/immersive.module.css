@@ -6,9 +6,13 @@
 }
 
 @layer utilities {
+  /* Full-screen mode paints over the header too, so the canvases leave the
+     viewport below it and take the whole screen back. */
   html.is-immersive #app-background canvas {
     z-index: 40;
     pointer-events: auto;
+    top: 0;
+    height: 100dvh;
   }
 
   /* The lens-flare overlay: above the scenery canvases (same z-index, later in the

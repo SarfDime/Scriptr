@@ -29,7 +29,7 @@ export function EditScriptModal({
     <>
       <Button
         onClick={() => setIsOpen(true)}
-        className='button button-sm hollow grow'
+        className='button button-sm subtle grow'
       >
         {strings.manage.edit}
       </Button>

@@ -12,7 +12,7 @@ import { NextLink } from '@/components/common/NextLink'
 import { Text } from '@/components/typography/Text'
 import { Avatar } from '@/components/ui/Avatar'
 import { Badge } from '@/components/ui/Badge'
-import { convertDateToClientLocale } from '@/lib/common-utils'
+import { cn, convertDateToClientLocale } from '@/lib/common-utils'
 import type { ComponentColorPalettes } from '@/types/components/ColorPalettes.types'
 
 const ROLE_PALETTE: Record<UserRole, ComponentColorPalettes> = {
@@ -29,6 +29,7 @@ type AdminUserItemProps = {
   onView: () => void
   onEdit: () => void
   onDelete: () => void
+  className?: string
 }
 
 /** One row of the admin user manager: who they are, what they selected, and
@@ -40,6 +41,7 @@ export const AdminUserItem = ({
   onView,
   onEdit,
   onDelete,
+  className,
 }: AdminUserItemProps) => {
   const role = isUserRole(profile.role) ? profile.role : null
   const name = profile.full_name ?? profile.username
@@ -51,7 +53,10 @@ export const AdminUserItem = ({
   )
 
   return (
-    <Box as='article' className='ui-stack ui-above-inside h-full gap-3'>
+    <Box
+      as='article'
+      className={cn('ui-stack ui-above-inside h-full gap-3', className)}
+    >
       <Box className='ui-cluster items-start justify-between gap-3'>
         <Box className='ui-cluster gap-2.5'>
           <Avatar

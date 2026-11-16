@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  CALENDAR_NOTES_AUTO_SYNC_DAYS,
   CALENDAR_NOTES_SYNC_DAILY_LIMIT,
   CALENDAR_NOTES_SYNC_SHORT_LIMIT,
   CALENDAR_NOTES_SYNC_SHORT_MINUTES,
@@ -127,6 +128,9 @@ export const CalendarNotesSyncSection = () => {
           {calendarStrings.note.syncLimitDaily(CALENDAR_NOTES_SYNC_DAILY_LIMIT)}
           {` — ${calendarStrings.note.syncLimitNotice}`}
         </Text>
+        <Text className='ui-caption text-fg-muted'>
+          {calendarStrings.note.autoSyncNotice(CALENDAR_NOTES_AUTO_SYNC_DAYS)}
+        </Text>
       </Box>
 
       <Divider />
@@ -214,7 +218,6 @@ const SyncConfirm = ({
 
   return (
     <Dialog
-      as='section'
       isOpen
       hideTrigger
       title={title}
@@ -225,7 +228,7 @@ const SyncConfirm = ({
       }}
     >
       <Card.Body className='ui-stack gap-3 p-4'>
-        <Text className='ui-caption text-fg-muted'>{description}</Text>
+        <Text className='ui-body'>{description}</Text>
         {warning && (
           <Text className='ui-caption cp-warning rounded-lg border p-2'>
             {warning}

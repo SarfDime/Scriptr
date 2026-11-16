@@ -12,7 +12,6 @@ export type TitleProps = {
   children?: PortableTextValue | ReactNode
 } & Omit<AdditionalComponentAttributes, 'children' | 'title'>
 
-/** Renders a title as a heading element, */
 export function Title({ children, as = 'h4', ...rest }: TitleProps) {
   const HeadingTag = as
 

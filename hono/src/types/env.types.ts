@@ -5,7 +5,6 @@ import type {
   UserRole,
 } from '../../../shared/types/profile.types'
 
-// Define your environment variable types
 export type Env = {
   NODE_ENV?: 'development' | 'test' | 'production'
   CORS_ORIGINS?: string
@@ -37,7 +36,6 @@ export type Env = {
   OPTIMIZER_SECRET?: string
 }
 
-// Extend User type with additional custom properties
 export type AuthUser = User & {
   profile?: {
     username?: string
@@ -48,7 +46,6 @@ export type AuthUser = User & {
   }
 }
 
-// Define Hono context with variables
 export type HonoEnv = {
   Bindings: Env
   Variables: {

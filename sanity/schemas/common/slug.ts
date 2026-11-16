@@ -12,10 +12,8 @@ type SlugProps = {
   fieldset?: string
 }
 
-/** This function returns a schema object for a slug field that can be used to
- * create a link to a section. The slug is automatically generated from the
- * section title or a custom source field.
- */
+/** A slug field whose value is generated from `source`, or from the document
+ * title when no source is given. */
 export function slugSchemaField({
   title,
   name,

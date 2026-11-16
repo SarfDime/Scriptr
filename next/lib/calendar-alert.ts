@@ -41,8 +41,7 @@ export const getCalendarAlertEvents = async (
 /**
  * The subjects a study's calendar alert matches events against, with their
  * database ids. Read on the server alongside the events, so the alert needs no
- * catalog of its own — it used to fetch the whole one to answer two questions
- * about one study.
+ * catalog of its own.
  *
  * A failed read yields no subjects: the alert then shows only the global
  * events, which is also what a signed-out reader sees.

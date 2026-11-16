@@ -1,5 +1,20 @@
-import type { SkyState } from '@shared/types/skybox.types'
-import { createColorResolver, TAU } from '@/lib/star-canvas'
+import {
+  applySkyColorOverrides,
+  SKY_PALETTE,
+  SKYBOX_DEFAULTS,
+} from '@shared/config/skybox'
+import type {
+  SkyboxConfig,
+  SkyboxSanityData,
+  SkyColorPalette,
+  SkyColorSettings,
+  SkyState,
+} from '@shared/types/skybox.types'
+import {
+  createColorResolver,
+  luminance,
+  TAU,
+} from '@/lib/app-background/canvas-primitives'
 import { paintSun } from './skybox-sun'
 
 // Drawing for the shared sky (components/ui/app-background/SkyboxCanvas.tsx). Flat shapes
@@ -8,7 +23,8 @@ import { paintSun } from './skybox-sun'
 // the only smooth thing in the picture.
 //
 // The sky itself is painted at most twice a second normally and at the effects frame
-// cap in immersive mode; stars and clouds are drawn live at that cap.
+// cap in immersive mode; stars and clouds are drawn live, at half that cap unless
+// immersive mode is on.
 
 export const rgba = (rgb: string, alpha = 1) => `rgba(${rgb}, ${alpha})`
 
@@ -29,10 +45,33 @@ export const createSkyColorResolver = () => {
   }
 }
 
-/** Brightness of an "r, g, b" string, 0 to 1. */
-const lumaOf = (rgb: string) => {
-  const [r = 0, g = 0, b = 0] = rgb.split(',').map(Number)
-  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
+/**
+ * The colors picked in Sanity for the current theme, on top of the built-in palette.
+ * The theme is read from the resolved page background, the way the scenery reads it.
+ * Call again after a theme change, with a fresh resolver.
+ */
+export const resolveSkyboxPalette = (
+  settings: SkyColorSettings | null | undefined,
+  toRGB: (key: string) => string
+): SkyColorPalette => {
+  const isDark = luminance(toRGB('background')) < 0.4
+  const overrides = isDark ? settings?.dark : settings?.light
+  return overrides
+    ? applySkyColorOverrides(SKY_PALETTE, overrides)
+    : SKY_PALETTE
+}
+
+/** Sanity returns `null` for unset fields, so `{...SKYBOX_DEFAULTS, ...data}` is not enough. */
+export const withSkyboxDefaults = (
+  data?: SkyboxSanityData | null
+): SkyboxConfig => {
+  const config: SkyboxConfig = { ...SKYBOX_DEFAULTS }
+  for (const [key, value] of Object.entries(data ?? {})) {
+    if (value != null && key in config) {
+      ;(config as Record<string, unknown>)[key] = value
+    }
+  }
+  return config
 }
 
 const clamp = (value: number, min: number, max: number) =>
@@ -230,7 +269,7 @@ export const paintSky = (
     const r = state.sun.radius * min
     paintGlow(ctx, sx, sy, r * 4.8, state.sun.glow, 0.34 * breath)
     paintGlow(ctx, sx, sy, r * 1.85, state.sun.glow, 0.62 * breath)
-    const skyLuma = (lumaOf(state.skyTop) + lumaOf(state.skyBottom)) / 2
+    const skyLuma = (luminance(state.skyTop) + luminance(state.skyBottom)) / 2
     paintSun(ctx, sx, sy, r, state.sun, 1 - 0.55 * skyLuma)
   }
 
@@ -255,7 +294,11 @@ export type SkyStar = {
   rate: number
 }
 
-export const buildStars = (count: number, seed: number): Array<SkyStar> => {
+export const buildStars = (
+  count: number,
+  seed: number,
+  size = 1
+): Array<SkyStar> => {
   let s = seed >>> 0
   const next = () => {
     s = (s + 0x6d2b79f5) >>> 0
@@ -269,7 +312,7 @@ export const buildStars = (count: number, seed: number): Array<SkyStar> => {
     y: next() * 0.92,
     // Mostly tiny: a high `pow` makes anything above a speck rare, and the
     // ceiling is lower, so even a big star stays small.
-    r: 0.0005 + next() ** 5.5 * 0.0014,
+    r: (0.0005 + next() ** 5.5 * 0.0014) * size,
     phase: next() * TAU,
     rate: 0.0012 + next() * 0.0022,
   }))
@@ -359,7 +402,11 @@ export type SkyCloud = {
   puffs: ReadonlyArray<{ dx: number; dy: number; r: number }>
 }
 
-export const buildClouds = (count: number, seed: number): Array<SkyCloud> => {
+export const buildClouds = (
+  count: number,
+  seed: number,
+  speedScale = 1
+): Array<SkyCloud> => {
   let s = seed >>> 0
   const next = () => {
     s = (s + 0x9e3779b9) >>> 0
@@ -373,7 +420,7 @@ export const buildClouds = (count: number, seed: number): Array<SkyCloud> => {
     return {
       x: next(),
       y: 0.08 + next() * 0.34,
-      speed: 0.0015 + next() * 0.002,
+      speed: (0.0015 + next() * 0.002) * speedScale,
       scale: 0.05 + next() * 0.05,
       puffs: Array.from({ length: puffs }, (_, i) => ({
         dx: (i - puffs / 2) * 0.9 + (next() - 0.5) * 0.3,

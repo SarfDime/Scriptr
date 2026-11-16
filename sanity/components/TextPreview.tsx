@@ -1,10 +1,6 @@
 import type { ComponentProps } from '../types/common.types'
 
-/** Renders a styled text preview.
- *
- * This component displays a text with a custom color, class, and styles.
- * The text is underlined with a dotted line and has a border at the bottom.
- */
+/** The text is underlined with a dotted line and has a border at the bottom. */
 export const TextPreview = ({
   title,
   customColor,

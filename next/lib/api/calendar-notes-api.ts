@@ -1,5 +1,6 @@
 import { apiRoutes } from '@shared/config/api-routes'
 import type {
+  CalendarNotesAutoSyncResponse,
   CalendarNotesResponse,
   CalendarNotesSyncRequest,
   CalendarNotesSyncResponse,
@@ -24,3 +25,16 @@ export const syncMyCalendarNotes = (payload: CalendarNotesSyncRequest) =>
     method: 'POST',
     body: payload,
   })
+
+/**
+ * The automatic push. The profile's copy comes back only when the push ran; a
+ * profile that is not due answers `{ notes: null, nextAutoSyncAt }`.
+ */
+export const autoSyncMyCalendarNotes = (payload: CalendarNotesSyncRequest) =>
+  apiFetchRequired<CalendarNotesAutoSyncResponse>(
+    apiRoutes.calendarNotes.autoSync,
+    {
+      method: 'POST',
+      body: payload,
+    }
+  )

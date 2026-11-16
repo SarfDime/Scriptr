@@ -144,10 +144,9 @@ export const OnboardingSubjectsStep = ({
                     }
                     isActive={isYearComplete}
                     aria-pressed={isYearComplete}
-                    className={cn(
-                      'button button-sm ml-auto shrink-0 rounded-full px-3 py-1.5 min-h-10 md:min-h-0',
-                      isYearComplete ? 'subtle' : 'hollow'
-                    )}
+                    className={
+                      'button button-sm subtle ml-auto shrink-0 rounded-full px-3 py-1.5 min-h-10 md:min-h-0'
+                    }
                   >
                     {isYearComplete ? <CheckmarkCircle /> : <CheckmarkIcon />}
                     {ui.onboarding.yearCompleted}

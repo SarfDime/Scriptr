@@ -1,85 +1,143 @@
 # Frontend Structure & UI Conventions
 
-* **Thin pages.** A route's `page.tsx` awaits its params, calls a loader, and composes components. Fetching, cookies and 404 handling live in `next/lib/<feature>-page.ts` (e.g. `loadScriptDetailScript` for the existence check, then `loadScriptDetailPage` for the rest; `loadPublicProfilePage` for `/user/[username]` and `loadMyProfilePage` for `/user`, both in `next/lib/profile-page.ts`), which return view models typed in `next/types/components/` (e.g. `ScriptDetailViewModel`, `ProfilePageViewModel`). Components receive plain props and never fetch. Pure helpers (sorting, link labels, author display) live in `next/lib/<feature>.ts`.
-* **A `loading.tsx` costs the 404 status.** A segment-level Suspense boundary flushes the response before the page resolves, so `notFound()` streams after the headers and the route answers `200`. The script detail route therefore has no `loading.tsx`; it awaits its existence check first and uses the skeleton as its own `Suspense` fallback for the body. `/user/[username]` is the same case — a `loading.tsx` there made a missing profile answer `200`. Its loader, `loadPublicProfilePage` (`next/lib/profile-page.ts`), makes both route-level decisions before anything renders: a viewer opening their own username is redirected to `/user`, and `getPublicProfileByUsername` returning `null` (the API answered `404`) becomes `notFound()`. Any other failed read throws to the error boundary rather than showing a false 404; only the stats read is contained (`null` leaves the counts undefined, so the activity strip is skipped).
-* **The loading overlay explains the wait.** `LoadingProvider` shows the last task's `message` and optional `hint`, both supplied through `LoadingTaskDetails` — a task with neither just shows the wordmark animation, and nothing is invented to fill the space.
-* **The root is the catalog.** `/` lists the universities, their faculties and the studies (`CatalogHomeContent`, fed by `catalogHomeQuery`), and each study links to its own site — no subjects, professors or scripts, because those belong to a study. It is the one page an uninvolved visitor can use, and it is cached until the publish webhook invalidates it. **The catalog is the apex host and nothing else**: a study is served from its own hostname (`lbe.scriptr.uk`) by `next.config.ts` rewriting that host's paths onto `/study/[siteSlug]/…`, so a study link is the study's absolute address and the catalog path only redirects. There is one build and one deployment — the study tree is dynamic, so a per-route-group deployment would buy nothing ([`ARCHITECTURE-STUDY-DOMAINS.md`](ARCHITECTURE-STUDY-DOMAINS.md)). The page opens with the same page header every other page uses, carrying its two ways in — create an account (`/auth?mode=register`) and set up studies (`/start`) — and below it the three levels sit as columns of one surface (`CatalogSection`): universities, faculties, studies, two columns from `md` and three from `lg`, each a stack of full-width `CatalogCard`s, the compact form of the entity overview card. A study site follows the same rule as the rest of the catalog — its root is the entity's overview: `/study/[siteSlug]` is the **academic overview** (the overview card, subjects and professors), and its **content surface** is `…/scripts`: the scripts its students share, curated to the reader's unfinished subjects (the old root homepage, now study-scoped), with a `?scripts=all` switch to the study's top scripts and the reader's unfinished subjects in a sidebar. The landing page is the overview so a newcomer is not dropped into a feed they have to set up first; the study's setup gate hangs off the feed, which is the page setup exists for.
-* **Script detail page** (`/study/[siteSlug]/scripts/[scriptSlug]`): `ScriptDetailOverview` places two translucent surfaces in a wrapping flex row: the info group (`ScriptInfoPanel` + `ScriptAdditionalReading`, always shown, with an empty state) and `ScriptFilesSection`. The files take almost all free space (grow 100 vs 1), so when the row is too narrow the *first* wrap is the files dropping below the info group; only then does the reading panel wrap under the info. Files render in an `auto-fit` grid; each `ScriptFileCard` is its own container-query container, stacked while narrow and thumbnail-beside-details once about 28rem wide. A lone file is capped to its content width — unless it is previewable, in which case its card spans the whole files surface and previews the file inline, stacked while the card is narrow and preview-beside-details once it is wide enough. `ScriptFileCard` composes `ScriptFileThumbnail` and `ScriptFileActions` and owns the preview modal.
-* **The academic calendar** (a study's `/study/[siteSlug]/calendar`, §9 in [Calendar](ARCHITECTURE-CALENDAR.md))
-  keeps its view in the URL (`?view=month|week&date=YYYY-MM-DD`), so it is a
-  Server Component with `Link` controls and no client state; it reads
-  `searchParams` and must never be pinned `force-static`. Opening a day is a
-  link to the week view, so its one client island is the header alert (the
-  layout ships the study's build-time events and its subject list, and the
-  island narrows them to the reader's unfinished subjects).
-* **Subject lists share one filter pair.** `useSubjectFilters` (`next/hooks/`)
-  and `SubjectFilters` own the year and electives state for every list of
-  subjects — the study/professor explorer, the scripts sidebar and the profile
-  sidebar. A list shows one year at a time (there is no "all years") and opens
-  on the first year it has, which is year 1 whenever the list includes it;
-  electives are included until the toggle hides them. Only the explorer adds
-  search and sort. Both sidebars (the study's scripts page and the profile)
-  stack full subject cards and scroll once the list passes four cards, so a
-  long curriculum does not stretch them; the professor sidebar scrolls the same
-  way after four professors.
-* **Study tips** are Sanity-only content (`studyTip` documents with a rich text title and rich text content, no `dbId`, not synced to the database). They appear **only in the navbar**, as a compact panel after the viewer's studies and favorites: the tip's own title in `ui-label`, its content in `ui-caption`, headed by the `ui-nav-caption` "Study tip" label and a gold sparkle. The root layout fetches the whole published list once (`getStudyTips`, `next/lib/study-tip.ts`, cached and tag-invalidated like every Sanity read) and passes it to `NavStudyTip` (`next/components/navigation/`), which picks one per render. Both are Server Components: the tip is chosen with `Math.random()` when the page renders, so it differs between readers and revisits without a client island, and a prerendered page simply keeps the tip its build picked. With no tips, or a failed fetch, the panel renders nothing.
-* **Footer.** A one-line static Server Component (`Footer`, wordmark and copyright, copy in `UI_STRINGS.footer`) styled with `ui-above` and spanning the full width of the main area like the header (so it is full width while the navbar is collapsed), rendered by `MainLayout` after the content, with no request-time APIs so static routes stay static. The existing Sanity `footer` document is not used and is not linked from `website`; the static footer was chosen because no footer content exists. `MainLayout` is a flex column so the footer sits at the bottom of short pages, and `--footer-height` lets full-screen layouts (`/auth` on mobile) account for it.
-* **Strings and localization.** User-facing copy lives in `shared/strings/<area>-strings.ts` (`comments-strings.ts`, `scripts-strings.ts`, `ratings-strings.ts`) or `UI_STRINGS` (`shared/config/strings.ts`), never inline in components. A translated entry is `{ en, mk }`; a plain string is simply not translated yet and reads the same in every language, so a collection is migrated one entry at a time. Copy that depends on a value stays a function returning `{ en, mk }`: pluralisation and word order differ per language, so they belong in the entry rather than at the call site (`TIME_AGO_STRINGS_PACK`, and the calendar's `periodLabel`, which also keeps one `Intl.DateTimeFormat` per language at module scope instead of building one per render).
-* **A collection has one source object and one English view.** `<AREA>_PACK` holds the copy; the historical export (`UI_STRINGS`, `CALENDAR_STRINGS`, `COMMENT_STRINGS`, `TIME_AGO_STRINGS`) is that collection resolved to `DEFAULT_LOCALE` (`getStrings(pack, DEFAULT_LOCALE)`, `shared/utils/localized-strings.ts`). That view is what keeps the ~200 un-migrated imports — including `hono/`, which reads `UI_STRINGS`/`COMMENT_STRINGS` in Node — compiling and reading English. `ResolvedStrings<T>` is type-transparent for untranslated entries, so a migrated collection does not change any other call site's types. Collections are registered by name in `shared/config/string-packs.ts` (an index, not a second copy: each collection stays in its own file).
-* **Client Components read copy through the hook.** `useStrings` (and its `useUIStrings` alias for the collection most components read) in `next/providers/locale/use-strings.ts` resolves the active language and re-renders on a switch; `getStrings` memoises per collection and language, so the same object comes back every render. Never read a collection at module scope — a `const labels = [...]` built from strings at import time freezes the language it was first evaluated in (`ThemeToggle`'s `modes` list is the worked example, `useScriptFilePicker`'s `fileErrors` destructure is a known remaining case).
-* **Two readers, one resolver.** A Client Component that needs copy where a node cannot go — an attribute (`aria-label`, `title`, `alt` — `SimpleModeToggle`'s `title` is the worked example) or a prop typed `string` — calls `useCopy('navigation.simpleMode')` (`next/providers/locale/use-strings.ts`). A Server Component awaits `getServerStrings(UI_STRINGS_PACK)` (`next/lib/server-strings.ts`), which reads the route's language from `next/root-params` and returns the same resolved collection. Both go through `getStrings`, so the two cannot drift, and neither reads the language from a cookie or a module-level value.
-* **Path types are derived, not repeated.** `StringPath<T>` (`shared/types/localization.types.ts`) enumerates a collection's dot paths; `shared/config/string-packs.ts` derives `StringPackPath<P>` from the registry and names the aliases (`UIPath`, `CalendarPath`, `CommentPath`, `TimeAgoPath`). A key→path table a module-level constant needs is annotated with one of those, so a typo is a compile error and no file re-derives `StringPath<typeof …>` for itself.
-* **Server Components keep their copy on the server.** `LocaleProvider` holds the language — the one the route resolved to, handed down by the root layout, so the server and the client cannot disagree — and mirrors it onto `<html lang>`. The stored preference (`scriptr-language`) is only what `/` and a study-host root read to pick a default; it no longer decides what a page renders. Every persisted preference — language, theme, simple mode, navbar — still listens for another tab's `storage` event through one helper (`next/lib/storage-events.ts`). A Server Component awaits `getServerStrings` and renders strings; `SearchResults` is the worked example (nine messages including four group labels, resolved once at the top, and the component never enters the client bundle). This replaced a `Localized` client island, which existed because the language used to be chosen in the browser; the island is gone. A component that is rendered from a client parent — `Footer` and `PageHeader`, under `PageLayout`, which client pages render too — is a Client Component and reads copy with `useUIStrings()`/`useLocale()`; the server HTML is still right because the provider is seeded with the route's language. Making `PageHeader` a Server Component instead fails the build: `next/root-params` has no exports in a client bundle.
-* **Server-only copy reads the route's language.** A page takes it from its own `params` (`LocalePageProps`, `next/types/localization.types.ts` — the `[locale]` segment typed as a `LocaleId`) and passes it to `getServerStrings(pack, locale)`; a Server Component or helper below the page leaves the argument out and `next/lib/server-strings.ts` reads `next/root-params` for it. Either way there is no prop drilling and no dynamic rendering. A layout cannot take the narrow type — Next validates a layout's props against its own `ParamMap` (`locale: string`), which is why the root layout narrows the segment itself and why a layout that needs a `LocaleId` calls `getServerLocale()`. `metadata`/`generateMetadata`, the 404 and the error boundary all read it (an error boundary is a Client Component, so it uses `useUIStrings`). `global-error.tsx`, which replaces the root layout, stays English by design. The module is `server-only` and cannot be used from a route handler or a Server Action — those get no root param, so `createAcademicMetadata` lives in its own module (`next/lib/academic-metadata.ts`) apart from `academic-detail-page.ts`, which the sitemap handlers import. `next/lib/comment-validation.ts` shows the event-handler path: the locale is an argument, and the caller has it from `useLocale()`.
-* **The default language keeps its unprefixed address.** The page tree is `app/[locale]`, and `prefixDefault: false` means English stays where it is (`/university/ukim`, `lbe.scriptr.uk/scripts/x`) while Macedonian lives under `/mk/…`. A `next.config.ts` `beforeFiles` rewrite serves the unprefixed default out of `[locale]`; `/en/…` and the cookie-driven `/` and study-host roots are `next.config.ts` redirects, so there is no proxy and no middleware, and therefore no request hop. The navbar switch is a link to the other language's address with the query string kept, and `localizedPath` (`shared/utils/localized-path.ts`) is the one rule for minting an address. Sitemaps carry one entry per page with `alternates.languages`, not two entries per page.
-* **The chrome is server, the clock is a leaf.** `MainLayout` (its own module) composes `Header`, `PageLayout` and `Footer`, and all four are Server Components: copy is resolved per request, so none of it reaches the client bundle. A part that reads the clock cannot join them — a server render freezes it at build time on a prerendered page — so `Header` renders `HeaderDate` and `Footer` renders `FooterCopyright`, and the interactive leaves (`NavToggle`, `HeaderActions`, `NavLogo`) stay client where they already were. The same split applies to a page: `auth/callback/page.tsx` is a Server Component around `AuthCallbackCard`, because only the card needs `window.location`. Keep it that way — importing `PageLayout` from a Client Component compiles the whole chrome into the client bundle and makes `PageHeader`'s `getServerLocale()` fail the build (`next/root-params` exports nothing there). `'use server'` is not the shortcut either: the build passes and the page then 500s on first render (`Server Functions cannot be called during initial render`).
-* **A stored notification's sentence is rebuilt at read time.** The API writes a finished sentence into `notifications.title`/`body`, because at the moment of the event there is no reader to translate for (`NOTIFICATION_ROW_STRINGS`, the English view of `NOTIFICATIONS_STRINGS_PACK.row`). The tray rebuilds it in the reader's language from the row's `type` and `data` — `achievement_id`, `reason`/`expires_at`, `target_kind`/`title`, `count`/`target_type` — through `resolveStoredNotificationCopy` (`shared/utils/notification-copy.ts`), so rows written before that change follow the reader too and nothing had to be migrated. A row it cannot rebuild keeps its stored text: an `announcement` (an admin's own words) and an achievement outside the catalogue. Two things read as written by nature: an announcement, and the parts of a sentence that quote the moderator's `reason` or the user's own content title. Achievement titles and descriptions are code copy in `ACHIEVEMENTS_STRINGS_PACK.copy`; `ACHIEVEMENT_COPY` is its English view for the API and the admin screens.
-* **Failures.** A thrown render or data failure lands on a route boundary —
-  `next/app/[locale]/error.tsx`, plus the calendar's own `app/[locale]/(study)/study/[siteSlug]/calendar/error.tsx` —
-  which shows generic copy and a retry. Never render `error.message`: it is an
-  exception, and its text can carry database or stack details. Unknown routes
-  render a `not-found.tsx`; the root and per-segment ones share `ErrorState`
-  (`next/components/ui/ErrorState.tsx`), which is a `<section>` because the
-  root layout's `MainLayout` already owns the `main` landmark. Its
-  illustration is an inline SVG component
-  (`next/components/ui/AstronautIllustration.tsx`) rather than an `<img>`,
-  because a CSS variable cannot reach an external SVG: every fill is an
-  `--illustration-*` role from `styles/base/semantic.module.css`, which
-  re-tints the figure per theme and carries light-theme literals as
-  fallbacks for `global-error.tsx`, where no stylesheet loads.
-  `global-error.tsx` catches failures in the layout itself, where the
-  stylesheet is not guaranteed, so it uses inline styles only.
-* **A failed user action is a toast, not a page.** Mutations report the
-  outcome in place with `useToast().addToast({ type: 'error' | 'success', ... })`
-  (`next/providers/toaster/ToasterProvider.tsx`); the reader stays where the
-  action was, and the copy comes from `UI_STRINGS`. Only a failure that throws
-  during render reaches an error boundary.
-* **Only reader-written errors are quoted.** What a failure *says* comes from
-  `toUserMessage(error, fallback)` (`next/lib/user-facing-error.ts`): an error
-  the code marked as `UserFacingError` keeps its wording — the optimizer
-  rejecting a file, or naming which one still has to be sent — and everything
-  else gets the `UI_STRINGS` line. Every `ApiError` is in the second group on
-  purpose: its body is written for whoever calls the API, so some messages are
-  reader copy and some are not ("Invalid pagination or sort parameters"), and
-  the `503` that `apiFetchRequired` throws when the API is unreachable names
-  the endpoint. A client that needs a specific case shown maps it itself and
-  wraps it in a `UserFacingError`. The request layer converts one status on its
-  own: a `429` is thrown as a `UserFacingError`, because every rate-limit body
-  in the API tells the reader what to do ("Too many comments. Please try again
-  later.", "Too many uploads. Please wait a few minutes and try again.").
-  Sign-in is the other exception: `SessionProvider` shows a 4xx from `/auth/*`
-  verbatim, because those routes pass Supabase's own wording through ("Invalid
-  login credentials", "Email not confirmed"), and falls back to generic copy for
-  a 5xx body.
-* **"Failed" is not "empty".** A loader must not swallow a failed read into an
-  empty list or `null` when the page would then misreport the state — a profile
-  read that fails must not render `404`, and a search that never ran must not
-  say "no results". Return the failure, and let the page render its error
-  state. The `apiFetchPublicRead` fallbacks exist only for reads a build or a
-  static route must survive.
-* **A control carries its own name.** `Button` and `NextLink` require `ButtonProps`/`NextLinkProps`, which are `AccessibleNameProps` — rendered content, or an `aria-label`/`aria-labelledby` when there is none — so a button with no content and no name fails to compile rather than shipping as an unnamed control. Wrappers that render their own content take the base props instead (`ButtonBaseProps`, `NextLinkBaseProps`) or supply a default label (`CloseButton`), and they wrap props with `OmitProps` rather than `Omit`: the built-in one keeps only the keys a union shares, which would drop the requirement (and the rest of the props) instead of narrowing them. The limit worth knowing: `<Button><CloseIcon /></Button>` has children, so nothing — type or lint — sees that it has no name; that stays a review pass. Beyond names, the a11y lint rules cover static-element handlers and key handlers, and toasts announce through one polite live region (`ToastContainer`).
-* **The root layout owns only the shell.** Fonts are declared in `next/app/fonts/fonts.ts` (beside the woff2 files, so the paths stay local) and exported as class names the layout applies; the layout itself fetches the nav menu and the star-canvas config and renders chrome. It no longer reads the academic catalog: each study page reads the one study it renders, and the setup pages take the catalog as a server prop. Site-level metadata comes from `generateMetadata`, reading the same `website` document every page reads — so `siteName`, the fallback description and the keyword list have one source — and sets `metadataBase` from `website.siteUrl` through `toOrigin` (`next/lib/academic-detail-page.ts`), which falls back to the environment origin and then to nothing rather than throwing on free text typed in the Studio. Font preloads are off for the local families on purpose: `next/font` preloads every declared file, which made a page fetch 22 woff2 files to render five faces.
-* **Metadata and canonicals come from the route's real address.** Detail pages get their metadata from `PageSEO` (`next/components/page-seo/PageSEO.tsx`), which takes `pagePath` — the page's own address, built with `getAcademicPath` (`next/lib/academic-routes.ts`): a site-relative path for a catalog page, an absolute URL for a page inside a study's site (the study host *is* where it lives) — and turns it into the canonical and the Open Graph URL, so it has to equal the URL the route is served at, *in the reader's language*: the builders take a `LocaleId` (`localizedPath`, `shared/utils/localized-path.ts`), and `createAcademicMetadata` hands its `getPath` the locale it resolved. The same `pagePath` yields `alternates.languages` for both languages (`languageAlternates`, `next/lib/localized-metadata.ts`), so the two variants name each other; a page without `PageSEO` returns `alternates: { canonical: localizedPath(path, locale), languages: languageAlternates(path) }` itself. The sitemaps carry the same pair on one entry, never one entry per language. The four academic entities are nested, and the prefix is singular (`/university/...`, `/professor/...`), which is why the pair of props this used to take (`pageDomain` plus the leaf slug) silently emitted canonicals pointing at URLs that 404: `/universities/ukim`, `/faculties/<slug>`. `PageSEO` now requires `pagePath` and has no other way to build one. `/study/[siteSlug]/scripts/[scriptSlug]` uses it as well, and it is the only script address: the catalog's `/scripts/[slug]` forwarder and the nested catalog study/subject routes were removed once study sites were the only canonical URLs. `/sitemap.xml` (`next/app/sitemap.xml/route.ts`) is an index over the sections built in `next/lib/sitemap-entries.ts` and served by `next/app/sitemap/[section]/route.ts`, and the catalog section lists `/`, `/search`, the university and faculty routes and the professors from the same `*StaticParamsQuery` the routes pre-generate from. A study host publishes **its own** index and sections (`next/app/(study)/study/[siteSlug]/sitemap.xml/route.ts`, `…/sitemap/[section]/route.ts`, built in `next/lib/study-sitemap.ts`): its root, its feed, its subjects and its scripts, all on its own host — so neither host publishes the other's pages to a crawler. The script list comes from `GET /api/sitemap/scripts` (behind `x-sitemap-secret`, scoped to that one route and limited to 10 reads a day) because the public listing is admin-only and paginated, and it carries only `slug` and `updated_at`. The sitemap itself is prerendered at build time and never revalidated, so that read happens once per deployment. Mirroring the static params means it cannot list a URL the route would 404, a failed read drops its own section instead of publishing an empty one, and the whole file is empty (with a warning) when `NEXT_PUBLIC_SITE_URL` is unset, since its URLs need the origin.
-* **Surfaces and dialogs.** Content sits on a translucent outer surface (`ui-above`, a 97% fill with no backdrop blur) with the same ice a shade darker (`ui-above-inside`, the `subtle` chip recipe at panel size) where text is shown; dialogs (file preview, sign-in) follow the same pattern. Details in `next/STYLING_GUIDE.md`.
-* **The navbar docks at `xl` (1280px).** Below it the navigation is the off-canvas drawer opened by the header toggle, and the content column gets the full width; the breakpoints are custom (`next/styles/base/breakpoints.module.css`: `lg` is 992px, `xl` is 1280px), so the CSS side (`Header`, `Navbar`, `PageLayout`, `ui-container`) and the JS side (`DESKTOP_QUERY` in `next/providers/nav/NavProvider.tsx`) have to name the same one — they decide the same state, and when they disagreed the drawer and the dock could both apply. Docking later is deliberate: a 248px rail plus its gutter leaves under 800px of content at 992-1280px, where the cards are narrow enough that wrapping text dominated the page. `NavStudies` lists the viewer's enrolled studies from the profile the navbar already loads (`ProfileProvider`), each opening that study's overview with its scripts one line below; it and `NavFavorites` render nothing for a guest or an empty list. The docked state defaults to open, and a collapsed/opened choice stored in `localStorage` wins on the next visit (`NavProvider`); a change made in another tab is picked up too. Until the profile arrives `ProfileProvider` holds a task on `LoadingProvider`, so the boot veil stays up through the session and profile reads instead of leaving when the theme task finishes and coming back: by the time the veil lifts, the nav already has its studies and the page has what it needs. The logo beside each study comes from `studyLogosQuery`, a cached catalog read the root layout hands down keyed by site handle — profile rows are Postgres and carry no image, and the nav must not add a request of its own.
-* **`Avatar` sizes its initials from its box.** `InitialsIcon` is the box (`[container-type:inline-size]`) and the letters are a child at `38cqi`, so one component serves a 24px header circle, a 40px card avatar and a 64px profile one without a per-site font size. The size must stay off the container itself: `cqi` on the element that declares the query resolves against the next container up, which rendered 114px letters inside a 24px circle. A caller sizes the box; passing a padding or a `text-*` with it either clips the letters or centres nothing, and an `Avatar` in an unsized flex row has no box to fill at all.
+Rules for changing `next/` live in [`next/AGENTS.md`](../next/AGENTS.md); this file records
+how the frontend is put together.
+
+* **Thin pages.** `page.tsx` awaits params, calls a loader and composes components.
+  Fetching, cookies and 404 handling live in `next/lib/<feature>-page.ts`, returning view
+  models typed in `next/types/components/` (`ScriptDetailViewModel`, `ProfilePageViewModel`).
+  Pure helpers live in `next/lib/<feature>.ts`. Components never fetch.
+* **A `loading.tsx` costs the 404 status:** the segment boundary flushes headers first, so
+  `notFound()` streams after them and the route answers `200`. The script detail route has
+  none and uses the skeleton as its own Suspense fallback; `/user/[username]` is the same
+  case, and `loadPublicProfilePage` makes both decisions before render (own username →
+  `/user`; API `404` → `notFound()`). Any other failed read throws to the error boundary;
+  only the stats read is contained.
+* **The loading overlay** shows the last task's `message` and optional `hint` from
+  `LoadingTaskDetails`, or the wordmark animation when there is neither.
+* **The root is the catalog.** `/` lists universities, faculties and studies
+  (`CatalogHomeContent`, `catalogHomeQuery`); each study links to its own site. No
+  subjects, professors or scripts — they belong to a study. Cached until the publish
+  webhook invalidates it. The catalog is the apex host only; a study is served from its own
+  hostname by a `next.config.ts` rewrite onto `/study/[siteSlug]/…`
+  ([`ARCHITECTURE-STUDY-DOMAINS.md`](ARCHITECTURE-STUDY-DOMAINS.md)).
+  - A study's root `/study/[siteSlug]` is the **academic overview** (overview card,
+    subjects, professors); its **content surface** is `…/scripts`, curated to the reader's
+    unfinished subjects, with `?scripts=all` for the study's top scripts and a sidebar of
+    unfinished subjects. The setup gate hangs off the feed.
+  - The catalog page header offers create-account (`/auth?mode=register`) and set-up
+    (`/start`); below it the three levels are columns of one surface (`CatalogSection`),
+    two columns from `md`, three from `lg`, each a stack of `CatalogCard`s.
+* **Script detail** (`/study/[siteSlug]/scripts/[scriptSlug]`): `ScriptDetailOverview`
+  places the info group (`ScriptInfoPanel` + `ScriptAdditionalReading`, with an empty
+  state) and `ScriptFilesSection` in a wrapping flex row. Files grow 100 against 1, so the
+  first wrap is files dropping below; then the reading panel wraps. Files form an
+  `auto-fit` grid; each `ScriptFileCard` is a container-query container, stacked narrow and
+  thumbnail-beside-details from ~28rem. A lone file is capped to its content width unless
+  previewable, when it spans the surface and previews inline. `ScriptFileCard` composes
+  `ScriptFileThumbnail` and `ScriptFileActions` and owns the preview modal.
+* **The calendar** (a study's `/study/[siteSlug]/calendar`,
+  [`ARCHITECTURE-CALENDAR.md`](ARCHITECTURE-CALENDAR.md)) keeps its view in the URL
+  (`?view=month|week&date=YYYY-MM-DD`): a Server Component with `Link` controls, no client
+  state, never `force-static`. Its one client island is the header alert, which narrows
+  the layout's build-time events to the reader's unfinished subjects.
+* **Subject lists share one filter pair.** `useSubjectFilters` + `SubjectFilters` own the
+  year and electives state for the explorer, the scripts sidebar and the profile sidebar.
+  One year at a time (no "all years"), opening on the first year the list has; electives
+  included until toggled off. Only the explorer adds search and sort. Both sidebars scroll
+  after four cards (and after four professors).
+* **Study tips** are Sanity-only (`studyTip`, no `dbId`), shown only in the navbar as a
+  compact panel after the viewer's studies and favorites. The root layout fetches the
+  published list once (`getStudyTips`, cached and tag-invalidated) and `NavStudyTip` picks
+  one per render with `Math.random()` — both Server Components, so no client island. No
+  tips, or a failed fetch, renders nothing.
+* **Footer** is a static Server Component (wordmark and copyright, `UI_STRINGS.footer`) on
+  `ui-above`, full width like the header, rendered by `MainLayout` with no request-time
+  API. The Sanity `footer` document is unused. `MainLayout` is a flex column and
+  `--footer-height` lets full-screen layouts account for it.
+* **Copy and localization.** Collections live in `shared/strings/*` or `UI_STRINGS`; the
+  `<AREA>_PACK` export is the source of truth and the historical export
+  (`UI_STRINGS`, `CALENDAR_STRINGS`, …) is that collection resolved to `DEFAULT_LOCALE`
+  through `getStrings`, which keeps the un-migrated imports (including `hono/`) working.
+  Collections are registered in `shared/config/string-packs.ts`, which also derives
+  `StringPackPath<P>` and the path aliases. Mechanics and traps: `next/AGENTS.md`.
+* **The chrome is server, the clock is a leaf.** `MainLayout`, `Header`, `PageLayout` and
+  `Footer` are Server Components; `HeaderDate` and `FooterCopyright` are the client leaves
+  that read the clock, and `NavToggle`, `HeaderActions`, `NavLogo` stay client. A component
+  rendered from a client parent (`Footer`, `PageHeader` under `PageLayout`) is itself a
+  Client Component and reads copy with the hooks. `auth/callback/page.tsx` is a Server
+  Component around `AuthCallbackCard`, which needs `window.location`.
+* **The default language keeps its unprefixed address.** The tree is `app/[locale]` with
+  `prefixDefault: false`: English at `/university/ukim`, Macedonian under `/mk/…`. A
+  `beforeFiles` rewrite serves the unprefixed default out of `[locale]`; `/en/…`, the
+  cookie-driven `/` and study-host roots are `next.config.ts` redirects — no proxy, no
+  middleware, no request hop. Sitemaps carry one entry per page with
+  `alternates.languages`, not one per language.
+* **A stored notification's sentence is rebuilt at read time.** The API writes finished
+  English into `notifications.title`/`body` at event time (no reader exists yet);
+  `resolveStoredNotificationCopy` (`shared/utils/notification-copy.ts`) rebuilds it from
+  `type` and `data`, so older rows follow the reader too. What it cannot rebuild keeps the
+  stored text: an `announcement` and an achievement outside the catalogue, plus quoted
+  reasons and content titles.
+* **Failures.** A thrown render or data failure lands on a route boundary
+  (`app/[locale]/error.tsx`, plus the calendar's own), showing generic copy and a retry —
+  never `error.message`, which can carry database or stack details. Unknown routes render
+  `not-found.tsx`; root and segment versions share `ErrorState` (a `<section>`, because
+  `MainLayout` owns the `main` landmark), whose illustration is an inline SVG
+  (`AstronautIllustration`) tinted through `--illustration-*` roles. `global-error.tsx`
+  catches layout failures where no stylesheet is guaranteed, so it uses inline styles only.
+* **A failed user action is a toast**, not a page: `useToast().addToast` keeps the reader in
+  place. Only a render-time throw reaches an error boundary.
+* **Only reader-written errors are quoted.** `toUserMessage(error, fallback)`
+  (`next/lib/user-facing-error.ts`) keeps the wording of a `UserFacingError`; everything
+  else gets the `UI_STRINGS` line. Every `ApiError` is in the second group, since its body
+  is written for API callers. The request layer converts one status itself: a `429` becomes
+  a `UserFacingError` because every rate-limit body tells the reader what to do. Sign-in is
+  the other exception — `SessionProvider` shows a 4xx from `/auth/*` verbatim and generic
+  copy for a 5xx.
+* **"Failed" is not "empty".** A loader must not swallow a failed read into an empty list
+  when the page would misreport it (a failed profile read must not render `404`; a search
+  that never ran must not say "no results"). `apiFetchPublicRead` fallbacks exist only for
+  reads a build must survive.
+* **A control carries its own name.** `Button`/`NextLink` require `AccessibleNameProps`;
+  wrappers take `ButtonBaseProps`/`NextLinkBaseProps` or supply a default (`CloseButton`),
+  and wrap with `OmitProps`, since `Omit` over a union keeps only shared keys. A button
+  whose only child is an element is still a review pass. Toasts announce through one polite
+  live region.
+* **The root layout owns only the shell.** Fonts are declared in `next/app/fonts/fonts.ts`
+  and exported as class names; the layout fetches the nav menu and the background and
+  skybox config and renders chrome, not the catalog — each study page reads its own study.
+  Site metadata comes from `generateMetadata` over the same `website` document every page
+  reads, with `metadataBase` from `toOrigin(website.siteUrl)` (falling back to the
+  environment origin, then nothing).
+* **Metadata and canonicals come from the route's real address.** `PageSEO` takes
+  `pagePath` — built with `getAcademicPath`: site-relative in the catalog, absolute inside a
+  study's site — and turns it into the canonical and Open Graph URL, so it must equal the
+  served URL in the reader's language. The same path yields `alternates.languages`
+  (`languageAlternates`), so the variants name each other; a page without `PageSEO`
+  returns both itself. `/sitemap.xml` is an index over sections built in
+  `next/lib/sitemap-entries.ts` and served by `app/sitemap/[section]/route.ts`; each study
+  host publishes its own index and sections from `next/lib/study-sitemap.ts`, so neither
+  host lists the other's pages. Script URLs come from `GET /api/sitemap/scripts` (secret-
+  guarded, 10 reads a day) and carry only `slug` and `updated_at`; the sitemap is
+  prerendered and never revalidated, so that is one read per deployment. A failed read
+  drops its own section rather than publishing an empty one; with `NEXT_PUBLIC_SITE_URL`
+  unset the file is empty, with a warning.
+* **Surfaces and dialogs.** Content sits on a translucent outer surface (`ui-above`) with
+  `ui-above-inside` where text is shown; dialogs follow the same pattern and are styled by
+  `next/STYLING_GUIDE.md`. A closed `Dialog` renders nothing at all.
+* **The navbar docks at `xl` (1280px).** Below it the off-canvas drawer gives the content
+  the full width. Breakpoints are custom (`lg` 992px, `xl` 1280px), so CSS (`Header`,
+  `Navbar`, `PageLayout`, `ui-container`) and `DESKTOP_QUERY`
+  (`next/providers/nav/NavProvider.tsx`) must name the same one. `NavStudies` lists the
+  viewer's studies from `ProfileProvider`, each opening that study's overview;
+  `NavFavorites` sits below it; both render nothing for a guest or an empty list. The
+  docked state defaults to open and a stored choice wins on the next visit.
+  `ProfileProvider` holds a `LoadingProvider` task until the profile arrives, so the boot
+  veil waits for the nav's studies too. Study logos come from `studyLogosQuery`, a cached
+  catalog read keyed by site handle — profile rows carry no image.
+* **`Avatar` sizes its initials from its box.** `InitialsIcon` declares
+  `[container-type:inline-size]` and the letters are a child at `38cqi`, so one component
+  serves a 24px header circle and a 64px profile avatar. The size must stay off the
+  container itself (`cqi` would resolve against the next container up). A caller sizes the
+  box; adding padding or `text-*` clips or uncentres the letters.

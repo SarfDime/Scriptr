@@ -236,7 +236,7 @@ function PreviewFileRow({
             onClick={onPreview}
             aria-label={strings.preview.previewFile(fileName)}
             aria-pressed={isSelected}
-            className='button button-sm hollow grow'
+            className='button button-sm subtle grow'
           >
             <EyeOpen className='overwrite size-4 shrink-0' />
             {ui.scripts.actions.preview}

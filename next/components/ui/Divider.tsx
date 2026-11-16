@@ -7,7 +7,6 @@ export type DividerProps = {
   colorScheme?: 'dark' | 'light'
 } & BoxProps
 
-/** `Divider` is used to render a divider line with optional orientation and styling */
 export function Divider({
   variant = 'solid',
   orientation = 'horizontal',
@@ -33,10 +32,12 @@ export function Divider({
           'bg-none! before:hidden after:hidden'
         )
       : ''
+  // `--divider-tint` is painted over the ice silhouette, so it carries an
+  // alpha: an opaque colour would flatten the ridge instead of tinting it.
   const colorSchemeStyles =
     colorScheme === 'dark'
       ? ''
-      : '[--divider-line:var(--color-grey-300)] [--divider-tint:var(--color-grey-300)]'
+      : '[--divider-line:var(--color-grey-300)] [--divider-tint:color-mix(in_srgb,var(--color-grey-300)_65%,transparent)]'
 
   return (
     <Box

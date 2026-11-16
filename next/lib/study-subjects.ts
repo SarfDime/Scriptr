@@ -48,12 +48,11 @@ export const completedSubjectDbIds = (
 
 /**
  * Ids of the subjects of the given studies that aren't completed. Derived from
- * the study rather than read from stored `currently_taking` rows, which aren't
- * reliable for it: registration writes them for the rest of the chosen study,
- * but accounts set up later (the onboarding sync, the academics editor) only
- * get `completed` rows, and subjects added to a study afterwards have no row at
- * all. So every subject of a study someone is enrolled in that isn't completed
- * counts as one they are taking.
+ * the study rather than read from stored rows, which aren't reliable for it:
+ * every writer (the setup sync, the academics editor) stores `completed` and
+ * nothing writes `currently_taking`, and a subject added to a study afterwards
+ * has no row at all. So every subject of a study someone is enrolled in that
+ * isn't completed counts as one they are taking.
  */
 export const deriveIncompleteSubjectDbIds = (
   catalog: OnboardingCatalog,

@@ -4,7 +4,7 @@ What is left to do. The system as it stands is described in
 [`ARCHITECTURE.md`](ARCHITECTURE.md); this file only tracks work, so finished
 features are not repeated here.
 
-Last reconciled: 2026-11-14. Tags: **[bug]**, **[decision]** (needs a call
+Last reconciled: 2026-11-16. Tags: **[bug]**, **[decision]** (needs a call
 before anyone builds it), **[deferred]** (recorded so it is not rediscovered,
 not queued).
 
@@ -14,15 +14,20 @@ not queued).
 
 ## Next
 
-In roughly this order: the weekly note sync, the comment and doc cleanup, and
-the remaining work below by area.
+In roughly this order:
 
-**Study hostnames are in use but attached by hand.** `lbe.scriptr.uk` serves
-the `lbe` study from the same build and deployment as the catalog; how that works
-is [`ARCHITECTURE-STUDY-DOMAINS.md`](ARCHITECTURE-STUDY-DOMAINS.md). Two things
-are still open:
+1. **Comment and docs cleanup** — see [Code and comments](#code-and-comments);
+   the change-narration and signature restatements are done, the long prose
+   blocks in `next/components/` and `optimizer/src/` are left.
+2. Everything else below, by area.
 
-- **Attach a host per study is three manual steps** (`vercel domains add`, a
+## Study hostnames
+
+`lbe.scriptr.uk` serves the `lbe` study from the same build and deployment as the
+catalog; how that works is
+[`ARCHITECTURE-STUDY-DOMAINS.md`](ARCHITECTURE-STUDY-DOMAINS.md). Outstanding:
+
+- **Attaching a host per study is three manual steps** (`vercel domains add`, a
   proxied `CNAME` at Cloudflare, then the certificate). Automate attaching on
   handle assignment and detaching on delete, so a new study does not depend on
   someone remembering.
@@ -36,39 +41,8 @@ are still open:
 
 ## Features
 
-### Profile and academics
-
-- **Atomic profile save:** the profile row is written before the
-  faculty/study selections, so a later failure leaves the two out of sync —
-  move the pair into one RPC.
-- **Study overview metadata:** add the remaining administrator/study metadata
-  to [`StudyOverviewCard.tsx`](../next/components/academics/study/StudyOverviewCard.tsx)
-  once it exists — today the card has only the assistant, website, student
-  count, location and email.
-
 ### Content and presentation
 
-- **Weekly note sync:** calendar notes live in `localStorage` (namespaced per
-  profile) and reach the database only through the explicit sync in
-  Preferences, so a reader who never syncs loses them with the browser's site
-  data. They should also be pushed automatically, at most **once a week per
-  profile** and **only when the local copy actually changed**
-  (`notesChangedSince` already computes that, and the manual sync's
-  "latest edit wins" merge is the rule to reuse). That needs a per-profile
-  record of the last automatic sync — a real limit, unlike the explicit-sync
-  allowance, which is per warmed serverless instance — and a strictly rate
-  limited route on top of the existing 3-per-half-hour / 12-per-day allowance.
-- **Localization — in review as #73.** Both languages are wired end to end:
-  every collection and every area of `UI_STRINGS` is `{ en, mk }`, the page tree
-  is `app/[locale]`, English keeps its unprefixed URLs, and both content
-  surfaces carry one value per language. What is left belongs to the merge
-  rather than to the code: the schema reaches the hosted Studio through
-  `deploy-sanity.yaml`, which runs when the change lands on `main-sanity` with
-  `-s-` in the commit message (or by hand through `deploy-sanity-force`, which
-  allows breaking GraphQL changes). Until then the deployed Studio is the older
-  schema, while the dataset and the API are already on the new one. The admin
-  surface stays in the default language by decision — see
-  [Out of Scope](ARCHITECTURE-OUT-OF-SCOPE.md).
 - **A 404's initial HTML is Next's error shell [deferred, upstream].** With
   `[locale]` as the root layout, `notFound()` answers the first response with
   `<html id="__next_error__">` and an empty body; the localized page arrives in
@@ -80,62 +54,108 @@ are still open:
   catch-all, the `global-not-found` hybrid, a root layout above `[locale]`, and
   a proxy. `next/app/[locale]/[...notFound]/page.tsx` is the shim to delete
   once the fix lands.
+- **React's dev-only performance track throws on an aborted server component
+  [deferred, upstream].** Firefox reports `Performance.measure: Given attribute
+  end cannot be negative` (Chromium words it "cannot have a negative time
+  stamp"); it is thrown inside React's Server Component performance track, not
+  in our code. `childrenEndTime` starts at `-Infinity` and is only recorded once
+  a component's children finish, and the branch that reports an errored or
+  aborted component passes it to `performance.measure` unguarded — the normal
+  render branch has the `0 <= childrenEndTime` check that this one lacks.
+  Anything that ends a server subtree early reaches it: `notFound()`,
+  `redirect()` and an auth-guarded route, which is why `/admin` reports it (its
+  layout `notFound()`s a visitor who cannot enter). It is
+  [`react/react#37561`](https://github.com/react/react/issues/37561) with the fix
+  in [`react/react#37572`](https://github.com/react/react/pull/37572), and the
+  Next.js side is [`vercel/next.js#86060`](https://github.com/vercel/next.js/issues/86060)
+  — both open against React 19.3.1 / Next 16.4.2. Development only: the
+  production client bundle contains none of the track, so nothing a reader sees
+  is affected, and the page still renders. Re-test after the React release that
+  carries #37572; there is no app-side fix that does not mean disabling React's
+  performance tracks.
 
 ## Correctness and quality
 
-- **Drop the old `rating_types.label` [decision, after deploy]:**
-  `20261115013000_rating_type_labels.sql` adds `labels` (`{ en, mk }`,
-  backfilled from `label`) and leaves the English-only `label` column nullable
-  so a deployment that still reads it keeps working. Nothing reads or writes it
-  any more; drop it in a follow-up migration once the build that reads `labels`
-  is live everywhere.
 - **Scrollbar layout shift (Chromium) [bug, deferred]:** locking body scroll
   removes the classic scrollbar, and the page jumps by its width when it
   returns. `scrollbar-gutter: stable` on `html` and a measured
   `padding-right` compensation in [`useBodyScroll.ts`](../next/hooks/useBodyScroll.ts)
   were both tried and rejected (empty strip, and still shifted); the only
-  scrollbar CSS today is the `scrollbar-hidden` utility. Next: a custom
-  `::-webkit-scrollbar` with a reserved width, or a ref-counted lock.
+  scrollbar CSS today is the `scrollbar-hidden` utility. The lock is
+  ref-counted now (`useBodyScrollLock`), which fixed nested dialogs but not the
+  shift. Next: a custom `::-webkit-scrollbar` with a reserved width.
 - **Accessibility, one item at a time [low priority]:** the type-level
   name rule and the a11y lint rules cover what a compiler and a parser can see.
   These need a design pass each, so they are listed instead of done — split so
   each ships on its own:
   - **No skip link** past the navbar to `main`.
 - **UI polish:** take z-index values from `Z_INDEX` rather than inline classes
-  (the select list uses `z-90`), modal lifecycle (don't render closed dialogs),
-  image sizing, a mobile layout pass, production CSS obfuscation, and more
-  mobile-friendly toasts.
-- **Palette file split:** `components/color-palettes.module.css` (270) is the
-  last large stylesheet. Its palette definitions and shared derivation rules
-  change together today, so split it by concern only if it grows past that —
-  and if it does, keep `styles/main.css` importing the pieces in the same
-  sequence.
+  (the select list uses `z-90`), image sizing, a mobile layout pass, production
+  CSS obfuscation, and more mobile-friendly toasts.
+
+## Performance
+
+- **`content-visibility` on a very long feed is unverified.** The
+  `content-auto` utility (now
+  `contain-intrinsic-size: auto var(--content-auto-size, 500px)`, in
+  [`utilities.module.css`](../next/styles/base/utilities.module.css)) sits on the
+  script cards, the catalog cards, the root comment threads, the notification
+  rows, the admin user rows and the calendar day cards, each tuned to its own
+  measured height. The dataset holds one script per subject, so the two things a
+  long list can still break — scroll restoration landing where the reader left
+  off, and find-in-page revealing a card that was never rendered — have not been
+  exercised. Check both on a feed with several screens of scripts.
+- **The canvas frame is cheap again, but only measured on one reader's
+  Firefox.** The scratch layer is gone: glows and chimney smoke are drawn
+  straight onto the effects canvas and the occluders are cut out of it there, the
+  houses' animated glows were dropped (their windows keep a faint halo painted
+  with the scenery, so it costs nothing per frame), and the remaining per-spot
+  work is a mask built once per layout. A reporter's Firefox at 2016×1059, DPR 0.95 now
+  shows ~50–60 fps with `draw` at 1.3–2.3 ms (`?canvasStats=1`), down from a
+  frame that dropped badly. What is left: the full-canvas `clearRect` is the
+  largest single item when the rasterizer is software (~6 ms of the ~13 ms draw
+  in headless Firefox at DPR 2), so a dirty-region clear is the next lever if a
+  software-composited browser ever struggles again.
+- **Cache Components:** investigate the `use cache` directive and partial
+  prerendering.
+- **Font weights:** the declarations and the preload links are settled — the
+  local families preload nothing, and the unused Bricolage family is gone, so a
+  page fetches the five faces it renders instead of 22 files. What is left is
+  trimming the *declared* weights: the fonts file declares 21 faces across
+  `Matter` and `Antique Olive`, and no page uses more than three of each. That
+  needs a sweep of the UI's computed font-weights once the design is final,
+  because removing a declared weight changes any element that falls back to it.
+
+## SEO
+
+- **Robots [decision]:** `https://scriptr.uk/robots.txt` answers `200` with a
+  content-signals preamble and nothing else — no `User-agent`, `Disallow` or
+  `Sitemap:` line. It is not ours: the repo has never contained a `robots.txt`
+  or `robots.ts`, and the response carries `x-vercel-cache`/`x-vercel-id`, so
+  Vercel serves it. Adding `next/app/robots.ts` would therefore either be
+  shadowed or conflict, so decide at the platform level: submit `/sitemap.xml`
+  in Search Console and Bing first, then only build a route if a crawler
+  directive is genuinely needed (that would mean turning the platform's
+  injection off first).
 
 ## Code and comments
 
-- **Comment and docs cleanup:** much of the commentary explains the moment a
-  change was made rather than the code that is left, and the worst offenders
-  restate what the code already says — the type-declaration comments where the
-  type name is the whole explanation, and function docs that only repeat the
-  signature. Delete those, and the paragraphs that narrate a bug that is now
-  fixed in one sentence elsewhere. Keep what a future reader cannot infer: the
-  database grant and RLS model, cache tags and what invalidates them, and the
-  security decisions behind a route. The workspace guides
-  (`docs/AGENTS-*.md`, `next/STYLING_GUIDE.md`) are the place for conventions
-  the code should not repeat.
+- **Comment and docs cleanup:** done for the three shapes the earlier pass named
+  — comments that narrated a fixed bug or the refactor that produced the current
+  code now state the invariant instead (the cache-version notes, the toast and
+  provider histories, the canvas notes on the removed scratch layer, the
+  `get-file` route's security note), docs that only repeated a signature or a
+  type name are gone (the `hono/src/routes/` handlers, `env.types.ts`,
+  `next/types/academics/`, `Text`/`Title`/`Divider`/`Field`/`NormalBlock`), and
+  the restatements of a type's own name went with them. What is left is a
+  reading pass over the long multi-line blocks in `next/components/` and
+  `optimizer/src/`: they mostly explain why, so trimming one is a judgment call
+  rather than a rule, and no mechanical scan finds them. The workspace guides
+  (the workspace `AGENTS.md` files, `next/STYLING_GUIDE.md`) remain the place for
+  conventions the code should not repeat.
 
 ## Sanity Studio
 
-- **Studio cleanup:** remove the exports nothing imports — `AccessCodeRequiredError`
-  and `clearAccessToken` ([`api-access.ts`](../sanity/lib/api-access.ts)),
-  `flattenFirstRichTextBlock`, `formatMinutesSeconds`,
-  `convertTimeToMinutesSeconds`
-  ([`utilFunctions.ts`](../sanity/schemas/util-functions/utilFunctions.ts)),
-  and `structureToolIconColors`
-  ([`icon-helpers.tsx`](../sanity/structure-tool/icon-helpers.tsx)) — and
-  verify the live hook in
-  [`useSanityFetch.ts`](../sanity/sanity-hooks/useSanityFetch.ts) against the
-  production fetch flow.
 - **Shared field builders:** decide whether the string `bio` variant stays in
   [`academicFields.tsx`](../sanity/schemas/common/academicFields.tsx)
   (`AcademicBioOptions`). `academicGrouping` already takes the grouping keys as
@@ -155,54 +175,23 @@ are still open:
 
 ## Visual fidelity
 
-The surfaces now carry their material detail — a sheen band, a 1px inner top
+The surfaces carry their material detail — a sheen band, a 1px inner top
 highlight, snow caps, ice ridges on horizontal and vertical dividers (and on
-the card/dialog/navbar edges) and darker chrome on the nav/header/footer — as described in
+the card/dialog/navbar edges) and darker chrome on the nav/header/footer — as
+described in
 [`next/STYLING_GUIDE.md`](../next/STYLING_GUIDE.md#surface-detail). Outstanding:
 
 - **Contrast audit coverage:** the simple-mode pass sampled five pages and fixed
   muted captions through `--color-fg-muted` and `--shadow-strength` on
   `:root[data-simple]`. Re-run it over the account, admin and dialog surfaces,
   which were not sampled.
-- **Font weights:** deferred until the design is final — see the entry under
-  [SEO and performance](#seo-and-performance).
-
-## SEO and performance
-
-- **Robots [decision]:** `https://scriptr.uk/robots.txt` answers `200` with a
-  content-signals preamble and nothing else — no `User-agent`, `Disallow` or
-  `Sitemap:` line. It is not ours: the repo has never contained a `robots.txt`
-  or `robots.ts`, and the response carries `x-vercel-cache`/`x-vercel-id`, so
-  Vercel serves it. Adding `next/app/robots.ts` would therefore either be
-  shadowed or conflict, so decide at the platform level: submit `/sitemap.xml`
-  in Search Console and Bing first, then only build a route if a crawler
-  directive is genuinely needed (that would mean turning the platform's
-  injection off first).
-- **Cache Components:** investigate the `use cache` directive and partial
-  prerendering.
-- **Font weights:** the declarations and the preload links are settled — the
-  local families preload nothing, and the unused Bricolage family is gone, so a
-  page fetches the five faces it renders instead of 22 files. What is left is
-  trimming the *declared* weights: the fonts file declares 21 faces across
-  `Matter` and `Antique Olive`, and no page uses more than three of each. That
-  needs a sweep of the UI's computed font-weights once the design is final,
-  because removing a declared weight changes any element that falls back to it.
-- **Animated backdrop cost:** the star canvas repaints continuously in
-  `requestAnimationFrame`, so whatever sits over it recomposites every frame.
-  Backdrop blur has been removed site-wide, so surfaces are flat 97% fills and
-  no longer pay that cost; `prefers-reduced-motion` draws one static frame and
-  the canvas is capped at `devicePixelRatio` 2. What is left is pausing the
-  canvas and compositing: `content-visibility: auto` on long card grids, and
-  stopping the canvas while the page is scrolled far from it.
 
 ## Infrastructure and deployment
 
-- **Optimizer tuning:** the service is deployed; what is left is running real
-  scans, text-heavy PDFs and 20 MB phone photos through it to see how often the
-  3.5 MB cap is hit and whether the `/ebook` and `/screen` presets keep text
-  legible, then tuning the presets and the image ladder.
-- **Serving cost:** review the preview/download paths for avoidable egress and
-  repeated signing.
+- **Serving cost:** a preview or a download goes through
+  `/file-ops/get-file`, which reads the `script_files` row and presigns an R2 URL
+  per request (buckets are derived from the row, deliberately). Review those
+  paths for avoidable egress and repeated signing before the traffic grows.
 
 ## Tooling and quality
 
@@ -257,13 +246,6 @@ the card/dialog/navbar edges) and darker chrome on the nav/header/footer — as 
   it used to depend on a guest having saved onboarding data. Decide whether it
   should key off "this browser has a study setup" instead of "nobody is signed
   in", now that setup is per study.
-- **Calendar notes are not study-scoped:** the calendar is per study now, but a
-  note (`calendar-notes`, keyed by profile and day) carries no study, so the same
-  note shows on every study's calendar for that day. Decide whether a note
-  belongs to the study whose calendar it was written on (a `study_id` on the
-  row, and the same scope on the header alert's dismissal keys) or is genuinely
-  personal and should stay shared. Deferred: nothing reads notes across studies
-  today.
 - **Professor comments and ratings are university-wide:** a professor belongs to
   one university and teaches across its studies, so the professor page stays a
   catalog page, but its comments and ratings are keyed by the professor's
@@ -296,11 +278,15 @@ the card/dialog/navbar edges) and darker chrome on the nav/header/footer — as 
   as the favicon; update the README. Today the tab still carries Next's
   scaffold favicon and the wordmark in
   [`NavLogo.tsx`](../next/components/navigation/NavLogo.tsx) is set text.
-- **`currently_taking` rows [decision]:** `POST /auth/register` still
-  seeds `profile_subjects` with both statuses, and nothing reads the
-  `currently_taking` ones for display (profiles derive it from the selected
-  studies). Decide first whether those rows will ever be needed by something
-  else, then either stop writing them or keep them in sync.
+- **The `currently_taking` status is accepted but never written [decision]:**
+  the only writers of `profile_subjects` store `completed` (the setup sync and
+  the academics editor), and nothing reads a stored `currently_taking` row for
+  display — the "taking" view derives from the enrolled study
+  (`deriveIncompleteSubjectDbIds`). Decide whether the status is worth keeping
+  (then keep the value, its copy and the view toggle in sync) or the derived
+  view is enough (then drop the status from the route, the type and
+  `isProfileSubjectStatus`). Note that registration no longer writes these rows
+  at all: that seeding went with the per-study profile.
 - **Academic sync and dependency tools:** the Studio syncs one
   document at a time ([`academicEntitySync.tsx`](../sanity/actions/academicEntitySync.tsx) →
   `/api/sanity/*/sync`), which is enough at the current scale. A batch sync and
@@ -333,16 +319,19 @@ the card/dialog/navbar edges) and darker chrome on the nav/header/footer — as 
 
 ## Exploratory ideas
 
-- **Christmas effects:** the `christmasCanvas` document is one of the backgrounds
-  the website settings accept (the single `background` field references either it
-  or a `starCanvas`), so switching it on is a Studio edit: create the document,
-  point the background field at it. `AppBackground` reads `_type` and mounts the skybox
-  plus `ChristmasCanvas` (`next/components/ui/app-background/ChristmasCanvas.tsx`,
-  scenery in `next/lib/app-background/christmas-canvas.ts`) instead of the star
-  canvas. Settings and light/dark scenery colors come from the document, with
-  defaults and editable color roles in `shared/config/christmas-canvas.ts`. Still
-  open: deciding when the seasonal background starts and ends (today it is on only
-  while the document is referenced).
+- **When the Christmas scenery is on:** the `christmasCanvas` document is one of
+  the backgrounds the website settings accept, so switching it on is a Studio
+  edit — create the document, point the background field at it — and
+  `AppBackground` then mounts the skybox plus
+  [`ChristmasCanvas`](../next/components/ui/app-background/ChristmasCanvas.tsx)
+  (scenery in [`christmas-canvas.ts`](../next/lib/app-background/christmas-canvas.ts)).
+  Settings and light/dark scenery colors come from the document, with defaults
+  and editable color roles in `shared/config/christmas-canvas.ts`; the sky's day,
+  sun and moon size, stars, clouds, full-screen behaviour and per-theme colors
+  come from the `skybox` document the same settings point at. Still open:
+  deciding when the seasonal background starts and ends — today it is on only
+  while the document is referenced, so it takes a manual Studio edit in both
+  directions.
 - **Computed rarity:** derive an achievement's rarity from the share of
   profiles that hold it instead of the admin-set tier. Only meaningful with a
   much larger user base.

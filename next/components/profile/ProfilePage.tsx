@@ -1,7 +1,6 @@
 import BookIcon from '@sanity/icons/Book'
 import { UI_STRINGS_PACK } from '@shared/config/strings'
 import { ScriptsSection } from '@/components/academics/scripts/ScriptsSection'
-import { ActivityStats } from '@/components/common/ActivityStats'
 import { Box } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
 import { PageLayout } from '@/components/layout/PageLayout'
@@ -93,31 +92,21 @@ export const ProfilePage = async ({
         ),
       }}
       sidebar={
-        <>
-          {subjects && (
-            <ProfileSubjectsSidebar
-              completed={subjects.completed}
-              currentlyTaking={subjects.currentlyTaking}
-              title={isOwner ? undefined : ui.subjects.title}
-            />
-          )}
-          {authoredCount !== undefined && commentCount !== undefined && (
-            <>
-              <Divider />
-
-              <ActivityStats
-                savedCount={profile.favorite_scripts.length}
-                authoredCount={authoredCount}
-                commentCount={commentCount}
-              />
-            </>
-          )}
-        </>
+        subjects && (
+          <ProfileSubjectsSidebar
+            completed={subjects.completed}
+            currentlyTaking={subjects.currentlyTaking}
+            title={isOwner ? undefined : ui.subjects.title}
+          />
+        )
       }
     >
       <ProfileCard
         name={displayName}
         academics={academics}
+        authoredCount={authoredCount}
+        commentCount={commentCount}
+        favoriteCount={profile.favorite_scripts.length}
         picture={profile.avatar_url ? { src: profile.avatar_url } : undefined}
         badges={
           <AchievementBadges

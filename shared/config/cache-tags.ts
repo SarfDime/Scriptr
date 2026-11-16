@@ -34,7 +34,6 @@ export const SANITY_CACHE_TAGS = {
  * the document that owns them, so they need no entry. */
 export const SANITY_TYPE_TAGS: Record<string, string> = {
   website: SANITY_CACHE_TAGS.website,
-  starCanvas: SANITY_CACHE_TAGS.website,
   navMenu: SANITY_CACHE_TAGS.navigation,
   navItem: SANITY_CACHE_TAGS.navigation,
   subMenuItem: SANITY_CACHE_TAGS.navigation,

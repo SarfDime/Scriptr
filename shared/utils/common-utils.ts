@@ -5,9 +5,8 @@ import {
 import { TIME_AGO_STRINGS_PACK } from '@shared/strings/time-strings'
 import { getStrings } from './localized-strings'
 
-/**
- * Returns an object with the specified attribute name and value if the condition is true, otherwise returns an empty object.
- */
+/** `{ [attributeName]: attributeValue }` when `condition` holds, else
+ * `undefined`, so a caller can spread the result. */
 const getAttribute = <T extends string, U>(
   condition: boolean,
   attributeName: T,
@@ -58,7 +57,8 @@ export const generateRandomKey = (): string =>
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2)
 
-/** Formats a given date string into a human-readable string indicating how long ago it was updated, in the reader's language. */
+/** `3 days ago` in the reader's language. A value the parser cannot read
+ * answers the collection's `invalidDate`. */
 export const formatDate = (
   dateString: string,
   locale: LocaleId = DEFAULT_LOCALE

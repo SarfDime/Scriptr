@@ -12,6 +12,7 @@ import { Popover } from '@/components/ui/Popover'
 import { formatCalendarDateShort, formatCalendarDay } from '@/lib/calendar'
 import { cn } from '@/lib/common-utils'
 import { useCalendarNotes } from '@/providers/calendar-notes/CalendarNotesProvider'
+import { useCalendarStudyId } from '@/providers/calendar-notes/CalendarStudyProvider'
 import { useLocale } from '@/providers/locale/LocaleProvider'
 import { useStrings } from '@/providers/locale/use-strings'
 import { CalendarNoteEditorDialog } from './CalendarNoteEditorDialog'
@@ -30,14 +31,19 @@ import { CalendarNoteEditorDialog } from './CalendarNoteEditorDialog'
 export const CalendarNotesTimeline = () => {
   const { locale } = useLocale()
   const strings = useStrings(CALENDAR_STRINGS_PACK)
+  const studyId = useCalendarStudyId()
   const { ready, notes } = useCalendarNotes()
   const [editing, setEditing] = useState<CalendarNote | null>(null)
 
-  const live = ready
-    ? notes
-        .filter((note) => !note.deleted)
-        .sort((left, right) => right.day.localeCompare(left.day))
-    : []
+  const live =
+    ready && studyId
+      ? notes
+          .filter((note) => !note.deleted && note.studyId === studyId)
+          .sort((left, right) => right.day.localeCompare(left.day))
+      : []
+
+  // Without a study to key a note on, there is nothing this panel could show.
+  if (!studyId) return null
 
   return (
     <>

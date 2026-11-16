@@ -31,17 +31,10 @@ export type FieldProps = {
   loading?: boolean
 } & Omit<BoxProps, 'onChange'>
 
-/** Renders a field with optional label, helper, and error texts, as well as validation badges.
- *
- * The label points at the field's control and the helper/error text describes
+/** The label points at the field's control and the helper/error text describes
  * it: `Field` generates the ids and every control inside reads them through
  * `useFieldControl`. A field whose children are a group of controls passes
  * `grouped`, which makes the container the labelled group instead.
- *
- * This component conditionally displays a skeleton loader or a box container
- * based on the `showSkeleton` prop. It uses `FieldContent` to render the
- * main content of the field, including the label and any helper or error texts.
- * Validation status is indicated through the label badge's color palette.
  */
 export const Field = (props: FieldProps) => {
   const {

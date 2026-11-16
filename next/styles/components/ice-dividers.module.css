@@ -29,17 +29,15 @@
   --ice-divider-front-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 24' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='24' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%235b83ab'/%3E%3Cstop offset='.45' stop-color='%233a5d84'/%3E%3Cstop offset='1' stop-color='%2324415f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M0 0L0 4L6 4Q10 6 12 14Q14 6 18 4L30 4Q33 6 35 9Q37 6 40 4L52 4Q57 8 60 22Q64 8 70 4L82 4Q84 5 86 7Q88 5 90 4L104 4Q108 7 111 16Q114 7 118 4L132 4Q134 5 136 8Q138 5 140 4L152 4Q157 8 161 20Q166 8 172 4L184 4Q186 5 188 10Q190 5 192 4L204 4Q207 7 210 15Q213 7 216 4L240 4L240 0Z'/%3E%3Cpath d='M0 .8H240' stroke='%23cfe4fa' stroke-width='1.4' fill='none'/%3E%3Cg stroke='%23bcd8f5' stroke-width='.9' stroke-linecap='round' opacity='.75' fill='none'%3E%3Cpath d='M59 7Q60 13 60.5 19'/%3E%3Cpath d='M159 7Q160 13 160.5 17'/%3E%3Cpath d='M110 6Q110.5 10 111 13'/%3E%3C/g%3E%3Cg fill='%23d8e9ff'%3E%3Ccircle cx='24' cy='2' r='.9'/%3E%3Ccircle cx='96' cy='2.2' r='.8'/%3E%3Ccircle cx='178' cy='2' r='1'/%3E%3Ccircle cx='226' cy='2.2' r='.8'/%3E%3Cpath d='M60 10.6L60.4 11.8L61.6 12.2L60.4 12.6L60 13.8L59.6 12.6L58.4 12.2L59.6 11.8Z'/%3E%3C/g%3E%3C/svg%3E");
   --ice-divider-back-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 24' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='24' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%23b9d0ea'/%3E%3Cstop offset='1' stop-color='%237f9fc6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' opacity='.75' d='M0 0L0 3L20 3Q24 5 26 12Q28 5 32 3L70 3Q74 6 76 17Q78 6 84 3L130 3Q133 5 135 9Q137 5 140 3L190 3Q195 7 198 19Q201 7 206 3L250 3Q253 5 255 10Q257 5 260 3L300 3Q304 6 306 14Q308 6 312 3L360 3L360 0Z'/%3E%3C/svg%3E");
   --ice-divider-back-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 24' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='24' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%2331557c'/%3E%3Cstop offset='1' stop-color='%231c3450'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' opacity='.8' d='M0 0L0 3L20 3Q24 5 26 12Q28 5 32 3L70 3Q74 6 76 17Q78 6 84 3L130 3Q133 5 135 9Q137 5 140 3L190 3Q195 7 198 19Q201 7 206 3L250 3Q253 5 255 10Q257 5 260 3L300 3Q304 6 306 14Q308 6 312 3L360 3L360 0Z'/%3E%3C/svg%3E");
-  --ice-divider-front-v-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 240' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='16' y2='0' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%2386aad6'/%3E%3Cstop offset='.3' stop-color='%23dceafb'/%3E%3Cstop offset='.5' stop-color='%23f7fbff'/%3E%3Cstop offset='.7' stop-color='%23dceafb'/%3E%3Cstop offset='1' stop-color='%2386aad6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg%3E%3Cpath fill='url(%23g)' d='M8.5 0H11V15L16 20L11 25V55L16 60L11 65V95L16 100L11 105V135L16 140L11 145V175L16 180L11 185V215L16 220L11 225V240L8.5 240Z'/%3E%3Cpath fill='url(%23g)' d='M8.5 0H11V15L16 20L11 25V55L16 60L11 65V95L16 100L11 105V135L16 140L11 145V175L16 180L11 185V215L16 220L11 225V240L8.5 240Z' transform='translate(16 0) scale(-1 1)'/%3E%3C/g%3E%3Crect x='6.9' y='0' width='2.2' height='240' fill='%23fff' opacity='.9'/%3E%3Cg fill='%23fff'%3E%3Ccircle cx='11.5' cy='30' r='.6'/%3E%3Ccircle cx='4.5' cy='95' r='.6'/%3E%3Ccircle cx='11.5' cy='160' r='.6'/%3E%3Ccircle cx='4.5' cy='205' r='.6'/%3E%3C/g%3E%3Cpath d='M8 34.6L8.4 35.8L9.6 36.2L8.4 36.6L8 37.8L7.6 36.6L6.4 36.2L7.6 35.8Z' fill='%23fff'/%3E%3C/svg%3E");
-  --ice-divider-front-v-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 240' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='16' y2='0' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%2324415f'/%3E%3Cstop offset='.3' stop-color='%237fa2c9'/%3E%3Cstop offset='.5' stop-color='%23b7d3ee'/%3E%3Cstop offset='.7' stop-color='%237fa2c9'/%3E%3Cstop offset='1' stop-color='%2324415f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg%3E%3Cpath fill='url(%23g)' d='M8.5 0H11V15L16 20L11 25V55L16 60L11 65V95L16 100L11 105V135L16 140L11 145V175L16 180L11 185V215L16 220L11 225V240L8.5 240Z'/%3E%3Cpath fill='url(%23g)' d='M8.5 0H11V15L16 20L11 25V55L16 60L11 65V95L16 100L11 105V135L16 140L11 145V175L16 180L11 185V215L16 220L11 225V240L8.5 240Z' transform='translate(16 0) scale(-1 1)'/%3E%3C/g%3E%3Crect x='6.9' y='0' width='2.2' height='240' fill='%23d8e9ff' opacity='.9'/%3E%3Cg fill='%23d8e9ff'%3E%3Ccircle cx='11.5' cy='30' r='.6'/%3E%3Ccircle cx='4.5' cy='95' r='.6'/%3E%3Ccircle cx='11.5' cy='160' r='.6'/%3E%3Ccircle cx='4.5' cy='205' r='.6'/%3E%3C/g%3E%3Cpath d='M8 34.6L8.4 35.8L9.6 36.2L8.4 36.6L8 37.8L7.6 36.6L6.4 36.2L7.6 35.8Z' fill='%23d8e9ff'/%3E%3C/svg%3E");
-  --ice-divider-back-v-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 240' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='16' y2='0' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%23b9d0ea'/%3E%3Cstop offset='1' stop-color='%237f9fc6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg opacity='0.7'%3E%3Cpath fill='url(%23g)' d='M9.5 0H11.5V35L15 40L11.5 45V115L15 120L11.5 125V195L15 200L11.5 205V240L9.5 240Z'/%3E%3Cpath fill='url(%23g)' d='M9.5 0H11.5V35L15 40L11.5 45V115L15 120L11.5 125V195L15 200L11.5 205V240L9.5 240Z' transform='translate(16 0) scale(-1 1)'/%3E%3C/g%3E%3Crect x='6.9' y='0' width='2.2' height='240' fill='%23fff' opacity='.9'/%3E%3Cg fill='%23fff'%3E%3Ccircle cx='4.5' cy='45' r='.6'/%3E%3Ccircle cx='11.5' cy='185' r='.6'/%3E%3C/g%3E%3Cpath d='M8 34.6L8.4 35.8L9.6 36.2L8.4 36.6L8 37.8L7.6 36.6L6.4 36.2L7.6 35.8Z' fill='%23fff'/%3E%3C/svg%3E");
-  --ice-divider-back-v-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 240' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='16' y2='0' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%2331557c'/%3E%3Cstop offset='1' stop-color='%231c3450'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg opacity='0.75'%3E%3Cpath fill='url(%23g)' d='M9.5 0H11.5V35L15 40L11.5 45V115L15 120L11.5 125V195L15 200L11.5 205V240L9.5 240Z'/%3E%3Cpath fill='url(%23g)' d='M9.5 0H11.5V35L15 40L11.5 45V115L15 120L11.5 125V195L15 200L11.5 205V240L9.5 240Z' transform='translate(16 0) scale(-1 1)'/%3E%3C/g%3E%3Crect x='6.9' y='0' width='2.2' height='240' fill='%23cfe4fa' opacity='.9'/%3E%3Cg fill='%23cfe4fa'%3E%3Ccircle cx='4.5' cy='45' r='.6'/%3E%3Ccircle cx='11.5' cy='185' r='.6'/%3E%3C/g%3E%3Cpath d='M8 34.6L8.4 35.8L9.6 36.2L8.4 36.6L8 37.8L7.6 36.6L6.4 36.2L7.6 35.8Z' fill='%23cfe4fa'/%3E%3C/svg%3E");
+  --ice-divider-front-v-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 240' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='16' y2='0' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='.0' stop-color='%2386aad6'/%3E%3Cstop offset='.3' stop-color='%23dceafb'/%3E%3Cstop offset='.5' stop-color='%23f7fbff'/%3E%3Cstop offset='.7' stop-color='%23dceafb'/%3E%3Cstop offset='1' stop-color='%2386aad6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='6' y='0' width='4' height='240' fill='url(%23g)'/%3E%3Crect x='6.9' y='0' width='2.2' height='240' fill='%23ffffff' opacity='.9'/%3E%3Cg fill='%23ffffff'%3E%3Ccircle cx='11.5' cy='30' r='.6'/%3E%3Ccircle cx='4.5' cy='95' r='.6'/%3E%3Ccircle cx='11.5' cy='160' r='.6'/%3E%3Ccircle cx='4.5' cy='205' r='.6'/%3E%3C/g%3E%3Cpath d='M8 34.6L8.4 35.8L9.6 36.2L8.4 36.6L8 37.8L7.6 36.6L6.4 36.2L7.6 35.8Z' fill='%23ffffff'/%3E%3C/svg%3E");
+  --ice-divider-front-v-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 240' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='16' y2='0' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='.0' stop-color='%2324415f'/%3E%3Cstop offset='.3' stop-color='%237fa2c9'/%3E%3Cstop offset='.5' stop-color='%23b7d3ee'/%3E%3Cstop offset='.7' stop-color='%237fa2c9'/%3E%3Cstop offset='1' stop-color='%2324415f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='6' y='0' width='4' height='240' fill='url(%23g)'/%3E%3Crect x='6.9' y='0' width='2.2' height='240' fill='%23d8e9ff' opacity='.9'/%3E%3Cg fill='%23d8e9ff'%3E%3Ccircle cx='11.5' cy='30' r='.6'/%3E%3Ccircle cx='4.5' cy='95' r='.6'/%3E%3Ccircle cx='11.5' cy='160' r='.6'/%3E%3Ccircle cx='4.5' cy='205' r='.6'/%3E%3C/g%3E%3Cpath d='M8 34.6L8.4 35.8L9.6 36.2L8.4 36.6L8 37.8L7.6 36.6L6.4 36.2L7.6 35.8Z' fill='%23d8e9ff'/%3E%3C/svg%3E");
+  --ice-divider-back-v-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 240' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='16' y2='0' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='.0' stop-color='%23b9d0ea'/%3E%3Cstop offset='1' stop-color='%237f9fc6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='5.2' y='0' width='5.6' height='240' fill='url(%23g)'/%3E%3C/svg%3E");
+  --ice-divider-back-v-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 240' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='16' y2='0' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='.0' stop-color='%2331557c'/%3E%3Cstop offset='1' stop-color='%231c3450'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='5.2' y='0' width='5.6' height='240' fill='url(%23g)'/%3E%3C/svg%3E");
 
   --ice-divider-front: var(--ice-divider-front-light);
   --ice-divider-back: var(--ice-divider-back-light);
   --ice-divider-front-v: var(--ice-divider-front-v-light);
   --ice-divider-back-v: var(--ice-divider-back-v-light);
-  --ice-divider-glow: 160 200 255;
-  --ice-divider-glow-a: 0.35;
   /* The two-layer art lists, so the divider and the edge grooves share them. */
   --ice-divider-art-h: var(--ice-divider-front), var(--ice-divider-back);
   --ice-divider-art-v: var(--ice-divider-front-v), var(--ice-divider-back-v);
@@ -51,8 +49,6 @@
     --ice-divider-back: var(--ice-divider-back-dark);
     --ice-divider-front-v: var(--ice-divider-front-v-dark);
     --ice-divider-back-v: var(--ice-divider-back-v-dark);
-    --ice-divider-glow: 120 170 235;
-    --ice-divider-glow-a: 0.4;
   }
 }
 
@@ -61,19 +57,17 @@
   --ice-divider-back: var(--ice-divider-back-dark);
   --ice-divider-front-v: var(--ice-divider-front-v-dark);
   --ice-divider-back-v: var(--ice-divider-back-v-dark);
-  --ice-divider-glow: 120 170 235;
-  --ice-divider-glow-a: 0.4;
 }
 
 /* Simple mode is flat: the ridge becomes the plain groove the divider had
  * before it was iced. The tokens are inherited, so every divider switches
  * together: no art, a 2px thickness, the groove painted by
- * `ui-divider-h/v::before`, no glow and no tint overlay. */
+ * `ui-divider-h/v::before`, and the groove's tint copy off with the art. */
 :root[data-simple] {
   --ice-divider-h: 2px;
   --ice-v-w: 2px;
   --ice-divider-paint: none;
-  --ice-divider-filter: none;
+  --ice-groove-tint-a: 0;
   --ice-divider-groove-a: 1;
   --ice-divider-tint-a: 0;
   --ice-groove-paint: none;
@@ -101,18 +95,12 @@
   background-repeat: var(--ice-divider-repeat);
   background-position: var(--ice-divider-position);
   background-size: var(--ice-divider-size);
-  /* faint cold glow so it reads on dark surfaces; `none` in simple mode */
-  filter: var(
-    --ice-divider-filter,
-    drop-shadow(
-      0 0 2px rgb(var(--ice-divider-glow) / var(--ice-divider-glow-a))
-    )
-  );
   background-image: var(--ice-divider-paint, var(--ice-divider-art));
 
-  /* A tinted copy of the silhouette, over the art. `color` keeps the ice's
-   * luminance (the highlights stay light) and takes only the hue and
-   * saturation, so `cp-divider` colours the ice the way it colours a groove. */
+  /* A tinted copy of the silhouette, over the art. It paints the tint itself
+   * rather than only its hue: under `color` blending the dark icicles kept
+   * their own luminance and stayed untinted, so the line coloured and the ice
+   * below it did not. */
   &::after {
     content: "";
     position: absolute;
@@ -120,7 +108,6 @@
     pointer-events: none;
     opacity: var(--ice-divider-tint-a, 1);
     background-color: var(--divider-tint);
-    mix-blend-mode: color;
     mask-image: var(--ice-divider-art);
     mask-repeat: var(--ice-divider-repeat);
     mask-position: var(--ice-divider-position);
@@ -129,8 +116,13 @@
 }
 
 /* The same ridge drawn down a narrow column instead of along a wide strip. It
- * only swaps the geometry tokens, so the glow, the tint overlay and the simple
- * mode fallback all come from `ice-divider`. */
+ * is a lit filament rather than a barbed one: the ridge art's icicles turn
+ * into full-width spikes when the strip is only a few pixels wide and a
+ * 16px separator shows a single one, so the vertical art carries the ridge's
+ * light and sparkle without the spikes.
+ *
+ * It only swaps the geometry tokens, so the tint overlay and the simple mode
+ * fallback all come from `ice-divider`. */
 @utility ice-divider-vertical {
   --ice-divider-art: var(--ice-divider-art-v);
   --ice-divider-size:
@@ -218,46 +210,109 @@
  * must not rely on its own background image, and only elements that carry no
  * shadow of their own should use it — the lip below replaces `box-shadow`.
  * Simple mode sets `--ice-groove-paint: none`, leaving the lip exactly as it
- * was. */
+ * was.
+ *
+ * The ridge takes `--divider-tint` the way a `Divider` does, so `cp-border` and
+ * `cp-divider` colour the art and not only the cut: a copy of the art masked to
+ * its own silhouette, laid over the band the art occupies. Each side gives that
+ * copy its geometry through `--ice-groove-*`, and simple mode sets
+ * `--ice-groove-tint-a: 0` so it goes with the art. */
+
+@utility ice-groove-tint {
+  content: "";
+  position: absolute;
+  inset: var(--ice-groove-inset);
+  pointer-events: none;
+  opacity: var(--ice-groove-tint-a, 1);
+  background-color: var(--divider-tint);
+  mask-image: var(--ice-groove-art, var(--ice-divider-art-h));
+  mask-repeat: var(--ice-groove-repeat);
+  mask-position: var(--ice-groove-position);
+  mask-size: var(--ice-groove-size);
+}
+
 @utility ice-groove-t {
+  --ice-groove-repeat: repeat-x;
+  --ice-groove-position: 0 0;
+  --ice-groove-inset: 0 0 auto 0;
+  --ice-groove-size: calc(var(--ice-groove-h, 0.5rem) * 10)
+    var(--ice-groove-h, 0.5rem);
+  position: relative;
   background-image: var(--ice-groove-paint, var(--ice-divider-art-h));
   background-repeat: repeat-x;
   background-position: 0 0;
   background-size: calc(var(--ice-groove-h, 0.5rem) * 10)
     var(--ice-groove-h, 0.5rem);
   box-shadow: inset 0 1px 0 var(--divider-lip);
+
+  &::after {
+    @apply ice-groove-tint;
+    height: var(--ice-groove-h, 0.5rem);
+  }
 }
 
 @utility ice-groove-b {
+  --ice-groove-repeat: repeat-x;
+  --ice-groove-position: 0 100%;
+  --ice-groove-inset: auto 0 0 0;
+  --ice-groove-size: calc(var(--ice-groove-h, 0.5rem) * 10)
+    var(--ice-groove-h, 0.5rem);
+  position: relative;
   background-image: var(--ice-groove-paint, var(--ice-divider-art-h));
   background-repeat: repeat-x;
   background-position: 0 100%;
   background-size: calc(var(--ice-groove-h, 0.5rem) * 10)
     var(--ice-groove-h, 0.5rem);
   box-shadow: inset 0 -1px 0 var(--divider-lip);
+
+  &::after {
+    @apply ice-groove-tint;
+    height: var(--ice-groove-h, 0.5rem);
+  }
 }
 
 @utility ice-groove-l {
+  --ice-groove-art: var(--ice-divider-art-v);
+  --ice-groove-repeat: repeat-y;
+  --ice-groove-position: 0 0;
+  --ice-groove-inset: 0 auto 0 0;
+  --ice-groove-size: var(--ice-groove-h, 0.5rem)
+    calc(var(--ice-groove-h, 0.5rem) * 10);
+  position: relative;
   background-image: var(--ice-groove-paint, var(--ice-divider-art-v));
   background-repeat: repeat-y;
   background-position: 0 0;
   background-size: var(--ice-groove-h, 0.5rem)
     calc(var(--ice-groove-h, 0.5rem) * 10);
   box-shadow: inset 1px 0 0 var(--divider-lip);
+
+  &::after {
+    @apply ice-groove-tint;
+    width: var(--ice-groove-h, 0.5rem);
+  }
 }
 
 @utility ice-groove-r {
+  --ice-groove-art: var(--ice-divider-art-v);
+  --ice-groove-repeat: repeat-y;
+  --ice-groove-position: 100% 0;
+  --ice-groove-inset: 0 0 0 auto;
+  --ice-groove-size: var(--ice-groove-h, 0.5rem)
+    calc(var(--ice-groove-h, 0.5rem) * 10);
+  position: relative;
   background-image: var(--ice-groove-paint, var(--ice-divider-art-v));
   background-repeat: repeat-y;
   background-position: 100% 0;
   background-size: var(--ice-groove-h, 0.5rem)
     calc(var(--ice-groove-h, 0.5rem) * 10);
   box-shadow: inset -1px 0 0 var(--divider-lip);
+
+  &::after {
+    @apply ice-groove-tint;
+    width: var(--ice-groove-h, 0.5rem);
+  }
 }
 
-/** Opts an element out of the ridge while keeping its own border and lip.
- * Pair it with a separator that was deliberately removed (`border-0`), since a
- * `background-image` cannot see that there is no border to sit on. */
 @utility ice-groove-none {
   --ice-groove-paint: none;
 }

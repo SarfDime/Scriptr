@@ -4,7 +4,6 @@ import {
   createContext,
   use,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
   useSyncExternalStore,
@@ -12,6 +11,7 @@ import {
 import { Box } from '@/components/common/Box'
 import { Text } from '@/components/typography/Text'
 import { useBodyScrollLock } from '@/hooks/useBodyScroll'
+import { useIsomorphicLayoutEffect } from '@/hooks/useIsomorphicLayoutEffect'
 import { useUIStrings } from '@/providers/locale/use-strings'
 import { cn } from '../../lib/common-utils'
 
@@ -39,11 +39,6 @@ const LoadingContext = createContext<LoadingContextType | null>(null)
 const LOGO_LETTERS = ['S', 'c', 'r', 'i', 'p', 't', 'r']
 const JUMP_DELAYS = [0.15, 0.42, 0.08, 0.55, 0.25, 0.62, 0.5]
 const HANG_DELAY = 750
-
-/** `useLayoutEffect` warns when it runs during SSR, and this provider renders on
- * the server, so fall back to `useEffect` there. */
-const useIsomorphicLayoutEffect =
-  typeof window === 'undefined' ? useEffect : useLayoutEffect
 
 const emptySubscribe = () => () => undefined
 const getClientSnapshot = () => true

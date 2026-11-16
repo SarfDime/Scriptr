@@ -5,6 +5,7 @@ import { Box } from '@/components/common/Box'
 import { EntityCard } from '@/components/common/EntityCard'
 import { ClickableCard } from '@/components/ui/Card'
 import { getAcademicPath } from '@/lib/academic-routes'
+import { getColorPalette } from '@/lib/color-pallette-gen'
 import { useLocale } from '@/providers/locale/LocaleProvider'
 import type { SubjectSidebarItem } from '@/types/academics/subject.types'
 
@@ -43,6 +44,8 @@ export const SubjectCard = ({
     locale
   )
 
+  const color = getColorPalette({ value: slug ?? '' })
+
   return (
     <EntityCard
       href={href}
@@ -58,9 +61,9 @@ export const SubjectCard = ({
           : undefined
       }
       headerAside={code && <AcademicBadge type='code' value={code} />}
-      className='group'
+      className={color}
       footer={
-        <ClickableCard.Footer className='ui-cluster w-full flex-wrap items-center justify-between gap-2 pt-2.5 transition-colors duration-300 group-hover:border-t-brand-300'>
+        <ClickableCard.Footer className='ui-cluster w-full flex-wrap items-center justify-between gap-2 pt-2.5 transition-colors duration-300 group-hover:cp-border'>
           <Box className='ui-cluster flex-wrap gap-2'>
             {year && <AcademicBadge type='year' value={year} />}
             {credits && <AcademicBadge type='credits' value={credits} />}

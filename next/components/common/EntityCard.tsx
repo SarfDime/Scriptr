@@ -38,7 +38,7 @@ export type EntityCardProps = {
  * long word break, which `break-words` does not do inside flex/grid items).
  */
 const defaultClassName =
-  'group p-4 min-w-0 overflow-hidden ui-stack gap-2 transition-colors hover:border-brand-200/50'
+  'cp-vars group p-4 min-w-0 overflow-hidden ui-stack gap-2 transition-colors'
 
 export const EntityCard = ({
   href,
@@ -63,7 +63,7 @@ export const EntityCard = ({
           <Box className='ui-cluster w-full min-w-0 flex-nowrap items-center justify-between gap-2'>
             <Title
               as='h3'
-              className='ui-body-strong min-w-0 max-md:wrap-anywhere md:truncate transition-colors group-hover:text-brand-500'
+              className='ui-body-strong min-w-0 max-md:wrap-anywhere truncate transition-colors group-hover:cp-text'
             >
               {title}
             </Title>

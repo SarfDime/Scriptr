@@ -19,7 +19,6 @@ export const FONT_WEIGHTS = ['semibold', 'strong', 'black'] as const
 export const ALIGNMENTS = ['left', 'center', 'right'] as const
 export const BUTTON_VARIANTS = [
   'solid',
-  'hollow',
   'ghost',
   'link',
   'basic',
@@ -141,8 +140,8 @@ export type {
 /**
  * Decorators that mean "one of a set": picking a colour should clear the other
  * colours, and the same for weights and alignments. Both editors enforce that
- * with a `decorator.add` behavior, and both used to build this map themselves —
- * two copies that had to be kept in step with the lists above.
+ * with a `decorator.add` behavior, so the map is derived here once instead of
+ * being restated in each.
  */
 export const DECORATOR_CATEGORIES = {
   alignment: ALIGNMENT_DECORATORS.map((decorator) => decorator.name),

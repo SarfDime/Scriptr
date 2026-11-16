@@ -57,7 +57,7 @@ export const NavBar = async ({
           'xl:group-data-[nav-collapsed=true]/nav:-translate-x-full'
         )}
       >
-        <Box className='ui-cluster justify-between h-16 px-3 ui-groove-b'>
+        <Box className='ui-cluster justify-between h-(--header-height) px-3 ui-groove-b'>
           <NavLogo />
           <NavToggle
             action='close'

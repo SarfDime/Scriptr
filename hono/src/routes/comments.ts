@@ -1131,7 +1131,6 @@ comments.post('/:commentId/like', authMiddleware, async (c) => {
   return c.json({ success: true, liked: true })
 })
 
-/** Create a new comment */
 comments.post('/', authMiddleware, async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)

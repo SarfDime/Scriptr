@@ -5,9 +5,9 @@ import { UI_STRINGS_PACK } from '@shared/config/strings'
 import type { ReactNode } from 'react'
 import { Box, type BoxPropsWithoutChildren } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
+import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
 import { Avatar } from '@/components/ui/Avatar'
-import { Card } from '@/components/ui/Card'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
 import { getServerStrings } from '@/lib/server-strings'
@@ -15,6 +15,7 @@ import type {
   ProfileAcademicEntry,
   ProfileAcademics,
 } from '@/types/components/ProfileCard.types'
+import { ActivityStats } from '../common/ActivityStats'
 import type { NextImageProps } from '../common/NextImage'
 
 type ProfileCardProps = {
@@ -24,6 +25,9 @@ type ProfileCardProps = {
   picture?: NextImageProps
   /** Rendered with the avatar (beside it on mobile, below it on desktop). */
   badges?: ReactNode
+  authoredCount?: number
+  commentCount?: number
+  favoriteCount?: number
 } & BoxPropsWithoutChildren
 
 const AcademicEntryLink = ({ entry }: { entry: ProfileAcademicEntry }) =>
@@ -35,12 +39,38 @@ const AcademicEntryLink = ({ entry }: { entry: ProfileAcademicEntry }) =>
     <Text className='ui-body'>{entry.name}</Text>
   )
 
+/** One affiliation level: its icon, its label and its entries. No wrapping
+ * between icon and text, so a long name wraps inside its own column instead of
+ * pushing the icon onto a line of its own. */
+const AcademicGroup = ({
+  icon,
+  label,
+  entries,
+}: {
+  icon: ReactNode
+  label: string
+  entries: Array<ProfileAcademicEntry>
+}) => (
+  <Box className='flex items-start gap-2'>
+    {icon}
+    <Box className='ui-stack min-w-0 gap-0'>
+      <Text className='ui-label'>{label}</Text>
+      {entries.map((entry) => (
+        <AcademicEntryLink key={entry.id} entry={entry} />
+      ))}
+    </Box>
+  </Box>
+)
+
 export const ProfileCard = async ({
   name,
   academics,
   picture,
   badges,
   className,
+  authoredCount,
+  commentCount,
+  favoriteCount,
   ...props
 }: ProfileCardProps) => {
   const ui = await getServerStrings(UI_STRINGS_PACK)
@@ -51,64 +81,62 @@ export const ProfileCard = async ({
     <Box
       as='section'
       {...props}
-      className={cn('ui-above relative z-10 block', className)}
+      className={cn(
+        'ui-above ui-cluster relative z-2 items-stretch',
+        className
+      )}
     >
-      {/* Below `lg` (where PageLayout stacks its columns) the avatar group is a
-          row with the academics full-width underneath. From `lg` the group is a
-          narrow column (avatar, badges wrapping under it) with the academics to
-          its right. */}
-      <Card.Body className='flex flex-col items-start gap-4 lg:flex-row'>
-        <Box className='flex items-start gap-3 lg:max-w-24 lg:flex-col'>
-          {/* The avatar fills its box (`h-full aspect-square`), so the box has to
-              be sized — an unsized flex item collapses to 0×0. */}
-          <Box className='relative h-20 w-20 shrink-0 overflow-hidden rounded-lg'>
-            <Avatar name={name} picture={picture} color={color} />
-          </Box>
-          {badges}
+      <Box className='flex items-start gap-3 lg:max-w-24 lg:flex-col'>
+        {/* The avatar fills its box (`h-full aspect-square`), so the box has to
+            be sized — an unsized flex item collapses to 0×0. */}
+        <Box className='relative h-20 w-20 shrink-0 overflow-hidden rounded-lg'>
+          <Avatar name={name} picture={picture} color={color} />
         </Box>
-        <Box className='ui-stack ui-above-inside w-full grow lg:w-auto'>
-          {!faculties.length && !studies.length && (
-            <Text className='ui-caption'>
-              {ui.profile.noAcademicAffiliations}
-            </Text>
-          )}
+        {badges}
+      </Box>
+      {authoredCount !== undefined && commentCount !== undefined && (
+        <ActivityStats
+          savedCount={favoriteCount}
+          authoredCount={authoredCount}
+          commentCount={commentCount}
+        />
+      )}
+      <Box
+        as='section'
+        className='ui-stack ui-above-inside grow-2 basis-72 gap-3'
+      >
+        <SectionHeader title={ui.profile.academics.sectionTitle} />
+        <Box className='ui-stack flex-1 justify-between gap-3'>
+          {universities.length === 0 &&
+            faculties.length === 0 &&
+            studies.length === 0 && (
+              <Text className='ui-caption'>
+                {ui.profile.noAcademicAffiliations}
+              </Text>
+            )}
           {universities.length > 0 && (
-            <Box className='ui-cluster items-start gap-2'>
-              <Home className='cp-blue rounded-sm p-0.5' />
-              <Box className='ui-stack gap-0'>
-                <Text className='ui-label'>{ui.profile.universities}</Text>
-                {universities.map((university) => (
-                  <AcademicEntryLink key={university.id} entry={university} />
-                ))}
-              </Box>
-            </Box>
+            <AcademicGroup
+              icon={<Home className='cp-blue shrink-0 rounded-md p-0.5' />}
+              label={ui.profile.universities}
+              entries={universities}
+            />
           )}
-
           {faculties.length > 0 && (
-            <Box className='ui-cluster items-start gap-2'>
-              <Users className='cp-amber rounded-sm p-0.5' />
-              <Box className='ui-stack gap-0'>
-                <Text className='ui-label'>{ui.profile.faculties}</Text>
-                {faculties.map((faculty) => (
-                  <AcademicEntryLink key={faculty.id} entry={faculty} />
-                ))}
-              </Box>
-            </Box>
+            <AcademicGroup
+              icon={<Users className='cp-amber shrink-0 rounded-md p-0.5' />}
+              label={ui.profile.faculties}
+              entries={faculties}
+            />
           )}
-
           {studies.length > 0 && (
-            <Box className='ui-cluster items-start gap-2'>
-              <Book className='cp-green rounded-sm p-0.5' />
-              <Box className='ui-stack gap-0'>
-                <Text className='ui-label'>{ui.profile.studies}</Text>
-                {studies.map((study) => (
-                  <AcademicEntryLink key={study.id} entry={study} />
-                ))}
-              </Box>
-            </Box>
+            <AcademicGroup
+              icon={<Book className='cp-green shrink-0 rounded-md p-0.5' />}
+              label={ui.profile.studies}
+              entries={studies}
+            />
           )}
         </Box>
-      </Card.Body>
+      </Box>
     </Box>
   )
 }

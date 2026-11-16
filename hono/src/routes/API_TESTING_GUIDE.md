@@ -312,10 +312,12 @@ curl -s -o /dev/null -w '%{http_code}\n' -b cookies-student.txt -X PATCH $BASE/p
 curl -s -b cookies-student.txt -X PATCH $BASE/profiles/me \
   -H "Content-Type: application/json" -d '{"selected_faculty_ids":"x"}' | jq .
 
-# 409 when a selected faculty id does not exist; an empty array clears them
+# 409 when a selected faculty id does not exist; an empty array clears them.
+# The bad id also rolls the username back: read it after the 409 and it is unchanged.
 curl -s -b cookies-student.txt -X PATCH $BASE/profiles/me \
   -H "Content-Type: application/json" \
-  -d '{"username":"localstudent","selected_faculty_ids":["00000000-0000-0000-0000-000000000000"]}' | jq .
+  -d '{"username":"localstudent","full_name":"Rolled back","selected_faculty_ids":["00000000-0000-0000-0000-000000000000"]}' | jq .
+curl -s $BASE/profiles/username/localstudent | jq '.full_name'
 ```
 
 Changing the avatar is two calls, like a script file upload. It needs
@@ -382,42 +384,61 @@ Calendar notes are local-first, so the API only sees a pull and a push:
 # Pull (counts as one sync)
 curl -s -b cookies-student.txt $BASE/calendar-notes | jq .
 
+# Every note carries the study whose calendar it belongs to.
+STUDY=$(curl -s -b cookies-student.txt $BASE/auth/session | jq -r '.selected_study_ids[0]')
+
 # Push two notes and read the merged copy back
 curl -s -b cookies-student.txt -X POST $BASE/calendar-notes/sync \
-  -H "Content-Type: application/json" -d '{
-    "since": null,
-    "notes": [
-      { "id": "11111111-1111-4111-8111-111111111111", "day": "2026-11-06",
-        "type": "exam", "title": "Midterm", "body": null,
-        "updatedAt": "2026-11-01T10:00:00.000Z", "deleted": false },
-      { "id": "22222222-2222-4222-8222-222222222222", "day": "2026-11-06",
-        "type": "note", "title": "Bring index card", "body": null,
-        "updatedAt": "2026-11-01T10:00:01.000Z", "deleted": false }
+  -H "Content-Type: application/json" -d "$(jq -nc --arg study "$STUDY" '{
+    since: null,
+    notes: [
+      { id: "11111111-1111-4111-8111-111111111111", studyId: $study, day: "2026-11-06",
+        type: "exam", title: "Midterm", body: null,
+        updatedAt: "2026-11-01T10:00:00.000Z", deleted: false },
+      { id: "22222222-2222-4222-8222-222222222222", studyId: $study, day: "2026-11-06",
+        type: "note", title: "Bring index card", body: null,
+        updatedAt: "2026-11-01T10:00:01.000Z", deleted: false }
     ]
-  }' | jq .
+  }')" | jq .
 
-# A fourth note on one day is refused: three is the cap
+# A fourth note on one day is refused: three is the cap per study-day
 curl -s -b cookies-student.txt -o /dev/null -w '%{http_code}\n' \
-  -X POST $BASE/calendar-notes/sync -H "Content-Type: application/json" -d '{
-    "since": null,
-    "notes": [
-      { "id": "33333333-3333-4333-8333-333333333333", "day": "2026-11-06", "type": "note",
-        "title": "One", "body": null, "updatedAt": "2026-11-01T10:00:02.000Z", "deleted": false },
-      { "id": "44444444-4444-4444-8444-444444444444", "day": "2026-11-06", "type": "note",
-        "title": "Two", "body": null, "updatedAt": "2026-11-01T10:00:03.000Z", "deleted": false }
+  -X POST $BASE/calendar-notes/sync -H "Content-Type: application/json" \
+  -d "$(jq -nc --arg study "$STUDY" '{
+    since: null,
+    notes: [
+      { id: "33333333-3333-4333-8333-333333333333", studyId: $study, day: "2026-11-06",
+        type: "note", title: "One", body: null,
+        updatedAt: "2026-11-01T10:00:02.000Z", deleted: false },
+      { id: "44444444-4444-4444-8444-444444444444", studyId: $study, day: "2026-11-06",
+        type: "note", title: "Two", body: null,
+        updatedAt: "2026-11-01T10:00:03.000Z", deleted: false }
     ]
-  }'
+  }')"
 
 # A deletion travels as a tombstone
 curl -s -b cookies-student.txt -X POST $BASE/calendar-notes/sync \
-  -H "Content-Type: application/json" -d '{
-    "since": "2026-11-01T10:00:01.000Z",
-    "notes": [
-      { "id": "22222222-2222-4222-8222-222222222222", "day": "2026-11-06", "type": "note",
-        "title": "Bring index card", "body": null,
-        "updatedAt": "2026-11-02T10:00:00.000Z", "deleted": true }
+  -H "Content-Type: application/json" -d "$(jq -nc --arg study "$STUDY" '{
+    since: "2026-11-01T10:00:01.000Z",
+    notes: [
+      { id: "22222222-2222-4222-8222-222222222222", studyId: $study, day: "2026-11-06",
+        type: "note", title: "Bring index card", body: null,
+        updatedAt: "2026-11-02T10:00:00.000Z", deleted: true }
     ]
-  }' | jq .
+  }')" | jq .
+
+# The automatic push runs once per profile per week. Run this twice: the first
+# answers with the notes and the next instant, the second with the same instant
+# and no notes. Both count against the sync allowance.
+curl -s -b cookies-student.txt -X POST $BASE/calendar-notes/auto-sync \
+  -H "Content-Type: application/json" -d "$(jq -nc --arg study "$STUDY" '{
+    since: null,
+    notes: [
+      { id: "55555555-5555-4555-8555-555555555555", studyId: $study, day: "2026-11-07",
+        type: "note", title: "Automatic save", body: null,
+        updatedAt: "2026-11-02T10:00:02.000Z", deleted: false }
+    ]
+  }')" | jq '{notes: (.notes | length), syncedAt, nextAutoSyncAt}'
 
 # The fourth sync inside half an hour answers 429
 for i in 1 2 3; do curl -s -o /dev/null -w "%{http_code} " -b cookies-student.txt $BASE/calendar-notes; done; echo
@@ -678,11 +699,11 @@ phase doesn't depend on migration state.
 
 ```bash
 curl -s -b cookies-admin.txt -X POST $BASE/ratings/types -H "Content-Type: application/json" \
-  -d '{"id":"test_teaching","target_type":"professor","label":"Test Teaching"}' | jq .
+  -d '{"id":"test_teaching","target_type":"professor","labels":{"en":"Test Teaching"}}' | jq .
 curl -s -b cookies-admin.txt -X POST $BASE/ratings/types -H "Content-Type: application/json" \
-  -d '{"id":"test_difficulty","target_type":"subject","label":"Test Difficulty"}' | jq .
+  -d '{"id":"test_difficulty","target_type":"subject","labels":{"en":"Test Difficulty"}}' | jq .
 
-curl -s $BASE/ratings/types | jq '.[] | {id, target_type, label}'
+curl -s $BASE/ratings/types | jq '.[] | {id, target_type, labels}'
 ```
 
 ```bash

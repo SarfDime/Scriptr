@@ -38,11 +38,12 @@ export function CommentReactions(props: CommentReactionsProps) {
             key={reactionType}
             onClick={() => react(reactionType)}
             disabled={disabled || isPending}
+            isActive={isMine}
             aria-pressed={isMine}
             aria-label={strings.reactions.reactWith(label, count)}
             className={cn(
-              'button button-sm gap-1.5 disabled:opacity-100 disabled:filter-none',
-              isMine ? 'hollow' : 'ghost'
+              'button button-sm ghost gap-1.5 disabled:opacity-100 disabled:filter-none py-2 px-2',
+              isMine && 'pl-1.5'
             )}
           >
             <Text className='text-base leading-none'>{reaction.emoji}</Text>
@@ -53,7 +54,7 @@ export function CommentReactions(props: CommentReactionsProps) {
       {!disabled && (
         <Button
           type='button'
-          className={cn('button ghost button-sm px-2')}
+          className={'button ghost button-sm px-2'}
           onClick={() => setShowAllReactions((shown) => !shown)}
           aria-expanded={showAllReactions}
           isActive={showAllReactions}

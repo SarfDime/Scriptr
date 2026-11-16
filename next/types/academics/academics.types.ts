@@ -42,19 +42,16 @@ export type MinimalEntity = {
   slug?: string
 }
 
-// Extracted shared contact properties
 export type ContactInfo = {
   telephone?: string
   email?: string
   website?: string
 }
 
-// Extracted relation type used inside SubjectDetail and ProfessorDetail
 export type RelatedFaculty = MinimalEntity & {
   university?: MinimalEntity
 }
 
-// Extracted relation type used inside SubjectDetail and ProfessorDetail
 export type RelatedStudy = MinimalEntity & {
   faculty?: RelatedFaculty
 }

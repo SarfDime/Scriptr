@@ -4,12 +4,18 @@ import type { CalendarNote } from '../../../shared/types/calendar-notes.types'
 import {
   exceedsDailyNoteCap,
   exceedsProfileNoteCap,
+  isCalendarNotesAutoSyncDue,
+  nextCalendarNotesAutoSyncAt,
   readCalendarNotesSyncPayload,
   takeCalendarNotesSyncSlot,
 } from './calendar-notes'
 
+const STUDY = '11111111-1111-4111-8111-111111111111'
+const OTHER_STUDY = '22222222-2222-4222-8222-222222222222'
+
 const note = (overrides: Partial<CalendarNote> = {}): CalendarNote => ({
   id: 'n1',
+  studyId: STUDY,
   day: '2026-11-06',
   type: 'note',
   title: 'Read chapter 4',
@@ -66,6 +72,18 @@ describe('exceedsDailyNoteCap', () => {
     assert.equal(exceedsDailyNoteCap([...three, note({ id: 'd' })]), true)
   })
 
+  it('counts each study separately, so two calendars can share a day', () => {
+    assert.equal(
+      exceedsDailyNoteCap([
+        note({ id: 'a' }),
+        note({ id: 'b' }),
+        note({ id: 'c' }),
+        note({ id: 'd', studyId: OTHER_STUDY }),
+      ]),
+      false
+    )
+  })
+
   it('does not count tombstones, which are what free a slot', () => {
     assert.equal(
       exceedsDailyNoteCap([
@@ -110,5 +128,47 @@ describe('takeCalendarNotesSyncSlot', () => {
     takeCalendarNotesSyncSlot(first)
 
     assert.equal(takeCalendarNotesSyncSlot(second), null)
+  })
+})
+
+describe('isCalendarNotesAutoSyncDue', () => {
+  const now = Date.parse('2026-11-16T12:00:00.000Z')
+  const daysAgo = (days: number) =>
+    new Date(now - days * 24 * 60 * 60 * 1000).toISOString()
+
+  it('is due without a record, or with one a week old', () => {
+    assert.equal(isCalendarNotesAutoSyncDue(null, now), true)
+    assert.equal(isCalendarNotesAutoSyncDue(daysAgo(7), now), true)
+    assert.equal(isCalendarNotesAutoSyncDue(daysAgo(30), now), true)
+  })
+
+  it('is not due inside the week, an hour short of it included', () => {
+    assert.equal(isCalendarNotesAutoSyncDue(daysAgo(6), now), false)
+    assert.equal(
+      isCalendarNotesAutoSyncDue(
+        new Date(now - 7 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString(),
+        now
+      ),
+      false
+    )
+  })
+
+  it('treats an unreadable record as due, so a bad row cannot strand a profile', () => {
+    assert.equal(isCalendarNotesAutoSyncDue('not a date', now), true)
+  })
+})
+
+describe('nextCalendarNotesAutoSyncAt', () => {
+  it('adds the week to the last automatic push', () => {
+    assert.equal(
+      nextCalendarNotesAutoSyncAt('2026-11-10T09:30:00.000Z'),
+      '2026-11-17T09:30:00.000Z'
+    )
+  })
+
+  it('answers now when there is nothing usable to read', () => {
+    const before = Date.now()
+    const next = Date.parse(nextCalendarNotesAutoSyncAt(null))
+    assert.ok(next >= before && next <= Date.now())
   })
 })

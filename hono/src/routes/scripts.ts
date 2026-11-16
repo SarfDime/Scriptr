@@ -256,8 +256,8 @@ const createScriptSchema = z
               'description must hold at least one language of supported Portable Text within 50 KB per language',
           })
           .nullable(),
-        subjectId: z.string().min(1, 'subjectId is required'),
-        professorId: z.string().min(1, 'professorId is required'),
+        subjectId: z.string().uuid('subjectId must be a database id'),
+        professorId: z.string().uuid('professorId must be a database id'),
         examSession: z
           .custom<ExamSession>(isExamSession, {
             message: 'examSession must be january, june or september',
@@ -735,6 +735,24 @@ scripts.post(
     // study is turned away without an R2 round trip.
     if (!(await canWriteInStudy(supabase, user.id, subject.study_id))) {
       return c.json({ error: STUDY_WRITE_DENIED_MESSAGE }, 403)
+    }
+
+    // `scripts_subject_professor_fkey` requires the pair, and the mirrored
+    // catalog can lag the Studio: check it before the upload rather than
+    // failing the insert after a round trip to R2.
+    const { data: assignment, error: assignmentError } = await supabase
+      .from('subject_professors')
+      .select('professor_id')
+      .eq('subject_id', subjectId)
+      .eq('professor_id', professorId)
+      .maybeSingle()
+
+    if (assignmentError) return databaseErrorResponse(c, assignmentError)
+    if (!assignment) {
+      return c.json(
+        { error: 'That professor is not assigned to this subject' },
+        409
+      )
     }
 
     // The client's file list is verified, not trusted: in the caller's own

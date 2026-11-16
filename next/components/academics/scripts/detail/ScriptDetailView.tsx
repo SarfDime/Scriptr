@@ -11,7 +11,7 @@ import { PageLayout } from '@/components/layout/PageLayout'
  * existence check has already run by the time this renders (so a missing script
  * answers a real `404` — see `ScriptDetailSkeleton` on why the route has no
  * `loading.tsx`), and the rest of the screen streams behind a Suspense boundary
- * with the same skeleton that used to be the route's loading file.
+ * that falls back to `ScriptDetailSkeleton`.
  */
 export const ScriptDetailView = ({
   script,

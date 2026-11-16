@@ -2,13 +2,16 @@ import {
   originalSkyKey,
   SKY_ANCHORS,
   SKY_COLORS,
+  SKY_PALETTE,
   SKY_STAR_COLOR,
   SKYBOX_DEFAULTS,
 } from '../config/skybox'
 import type {
   SkyboxConfig,
+  SkyColorPalette,
   SkyKeyframe,
   SkyPhase,
+  SkyPhaseColors,
   SkyState,
 } from '../types/skybox.types'
 
@@ -51,7 +54,10 @@ const dimRGB = (rgb: string, k: number) =>
  * Sanity setting moves the whole day with it. Sorted, and one keyframe per hour: if
  * two phases would land on the same hour (a very late sunrise), the earlier wins.
  */
-export const buildSkyKeyframes = (config: SkyboxConfig): Array<SkyKeyframe> => {
+export const buildSkyKeyframes = (
+  config: SkyboxConfig,
+  palette: Record<SkyPhase, SkyPhaseColors> = SKY_COLORS
+): Array<SkyKeyframe> => {
   const rise = config.sunriseHour
   const set = config.sunsetHour
   const placed: Array<{ hour: number; phase: SkyPhase }> = [
@@ -71,7 +77,7 @@ export const buildSkyKeyframes = (config: SkyboxConfig): Array<SkyKeyframe> => {
   for (const { hour, phase } of placed.sort((a, b) => a.hour - b.hour)) {
     if (seen.has(hour) || hour < 0 || hour > 24) continue
     seen.add(hour)
-    frames.push({ hour, phase, ...SKY_COLORS[phase] })
+    frames.push({ hour, phase, ...palette[phase] })
   }
   return frames
 }
@@ -106,35 +112,52 @@ export const moonHours = (hours: number) => (hours + 12) % 24
  * keeps this file free of the DOM while still blending real colors smoothly.
  *
  * `originalMix` blends from the themed palette (0) to the theme-independent
- * immersive one (1); the canvas animates it to crossfade.
+ * immersive one (1); the canvas animates it to crossfade. `palette` carries the
+ * colors picked in Sanity on top of the built-in ones; immersive mode always uses the
+ * built-in palette, because nothing on screen has to stay readable there.
  */
 export const getSkyState = (
   hours: number,
   config: SkyboxConfig = SKYBOX_DEFAULTS,
   toRGB: (key: string) => string = () => '128, 128, 128',
-  originalMix = 0
+  originalMix = 0,
+  palette: SkyColorPalette = SKY_PALETTE
 ): SkyState => {
   const time = ((hours % 24) + 24) % 24
-  const frames = buildSkyKeyframes(config)
+  const frames = buildSkyKeyframes(config, palette)
   const { from, to, t } = around(frames, time)
 
   // Smoothstep on the blend, so the slope is 0 at a keyframe and the sky never
   // changes direction with a visible kink.
   const w = smoothstep(0, 1, t)
   const mix = clamp(originalMix, 0, 1)
-  const blend = (resolve: (key: string) => string, key: keyof SkyKeyframe) =>
-    mixRGB(resolve(from[key] as string), resolve(to[key] as string), w)
+  const blend = (
+    resolve: (key: string) => string,
+    colorsOf: (phase: SkyPhase) => SkyPhaseColors,
+    key: keyof SkyPhaseColors
+  ) =>
+    mixRGB(
+      resolve(colorsOf(from.phase)[key]),
+      resolve(colorsOf(to.phase)[key]),
+      w
+    )
   const original = (key: string) => toRGB(originalSkyKey(key))
+  const themed = (key: keyof SkyPhaseColors) =>
+    blend(toRGB, (phase) => palette[phase], key)
+  // Immersive mode reads the built-in keyframes, so the picked colors and their
+  // theme tokens never reach the full-screen palette.
+  const builtIn = (key: keyof SkyPhaseColors) =>
+    blend(original, (phase) => SKY_COLORS[phase], key)
   // Only the palettes in play are resolved: a color lookup touches the DOM.
-  const colour = (key: keyof SkyKeyframe) => {
-    if (mix <= 0) return blend(toRGB, key)
-    if (mix >= 1) return blend(original, key)
-    return mixRGB(blend(toRGB, key), blend(original, key), mix)
+  const colour = (key: keyof SkyPhaseColors) => {
+    if (mix <= 0) return themed(key)
+    if (mix >= 1) return builtIn(key)
+    return mixRGB(themed(key), builtIn(key), mix)
   }
   const starColour = (() => {
-    if (mix <= 0) return toRGB(SKY_STAR_COLOR)
+    if (mix <= 0) return toRGB(palette.star)
     if (mix >= 1) return original(SKY_STAR_COLOR)
-    return mixRGB(toRGB(SKY_STAR_COLOR), original(SKY_STAR_COLOR), mix)
+    return mixRGB(toRGB(palette.star), original(SKY_STAR_COLOR), mix)
   })()
 
   const phase = t < 0.5 ? from.phase : to.phase
@@ -167,7 +190,11 @@ export const getSkyState = (
   // Immersive mode only: the sky deepens as the moon climbs, so the middle of its
   // cycle (its highest point, at midnight) is the darkest point of the night. The
   // themed palette keeps its own night, which has to stay readable under page copy.
-  const moonDarkening = 1 - 0.38 * mix * smoothstep(0, 0.85, moonElevation)
+  const moonDarkening =
+    1 -
+    clamp(config.immersiveDarkening, 0, 1) *
+      mix *
+      smoothstep(0, 0.85, moonElevation)
 
   return {
     phase,
@@ -176,7 +203,7 @@ export const getSkyState = (
     sun: {
       x: sunX,
       y: sunY,
-      radius: 0.1 - 0.008 * day,
+      radius: config.sunRadius * (1 - 0.09 * day),
       visible: elevation >= 0,
       visibility: smoothstep(0, 0.14, elevation),
       elevation: day,
@@ -186,7 +213,7 @@ export const getSkyState = (
     moon: {
       x: moonX,
       y: moonY,
-      radius: 0.06 + 0.03 * (1 - daylight),
+      radius: config.moonRadius * (2 / 3 + (1 - daylight) / 3),
       opacity: 0.08 + 0.92 * (1 - daylight),
       color: colour('moon'),
     },

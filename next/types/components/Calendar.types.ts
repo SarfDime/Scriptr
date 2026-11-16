@@ -74,6 +74,9 @@ export type CalendarPeriodLinks = {
 
 export type CalendarPageViewModel = {
   view: CalendarView
+  /** The study's database id, which a note is keyed on. `null` when the study
+   * has no database row yet, so notes cannot be attached to this calendar. */
+  studyId: string | null
   /** Whether the period on screen already contains today, which is what
    * disables the "Today" control instead of re-linking to the same page. */
   isAtToday: boolean

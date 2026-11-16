@@ -2,9 +2,17 @@
 
 import { useEffect } from 'react'
 
-/** Hook to lock or unlock body scroll based on the isLocked parameter.
- * When isLocked is true, the body's overflow-y is set to hidden to prevent scrolling.
- * When isLocked is false, the body's overflow-y is restored to its default state.
+// A dialog can open a second dialog (a confirm inside a form, a preview inside
+// the upload form), so the lock is counted and only the last release unlocks.
+let lockCount = 0
+
+const syncBodyScrollLock = () => {
+  document.body.classList.toggle('overflow-y-hidden', lockCount > 0)
+}
+
+/**
+ * Locks body scroll while `isLocked` is true. The lock is shared: closing a
+ * dialog nested in another one leaves the outer dialog's lock in place.
  */
 export const useBodyScrollLock = ({
   skipCheck = false,
@@ -14,25 +22,14 @@ export const useBodyScrollLock = ({
   isLocked?: boolean
 }) => {
   useEffect(() => {
-    if (typeof document === 'undefined') {
-      return
-    }
+    if (skipCheck || !isLocked) return
 
-    if (skipCheck) {
-      return
-    }
+    lockCount += 1
+    syncBodyScrollLock()
 
-    const { body } = document
-
-    if (isLocked) {
-      body.classList.add('overflow-y-hidden')
-    } else {
-      body.classList.remove('overflow-y-hidden')
-    }
-
-    // Cleanup function
     return () => {
-      body.classList.remove('overflow-y-hidden')
+      lockCount -= 1
+      syncBodyScrollLock()
     }
   }, [isLocked, skipCheck])
 }

@@ -46,7 +46,6 @@ notifications.get('/', async (c) => {
   if (error) return databaseErrorResponse(c, error)
   return c.json<Array<NotificationWithStudy>>(data ?? [])
 })
-/** Get the current user's unread notification count */
 notifications.get('/unread-count', async (c) => {
   const user = c.get('user')
   const supabase = createSupabaseClient(c)

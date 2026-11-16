@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  CALENDAR_NOTES_AUTO_SYNC_RETRY_MINUTES,
   CALENDAR_NOTES_PER_DAY,
   type CalendarNoteType,
   DEFAULT_CALENDAR_NOTE_TYPE,
@@ -9,6 +10,7 @@ import { CALENDAR_STRINGS_PACK } from '@shared/strings/calendar-strings'
 import type { CalendarNote } from '@shared/types/calendar-notes.types'
 import type { ResolvedStrings } from '@shared/types/localization.types'
 import {
+  calendarNotesDigest,
   canAddNoteOnDay,
   groupNotesByDay,
   mergeCalendarNotes,
@@ -17,12 +19,15 @@ import {
 import {
   createContext,
   type ReactNode,
+  useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   useSyncExternalStore,
 } from 'react'
 import {
+  autoSyncMyCalendarNotes,
   getMyCalendarNotes,
   syncMyCalendarNotes,
 } from '@/lib/api/calendar-notes-api'
@@ -32,9 +37,13 @@ import {
   getServerCalendarNotes,
   hasFetchedCalendarNotes,
   markCalendarNotesFetched,
+  readCalendarNotesAutoSyncAt,
+  readCalendarNotesDigest,
   readCalendarNotesSyncMarker,
   readLocalCalendarNotes,
   subscribeToCalendarNotes,
+  writeCalendarNotesAutoSyncAt,
+  writeCalendarNotesDigest,
   writeCalendarNotesSyncMarker,
   writeLocalCalendarNotes,
 } from '@/lib/calendar-notes-storage'
@@ -52,11 +61,12 @@ type CalendarNotesContextValue = {
   /** False until the browser copy has been read, so an unhydrated render never
    * claims a day has no notes. */
   ready: boolean
+  /** Every study's notes of this profile. */
   notes: Array<CalendarNote>
-  /** Live notes of one day, newest edit first. */
-  notesForDay: (day: string) => Array<CalendarNote>
-  canAddNote: (day: string) => boolean
-  addNote: (day: string, draft: CalendarNoteDraft) => boolean
+  /** Live notes of one study's day, newest edit first. */
+  notesForDay: (studyId: string, day: string) => Array<CalendarNote>
+  canAddNote: (studyId: string, day: string) => boolean
+  addNote: (studyId: string, day: string, draft: CalendarNoteDraft) => boolean
   updateNote: (id: string, draft: CalendarNoteDraft) => void
   deleteNote: (id: string) => void
   signedIn: boolean
@@ -97,13 +107,13 @@ const syncErrorMessage = (strings: CalendarStrings, error: unknown) =>
     : strings.note.syncFailed
 
 /**
- * Owns the reader's calendar notes: the browser copy, the edits, and the two
- * sync directions.
+ * Owns the reader's calendar notes: the browser copy, the edits, and the sync
+ * directions.
  *
  * Nothing is fetched per page load. On login the profile's notes are pulled once
- * per browser (`hasFetchedCalendarNotes`), and after that only an explicit sync
- * talks to the API — which is also why the local copy stays the source of truth
- * while offline.
+ * per browser (`hasFetchedCalendarNotes`), a push the reader asks for runs from
+ * Preferences, and an automatic push saves whatever this browser changed once a
+ * week — so the local copy stays the source of truth while offline.
  */
 export const CalendarNotesProvider = ({
   children,
@@ -123,6 +133,12 @@ export const CalendarNotesProvider = ({
   )
   const [syncing, setSyncing] = useState(false)
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
+  /** True once the once-per-login pull has finished (or was not needed), so an
+   * automatic push never runs ahead of it. */
+  const [pullSettled, setPullSettled] = useState(false)
+  /** One automatic push at a time: an edit while one is in the air would
+   * otherwise spend a second slot on the same notes. */
+  const autoSyncInFlightRef = useRef(false)
 
   // Signed-out notes move into the profile's namespace the first time that
   // profile signs in; the sync marker is read once so a reload keeps it.
@@ -132,40 +148,127 @@ export const CalendarNotesProvider = ({
     setLastSyncedAt(readCalendarNotesSyncMarker(userId))
   }, [userId])
 
+  /** Records the profile's copy and the digest of the browser copy that now
+   * matches it, so the next automatic push has something to compare against. */
+  const rememberProfileCopy = useCallback(
+    (profileCopy: Array<CalendarNote>) => {
+      if (!userId) return
+      const merged = mergeCalendarNotes(
+        readLocalCalendarNotes(userId),
+        profileCopy
+      )
+      writeLocalCalendarNotes(userId, merged)
+      writeCalendarNotesDigest(userId, calendarNotesDigest(merged))
+    },
+    [userId]
+  )
+
   // One pull per login per browser, so the local copy carries whatever was
   // synced from another device without a fetch on every refresh.
   useEffect(() => {
-    if (!userId || hasFetchedCalendarNotes(userId)) return
+    setPullSettled(false)
+    if (!userId) return
+    if (hasFetchedCalendarNotes(userId)) {
+      setPullSettled(true)
+      return
+    }
 
     let cancelled = false
     getMyCalendarNotes()
       .then(({ notes }) => {
         if (cancelled) return
         markCalendarNotesFetched(userId)
-        writeLocalCalendarNotes(
-          userId,
-          mergeCalendarNotes(readLocalCalendarNotes(userId), notes)
-        )
+        rememberProfileCopy(notes)
       })
       .catch(() => {
         // Leave the flag unset, so the next login tries again.
+      })
+      .finally(() => {
+        if (!cancelled) setPullSettled(true)
       })
 
     return () => {
       cancelled = true
     }
-  }, [userId])
+  }, [userId, rememberProfileCopy])
+
+  // The automatic push: only when this browser holds notes the profile has not
+  // seen, and at most once the profile's week is up — which the API keeps, so
+  // another browser cannot spend it twice. It stays silent: the reader sees it
+  // as "last synced" in Preferences.
+  useEffect(() => {
+    if (!userId || !mounted || !pullSettled) return
+    if (autoSyncInFlightRef.current) return
+
+    const knownDue = readCalendarNotesAutoSyncAt(userId)
+    if (knownDue && Date.parse(knownDue) > Date.now()) return
+
+    // The digest is of the copy the profile held when this browser last read
+    // it, so a pull — or a reload after one — leaves nothing to send, while a
+    // single edit does. A missing digest falls back to the sync marker.
+    const syncedDigest = readCalendarNotesDigest(userId)
+    const since = readCalendarNotesSyncMarker(userId)
+    const changed =
+      syncedDigest && syncedDigest === calendarNotesDigest(stored)
+        ? []
+        : notesChangedSince(stored, since)
+    if (changed.length === 0) return
+
+    autoSyncInFlightRef.current = true
+    autoSyncMyCalendarNotes({ since, notes: changed })
+      .then(({ notes: remote, syncedAt, nextAutoSyncAt }) => {
+        writeCalendarNotesAutoSyncAt(userId, nextAutoSyncAt)
+        if (remote) {
+          rememberProfileCopy(remote)
+          markCalendarNotesFetched(userId)
+        }
+        if (syncedAt) {
+          writeCalendarNotesSyncMarker(userId, syncedAt)
+          setLastSyncedAt(syncedAt)
+        }
+      })
+      .catch((error: unknown) => {
+        // Wait before asking again rather than on every page load; the API's own
+        // week is the rule, this only spares requests after a refusal.
+        const retryAfterSeconds =
+          error instanceof ApiError
+            ? Number(error.data?.retryAfterSeconds)
+            : Number.NaN
+        writeCalendarNotesAutoSyncAt(
+          userId,
+          new Date(
+            Date.now() +
+              (Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
+                ? retryAfterSeconds * 1000
+                : CALENDAR_NOTES_AUTO_SYNC_RETRY_MINUTES * 60 * 1000)
+          ).toISOString()
+        )
+      })
+      .finally(() => {
+        autoSyncInFlightRef.current = false
+      })
+  }, [userId, mounted, pullSettled, stored, rememberProfileCopy])
 
   const notes = mounted ? stored : []
-  const byDay = groupNotesByDay(notes)
+  const byStudy = new Map(
+    [...new Set(notes.map((note) => note.studyId))].map((studyId) => [
+      studyId,
+      groupNotesByDay(notes, studyId),
+    ])
+  )
 
-  const notesForDay = (day: string) => byDay[day] ?? []
+  const notesForDay = (studyId: string, day: string) =>
+    byStudy.get(studyId)?.[day] ?? []
 
   const write = (next: Array<CalendarNote>) =>
     writeLocalCalendarNotes(userId, next)
 
-  const addNote = (day: string, draft: CalendarNoteDraft): boolean => {
-    if (!canAddNoteOnDay(notes, day)) {
+  const addNote = (
+    studyId: string,
+    day: string,
+    draft: CalendarNoteDraft
+  ): boolean => {
+    if (!canAddNoteOnDay(notes, studyId, day)) {
       addToast({
         type: 'warning',
         title: strings.note.limitReached(CALENDAR_NOTES_PER_DAY),
@@ -177,6 +280,7 @@ export const CalendarNotesProvider = ({
       ...notes,
       {
         id: newNoteId(),
+        studyId,
         day,
         type: draft.type ?? DEFAULT_CALENDAR_NOTE_TYPE,
         title: draft.title,
@@ -237,6 +341,7 @@ export const CalendarNotesProvider = ({
     // A pull replaces the local copy outright: the warning before it already
     // said which local notes it was about to discard.
     writeLocalCalendarNotes(userId, mergeCalendarNotes([], remote))
+    writeCalendarNotesDigest(userId, calendarNotesDigest(remote))
     writeCalendarNotesSyncMarker(userId, syncedAt)
     setLastSyncedAt(syncedAt)
     markCalendarNotesFetched(userId)
@@ -255,7 +360,7 @@ export const CalendarNotesProvider = ({
         since,
         notes: notesChangedSince(notes, since),
       })
-      writeLocalCalendarNotes(userId, mergeCalendarNotes(notes, remote))
+      rememberProfileCopy(remote)
       writeCalendarNotesSyncMarker(userId, syncedAt)
       setLastSyncedAt(syncedAt)
       markCalendarNotesFetched(userId)
@@ -274,7 +379,7 @@ export const CalendarNotesProvider = ({
         ready: mounted,
         notes,
         notesForDay,
-        canAddNote: (day) => canAddNoteOnDay(notes, day),
+        canAddNote: (studyId, day) => canAddNoteOnDay(notes, studyId, day),
         addNote,
         updateNote,
         deleteNote,

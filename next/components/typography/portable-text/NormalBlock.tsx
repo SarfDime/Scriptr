@@ -46,12 +46,8 @@ const isEmptyParagraph = (children: ReactNode) => {
   )
 }
 
-/**
- * Renders a generic aligned block container for Portable Text blocks.
- *
- * This helper can be reused for button blocks or any other block type that
- * needs a shared wrapper with optional alignment styling.
- */
+/** A shared wrapper for any block type that needs alignment styling — buttons,
+ * and the normal block itself. */
 const renderBlockContainer = (
   children: ReactNode,
   alignmentMark?: keyof typeof ALIGNMENT_MAP,
@@ -84,16 +80,10 @@ const renderBlockContainer = (
   )
 }
 
-/**
- * Renders a container for embedded items like images and tables.
- */
 const renderItemContainer = (children: ReactNode, className?: string) => {
   return <div className={cn(className, 'item-container')}>{children}</div>
 }
 
-/**
- * Renders the default paragraph element with an optional override tag.
- */
 const renderDefaultParagraph = (
   children: ReactNode,
   className?: string,
@@ -110,10 +100,7 @@ type NormalBlockProps = {
   overrideElements?: ComponentParserType['overrideElements']
 }
 
-/**
- * Renders the Portable Text normal block with custom handling for buttons,
- * embedded items, and empty paragraphs.
- */
+/** Buttons, embedded items and empty paragraphs each need their own wrapper. */
 export const NormalBlock = ({
   children,
   value,

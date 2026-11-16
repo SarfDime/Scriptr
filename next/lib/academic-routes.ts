@@ -36,9 +36,8 @@ export type AcademicPathInput =
 /**
  * A slug the schema requires can still be absent at runtime: a doc saved before
  * the validation, a published field cleared in the Studio, or a payload cached
- * in a shape that predates the field. That used to throw from `startsWith` and
- * take the whole page down (see the profile cache note in
- * `lib/api/profile-api.ts`), so a missing value is handled here instead.
+ * in a shape that predates the field. `startsWith` on a missing value takes the
+ * whole page down, so a missing value is handled here instead.
  */
 const cleanEntityId = (id: string | null | undefined): string => {
   if (!id) return ''

@@ -32,7 +32,6 @@ export const NotificationsAside = () => {
 
   return (
     <Dialog
-      as='aside'
       aria-label={strings.openNotifications}
       isOpen={trayOpen}
       title={
@@ -51,7 +50,7 @@ export const NotificationsAside = () => {
       hideBackdrop={true}
       dialogProps={{
         className: cn(
-          'fixed top-16 z-50 ui-stack h-[calc(100%-4rem)] w-full max-w-full md:max-w-sm overflow-y-auto md:min-w-[unset] md:w-full',
+          'fixed top-(--header-height) z-50 ui-stack h-[calc(100%-var(--header-height))] w-full max-w-full md:max-w-sm overflow-y-auto md:min-w-[unset] md:w-full',
           trayOpen && 'transition-transform transform translate-x-0',
           !trayOpen && 'transition-transform transform translate-x-full',
           'ui-above-drawer'
@@ -85,6 +84,7 @@ export const NotificationsAside = () => {
             <NotificationRow
               key={notification.id}
               notification={notification}
+              className='content-auto [--content-auto-size:10rem]'
             />
           ))}
         </Box>

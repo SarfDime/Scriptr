@@ -5,6 +5,7 @@ import type { DetailedHTMLProps, DialogHTMLAttributes, ReactNode } from 'react'
 import { useEffect, useEffectEvent, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useBodyScrollLock } from '@/hooks/useBodyScroll'
+import { useIsomorphicLayoutEffect } from '@/hooks/useIsomorphicLayoutEffect'
 import { cn, getPlacementClasses } from '@/lib/common-utils'
 import { useUIStrings } from '@/providers/locale/use-strings'
 import { Z_INDEX } from '../../styles/style'
@@ -51,7 +52,7 @@ export type DialogProps = {
         DialogHTMLAttributes<HTMLDialogElement>,
         HTMLDialogElement
       >,
-    'children' | 'onClick'
+    'as' | 'children' | 'onClick'
   >
   hideTrigger?: boolean
   onClose?: () => void
@@ -60,29 +61,18 @@ export type DialogProps = {
   setRef?: (ref: HTMLDialogElement) => void
   closeOnOutsideClick?: boolean
   closeOnEsc?: boolean
-} & Omit<BoxProps, 'title' | 'className'> &
+} & Omit<BoxProps, 'as' | 'title' | 'className'> &
   Omit<ComponentPlacement, 'placement'>
 
-/** `Dialog` - A component that renders a modal dialog with customizable positioning and appearance.
+/**
+ * Modal dialog. Nothing is rendered while it is closed — neither the `<dialog>`
+ * nor its children — so a page full of closed dialogs costs no markup and no
+ * form state. `isOpen` (with `hideTrigger`) drives it from the caller's state,
+ * otherwise the built-in trigger opens it.
  *
- * This component provides an optional trigger button to open the dialog, and allows for customization
- * of its header, content, and close button through various props. It also handles outside clicks to close
- * the dialog.
- *
- * Props:
- * - `title`: The title displayed in the dialog header.
- * - `children`: The content to be displayed inside the dialog.
- * - `placement`: The positioning of the dialog on the screen. Defaults to 'center'.
- * - `offsetX`: Horizontal offset for dialog positioning.
- * - `offsetY`: Vertical offset for dialog positioning.
- * - `showOpenButton`: Boolean to control the rendering of the dialog opener button.
- * - `triggerButtonProps`: Props for the button that triggers the dialog to open.
- * - `rootProps`: Props for the root dialog element for additional customization.
- * - `headerProps`: Props to customize the header section of the dialog.
- * - `closeButtonProps`: Props for the close button in the dialog header.
- * - `titleProps`: Props for customizing the title element within the dialog header.
- *
- * Utilizes `useRef` to manage the dialog element and handle open/close actions.
+ * Opening mounts the element and then calls `showModal()`, which keeps it in
+ * the top layer with the browser's focus trap. Closing goes through `close()`,
+ * so focus returns to whatever was focused when it opened.
  */
 export function Dialog({
   title,
@@ -111,54 +101,66 @@ export function Dialog({
   const ui = useUIStrings()
   const titleId = useId()
   const isCentered = placement === 'center'
-  const [showBackdrop, setShowBackdrop] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [internalDialogOpen, setInternalDialogOpen] = useState(false)
+  // Gates the `<dialog>`, its backdrop and its children. It outlives the close
+  // request by the turn `close()` takes to fire the `close` event, so the
+  // dialog can hand focus back and report `onClose` while still in the DOM.
+  const [isRendered, setIsRendered] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const triggerRef = useRef<HTMLElement | null>(null)
+  // `hideTrigger` + `isOpen` means the caller owns the open state; a `setRef`
+  // caller drives the element itself.
+  const isControlled = Boolean(hideTrigger) && !setRef
 
-  useBodyScrollLock({ skipCheck, isLocked: internalDialogOpen ?? false })
-
-  const setMountedEffect = useEffectEvent((isMounted: boolean) => {
-    setMounted(isMounted)
-  })
-
-  const setRefEffect = useEffectEvent((ref: HTMLDialogElement) => {
-    setRef?.(ref)
-  })
+  useBodyScrollLock({ skipCheck, isLocked: isRendered })
 
   useEffect(() => {
-    setMountedEffect(true)
+    setMounted(true)
   }, [])
 
-  useEffect(() => {
-    if (setRef && dialogRef?.current) {
-      setRefEffect(dialogRef?.current)
-    }
-  }, [setRef])
-
-  const handleOpen = () => {
-    if (dialogRef.current?.open) return
+  const requestOpen = () => {
+    if (isRendered) return
     triggerRef.current =
       document.activeElement instanceof HTMLElement
         ? document.activeElement
         : null
-    dialogRef.current?.showModal()
-    setShowBackdrop(true)
-    setInternalDialogOpen(true)
+    setIsRendered(true)
     onOpen?.()
   }
 
-  const handleClose = () => {
+  const requestClose = () => {
     if (!dialogRef.current?.open) return
     dialogRef.current.close()
   }
 
+  const syncControlledState = useEffectEvent(() => {
+    if (!isControlled) return
+    if (isOpen) requestOpen()
+    else requestClose()
+  })
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `isRendered` is a rerun trigger, so a caller that flips `isOpen` back on while the close event is still in flight reopens the dialog.
+  useEffect(() => {
+    syncControlledState()
+  }, [isControlled, isOpen, isRendered])
+
+  // The element only exists once `isRendered` is true, so opening happens after
+  // the commit that renders it. The layout effect puts it in the top layer
+  // before the frame the backdrop first appears in is painted.
+  const showModalOnMount = useEffectEvent(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+    setRef?.(dialog)
+    if (!dialog.open) dialog.showModal()
+  })
+
+  useIsomorphicLayoutEffect(() => {
+    if (!isRendered || !mounted) return
+    showModalOnMount()
+  }, [isRendered, mounted])
+
   const handleToggle = (e: React.SyntheticEvent<HTMLDialogElement>) => {
     if (e.target !== e.currentTarget) return
-    const open = dialogRef.current?.open ?? false
-    setShowBackdrop(open)
-    setInternalDialogOpen(open)
     onToggle?.()
   }
 
@@ -168,35 +170,20 @@ export function Dialog({
   // dialog, or closing it would also close this one.
   const handleNativeClose = (e: React.SyntheticEvent<HTMLDialogElement>) => {
     if (e.target !== e.currentTarget) return
-    setShowBackdrop(false)
-    setInternalDialogOpen(false)
+    setIsRendered(false)
     onClose?.()
     triggerRef.current?.focus()
     triggerRef.current = null
   }
 
   useEffect(() => {
-    if (!internalDialogOpen) return
+    if (!isRendered) return
     dialogRef.current?.focus()
-  }, [internalDialogOpen])
-
-  const syncControlledState = useEffectEvent(() => {
-    if (setRef || !hideTrigger || !dialogRef.current) return
-    if (isOpen) {
-      handleOpen()
-    } else if (dialogRef.current.open) {
-      handleClose()
-    }
-  })
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Controlled state is synchronized when inputs or the portal mount change.
-  useEffect(() => {
-    syncControlledState()
-  }, [hideTrigger, isOpen, mounted, setRef])
+  }, [isRendered])
 
   const handleClickOutside = (e: React.MouseEvent<HTMLDialogElement>) => {
     if (!closeOnOutsideClick) return
-    if (e.target === dialogRef?.current) handleClose()
+    if (e.target === dialogRef?.current) requestClose()
   }
 
   const handleCancel = (e: React.SyntheticEvent<HTMLDialogElement>) => {
@@ -244,7 +231,7 @@ export function Dialog({
 
   const closeButton = hideCloseButton ? null : (
     <CloseButton
-      onClick={handleClose}
+      onClick={requestClose}
       aria-label={ui.general.closeDialog}
       {...closeButtonProps}
       className={cn('button ghost p-1', closeButtonProps?.className)}
@@ -255,15 +242,16 @@ export function Dialog({
     <>
       {/* Dialog Opener Button (if not hidden) */}
       {!hideTrigger && (
-        <Button onClick={handleOpen} {...triggerButtonProps}>
+        <Button onClick={requestOpen} {...triggerButtonProps}>
           {triggerButtonProps?.children || ui.general.openDialog}
         </Button>
       )}
 
       {mounted &&
+        isRendered &&
         createPortal(
           <>
-            {!hideBackdrop && showBackdrop && (
+            {!hideBackdrop && (
               <div
                 className={cn(
                   'pointer-events-none fixed inset-0 bg-background-150/80 starting:opacity-0 starting:backdrop-blur-none backdrop-blur-sm transition-opacity duration-350',

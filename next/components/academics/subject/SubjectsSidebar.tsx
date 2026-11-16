@@ -30,7 +30,7 @@ export const SubjectsSidebar = ({
   return (
     <Box
       as='aside'
-      className={cn('ui-stack ui-above h-fit', className)}
+      className={cn('ui-stack ui-above h-fit min-w-0', className)}
       {...props}
     >
       <SectionHeader

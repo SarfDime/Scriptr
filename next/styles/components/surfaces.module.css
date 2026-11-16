@@ -119,7 +119,7 @@
   border-radius: 0;
   border-width: 0 0 1px;
   --ui-above-shadow: var(--shadow-edge-bottom);
-  /* A 64px bar compresses the ramp into a stripe, so it keeps the light and
+  /* A short bar compresses the ramp into a stripe, so it keeps the light and
      barely any shade. */
   --ui-ramp-light: 12%;
   --ui-ramp-shade: 4%;
@@ -188,6 +188,16 @@
 /* The variant is `:where()`-wrapped so it adds no specificity: an ice surface
  * still loses to `p-6`, `no-gradient` and the rest exactly as before. */
 @custom-variant ice (:where(:root[data-surface="ice"]:not([data-simple])) &);
+
+/* The resting edge of a control that draws its border as an inset ring rather
+ * than a border of its own (`InputWrapper`, the calendar note fields), so it
+ * follows the material exactly as `ui-above-inside`'s border does. */
+:root {
+  --field-edge: var(--color-background-400);
+}
+:root[data-surface="ice"]:not([data-simple]) {
+  --field-edge: rgb(var(--ice-edge) / calc(var(--ice-edge-a) * 0.9));
+}
 
 @utility ui-above {
   @apply classic-above;
@@ -287,8 +297,8 @@
   --ui-sheen: 0%;
 }
 
-/* Static brand gradient with a faint dot grid. Used instead of the StarCanvas
- * in simple mode and when no StarCanvas is configured in Sanity. */
+/* Static brand gradient with a faint dot grid. Used in simple mode and when no
+ * background canvas is configured in Sanity. */
 @utility ui-simple-backdrop {
   background-color: var(--color-background-100);
   /* Four washes: the brand glow bottom-right, a second hue top-left so the

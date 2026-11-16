@@ -9,8 +9,8 @@ import type { AuthUser, HonoEnv } from '../types/env.types'
 import type { Database } from '../types/supabase-override-types'
 import { honoLog } from './logger'
 
-/** Creates a Supabase client with the given context, using environment variables for the endpoint and credentials.
- * Sessions are handled via HTTP-only cookies for security and persistence.
+/** Sessions are handled through HTTP-only cookies for security and persistence;
+ * the endpoint and credentials come from the context's environment.
  */
 export function createSupabaseClient(c: Context<HonoEnv>) {
   return createClient<Database>(

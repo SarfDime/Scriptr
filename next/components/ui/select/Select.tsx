@@ -124,7 +124,7 @@ export const Select = <T = string>({
       }}
       className={cn(
         'group/select relative flex w-full items-center text-fg',
-        'button button-sm basic rounded-lg ui-above-inside p-0',
+        'button button-sm subtle rounded-md p-0',
         rest.className
       )}
       data-open={listOpen}

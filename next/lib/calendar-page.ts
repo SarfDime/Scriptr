@@ -29,6 +29,7 @@ import {
 import { loadCalendarEvents } from './calendar-data'
 import { getServerLocale } from './server-strings'
 import { catalogUrl } from './study-origin'
+import { getStudySite } from './study-site'
 
 /** Next's `searchParams`, already awaited. A repeated parameter arrives as an
  * array and is ignored, which falls back to the default like any other
@@ -162,7 +163,10 @@ export const loadCalendarPage = async (
   const requestedDay = single(params[CALENDAR_DATE_PARAM])
   const anchorKey = isValidDayKey(requestedDay) ? requestedDay : todayKey
   const grid = buildCalendarGrid(view, anchorKey)
-  const records = await loadCalendarEvents(siteSlug)
+  const [records, study] = await Promise.all([
+    loadCalendarEvents(siteSlug),
+    getStudySite(siteSlug),
+  ])
   const byDay = groupEventsByDay(records, locale)
   const dataRange = calendarDataRange(records)
   const anchorMonth = anchorKey.slice(0, 7)
@@ -193,6 +197,7 @@ export const loadCalendarPage = async (
 
   return {
     view,
+    studyId: study?.dbId ?? null,
     // Whether the period on screen already contains today, which is what
     // disables the "Today" control: a month view is at today for the whole
     // current month, a week view while today falls inside its seven days.

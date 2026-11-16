@@ -23,6 +23,7 @@ import {
   type CalendarNoteDraft,
   useCalendarNotes,
 } from '@/providers/calendar-notes/CalendarNotesProvider'
+import { useCalendarStudyId } from '@/providers/calendar-notes/CalendarStudyProvider'
 import { useStrings, useUIStrings } from '@/providers/locale/use-strings'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 
@@ -47,6 +48,7 @@ export const CalendarNoteEditorDialog = ({
 }: CalendarNoteEditorDialogProps) => {
   const ui = useUIStrings()
   const strings = useStrings(CALENDAR_STRINGS_PACK)
+  const studyId = useCalendarStudyId()
   const { addNote, updateNote, deleteNote } = useCalendarNotes()
   const { addToast } = useToast()
   const [type, setType] = useState<CalendarNoteType>(
@@ -76,8 +78,11 @@ export const CalendarNoteEditorDialog = ({
       return
     }
 
+    // A study without a database row has no key to store the note under.
+    if (!studyId) return
+
     // The provider refuses a fourth note on the day and says why.
-    if (addNote(day, draft)) {
+    if (addNote(studyId, day, draft)) {
       addToast({ type: 'success', title: strings.note.saved })
       onClose()
     }
@@ -95,7 +100,6 @@ export const CalendarNoteEditorDialog = ({
 
   return (
     <Dialog
-      as='section'
       isOpen
       hideTrigger
       title={strings.note.editorTitle(dayLabel)}
@@ -148,7 +152,7 @@ export const CalendarNoteEditorDialog = ({
                 setTitle(event.target.value)
                 setTitleError(false)
               }}
-              className='ui-above-inside field-sizing-content h-10 rounded-lg px-2 ring-1 ring-inset ring-background-400 focus-visible:outline-none focus-visible:ring-brand'
+              className='ui-above-inside field-sizing-content h-10 rounded-lg px-2 ring-1 ring-inset ring-(--field-edge) focus-visible:outline-none focus-visible:ring-brand'
             />
           </Box>
 
@@ -163,7 +167,7 @@ export const CalendarNoteEditorDialog = ({
               maxLength={CALENDAR_NOTE_BODY_MAX}
               placeholder={strings.note.bodyPlaceholder}
               onChange={(event) => setBody(event.target.value)}
-              className='ui-above-inside rounded-lg p-2 ring-1 ring-inset ring-background-400 focus-visible:outline-none focus-visible:ring-brand'
+              className='ui-above-inside rounded-lg p-2 ring-1 ring-inset ring-(--field-edge) focus-visible:outline-none focus-visible:ring-brand'
             />
           </Box>
 

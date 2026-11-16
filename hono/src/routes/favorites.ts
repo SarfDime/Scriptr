@@ -37,7 +37,6 @@ favorites.get('/', async (c) => {
   return c.json<Array<FavoriteScriptRecord>>(data ?? [])
 })
 
-/** Get the current user's favorite record for a script, or null */
 favorites.get('/:scriptId', async (c) => {
   const user = c.get('user')
   const scriptId = requiredParam(c, 'scriptId')

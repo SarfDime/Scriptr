@@ -9,8 +9,9 @@ import { useUIStrings } from '@/providers/locale/use-strings'
 const HIDE_AFTER_MS = 3000
 
 /**
- * The way out of immersive mode that needs no keyboard: a click no longer leaves it,
- * and where fullscreen is unavailable (iPhone Safari) there is no Escape either.
+ * The way out of immersive mode that needs no keyboard: a click on the scenery does
+ * not leave it, and where fullscreen is unavailable (iPhone Safari) there is no
+ * Escape either.
  * It shows on mount, on any pointer move or tap, and fades after a few seconds.
  * Mounted only while immersive, so each visit starts visible.
  */

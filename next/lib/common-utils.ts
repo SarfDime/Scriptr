@@ -136,7 +136,7 @@ export const detectDeviceType = (): 'desktop' | 'tablet' | 'mobile' => {
   return deviceType
 }
 
-/** Gets the possible numbers in range */
+/** Clamps `number` into `[min, max]`. */
 export const numberWithinRange = (
   number: number,
   min: number,
@@ -169,7 +169,6 @@ export const generateSlug = (slugData: LinkSelectorProps) =>
 // Create an image URL builder using the client
 const builder = createImageUrlBuilder(client)
 
-// Export a function that can be used to get image URLs
 export function urlFor(source?: SanityImageSource) {
   if (!source) return { url: () => '' }
   return builder.image(source)

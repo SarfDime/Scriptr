@@ -14,14 +14,14 @@ const contentSchemas: Array<ChildSchemaType> = [
     icon: ButtonIcon,
   },
   {
-    title: 'Star Canvas',
-    schemaType: 'starCanvas',
+    title: 'Christmas Canvas',
+    schemaType: 'christmasCanvas',
     category: 'content',
     icon: InfoOutlineIcon,
   },
   {
-    title: 'Christmas Canvas',
-    schemaType: 'christmasCanvas',
+    title: 'Skybox',
+    schemaType: 'skybox',
     category: 'content',
     icon: InfoOutlineIcon,
   },

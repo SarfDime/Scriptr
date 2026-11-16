@@ -10,9 +10,9 @@ import type { HonoEnv } from '../types/env.types'
  * with the repository can expire the web cache, so it is called out below. */
 const DEV_REVALIDATE_SECRET = 'development_secret_key'
 
-/** Logs through the API logger where possible; cache-revalidation failures
- * must be visible — a silent failure previously let public feeds go stale for
- * weeks without a single error. */
+/** Logs through the API logger where possible. A cache-revalidation failure
+ * must be visible: a stale public feed is otherwise indistinguishable from a
+ * healthy one. */
 function reportFailure(message: string, detail?: unknown) {
   // biome-ignore lint/suspicious/noConsole: no Hono context in this helper
   console.error(message, detail ?? '')

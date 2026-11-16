@@ -263,9 +263,13 @@ export const CALENDAR_STRINGS_PACK = {
     neverSynced: { en: 'Not synced yet', mk: 'Сè уште не е синхронизирано' },
     /** The local-first reminder next to every notes control. */
     localNotice: {
-      en: 'Notes are saved in this browser. Sync them to your profile in Preferences to keep them on another device.',
-      mk: 'Белешките се зачувуваат во овој прелистувач. Синхронизирај ги со профилот во Поставки за да ги имаш на друг уред.',
+      en: 'Notes are saved in this browser and sent to your profile once a week. Sync them in Preferences to move them sooner.',
+      mk: 'Белешките се зачувуваат во овој прелистувач и се испраќаат до профилот еднаш неделно. Синхронизирај ги во Поставки за да ги пренесеш порано.',
     },
+    autoSyncNotice: (days: number): LocalizedText => ({
+      en: `Automatic save: at most once every ${days} days, and only when a note changed.`,
+      mk: `Автоматско зачувување: најмногу еднаш на ${days} дена, и само кога некоја белешка е изменета.`,
+    }),
     limitReached: (limit: number): LocalizedText => ({
       en: `This day already has ${limit} notes. Delete one to add another.`,
       mk: `Овој ден веќе има ${limit} белешки. Избриши една за да додадеш друга.`,

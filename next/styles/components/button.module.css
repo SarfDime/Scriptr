@@ -102,7 +102,7 @@
   &:disabled {
     pointer-events: none;
     filter: grayscale(1);
-    opacity: 0.55;
+    opacity: 0.85;
   }
 
   /* A container that only borrows `.button` for its look — the `Select` wrapper
@@ -112,7 +112,7 @@
   &[data-disabled="true"] {
     pointer-events: none;
     filter: grayscale(1);
-    opacity: 0.55;
+    opacity: 0.85;
   }
 
   /* Press feedback belongs to the control itself. A container that reuses
@@ -176,31 +176,6 @@
 }
 
 /* --- Quiet variants --- */
-
-@utility hollow {
-  /* The hairline is an inset ring, not an `outline`: the outline is the focus
-   * ring everywhere (`base/utilities.module.css`), and a control that drew its
-   * border with it kept the border colour when focused. */
-  background-color: transparent;
-  color: var(--color-brand);
-  font-weight: 600;
-  box-shadow:
-    inset 0 0 0 1px var(--color-brand-150),
-    var(--shadow-button);
-  /* The same top-edge light as the filled variants and the panels, at a lower
-   * strength: this one sits on no fill of its own. */
-  --ui-sheen: 8%;
-  @apply ui-sheen;
-
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      background-color: var(--color-brand-50);
-      box-shadow:
-        inset 0 0 0 1px var(--color-brand-250),
-        var(--shadow-button-hover);
-    }
-  }
-}
 
 @utility ghost {
   background-color: transparent;

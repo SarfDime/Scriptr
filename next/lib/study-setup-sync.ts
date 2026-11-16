@@ -12,8 +12,7 @@ const COMPLETED: ProfileSubjectStatus = 'completed'
 /**
  * Applies what a guest set up in this browser to the account that just signed
  * in. An academic profile is per study, so this walks each stored study and
- * writes it through the same study-scoped endpoints the setup form uses —
- * which is why registration no longer carries an academic profile at all.
+ * writes it through the same study-scoped endpoints the setup form uses.
  *
  * Records without a completed setup are skipped: "skip for now" is a dismissal,
  * not an enrolment. So is anything the account already has, so a device that was

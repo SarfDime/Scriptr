@@ -87,6 +87,7 @@ export type ApiEndpoint =
   | `/api/profiles/${string}/stats`
   | '/api/calendar-notes'
   | '/api/calendar-notes/sync'
+  | '/api/calendar-notes/auto-sync'
   | '/api/profile-subjects'
   | `/api/profile-subjects/${string}`
   | '/api/profile-studies'
@@ -290,6 +291,7 @@ export const apiRoutes = {
   calendarNotes: {
     index: '/api/calendar-notes',
     sync: '/api/calendar-notes/sync',
+    autoSync: '/api/calendar-notes/auto-sync',
   },
   profileSubjects: {
     index: '/api/profile-subjects',

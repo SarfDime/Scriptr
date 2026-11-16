@@ -30,12 +30,14 @@ export const CatalogCard = ({
   logo,
   colorPalette,
   priority = false,
+  className,
 }: CatalogCardProps) => (
   <ClickableCard
     href={href}
     className={cn(
       colorPalette,
-      'cp-vars group flex grow min-h-full w-full flex-col overflow-hidden ui-above-inside ui-sheen-vertical transition-[border-color,box-shadow] hover:shadow-button-hover'
+      'cp-vars group flex grow min-h-full w-full flex-col overflow-hidden ui-above-inside ui-sheen-vertical transition-[border-color,box-shadow] hover:shadow-button-hover',
+      className
     )}
   >
     <ClickableCard.Header className='relative h-32 shrink-0 overflow-hidden p-0 ui-above-defaults rounded-lg'>

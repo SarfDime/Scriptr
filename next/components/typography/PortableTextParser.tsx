@@ -12,10 +12,7 @@ import { Lists } from './portable-text/Lists'
 import { NormalBlock } from './portable-text/NormalBlock'
 import { FontSizeBlocks } from './portable-text/StyleBlocks'
 
-/** A function that returns a Portable Text parser configuration object.
- * This object is used by the `PortableText` component to render
- * Portable Text content.
- */
+/** The parser configuration `PortableText` renders with. */
 export const portableTextParser = ({
   renderDefaultBlock = true,
   overrideElements,

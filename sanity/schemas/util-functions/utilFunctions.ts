@@ -33,7 +33,7 @@ export const flattenRichText = (blocks: Array<PortableTextBlock>) => {
  * Flatten a Portable Text block array into a plain string
  * and get only first block
  */
-export const flattenFirstRichTextBlock = (
+const flattenFirstRichTextBlock = (
   blocks: Array<PortableTextBlock> | undefined
 ) => {
   if (!Array.isArray(blocks)) return blocks ?? ''
@@ -80,27 +80,6 @@ export const sanitizeSlug = (slug?: string) => {
 export const slugifyString = (input: Array<PortableTextBlock>) => {
   const flattenedInput = flattenFirstRichTextBlock(input)
   return sanitizeSlug(flattenedInput)
-}
-
-/** * Converts minutes and seconds to a string
- * Adds a leading zero if the number of minutes or seconds is less than 10
- */
-export function formatMinutesSeconds(minutes: number, seconds: number) {
-  const formattedMinutes = minutes < 10 ? `0${minutes}` : `${minutes}`
-  const formattedSeconds = seconds < 10 ? `0${seconds}` : `${seconds}`
-  return `${formattedMinutes}:${formattedSeconds}`
-}
-
-/**
- * Converts seconds to minutes and seconds
- */
-export function convertTimeToMinutesSeconds(seconds: number) {
-  if (typeof seconds !== 'number') return null
-
-  const minutes = Math.floor(seconds / 60) // Get the whole number of minutes
-  const secondsLeft = seconds % 60 // Get the remaining seconds
-
-  return formatMinutesSeconds(minutes, secondsLeft)
 }
 
 /** Preset select for a document previewed by its localized header title. */

@@ -1,96 +1,48 @@
 # Scriptr API
 
-The Hono service is Scriptr's backend. It provides authentication, profiles,
-academic catalog data, scripts, comments, flags, votes, ratings, favorites,
-profile selections (faculties/studies/subjects), notifications (including
-onboarding, account-creation, and achievement notifications), achievement
-award-checking, user restrictions, and Cloudflare R2 file operations.
+Hono on Node: auth, profiles, academic catalog, scripts, comments, flags, votes,
+ratings, favorites, profile selections, notifications, achievements, restrictions and
+R2 file operations. Supabase (Auth + Postgres) and Cloudflare R2 via the S3 SDK.
 
-## Stack
-
-- Hono on Node.js
-- Supabase Auth and PostgreSQL
-- Cloudflare R2 for file storage
-- AWS S3 SDK for R2 access
+Rules for changing it: [`AGENTS.md`](AGENTS.md). Endpoint detail:
+[`src/routes/API_DOCUMENTATION.md`](src/routes/API_DOCUMENTATION.md); curl walkthrough:
+[`src/routes/API_TESTING_GUIDE.md`](src/routes/API_TESTING_GUIDE.md).
 
 ## Setup
 
-From the repository root:
-
 ```bash
-corepack pnpm install
-corepack pnpm dev:hono
+corepack pnpm install     # from the repo root
+corepack pnpm dev:hono    # port 8787, or PORT
 ```
 
-The API starts on port `8787` by default. Set `PORT` to override it.
+Create `hono/.env` from `.env.example`. The values that are easy to get wrong:
 
-Create `hono/.env` locally. Use deployment secrets in production:
-
-```env
-SUPABASE_URL=your_supabase_url
-SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
-SUPABASE_SECRET_KEY=your_supabase_secret_key
-SITEMAP_SECRET=development_sitemap_secret
-ADMIN_TOTP_SECRET=
-R2_ACCOUNT_ID=your_cloudflare_account_id
-R2_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
-R2_ACCESS_KEY_ID=your_access_key
-R2_SECRET_ACCESS_KEY=your_secret_key
-R2_BUCKET=your_bucket_name
-R2_PUBLIC_URL=your_public_r2_domain
-NODE_ENV=development
-PORT=8787
-NEXT_REVALIDATE_URL=http://localhost:3000/api/revalidate
-REVALIDATE_SECRET=development_secret_key
-```
-
-Universities can override `R2_BUCKET` per-university via
-`universities.r2_bucket_id` — see [File Uploads](src/routes/API_DOCUMENTATION.md#file-uploads).
-`R2_BUCKET` remains the fallback for any university without one set.
-
-`SITEMAP_SECRET` scopes one read route (`GET /api/sitemap/scripts`) and must
-match `SITEMAP_SECRET` in `next/`.
-
-`ADMIN_TOTP_SECRET` gates the Studio's sync/delete actions. Generate one with
-`corepack pnpm --filter @scriptr/api admin:totp`, add the printed `otpauth` URI
-to an authenticator app, and paste the secret into `hono/.env`. The Studio asks
-for a code once per twenty minutes; nothing secret is bundled into it.
-
-`CORS_ORIGINS` is the origin allowlist. The localhost dev ports
-(`3000`, `5173`, `3333`) are added automatically unless `NODE_ENV` is
-`production`; everything else — including the hosted Studio — must be listed
-there. Studio actions run in the browser, so an unlisted Studio hostname fails
-its preflight with `(Reason: CORS request did not succeed)`, while a
-`401 Access code required` after that means the Studio asked for a code before
-one was entered, or the twenty-minute token lapsed.
-
-`R2_ENDPOINT` must be the bucket's S3 endpoint and nothing more — a path on the
-end (e.g. `.../scriptr`) makes the SDK store every object under an extra prefix,
-which shows up as broken public avatar URLs.
-
-`R2_PUBLIC_URL` is the bucket's public domain (a custom domain, or its `r2.dev`
-URL). Avatars are written to `R2_BUCKET` at `avatars/{userId}.webp` and served
-from there, so avatar uploads (`POST /profiles/me/avatar*`) answer `503`
-without it. This is the one thing in the bucket that is publicly readable:
-keep `r2.dev` access off and front the custom domain with a WAF rule that
-blocks every path outside `/avatars/*`, so script files stay private (they are
-still served through expiring signed URLs from `GET /file-ops/get-file/*`).
-
-`OPTIMIZER_URL` and `OPTIMIZER_SECRET` are optional and must be set together.
-They point the API at the file optimizer service; with neither set,
-`/file-ops/finalize` uses an in-process stand-in that validates files but
-doesn't shrink them. If only one is set, or the service is unreachable,
-finalize fails with `503` instead of storing a file unoptimized.
-
-`NEXT_REVALIDATE_URL` and `REVALIDATE_SECRET` configure the cache-revalidation
-webhook the API calls after mutations; `REVALIDATE_SECRET` must match the
-value in the frontend's environment (`next/.env.example`). In production the
-URL must be the web project's Vercel alias
-(`https://scriptr-web-team-slug.vercel.app/api/revalidate`), because the
-public hostname is behind Cloudflare and the proxy drops the API's server-to-
-server request. See [`VERCEL_DEPLOYMENT.md`](../docs/VERCEL_DEPLOYMENT.md).
-
-Never commit `.env` files or storage credentials.
+- `SITEMAP_SECRET` scopes `GET /api/sitemap/scripts` and must match `next/`'s.
+- `ADMIN_TOTP_SECRET` gates the Studio's sync/delete actions. Generate it with
+  `corepack pnpm --filter @scriptr/api admin:totp`, add the printed `otpauth` URI to an
+  authenticator app, paste the secret into `hono/.env`. The Studio asks for a code once
+  per twenty minutes and bundles nothing secret.
+- `CORS_ORIGINS` is the allowlist. The localhost dev ports (3000, 5173, 3333) are added
+  unless `NODE_ENV=production`; everything else, the hosted Studio included, must be
+  listed. An unlisted Studio origin fails its preflight
+  (`Reason: CORS request did not succeed`); a `401 Access code required` after that means
+  no code was entered yet or the token lapsed.
+- `R2_ENDPOINT` is the bucket's S3 endpoint with no path on the end — a path stores every
+  object under an extra prefix and breaks public avatar URLs.
+- `R2_PUBLIC_URL` is the bucket's public domain. Avatars live at
+  `avatars/{userId}.webp` in `R2_BUCKET`; without it, avatar uploads answer `503`. It is
+  the only public object in the bucket: keep `r2.dev` access off and put a WAF rule on
+  the custom domain that allows only `/avatars/*`, so script files stay behind expiring
+  signed URLs.
+- A university can override the bucket through `universities.r2_bucket_id`; `R2_BUCKET`
+  is the fallback ([File Uploads](src/routes/API_DOCUMENTATION.md#uploads)).
+- `OPTIMIZER_URL` and `OPTIMIZER_SECRET` are optional but go together. With neither,
+  `/file-ops/finalize` validates files in-process without shrinking them; with one, or
+  an unreachable service, finalize answers `503` instead of storing a file unoptimized.
+- `NEXT_REVALIDATE_URL` and `REVALIDATE_SECRET` are the cache-revalidation webhook called
+  after mutations; the secret must match `next/`'s. In production the URL is the web
+  project's Vercel alias, not the public hostname — Cloudflare drops the API's
+  server-to-server request ([`VERCEL_DEPLOYMENT.md`](../docs/VERCEL_DEPLOYMENT.md)).
 
 ## Commands
 
@@ -98,116 +50,57 @@ Never commit `.env` files or storage credentials.
 corepack pnpm dev:hono
 corepack pnpm --filter @scriptr/api check-types
 corepack pnpm test
-corepack pnpm format
-corepack pnpm gen:api-types
-corepack pnpm gen:api-endpoints
+corepack pnpm gen:api-types       # after a Postgres change
+corepack pnpm gen:api-endpoints   # after mounting or renaming a route
 ```
 
-Formatting is run from the repository root and applies Biome fixes
-automatically. `gen:api-types` regenerates the Supabase types after a schema
-change; `gen:api-endpoints` (run from the repository root) regenerates
-`shared/config/api-routes.ts` after any route is added, removed, or renamed.
+## Migrations
 
-## Database Migrations
+`supabase/migrations` mirrors the remote history one-to-one; `supabase migration list
+--linked` must show no local/remote mismatch. Change the schema only by adding a
+migration file and applying it — never through the dashboard SQL editor, which records a
+migration with no file and makes `db push` refuse to run. If that happens,
+`supabase migration fetch --linked` writes the missing files but overwrites existing
+ones: `git checkout` those and keep only the new file.
 
-`hono/supabase/migrations` mirrors the remote migration history one-to-one;
-`supabase migration list --linked` should show no local/remote mismatch. Make
-schema changes only by adding a migration file here and applying it with
-`supabase db push --linked` (preview with `--dry-run`), then run
-`corepack pnpm gen:api-types`. Do not apply schema changes through the Supabase
-dashboard SQL editor: it records a migration with no file, and `db push` then
-refuses to run. If that happens, `supabase migration fetch --linked` writes the
-missing files (it overwrites existing files with the recorded SQL, so restore
-those with `git checkout` and keep only the new ones).
-
-`corepack pnpm db:migrate` wraps that flow with the checks `db push` leaves to
-you. It is a dry run unless you pass `--apply`:
+`corepack pnpm db:migrate` wraps the push. It is a dry run unless you pass `--apply`:
 
 ```bash
-corepack pnpm db:migrate                    # analyse and preview
-corepack pnpm db:migrate --apply            # push, then regenerate the types
+corepack pnpm db:migrate            # analyse and preview
+corepack pnpm db:migrate --apply    # push, then regenerate types
 corepack pnpm db:migrate --apply --skip-types
 ```
 
-It stops before touching the database when the linked project is missing, when
-the remote history has a migration with no local file, when a pending migration
-is uncommitted (pass `--allow-uncommitted`), or when a pending file contains a
-destructive statement — `DROP TABLE`/`COLUMN`/`SCHEMA`, `TRUNCATE`, an
-`ALTER COLUMN … TYPE`, or a `DELETE` with no `WHERE` (pass
-`--allow-destructive` once you've reviewed it). After a successful push it
-regenerates `shared/types/database.types.ts`, re-checks that nothing is still
-pending, reminds you to run `corepack pnpm check-types`, and revalidates the
-cached public profile pages, because a migration can change data those pages
-already embedded (an achievement's title, for example). That last step is
-skipped when `NEXT_REVALIDATE_URL` and `REVALIDATE_SECRET` are unset.
+It refuses to touch the database when the project is unlinked, when the remote has a
+migration with no local file, when a pending migration is uncommitted
+(`--allow-uncommitted`), or when a pending file is destructive — `DROP
+TABLE`/`COLUMN`/`SCHEMA`, `TRUNCATE`, `ALTER COLUMN … TYPE`, a `DELETE` with no `WHERE`
+(`--allow-destructive`). After a successful push it regenerates
+`shared/types/database.types.ts`, confirms nothing is pending, reminds you to run
+`check-types`, and revalidates the cached public profiles (a migration can change data
+they embed). That last step is skipped without `NEXT_REVALIDATE_URL` and
+`REVALIDATE_SECRET`.
 
-## API Base Path
+## Base path
 
-The app is built with `.basePath('/api')`, so **every** route — including
-the root health check (`GET /api/`) — is mounted below `/api`:
+The app is built with `.basePath('/api')`, so every route — the health check at
+`GET /api/` included — is mounted below `/api`, including `/api/sanity/*` and
+`/api/admin/*`.
 
-- `/api/` (health check)
-- `/api/auth`
-- `/api/file-ops`
-- `/api/scripts`
-- `/api/votes`
-- `/api/comments`
-- `/api/flags`
-- `/api/favorites`
-- `/api/profiles`
-- `/api/profile-subjects`
-- `/api/profile-faculties`
-- `/api/profile-studies`
-- `/api/universities`
-- `/api/faculties`
-- `/api/studies`
-- `/api/professors`
-- `/api/subjects`
-- `/api/ratings`
-- `/api/notifications`
-- `/api/restrictions`
-- `/api/sanity`
-- `/api/sitemap/scripts`
+## Security model in one screen
 
-The complete endpoint, authentication, authorization, validation, and error
-reference is in [API_DOCUMENTATION.md](src/routes/API_DOCUMENTATION.md). A
-curl walkthrough covering every route is in
-[API_TESTING_GUIDE.md](src/routes/API_TESTING_GUIDE.md).
-
-## Security Notes
-
-- Academic catalog routes (`/api/sanity/universities`, `/api/sanity/faculties`, `/api/sanity/studies`, `/api/sanity/professors`, `/api/sanity/subjects`) are **not** public — every request, reads included, requires a twenty-minute admin token in `x-admin-token`, obtained by trading a TOTP code at `POST /api/sanity/access`. RLS closes these tables to every Supabase role, admin included; there is no session-based access path at all.
-- That token is the only credential the Sanity Studio holds, and it lives in memory: nothing secret is bundled into the Studio, whose JavaScript is public.
-- **Every admin action needs the twenty-minute unlock**, not just a session: the flag queue, restriction management, rating-type and achievement-definition writes, the admin script list and the admin profile routes all chain `requireAdminAccess` after `authMiddleware`. `/admin` shows the code form while the HttpOnly `scriptr-admin-access` cookie is missing or spent.
-- Role changes live on the website's admin surface (`PATCH /api/admin/profiles/:id/role`), with the same double gate; the first admin has to be promoted directly in the database.
-- `/api/admin/*` is the site's admin surface: pinned to `WEBSITE_ORIGIN` and unlocked with a TOTP code. `/api/sanity/*` is the Studio's, pinned to `SANITY_STUDIO_ORIGIN` and using the header form of the same token. A request from one surface's origin is `403` on the other.
-- `GET /api/sitemap/scripts` is the one route with a shared header secret (`x-sitemap-secret`), scoped to that path and held only by the Next build. It is limited to 10 requests a day and 2 a minute per IP.
-- Authentication uses the Supabase session cookie only (no Bearer-token path). `POST /api/auth/callback` establishes the session from the tokens in an email-confirmation link.
-- Rating types (`/api/ratings/types`) are the one lookup table that's actually public to read; only mutation is admin-gated, via `is_admin()` RLS on the admin's own session — no service secret involved there.
-- User-specific write routes require a valid Supabase session cookie.
-- Role updates are never exposed on the public profile routes.
-- Moderators currently have zero elevated access anywhere in this API — the role exists in the schema but isn't checked by any policy or route yet.
-- Restricted users (`profile_restrictions`, admin-managed via `/api/restrictions`) are blocked at the RLS layer from creating/updating scripts, comments, comment reactions/likes, flags, votes, and ratings — never from removing their own existing content. See [API_DOCUMENTATION.md](src/routes/API_DOCUMENTATION.md#role-based-access-control).
-- Route parameters are validated before database operations.
-- Uploads are restricted to the file types documented in the API reference, and scoped per-university to a distinct R2 bucket when `r2_bucket_id` is set.
-- `GET /api/file-ops/get-file/*` is unauthenticated (guest preview/download) and only signs keys recorded in `script_files`, deriving the bucket from that row.
-- R2 and Supabase credentials must be supplied through environment variables.
-
-## Response Types
-
-Route response shapes are defined in `shared/types/` and applied at the route
-(for example `c.json<LoginResponse>(...)` using `shared/types/auth.types.ts`),
-so `next/` and `sanity/` consume the same definitions the backend returns.
-Anything a `hono/` route imports must live under `shared/`, never `next/types/`.
-When adding or changing a route, add or update its response type there rather
-than returning an untyped object.
-
-## Route Files: Build It, Then Mount It
-
-Every route file (`src/routes/*.ts`) needs an explicit
-`app.route('/path', router)` call in `src/index.ts`. A route file that is
-fully built and documented but never mounted type-checks clean, passes review,
-and silently 404s in production (this already happened once with `ratings.ts`).
-Before calling route work done, grep `src/index.ts` for the new route file,
-run `corepack pnpm gen:api-endpoints`, and update `API_DOCUMENTATION.md`,
-`API_TESTING_GUIDE.md`, and `docs/PROGRESS.md`.
+- RLS is the boundary; the route decides which client to use. Details and per-table
+  grants: [`API_DOCUMENTATION.md`](src/routes/API_DOCUMENTATION.md).
+- `/api/sanity/*` needs a twenty-minute admin token in `x-admin-token`, traded for a TOTP
+  code at `POST /api/sanity/access`; reads included. RLS closes those tables to every
+  Supabase role, admin included — there is no session path.
+- `/api/admin/*` needs the same unlock plus an admin session, and is pinned to
+  `WEBSITE_ORIGIN`. `/api/sanity/*` is pinned to `SANITY_STUDIO_ORIGIN`. A request from
+  one surface's origin gets `403` on the other.
+- Restriction checks block create and update, never delete.
+- `GET /api/sitemap/scripts` is the only shared-header-secret route
+  (`x-sitemap-secret`), 10 requests a day and 2 a minute per IP.
+- `GET /api/file-ops/get-file/*` is unauthenticated by design and signs only keys found in
+  `script_files`, deriving the bucket from that row.
+- Rating types are the one publicly readable lookup table; only their mutation is
+  admin-gated. Moderators have no elevated access anywhere yet.

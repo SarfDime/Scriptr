@@ -1,1110 +1,531 @@
-# API Endpoints Documentation
+# API Endpoints
 
-REST API reference for Scriptr. All paths are relative to `/api`
-(`http://localhost:8787/api` in local dev). Response shapes are typed in
-`shared/types/` (see [Notes](#notes)).
+Reference for `hono/`. Every path is relative to `/api` (`.basePath('/api')`), so the health
+check is `GET /api`. Response shapes live in `shared/types/` and are applied at the route
+(`c.json<T>(…)`). Repo and route rules: [`../../AGENTS.md`](../../AGENTS.md) (workspace) and
+[`../../../AGENTS.md`](../../../AGENTS.md) (repo-wide).
 
-## Table of Contents
-- [Catalog](#catalog)
-- [Universities](#universities)
-- [Faculties](#faculties)
-- [Professors](#professors)
-- [Studies](#studies)
-- [Subjects](#subjects)
-- [Admin access](#admin-access)
-- [Admin Lookups](#admin-lookups)
-- [File Uploads](#file-uploads)
-- [Scripts](#scripts)
-  - [Public](#public)
-  - [Authenticated](#authenticated)
-- [Comments](#comments)
-  - [Public](#public-1)
-  - [Authenticated](#authenticated-1)
-- [Flags](#flags)
-- [Restrictions](#restrictions)
-- [Download review](#download-review)
-- [Profiles](#profiles)
-  - [Public](#public-2)
-  - [Authenticated](#authenticated-2)
-  - [Admin](#admin)
-  - [Role changes](#role-changes)
-- [Profile Selections](#profile-selections)
-- [Favorites](#favorites)
-- [Votes](#votes)
-- [Ratings](#ratings)
-- [Notifications](#notifications)
-  - [Achievements](#achievements)
-- [Client Access Patterns](#client-access-patterns)
-- [Authentication](#authentication)
-- [Role-Based Access Control](#role-based-access-control)
-- [Error Responses](#error-responses)
-- [Notes](#notes)
-- [Achievement definitions](#achievement-definitions)
+## Access surfaces
 
----
+| Surface | Needs | Pinned origin |
+| --- | --- | --- |
+| Session routes (the default) | Supabase session cookie | — |
+| `/api/sanity/*` | `x-admin-token`: a TOTP code exchanged at `POST /sanity/access` | `SANITY_STUDIO_ORIGIN` |
+| `/api/admin/*` | the same token **and** an admin session | `WEBSITE_ORIGIN` |
 
-## Catalog
+- `POST /sanity/access` `{ code }` → `{ token, expiresAt }`, valid twenty minutes. `400` not
+  six digits, `401` wrong or reused code, `429` after 5 attempts per IP in 15 minutes,
+  `503` when `ADMIN_TOTP_SECRET` is unset or not base32. The token is stateless, so twenty
+  minutes is the whole revocation window.
+- `POST /admin/access` `{ code }` verifies the same TOTP and sets the
+  `scriptr-admin-access` cookie (`HttpOnly`, `SameSite=Lax`, `Max-Age=1200`, `COOKIE_DOMAIN`)
+  as well as returning `{ token, expiresAt }` for scripted callers. Same codes.
+- Every other `/sanity/*` route takes `x-admin-token`; every other `/admin/*` route takes
+  the cookie or that header **and** an admin session (the token proves the unlock, the
+  session identifies the actor and keeps RLS in force).
+- Origin pinning: a foreign `Origin` is `403` even with a valid token, and in production a
+  missing one is too (the admin surface allows it, because server-rendered pages call from
+  Node). The origin must also be listed in `CORS_ORIGINS`.
+- Admin-gated routes on ordinary paths (session + unlock): the flag queue and resolution,
+  the restriction reads and writes, rating-type and achievement-definition writes, the admin
+  script list (`GET /scripts`, `/scripts/flagged/all`, `/comments/flagged/all`), and
+  `GET`/`PATCH`/`DELETE /profiles/:id`, `GET /profiles`, `GET /profiles/:id/admin`,
+  `POST /admin/notifications`.
+- Generate the secret with `corepack pnpm --filter @scriptr/api admin:totp`.
 
-Academic catalog data (universities, faculties, studies, professors, subjects)
-is admin-managed and closed to end users. **Every route below, reads included,
-requires an admin access token** in the `x-admin-token` header, and they are all
-mounted under `/api/sanity` — this is independent of Supabase Auth roles, since
-RLS on these tables (and their junctions: `subject_professors`,
-`professor_faculties`, `professor_studies`) is read-only for every role, admin
-included. See [Admin access](#admin-access) and
-[Client Access Patterns](#client-access-patterns).
+## Catalog (admin token, reads included)
 
-| Route                   | Response                                                                                          |
-| ----------------------- | ------------------------------------------------------------------------------------------------- |
-| `GET /sanity/universities`     | Universities with faculties (includes `r2_bucket_id`)                           |
-| `GET /sanity/universities/:id` | One university with faculties (includes `r2_bucket_id`)                         |
-| `GET /sanity/faculties`        | Faculties                                                                       |
-| `GET /sanity/faculties/:id`    | One faculty with `studies` (each with its `subjects`) and assigned `professors`  |
-| `GET /sanity/professors`       | Professors                                                                      |
-| `GET /sanity/professors/:id`   | One professor with subjects, studies, faculties                                 |
-| `GET /sanity/subjects`         | Subjects                                                                        |
-| `GET /sanity/subjects/:id`     | One subject with study and assigned professors                                  |
+RLS is read-only on these tables and their junctions for every role, admin included;
+`/api/sanity/*` with the service-role client is the only write path.
 
-Note on shape: subjects relate to faculties only *through* studies
-(`subjects.study_id → studies.faculty_id`) — there is no direct
-`subjects.faculty_id`. Faculty responses nest subjects under `studies`
-accordingly; don't expect a flat `faculty.subjects` array.
+| Route | Response |
+| --- | --- |
+| `GET /sanity/universities`, `/:id` | Universities with faculties (incl. `r2_bucket_id`) |
+| `GET /sanity/faculties`, `/:id` | Faculties; one faculty with `studies` (each with `subjects`) and professors |
+| `GET /sanity/professors`, `/:id` | Professors; one with subjects, studies, faculties |
+| `GET /sanity/subjects`, `/:id` | Subjects; one with study and professors |
 
-Catalog **mutations** live under the same `/api/sanity` prefix (below), same
-token — see [Universities](#universities) for university-specific mutations,
-and the sections below for the rest. These are the endpoints the Sanity Studio
-"Create in Database" / "Sync with Database" / checked-delete actions call
-(tested end to end).
-`profile_subjects`/`profile_faculties`/`profile_studies` are not catalog data
-— they're a user's own selections and stay on the normal authenticated API.
+Subjects reach faculties only through studies (`subjects.study_id → studies.faculty_id`);
+faculty responses nest subjects under `studies`.
 
----
+Mutations, all under `/sanity`:
+
+| Entity | Routes |
+| --- | --- |
+| University | `POST /universities` `{ name, sanity_id?, r2_bucket_id? }` (returns the linked row with `existing: true` if the Sanity doc is already linked) · `PATCH /universities/:id` `{ name?, r2_bucket_id? }` · `DELETE` (blocked with `409` while faculties reference it) · `POST /universities/:id/sync` `{ name, r2_bucket_id? }` (`404` if no row) |
+| Faculty | `POST /faculties` `{ name, university_id, sanity_id? }` · `PATCH /faculties/:id` `{ name?, university_id? }` · `DELETE` (`409` if referenced by studies, professor assignments or user selections) · `POST /faculties/:id/sync` |
+| Professor | `POST /professors` `{ name, faculty_ids?, study_ids?, sanity_id? }` · `PATCH /professors/:id` `{ name? }` · `DELETE` (blocked if referenced by subjects, faculties, studies, scripts or comments) · `POST`/`DELETE /professors/:id/{faculties/:facultyId,studies/:studyId}` · `GET /professors/by-sanity/:sanityId` · `POST /professors/:id/sync` |
+| Study | `POST /studies` `{ name, faculty_id, site_slug, sanity_id?, r2_bucket_id? }` · `PATCH /studies/:id` · `DELETE` (blocked if referenced by subjects, professor assignments or enrollments) · `POST /studies/:id/sync` |
+| Subject | `POST /subjects` `{ name, study_id, professor_ids?, sanity_id? }` · `PATCH /subjects/:id` `{ name?, study_id? }` · `DELETE` (blocked if referenced by professor assignments, user statuses or scripts) · `POST`/`DELETE /subjects/:id/professors/:professorId` · `POST /subjects/:id/sync` |
+
+- `r2_bucket_id` matches `^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$` (API and a DB CHECK), unique per
+  university; studies may also carry one, falling back to the parent university's bucket.
+- `site_slug` is a study's permanent handle: lowercase letters, digits and inner dashes, not
+  reserved, unique, refused with `409` once set.
+- University delete is blocked by an explicit dependents check (`409`), independent of the
+  FK's `ON DELETE CASCADE`.
+- `professors` holds only `id`, `name`, `sanity_id`, `created_at`; bio and picture are Sanity.
+
+Read-only lookups for the Studio: `GET /sanity/{universities,faculties,studies,professors,subjects}`
+(plain rows, no embeds) and `GET /sanity/{universities,faculties,professors,subjects}/by-sanity/:sanityId`
+(`404` "Not linked to a database record yet").
 
 ## Sitemap
 
-`GET /sitemap/scripts` — every script's `{ slug, updated_at }`, newest first.
-Feeds `/sitemap.xml`, which needs the complete list that the admin-only
-`GET /scripts` no longer serves, and only the two columns a crawler list needs.
+`GET /sitemap/scripts` — `{ slug, updated_at }` for every script, newest first. Needs
+`x-sitemap-secret` = `SITEMAP_SECRET`; 10 requests a day and 2 a minute per IP (`429`).
+`/sitemap.xml` is prerendered, so one read per deployment is the expected load.
 
-Requires the `x-sitemap-secret` header matching `SITEMAP_SECRET`. That secret is
-scoped to this one route and lives only in the Next build, so it grants nothing
-beyond a list of public slugs. The route is limited to 10 requests a day and 2 a
-minute per IP (`429` past either): `/sitemap.xml` is prerendered at build time
-and never revalidated, so one read per deployment is the whole expected load.
+## Uploads
 
-## Studio access
+| Route | Notes |
+| --- | --- |
+| `POST /file-ops/upload-urls` | Auth. Step 1. `{ subjectId?, files: [{ name, size }] }`, 1–10 files. Returns `{ success, uploads: [{ stagingKey, url, contentType }] }` — presigned PUTs valid 10 minutes into `staging/{userId}/`. `400` unsupported extension / oversized / too many; `429` at 30 requests per 10 minutes per user. |
+| `POST /file-ops/finalize` | Auth. Step 3. `{ subjectId?, files: [{ stagingKey, name }] }`. Optimizes each file and returns `{ success, files: [{ fileKey, fileType, fileSizeBytes, bucket, fileName }] }`, which `POST /scripts` and `POST /scripts/:id/files` accept as `files`. `fileName` is the original name lowercased, accent-stripped, kebab-cased, extension dropped (`Predavanje 3.PDF` → `predavanje-3`), or `null` when nothing usable remains (Cyrillic-only). All-or-nothing: `400` for a key that is not the caller's, does not exist, or whose bytes do not match the extension; `413` (with `stagingKey` and post-optimization `sizeBytes`) if still over the cap; `429` at 15 per 10 minutes; `503` if the optimizer is configured but unavailable; `500` otherwise. Nothing is left behind. |
+| `GET /file-ops/get-file/*` | Public. `{ url, key }` — a pre-signed download valid one hour for a key recorded in `script_files`, with the bucket resolved from that row (any `?bucket=` is ignored). `?download=1` answers `Content-Disposition: attachment; filename="<file_name>.<file_type>"` (a row without a usable name gets plain `attachment`); otherwise the URL renders inline. |
 
-Everything under `/sanity/*` is the Sanity Studio's surface — no website route
-lives there, and no website code calls it. The Studio cannot hold a long-lived
-secret (its bundle is served to anyone who opens the Studio), so it proves
-possession of a TOTP secret instead:
-
-| Route               | Body       | Notes                                                                                                                                                                                                                  |
-| ------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /api/sanity/access` | `{ code }` | Exchanges the authenticator app's current six-digit code for `{ token, expiresAt }`, valid twenty minutes. `400` when the code is not six digits, `401` for a wrong or already-used code, `429` after 5 attempts per IP in 15 minutes, `503` when `ADMIN_TOTP_SECRET` is unset or not base32. |
-
-Every other `/sanity/*` route takes that token in `x-admin-token`; a `401` means
-it is missing, expired or tampered with, and the caller has to exchange a fresh
-code. A code is accepted once, so a captured one cannot be replayed for the rest
-of its 90-second window. Generate the secret with
-`corepack pnpm --filter @scriptr/api admin:totp`, add the printed `otpauth` URI
-to an authenticator app, and set `ADMIN_TOTP_SECRET` on the API.
-
-**Origin pinning:** every `/sanity/*` route also requires the request's
-`Origin` to equal `SANITY_STUDIO_ORIGIN` (e.g.
-`https://scriptr.sanity.studio`). A mismatched origin is `403` even with a valid
-token or code. In production a missing `Origin` is a `403` too — browsers always
-send it on a cross-origin request; outside production it is allowed so `curl`
-and the route tests work. The origin must also be listed in `CORS_ORIGINS`, or
-the browser blocks the preflight before the API sees the request.
-
-The token is HMAC-signed and stateless, so it cannot be revoked before it
-expires; twenty minutes is the whole revocation window.
-
-## Universities
-
-Admin-only: `x-admin-token` required for all routes (reads and writes).
-
-**Reads**: `GET /universities`, `GET /universities/:id` (see [Catalog](#catalog)).
-
-**Mutations** (`/api/sanity`):
-
-| Route                                  | Body                                                 |
-| -------------------------------------- | ---------------------------------------------------- |
-| `POST /sanity/universities`          | `{ name, sanity_id?, r2_bucket_id? }` — returns the existing row (`existing: true`) if the Sanity document is already linked |
-| `PATCH /sanity/universities/:id`     | `{ name?, r2_bucket_id? }`             |
-| `DELETE /sanity/universities/:id`    | — (blocked if any faculties still reference it)      |
-| `POST /sanity/universities/:id/sync` | `{ name, r2_bucket_id? }` — full re-sync from Sanity (`404` if the database row doesn't exist) |
-
-`r2_bucket_id` is the Cloudflare R2 bucket used for this university's file
-storage — must match `^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$` (S3/R2 bucket naming
-rules), enforced at both the API and a Postgres `CHECK` constraint, and
-unique across universities. Nullable — a university without one falls back
-to the default `R2_BUCKET` env var at upload time (see
-[File Uploads](#file-uploads) below). Delete is blocked at the application
-level by an explicit dependents check against `faculties` (`409`),
-independent of the underlying FK's `ON DELETE CASCADE` — the FK itself would
-not stop a raw SQL delete from cascading through the whole hierarchy; only
-this route does.
-
----
-
-## Faculties
-
-Admin-only: `x-admin-token` required for all routes (reads and writes).
-
-**Reads**: `GET /faculties`, `GET /faculties/:id` (see [Catalog](#catalog)).
-
-**Mutations** (`/api/sanity`):
-
-| Route                               | Body                                                                                                                           |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `POST /sanity/faculties`          | `{ name, university_id, sanity_id? }` — returns the existing row (`existing: true`) if the Sanity document is already linked |
-| `PATCH /sanity/faculties/:id`     | `{ name?, university_id? }`                                                                                                    |
-| `DELETE /sanity/faculties/:id`    | — (`409` if referenced by studies, professor assignments, or user faculty selections)                                        |
-| `POST /sanity/faculties/:id/sync` | `{ name, university_id }` — `404` if the database row doesn't exist                                                           |
-
----
-
-## Professors
-
-Admin-only: `x-admin-token` required for all routes (reads and writes).
-
-**Reads**: `GET /professors`, `GET /professors/:id` (see [Catalog](#catalog)).
-
-**Mutations** (`/api/sanity`):
-
-| Route                                                         | Body                                                                            |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `POST /sanity/professors`                                   | `{ name, faculty_ids?, study_ids?, sanity_id? }`                                |
-| `PATCH /sanity/professors/:id`                              | `{ name? }`                                                                     |
-| `DELETE /sanity/professors/:id`                             | — (blocked if referenced by subjects, faculties, studies, scripts, or comments) |
-| `POST`/`DELETE /sanity/professors/:id/faculties/:facultyId` | —                                                                               |
-| `POST`/`DELETE /sanity/professors/:id/studies/:studyId`     | —                                                                               |
-| `GET /sanity/professors/by-sanity/:sanityId`                | Looks up the DB row linked to a Sanity document                                 |
-| `POST /sanity/professors/:id/sync`                          | `{ name, faculty_ids?, study_ids? }` — full re-sync from Sanity                 |
-
-`professors` only has `id`, `name`, `sanity_id`, `created_at` in Postgres —
-bio/picture and other rich metadata live in Sanity, not here.
-
----
-
-## Studies
-
-Admin-only: `x-admin-token` required for all routes. Reads and mutations share
-the `/sanity/studies` path, like every other catalog entity.
-
-**Reads**: `GET /sanity/studies`, `GET /sanity/studies/:id` (see
-[Catalog](#catalog) — faculty/university metadata, subjects, professor
-assignments).
-
-**Mutations** (`/api/sanity`):
-
-| Route                             | Body                                                                              |
-| --------------------------------- | --------------------------------------------------------------------------------- |
-| `POST /sanity/studies`          | `{ name, faculty_id, site_slug, sanity_id?, r2_bucket_id? }`                      |
-| `PATCH /sanity/studies/:id`     | `{ name?, faculty_id?, site_slug?, r2_bucket_id? }`                               |
-| `DELETE /sanity/studies/:id`    | — (blocked if referenced by subjects, professor assignments, or user enrollments) |
-| `POST /sanity/studies/:id/sync` | `{ name, faculty_id, site_slug?, r2_bucket_id? }`                                 |
-
-`site_slug` is the study's permanent handle: lowercase letters, digits and inner
-dashes, not a reserved word, unique across every study, and refused with `409`
-once set. `r2_bucket_id` is the study's own R2 bucket; left empty, storage falls
-back to the parent university's bucket. Study files are keyed
-`<study>/<subject>/<user>`.
-
----
-
-## Subjects
-
-Admin-only: `x-admin-token` required for all routes. Does not apply to
-`/api/profile-subjects`, which is a user's own progress, not catalog data.
-
-**Reads**: `GET /subjects`, `GET /subjects/:id` (see [Catalog](#catalog)).
-
-**Mutations** (`/api/sanity`):
-
-| Route                                                          | Body                                                                                  |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `POST /sanity/subjects`                                      | `{ name, study_id, professor_ids?, sanity_id? }`                                      |
-| `PATCH /sanity/subjects/:id`                                 | `{ name?, study_id? }`                                                                |
-| `DELETE /sanity/subjects/:id`                                | — (blocked if referenced by professor assignments, user subject statuses, or scripts) |
-| `POST`/`DELETE /sanity/subjects/:id/professors/:professorId` | —                                                                                     |
-| `POST /sanity/subjects/:id/sync`                             | `{ name, study_id, professor_ids? }`                                                  |
-
----
-
-## Website admin access
-
-`/api/admin/*` is the website's admin surface, separate from
-[the Studio's](#studio-access). Nothing here is reachable by the Studio, and
-nothing under `/sanity/*` is reachable by the site.
-
-| Route                    | Body       | Notes                                                                                                                                                     |
-| ------------------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /api/admin/access` | `{ code }` | Verifies the authenticator code and sets the `scriptr-admin-access` cookie (`HttpOnly`, `SameSite=Lax`, `Max-Age=1200`, domain from `COOKIE_DOMAIN`). Also returns `{ token, expiresAt }` for scripted callers. `400` malformed, `401` wrong/replayed code, `429` after 5 attempts per IP in 15 minutes, `503` when `ADMIN_TOTP_SECRET` is unset. |
-
-Every other `/api/admin/*` route needs that token — from the cookie or an
-`x-admin-token` header — **and** an admin session. The token proves the operator
-unlocked the surface; the session identifies who is acting and keeps RLS in
-force. `/admin`'s layout shows the code form whenever the cookie is missing or
-spent, and the code is entered once per twenty minutes rather than per action.
-
-**Which routes are gated:** the admin-only operations on the site's ordinary
-routes carry the same guard — the flag queue (`GET /flags`, `GET /flags/pending`,
-`GET /flags/status/:status`) and `PATCH`/`DELETE /flags/:id`; the admin
-restriction reads and writes (`GET /restrictions`, `GET /restrictions/lifted`,
-`GET /restrictions/lookup`, `PUT`/`DELETE /restrictions/:profileId`); rating-type
-writes (`POST`/`PATCH`/`DELETE /ratings/types`); achievement-definition writes
-(`POST`/`PATCH`/`DELETE /achievement-definitions`); the admin script list
-(`GET /scripts`, `GET /scripts/flagged/all`, `GET /comments/flagged/all`); and
-`GET`/`PATCH`/`DELETE /profiles/:id`, `GET /profiles`, `GET
-/profiles/:id/admin`, and the announcement broadcast `POST
-/admin/notifications`. Everything else — the site's public and per-user routes —
-stays session-authenticated only.
-
-**Origin pinning:** every `/api/admin/*` request must come from
-`WEBSITE_ORIGIN` (e.g. `https://scriptr.uk`); a mismatched origin is `403` even
-with a valid token, including requests from the Studio's own origin. In
-production a missing `Origin` is a `403` too. The origin must also be listed in
-`CORS_ORIGINS`, and staging needs its own `WEBSITE_ORIGIN` value.
-
-## Admin Lookups
-
-Read-only helpers under `/api/sanity` (`x-admin-token`, service-role client).
-
-| Route                                                                            | Response                                                                              |
-| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `GET /sanity/{universities,faculties,studies,professors,subjects}`             | Plain rows, no embeds                                                                 |
-| `GET /sanity/{universities,faculties,professors,subjects}/by-sanity/:sanityId` | The row linked to a Sanity document, or `404` ("Not linked to a database record yet") |
-
----
-
-## File Uploads
-
-| Route                      | Notes                                                                                                                                                                                                                                                                                                     |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /file-ops/upload-urls` | Authenticated. Step 1 of 3. Body: `{ subjectId?, files: [{ name, size }] }` (1–10 files). Validates each extension and size, then returns `{ success: true, uploads: [{ stagingKey, url, contentType }] }` in request order: presigned PUT URLs (valid 10 minutes) into `staging/{userId}/` in the default bucket. `400` for an unsupported extension, an oversized file, or too many files; `429` when rate limited (30 requests per 10 minutes per user). |
-| `POST /file-ops/finalize` | Authenticated. Step 3 of 3. Body: `{ subjectId?, files: [{ stagingKey, name }] }`, where `name` is the file's original name. Runs each staged file through the optimizer and returns `{ success: true, files: [{ fileKey, fileType, fileSizeBytes, bucket, fileName }] }` (`UploadResponse`), which is what `POST /scripts` and `POST /scripts/:id/files` take as `files`. `fileName` is derived from the original `name`: lowercased, stripped of accents, kebab-cased and without its extension (`Predavanje 3.PDF` → `predavanje-3`), or `null` when nothing usable is left (e.g. a name in Cyrillic only). It stays that whatever the optimizer does to the stored object, so a download is named after what was uploaded with the stored extension (an image uploaded as `.png` is stored, and downloaded, as `.webp`); the R2 key itself is `<prefix>/<uuid>.<ext>`. All-or-nothing: `400` for a key that isn't the caller's, doesn't exist (never uploaded, or expired), or whose contents don't match its extension; `413` if a file is still over the stored cap after optimizing (the body also has `stagingKey`, naming the file, and `sizeBytes`, its size after optimizing); `429` when rate limited (15 requests per 10 minutes per user); `503` if the optimizer service is configured but unavailable (nothing is stored unoptimized); `500` otherwise. A rejected request leaves nothing behind. |
-| `GET /file-ops/get-file/*` | Public. Returns `{ url, key }`: a pre-signed download URL (valid for 1 hour) for a key recorded in `script_files`; the endpoint resolves its bucket from that row and ignores any `?bucket=` query param. With `?download=1` the URL answers with `Content-Disposition: attachment; filename="<file_name>.<file_type>"` so the browser saves the file under its stored name (a row without a valid stored name gets a plain `attachment`); without it the URL renders inline, which previews rely on. |
-
-**Upload flow**: file bytes never pass through the API (Vercel caps request
-bodies at 4.5 MB). The browser (1) calls `/upload-urls`, (2) `PUT`s each file
-straight to its presigned URL, sending the returned `contentType` as
-`Content-Type` and the declared size as the body length (both are signed),
-then (3) calls `/finalize`. The content type is derived from the extension
-server-side, never taken from the client. Limits live in
-`shared/config/shared-constants.ts`: a file stored in R2 is at most 3.5 MB
-(`MAX_STORED_FILE_BYTES`; the optimizer aims for 3 MB,
-`TARGET_STORED_FILE_BYTES`), and `MAX_UPLOAD_FILE_BYTES` is the largest
-*uploaded* file for types the optimizer can shrink (PDF, images): 20 MB. Anything
-above the stored cap relies on the optimizer; without the optimizer service it
-is rejected at finalize. Accepted extensions: `pdf`, `jpg`, `jpeg`, `png`,
-`webp`, `md`, `docx`, `xlsx`. Legacy `.doc` and `.xls` are rejected.
-
-**Optimizer**: `finalize` calls `optimizeStagedFile`
-(`hono/src/lib/file-optimizer.ts`). When both `OPTIMIZER_URL` and
-`OPTIMIZER_SECRET` are set it calls the optimizer service (`POST /optimize`,
-90 s timeout); the request is signed with an HMAC over a timestamp and the body
-(`shared/utils/optimizer-signature.ts`), so the secret never travels and a
-captured request expires after 5 minutes. With neither set it uses an
-in-process stand-in that enforces the stored cap, checks the real file signature
-(so a renamed file is rejected), and stores the file as uploaded, with no
-compression or WebP conversion. It fails closed: if the service is configured
-but unreachable or errors (or only one variable is set), `finalize` returns
-`503` and stores nothing unoptimized. The contract
-(`OptimizeFileRequest` / `OptimizeFileResult` in
-`shared/types/file-upload.types.ts`): the service answers `200` with an
-`OptimizeFileResult` for everything it decides about a file, rejections included.
-
-**Bucket setup (required)**: the default bucket needs a CORS rule allowing
-`PUT` from the site origin with the `Content-Type` header, and a lifecycle
-rule expiring the `staging/` prefix after one day (for abandoned uploads). R2
-enforces the signed `Content-Length`: a PUT whose body doesn't match the
-declared size is rejected with `403`.
-
-The CORS rule's `AllowedOrigins` must list every origin that uploads, and R2
-takes exact strings plus a single `*` — no `https://*.vercel.app` wildcard. The
-current list covers `https://scriptr.uk`, `http://localhost:3000`, and one
-preview alias; other `scriptr-web-git-*` previews will fail the browser `PUT`
-(CORS), though they fail earlier anyway because the auth cookie isn't sent
-cross-site. Only `PUT` is needed: the browser never reads script files through
-`fetch`, and avatars are fetched from a public URL, not from this rule.
-
-**Storage scoping**: if `subjectId` is provided and resolves to a real
-subject → study → faculty → university chain, the file is stored in that
-university's `r2_bucket_id` bucket (falling back to the default `R2_BUCKET`
-if the university has none set), under a key prefixed
-`{facultyId}/{studyId}/{subjectId}/{userId}/` — all Postgres dbIds, not
-slugs. If `subjectId` is omitted or doesn't resolve, the file falls back to
-the default bucket under a plain `{userId}/` prefix. The file type is also
-constrained in Postgres (`script_files_file_type_check`), so adding or
-removing a type needs a migration as well as a code change.
-
-`script_files.bucket` persists which bucket each file actually landed in —
-required at download time, since a bare file key no longer implies a single
-global bucket once buckets are university-scoped. It's included in every
-public script response's `files` array (see [Scripts](#scripts)).
-
-`GET /file-ops/get-file/*` has no auth so guests can preview and download
-scripts, but it signs only keys recorded in `script_files` and derives their
-bucket server-side. Deleted scripts remove their associated R2 objects.
-
----
+- Bytes never pass through the API (Vercel caps bodies at 4.5 MB): the browser gets the
+  presigned URLs, PUTs each file with the returned `Content-Type` and the declared length
+  (both signed), then calls finalize. The content type is derived from the extension
+  server-side.
+- Limits (`shared/config/shared-constants.ts`): 3.5 MB stored (`MAX_STORED_FILE_BYTES`,
+  optimizer target 3 MB), 20 MB uploaded for shrinkable types (PDF, images). Accepted:
+  `pdf`, `jpg`, `jpeg`, `png`, `webp`, `md`, `docx`, `xlsx`; legacy `.doc`/`.xls` are
+  rejected. `script_files_file_type_check` means a type change also needs a migration.
+- `finalize` calls `optimizeStagedFile` (`../lib/file-optimizer.ts`): the service
+  when `OPTIMIZER_URL` and `OPTIMIZER_SECRET` are both set (HMAC over a timestamp and the
+  body, 90 s timeout), otherwise an in-process stand-in that enforces the cap, checks the
+  signature and stores as uploaded. One variable set, or an unreachable service, is `503`.
+- Storage scoping: a resolvable `subjectId` → study → faculty → university selects that
+  university's bucket, under `{facultyId}/{studyId}/{subjectId}/{userId}/{uuid}.{ext}`;
+  otherwise the default bucket under `{userId}/`. `script_files.bucket` records where each
+  file landed, because a key no longer implies a bucket.
+- Bucket setup: CORS allowing `PUT` from the site origin with `Content-Type`, and a
+  lifecycle rule expiring `staging/` after a day. R2 enforces the signed length (mismatch →
+  `403`). `AllowedOrigins` takes exact strings plus one `*` — no `https://*.vercel.app`
+  wildcard — and only `PUT` is needed.
 
 ## Scripts
 
-### Public
+Public:
 
-| Route                             | Notes                                                                                                                                                                                                       |
-| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /scripts`                    | **Admin only.** One page of every script, newest first: `?limit` (max 50, default 50), `?offset` and an optional `?study=<id>`; returns `{ items, hasMore, totalCount }`. Was public and unpaginated |
-| `GET /scripts/:id`                | One script by **slug or id** — both resolve. Public and unscoped; `404` only when the script does not exist. `slug` is minted at creation (`<transliterated title>-<first 8 id chars>`) and never changes |
-| `GET /scripts/subject/:subjectId` | Scripts for a subject, sorted by vote score                                                                                                                                                                 |
-| `GET /scripts/study/:studyId`     | A study's scripts, sorted by vote score — what the study site's home lists                                                                                                                                    |
-| `GET /scripts/top?limit=10`       | By vote score. Optional `?study=<id>` narrows it to one study                                                                                                                                                |
-| `GET /scripts/popular?limit=10`   | By download count. Optional `?study=<id>`                                                                                                                                                                    |
-| `GET /scripts/search?q=`          | Fuzzy match on title/description, across **every** language a script carries (Portable Text → plain text), so a script authored only in Macedonian is found whoever is reading. Optional `?study=<id>`                                                                                                                        |
-| `POST /scripts/:id/download`      | Records a download, deduped by account → IP → `x-device-id` header. Runs on service-role — `download_events` has no client-facing INSERT policy for any role. The count is incremented atomically (`increment_script_download_count` RPC, service-role only). A signed-in author downloading their own script returns `counted: false` and records nothing; anonymous self-downloads can't be detected and still count. Returns `{ success: true, counted: boolean }` |
+| Route | Notes |
+| --- | --- |
+| `GET /scripts` | **Admin.** One page, newest first: `?limit` (max 50, default 50), `?offset`, optional `?study=<id>` → `{ items, hasMore, totalCount }`. |
+| `GET /scripts/:id` | By **slug or id**. Public and unscoped; `404` only when missing. The slug is minted at creation and never changes. |
+| `GET /scripts/subject/:subjectId`, `/scripts/study/:studyId` | By vote score. |
+| `GET /scripts/top?limit=10`, `/scripts/popular?limit=10` | By votes / downloads; optional `?study=<id>`. |
+| `GET /scripts/search?q=` | Fuzzy over title and description in every language; optional `?study=<id>`. |
+| `POST /scripts/:id/download` | Records a download deduped by account → IP → `x-device-id`. Service-role: `download_events` has no client INSERT policy, and the count goes through the atomic `increment_script_download_count` RPC. An author downloading their own script gets `counted: false` and nothing is recorded; an anonymous self-download still counts. |
 
-The `?study=<uuid>` filter is a narrowing, never an authorization grant: reads
-are scoped by RLS alone, the catalog omits the parameter and sees every study,
-and a value that is not a UUID is a `400` rather than a silently unscoped read.
-There is no `?study=` on `/professors` — professors are university-scoped.
+`?study=` narrows, it never grants: reads are scoped by RLS, and a non-UUID value is `400`
+rather than a silently unscoped read. There is no `?study=` on `/professors` (they are
+university-scoped). Responses exclude `is_flagged`; `files` carry `bucket`; summaries carry
+`comments: [{ count }]` (comments and replies).
 
-Response excludes `is_flagged` (internal moderation state). Each file in
-`files` includes `bucket` (see [File Uploads](#file-uploads)).
-Script summary responses include `comments: [{ count }]`, counting all
-comments and replies. Comment-list responses include `totalCount` for
-top-level threads (used for root pagination) and `totalCommentCount` for all
-comments, including replies.
+Authenticated:
 
-### Authenticated
-
-| Route                      | Notes                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /scripts`            | Body: `{ title, description?, subjectId, professorId, examSession?, examYear?, additionalReading?, files?: [{ fileKey, fileType, fileSizeBytes, bucket, fileName? }] }` — `examSession` is `january`, `june`, `september` or `null` ("General (All Sessions)"); `examYear` is a whole year from 2023 up to the current year, and for a session later in the calendar year than today, at most the previous year (e.g. a September script cannot use 2027 in January 2027). `null` is "General (All Years)" and is only sent with a `null` session. Out-of-range years or unknown sessions are rejected with `400` — `files`, when present, is exactly what `POST /file-ops/finalize` returns, passed straight through (a `fileName`, if sent, must already be in the kebab-case form finalize returns, or the request is rejected with `400`), and checked against the caller's own storage scope for the script's subject (a bucket or key outside it is rejected with `400` `Invalid upload request`, a file that doesn't exist in R2 with `400`, and one over the stored cap with `413`, all before anything is written; the stored size is the one R2 reports, not the client's); omit it or send an empty array to create a script without files. `title`/`description` are Portable Text **per language** — `{ en?: …, mk?: … }`, the title with at least one language filled and the description optional (`null` or absent), every present one restricted to supported text blocks, spans, styles, decorators, lists, and alignments, the title within 2 KiB and the description within 50 KiB *per language* (see [Portable Text](#portable-text)); the slug is built from the default language, or from whichever one is filled, and never rewritten. Validated via a `zValidator` JSON schema (accepts both `subjectId`/`subject_id` etc. key styles). Rejected if restricted. **Study-scoped:** the caller must belong to the subject's study — a `profile_studies` row, a study role, or ownership — or the route answers `403` before it touches R2. Returns `403` for RLS authorization failures, `409` for missing subject/professor references, and `400` for invalid Portable Text or database constraint violations. |
-| `GET /scripts/my-scripts`  | Current user's scripts                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `PATCH /scripts/:id`       | Author or admin. Body: `{ title?, description?, additional_reading?, exam_session?, exam_year? }`. Updated Portable Text uses the same per-language shape, allow-list and byte limits as `POST /scripts`; files are immutable — not part of this body. `description: null` clears the description; `exam_session: null` / `exam_year: null` set the general (all sessions / all years) options, and an `exam_year` is validated against the session the script ends up with (a year-only update still has to fit the stored session; changing the session without a new year drops a year the new session cannot have). Invalid Portable Text, an unknown session or an out-of-range year returns `400`. Restriction-checked in RLS (`is_restricted()` is in the UPDATE policy's `USING` clause): a restricted author's update matches no rows, which the route maps to `403` (`Your account is restricted from editing scripts`) instead of a generic `500`. Admins are never restricted. `authenticated` holds column-level `UPDATE` on exactly `title`, `description`, `additional_reading`, `exam_session`, `exam_year` and `updated_at`; anything else this route might write needs its own grant or it fails with `42501` (a `500`).                                                                                                                                                                                                |
-| `DELETE /scripts/:id`      | Author or admin. Not restriction-checked (restricted users can still delete their own scripts). Removes the script's database records and attempts to delete all associated R2 objects.                                                                                                                                                                                                                                                                                                                            |
-| `DELETE /scripts/:scriptId/files/:fileId` | Author or admin. Removes a single `script_files` row and attempts to delete that R2 object while leaving the script intact. `404` if the file doesn't belong to that script. Not restriction-checked. After the delete, the remaining files are renumbered so `position` stays `0..n-1` (labels never skip); `script_files` has no UPDATE policy, so this step uses the service-role client and only runs once the session client's RLS-checked delete has succeeded. Renumbering is best effort and never fails the request. |
-| `POST /scripts/:id/files`  | Author or admin. Body: `{ files: [{ fileKey, fileType, fileSizeBytes, bucket, fileName? }] }` — at least one entry, exactly what `POST /file-ops/finalize` returns. Appends the files to an existing script after its current last `position`. The files get the same checks as in `POST /scripts` (in the caller's own scope for this script's subject, present in R2, size taken from R2; otherwise `400`/`413`). Restriction-checked in RLS (the `script_files` INSERT policy requires a non-restricted author; admins are exempt): a restricted author gets `403` (`Your account is restricted from adding files`). `404` if the script doesn't exist, `403` if the caller is neither author nor admin, `400` for invalid file data or a failed constraint. Because the files are already in R2 when this is called, every failure path deletes the uploaded objects again, but only objects under the caller's own user id: the keys come from the client, and the `404` and `403` paths run before they have been checked. Returns `{ success: true, files: [...] }` with the inserted rows. |
-| `GET /scripts/flagged/all` | Admin only                                                                                                                                                                                                                                                                                                                                                                                                                          |
-
----
+| Route | Notes |
+| --- | --- |
+| `POST /scripts` | `{ title, description?, subjectId, professorId, examSession?, examYear?, additionalReading?, files? }`. `examSession` is `january`/`june`/`september`/`null`; `examYear` is 2023…current, one lower for a session still ahead this calendar year; `null` year only with a `null` session. Out of range is `400`. `files` is exactly what finalize returned — checked against the caller's scope for this subject (otherwise `400 Invalid upload request`), existence in R2 (`400`) and the cap (`413`) before anything is written, with the size taken from R2 — or omitted/empty for a script without files. `title`/`description` are Portable Text per language (see Notes). Study-scoped: the caller must belong to the subject's study (a `profile_studies` row, a study role, or ownership), else `403` before R2 is touched. `409` for an unknown subject/professor, or a professor not assigned to the subject (checked before the upload). Rejected if restricted. |
+| `GET /scripts/my-scripts` | The caller's scripts. |
+| `PATCH /scripts/:id` | Author or admin. `{ title?, description?, additional_reading?, exam_session?, exam_year? }`; files are immutable. `description: null` clears it; `exam_session/year: null` sets the general options; a year is validated against the session the script ends up with. `400` on invalid text, an unknown session or an out-of-range year. Restriction is enforced in the UPDATE policy, mapped to `403` ("Your account is restricted from editing scripts"). `authenticated` holds column UPDATE on exactly `title`, `description`, `additional_reading`, `exam_session`, `exam_year`, `updated_at`. |
+| `DELETE /scripts/:id` | Author or admin. Not restriction-checked. Removes the rows and best-effort deletes the R2 objects. |
+| `DELETE /scripts/:scriptId/files/:fileId` | Author or admin. `404` if the file is not that script's. Not restriction-checked. Renumbers the remaining `position`s (service-role, because `script_files` has no UPDATE policy; best effort). |
+| `POST /scripts/:id/files` | Author or admin. `{ files: [...] }`, at least one, exactly what finalize returned; appends after the last `position`. Same scope/existence/size checks (`400`/`413`). The INSERT policy requires a non-restricted author → `403` ("Your account is restricted from adding files"). `404` unknown script, `403` neither author nor admin. Every failure deletes the uploaded objects again, only under the caller's own user id. |
+| `GET /scripts/flagged/all` | Admin. |
 
 ## Comments
 
-### Public
-`GET /comments/script/:scriptId`, `/comments/professor/:professorId`,
-`/comments/user/:userId`, `/comments/:commentId/reactions`,
-`/comments/:commentId/replies` — no auth
-required; list routes include `reactions_count`, `reactions_by_type`,
-`likes_count`, `my_reactions`, `liked_by_me` when a session is present.
-The three comment-list routes return only top-level comments and accept
-`limit` (1–2, default 2), `offset` (default 0), and `sort` (`newest` by
-default, or `top`). `top` ranks root comments by combined heart likes and
-emoji reactions. Responses are `{ items, hasMore, totalCount, totalCommentCount }`; each root
-includes up to five chronological immediate replies and `replies_has_more`.
-`totalCount` counts top-level threads for pagination; `totalCommentCount`
-counts every comment matching the target, including replies.
-`GET /comments/:commentId/replies` returns `{ items, hasMore, totalCount }`
-for one chronological reply page (`limit` 1–10, default 10, and `offset`
-default 0). Replies with nested replies expose `has_replies`, allowing the UI
-to fetch each deeper level on demand. Reaction and like counts in comment
-responses include all users' engagement; the API aggregates those rows
-server-side and only returns counts and the current viewer's own status.
-The frontend retains fetched root and reply pages while the comment section
-is mounted, and requests additional pages only when a user expands them.
-Rate-limit buckets are currently process-local; deployments with multiple API
-instances enforce the limits independently on each instance.
+Public (no auth): `GET /comments/script/:scriptId`, `/comments/professor/:professorId`,
+`/comments/user/:userId`, `/comments/:commentId/reactions`, `/comments/:commentId/replies`.
+With a session, list responses add `reactions_count`, `reactions_by_type`, `likes_count`,
+`my_reactions`, `liked_by_me`.
 
-### Authenticated
+- The three comment lists return top-level comments only: `limit` 1–2 (default 2), `offset`,
+  `sort` (`newest` default, or `top` by combined likes and reactions) →
+  `{ items, hasMore, totalCount, totalCommentCount }`, each root with up to five
+  chronological replies and `replies_has_more`. `totalCount` is root threads for pagination;
+  `totalCommentCount` includes replies.
+- `GET /comments/:commentId/replies` pages one chronological reply set: `limit` 1–10
+  (default 10), `offset` → `{ items, hasMore, totalCount }`; nested replies expose
+  `has_replies`.
+- Counts include all users' engagement; the API aggregates server-side and returns only
+  counts and the viewer's own status. The frontend keeps fetched pages while mounted.
 
-| Route                                 | Notes                                                                                                       |
-| ------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `POST /comments`                      | `{ content: PortableTextValue, professor_id? \| script_id? }` — exactly one target. Supports allow-listed inline decorators on normal text blocks only; rejects custom blocks, annotations, headings, lists, and text alignment. Requires at least 3 non-whitespace characters and is limited to 10 KiB serialized JSON. Max 10 comments per 15 minutes per account, plus 60 per 15 minutes across one study. **Study-scoped** when the target is a script: the caller must belong to that study (`403`), and an unknown `script_id` is a `404`. A professor comment has no study and stays open to any signed-in account. Rejected if restricted. |
-| `POST /comments/:commentId/replies`   | `{ content }`; target is copied from the parent and enforced by a database trigger. Same content validation, per-account and per-study limits, and study membership rule as top-level comments. |
-| `POST /comments/:commentId/reactions` | `{ reaction_type: 'like'\|'hate'\|'funny'\|'sad'\|'confused' }` — toggles that type independently, so one user may add multiple reaction types. Authors cannot like or react to their own comments. Combined with likes, max 15 toggles per minute per account. Rejected if restricted. |
-| `POST /comments/:commentId/like`      | Toggle. Authors cannot like or react to their own comments. Shares the 15-per-minute engagement limit with reactions. Rejected if restricted. |
-| `PATCH /comments/:id`                 | Author or admin. `{ content }`; same allow-list, 3-character minimum, and 10 KiB limit as comment creation. `404` if missing. |
-| `DELETE /comments/:id`                | Author or admin. `404` if missing. Returns the updated `totalCommentCount` for the script/professor target, including replies deleted by cascade. |
-| `GET /comments/flagged/all`           | Admin only, and needs the admin unlock; internal service-role query after the route verifies the admin session, because `is_flagged` is not selectable by public roles. |
+Authenticated:
 
-Comment and reply list responses are bounded to one page. Database
-errors map unique/FK conflicts to `409`, permission errors to `403`, custom
-Postgres exceptions to `400`, and other failures to a generic `500` response;
-raw Postgres details are logged server-side only.
+| Route | Notes |
+| --- | --- |
+| `POST /comments` | `{ content, professor_id? \| script_id? }` — exactly one target. Inline decorators on normal text blocks only; no blocks, annotations, headings, lists or alignment. ≥3 non-whitespace characters, ≤10 KiB of JSON. 10 per 15 minutes per account, plus 60 per 15 minutes across one study. Study-scoped when the target is a script (`403`; unknown `script_id` is `404`); a professor comment is open to any signed-in account. Rejected if restricted. |
+| `POST /comments/:commentId/replies` | `{ content }`; the target is copied from the parent and enforced by a trigger. Same validation, limits and study rule. |
+| `POST /comments/:commentId/reactions` | `{ reaction_type: 'like'\|'hate'\|'funny'\|'sad'\|'confused' }`, toggled per type. Authors cannot react to their own comment. 15 toggles per minute per account with likes. Rejected if restricted. |
+| `POST /comments/:commentId/like` | Toggle, same author rule and engagement limit. |
+| `PATCH /comments/:id` | Author or admin. `{ content }`, same allow-list, minimum and size. `404` if missing. |
+| `DELETE /comments/:id` | Author or admin. Returns the target's updated `totalCommentCount`, cascade included. |
+| `GET /comments/flagged/all` | Admin, unlocked. Service-role read after the admin check, because public roles cannot select `is_flagged`. |
 
----
+Database errors map to `409` (unique/FK), `403` (permission), `400` (custom Postgres
+exception) and a generic `500`; raw details stay in the logs.
 
 ## Flags
 
-Single `flags` table for scripts, users, and comments
-(`target_script_id`/`target_user_id`/`target_comment_id`, exactly one set).
+One table for scripts, users and comments (`target_script_id`/`target_user_id`/
+`target_comment_id`, exactly one set).
 
-| Route                                                   | Access                                                                                                                                         |
-| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /flags`                                           | Any authenticated, non-restricted user. `{ target_type: 'user'\|'script'\|'comment', target_id, reason (≥10 chars) }`. Authors cannot report their own scripts or comments (`403`); each reporter can have only one pending flag per target (`400` for a duplicate). At five distinct reporters with non-dismissed flags on the same target, every owner receives a `flag_threshold` notification, plus the admins and moderators of the study the flagged script or comment belongs to (a flag on a user alerts owners only). |
-| `GET /flags/my-flags`                                   | Reporter, own flags only                                                                                                                       |
-| `DELETE /flags/:id`                                     | Reporter (own flag) **or** admin (any flag). Not restriction-checked.                                                                          |
-| `GET /flags`, `/flags/pending`, `/flags/status/:status` | Admin only — RLS grants admins direct `SELECT`                                                                                                 |
-| `PATCH /flags/:id`                                      | Admin only. `{ status: 'pending'\|'reviewed'\|'dismissed' }`. A transition to `reviewed` or `dismissed` records `reviewed_by` and `reviewed_at`; returning to `pending` clears them. Dismissing clears `is_flagged` on the target once no other pending flag remains. |
+| Route | Access |
+| --- | --- |
+| `POST /flags` | Any authenticated, non-restricted user. `{ target_type: 'user'\|'script'\|'comment', target_id, reason (≥10 chars) }`. Authors cannot report their own script or comment (`403`); one pending flag per reporter per target (`400`). At five distinct reporters with non-dismissed flags, every owner and the admins/moderators of the target's study get a `flag_threshold` notification (a user flag alerts owners only). |
+| `GET /flags/my-flags` | Own flags. |
+| `DELETE /flags/:id` | Reporter (own) or admin (any). Not restriction-checked. |
+| `GET /flags`, `/flags/pending`, `/flags/status/:status` | Admin (RLS grants SELECT). |
+| `PATCH /flags/:id` | Admin. `{ status: 'pending'\|'reviewed'\|'dismissed' }`; resolving records `reviewed_by`/`reviewed_at`, returning to pending clears them, and dismissing clears `is_flagged` once no pending flag remains. |
 
-Reporters can create, view their own, and delete their own flag — that's the
-complete self-service surface. They cannot change a flag's `status`; only an
-admin can resolve one. Moderators have no flag access at all (see
-[Role-Based Access Control](#role-based-access-control)).
-
----
+`is_flagged` is written with the service-role client (`authenticated` has no UPDATE grant);
+flagged content stays visible.
 
 ## Restrictions
 
-Admin-managed. `profile_restrictions` has `profile_id` as its primary key —
-one row per user. It is active when `expires_at` is `null` (permanent) or is
-later than the current time. Expired rows remain in the table for the admin
-list, but `is_restricted()` ignores them. Restricted users are blocked from
-creating/updating scripts, comments, flags, comment reactions, votes, and
-ratings — see [Role-Based Access Control](#role-based-access-control).
-`profile_restriction_history` records each applied restriction. The ladder
-counts history rows that were not lifted early: first = two weeks, second =
-one calendar month, third and later = permanent.
+`profile_restrictions` is one row per profile, active while `expires_at` is null or later;
+`is_restricted()` ignores expired rows. History lives in `profile_restriction_history`, and
+the ladder counts rows not lifted early: two weeks, one calendar month, then permanent.
 
-| Route                             | Access                                                                                                                                              |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /restrictions`               | Admin only. Active and lapsed rows, including `expires_at` and an `active` flag. |
-| `GET /restrictions/me`            | Any authenticated user. Own active restriction, or `null` when unrestricted or expired. Limited to 15 requests per minute per user (`429`). |
-| `GET /restrictions/lifted` | Admin only. History rows lifted early (`lifted_early_at` set), newest first, with profile and admin names. |
-| `GET /restrictions/lookup?username=...` or `?profile_id=...` | Admin only. Minimal profile fields, count of ladder-eligible history rows, and any active restriction. Exactly one query parameter is required. |
-| `GET /restrictions/:profileId`    | Owner or admin (RLS-enforced) — a non-admin querying someone else's status silently gets `null`, indistinguishable from unrestricted. |
-| `PUT /restrictions/:profileId`    | Admin only. `{ reason (3–500 chars) }`. Returns `400` when the target is an admin account (including the caller); `lookup` does the same. For an active restriction, updates only the reason; otherwise replaces a lapsed row using the ladder and inserts history. |
-| `DELETE /restrictions/:profileId` | Admin only. Lifts the row. An active lift marks the latest history row `lifted_early_at`; removing a lapsed row does not change the ladder. `404` if no row exists. |
-
----
+| Route | Access |
+| --- | --- |
+| `GET /restrictions` | Admin. Active and lapsed rows with `active`. |
+| `GET /restrictions/me` | Any user. Own active restriction or `null`. 15 requests per minute. |
+| `GET /restrictions/lifted` | Admin. Early lifts, newest first, with names. |
+| `GET /restrictions/lookup?username=` \| `?profile_id=` | Admin. Exactly one parameter. Minimal profile, ladder-eligible count, active restriction. |
+| `GET /restrictions/:profileId` | Owner or admin by RLS; anyone else silently gets `null`. |
+| `PUT /restrictions/:profileId` | Admin. `{ reason (3–500 chars) }`. `400` for an admin target (self included). An active row only updates its reason; otherwise it replaces a lapsed row by the ladder and inserts history. |
+| `DELETE /restrictions/:profileId` | Admin. Lifts; an active lift marks the latest history row `lifted_early_at`, a lapsed removal changes nothing. `404` if absent. |
 
 ## Download review
 
-Admin-only reads over `download_events`, the append-only table every counted
-download writes: one row per identity per script, the identity being the
-account, else the IP address, else the device (`x-device-id`, which the web app
-sends from `next/lib/device-id.ts`). RLS shows a user only their own rows, so
-these routes read with the service-role client and check the session's role
-explicitly. The gate is the same as [Restrictions](#restrictions) —
-`requireAdminAccess` (origin plus the twenty-minute unlock) and an admin
-session.
+Admin-only reads over the append-only `download_events`; RLS shows a user only their own
+rows, so these use the service-role client after an explicit role check, plus
+`requireAdminAccess`.
 
-The accounts and scripts lists are one aggregate pass over the newest 2,000
-events, so both are bounded by that window rather than by the table. Each
-response repeats `scanned` (events aggregated), `total_events` (rows in the
-table) and `window`, so a list can say what its counts covered: `scanned` is
-below `total_events` once the window fills, and older events are then not
-counted at all. Both lists take `limit` (default 10, max 50), `offset`,
-`sort`, `order` (`asc`/`desc`, default `desc`) and `search`, and answer
-`{ items, total, offset, limit, scanned, total_events, window }` where `total`
-counts the rows matching the search, before paging.
+- Both lists aggregate the newest 2,000 events and repeat `scanned`, `total_events` and
+  `window`. `limit` (default 10, max 50), `offset`, `sort`, `order` (`asc`/`desc`), `search`
+  → `{ items, total, offset, limit, scanned, total_events, window }`, with `total` the
+  matching rows before paging. An unknown sort column, order or target is `400`.
+- `?study=<id>` scopes all three routes to one study; without it a non-owner has no scope
+  and gets `403`, while an owner sees every study. The script drill-down derives the study
+  from the script.
 
-An optional `?study=<id>` scopes all three routes to one study: the lists keep
-only events whose script belongs to it, and the account drill-down narrows the
-same way. Without it a non-owner has no scope to review and gets `403`; an owner
-sees every study. The script drill-down derives the study from the script, so it
-needs no parameter.
-
-| Route                             | Access                                                                                                                                              |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /download-review/accounts`   | Admin only. Accounts by counted downloads. `sort`: `events`, `scripts`, `ip_addresses`, `devices`, `last_download_at`. `search` matches the username or full name, case-insensitively. Each item carries its events, distinct scripts, addresses and devices, and first/last download. |
-| `GET /download-review/scripts`    | Admin only. Scripts by counted downloads. `sort`: `events`, `accounts`, `anonymous`, `ip_addresses`, `devices`, `last_download_at`. `search` matches the title or slug. Each item splits its volume between distinct signed-in accounts and anonymous rows, and carries addresses, devices, and first/last download. |
-| `GET /download-review/events?script_id=...` or `?user_id=...` | Admin only. The events behind one script or one account, newest first. Exactly one target, anything else is `400`; `limit` defaults to 20 (max 100) with `offset`. Each row carries its account, its script (slug plus plain-text title) and the identity it was counted under. Answers `{ events, total, offset, limit }`. |
-
-`400` on any of them means the paging, sort column, order or target was not one
-this route honours — nothing is silently defaulted.
-
----
+| Route | Notes |
+| --- | --- |
+| `GET /download-review/accounts` | Accounts by counted downloads. `sort`: `events`, `scripts`, `ip_addresses`, `devices`, `last_download_at`. `search` on username or full name. |
+| `GET /download-review/scripts` | Scripts by counted downloads. `sort`: `events`, `accounts`, `anonymous`, `ip_addresses`, `devices`, `last_download_at`. `search` on title or slug. |
+| `GET /download-review/events?script_id=` \| `?user_id=` | The events behind one script or account, newest first; `limit` 20 (max 100) with `offset` → `{ events, total, offset, limit }`. |
 
 ## Profiles
 
-### Public
-`/profiles/username/:username`, `/profiles/:id`,
-`/profiles/:id/stats` — no auth required. The Next frontend caches public
-profile and stats responses; profile, selection, favorite, script, vote, and
-download mutations revalidate those tags. A public profile response includes
-both authored scripts and favorite scripts. The `script_favorites` SELECT
-policy is `true`, so favorites are public and read on the session client; the
-direct `/favorites` endpoints remain authenticated and owner-scoped (INSERT /
-DELETE policies are owner-only). A failed favorites read returns `500` rather
-than an empty list.
-Each script's `comments` field is an array containing one `{ count }` item;
-the count includes root comments and replies and is read through the
-`get_script_comment_counts` RPC rather than a direct comments-table embed.
-Missing profiles return `404`; profile database failures return a generic
-`500` response rather than exposing database details.
-Every profile payload (including `GET /profiles/me`) carries `achievements`:
-`[{ achievement_id, earned_at, achievement: { title, description, metric,
-threshold, rarity } | null }]`. `title` and `description` are the database
-fallback: seeded wording lives in `ACHIEVEMENTS_STRINGS_PACK.copy`
-(`shared/strings/achievements-strings.ts`; `ACHIEVEMENT_COPY` is its English
-view), which both the UI and the award notification prefer, keyed by
-`achievement_id`. `rarity` is one of `common`, `uncommon`,
-`rare`, `epic`, `legendary`; `metric` and `rarity` are plain strings in the
-payload. Awards are permanent; they are read on the session client (the
-`profile_achievements` and `achievement_definitions` SELECT policies are
-`true`).
+Public: `/profiles/username/:username`, `/profiles/:id`, `/profiles/:id/stats` — cached by
+the frontend and invalidated by the profile/selection/favorite/script/vote tags.
 
-### Authenticated
-`GET /profiles/me`, `PATCH /profiles/me`, `DELETE /profiles/me`.
+Authenticated: `GET`/`PATCH`/`DELETE /profiles/me`.
 
-`GET /profiles` is **admin only**, paginated, filtered and sorted — it backs
-the admin user manager at `/admin/users`. Query parameters:
+`GET /profiles` is **admin only** — the user manager's listing. `limit` 1–100 (20),
+`offset`, `search` (username or full name, case-insensitive; reserved `or` grammar
+characters are replaced and `ilike` wildcards stripped so a term can only narrow),
+`role`, `sort` (`created_at`, `updated_at`, `username`, `full_name`, `role`), `order` →
+`AdminProfilesListResponse` `{ profiles, total, limit, offset }`, each row with
+`id, username, full_name, role, avatar_url, created_at, updated_at`, its `subjects`
+(`subject_id, status, updated_at`) and the names of its selected faculties and studies.
+`400` outside those lists, `401` without a session, `403` for a non-admin. The `profiles`
+SELECT policy is public, so this route's check is the only gate.
 
-| Parameter | Values | Default |
-| --- | --- | --- |
-| `limit` | 1–100 | 20 |
-| `offset` | 0 or more | 0 |
-| `search` | matches `username` or `full_name`, case-insensitively | none |
-| `role` | `student`, `moderator`, `admin` | none (all) |
-| `sort` | `created_at`, `updated_at`, `username`, `full_name`, `role` | `created_at` |
-| `order` | `asc`, `desc` | `desc` |
+Preferences: `GET`/`PATCH /profiles/me/preferences`, own row, 15 requests per minute. A
+missing row reads `{}`. PATCH `{ preferences }` merges into the v1 shape
+`{ version: 1, notifications: { toasts: boolean, achievements: 'show'|'hide' } }`; unknown
+keys and invalid values are rejected. Restriction and moderation notices are not
+configurable.
 
-The search term has the characters PostgREST's `or` filter grammar reserves
-(`,` `(` `)` and quotes) replaced with spaces and its `ilike` wildcards
-removed, so a term can only narrow the match. The response is
-`AdminProfilesListResponse` — `{ profiles, total, limit, offset }`, where
-`total` is the filtered count, so a page control needs no second request. Each
-row carries `id, username, full_name, role, avatar_url, created_at,
-updated_at`, its `subjects` (`subject_id, status, updated_at`) and the names of
-its selected faculties and studies. `400` for paging, a role, a sort column or
-a direction outside those lists; `401` without a session; `403` for a signed-in
-non-admin. The `profiles` SELECT policy is public, so this route's admin check
-is the only thing gating the listing.
-
-`GET /profiles/me/preferences` and `PATCH /profiles/me/preferences` are
-authenticated own-row operations on `profile_preferences`, limited to 15 requests per minute per user (`429`). A missing row reads
-as `{}`. The PATCH body is `{ preferences }` and merges into the v1 shape:
-`{ version: 1, notifications: { toasts: boolean, achievements: 'show'|'hide' } }`.
-Unknown keys and invalid values are rejected. Restriction and moderation
-notifications are not configurable.
-
-`PATCH /profiles/me` body is `ProfileUpdateRequest`: `{ username (required),
-full_name?, selected_faculty_ids?, selected_study_ids? }`. `username` and
-`full_name` are validated with the same rules as registration and stored
-trimmed. The selection arrays, when present, replace that user's selections
-(rows are diffed, inserts before deletes, errors are checked); they are not
-restriction-checked and neither is the profile update. Username uniqueness is
-checked the same way as `POST /auth/register` (a shared `isUsernameTaken`
-lookup, excluding the profile being edited so keeping your own name is fine);
-the `profiles_username_key` unique index (`23505`) is the backstop for a race
-past it. Success returns `ProfileUpdateResponse` (`{ success: true, profile }`).
+`PATCH /profiles/me` takes `ProfileUpdateRequest` `{ username, full_name?,
+selected_faculty_ids?, selected_study_ids? }`. Both strings use the registration rules and
+are stored trimmed; the arrays replace the selections (diffed, inserts before deletes,
+errors checked) and are not restriction-checked. Username uniqueness uses the shared
+`isUsernameTaken`, excluding the profile being edited, with `profiles_username_key`
+(`23505`) as the race backstop. Returns `ProfileUpdateResponse`.
 
 | Status | When |
-|---|---|
-| `400` | Invalid JSON body, invalid `username`/`full_name`, or a non-array id list |
+| --- | --- |
+| `400` | Invalid JSON, invalid username/full name, non-array ids |
 | `403` | RLS violation (`42501`) |
 | `404` | Profile not found |
-| `409` | Username taken (`ProfileUpdateConflictResponse`: `{ error, field: 'username' }`), or a selected faculty/study id does not exist (FK `23503`) |
+| `409` | Username taken (`{ error, field: 'username' }`) or an unknown faculty/study id (`23503`) |
 
-The profile row is written before the selections, so a selection failure
-returns its error with the profile fields already saved. The sync is not
-atomic across the two tables.
+The row and both selection lists are written by `sync_profile_selections`, one transaction:
+a bad faculty or study id rolls the username back with it. The function runs as the caller,
+so RLS and the `(username, full_name)` column grant still apply.
 
-**Avatar uploads** are the same two-call shape as a script file upload, and
-the only way `profiles.avatar_url` is written:
+Avatars are two calls and the only way `profiles.avatar_url` is written:
 
 | Route | Notes |
-|---|---|
-| `POST /profiles/me/avatar/upload-url` | Authenticated. Step 1 of 2. Body: `{ name, size }`. Validates the extension against `AVATAR_FILE_TYPES` (`jpg`, `jpeg`, `png`, `webp`) and the size against `AVATAR_MAX_UPLOAD_BYTES` (10 MB), then returns `{ success: true, upload: { stagingKey, url, contentType } }`: a presigned PUT into `R2_BUCKET`'s `staging/{userId}/` prefix, exactly like a script upload. `400` for an unsupported extension or an oversized file; `429` when rate limited (20 requests per 10 minutes per user, counted across both avatar calls). |
-| `POST /profiles/me/avatar` | Authenticated. Step 2 of 2. Body: `{ stagingKey }`. Runs the staged image through the optimizer's avatar profile — oriented by EXIF, cropped square around the most interesting region, scaled to `AVATAR_SIZE_PX` (320 px), metadata stripped (GPS included), stored as WebP — into `R2_BUCKET` at `avatars/{userId}.webp` (the same key every time, so a re-upload overwrites the old picture), and points `profiles.avatar_url` at `${R2_PUBLIC_URL}/avatars/{userId}.webp?v={version}`. Returns `AvatarUploadResponse` (`{ success: true, avatarUrl }`). `400` for a key that isn't the caller's or whose extension isn't an avatar type; `413` if the stored image is still over `AVATAR_MAX_STORED_BYTES` (200 KB; the optimizer aims for 100 KB); `429` when rate limited; `503` when `R2_PUBLIC_URL` isn't set, or when the optimizer service is configured but unavailable — an avatar is never stored uncropped; `500` otherwise. A rejected upload leaves the previous avatar untouched and removes only the staged copy. |
+| --- | --- |
+| `POST /profiles/me/avatar/upload-url` | `{ name, size }`. Extension against `AVATAR_FILE_TYPES` (`jpg`, `jpeg`, `png`, `webp`) and size against `AVATAR_MAX_UPLOAD_BYTES` (10 MB) → `{ success, upload: { stagingKey, url, contentType } }`. `400` unsupported/oversized; `429` at 20 requests per 10 minutes across both avatar calls. |
+| `POST /profiles/me/avatar` | `{ stagingKey }`. Runs the image through the optimizer's avatar profile (EXIF-oriented, square crop around the most interesting region, `AVATAR_SIZE_PX` 320, metadata stripped, WebP) into `R2_BUCKET` at `avatars/{userId}.webp`, then stores `${R2_PUBLIC_URL}/avatars/{userId}.webp?v={version}`. `400` for a key that is not the caller's or a non-avatar extension; `413` over `AVATAR_MAX_STORED_BYTES` (200 KB, aiming for 100 KB); `429`; `503` without `R2_PUBLIC_URL` or with the optimizer configured but unavailable (never stored uncropped); `500` otherwise. A rejection leaves the previous avatar and removes only the staged copy. |
 
-Avatars differ from script files in four ways that matter:
+Avatars live in the script bucket under `avatars/`, which needs a public domain and exposes
+every object by key (script keys stay random UUIDs, but a leaked one no longer expires).
+The key is fixed per user, so `?v=` is what refreshes browser and CDN caches; account
+deletion removes the key. The row is written with the service-role client — `authenticated`
+has no INSERT/UPDATE grant on `avatar_url`
+(`20261029120000_revoke_profile_avatar_url_write.sql`) — and the client renders it with
+`unoptimized`, so the column grant is the boundary, not the host allow-list. Limits live in
+`shared/config/avatar.ts`; the routes re-check them.
 
-- They live in the **same bucket** as script files, under the `avatars/`
-  prefix. That bucket needs a public domain (`R2_PUBLIC_URL`, a custom domain or
-  its `r2.dev` URL): it exposes every object by key, so script files are no
-  longer only reachable through expiring signed URLs — their keys stay
-  unguessable random UUIDs and are only handed out with a script.
-- `profiles.avatar_url` holds a **full public URL**, not a key. It is rendered
-  directly as an image source on cached pages (comments, script cards, the
-  header, the profile page), so it has to stay valid without signing.
-- The **key is fixed per user** (`avatars/{userId}.webp`), so the stored URL
-  carries a `?v=` that changes on every upload. R2 ignores the query when
-  resolving the object, and browser/CDN caches key on it, so each upload is a
-  new cache entry and the object keeps the bucket's immutable `Cache-Control`.
-  There is no previous object to delete; account deletion removes the one key.
-- The row is written with the **service-role client**, because the URL is
-  served to every visitor. `authenticated` therefore has no `UPDATE`/
-  `INSERT` grant on `avatar_url` (migration
-  `20261029120000_revoke_profile_avatar_url_write.sql`); do not move this
-  write onto the session client. The client renders avatars with
-  `unoptimized`, which also takes away the `next/image` host allow-list as a
-  backstop — the grant is the boundary.
+Admin: `GET /profiles/:id/admin`, `PATCH /profiles/:id`, `DELETE /profiles/:id` (session
+**and** unlock). The profile row goes through the session client, but
+`profile_faculties`/`profile_studies` have no admin RLS path, so `PATCH` writes the row and
+selections with the service-role client after the admin check; its body matches `/me`, so
+the form sends the whole pair.
 
-**Bot Fight Mode**: `files.scriptr.uk` is a proxied host in the same Cloudflare
-zone, so the zone-wide Bot Fight Mode applies to it. On the free plan that
-setting is on or off for the whole zone, not per hostname (the API host is
-DNS-only for exactly that reason). Avatar loads were tested from non-browser
-clients — `curl` and Node both got `200 image/webp` — so it is not challenging
-this host today. If avatars ever render as broken images while the object is
-correct in the bucket, this is the first suspect, and the only lever available
-is turning Bot Fight Mode off for the zone.
+- `GET /profiles/:id/admin` → `AdminProfileDetail` `{ profile, counts: { scripts, comments },
+  faculties, studies }`; `404` for an unknown id.
+- `DELETE /profiles/:id` removes the profile, its avatar and the Supabase Auth login (without
+  which the account could sign in with no profile). The profile goes first on the session
+  client; if the login deletion fails afterwards the row stays deleted, the failure is
+  logged and the response says so (`{ success: true, auth_user_deleted: false }`). `400` when
+  an admin targets themselves, `404` for an unknown id.
+- `PATCH /admin/profiles/:id/role` `{ role: 'student'|'moderator'|'admin' }` lives on the
+  admin surface (unlock + admin session, else `403`; `404` unknown id) and is the one profile
+  write on the service-role client: `authenticated` holds column UPDATE on
+  `(username, full_name)` only, and the profiles UPDATE policy lets a caller update their own
+  row, so a session-client role write would be a self-promotion path. The first admin has no
+  route — promote it in the database.
 
-Limits and types live in `shared/config/avatar.ts`; the routes check them
-again, so the client-side check only saves a round trip.
+## Profile selections
 
-### Admin
-`GET /profiles/:id/admin`, `PATCH /profiles/:id`, `DELETE /profiles/:id` — an
-admin session **and** the unlock, like `GET /profiles`. The profiles row goes
-through the session client (`is_owner()` is baked into its RLS policy), but
-`profile_faculties`/`profile_studies` policies are `profile_id = auth.uid()`
-with no admin override, so `PATCH /profiles/:id` writes selections with the
-service-role client after the admin check. The PATCH body is the same as the
-`/me` equivalent, so the edit form sends the whole `username`/`full_name` pair
-even when only one changed.
+Own-resource, authenticated, `profile_id = auth.uid()` RLS, session client.
 
-`GET /profiles/:id/admin` is the detail view behind the manager's dialog, so
-the listing stays one query: it returns `AdminProfileDetail` — `profile` (the
-columns the listing selects), `counts` (`scripts`, `comments`) and the names of
-the selected `faculties` and `studies`. `404` for an unknown id.
+| Resource | List | Get | Add | Remove |
+| --- | --- | --- | --- | --- |
+| Faculties | `GET /profile-faculties` | `/:facultyId` | `POST /:facultyId` (no body) | `DELETE /:facultyId` |
+| Studies | `GET /profile-studies` | `/:studyId` | `POST /:studyId` (no body) | `DELETE /:studyId` |
+| Subjects | `GET /profile-subjects` | `/:subjectId` | `PUT /:subjectId` `{ status }` | `DELETE /:subjectId` |
 
-`DELETE /profiles/:id` removes the profile row, its avatar object and its
-Supabase Auth login. The login matters: without it the account can still sign
-in with no profile behind it. The profile goes first on the caller's session
-client (the DELETE policy is `id = auth.uid() or is_owner()`); if the login
-deletion then fails, the profile stays deleted, the failure is logged and the
-response says so — `{ success: true, auth_user_deleted: false }` — instead of
-re-reporting a request that already removed the row. `400` when an admin targets
-their own account, `404` for an unknown id.
-
-### Role changes
-`PATCH /admin/profiles/:id/role` — `{ role: 'student'|'moderator'|'admin' }`.
-Lives on the [website admin surface](#website-admin-access), so it needs the
-unlocked access cookie **and** an admin session (`403` for anyone else); `404`
-for an unknown id. The first admin has no route at all — promote that account
-directly in the database.
-
-This is the one profile write that runs on the **service-role client**.
-`authenticated` holds column-level UPDATE on `(username, full_name)` only
-(`20261029120000_revoke_profile_avatar_url_write.sql` dropped the table-wide
-grant and granted the writable columns back), so a session-client write of
-`role` is refused with `42501` before RLS is consulted. Granting the column is
-not an option: the profiles UPDATE policy lets a caller update their **own**
-row, so every signed-in user could promote themselves through PostgREST. The
-role has no session path at all, which makes the unlock plus the explicit admin
-check in the handler the boundary.
-
----
-
-## Profile Selections
-
-Three structurally identical resources for a user's own faculty, study, and
-subject data. All require authentication and operate on the caller only.
-These are what first-visit onboarding persists to once the user has an account.
-
-| Resource  | List                     | Get one                             | Add                                             | Remove                                 |
-| --------- | ------------------------ | ----------------------------------- | ----------------------------------------------- | -------------------------------------- |
-| Faculties | `GET /profile-faculties` | `GET /profile-faculties/:facultyId` | `POST /profile-faculties/:facultyId`            | `DELETE /profile-faculties/:facultyId` |
-| Studies   | `GET /profile-studies`   | `GET /profile-studies/:studyId`     | `POST /profile-studies/:studyId`                | `DELETE /profile-studies/:studyId`     |
-| Subjects  | `GET /profile-subjects`  | `GET /profile-subjects/:subjectId`  | `PUT /profile-subjects/:subjectId` `{ status }` | `DELETE /profile-subjects/:subjectId`  |
-
-Faculties/studies adds are plain idempotent selections (no body). Subjects
-use `PUT` with a `status` body (`completed` or `currently_taking`) since it's
-a value, not just a membership toggle. All three are `profile_id = auth.uid()`
-RLS, session-client-eligible.
-
----
+Subjects use `PUT` because the status (`completed` | `currently_taking`) is a value.
 
 ## Calendar notes
 
-Personal notes a reader writes on calendar days. They are **local-first**: the
-browser holds them, and these routes are the only times the database is
-involved. Both require authentication, operate on the caller only, and are
-session-client eligible (`profile_id = auth.uid()` RLS).
+Local-first notes; these routes are the only place the database is involved. Authenticated,
+own resource, session client.
 
-| Route                      | Body                                  | Notes                                                                                                                                             |
-| -------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /calendar-notes`      | —                                     | `{ notes }` — every note of the profile, tombstones included (a pull needs the deletions too). Worth **one** sync.                                 |
-| `POST /calendar-notes/sync` | `{ since: string \| null, notes: [] }` | Pushes the notes changed since `since` and answers `{ notes, syncedAt }` with the merged copy. A stored note newer than the incoming one is kept. |
+| Route | Notes |
+| --- | --- |
+| `GET /calendar-notes` | `{ notes }`, tombstones included. One sync. |
+| `POST /calendar-notes/sync` | `{ since, notes }` → `{ notes, syncedAt }` with the merged copy; a stored note newer than the incoming one is kept. |
+| `POST /calendar-notes/auto-sync` | Same body and merge, at most once per profile per 7 days: `{ notes, syncedAt, nextAutoSyncAt }`, with `notes` and `syncedAt` null when it is not due. |
 
-Rules:
-
-- **Three notes per day**, enforced here against the merged result before
-  anything is written (`400` otherwise). The client caps the editor at the same
-  number.
-- **A deletion is a tombstone** (`deleted: true`), not a row removal, so it can
-  travel to the reader's other browser.
-- **Sync allowance: 3 per 30 minutes and 12 per day, per profile**, counted for
-  both directions together (`429`, with the window named in the message).
-  Preferences states the same numbers.
-- **Restricted accounts cannot push** (`403`); reading stays available. The
-  insert/update policies check `is_restricted()` too.
-- A payload whose notes all fail validation is a `400`, not an empty sync, so a
-  client bug cannot wipe the profile's copy.
-- Limits are per warmed serverless instance, like the other in-memory limiters:
-  abuse friction rather than an exact quota.
-
----
+- A note carries `studyId` (a `studies.id`): it belongs to the calendar it was written on,
+  so the same day holds different notes in two studies. A note without a valid `studyId` is
+  invalid, like any other malformed note.
+- Three notes per study's day, checked against the merged result before writing (`400`).
+- A deletion is a tombstone (`deleted: true`), not a row removal.
+- Allowance: 3 per 30 minutes and 12 per day per profile, both directions; an automatic push
+  spends one too (`429` with the window named).
+- A restricted account cannot push (`403`); reading still works.
+- A payload whose notes all fail validation is `400`, not an empty sync.
+- Limits are per warm instance, like the other in-memory limiters. The automatic push's week is
+  not: `profile_calendar_notes_syncs` (one row per profile, written only by
+  `claim_calendar_notes_auto_sync`) holds it. The claim runs after the write, so a failed write
+  never spends the week, and a browser that asks early is answered without spending a slot.
 
 ## Favorites
 
-Authenticated, own resource. `GET /favorites`, `GET /favorites/:scriptId`,
-`POST /favorites/:scriptId` (idempotent), `DELETE /favorites/:scriptId`.
-**Not** restriction-checked — favoriting is always available to a member.
-Creating is **study-scoped** (the script's study must be one the caller belongs
-to, else `403`; an unknown script is a `404`); removing is not. Creating or
-removing a favorite revalidates the affected public-profile cache tags.
-
----
+Authenticated, own resource: `GET /favorites`, `GET /favorites/:scriptId`,
+`POST /favorites/:scriptId` (idempotent), `DELETE /favorites/:scriptId`. Not
+restriction-checked. Creating is study-scoped (`403` for another study, `404` unknown
+script), removing is not. Either revalidates the public-profile tags.
 
 ## Votes
 
-| Route                                                          | Auth     | Notes                                                                                                                                                                                                                                                                                                                                                                              |
-| -------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /votes`, `/votes/script/:scriptId`, `/votes/user/:userId` | Public   | —                                                                                                                                                                                                                                                                                                                                                                                  |
-| `GET /votes/script/:scriptId/stats`                            | Public   | `{ upvotes, score }`                                                                                                                                                                                                                                                                                                                                                               |
-| `GET /votes/my-votes`, `/votes/script/:scriptId/my-vote`       | Required | —                                                                                                                                                                                                                                                                                                                                                                                  |
-| `POST /votes/:scriptId`                                        | Required | Toggle. First call adds a vote, second removes it. Script authors cannot vote for their own scripts, but may remove an existing vote. `vote_score` is clamped at zero. Runs through a single atomic `toggle_vote` RPC (`security definer`, keyed off `auth.uid()` internally) rather than a read-then-write, so it can't race and can't be called with an arbitrary score delta. Casting is rejected if restricted; removing is not. Casting is **study-scoped**: the script's study must be one the caller belongs to (`403`), and an unknown script is a `404`. Returns `{ voted, vote_score }`. |
-
----
+| Route | Auth | Notes |
+| --- | --- | --- |
+| `GET /votes`, `/votes/script/:scriptId`, `/votes/user/:userId` | Public | — |
+| `GET /votes/script/:scriptId/stats` | Public | `{ upvotes, score }` |
+| `GET /votes/my-votes`, `/votes/script/:scriptId/my-vote` | Required | — |
+| `POST /votes/:scriptId` | Required | Toggle. Authors cannot vote for their own script but may remove an existing vote; `vote_score` clamps at zero. Runs through the atomic `toggle_vote` RPC (`security definer`, keyed on `auth.uid()`), so it cannot race or take an arbitrary delta. Casting is rejected if restricted and is study-scoped (`403`; unknown script `404`); removing is not. Returns `{ voted, vote_score }`. |
 
 ## Ratings
 
-Professors and subjects each take multiple, independently extensible rating
-types via a shared `rating_types` lookup (`target_type: 'professor'|'subject'`).
-One rating per user per type per entity — posting again updates the score.
+`rating_types` (`target_type: 'professor'|'subject'`) is a shared, public-read lookup;
+one rating per user per type per entity, and posting again updates it.
 
-**Rating types** — public read, owner-only write (`is_owner()` RLS, no service
-secret involved):
-`GET /ratings/types` (optional `?target_type=`), `GET /ratings/types/:id`,
-`POST /ratings/types` (`{ id, target_type, labels }`, `id` matches
-`^[a-z0-9_]{2,40}$`), `PATCH /ratings/types/:id` (`{ labels }`),
-`DELETE /ratings/types/:id` (409 if any rating still references it).
+- Types: `GET /ratings/types` (optional `?target_type=`), `GET /ratings/types/:id`,
+  `POST /ratings/types` `{ id, target_type, labels }` (`id` matches `^[a-z0-9_]{2,40}$`),
+  `PATCH /ratings/types/:id` `{ labels }`, `DELETE /ratings/types/:id` (`409` while a rating
+  references it). Writes are owner-gated by RLS, with no service secret.
+- `labels` is `{ en?, mk? }`, every present language 2–60 characters and at least one filled
+  (`isLocalizedRatingLabel`).
 
-`labels` is `{ "en"?: string, "mk"?: string }` — every language present 2–60
-characters, at least one filled (`isLocalizedRatingLabel`,
-`shared/utils/rating-label.utils.ts`). The name lives with the criterion so a
-Macedonian reader sees the Macedonian label; the UI resolves it with the
-reader's locale.
+| Route | Auth |
+| --- | --- |
+| `GET /ratings/{professor,subject}/:id` | Public |
+| `GET /ratings/{professor,subject}/:id/stats` | Public — `{ rating_type_id, average, count }[]` |
+| `GET /ratings/{professor,subject}/:id/my-ratings` | Required |
+| `POST /ratings/{professor,subject}/:id` | Required — `{ rating_type_id, score (1–5) }`. Rejected if restricted or if the type does not match the target. Subject ratings are study-scoped (`403`; unknown subject `404`); professor ratings are open. |
+| `DELETE /ratings/{professor,subject}/:id/:ratingTypeId` | Required, not restriction-checked |
 
-**Professor/subject ratings** — identical shape, scoped by path:
-
-| Route                                                   | Auth                                                                                                           |
-| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `GET /ratings/{professor,subject}/:id`                  | Public                                                                                                         |
-| `GET /ratings/{professor,subject}/:id/stats`            | Public — `{ rating_type_id, average, count }[]`                                                                |
-| `GET /ratings/{professor,subject}/:id/my-ratings`       | Required                                                                                                       |
-| `POST /ratings/{professor,subject}/:id`                 | Required — `{ rating_type_id, score (1–5) }`. Rejected if restricted, or if the type doesn't match the target. A **subject** rating is study-scoped (the caller must belong to the subject's study, else `403`; unknown subject is `404`); a professor rating has no study and stays open. |
-| `DELETE /ratings/{professor,subject}/:id/:ratingTypeId` | Required — not restriction-checked                                                                             |
-
-Responses for the types, stats, my-ratings and upsert endpoints are typed in
-`shared/types/ratings.types.ts`. Error mapping on `POST`: `403` (restricted),
-`409` (`23503`: the professor or subject being rated doesn't exist), `400`
-(missing/invalid/non-JSON body, or a rating type that doesn't exist or doesn't
-match the target — the DB trigger raises `P0001` before the foreign key is checked).
-Stats are aggregated in the route from the raw rows, so only types with at
-least one rating appear.
-
-The Next frontend caches the public reads — the criteria list and one entry per
-`{professor,subject}/:id/stats` — under `RATING_CACHE_TAGS`
-(`shared/config/cache-tags.ts`) with no time-based expiry. A rating type
-mutation therefore revalidates `ratings:types`, and a rating upsert/delete
-revalidates `ratings:professor:<id>` or `ratings:subject:<id>`. The browser
-reads both fresh, because the rating widget re-reads the averages right after a
-rating changes.
-
----
+`POST` errors: `403` restricted, `409` (`23503`) unknown professor/subject, `400` invalid
+body or an unknown/mismatched type (the trigger raises `P0001` before the FK). Stats are
+aggregated in the route, so only types with a rating appear. The frontend caches the
+criteria list and each stats entry under `RATING_CACHE_TAGS` with no expiry: a type mutation
+revalidates `ratings:types`, a rating write revalidates `ratings:professor:<id>` or
+`ratings:subject:<id>`, and the widget reads both fresh.
 
 ## Notifications
 
-Own-resource, authenticated. Rate limited per user (15 requests per minute
-across all notification routes, `429` beyond that). System-generated — there
-is no user-facing create endpoint. Admin-triggered moderation notifications use the session
-client under the admin INSERT policy; achievement and flag-threshold
-notifications use the service-role client. Kinds include achievements,
-restriction applied/lifted, content removed, the five-reporter flag threshold
-alert, and the admin announcement below. Onboarding and account creation
-notifications remain supported. The `type` column is open-ended, so new kinds
-need no migration; type-specific payload lives in `data`.
+Own resource, authenticated, 15 requests per minute across all notification routes.
+System-generated — the only create path is the announcement below. Types are open-ended, so
+a new kind needs no migration; the payload lives in `data`. Moderation notifications use the
+session client under the admin INSERT policy; achievement and flag-threshold ones use the
+service role.
 
-`notifications.study_id` (nullable) names the study a content notification
-belongs to — an achievement earned in a study, a removed script or comment, a
-flag alert, a study announcement. It is not a permission key (a notification is
-always the reader's own); it is what a notification link and the tray's scope
-read from. Account-wide notifications (announcements sent to everyone,
-restrictions, global achievements) leave it null. Hrefs minted for notifications
-point at the study site (`/study/<site_slug>/scripts/<slug>`) — see
-`shared/utils/site-paths.ts`.
+`study_id` (nullable) names the study a content notification belongs to; it is not a
+permission key but decides the link (`/study/<site_slug>/scripts/<slug>`) and the tray's
+scope. Account-wide ones leave it null.
 
-The frontend merges server rows with per-user local notifications. It refreshes
-on mount, tray open, and window focus/visibility change; it does not poll or use
-realtime. The persistent restriction notice is derived from
-`GET /restrictions/me`, not from a deletable notification row.
+| Route | Notes |
+| --- | --- |
+| `GET /notifications` | Own rows, optional `?is_read`; each carries `study: { site_slug }`. |
+| `GET /notifications/unread-count` | `{ count }`. |
+| `PATCH /notifications/read-all` | Marks all read. |
+| `PATCH /notifications/:id` | `{ is_read }`; `400` for a non-boolean, `404` if not the caller's. |
+| `DELETE /notifications/:id` | Deletes one. |
+| `POST /admin/notifications` | Admin, unlocked. `{ title, body?, studyId? }` — see below. |
 
-| Route                             | Notes                                                                                                 |
-| --------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `GET /notifications`              | List own notifications. Query: `is_read` (`true`/`false`). Each row carries its study's site handle (`study: { site_slug }`), which the tray uses to narrow itself to the study site in view |
-| `GET /notifications/unread-count` | `{ count }`                                                                                           |
-| `PATCH /notifications/read-all`   | Marks all unread as read                                                                              |
-| `PATCH /notifications/:id`        | `{ is_read }` (boolean, else `400`) — update one notification's read state; `404` if not the caller's |
-| `DELETE /notifications/:id`       | Delete one notification                                                                               |
-| `POST /admin/notifications`       | Admin only. `{ title, body? }` — one `announcement` for every profile. See below                      |
+Announcements: `title` 1–200 characters, `body` ≤1000 (the table's CHECK limits), else
+`400`; `413` over the 4 KiB body cap; `429` after ten broadcasts per admin per hour.
+Omitted/`null` `studyId` addresses every profile; a study id addresses that study's students
+(`profile_studies`), its admins and moderators (`study_roles`) and every owner, stamping the
+rows with the study. An owner may address everyone or any study, a study admin only their
+own, which the INSERT policy also enforces. Recipient ids are read in pages with the service
+client and written in chunks with the session client, so RLS stays the boundary. Response
+`{ success: true, recipients }`. A broadcast cannot be recalled; each recipient can dismiss
+their own.
 
-**Announcements** (`POST /admin/notifications`) are the one create path, and it
-is on the [website admin surface](#website-admin-access): an admin session plus
-the unlock. The body is `{ title, body?, studyId? }`, with `title` 1–200
-characters and `body` at most 1000, the same limits as the table's CHECK
-constraints; `400` otherwise, `413` over the 4 KiB request cap, `429` after ten
-broadcasts per admin per hour. `studyId` picks the audience: omitted or `null`
-sends it to every profile, a study id sends it to that study's students
-(`profile_studies`), its admins and moderators (`study_roles`) and every owner,
-and stamps the rows with that study so only its site shows them. An owner may
-address everyone or any study; a study admin only a study they administer, which
-the `study admins can announce in their study` INSERT policy enforces as well as
-the route. Recipient ids are read in pages with the service-role client and the
-rows are written in chunks with the caller's session client, so RLS stays the
-boundary on every row. The response is `{ success: true, recipients }`. A
-broadcast cannot be recalled — deleting the rows afterwards is the only undo,
-and each recipient can dismiss their own.
+Achievements are rows: a definition is `metric` + `threshold` on the `profile` entity type,
+optionally scoped to one study. After a relevant mutation the backend recomputes the
+profile's value and awards + notifies (`type: 'achievement_earned'`) for any newly crossed
+threshold — idempotent, service-role, never failing the triggering request.
 
-### Achievements
+| Metric | Recomputed after | Credited to |
+| --- | --- | --- |
+| `scripts_uploaded` | `POST /scripts` | The uploader |
+| `comments_posted` | `POST /comments`, `POST /comments/:id/replies` | The author |
+| `total_script_votes` | `POST /votes/:scriptId` (either direction) | The script's author |
+| `total_script_downloads` | `POST /scripts/:id/download` | The script's author (their own download is not counted) |
 
-`achievement_definitions` (public read) define a `metric` + `threshold` on the
-`profile` entity type, optionally scoped to one study (`study_id`). After a
-relevant mutation, the backend recomputes that profile's current value for the
-metric and awards (`profile_achievements`) + notifies
-(`type: 'achievement_earned'`) for any newly-crossed threshold — idempotent,
-service-role, never fails the triggering request.
+A global definition (`study_id` null) counts platform-wide; a study definition counts inside
+its study; a mutation inside a study evaluates both groups, one outside only the global ones.
 
-`POST`/`PATCH /achievement-definitions` take `studyId` (a study id, or `null`
-for platform-wide) beside `metric`, `threshold` and `rarity`; an unknown study is
-a `400`. Definitions are owner-authored; a study admin sees them in the list but
-does not write them.
+`GET /achievement-definitions` is public (full rows, ordered by metric then threshold).
+`POST`/`PATCH`/`DELETE /achievement-definitions[/:id]` are admin + unlock. Body:
+`AchievementDefinitionInput` — `id` (create only, immutable, `^[a-z0-9_]{2,60}$`), `metric`,
+`threshold` (whole, >0), `rarity` (`common` | `uncommon` | `rare` | `epic` | `legendary`),
+`studyId` (a study id or null; unknown is `400`). Title and description are **not** input:
+they live in `ACHIEVEMENTS_STRINGS_PACK.copy` (`shared/strings/achievements-strings.ts`),
+`POST` rejects an id with no entry there (`400`), the API copies them onto the row and every
+`PATCH` re-syncs them, so the row's copy is only a snapshot. Errors: `400` validation, `403`
+not an admin, `409` duplicate id or a delete blocked by earned awards. Awards are permanent
+and never recomputed: an edited rarity only changes rendering, a new or lowered definition
+awards on the next qualifying action with no backfill, and a definition nobody holds can be
+deleted. Entity type is always `profile` and never sent by a client.
 
-A global definition (`study_id` null) is measured across every study, so "10
-scripts uploaded" still means ten anywhere. A study definition is measured
-inside that study, so "5 scripts in this study" means five here. A mutation
-inside a study evaluates both groups; a mutation outside one (a professor
-comment) evaluates only the global ones. The award notification carries the
-definition's `study_id`.
+## Client access patterns
 
-| Metric                   | Recomputed after                               | Credited to                                               |
-| ------------------------ | ---------------------------------------------- | --------------------------------------------------------- |
-| `scripts_uploaded`       | `POST /scripts`                                | The uploader                                              |
-| `comments_posted`        | `POST /comments`, `POST /comments/:id/replies` | The comment/reply author                                  |
-| `total_script_votes`     | `POST /votes/:scriptId` (either direction)     | The **voted-on script's author**, not the voter           |
-| `total_script_downloads` | `POST /scripts/:id/download`                   | The script's author (seeded downloads achievements start at 1; a signed-in author downloading their own script is not counted) |
+Every route uses either the caller's session client or the service-role client. Backwards,
+a legitimate request fails silently or an intended check is bypassed.
 
----
+**Session client** where RLS already grants the caller — their own resource
+(`author_id`/`user_id`/`profile_id = auth.uid()`) or an `is_owner()`-gated policy. That is
+nearly everything: admin script/comment/profile actions, all own-resource endpoints, flags,
+rating types, professor/subject ratings, profile selections, notifications, restrictions,
+preferences and restriction history.
 
-## Client Access Patterns
+**Service role** only where no RLS path exists for the caller:
 
-Every route uses either the caller's session client or the service-role
-client. Getting it backwards either silently fails a legitimate request
-(session client hits a table RLS doesn't grant it) or bypasses an intended
-check (service role used where RLS was supposed to be the actual gate).
-
-**Use the session client** when RLS already grants the caller access: their
-own resource (`author_id`/`user_id`/`profile_id` = `auth.uid()`), or an
-`is_owner()`-gated policy for an owner action. This is nearly everything —
-scripts/comments/profiles admin actions, all "own resource" endpoints, flags
-(list/resolve/delete, now that admin has direct SELECT/DELETE RLS), rating
-types, professor/subject ratings, profile faculties/studies/subjects,
-notifications, restrictions, and profile preferences. Restriction history is
-admin-accessible through its admin RLS policies.
-
-**Use the service role** only where no RLS path exists for the caller:
-- All catalog + catalog-junction tables (`universities` → `professor_studies`)
-  — read-only via RLS for every role, admin included; `/api/sanity` is the
-  only write path.
-- `POST /scripts/:id/download` — `download_events` has zero client-facing
-  `INSERT` policy for any role.
-- `GET /download-review/{accounts,scripts,events}` — RLS shows a caller only
-  their **own** `download_events` rows, so the review reads with the service
-  role and checks the session's role explicitly.
-- Awarding achievements and creating flag-threshold alerts (`INSERT` is not
-  granted to non-admin clients). Admin-triggered moderation notifications use
-  the session client under the admin INSERT policy.
-- Reading/writing `profile_preferences` and admin restriction history uses the
-  session client under its own-row or admin RLS policies.
-- `POST /profiles/me/avatar` writing `profiles.avatar_url` — the value is a
-  public URL shown to everyone, so it must not be settable by the user, and
-  `authenticated` has no grant on that column (see
-  [Profiles](#profiles)).
-
----
+- Catalog and junction tables (`universities` → `professor_studies`) — read-only by RLS for
+  every role.
+- `POST /scripts/:id/download`, and `GET /download-review/*` (RLS shows only one's own
+  `download_events`).
+- Awarding achievements and creating flag-threshold alerts, plus writing `is_flagged`.
+- `POST /profiles/me/avatar` writing `profiles.avatar_url`, and `PATCH /admin/profiles/:id/role`.
 
 ## Authentication
 
-Authenticated endpoints require the Supabase session cookie set by
-`/api/auth/login` or `/api/auth/callback`. There is no Bearer-token path.
-`authMiddleware` verifies the cookie and returns `401` on failure.
+The Supabase session cookie from `/api/auth/login` or `/api/auth/callback`; no Bearer path.
+`authMiddleware` verifies it and answers `401`. `SessionUser`
+(`shared/types/auth.types.ts`) is the app-shaped user — `{ id, email, username, role,
+subjects: [{ subject_id, status }], selected_faculty_ids, selected_study_ids }` — returned
+by login, callback and session alike.
 
-| Route                 | Auth     | Notes                                                                                                                                                                                                                                                                                                                    |
-| --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `POST /auth/register` | Public   | `{ email, password, username, full_name }` — all required, else `400`. No academic profile: it is per study now, and the client writes each stored study setup through the study-scoped endpoints right after the account exists (`next/lib/study-setup-sync.ts`). A taken username or an already-registered email returns `409` with `{ error, field: 'username' \| 'email' }` (typed `RegisterConflictResponse`), disposable email domains are rejected with `400`, and repeated attempts are `429`-limited per IP. The profile row is ensured server-side because registration must not depend on the database trigger alone. Sets `emailRedirectTo` to `{origin}/auth/callback`. |
-| `POST /auth/login`    | Public   | `{ email, password }`. `401` on bad credentials and `429` after repeated failed attempts from the same IP. Returns `{ success, user: SessionUser, session }`.                                                                                                                                                              |
-| `POST /auth/callback` | Public   | `{ access_token, refresh_token }` — establishes the session from an email-confirmation (or similar) redirect. The frontend (`useAuthCallback`) reads the tokens from the URL fragment and posts them here. Implicit flow, not PKCE. `400` if either token is missing, `401` if invalid. Returns the same shape as login. |
-| `POST /auth/logout`   | Required | Signs out and clears the cookie.                                                                                                                                                                                                                                                                                         |
-| `GET /auth/session`   | Public   | `{ user: SessionUser \| null, session: null }`-shaped; refreshes sessions only when they expire within 60 seconds, and clears invalid/expired sessions when refresh fails. Access tokens are configured for one week to minimize refreshes.                                                                                                                                                                                                                                                                                              |
+| Route | Auth | Notes |
+| --- | --- | --- |
+| `POST /auth/register` | Public | `{ email, password, username, full_name }`, all required. No academic profile: it is per study and the client writes each stored setup through the study endpoints afterwards (`next/lib/study-setup-sync.ts`). `409` `{ error, field: 'username'\|'email' }` when taken, `400` for a disposable domain, `429` per IP on repeats. The profile row is ensured server-side, not left to the trigger. `emailRedirectTo` is `{origin}/auth/callback`. |
+| `POST /auth/login` | Public | `{ email, password }` → `{ success, user, session }`. `401` bad credentials, `429` after repeated failures per IP. |
+| `POST /auth/callback` | Public | `{ access_token, refresh_token }` from the confirmation redirect (implicit flow, no PKCE; the client reads them from the URL fragment). `400` missing, `401` invalid. Same shape as login. |
+| `POST /auth/logout` | Required | Signs out and clears the cookie. |
+| `GET /auth/session` | Public | `{ user, session }`; refreshes only when the token expires within 60 s, clears invalid sessions, and returns `role` plus `study_roles` for the admin surface. |
 
-`SessionUser` (see `shared/types/auth.types.ts`) is the app-shaped user, not
-Supabase's raw auth user: `{ id, email, username, role, subjects: [{ subject_id,
-status }], selected_faculty_ids, selected_study_ids }`. `login`, `callback`,
-and `session` all return it, so the client never has to refetch `/session`
-after signing in. Responses are typed `RegisterResponse`, `LoginResponse`,
-`CallbackResponse`, `LogoutResponse`, `SessionResponse`.
+## Roles and access control
 
-## Role-Based Access Control
+- `profiles.role` is `student` or `owner`; an owner is org-level (every study, catalog table
+  and queue). `study_roles` (`profile_id`, `study_id`, `role`) holds `admin` or `moderator`
+  per study; a study admin passes every moderator check, a moderator does not pass admin
+  checks. Usernames are unique org-wide and bans are org-wide.
+- Predicates: `is_owner(uid)`, `has_study_role(uid, study_id, need)` (`admin` satisfies
+  `moderator`), `is_moderator(uid)` (holds any study role; unused by policies).
+- Study-scoped policies (`scripts`, `comments`, `flags`, `script_files`,
+  `professor_studies`) read `is_owner(auth.uid()) or has_study_role(auth.uid(), <study>, …)`,
+  taking the study from the row (scripts, professor assignments), the script (comments,
+  files) or `flag_study_id(…)`. A flag or comment with no script belongs to no study and is
+  owner-only. Achievement definitions, rating types, restrictions and the profile admin
+  branch stay owner-only; a study admin may announce inside their study.
+- Gates: catalog routes need the access token regardless of Supabase role; `/api/admin/*`
+  needs the session and the unlock (`GET /admin/studies` lists what the caller may act on,
+  `PUT`/`DELETE /admin/profiles/:id/study-roles[/:studyId]` are owner-only); routes check
+  roles for a clean `403` but RLS is the boundary.
+- **Restricted users** cannot create or update scripts, comments, reactions/likes, flags,
+  votes or ratings, but can remove their own content; favorites are exempt.
+- **Writes are study-scoped**: creating a script, commenting on or replying to one, voting,
+  rating a subject and favoriting all resolve the target's `study_id` and require
+  `profile_studies` membership, a study role or ownership (`../lib/study-access.ts`), else
+  `403` "Join this study before contributing to it". Professor comments and professor
+  ratings carry no study. This check is in the route, not in RLS.
+- The flag queue accepts `?study=<id>`; a flag without a study appears only unfiltered.
 
-Two scopes, one account.
-
-- `profiles.role` is `student` | `owner`. An **owner** is org-level: every study,
-  every catalog table, every moderation queue.
-- `study_roles` (`profile_id`, `study_id`, `role`) holds `admin` | `moderator`
-  **per study**, so one person can administer several studies. A study admin
-  passes every moderator check for that study; a moderator does not pass admin
-  checks (professor assignments).
-- Usernames stay unique across the org, and **bans stay org-wide**
-  (`profile_restrictions` and `is_restricted()` carry no study).
-
-Database predicates:
-
-| Predicate | Meaning |
-| --- | --- |
-| `is_owner(uid)` | the org role |
-| `has_study_role(uid, study_id, need)` | `need` is `admin` or `moderator`; an admin satisfies `moderator` |
-| `is_moderator(uid)` | holds any study role anywhere; no policy calls it (kept for the moderator-narrowing follow-up) |
-
-Study-scoped policies (`scripts`, `comments`, `flags`, `script_files`,
-`professor_studies`) read
-`is_owner(auth.uid()) or has_study_role(auth.uid(), <study of the row>, …)`.
-The study comes from the row itself for scripts and professor assignments, from
-the script for comments and script files, and from `flag_study_id(...)` for
-flags; a flag or comment with no script belongs to no study, so only an owner
-moderates it. Achievement definitions, rating types, restrictions and the
-profile admin branch remain owner-only; an announcement to everyone is
-owner-only too, while a study admin may announce inside a study they administer
-(see [Notifications](#notifications)).
-
-`is_admin(uid)` is gone: it was an alias of `is_owner` kept while the older
-policies still spelled it that way, and Phase 7 rewrote them.
-
-Gates:
-
-1. Catalog routes require a short-lived access token on every request,
-   independent of Supabase role — RLS closes these tables to everyone
-   regardless. See [Admin access](#admin-access).
-2. The website admin surface (`/api/admin/*`) requires the session **and** the
-   twenty-minute unlock cookie. `GET /admin/studies` lists the studies the
-   caller may act on; `PUT`/`DELETE /admin/profiles/:id/study-roles[/:studyId]`
-   grant and revoke a study role and are owner-only.
-3. Routes check roles for a clean `403`, but RLS is the boundary: a moderator's
-   queue only contains their study's rows because the policy says so.
-4. **Restricted users** are blocked from *creating or updating* scripts,
-   comments, comment reactions/likes, flags, votes and ratings, but can still
-   remove their own content. Favoriting is exempt (`script_favorites` has no
-   restriction check).
-5. **Writes are study-scoped.** Creating a script, commenting on or replying to
-   a script, voting, rating a subject and favoriting a script all resolve the
-   target's `study_id` and require `profile_studies` membership, a study role, or
-   ownership (`hono/src/lib/study-access.ts`); otherwise the route answers `403`
-   `Join this study before contributing to it`. A comment on a professor and a
-   professor rating carry no study and keep the plain "signed in" rule. This
-   check lives in the route, not in RLS — see the deferred item in
-   `docs/PROGRESS.md`.
-
-The flag queue accepts `?study=<id>` and narrows to that study; a flag with no
-study (a user or professor flag) only appears without the filter.
-
-`GET /session` returns `role` and `study_roles: [{ study_id, role }]`, which is
-what the web app uses to decide whether the admin surface is reachable and which
-studies the switcher offers. The study the admin pages act on is a cookie
-(`scriptr-admin-study`), not a credential: the API authorizes every request on
-its own.
-
-Violations return `403` with an error payload.
-
-## Error Responses
+## Errors
 
 ```json
 { "error": "Error message description" }
 ```
-`400` validation · `401` unauthenticated · `403` forbidden/restricted ·
-`404` not found · `409` conflict (unique/FK constraint, or a catalog delete
-blocked by dependents) · `429` too many requests · `500` server error.
+
+`400` validation · `401` unauthenticated · `403` forbidden/restricted · `404` not found ·
+`409` conflict (unique/FK, or a catalog delete blocked by dependents) · `429` too many
+requests · `500` server error. Raw Postgres details never reach the client.
 
 ## Notes
 
-**Response types**: route response shapes are defined in `shared/types/` and
-applied at the route with `c.json<T>(...)` (e.g. the auth routes above), so
-`next/` and `sanity/` import the same types the API returns.
-
-**Vote system**: one `+1` per user per script, toggle behavior, `vote_score`
-clamped at zero. No downvotes exist anywhere in the schema or API.
-
-**Flag system**: `is_flagged` is set on the target when a flag lands, cleared
-once no pending flags remain. Both writes use the internal (service-role) client, because `authenticated` has no `UPDATE` grant on `is_flagged`. Flagged content stays publicly visible —
-flagging surfaces content for review, it never hides it.
-
-**File types**: `pdf`, `jpg`, `jpeg`, `png`, `webp`, `md`, `docx`, `xlsx`
-(legacy `doc`/`xls` are rejected). A script has one or more immutable
-`script_files` rows
-(`file_url`, `file_type`, `file_size_bytes`, `bucket`, `file_name`, ordered by
-`position`). `file_name` is the uploaded name in kebab-case without its
-extension, and is `null` for files uploaded before names were kept (the UI
-falls back to a positional label). Type/extension checks run at the API via
-`zValidator` and the real file signature at finalize, not in Postgres — the
-database never sees raw bytes. A stored file is at most 3.5 MB; PDFs and images
-may be uploaded up to 20 MB and are shrunk to fit (see
-[File Uploads](#file-uploads)).
-
-**Portable Text**: `scripts.title`, `scripts.description`, and `comments.content`
-are Portable Text (`jsonb` block arrays). The API enforces the editor allow-list:
-script content accepts text blocks with spans, known styles/decorators, configured
-lists, and alignments; comments accept normal text blocks with inline decorators
-only. Unsupported block/child types, marks, annotations, and extra fields are
-rejected with `400`. Script titles must contain text and fit within 2 KiB;
-descriptions are limited to 50 KiB. Comments require at least 3
-non-whitespace characters and 10 KiB of serialized JSON. Postgres also
-enforces its JSON size caps.
-
-**Script text is per language.** `scripts.title` and `scripts.description` hold
-an object keyed by language (`{ "en": <Portable Text>, "mk": <Portable Text> }`),
-not one value: a script may be authored in any subset of `LOCALES`
-(`shared/config/localization-constants.ts`), and at least one language has to be
-filled. Each language that is present is validated on its own (the same
-allow-list and byte limits), an unknown language key or a bare Portable Text
-array is rejected with `400`, and a language the author left untouched is
-absent rather than empty. The API returns the map as stored: a reader's
-language is resolved by the caller (`pickLocalizedPortableText`, requested →
-default → any other filled language), so one cached read serves both languages.
-The slug is minted once at creation from the default language, or from whichever
-language is filled. Search matches every language of every script.
-
-## Achievement definitions
-
-Definitions are rows: admins create and edit their metric, threshold and
-rarity at runtime, while the title and description are code
-(`ACHIEVEMENTS_STRINGS_PACK.copy` in `shared/strings/achievements-strings.ts`). Only profiles earn achievements, so
-entity_type is always profile and is never sent by a client.
-
-- GET /achievement-definitions — public; full rows, ordered by metric then threshold.
-- POST /achievement-definitions — admin; body AchievementDefinitionInput. The id is immutable after create.
-- PATCH /achievement-definitions/:id — admin; body AchievementDefinitionPatch.
-- DELETE /achievement-definitions/:id — admin; 409 once anyone has earned it, because awards are permanent.
-
-Body fields: id (create only), metric, threshold, rarity. Title and
-description are **not** client input: they live in
-`ACHIEVEMENTS_STRINGS_PACK.copy` (`shared/strings/achievements-strings.ts`),
-and `POST` rejects an id that has no entry
-there with `400`, because the badge and the notification have nothing to show
-otherwise. The API writes that copy onto the row, and every `PATCH` re-syncs it,
-so the database copy is only a snapshot used if an entry is ever removed.
-
-Validation mirrors the database: id matches ^[a-z0-9_]{2,60}$, threshold is a
-whole number above 0, metric is one of the four metrics above, and rarity is
-one of common, uncommon, rare, epic, legendary. Errors: 400 validation, 403
-not an admin, 409 duplicate id or a delete blocked by earned awards.
-
-Awards are permanent and are never recomputed. Editing a definition's rarity
-leaves existing awards in place and only changes how they render; changing its
-title or description is a code change in `ACHIEVEMENTS_STRINGS_PACK.copy`, which updates the
-badge, the admin list and future notifications together. Adding a definition or lowering a threshold awards users the
-next time they take that qualifying action; there is no backfill and no
-recheck action. Deleting a definition nobody holds is allowed.
+- **Votes:** one `+1` per user per script, toggle, clamped at zero. No downvotes exist.
+- **Files:** a script has one or more immutable `script_files` rows ordered by `position`;
+  `file_name` is the kebab-case name without extension, `null` for older uploads (the UI
+  falls back to a positional label). Type checks run at the API and the real signature at
+  finalize; the database never sees bytes.
+- **Portable Text:** `scripts.title`, `scripts.description` and `comments.content` are
+  `jsonb` block arrays. Script content accepts text blocks with spans, known
+  styles/decorators, configured lists and alignments; comments accept normal text blocks
+  with inline decorators only. Unsupported types, marks, annotations and extra fields are
+  `400`. Titles ≤2 KiB per language, descriptions ≤50 KiB per language, comments ≥3
+  non-whitespace characters and ≤10 KiB. Postgres also enforces JSON size caps.
+- **Per-language script text:** `title` and `description` are objects keyed by language
+  (`{ "en": <PT>, "mk": <PT> }`), any subset of `LOCALES`, at least one filled; each present
+  language is validated on its own, and an unknown key or a bare array is `400`. The API
+  returns the map as stored and the caller resolves the reader's language
+  (`pickLocalizedPortableText`, requested → default → any filled), so one cached read serves
+  both. The slug is minted once from the default language, or the first filled one. Search
+  matches every language.

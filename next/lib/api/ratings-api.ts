@@ -23,9 +23,9 @@ const NO_STORE = { cache: 'no-store' } as const
 /**
  * Versions the cached criteria lists. It rides along as a query parameter, so
  * bumping it changes the fetch URL and every cached body is bypassed: a
- * criterion used to carry one English `label` and now carries `labels` per
- * language, and an entry from before that has no name to resolve. Raised to 2
- * with `20261115013000_rating_type_labels.sql`.
+ * criterion carries `labels` per language now, and an entry from an older shape
+ * has no name to resolve. Bump it whenever the payload shape changes — a cached
+ * body outlives a deploy.
  */
 const RATING_TYPES_PAYLOAD_VERSION = 2
 

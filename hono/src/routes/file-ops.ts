@@ -322,13 +322,10 @@ const toAttachmentDisposition = (file: {
  * (no authMiddleware) — every file in the app is downloadable by design,
  * guests included. "Protected" here doesn't mean identity-gated; it means
  * the requested key has to actually correspond to a real `script_files`
- * row before we'll sign a URL for it. Previously `bucket` was a
- * client-supplied query param passed straight to `GetObjectCommand` — this
- * endpoint would sign a URL for *any* bucket these R2 credentials can
- * reach, for any key string, turning it into an open pre-signed-URL
- * generator rather than a script-download endpoint. Deriving `bucket` from
- * the matched row instead closes that off without requiring anyone to be
- * logged in.
+ * row before we'll sign a URL for it. `bucket` therefore comes from that
+ * row and never from the request: a client-supplied bucket would turn this
+ * into an open pre-signed-URL generator for every bucket these credentials
+ * can reach — still without requiring anyone to be logged in.
  *
  * `?download=1` makes the signed URL answer with `Content-Disposition:
  * attachment`, so the browser saves the file (named after its stored

@@ -32,7 +32,7 @@ export const Header = async ({
   return (
     <header
       className={cn(
-        'sticky top-0 z-10 flex h-16 items-center justify-between',
+        'sticky top-0 z-10 flex h-(--header-height) shrink-0 items-center justify-between',
         'ui-above-header ui-sheen-diagonal-inverted gap-2'
       )}
     >

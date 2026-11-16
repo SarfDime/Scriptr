@@ -76,15 +76,9 @@ export const getMyProfile = (cookie?: string) =>
  * cached body is bypassed instead of being read in a shape the app no longer
  * expects.
  *
- * Raised to 2 when `slug` joined `PROFILE_SCRIPT_FIELDS` in
- * `hono/src/routes/profiles.ts`. A copy cached before that has no `slug` on the
- * profile's scripts, and `getAcademicPath` threw on `undefined.startsWith`,
- * taking the whole profile page down.
- *
- * Raised to 3 with the per-language script text
- * (`20261114193000_script_text_per_language.sql`): `PROFILE_SCRIPT_FIELDS`
- * still embeds `scripts.title`, and a body from before the `{ en, mk }` shape
- * left every script on a profile page with a blank title.
+ * Bump it whenever `PROFILE_SCRIPT_FIELDS` changes shape — a new field, or a
+ * field whose type changed (`scripts.title` is a `{ en, mk }` map). A cached
+ * body outlives a deploy, and the profile page reads it as if it were current.
  */
 const PROFILE_PAYLOAD_VERSION = 3
 

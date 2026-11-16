@@ -85,7 +85,6 @@ votes.get('/my-votes', authMiddleware, async (c) => {
   return c.json<Array<VoteWithScript>>(data)
 })
 
-/** Get the current user's vote for a script, or null */
 votes.get('/script/:scriptId/my-vote', authMiddleware, async (c) => {
   const user = c.get('user')
   const scriptId = requiredParam(c, 'scriptId')

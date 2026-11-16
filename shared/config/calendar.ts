@@ -154,10 +154,18 @@ export const CALENDAR_TYPE_SCHEMES: Record<
 // ---------------------------------------------------------------------------
 
 /** The sync allowance, shown in Preferences and enforced by the API. Both
- * windows count a push and a pull alike. */
+ * windows count a push and a pull alike, and an automatic push is one of them. */
 export const CALENDAR_NOTES_SYNC_SHORT_LIMIT = 3
 export const CALENDAR_NOTES_SYNC_SHORT_MINUTES = 30
 export const CALENDAR_NOTES_SYNC_DAILY_LIMIT = 12
+
+/** How often one profile's notes may be pushed automatically. The API keeps the
+ * record per profile, so this holds across browsers and devices. */
+export const CALENDAR_NOTES_AUTO_SYNC_DAYS = 7
+
+/** How long a browser waits after a failed automatic push before trying again,
+ * unless the API names a shorter window. */
+export const CALENDAR_NOTES_AUTO_SYNC_RETRY_MINUTES = 60
 
 /** A note is personal and private; its types are a separate list from the
  * event types so the two never share a palette. */

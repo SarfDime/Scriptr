@@ -128,7 +128,7 @@ export function ScriptDetailsFields({
         />
       </Field>
       <Box className='ui-stack gap-1'>
-        <Text className='ui-caption'>
+        <Text className='ui-label'>
           {ui.scripts.uploadModal.slug.label}:{' '}
           <code>
             {slug

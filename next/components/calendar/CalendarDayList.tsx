@@ -30,7 +30,8 @@ export const CalendarDayList = async ({
         <Card
           key={day.key}
           className={cn(
-            'p-0 bg-transparent shadow-0 border-0 ring-0 bg-none gap-2'
+            'p-0 bg-transparent shadow-0 border-0 ring-0 bg-none gap-2',
+            'content-auto [--content-auto-size:4.5rem]'
             // day.isToday && 'border-brand-600'
           )}
         >

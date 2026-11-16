@@ -5,7 +5,6 @@ import { UI_STRINGS_PACK } from '@shared/config/strings'
 import { getServerStrings } from '@/lib/server-strings'
 import { Text } from '../typography/Text'
 import { Box } from './Box'
-import { Button } from './Button'
 import { SectionHeader } from './SectionHeader'
 
 interface ActivityStatsProps {
@@ -13,16 +12,12 @@ interface ActivityStatsProps {
   savedCount?: number
   authoredCount: number
   commentCount: number
-  title?: string
-  subtitle?: string
 }
 
 export const ActivityStats = async ({
   savedCount,
   authoredCount,
   commentCount,
-  title,
-  subtitle,
 }: ActivityStatsProps) => {
   const ui = await getServerStrings(UI_STRINGS_PACK)
   const stats = [
@@ -54,27 +49,16 @@ export const ActivityStats = async ({
   ]
 
   return (
-    <Box as='section' className='ui-stack gap-4 p-4 ui-above'>
-      <SectionHeader
-        title={title ?? ui.activity.title}
-        subtitle={subtitle ?? ui.activity.subtitle}
-        actions={
-          <Button className='button button-sm subtle'>
-            <Text>{ui.activity.view}</Text>
-          </Button>
-        }
-      />
-      <Box className='flex flex-wrap gap-2'>
+    <Box as='section' className='ui-stack ui-above-inside grow basis-56 gap-3'>
+      <SectionHeader title={ui.activity.title} />
+      <Box className='ui-stack flex-1 justify-between gap-1.5'>
         {stats.map(({ key, icon: Icon, count, label, color }) => (
-          <Box
-            key={key}
-            className='ui-stack flex-[1_1_8rem] gap-1 rounded-md p-2'
-          >
-            <Box className='ui-cluster gap-2'>
-              <Icon className={`${color} h-7 w-7 rounded-md p-1`} />
-              <Text className='ui-stat'>{count}</Text>
+          <Box key={key} className='flex items-center justify-between gap-2'>
+            <Box className='flex min-w-0 items-center gap-2'>
+              <Icon className={`${color} shrink-0 rounded-md p-0.5`} />
+              <Text className='ui-body'>{label}</Text>
             </Box>
-            <Text className='ui-subtitle'>{label}</Text>
+            <Text className='ui-stat'>{count}</Text>
           </Box>
         ))}
       </Box>

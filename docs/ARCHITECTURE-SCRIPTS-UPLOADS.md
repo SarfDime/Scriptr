@@ -1,15 +1,106 @@
 # Scripts & Uploads
 
-* **Single subject:** a script belongs to exactly one subject; faculty/study/university are derived, never stored on `scripts`.
-* **Professor selection:** chosen explicitly and validated against `subject_professors`.
-* **Payload:** `title` and `description` as Portable Text **per language** — `{ en?: …, mk?: … }` (`jsonb` object; the title needs at least one language, the description may be absent entirely, any subset of languages; each title ≤2KB and each description ≤50KB), which the API returns as stored and the reader's language resolves from (`pickLocalizedPortableText`), `exam_session` (one of `january`/`june`/`september`, or `null` for "General (All Sessions)"), `exam_year` (from `SCRIPT_START_YEAR` = 2023 up to the current year, capped one year lower for a session that has not come around yet this calendar year; `null` for "General (All Years)"), `additional_reading` (`text[]`), and one or more `script_files` (`file_url`, `file_type`, `file_size_bytes`, `bucket`, `position`, `file_name`; file contents are immutable, but the author or an admin can add files to an existing script via `POST /scripts/:id/files` (restriction-checked) and remove an individual one via `DELETE /scripts/:scriptId/files/:fileId`, which renumbers the remaining `position`s). `file_name` is the uploaded name lowercased, accent-stripped, kebab-cased and without its extension, `null` for files from before names were kept. Body validated by a `zValidator` schema, including an allow-list for supported Portable Text blocks, spans, decorators, styles, lists, and alignments. The Next.js form validates the same rule per language before submission and edits one language at a time behind a language selector (`ScriptLanguageSelector`), dropping a language the author never touched rather than sending it empty. Its submit button is disabled only for work in progress (or, when editing, when nothing changed) — an invalid form stays clickable, and the click marks every field as touched so the errors render instead of the button doing nothing visibly. The column's `CHECK` accepts only the object (`20261114214500_script_text_object_only.sql`; the pre-localization array was allowed while the backfill ran).
-* **Comments:** comments and replies use allow-listed Portable Text with inline decorators only; custom blocks, annotations, headings, lists, and custom text alignment are rejected. Payloads are capped at 10 KiB and require at least three non-whitespace characters. Replies inherit and are database-enforced against their parent's target. Root comments load in pages of two and support newest or combined-like-and-reaction top ordering; up to five chronological replies are shown per comment, with further replies fetched in pages of 10 on demand at every thread depth. Each root thread has a single hide/show control; hiding resets it to the default reply preview, and loaded pages remain cached. Script summary counts and `totalCommentCount` include all comments and replies; root `totalCount` remains the root-thread pagination total. Script summary totals are retrieved through the bounded `get_script_comment_counts` security-definer RPC because public roles have no table-level `SELECT` on comments. Reaction/like totals are also aggregated server-side through the internal client so RLS does not hide other users' engagement; only aggregate counts and the current viewer's own status are returned. The frontend retains fetched pages while mounted and the Next.js Data Cache serves only non-personalized initial reads. Each user can independently toggle multiple reaction types, but cannot add a like or reaction to their own comment. Comment and reply creation are limited to 10 per 15 minutes each, and combined likes/reactions to 15 per minute per account, per API process. Comments are shared by scripts and professors: the target is exactly one of a script or a professor, and the comment components are target-agnostic. Script pages read the first page on the server with the viewer's cookie, which makes them dynamic. Professor pages stay statically generated and fetch the first page in the browser after mount (`ProfessorComments` / `useProfessorComments`; the browser sends its own session cookie and the read is `no-store`), showing a loading placeholder, the retry UI on failure, and the empty state; the section renders only when the professor has a database id.
-* **Address:** a script is served at `/study/<siteSlug>/scripts/<slug>`, where the slug is its title folded to ASCII plus the first eight characters of its id — `биологија предавање 1` in LBE at `/study/lbe/scripts/biologija-predavanje-1-f585a670`. The top-level `/scripts/<slug>` forwarder is gone with the rest of the pre-study addresses; a script belongs to a study, and the study's site owns it. It is minted in the same insert as the row (`buildScriptSlug`, `shared/utils/slug.utils.ts`), and **never regenerated**: it is the address people share, so editing the title must not break it, which is why the edit form shows it read-only and the create form previews it from the title before anything is saved. The slug is minted from the default language, or from whichever language is filled when the default one is absent, and it is still never rewritten. The transliteration is shared because the API mints and the form previews with the same function; it folds to ASCII (`ж` → `z`, not `ž`) because a non-ASCII slug would percent-encode. Because that map is a closed set, authored script text is restricted to Latin and Cyrillic (`hasUnsupportedScript`), rejected at the form and by `POST`/`PATCH`. `GET /scripts/:id` resolves a slug **or** an id, so links minted before slugs existed still resolve.
-* **File types:** `pdf`, `jpg`, `jpeg`, `png`, `webp`, `md`, `docx`, `xlsx` (legacy `.doc`/`.xls` are not accepted), checked by extension at `POST /file-ops/upload-urls` and by real file signature at `POST /file-ops/finalize`. Files stored in R2 are capped at 3.5 MB, and the optimizer aims for 3 MB (`shared/config/shared-constants.ts`). PDFs and images may be uploaded up to 20 MB and are shrunk to fit.
-* **Optional script files:** uploads take three steps. `POST /file-ops/upload-urls` returns presigned PUTs into a `staging/{userId}/` prefix; the browser PUTs each file straight to R2 (bytes never pass through the API, which sidesteps Vercel's 4.5 MB body limit); `POST /file-ops/finalize` runs each file through the optimizer (the optimizer service when configured, otherwise an in-process stand-in that validates but doesn't shrink) and returns one `{ fileKey, fileType, fileSizeBytes, bucket, fileName }` per file (`fileName` comes from the original name the client sends with each staging key, so a converted image still downloads under the name it was uploaded with), passed into `POST /scripts` or `POST /scripts/:id/files`. Scripts may also be created with an empty file list.
-* **Overlay interaction:** the main `ui-container` scroll surface is locked with a `:has()` CSS rule while the mobile navigation drawer or a native dialog is open; dialogs also restore focus to their trigger and trap keyboard focus.
-* **Storage scoping:** each university may have its own R2 bucket (`universities.r2_bucket_id`); the upload resolves it via subject → study → faculty → university, falling back to `R2_BUCKET`. Keys use dbIds: `{facultyId}/{studyId}/{subjectId}/{userId}/{uuid}.{ext}`. `script_files.bucket` records the landing bucket; `GET /file-ops/get-file/*` is public for guest preview/download, but verifies the key against `script_files` and resolves its bucket server-side (`?download=1` makes the signed URL save under the stored `file_name` rather than render inline). `POST /scripts` and `POST /scripts/:id/files` only accept files whose bucket and key lie in the caller's own scope for the script's subject and that actually exist in R2, and they store the size R2 reports rather than the client's; before that check, cleanup only ever deletes keys under the caller's own user id. Deleting a script, or a failed upload, script create or file attach, deletes the affected R2 objects on a best-effort basis (failures are logged, not returned to the client).
-* **Object caching:** uploads use UUID-suffixed keys that are unique per upload and never overwritten, so they are served with `public, max-age=31536000, immutable`.
-* **Moderation flag:** `is_flagged` is excluded from every public response.
-* **Search:** local-first on the frontend, API fallback (`GET /scripts/search`), fuzzy-matched against Portable Text as plain text. Scripts only, and never platform-wide: a script belongs to a study, so a study's site searches its own scripts. The header bar (`HeaderSearch`) submits to the study's `/scripts?q=…` — the study's layout hands it the handle, so the client never reads the host and the catalog tree's bar still submits to `/search` — and the feed page (`app/[locale]/(study)/study/[siteSlug]/scripts/page.tsx`) reads `?q=` and asks the API with `study=<dbId>`, rendering the result list instead of the curated feed (with a link back to it; the feed's own search and filters are hidden since the list is already filtered). The catalog's `/search` is the catalog's alone — universities, faculties, studies and professors from Sanity (`loadSearchPage` in `next/lib/search-page.ts`). The local filter in `ScriptsSection` only covers the scripts already loaded. Query validation is shared: `isValidSearchQuery` (`next/lib/script-search.ts`) requires a non-empty query of at most `INPUT_MAX_LENGTH` characters once trimmed (the limits `normalizeSearchQuery` enforces), and both the header bar and the `/search` form (`SearchForm`, still a plain GET form without JS) use it to stop an invalid submit with an inline message. The API's `400` on an empty query stays as the backstop. The header does not prefill the current `?q=`, since `useSearchParams` in the root layout would make every static route client-rendered.
-* **Caching:** Next.js Data Cache, tagged per endpoint/id; public profile pages and stats are cached with no time-based expiry, so the tags are the only thing that refreshes them, and script/profile/favorite/vote/download/comment/rating/role mutations trigger the backend webhook to revalidate the affected script/profile/rating tags. The webhook targets the web project's Vercel alias rather than `scriptr.uk`, because Cloudflare proxies the public hostname and does not forward the API's server-to-server request. A study's feed page composes the signed-in curated list from shared cached per-subject script reads. Search and "my scripts" are never cached.
+## The script
+
+* One subject per script; faculty, study and university are derived, never stored.
+  The professor is chosen explicitly and validated against `subject_professors`.
+* `title` and `description` are Portable Text **per language** — `jsonb`
+  `{ en?, mk?: … }`, title needs at least one language, description may be absent, any
+  subset; title ≤2KB per language, description ≤50KB. The API returns them as stored and
+  the reader's language resolves through `pickLocalizedPortableText`. The column `CHECK`
+  accepts only the object (`20261114214500_script_text_object_only.sql`).
+* `exam_session` (`january`/`june`/`september`, or `null` for general),
+  `exam_year` (`SCRIPT_START_YEAR` = 2023 to the current year, one lower for a session
+  still ahead this calendar year, or `null`), `additional_reading` (`text[]`), and one or
+  more `script_files` (`file_url`, `file_type`, `file_size_bytes`, `bucket`, `position`,
+  `file_name`). File contents are immutable; the author or an admin adds files with
+  `POST /scripts/:id/files` (restriction-checked) and removes one with
+  `DELETE /scripts/:scriptId/files/:fileId`, which renumbers `position`.
+* `file_name` is the uploaded name lowercased, accent-stripped, kebab-cased, without its
+  extension; `null` for uploads from before names were kept.
+* `zValidator` enforces the body, including the Portable Text allow-list (blocks, spans,
+  decorators, styles, lists, alignments). The form validates per language and edits one
+  language at a time behind `ScriptLanguageSelector`, dropping a language the author never
+  touched. Submit is disabled only while busy (or, when editing, when nothing changed):
+  an invalid form stays clickable and the click marks every field touched.
+* **Address:** `/study/<siteSlug>/scripts/<slug>`, the slug being the title folded to ASCII
+  plus the first eight id characters. It is minted in the same insert as the row
+  (`buildScriptSlug`, `shared/utils/slug.utils.ts`) and **never regenerated** — the edit
+  form shows it read-only, the create form previews it. It uses the default language, or
+  the first filled one. The fold is a closed map to ASCII (`ж` → `z`, never `ž`, which
+  would percent-encode), which is why authored text is Latin and Cyrillic only
+  (`hasUnsupportedScript`, rejected at the form and by `POST`/`PATCH`). `GET /scripts/:id`
+  resolves a slug or an id, so older links still work.
+* `is_flagged` is excluded from every public response.
+* **Search** is local-first with an API fallback (`GET /scripts/search`), fuzzy over
+  Portable Text as plain text, and never platform-wide: a study's site searches its own
+  scripts with `study=<dbId>` (`/scripts?q=…`). The catalog's `/search` covers
+  universities, faculties, studies and professors from Sanity (`loadSearchPage`).
+  `ScriptsSection`'s local filter only covers loaded scripts. `isValidSearchQuery`
+  (`next/lib/script-search.ts`) trims and caps at `INPUT_MAX_LENGTH` for both the header
+  and `SearchForm`; the API's `400` is the backstop. The header never prefills `?q=`,
+  because `useSearchParams` in the root layout would make every static route client-
+  rendered.
+
+## Comments
+
+* Allow-listed Portable Text with inline decorators only — no custom blocks, annotations,
+  headings, lists or alignment. ≤10 KiB, at least three non-whitespace characters. A reply
+  inherits and is database-enforced against its parent's target.
+* Root comments page by two, ordered newest or combined like-and-reaction. Five
+  chronological replies show per comment, further replies page by 10 at any depth. One
+  hide/show control per root thread, which resets to the reply preview; loaded pages stay
+  cached.
+* Summary counts and `totalCommentCount` include replies; root `totalCount` is the
+  paginated root total. Totals come from the bounded `get_script_comment_counts`
+  security-definer RPC, because public roles have no table `SELECT` on comments;
+  reaction/like totals are aggregated server-side through the internal client, returning
+  counts and the viewer's own status only.
+* Each user toggles several reaction types, but cannot like or react to their own comment.
+  Comment and reply creation are limited to 10 per 15 minutes each, and likes/reactions to
+  15 per minute per account, per API process.
+* Comments target exactly one script or professor, and the components are target-agnostic.
+  A script page reads its first page on the server with the viewer's cookie (so it is
+  dynamic); a professor page stays static and loads the first page in the browser
+  (`ProfessorComments`/`useProfessorComments`, `no-store`), with loading, retry and empty
+  states, and only when the professor has a database id.
+
+## Files
+
+* Types: `pdf`, `jpg`, `jpeg`, `png`, `webp`, `md`, `docx`, `xlsx` (no legacy `.doc`/`.xls`),
+  checked by extension at `POST /file-ops/upload-urls` and by real signature at
+  `POST /file-ops/finalize`. Stored files are capped at 3.5 MB with a 3 MB target
+  (`shared/config/shared-constants.ts`); PDFs and images may arrive up to 20 MB and are
+  shrunk to fit.
+* Three steps: `POST /file-ops/upload-urls` presigns PUTs into `staging/{userId}/`; the
+  browser PUTs straight to R2 (bytes never pass through the API, which sidesteps Vercel's
+  4.5 MB body limit); `POST /file-ops/finalize` optimizes each file (the optimizer service
+  when configured, otherwise an in-process stand-in that validates without shrinking) and
+  returns `{ fileKey, fileType, fileSizeBytes, bucket, fileName }` per file, passed into
+  `POST /scripts` or `POST /scripts/:id/files`. A script may be created with no files.
+* **Storage scoping:** a university may have its own bucket (`universities.r2_bucket_id`),
+  resolved through subject → study → faculty → university, falling back to `R2_BUCKET`.
+  Keys use dbIds: `{facultyId}/{studyId}/{subjectId}/{userId}/{uuid}.{ext}`;
+  `script_files.bucket` records the landing bucket. `POST /scripts` and
+  `POST /scripts/:id/files` accept only keys inside the caller's scope for that subject
+  that exist in R2, and store the size R2 reports. Cleanup deletes only under the caller's
+  own user id. Deleting a script, or a failed upload/create/attach, deletes the affected
+  objects best-effort (logged, never returned).
+* `GET /file-ops/get-file/*` is public for guest preview and download, verifies the key
+  against `script_files` and resolves the bucket server-side; `?download=1` saves under the
+  stored `file_name` instead of rendering inline.
+* Keys are unique per upload and never overwritten, so objects are served
+  `public, max-age=31536000, immutable`.
+* While the mobile drawer or a native dialog is open, the main `ui-container` scroll
+  surface is locked by a `:has()` rule; a dialog also restores focus to its trigger and
+  traps keyboard focus.
+
+## Caching
+
+* Next.js Data Cache, tagged per endpoint/id; public profiles and stats never expire on a
+  clock, so tags are the only refresh. Script, profile, favorite, vote, download, comment,
+  rating and role mutations call the backend webhook to revalidate the affected tags. The
+  webhook targets the web project's Vercel alias, because Cloudflare does not forward the
+  API's server-to-server request to `scriptr.uk`.
+* A study's feed composes the signed-in curated list from shared cached per-subject reads.
+  Search and "my scripts" are never cached.

@@ -1,7 +1,7 @@
 'use client'
 
 import type { SkyState } from '@shared/types/skybox.types'
-import { mixRGB, TAU, WHITE } from '@/lib/star-canvas'
+import { mixRGB, TAU, WHITE } from '@/lib/app-background/canvas-primitives'
 import { rgba } from './skybox-canvas'
 
 // Lens flares for immersive mode, drawn on their own overlay canvas above the

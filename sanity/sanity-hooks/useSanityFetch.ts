@@ -2,13 +2,11 @@ import { API_VERSION } from '@shared/config/sanity-constants'
 import { useCallback, useEffect, useState } from 'react'
 import { type QueryParams, useClient } from 'sanity'
 
-// 1. EXTRACT OUTSIDE THE HOOK
-// By defining this outside, the object reference never changes.
-// This ensures `useClient` returns a stable client instance,
-// breaking the infinite network-request loop.
+// Defined once, so the object reference never changes and `useClient` keeps
+// returning the same client instance.
 const clientConfig = { apiVersion: API_VERSION }
 
-/** Custom hook to fetch data from Sanity. */
+/** Fetches a document projection with the Studio's own client. */
 export const useSanityFetch = <T>(query: string, params?: QueryParams) => {
   const client = useClient(clientConfig)
 
@@ -17,10 +15,8 @@ export const useSanityFetch = <T>(query: string, params?: QueryParams) => {
   const [error, setError] = useState<Error | null>(null)
   const [tick, setTick] = useState(0)
 
-  // 2. STABLE PRIMITIVE DEPENDENCY
-  // React compares strings by value, not reference. If a parent component
-  // passes an inline object like `params={{ id: doc._id }}` every render,
-  // this string stays identical, preventing the useEffect from firing unnecessarily.
+  // React compares strings by value, not reference: an inline
+  // `params={{ id: doc._id }}` from a parent keeps this dependency stable.
   const paramsString = params ? JSON.stringify(params) : ''
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <Needed maybe>

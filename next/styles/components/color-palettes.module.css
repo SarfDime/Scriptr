@@ -287,7 +287,9 @@
  * (pair it with `cp-vars` to avoid painting that element), and compose with
  * variants: `hover:cp-border`, `group-hover:cp-text`. */
 
-/** The colour the palette draws its border with; it does not add a border. */
+/** The colour the palette draws its border with; it does not add a border.
+ * It hands the ridge the same tint `cp-divider` does, so a border that carries
+ * `ui-groove-*` paints its art in the palette too. */
 @utility cp-border {
   border-color: var(
     --cp-border-color,
@@ -297,6 +299,7 @@
       var(--color-background-100)
     )
   );
+  --divider-tint: color-mix(in oklab, var(--cp-hue) 65%, transparent);
 }
 
 /** The palette's readable ink, the same mix a palette surface uses. */

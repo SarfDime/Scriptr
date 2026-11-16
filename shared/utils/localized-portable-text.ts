@@ -86,9 +86,8 @@ const isLanguageKey = (key: string): key is LocaleId =>
  * language, every language present valid on its own (the Portable Text rules
  * and byte limit a single value always had), and at least one of them filled.
  *
- * A bare Portable Text array — the pre-localization shape — is rejected rather
- * than guessed at, so a stale client cannot silently write a value no reader
- * resolves.
+ * A bare Portable Text array is rejected rather than guessed at, so a stale
+ * client cannot silently write a value no reader resolves.
  */
 const isLocalizedTextMap = (
   value: unknown,

@@ -138,7 +138,7 @@ export function ScriptFileCard({
             {Boolean(kind) && (
               <Button
                 onClick={openPreview}
-                className={cn('button hollow px-2 w-min', buttonClass)}
+                className={cn('button subtle px-2 w-min', buttonClass)}
               >
                 <EyeOpen className={'overwrite size-5'} />
                 {ui.scripts.actions.preview}

@@ -16,6 +16,9 @@
   @theme {
     --nav-width: 17rem;
     --nav-width-offset: calc(100dvw - var(--nav-width));
+    --header-height: 3.5rem;
+    /* What the background canvases paint: the viewport below the sticky header. */
+    --background-height: calc(100dvh - var(--header-height));
     /* Fixed so full-height screens (`/auth` on mobile) can subtract it. */
     --footer-height: 3rem;
   }

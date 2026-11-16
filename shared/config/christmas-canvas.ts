@@ -15,7 +15,6 @@ export const CHRISTMAS_DEFAULTS: ChristmasCanvasConfig = {
   santaMinGapSeconds: 22,
   santaMaxGapSeconds: 45,
   enableSmoke: true,
-  enableWindowGlow: true,
   treeDecorationChance: 0.12,
   houseDecorationChance: 0.35,
 }

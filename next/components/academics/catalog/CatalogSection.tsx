@@ -39,6 +39,7 @@ export const CatalogSection = ({
             {...card}
             colorPalette={colorPalette}
             priority={priority && index === 0}
+            className='content-auto [--content-auto-size:21.5rem]'
           />
         ))}
       </Box>

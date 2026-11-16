@@ -3,7 +3,6 @@ import type { ComponentType, CSSProperties } from 'react'
 import type { ReferenceValue } from 'sanity'
 import type { StructureToolIconColorsType } from '../structure-tool/icon-helpers'
 
-/** Represents a type typically used in deskStructure to associate an icon with schemas. */
 type ChildSchemaType = {
   title: string
   schemaType: string

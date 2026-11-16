@@ -1028,6 +1028,7 @@ export const UI_STRINGS_PACK = {
         mk: 'Уреди академски податоци',
       },
       title: { en: 'Edit academics', mk: 'Уреди академски податоци' },
+      sectionTitle: { en: 'Academics', mk: 'Академски податоци' },
       notPrepared: {
         en: 'Your academic selections could not be prepared. Please review them and try again.',
         mk: 'Твоите академски избори не можеа да се подготват. Прегледај ги и обиди се повторно.',
@@ -1110,11 +1111,6 @@ export const UI_STRINGS_PACK = {
   },
   activity: {
     title: { en: 'Your activity', mk: 'Твојата активност' },
-    subtitle: {
-      en: 'A quick view of the work you have been making.',
-      mk: 'Брз преглед на она што го работеше досега.',
-    },
-    view: { en: 'View activity', mk: 'Прикажи активност' },
     savedScripts: { en: 'Saved scripts', mk: 'Зачувани скрипти' },
     scriptsAuthored: { en: 'Scripts authored', mk: 'Напишани скрипти' },
     helpfulComments: { en: 'Helpful comments', mk: 'Корисни коментари' },

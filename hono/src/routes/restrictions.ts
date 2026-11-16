@@ -100,7 +100,6 @@ restrictions.get('/lifted', requireAdminAccess, async (c) => {
   )
 })
 
-/** Get the current user's own active restriction, or null. */
 restrictions.get('/me', async (c) => {
   const user = c.get('user')
   if (isOwnRestrictionLimited(user.id)) {
@@ -178,11 +177,12 @@ restrictions.get('/lookup', requireAdminAccess, async (c) => {
   })
 })
 
-/** Get a profile's active restriction. RLS returns null for an unrelated user. */
 restrictions.get('/:profileId', async (c) => {
   const profileId = requiredParam(c, 'profileId')
   const supabase = createSupabaseClient(c)
 
+  // No owner check on purpose: RLS — not this route — decides who may read a
+  // restriction, and an unrelated caller simply gets `null`.
   const { data, error } = await supabase
     .from('profile_restrictions')
     .select(RESTRICTION_COLUMNS)

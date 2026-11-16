@@ -14,3 +14,8 @@ export const websiteSeoQuery = groq`
 export const websiteBackgroundQuery = groq`
 *[_id == $WEBSITE][0].background->{...}
 `
+/** The skybox document the website settings point at: time settings and the color
+ * picks per theme. */
+export const websiteSkyboxQuery = groq`
+*[_id == $WEBSITE][0].skybox->{...}
+`

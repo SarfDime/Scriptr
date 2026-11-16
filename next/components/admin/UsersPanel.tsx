@@ -233,6 +233,7 @@ export const UsersPanel = ({
             <AdminUserItem
               key={profile.id}
               profile={profile}
+              className='content-auto [--content-auto-size:10rem]'
               busy={deleteBusy && deleting?.id === profile.id}
               onView={() => setViewing(profile)}
               onEdit={() => setEditing(profile)}

@@ -38,6 +38,7 @@ export type CatalogCardProps = {
   priority?: boolean
   /** The palette the card's badge and hover accent use. */
   colorPalette: ColorPaletteClass
+  className?: string
 }
 
 /** One column of the home directory: a heading, its cards, or its empty line. */

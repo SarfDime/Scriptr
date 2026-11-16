@@ -1,336 +1,199 @@
 # Vercel Deployment
 
-Scriptr is deployed as two Git-connected Vercel projects in the
-`Vercel team` team (`team-slug`):
+Two Git-connected Vercel projects in the `Vercel team` team (`team-slug`):
 
-| Project       | Vercel project ID                  | Repository root | Framework |
-| ------------- | ---------------------------------- | --------------- | --------- |
-| `scriptr-web` | `REDACTED_VERCEL_PROJECT` | `next`          | Next.js   |
-| `scriptr-api` | `REDACTED_VERCEL_PROJECT` | `hono`          | Node.js   |
+| Project | Project ID | Root | Framework |
+| --- | --- | --- | --- |
+| `scriptr-web` | `REDACTED_VERCEL_PROJECT` | `next` | Next.js |
+| `scriptr-api` | `REDACTED_VERCEL_PROJECT` | `hono` | Node.js |
 
-Both projects are connected to `this repository` and must allow source files
-outside of their Root Directory because they import the root workspace and
-`shared/` package files.
+Both connect to `this repository` and must allow source files outside their root
+directory, because they import the root workspace and `shared/`.
 
-## Production URLs
+Production: web `https://scriptr.uk`, API `https://api.scriptr.uk`, API health
+`https://api.scriptr.uk/api`. The Vercel aliases stay useful for inspection and preview
+traffic but are not production origins, and cookies cannot be shared between
+`*.vercel.app` projects (`vercel.app` is a public suffix). Keep Deployment Protection off:
+on the API it makes server-side and browser calls receive Vercel's HTML instead of JSON.
 
-- Web: `https://scriptr.uk`
-- API: `https://api.scriptr.uk`
-- API health check: `https://api.scriptr.uk/api`
+## Project commands
 
-The Vercel aliases remain useful for deployment inspection and preview traffic,
-but they are not the production origins. Cookies cannot be shared between
-`*.vercel.app` projects because `vercel.app` is a public suffix. Preview
-deployments therefore do not have the production shared-cookie auth behavior.
-
-Deployment Protection is disabled for both public projects. Enabling it on the
-API causes server-side and browser API calls to receive a Vercel HTML
-protection response instead of JSON.
-
-## Project Commands
-
-The projects remain rooted at `next/` and `hono/`. Their `vercel.json` files
-set filtered install and build commands, overriding the corresponding project
-dashboard commands. The commands run from the repository root so pnpm can read
-`pnpm-workspace.yaml` and link `shared/`; each selects the app, its workspace
-dependencies, and the lightweight root toolchain:
+`next/vercel.json` and `hono/vercel.json` override the dashboard commands. They run from
+the repository root so pnpm can read `pnpm-workspace.yaml` and link `shared/`:
 
 ```text
 cd .. && corepack pnpm install --frozen-lockfile --filter scriptr... --filter scriptr-next...
-cd .. && corepack pnpm install --frozen-lockfile --filter scriptr... --filter @scriptr/api...
-```
-
-The `scriptr-web` build command is:
-
-```text
 cd .. && corepack pnpm --filter scriptr-next build
-```
 
-The `scriptr-api` build command is:
-
-```text
+cd .. && corepack pnpm install --frozen-lockfile --filter scriptr... --filter @scriptr/api...
 cd .. && corepack pnpm --filter @scriptr/api check-types
 ```
 
-## API Runtime Contract
+## API runtime contract
 
-The API is deployed with Vercel's **Node.js** framework preset, not the Hono
-preset. The Hono preset's isolated TypeScript pass cannot resolve the generated
-Sanity module augmentation in this monorepo.
-
-Vercel's Node runtime requires a `(req, res)` listener. Therefore
-[`hono/src/index.ts`](../hono/src/index.ts) exports:
+The API uses Vercel's **Node.js** preset, not the Hono preset: the Hono preset's isolated
+TypeScript pass cannot resolve the generated Sanity module augmentation in this monorepo.
+The Node runtime needs a `(req, res)` listener, so
+[`hono/src/index.ts`](../hono/src/index.ts) exports
 
 ```ts
 export default getRequestListener(app.fetch)
 ```
 
-Do not replace this with `handle(app)` or `app`. Those values return a Web
-`Response`, which Vercel's Node runtime ignores and then times out.
-[`hono/src/server.ts`](../hono/src/server.ts) remains the local development
-server only.
+`handle(app)` or `app` return a Web `Response` that the Node runtime ignores, then times
+out. [`hono/src/server.ts`](../hono/src/server.ts) is the local dev server only. The app
+uses `.basePath('/api')`, with the health endpoint at `GET /api` (no trailing slash).
 
-The Hono app uses `.basePath('/api')`. Its root health endpoint is
-`GET /api`, without a required trailing slash.
+## Environment
 
-## Production Environment Synchronization
-
-Store values in Vercel Environment Variables; never add them to Git.
+Values live in Vercel Environment Variables — never in Git.
 
 ### `scriptr-web`
 
-Use the variables from [`next/.env.example`](../next/.env.example). In
-Production:
+From [`next/.env.example`](../next/.env.example); in Production:
 
-- `NEXT_PUBLIC_API_URL` must be `https://api.scriptr.uk`.
-- `NEXT_PUBLIC_SITE_URL` must be `https://scriptr.uk`. It is also the base every
-  study hostname is derived from (`<siteSlug>.scriptr.uk`), so it decides each
-  study's address and canonical — see [Study hostnames](#study-hostnames).
-- `NEXT_TELEMETRY_DISABLED=1` disables Next.js telemetry during builds.
-- `REVALIDATE_SECRET` must equal the API's `REVALIDATE_SECRET`. It is a signing
-  key, not a header value: the API sends `x-revalidate-timestamp` +
-  `x-revalidate-signature` and this project verifies the HMAC, so the secret
-  never crosses the wire.
-- `SANITY_REVALIDATE_SECRET` is the bearer secret the Sanity publish webhook
-  sends in `x-sanity-webhook-secret`; the webhook is configured with the same
-  value (see [`sanity/README.md`](../sanity/README.md#publish-webhook)). Sanity
-  cannot sign a request, so unlike `REVALIDATE_SECRET` this one does cross the
-  wire and belongs in the webhook header. Without it
-  `POST /api/sanity/revalidate` answers `503`, and a mismatch answers `401` —
-  either way an editorial publish only reaches readers on the next deploy.
-
-### Study hostnames
-
-A study is served from its own hostname (`lbe.scriptr.uk`) by **one deployment
-and one build**: `next/next.config.ts` rewrites that host's paths onto the study
-tree and redirects the catalog path (`scriptr.uk/study/lbe/*`) to it. Nothing is
-built separately for a study.
-
-How the mapping works, and the three steps to attach another host (Vercel
-domain → proxied `CNAME` at Cloudflare → certificate), live in
-[`ARCHITECTURE-STUDY-DOMAINS.md`](ARCHITECTURE-STUDY-DOMAINS.md). Two things
-belong here because they are deployment values:
-
-- `COOKIE_DOMAIN=.scriptr.uk` and `CORS_ORIGINS=*.scriptr.uk` (both already
-  required above) are what keep the browser's session and calls working when the
-  reader moves between the apex and a study host: the browser loads
-  `https://lbe.scriptr.uk` itself, and only Vercel sees which host it was.
-- A **preview deployment** cannot exercise a study host. Its
-  `NEXT_PUBLIC_SITE_URL` is a `*.vercel.app` alias, so the patterns
-  `next.config.ts` builds from it target that alias. Test on
-  `http://lbe.localhost:3000` locally instead.
+- `NEXT_PUBLIC_API_URL=https://api.scriptr.uk`.
+- `NEXT_PUBLIC_SITE_URL=https://scriptr.uk` — also the base every study hostname derives
+  from (`<siteSlug>.scriptr.uk`), so it decides each study's address and canonical.
+- `NEXT_TELEMETRY_DISABLED=1`.
+- `REVALIDATE_SECRET` must equal the API's. It is a signing key: the API sends
+  `x-revalidate-timestamp` + `x-revalidate-signature` and this project verifies the HMAC,
+  so it never crosses the wire.
+- `SANITY_REVALIDATE_SECRET` is the bearer secret the Sanity publish webhook sends in
+  `x-sanity-webhook-secret` ([`sanity/README.md`](../sanity/README.md#publish-webhook)).
+  Sanity cannot sign, so this one does cross the wire. Missing → `503` on
+  `POST /api/sanity/revalidate`; mismatched → `401`. Either way a publish waits for the
+  next deploy.
 
 ### `scriptr-api`
 
-Use the variables from [`hono/.env.example`](../hono/.env.example). In
-Production:
+From [`hono/.env.example`](../hono/.env.example); in Production:
 
-- `COOKIE_DOMAIN` must be `.scriptr.uk` so the API cookie reaches the web host.
-- `CORS_ORIGINS` is the only origin allowlist in production (the localhost dev
-  ports are added automatically only when `NODE_ENV` is not `production`), so it
-  must include the production origins, stable web aliases and the hosted Studio:
-  - `https://scriptr.uk`
-  - `*.scriptr.uk`
-  - `https://scriptr-web.vercel.app`
-  - `https://scriptr-web-ivory.vercel.app`
-  - `https://scriptr-web-team-slug.vercel.app`
-  - `https://scriptr-web-git-main-team-slug.vercel.app`
-  - `https://scriptr-web-git-staging-team-slug.vercel.app`
-  - `https://scriptr.sanity.studio`
-  Leaving the Studio out makes every sync/delete action fail its preflight with
-  `(Reason: CORS request did not succeed)`; a `403 Forbidden` after that instead
-  means `ADMIN_TOTP_SECRET` is missing on the API (the Studio itself carries no
-  secret).
-- `NEXT_REVALIDATE_URL` must be the web project's **Vercel alias**, not the
-  public hostname: `https://scriptr-web-team-slug.vercel.app/api/revalidate`.
-  `scriptr.uk` sits behind the Cloudflare proxy, and Cloudflare does not pass
-  the API's server-to-server request through to Vercel (the request never
-  reaches the deployment, so every mutation silently left the cache stale —
-  the homepage kept listing deleted scripts). Direct Vercel aliases are
-  DNS-only and accept the webhook.
-- `REVALIDATE_SECRET` must equal the web project's value, and must not be the
-  `.env.example` value: the API's startup report and `revalidateCacheTags` both
-  call that out in production.
-- `OPTIMIZER_SECRET` must equal the optimizer service's Secret Manager value;
-  it signs every `/optimize` call the same way.
-- Supabase, R2, and the API secrets are required production values:
-  `SITEMAP_SECRET` (must match the web project's) and `ADMIN_TOTP_SECRET` (the
-  base32 TOTP secret generated with `corepack pnpm --filter @scriptr/api admin:totp`,
-  also enrolled in an authenticator app).
-- `SANITY_STUDIO_ORIGIN` (`https://scriptr.sanity.studio`) and `WEBSITE_ORIGIN`
-  (the site's public hostname) pin the two non-session surfaces to their caller.
-  Both must also appear in `CORS_ORIGINS`. Leaving either unset makes its
-  surface answer `403` in production. The `staging` branch is not used, so only
-  Production carries these values; enabling staging later means adding all four
-  (`SANITY_STUDIO_ORIGIN`, `WEBSITE_ORIGIN`, `ADMIN_TOTP_SECRET`,
-  `SITEMAP_SECRET`) plus `CORS_ORIGINS` to the **Preview** environment.
-- `OPTIMIZER_URL` and `OPTIMIZER_SECRET` are optional and set together, once
-  the file optimizer service is deployed. The secret signs API-to-service
-  requests and must equal the service's own value.
-- `R2_PUBLIC_URL` must be the bucket's public domain (a custom domain, or its
-  `r2.dev` URL), with public access enabled on the bucket. Avatars live in
-  `R2_BUCKET` under `avatars/{userId}.webp` and are served from there; without
-  it avatar uploads answer `503`. Note this makes every object in the bucket
-  readable by key: script keys stay unguessable (random UUIDs) but a leaked key
-  no longer expires, unlike the signed URLs `GET /file-ops/get-file/*` hands out.
-- Finalizing an upload runs the optimizer and can take tens of seconds, and the
-  web client waits up to 120 s for it. The API project should run with Fluid
-  compute (the default for projects created after 2025-04-23), whose default
-  function duration is 300 s on every plan. Check this in the project settings:
-  without it the function limit can be far lower than the client's timeout.
+- `COOKIE_DOMAIN=.scriptr.uk` so the API cookie reaches the web host.
+- `CORS_ORIGINS` is the only allowlist in production (localhost dev ports are added only
+  when `NODE_ENV` is not `production`), so it must list:
+  `https://scriptr.uk`, `*.scriptr.uk`, `https://scriptr-web.vercel.app`,
+  `https://scriptr-web-ivory.vercel.app`, `https://scriptr-web-team-slug.vercel.app`,
+  `https://scriptr-web-git-main-team-slug.vercel.app`,
+  `https://scriptr-web-git-staging-team-slug.vercel.app`,
+  `https://scriptr.sanity.studio`. Without the Studio entry every sync/delete action fails
+  its preflight (`Reason: CORS request did not succeed`); a later `403` means
+  `ADMIN_TOTP_SECRET` is missing on the API.
+- `NEXT_REVALIDATE_URL` must be the web project's **Vercel alias**,
+  `https://scriptr-web-team-slug.vercel.app/api/revalidate`, not the public hostname:
+  Cloudflare does not pass the API's server-to-server request through to Vercel, so the
+  webhook silently never runs and mutations leave the cache stale. Vercel aliases are
+  DNS-only and accept it.
+- `REVALIDATE_SECRET` must match the web project and must not be the `.env.example` value
+  (the startup report and `revalidateCacheTags` both flag it in production).
+- `OPTIMIZER_URL` and `OPTIMIZER_SECRET` are optional but set together; the secret must
+  equal the optimizer's Secret Manager value.
+- `SITEMAP_SECRET` (matching the web project) and `ADMIN_TOTP_SECRET` (the base32 secret
+  from `corepack pnpm --filter @scriptr/api admin:totp`, also enrolled in an authenticator
+  app), plus the Supabase and R2 values.
+- `SANITY_STUDIO_ORIGIN=https://scriptr.sanity.studio` and `WEBSITE_ORIGIN` (the exact host
+  readers load, `https://scriptr.uk` — never an alias, since it is compared against the
+  browser's `Origin`) pin the two non-session surfaces. Both must be in `CORS_ORIGINS`;
+  either unset makes its surface answer `403`. Only Production carries these: the `staging`
+  branch is unused, and enabling it means adding all four plus `CORS_ORIGINS` to Preview.
+- `R2_PUBLIC_URL` is the bucket's public domain, with public access enabled. Avatars live
+  at `avatars/{userId}.webp` in `R2_BUCKET`; without it avatar uploads answer `503`. Every
+  object then becomes readable by key — script keys stay unguessable UUIDs, but a leaked
+  key no longer expires, unlike the signed URLs `GET /file-ops/get-file/*` hands out.
+- Finalizing an upload runs the optimizer and can take tens of seconds while the client
+  waits up to 120 s. Keep the project on Fluid compute (default for projects created after
+  2025-04-23, 300 s per function on every plan); a lower limit fails the request.
 
-The hosted Sanity Studio must build with `SANITY_STUDIO_API_URL` set to
-`https://api.scriptr.uk`. In Supabase Auth, set the Site URL to
-`https://scriptr.uk` and add `https://scriptr.uk/auth/callback` to the allowed
-redirect URLs.
+The hosted Studio builds with `SANITY_STUDIO_API_URL=https://api.scriptr.uk`. In Supabase
+Auth, the Site URL is `https://scriptr.uk` and `https://scriptr.uk/auth/callback` is an
+allowed redirect URL.
 
-Cloudflare Bot Fight Mode challenged Vercel's server-side requests to
-`api.scriptr.uk` on 2026-10-14. The API hostname is now DNS-only, so those
-requests go directly to Vercel while Bot Fight Mode remains enabled for the web
-host. The API no longer receives Cloudflare proxy/WAF protection. On the API
-Vercel project, Managed Bot Protection is set to `log` so server-side Node
-requests are recorded without a browser challenge; automatic Vercel DDoS
-mitigation remains enabled. The web project's protection settings are
-unchanged.
+### Study hostnames
 
-The `scriptr-web` project has Vercel's **Auto-assign Custom Production Domains**
-setting enabled. Vercel assigns `scriptr.uk` to each new production deployment;
-no separate alias workflow or GitHub token is required.
+One build and one deployment serve the apex and every study host; `next/next.config.ts`
+rewrites a host's paths onto the study tree and redirects `scriptr.uk/study/lbe/*`. The
+mapping and the three attach steps (Vercel domain → proxied `CNAME` → certificate) are in
+[`ARCHITECTURE-STUDY-DOMAINS.md`](ARCHITECTURE-STUDY-DOMAINS.md). Two deployment values
+matter: `COOKIE_DOMAIN=.scriptr.uk` and `CORS_ORIGINS=*.scriptr.uk` keep the session and
+calls working when the reader moves between apex and study host. A preview deployment
+cannot exercise a study host — its `NEXT_PUBLIC_SITE_URL` is a `*.vercel.app` alias — so
+test on `http://lbe.localhost:3000`.
 
-Both projects use `git.deploymentEnabled` in their project-root `vercel.json`,
-and each allows exactly the branches it deploys from. The web builds from `main`
-(production) and `staging` (a Vercel Preview deployment). The API builds from
-`main-api` alone, which is `scriptr-api`'s production branch: **Settings →
-Environments → Production → Branch Tracking** (not the Git page — Vercel moved
-it there). An API release is a push to `main-api` and never rides along with a
-web deploy, and `main`/`staging` are disabled by name so a web release cannot
-start an API build. That dashboard setting is what makes the push production —
-Vercel's REST API does not expose a production branch, so it cannot be set from
-the CLI. Everything else is disabled by the `**` fallback, so a feature
-branch builds nothing and `main-api` deploys nothing on the web project.
+### Domains, protection and branches
 
-`main-sanity` is disabled by name for the same reason, not just by the `**`
-fallback: it only exists to trigger `deploy-sanity.yaml`, and the API/web have
-nothing to deploy for it, so a stray edit to `**` must not silently start
-building it.
-
-A branch can still be previewed on demand with the Vercel CLI
-(`vercel` from `hono/` or `next/`), which bypasses the allowlist. The
-project-level Ignored Build Step further limits automatic builds to commits
-whose subjects start with `feat:` or `fix:` — `docs:`, `chore:` and merge
-commits are skipped, so a docs-only push deploys nothing by design. **A squash
-merge takes the PR title as the commit subject**, so the prefix has to be on the
-PR title too — "Address catalog pages absolutely" deploys nothing, and nothing
-says so beyond a deployment reported as *Canceled*.
-
-After changing production environment variables, redeploy both Vercel projects;
-`NEXT_PUBLIC_API_URL` is inlined at build time. Users need to sign in once again
-because their old session cookie is scoped to the Vercel API host.
-
-## Deploying the access refactor
-
-The three non-session surfaces (`/api/sanity/*`, `/api/admin/*`, `/api/sitemap/scripts`) replaced `x-internal-secret`. A half-deployed state has a short, operator-only failure window, so deploy in this order:
-
-1. **`scriptr-web`** — it verifies the new signed `/api/revalidate` calls, so deploying it first means the old API's unsigned calls are simply rejected (cache stays stale for a few minutes) instead of the reverse.
-2. **`scriptr-api`** — this is the switchover. Until it lands, `/api/sanity/*` and `/api/admin/*` do not exist; after it lands, `/api/internal/*` is gone, so an open Studio tab running the old bundle fails its sync/delete actions. Reload the Studio once the API is Healthy.
-3. **Sanity Studio** (`corepack pnpm --filter scriptr-sanity deploy`) — the bundle no longer contains any secret, so this must be re-published for the TOTP flow to reach the operator.
-
-Environment changes required by the deploy:
-
-| Project | Add | Remove |
-| ------- | --- | ------ |
-| `scriptr-api` | `ADMIN_TOTP_SECRET`, `SANITY_STUDIO_ORIGIN`, `WEBSITE_ORIGIN`, `SITEMAP_SECRET`, refreshed `CORS_ORIGINS` | `INTERNAL_API_SECRET` |
-| `scriptr-web` | `SITEMAP_SECRET` (same value) | `INTERNAL_API_SECRET`, `SANITY_STUDIO_INTERNAL_SECRET` |
-| Sanity Studio | — | `SANITY_STUDIO_INTERNAL_SECRET` (in `sanity/.env.production`) and from the deploy workflows' `env:` blocks |
-
-`WEBSITE_ORIGIN` must be the **exact** hostname users load — `https://scriptr.uk`, not a Vercel alias — because it is compared against the browser's `Origin` on every admin call. Add both origins to `CORS_ORIGINS` as well; the check runs after the preflight, so a missing entry fails earlier and less clearly.
-
-**Rotate the old `INTERNAL_API_SECRET`** unless you can prove nothing else ever reused that value: it was readable by anyone who loaded the Studio, and any deployment still running the previous code keeps accepting it.
-
-Post-deploy checks, in order:
-
-```bash
-# 401 (route exists, token missing) — not 404, not 403
-curl -s -o /dev/null -w '%{http_code}\n' https://api.scriptr.uk/api/sanity/universities
-
-# 404 — the old surface is gone
-curl -s -o /dev/null -w '%{http_code}\n' https://api.scriptr.uk/api/internal/universities
-
-# 403 — the route-scoped sitemap secret is enforced
-curl -s -o /dev/null -w '%{http_code}\n' https://api.scriptr.uk/api/sitemap/scripts
-
-# 401 — unsigned revalidation is rejected
-curl -s -o /dev/null -w '%{http_code}\n' -X POST https://scriptr.uk/api/revalidate
-```
-
-Then, signed in as an admin: `/admin` shows the code form; after entering a code the flag queue loads, and the Studio's "Sync with Database" works on the same code.
+- `scriptr-web` has **Auto-assign Custom Production Domains** on: Vercel assigns
+  `scriptr.uk` to each production deployment, with no alias workflow or token.
+- `api.scriptr.uk` is **DNS-only**: Cloudflare Bot Fight Mode challenged Vercel's
+  server-side requests to it, so the API now bypasses the proxy and receives no WAF
+  protection. Vercel's Managed Bot Protection is `log` on the API project (server-side Node
+  requests recorded, no browser challenge) and automatic DDoS mitigation stays on.
+- Each project's `git.deploymentEnabled` allows exactly the branches it deploys: web from
+  `main` (production) and `staging` (preview); API from `main-api` alone, which is set as
+  its production branch in **Settings → Environments → Production → Branch Tracking** (not
+  the Git page; the REST API cannot set it). `main`, `staging` and `main-sanity` are
+  disabled by name as well as by the `**` fallback, so a web release never starts an API
+  build and a Sanity-only push deploys nothing.
+- A branch can still be previewed with `vercel` from `hono/` or `next/`, which bypasses the
+  allowlist. The Ignored Build Step limits automatic builds to commit subjects starting
+  with `feat:` or `fix:`, so `docs:` and `chore:` deploy nothing. **A squash merge takes
+  the PR title as the subject**, so the prefix belongs on the PR title too; otherwise the
+  deployment is reported as *Canceled* with no explanation.
+- After changing production variables, redeploy both projects — `NEXT_PUBLIC_API_URL` is
+  inlined at build — and expect everyone to sign in once more, since the old cookie was
+  scoped to the Vercel API host.
 
 ## Rotating the shared secrets
 
-These values are shared with another deployment or configuration, and each only
-works when **both** sides change. Rotate them on a schedule and whenever someone
-with access leaves; use a unique random value per environment
-(`openssl rand -base64 32`), never the `.env.example` placeholder.
+These work only when **both** sides change. Rotate on a schedule and when someone with
+access leaves; use a unique random value per environment (`openssl rand -base64 32`), never
+the `.env.example` placeholder.
 
-| Secret | Held by | Rotation order |
-| ------ | ------- | -------------- |
-| `REVALIDATE_SECRET` | `scriptr-api`, `scriptr-web` | Add the new value to **both** projects, redeploy both, then remove the old one. A mismatch shows up as `401` on `/api/revalidate` and the API logs `Cache revalidation failed with status 401`. |
-| `OPTIMIZER_SECRET` | `scriptr-api`, Cloud Run (`optimizer-secret`) | Create a new Secret Manager version and deploy the service, then set the same value on the API and redeploy. Between the two deploys uploads fail with `503` — finalize fails closed rather than storing files unoptimized. |
-| `SITEMAP_SECRET` | `scriptr-api`, `scriptr-web` | Same as `REVALIDATE_SECRET`. A mismatch silently drops script URLs from `/sitemap.xml` (the API answers `403`, the web app logs a warning). |
-| `ADMIN_TOTP_SECRET` | `scriptr-api` only | Generate with `corepack pnpm --filter @scriptr/api admin:totp`, set it, and re-enrol the new `otpauth` URI in the authenticator app. Every issued token stops working immediately; the old secret is dead as soon as the API restarts. |
-| `SANITY_REVALIDATE_SECRET` | `scriptr-web`, the Sanity publish webhook | Set the new value on the web project, redeploy it, then update the webhook's `x-sanity-webhook-secret` header in Sanity. Between the two, every publish answers `401` and the cache waits for the next deploy. |
+| Secret | Held by | Order |
+| --- | --- | --- |
+| `REVALIDATE_SECRET` | `scriptr-api`, `scriptr-web` | Both projects, redeploy both, then remove the old value. A mismatch is `401` on `/api/revalidate`. |
+| `OPTIMIZER_SECRET` | `scriptr-api`, Cloud Run (`optimizer-secret`) | New Secret Manager version, deploy the service, then set the API and redeploy. Uploads answer `503` between the two. |
+| `SITEMAP_SECRET` | `scriptr-api`, `scriptr-web` | As `REVALIDATE_SECRET`. A mismatch silently drops script URLs from `/sitemap.xml`. |
+| `ADMIN_TOTP_SECRET` | `scriptr-api` only | Generate, set, re-enrol the `otpauth` URI. Every issued token dies with the restart. |
+| `SANITY_REVALIDATE_SECRET` | `scriptr-web`, the Sanity webhook | Set and redeploy the web project, then update the webhook header. Publishes `401` in between. |
 
-**A version is not `latest` by being enabled.** `latest` means the highest
-version *number that exists*, whatever its state. Disabling or destroying a bad
-version does not move `latest` back — it makes the next mount fail with
-`FAILED_PRECONDITION` (Cloud Run) or an access error. Recover by adding a new
-version that holds the good value, piping it so it is never echoed:
+**A Cloud Run version is not `latest` by being enabled:** `latest` is the highest version
+*number*, whatever its state, so disabling a bad version makes the next mount fail with
+`FAILED_PRECONDITION`. Recover with a new version holding the good value:
 
 ```bash
 gcloud secrets versions access <good-version> --secret=<name> \
   | gcloud secrets versions add <name> --data-file=-
 ```
 
-And never run that `add` with an unset variable: `<<< "$NEW_KEY"` sends a bare
-newline, which Cloudflare will reject but Cloud Run will happily mount as an
-empty secret. Check the length first — `printf '%s' "$NEW_KEY" | wc -c` should be
-non-zero — and remember that the running revision keeps the values it was
-deployed with until the next deploy.
+Never run that `add` with an unset variable — `<<< "$NEW_KEY"` sends a bare newline, which
+Cloud Run mounts as an empty secret. Check `printf '%s' "$NEW_KEY" | wc -c` first, and
+remember the running revision keeps its values until the next deploy.
 
-Two rules that make rotation uneventful:
-
-1. **Deploy the consumer first when it only verifies** (`scriptr-web` for
-   revalidation, the optimizer service for signing), so there is no window where
-   a new signer talks to an old verifier.
-2. **Check the startup report after deploying** — every app prints which
-   variables are set and which are missing, names only. A half-rotation shows up
-   there and in the first failing request.
+Two rules make rotation uneventful: deploy the consumer first when it only verifies
+(`scriptr-web` for revalidation, the optimizer for signing), and read the startup report
+after deploying — every app prints which variables are set, names only.
 
 ## Verification
 
-Before declaring a production deployment healthy:
-
 ```bash
-curl -i https://api.scriptr.uk/api
-curl -i https://api.scriptr.uk/api/auth/session
-curl -i \
-  -H 'Origin: https://scriptr.uk' \
-  https://api.scriptr.uk/api/auth/session
+curl -i https://api.scriptr.uk/api                    # JSON, 200
+curl -i https://api.scriptr.uk/api/auth/session       # JSON, 200
+curl -i -H 'Origin: https://scriptr.uk' https://api.scriptr.uk/api/auth/session
 curl -i https://scriptr.uk/
-# 401 — the Sanity webhook route rejects an unsigned publish (503 means
-# SANITY_REVALIDATE_SECRET is missing from the web project)
+# 401 — unsigned publish rejected (503 = SANITY_REVALIDATE_SECRET missing)
 curl -s -o /dev/null -w '%{http_code}\n' -X POST https://scriptr.uk/api/sanity/revalidate
+# 401 — the route exists and wants a token
+curl -s -o /dev/null -w '%{http_code}\n' https://api.scriptr.uk/api/sanity/universities
+# 403 — the sitemap secret is enforced
+curl -s -o /dev/null -w '%{http_code}\n' https://api.scriptr.uk/api/sitemap/scripts
 ```
 
-The API health and session requests must return JSON with HTTP `200`. The
-CORS response must include:
+The CORS response must carry `Access-Control-Allow-Origin: https://scriptr.uk` and
+`Access-Control-Allow-Credentials: true`. Signed in as an admin, `/admin` shows the code
+form, and after entering a code the flag queue loads and the Studio's "Sync with Database"
+works on the same code.
 
-```text
-Access-Control-Allow-Origin: https://scriptr.uk
-Access-Control-Allow-Credentials: true
-```
-
-Run these repository checks before deployment-related commits:
+Before a deployment-related commit:
 
 ```bash
 corepack pnpm --filter @scriptr/api check-types

@@ -10,7 +10,7 @@ import {
   CHRISTMAS_MAX_LIGHT_COLORS,
 } from '@shared/config/christmas-canvas'
 import { defineField, defineType } from 'sanity'
-import { type Context, numberField, THEME_COLORS } from './star-canvas'
+import { type Context, numberField, THEME_COLORS } from './canvas-fields'
 
 // Settings and colors of the Christmas background
 // (next/components/ui/app-background/ChristmasCanvas.tsx).
@@ -175,15 +175,6 @@ export const ChristmasCanvas = defineType({
       type: 'boolean',
       group: 'scene',
       initialValue: CHRISTMAS_DEFAULTS.enableSmoke,
-    }),
-    defineField({
-      name: 'enableWindowGlow',
-      title: 'Window glow',
-      description:
-        'A soft, flickering glow around the lit windows. On by default.',
-      type: 'boolean',
-      group: 'scene',
-      initialValue: CHRISTMAS_DEFAULTS.enableWindowGlow,
     }),
 
     // ── Snow ─────────────────────────────────────────────────────────────

@@ -40,7 +40,6 @@ type NavItemPresentationType = {
   icon: SanityImageType
 }
 
-// Generic type for any entity with at least an _id and name
 type Summarizable = {
   _id: string
   name: string

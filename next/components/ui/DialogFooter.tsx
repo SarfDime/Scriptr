@@ -38,8 +38,6 @@ export type DialogFooterProps = {
 /**
  * The action row every dialog ends with: an optional secondary action beside
  * one primary, right-aligned, with the disabled and busy states handled once.
- * Dialogs used to write this by hand, which is how they drifted into three
- * different button sizes and two different paddings.
  */
 export const DialogFooter = ({
   className,

@@ -11,7 +11,7 @@ import {
  *
  * Everything here is bundled into the browser app, so the report also flags any
  * `SANITY_STUDIO_*` name that looks like a credential: those are not settings,
- * they are the exact leak this Studio no longer relies on.
+ * and inlining one publishes it with the Studio bundle.
  */
 const ENV_REQUIREMENTS: Array<EnvVarRequirement> = [
   {

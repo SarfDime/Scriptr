@@ -14,7 +14,7 @@ export function ButtonColorVariantInput(props: ButtonColorVariantInputProps) {
   const { schemaType, value, onChange } = props
   const options = schemaType?.options?.list ?? DEFAULT_BUTTON_VARIANTS
   // The button's label is localized, so the preview shows the first filled
-  // language rather than a field that no longer exists.
+  // language.
   const buttonLabel = firstFilledLocalizedText(useFormValue(['localizedTitle']))
 
   return (

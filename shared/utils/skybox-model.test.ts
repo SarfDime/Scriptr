@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { SKY_ANCHORS, SKYBOX_DEFAULTS } from '../config/skybox'
+import {
+  applySkyColorOverrides,
+  SKY_ANCHORS,
+  SKY_PALETTE,
+  SKYBOX_DEFAULTS,
+  skyColorField,
+} from '../config/skybox'
 import {
   buildSkyKeyframes,
   getSkyState,
@@ -142,4 +148,48 @@ test('the sun fades in over the horizon and is gone below it', () => {
   assert.ok(at(12).sun.visibility > 0.99)
   const rising = at(SKYBOX_DEFAULTS.sunriseHour + 0.25).sun.visibility
   assert.ok(rising > 0 && rising < 1)
+})
+
+test('a picked color replaces one phase key and leaves the rest alone', () => {
+  const palette = applySkyColorOverrides(SKY_PALETTE, {
+    [skyColorField('noon', 'skyTop')]: 'rose-pink',
+    star: 'amber',
+  })
+  const noon = getSkyState(12, SKYBOX_DEFAULTS, toRGB, 0, palette)
+  assert.equal(noon.skyTop, toRGB('rose-pink'))
+  assert.equal(noon.skyBottom, toRGB('sky-noon-bottom'))
+  assert.equal(noon.star, toRGB('amber'))
+  assert.equal(at(0).star, toRGB('sky-star'), 'other states keep the default')
+})
+
+test('immersive mode ignores the picked colors', () => {
+  const palette = applySkyColorOverrides(SKY_PALETTE, {
+    [skyColorField('noon', 'skyTop')]: 'rose-pink',
+  })
+  const noon = getSkyState(12, SKYBOX_DEFAULTS, toRGB, 1, palette)
+  assert.equal(noon.skyTop, toRGB('sky-original-noon-top'))
+})
+
+test('the sun, the moon and the immersive night follow the settings', () => {
+  const tuned = {
+    ...SKYBOX_DEFAULTS,
+    sunRadius: 0.18,
+    moonRadius: 0.18,
+    immersiveDarkening: 0.7,
+  }
+  assert.ok(getSkyState(12, tuned, toRGB).sun.radius > at(12).sun.radius)
+  assert.ok(getSkyState(0, tuned, toRGB).moon.radius > at(0).moon.radius)
+
+  const brightness = (rgb: string) =>
+    rgb.split(',').reduce((sum, channel) => sum + Number(channel), 0)
+  assert.ok(
+    brightness(getSkyState(0, tuned, toRGB, 1).skyTop) <
+      brightness(getSkyState(0, SKYBOX_DEFAULTS, toRGB, 1).skyTop)
+  )
+
+  const untouched = { ...SKYBOX_DEFAULTS, immersiveDarkening: 0 }
+  assert.equal(
+    getSkyState(0, untouched, toRGB, 1).skyTop,
+    toRGB('sky-original-night-top')
+  )
 })
