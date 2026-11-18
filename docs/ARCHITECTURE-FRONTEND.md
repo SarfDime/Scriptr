@@ -46,11 +46,10 @@ how the frontend is put together.
   One year at a time (no "all years"), opening on the first year the list has; electives
   included until toggled off. Only the explorer adds search and sort. Both sidebars scroll
   after four cards (and after four professors).
-* **Study tips** are Sanity-only (`studyTip`, no `dbId`), shown only in the navbar as a
-  compact panel after the viewer's studies and favorites. The root layout fetches the
-  published list once (`getStudyTips`, cached and tag-invalidated) and `NavStudyTip` picks
-  one per render with `Math.random()` — both Server Components, so no client island. No
-  tips, or a failed fetch, renders nothing.
+* **The navbar scrolls its middle.** A study has its links, its enrolled studies and
+  its favorites between the logo and the account controls; on a laptop they do not all
+  fit. The links, studies and favorites share the one scrollable region, so the logo and
+  the account controls stay put.
 * **Footer** is a static Server Component (wordmark and copyright, `UI_STRINGS.footer`) on
   `ui-above`, full width like the header, rendered by `MainLayout` with no request-time
   API. The Sanity `footer` document is unused. `MainLayout` is a flex column and

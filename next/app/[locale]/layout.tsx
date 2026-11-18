@@ -15,7 +15,6 @@ import { AppBackground } from '@/components/ui/app-background/AppBackground'
 import { ToastContainer } from '@/components/ui/toast/ToastContainer'
 import { fetchWebsiteSeoSettings, toOrigin } from '@/lib/academic-detail-page'
 import { getServerStrings } from '@/lib/server-strings'
-import { getStudyTips } from '@/lib/study-tip'
 import { NavProvider } from '@/providers/nav/NavProvider'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { navMenuQuery, studyLogosQuery } from '@/sanity/queries/nav.queries'
@@ -87,31 +86,29 @@ export default async function RootLayout({
   const { locale } = await params
   if (!isLocaleId(locale)) notFound()
 
-  const [navMenu, background, skybox, studyLogos, studyTips] =
-    await Promise.all([
-      fetchSanityData<NavMenuType>({
-        query: navMenuQuery,
-        locale,
-        fetchOrigin: `navMenuQuery`,
-        tags: [SANITY_CACHE_TAGS.navigation],
-      }),
-      fetchSanityData<WebsiteBackground>({
-        query: websiteBackgroundQuery,
-        fetchOrigin: `websiteBackgroundQuery(layout)`,
-        tags: [SANITY_CACHE_TAGS.website],
-      }),
-      fetchSanityData<WebsiteSkybox>({
-        query: websiteSkyboxQuery,
-        fetchOrigin: `websiteSkyboxQuery(layout)`,
-        tags: [SANITY_CACHE_TAGS.website],
-      }),
-      fetchSanityData<Array<NavStudyLogoEntry>>({
-        query: studyLogosQuery,
-        fetchOrigin: 'studyLogosQuery',
-        tags: [SANITY_CACHE_TAGS.study],
-      }),
-      getStudyTips(),
-    ])
+  const [navMenu, background, skybox, studyLogos] = await Promise.all([
+    fetchSanityData<NavMenuType>({
+      query: navMenuQuery,
+      locale,
+      fetchOrigin: `navMenuQuery`,
+      tags: [SANITY_CACHE_TAGS.navigation],
+    }),
+    fetchSanityData<WebsiteBackground>({
+      query: websiteBackgroundQuery,
+      fetchOrigin: `websiteBackgroundQuery(layout)`,
+      tags: [SANITY_CACHE_TAGS.website],
+    }),
+    fetchSanityData<WebsiteSkybox>({
+      query: websiteSkyboxQuery,
+      fetchOrigin: `websiteSkyboxQuery(layout)`,
+      tags: [SANITY_CACHE_TAGS.website],
+    }),
+    fetchSanityData<Array<NavStudyLogoEntry>>({
+      query: studyLogosQuery,
+      fetchOrigin: 'studyLogosQuery',
+      tags: [SANITY_CACHE_TAGS.study],
+    }),
+  ])
 
   // The enrolled-studies list in the navbar carries Postgres rows, which have
   // no logo; the handle the row does carry is the key into this cached map.
@@ -133,11 +130,7 @@ export default async function RootLayout({
           <ToastContainer />
           <AppBackground background={background} skybox={skybox} />
           <NavProvider>
-            <NavBar
-              {...navMenu}
-              studyLogos={studyLogosBySite}
-              studyTips={studyTips}
-            />
+            <NavBar {...navMenu} studyLogos={studyLogosBySite} />
             {children}
           </NavProvider>
           <NotificationsAside />

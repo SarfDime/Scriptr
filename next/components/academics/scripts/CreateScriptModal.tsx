@@ -81,7 +81,7 @@ export function CreateScriptModal({
         onClick={() => {
           if (requireSignIn()) setIsOpen(true)
         }}
-        className='button solid gap-1 p-2 md:grow-0 grow'
+        className='button solid button-sm h-10 gap-1 md:grow-0 grow'
       >
         <AddCircle />
         {triggerLabel ?? ui.scripts.uploadModal.triggerLabel}

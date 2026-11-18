@@ -7,7 +7,6 @@ import type {
   SanityImageType,
   WithResolvedSanityData,
 } from '@shared/types/sanity-transform.types'
-import type { StudyTipData } from '@/types/components/StudyTip.types'
 
 type NavItemType = {
   navItemSlug: string
@@ -34,8 +33,6 @@ type NavStudyLogos = Record<string, SanityImageType>
 
 type NavBarProps = NavMenuType & {
   studyLogos?: NavStudyLogos
-  /** The published study tips; the navbar picks one per render. */
-  studyTips?: Array<StudyTipData>
 }
 
 export type {

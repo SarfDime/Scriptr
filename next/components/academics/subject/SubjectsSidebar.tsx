@@ -12,8 +12,8 @@ import { SubjectCard } from './SubjectCard'
  * subjects cannot push the rest of the sidebar off-screen. */
 const LIST_MAX_HEIGHT = 'max-h-[36rem]'
 
-/** The "Your subjects" sidebar: a header, the subject list (or `emptyMessage`
- * when there are none) and, when one is given, the study tip. */
+/** The "Your subjects" sidebar: a header and the subject list (or
+ * `emptyMessage` when there are none). */
 export const SubjectsSidebar = ({
   subjects,
   title,

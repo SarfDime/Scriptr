@@ -31,7 +31,7 @@ export const ScriptCard = ({
 
   return (
     <Card
-      className={cn('ui-card-clickable cp-vars group', className, color)}
+      className={cn('ui-card-clickable cp-vars group pb-0', className, color)}
       {...props}
     >
       <NextLink
@@ -74,7 +74,7 @@ export const ScriptCard = ({
         </Box>
       </NextLink>
 
-      <Card.Footer className='ui-cluster flex-wrap items-center gap-2 transition-colors duration-300 group-hover:cp-border'>
+      <Card.Footer className='ui-cluster flex-wrap items-center gap-2 py-2 transition-colors duration-300 group-hover:cp-border'>
         <ScriptActions
           id={script.id}
           slug={script.slug}

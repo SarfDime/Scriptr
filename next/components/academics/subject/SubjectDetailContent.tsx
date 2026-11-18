@@ -88,6 +88,7 @@ export const SubjectDetailContent = async ({
         scripts={scripts}
         scriptsUnavailable={subjectScripts === null}
         parentSubject={subject}
+        showControls={{ subjectFilter: false }}
       />
     </PageLayout>
   )

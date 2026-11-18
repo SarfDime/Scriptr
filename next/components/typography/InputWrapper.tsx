@@ -16,6 +16,9 @@ import { Field } from '../ui/field/Field'
 import { FieldInput } from '../ui/field/FieldControl'
 
 export type InputWrapperProps = {
+  /** Defaults to `INPUT_MAX_LENGTH`. Pass `null` to let the input grow and let
+   * the field's own validation report the overflow instead of clipping it. */
+  maxLength?: number | null
   inputProps?: DetailedHTMLProps<
     InputHTMLAttributes<HTMLInputElement>,
     HTMLInputElement
@@ -32,6 +35,7 @@ export type InputWrapperProps = {
  * and a maximum length
  */
 export function InputWrapper({
+  maxLength,
   inputVal,
   inputClearButton,
   inputOnClear,
@@ -61,16 +65,22 @@ export function InputWrapper({
           value={inputVal}
           onChange={inputOnChange}
           onClick={inputOnClick}
-          maxLength={inputProps?.maxLength ?? INPUT_MAX_LENGTH}
+          maxLength={
+            maxLength === null
+              ? undefined
+              : (maxLength ?? inputProps?.maxLength ?? INPUT_MAX_LENGTH)
+          }
           className={cn(
             'focus-visible:outline-none grow',
+            inputClearButton &&
+              'pr-8 [&::-webkit-search-cancel-button]:appearance-none',
             inputProps?.className
           )}
         />
 
         {inputClearButton && inputVal !== '' && (
           <Button
-            className='button absolute top-0 right-0 bottom-0 h-full rounded-none px-2 opacity-70 hover:bg-gray-100 hover:opacity-100'
+            className='button ghost absolute top-0 right-0 bottom-0 h-full rounded-none px-2'
             onClick={inputOnClear}
             icon={<CloseIcon />}
             type='button'

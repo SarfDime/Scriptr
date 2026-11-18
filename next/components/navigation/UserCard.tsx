@@ -37,6 +37,7 @@ export const UserCard = ({
       )}
     >
       <Avatar
+        className='shrink-0'
         name={name}
         picture={
           avatarUrl
@@ -50,11 +51,18 @@ export const UserCard = ({
           className: 'h-6 w-6 rounded-full shadow-sm',
         }}
       />
-      <Box className='text-left'>
-        <Text className={cn('ui-label', !restricted && 'text-fg-700')}>
+      <Box className='min-w-0 flex-1 text-left'>
+        <Text
+          className={cn(
+            'ui-label block truncate',
+            !restricted && 'text-fg-700'
+          )}
+        >
           {name}
         </Text>
-        {userRole && <Text className='ui-caption'>{userRole}</Text>}
+        {userRole && (
+          <Text className='ui-caption block truncate'>{userRole}</Text>
+        )}
       </Box>
     </NextLink>
   )

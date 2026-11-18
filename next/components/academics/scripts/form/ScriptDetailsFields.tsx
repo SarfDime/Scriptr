@@ -1,5 +1,7 @@
 'use client'
 
+import { ENGLISH_LOCALE } from '@shared/config/localization-constants'
+import { PORTABLE_TEXT_LIMITS } from '@shared/config/portable-text-limits'
 import { portableTextToPlainText } from '@shared/utils/portable-text.utils'
 import { slugifyTitle } from '@shared/utils/slug.utils'
 import dynamic from 'next/dynamic'
@@ -79,23 +81,39 @@ export function ScriptDetailsFields({
     titleFilledLanguages,
     titleHasContent,
     titleTooLong,
+    titleTooShort,
     titleUnsupportedScript,
+    titleWrongScript,
     titleValid,
     titleInvalid,
     descriptionUnsupportedScript,
+    descriptionWrongScript,
     descriptionInvalid,
   } = fields
 
+  const fieldErrors = ui.scripts.uploadModal.fieldErrors
+  const wrongScriptError =
+    language === ENGLISH_LOCALE
+      ? fieldErrors.wrongScriptLatin
+      : fieldErrors.wrongScriptCyrillic
+
   const titleError = (() => {
-    if (titleUnsupportedScript) {
-      return ui.scripts.uploadModal.fieldErrors.unsupportedScript
+    if (titleWrongScript) return wrongScriptError
+    if (titleUnsupportedScript) return fieldErrors.unsupportedScript
+    if (!titleHasContent) return fieldErrors.titleRequired
+    if (titleTooShort) {
+      return fieldErrors.titleTooShort(
+        PORTABLE_TEXT_LIMITS.scriptTitleMinimumLetters
+      )
     }
-    if (titleTooLong) {
-      return ui.scripts.uploadModal.fieldErrors.titleTooLong
-    }
-    return titleHasContent
-      ? undefined
-      : ui.scripts.uploadModal.fieldErrors.titleRequired
+    if (titleTooLong) return fieldErrors.titleTooLong
+    return undefined
+  })()
+
+  const descriptionError = (() => {
+    if (descriptionWrongScript) return wrongScriptError
+    if (descriptionUnsupportedScript) return fieldErrors.unsupportedScript
+    return fieldErrors.descriptionTooLong
   })()
 
   return (
@@ -125,6 +143,7 @@ export function ScriptDetailsFields({
           editorOptions={RESTRICTED_EDITOR_OPTIONS}
           editorClassName='h-10 min-h-0 overflow-hidden whitespace-nowrap p-2'
           singleLine
+          autoCapitalize
         />
       </Field>
       <Box className='ui-stack gap-1'>
@@ -152,11 +171,7 @@ export function ScriptDetailsFields({
         label={ui.scripts.uploadModal.formDescription}
         labelProps={SCRIPT_FIELD_LABEL_PROPS}
         helperText={ui.scripts.uploadModal.formDescriptionHelp}
-        errorText={
-          descriptionUnsupportedScript
-            ? ui.scripts.uploadModal.fieldErrors.unsupportedScript
-            : ui.scripts.uploadModal.fieldErrors.descriptionTooLong
-        }
+        errorText={descriptionError}
         invalid={descriptionInvalid}
       >
         <PortableTextEditorSection

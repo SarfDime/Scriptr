@@ -16,6 +16,7 @@ import { toUserMessage } from '@/lib/user-facing-error'
 import { useToast } from '@/providers/toaster/ToasterProvider'
 import type { PortableTextEditorSectionProps } from '@/types/components/PortableTextEditor.types'
 import { PortableTextEditorActions } from './PortableTextEditorActions'
+import { PTCapitalizeFirstLetter } from './PTCapitalizeFirstLetter'
 import { ClearOtherDecorators } from './toolbar/PTClearOtherDecorators'
 import { Toolbar } from './toolbar/PTToolbar'
 import { createPortableTextEditorConfig } from './toolbar/schema'
@@ -47,6 +48,7 @@ export const PortableTextEditorSection = ({
   editorClassName,
   editorContainerClassName,
   singleLine = false,
+  autoCapitalize = false,
 }: PortableTextEditorSectionProps) => {
   const control = useFieldControl()
   const [draftValue, setDraftValue] = useState<PortableTextValue>(
@@ -123,6 +125,7 @@ export const PortableTextEditorSection = ({
           }}
         />
         <ClearOtherDecorators />
+        {autoCapitalize && <PTCapitalizeFirstLetter />}
         <Toolbar {...editorOptions} />
         <Box
         // Needed for overflow handling of the editor content and toolbar panels.

@@ -24,6 +24,12 @@ type SearchFormProps = {
   /** Receives the trimmed query. When given, the form submits through it
    * (the header uses the router) instead of the native GET navigation. */
   onValidSubmit?: (query: string) => void
+  /** Every keystroke, for a caller that must know whether the field holds
+   * text (the header's icon doubles as submit and close). */
+  onValueChange?: (value: string) => void
+  /** Show the input's clear button. The header bar wants it; the page's own
+   * form is submitted with a button beside it. */
+  clearable?: boolean
   /** Overrides the catalog placeholder, for the header's study variant. */
   placeholder?: string
   inputRef?: Ref<HTMLInputElement>
@@ -46,6 +52,8 @@ export const SearchForm = ({
   ariaLabel,
   placeholder,
   onValidSubmit,
+  onValueChange,
+  clearable = false,
   inputRef,
   errorClassName,
   className,
@@ -54,11 +62,18 @@ export const SearchForm = ({
   const searchLabel = ariaLabel ?? ui.scripts.search.formAriaLabel
   const searchPlaceholder = placeholder ?? ui.scripts.search.placeholder
   const errorId = useId()
+  const [value, setValue] = useState(query)
   const [invalid, setInvalid] = useState(false)
 
+  const handleChange = (next: string) => {
+    setValue(next)
+    if (invalid) setInvalid(false)
+    onValueChange?.(next)
+  }
+
   const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
-    const value = new FormData(e.currentTarget).get(SEARCH_QUERY_PARAM)
-    const raw = typeof value === 'string' ? value : ''
+    const submitted = new FormData(e.currentTarget).get(SEARCH_QUERY_PARAM)
+    const raw = typeof submitted === 'string' ? submitted : ''
 
     if (!isValidSearchQuery(raw)) {
       e.preventDefault()
@@ -77,15 +92,15 @@ export const SearchForm = ({
       // never disagree on what this field searches.
       label={searchLabel}
       invalid={invalid}
-      inputOnChange={() => {
-        if (invalid) setInvalid(false)
-      }}
+      inputVal={value}
+      inputOnChange={(event) => handleChange(event.target.value)}
+      inputClearButton={clearable}
+      inputOnClear={() => handleChange('')}
       inputProps={{
         ref: inputRef,
         name: SEARCH_QUERY_PARAM,
         type: 'search',
         placeholder: searchPlaceholder,
-        defaultValue: query,
         'aria-label': searchLabel,
         'aria-invalid': invalid,
         'aria-describedby': invalid ? errorId : undefined,

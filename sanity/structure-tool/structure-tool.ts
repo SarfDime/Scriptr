@@ -1,4 +1,3 @@
-import BulbOutlineIcon from '@sanity/icons/BulbOutline'
 import CalendarIcon from '@sanity/icons/Calendar'
 import EarthGlobeIcon from '@sanity/icons/EarthGlobe'
 import MasterDetailIcon from '@sanity/icons/MasterDetail'
@@ -17,7 +16,6 @@ import { buildNavigationStructure } from './nav-structure'
  *
  * - Website: A list of all websites
  * - Navigation Menu: A list of all navigation menus
- * - Study tips: A list of all study tips (Sanity-only content)
  * - Calendar: Calendars and their events
  * - Miscellaneous: Miscellaneous documents alongside the website's schemas
  * - Academic: The academic catalogue entities
@@ -40,12 +38,6 @@ export const customStructureTool = (build: StructureToolTypes['Build']) =>
         .icon(createColoredIcon(MenuIcon, 'navigationMenu'))
         .title('Navigation')
         .child(buildNavigationStructure(build)),
-
-      build
-        .listItem()
-        .icon(createColoredIcon(BulbOutlineIcon, 'content'))
-        .title('Study tips')
-        .child(build.documentTypeList('studyTip')),
 
       build
         .listItem()

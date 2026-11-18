@@ -3,6 +3,7 @@
 import Calendar from '@sanity/icons/Calendar'
 import DocumentPdf from '@sanity/icons/DocumentPdf'
 import type { ExamSession } from '@shared/types/academic.types'
+import { Box } from '@/components/common/Box'
 import { Field } from '@/components/ui/field/Field'
 import { Select } from '@/components/ui/select/Select'
 import type { UseScriptSessionFieldsReturn } from '@/hooks/useScriptSessionFields'
@@ -44,9 +45,10 @@ export function ScriptSessionYearFields({
   const choiceKey = isChosen ? (session ?? 'general') : 'none'
 
   return (
-    <>
+    /* One grid/flex child, so the pair stays together; `items-start` keeps the
+       selects their own height when the column is taller than them. */
+    <Box className='ui-stack gap-4'>
       <Field
-        className='min-w-0'
         label={ui.scripts.uploadModal.examSessionLabel}
         labelProps={SCRIPT_FIELD_LABEL_PROPS}
         helperText={ui.scripts.uploadModal.examSessionHelp}
@@ -73,7 +75,6 @@ export function ScriptSessionYearFields({
       </Field>
 
       <Field
-        className='min-w-0'
         label={ui.scripts.uploadModal.examYearLabel}
         labelProps={SCRIPT_FIELD_LABEL_PROPS}
         helperText={ui.scripts.uploadModal.examYearHelp}
@@ -92,6 +93,6 @@ export function ScriptSessionYearFields({
           icon={<Calendar />}
         />
       </Field>
-    </>
+    </Box>
   )
 }

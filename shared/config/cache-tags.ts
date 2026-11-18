@@ -26,7 +26,6 @@ export const SANITY_CACHE_TAGS = {
   professor: 'sanity:professor',
   person: 'sanity:person',
   calendar: 'sanity:calendar',
-  studyTip: 'sanity:study-tip',
 } as const
 
 /** Sanity document type to the cache tag its reads carry. Types that only
@@ -45,7 +44,6 @@ export const SANITY_TYPE_TAGS: Record<string, string> = {
   person: SANITY_CACHE_TAGS.person,
   calendar: SANITY_CACHE_TAGS.calendar,
   calendarEvent: SANITY_CACHE_TAGS.calendar,
-  studyTip: SANITY_CACHE_TAGS.studyTip,
 }
 
 /** Public profile pages share one representation tag because a script can

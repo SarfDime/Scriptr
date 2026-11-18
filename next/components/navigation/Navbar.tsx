@@ -13,7 +13,6 @@ import { NavFavorites } from './NavFavorites'
 import { NavigationLinks } from './NavigationLinks'
 import { NavLogo } from './NavLogo'
 import { NavStudies } from './NavStudies'
-import { NavStudyTip } from './NavStudyTip'
 import { NavToggle } from './NavToggle'
 import { NavUserSlot } from './NavUserSlot'
 
@@ -24,11 +23,7 @@ import { NavUserSlot } from './NavUserSlot'
  * collapsed. Hidden states are also `invisible` so the links leave the tab
  * order.
  */
-export const NavBar = async ({
-  navItems,
-  studyLogos,
-  studyTips,
-}: NavBarProps) => {
+export const NavBar = async ({ navItems, studyLogos }: NavBarProps) => {
   const strings = await getServerStrings(UI_STRINGS_PACK)
 
   return (
@@ -57,7 +52,7 @@ export const NavBar = async ({
           'xl:group-data-[nav-collapsed=true]/nav:-translate-x-full'
         )}
       >
-        <Box className='ui-cluster justify-between h-(--header-height) px-3 ui-groove-b'>
+        <Box className='ui-cluster justify-between h-(--header-height) shrink-0 px-3 ui-groove-b'>
           <NavLogo />
           <NavToggle
             action='close'
@@ -67,19 +62,21 @@ export const NavBar = async ({
           </NavToggle>
         </Box>
 
-        {navItems && (
-          <>
-            <NavigationLinks navItems={navItems} /> <Divider />
-          </>
-        )}
+        {/* The only part that scrolls: a laptop-height screen with favorites
+          cannot hold every section beside the account controls. */}
+        <Box className='ui-stack min-h-0 grow gap-3 overflow-y-auto'>
+          {navItems && (
+            <>
+              <NavigationLinks navItems={navItems} /> <Divider />
+            </>
+          )}
 
-        <NavStudies studyLogos={studyLogos} />
+          <NavStudies studyLogos={studyLogos} />
 
-        <NavFavorites />
+          <NavFavorites />
+        </Box>
 
-        {studyTips && studyTips.length > 0 && <NavStudyTip tips={studyTips} />}
-
-        <Box className={cn('ui-stack gap-3', !studyTips?.length && 'mt-auto')}>
+        <Box className='ui-stack shrink-0 gap-3'>
           <Divider />
           <ThemeToggle className='w-full flex-row' />
           <LanguageToggle className='w-full flex-row' />

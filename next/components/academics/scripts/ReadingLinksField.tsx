@@ -30,8 +30,11 @@ export function ReadingLinksField({
   const ui = useUIStrings()
   const linkErrors = getReadingLinkErrors(links)
   const hasLinkErrors = linkErrors.some((error) => error !== null)
+  // A link past the character limit is reported while it is typed; the other
+  // errors wait until the row is left, so a half-typed URL is not flagged.
   const hasVisibleLinkErrors = linkErrors.some(
-    (error, index) => error !== null && touched.has(index)
+    (error, index) =>
+      error !== null && (touched.has(index) || error === 'tooLong')
   )
   const hasLinks = links.some((link) => link.trim() !== '')
 
@@ -48,11 +51,15 @@ export function ReadingLinksField({
       <Box className='ui-stack gap-2'>
         {links.map((link, index) => {
           const isTouched = touched.has(index)
-          const errorCode = isTouched ? linkErrors[index] : null
+          const errorCode =
+            isTouched || linkErrors[index] === 'tooLong'
+              ? linkErrors[index]
+              : null
 
           return (
             <InputWrapper
               key={index}
+              maxLength={null}
               valid={isTouched && link.trim() !== '' && !errorCode}
               invalid={Boolean(errorCode)}
               inputProps={{

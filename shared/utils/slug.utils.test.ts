@@ -21,10 +21,6 @@ describe('transliterateToAscii', () => {
     )
   })
 
-  it('drops the Slavic hard and soft signs rather than spelling them', () => {
-    assert.equal(transliterateToAscii('объект'), 'obekt')
-  })
-
   it('folds accented Latin', () => {
     assert.equal(
       transliterateToAscii('Ščedrvaj Čedo Žarko'),

@@ -31,6 +31,7 @@ import {
   type SearchQueryParam,
 } from '@/lib/script-search'
 import { getServerStrings } from '@/lib/server-strings'
+import { studySitePath } from '@/lib/study-origin'
 import { getStudySite, getStudySiteOrNotFound } from '@/lib/study-site'
 import { studySeoQuery } from '@/sanity/queries/academics/study.queries'
 import type { StudySiteRouteParams } from '@/types/academics/academics.types'
@@ -136,11 +137,14 @@ export default async function StudyScriptsPage({
 
   const feedPath = getStudyFeedPath(siteSlug, locale)
   const overviewPath = getStudySiteUrl(siteSlug, locale)
+  // Where the page's own search bar submits: a path on this site, so the study
+  // host answers it without the cross-origin redirect a feed URL would take.
+  const searchPath = studySitePath(siteSlug, '/scripts', locale)
 
-  // A search result list is already filtered by the server, so the feed's own
-  // search and subject filters would only narrow it again; the header bar is
-  // where a new query is typed.
-  const searchControls = { all: true, search: false, filters: false }
+  // A search result list is already filtered by the server, so the subject and
+  // sort controls would only narrow it again; the bar stays so a new query can
+  // be typed and submitted.
+  const searchControls = { all: true, search: true, filters: false }
 
   let feedTitle: string | undefined
   let feedSubtitle: string | undefined
@@ -151,6 +155,8 @@ export default async function StudyScriptsPage({
   } else if (showAllScripts) {
     feedTitle = UI_STRINGS.scripts.feed.allTitle
     feedSubtitle = UI_STRINGS.scripts.feed.allSubtitle
+  } else {
+    feedTitle = UI_STRINGS.scripts.feed.forYouTitle
   }
 
   let headerActions: ReactNode
@@ -191,13 +197,18 @@ export default async function StudyScriptsPage({
         }
       >
         <ScriptsSection
+          key={searchQuery}
           scripts={scripts}
           scriptsUnavailable={feedScripts === null}
           title={feedTitle}
           subtitle={feedSubtitle}
+          searchPath={searchPath}
+          searchQuery={searching ? searchQuery : undefined}
           showControls={searching ? searchControls : undefined}
           emptyMessage={emptyMessage}
           headerActions={headerActions}
+          initialPageSize={9}
+          pageSize={3}
         />
         {user && <StudySubjectsPanel subjects={subjects} />}
       </Box>

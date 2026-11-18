@@ -21,6 +21,7 @@ export const ScriptFilters = ({
   sort,
   onSubjectChange,
   onSortChange,
+  showSubject = true,
 }: ScriptFiltersProps) => {
   const ui = useUIStrings()
   const iconClass = 'rounded-md'
@@ -68,34 +69,36 @@ export const ScriptFilters = ({
   ]
 
   return (
-    <Box className='ui-cluster gap-2 grow xxl:grow-0'>
-      <Select
-        className='flex-1 xxl:w-40 lg:flex-none'
-        defaultOption={
-          subjectOptions.find((option) => option.value === subject) ??
-          subjectOptions[0]
-        }
-        options={subjectOptions}
-        icon={
-          <Documents
-            className={cn(
-              getColorPalette({
-                value:
-                  subjectOptions.find((option) => option.value === subject)
-                    ?.value || '',
-                type: 'seed',
-              }),
-              iconClass
-            )}
-          />
-        }
-        setSelectedValue={(value) => onSubjectChange(value || '')}
-        triggerProps={{
-          'aria-label': ui.scripts.filters.subjectLabel,
-        }}
-      />
+    <Box className='ui-cluster w-full min-w-0 gap-2 sm:w-auto'>
+      {showSubject && (
+        <Select
+          className='h-10 w-full sm:w-56'
+          defaultOption={
+            subjectOptions.find((option) => option.value === subject) ??
+            subjectOptions[0]
+          }
+          options={subjectOptions}
+          icon={
+            <Documents
+              className={cn(
+                getColorPalette({
+                  value:
+                    subjectOptions.find((option) => option.value === subject)
+                      ?.value || '',
+                  type: 'seed',
+                }),
+                iconClass
+              )}
+            />
+          }
+          setSelectedValue={(value) => onSubjectChange(value || '')}
+          triggerProps={{
+            'aria-label': ui.scripts.filters.subjectLabel,
+          }}
+        />
+      )}
       <Select<ScriptSortOption>
-        className='flex-1 xxl:w-40 lg:flex-none'
+        className='h-10 w-full sm:w-56'
         defaultOption={
           sortOptions.find((option) => option.value === sort) ?? sortOptions[0]
         }

@@ -32,7 +32,7 @@ const subjectRefOf = (document: Record<string, unknown> | null | undefined) => {
 }
 
 /**
- * Sanity-only content, like `studyTip`: no `dbId`, no Create/Sync actions and
+ * Sanity-only content, like `skybox`: no `dbId`, no Create/Sync actions and
  * no database record. The website reads these documents directly for
  * `/calendar` and for the header alert, so a publish reaches readers on the
  * next rebuild rather than immediately.

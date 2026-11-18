@@ -376,91 +376,6 @@
     }
   },
   {
-    "name": "studyTip",
-    "type": "document",
-    "attributes": {
-      "_id": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "string"
-        }
-      },
-      "_type": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "string",
-          "value": "studyTip"
-        }
-      },
-      "_createdAt": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "string"
-        }
-      },
-      "_updatedAt": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "string"
-        }
-      },
-      "_rev": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "string"
-        }
-      },
-      "localizedTitle": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "inline",
-          "name": "localizedRichTextLite"
-        },
-        "optional": true
-      },
-      "localizedContent": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "inline",
-          "name": "localizedRichTextLite"
-        },
-        "optional": true
-      }
-    }
-  },
-  {
-    "name": "localizedRichTextLite",
-    "type": "type",
-    "value": {
-      "type": "object",
-      "attributes": {
-        "_type": {
-          "type": "objectAttribute",
-          "value": {
-            "type": "string",
-            "value": "localizedRichTextLite"
-          }
-        },
-        "en": {
-          "type": "objectAttribute",
-          "value": {
-            "type": "inline",
-            "name": "richTextLite"
-          },
-          "optional": true
-        },
-        "mk": {
-          "type": "objectAttribute",
-          "value": {
-            "type": "inline",
-            "name": "richTextLite"
-          },
-          "optional": true
-        }
-      }
-    }
-  },
-  {
     "name": "skyboxColors",
     "type": "type",
     "value": {
@@ -6664,6 +6579,38 @@
           "type": "objectAttribute",
           "value": {
             "type": "string"
+          },
+          "optional": true
+        }
+      }
+    }
+  },
+  {
+    "name": "localizedRichTextLite",
+    "type": "type",
+    "value": {
+      "type": "object",
+      "attributes": {
+        "_type": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "string",
+            "value": "localizedRichTextLite"
+          }
+        },
+        "en": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "inline",
+            "name": "richTextLite"
+          },
+          "optional": true
+        },
+        "mk": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "inline",
+            "name": "richTextLite"
           },
           "optional": true
         }

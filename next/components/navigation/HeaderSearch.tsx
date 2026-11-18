@@ -5,7 +5,11 @@ import SearchIcon from '@sanity/icons/Search'
 import { useRouter } from 'next/navigation'
 import { useEffect, useEffectEvent, useId, useRef, useState } from 'react'
 import { cn } from '@/lib/common-utils'
-import { buildSearchHref, SEARCH_PAGE_PATH } from '@/lib/script-search'
+import {
+  buildSearchHref,
+  isValidSearchQuery,
+  SEARCH_PAGE_PATH,
+} from '@/lib/script-search'
 import { studySitePath } from '@/lib/study-origin'
 import { useLocale } from '@/providers/locale/LocaleProvider'
 import { useUIStrings } from '@/providers/locale/use-strings'
@@ -44,6 +48,7 @@ export const HeaderSearch = ({ studySiteSlug }: HeaderSearchProps) => {
   const triggerId = useId()
   const panelId = useId()
   const [open, setOpen] = useState(false)
+  const [hasQuery, setHasQuery] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -58,8 +63,13 @@ export const HeaderSearch = ({ studySiteSlug }: HeaderSearchProps) => {
     ? studySitePath(studySiteSlug, STUDY_FEED_PATH, locale)
     : SEARCH_PAGE_PATH
 
-  const closeAndRestoreFocus = () => {
+  const close = () => {
     setOpen(false)
+    setHasQuery(false)
+  }
+
+  const closeAndRestoreFocus = () => {
+    close()
     document.getElementById(triggerId)?.focus()
   }
 
@@ -68,6 +78,7 @@ export const HeaderSearch = ({ studySiteSlug }: HeaderSearchProps) => {
       return
     }
     setOpen(false)
+    setHasQuery(false)
   })
 
   const handleKeyDown = useEffectEvent((e: KeyboardEvent) => {
@@ -87,7 +98,22 @@ export const HeaderSearch = ({ studySiteSlug }: HeaderSearchProps) => {
 
   const handleValidSubmit = (query: string) => {
     router.push(buildSearchHref(query, searchBasePath))
-    setOpen(false)
+    close()
+  }
+
+  /** The icon opens the bar; while it is open it submits what was typed, and
+   * an empty field gives it nothing to search so it just closes. */
+  const handleTriggerClick = () => {
+    if (!open) {
+      setOpen(true)
+      return
+    }
+    const value = inputRef.current?.value ?? ''
+    if (isValidSearchQuery(value)) {
+      handleValidSubmit(value.trim())
+      return
+    }
+    closeAndRestoreFocus()
   }
 
   return (
@@ -107,7 +133,9 @@ export const HeaderSearch = ({ studySiteSlug }: HeaderSearchProps) => {
               ariaLabel={ui.scripts.search.quickSearchLabel}
               placeholder={searchPlaceholder}
               inputRef={inputRef}
+              clearable
               onValidSubmit={handleValidSubmit}
+              onValueChange={(value) => setHasQuery(value.trim().length > 0)}
               className='min-w-0 flex-1'
               errorClassName='absolute top-full left-0 z-10 rounded-md bg-background-250 px-2 pb-1'
             />
@@ -123,11 +151,13 @@ export const HeaderSearch = ({ studySiteSlug }: HeaderSearchProps) => {
       </Box>
       <Button
         id={triggerId}
-        onClick={() => setOpen(!open)}
-        aria-label={searchLabel}
+        onClick={handleTriggerClick}
+        aria-label={
+          open && !hasQuery ? ui.scripts.search.closeSearch : searchLabel
+        }
         aria-expanded={open}
         aria-controls={panelId}
-        className='button ghost p-2'
+        className={cn('button p-2', open && hasQuery ? 'solid' : 'ghost')}
       >
         <SearchIcon />
       </Button>

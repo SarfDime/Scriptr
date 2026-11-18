@@ -49,4 +49,6 @@ export type PortableTextEditorSectionProps = {
   editorClassName?: string
   editorContainerClassName?: string
   singleLine?: boolean
+  /** Upper-case the first character typed at the start of the block. */
+  autoCapitalize?: boolean
 }

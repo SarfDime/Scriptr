@@ -81,6 +81,8 @@ export type ScriptFiltersProps = {
   sort: ScriptSortOption
   onSubjectChange: (value: string) => void
   onSortChange: (value: ScriptSortOption) => void
+  /** Hide the subject select when the list is already one subject's scripts. */
+  showSubject?: boolean
 }
 
 // -----------------------------------------------------------------------------
@@ -141,15 +143,28 @@ export type ScriptsSectionProps = {
   title?: string
   subtitle?: string
   parentSubject?: SubjectDetail
-  /** Hide the search, the filters and the create action: a short list that
-   * only shows the study's own scripts (the study overview's sidebar) has
-   * nothing to search or filter. */
+  /** Each control is on unless the caller turns it off. A short list that only
+   * shows the study's own scripts (the study overview's sidebar) has nothing to
+   * search or filter. */
   showControls?: {
     all?: boolean
     search?: boolean
     filters?: boolean
+    /** The subject select. A subject's own page hides it: the list is already
+     * that subject's. */
+    subjectFilter?: boolean
     create?: boolean
   }
+  /** Where a whole-list search submits — the feed's own `?q=`. Without it the
+   * search input only narrows the list already on the page. */
+  searchPath?: string
+  /** Set while the page shows server-side results for this query: the bar
+   * keeps it and submits a new search, and the local filters stand down. */
+  searchQuery?: string
+  /** Scripts shown before the list grows. Defaults to `pageSize`. */
+  initialPageSize?: number
+  /** Scripts a Show more adds. Defaults to `INITIAL_PAGE_SIZE`. */
+  pageSize?: number
   /** Copy for an empty list. The default speaks about filters, which is wrong
    * wherever the controls are hidden. */
   emptyMessage?: string

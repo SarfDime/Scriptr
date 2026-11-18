@@ -11,7 +11,7 @@ type ScriptListProps = {
 /** Renders script cards in an auto-fit grid, or `emptyMessage` when there are none. */
 export const ScriptList = ({ scripts, emptyMessage }: ScriptListProps) =>
   scripts.length > 0 ? (
-    <Box className='ui-card-grid [--grid-min:22rem]'>
+    <Box className='ui-card-grid [--grid-min:22rem] max-h-135 overflow-y-auto'>
       {scripts.map((script) => (
         <ScriptCard
           key={script.id}

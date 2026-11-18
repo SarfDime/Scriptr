@@ -86,7 +86,7 @@ export const FieldContent = ({
               id={ids.helper}
               {...helperProps}
               className={cn(
-                'text-fg-400 text-xs pl-0.5',
+                'text-fg-400 text-sm pl-0.5',
                 helperProps?.className
               )}
             >
@@ -102,7 +102,7 @@ export const FieldContent = ({
           id={ids.error}
           {...errorProps}
           role='alert'
-          className={cn('text-error-red ui-caption', errorProps?.className)}
+          className={cn('text-error-red ui-body', errorProps?.className)}
         >
           {errorText}
         </Text>

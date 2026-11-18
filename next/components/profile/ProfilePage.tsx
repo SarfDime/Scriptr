@@ -118,11 +118,15 @@ export const ProfilePage = async ({
         scripts={toScriptDetails(profile.scripts, locale)}
         title={ui.scripts.authoredSectionTitle}
         subtitle={ui.scripts.authoredSectionSubtitle}
+        pageSize={2}
+        initialPageSize={4}
       />
       <ScriptsSection
         scripts={toScriptDetails(profile.favorite_scripts, locale)}
         title={ui.scripts.favoritesSectionTitle}
         subtitle={ui.scripts.favoritesSectionSubtitle}
+        pageSize={2}
+        initialPageSize={4}
       />
     </PageLayout>
   )

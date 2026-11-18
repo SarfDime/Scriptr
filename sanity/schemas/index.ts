@@ -19,7 +19,6 @@ import { CalendarEvent } from './misc/calendar-event'
 import { ChristmasCanvas, ChristmasColors } from './misc/christmas-canvas'
 import { Person } from './misc/person'
 import { Skybox, SkyboxColors } from './misc/skybox'
-import { StudyTip } from './misc/study-tip'
 import { NavItem } from './navigation/nav-item'
 import { NavMenu } from './navigation/nav-menu'
 import { SubMenuItem } from './navigation/subMenuItem'
@@ -50,7 +49,6 @@ export const schemaTypes = [
   ChristmasColors,
   Skybox,
   SkyboxColors,
-  StudyTip,
   CalendarEvent,
   Calendar,
 ]

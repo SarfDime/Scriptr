@@ -31,7 +31,7 @@ export const SearchBar = ({
     <InputWrapper
       label={ui.scripts.searchLabel}
       {...rest}
-      className={cn('grow', className)}
+      className={cn('grow gap-0', className)}
       labelProps={{
         ...labelProps,
         className: cn('sr-only', labelProps?.className),

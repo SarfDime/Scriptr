@@ -48,22 +48,6 @@ const CYRILLIC: ReadonlyMap<string, string> = new Map([
   ['ч', 'c'],
   ['џ', 'dz'],
   ['ш', 's'],
-  ['ћ', 'c'],
-  ['ђ', 'dj'],
-  ['й', 'j'],
-  ['щ', 'shch'],
-  ['ъ', ''],
-  ['ы', 'y'],
-  ['ь', ''],
-  ['э', 'e'],
-  ['ю', 'yu'],
-  ['я', 'ya'],
-  ['ё', 'yo'],
-  ['є', 'ye'],
-  ['і', 'i'],
-  ['ї', 'yi'],
-  ['ґ', 'g'],
-  ['ў', 'u'],
 ])
 
 /** `đ` is the one Latin letter with a stroke that NFKD does not decompose. */

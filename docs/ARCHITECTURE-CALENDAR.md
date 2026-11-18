@@ -1,7 +1,7 @@
 # Calendar
 
-* **Sanity-only content.** A `calendarEvent` (`sanity/schemas/misc/calendar-event.ts`) is a
-  study-tip sibling: no `dbId`, no Create/Sync action, no database row. Fields:
+* **Sanity-only content.** A `calendarEvent` (`sanity/schemas/misc/calendar-event.ts`) has
+  no `dbId`, no Create/Sync action and no database row. Fields:
   `stringTitle`, `date`, `type` (`exam | preliminary_exam | reminder | info | announcement`),
   `importance` (`low | normal | high`), optional `stringSubtitle`, optional `subject` and
   `professors`. Exams and preliminary exams require the subject, and the professor picker

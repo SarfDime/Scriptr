@@ -1,6 +1,7 @@
 'use client'
 
 import ChevronDownIcon from '@sanity/icons/ChevronDown'
+import { useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { SectionHeader } from '@/components/common/SectionHeader'
@@ -9,12 +10,13 @@ import { useScriptExplorer } from '@/hooks/useScriptExplorer'
 import { cn } from '@/lib/common-utils'
 import { useUIStrings } from '@/providers/locale/use-strings'
 import type { ScriptsSectionProps } from '@/types/components/Scripts.types'
-import { SearchBar } from '../../typography/SearchBar'
 import { CreateScriptModal } from './CreateScriptModal'
 import { ScriptFilters } from './ScriptFilters'
 import { ScriptList } from './ScriptList'
+import { ScriptSearchBar, ScriptSearchFilter } from './ScriptSearchControls'
 
-const VISIBLE_LIMIT = 5
+/** Scripts a list shows before its first Show more. */
+const INITIAL_PAGE_SIZE = 4
 
 /** A component that renders a section displaying a list of scripts with search and filter functionality. */
 export const ScriptsSection = ({
@@ -23,7 +25,11 @@ export const ScriptsSection = ({
   className,
   parentSubject,
   scriptsUnavailable = false,
-  showControls = { all: true, search: true, filters: true, create: true },
+  showControls,
+  searchPath,
+  searchQuery,
+  initialPageSize,
+  pageSize,
   emptyMessage,
   headerActions,
   ...rest
@@ -40,8 +46,18 @@ export const ScriptsSection = ({
     visibleScripts,
   } = useScriptExplorer(scripts)
 
-  const shownScripts = visibleScripts.slice(0, VISIBLE_LIMIT)
-  const hasMore = visibleScripts.length > VISIBLE_LIMIT
+  const controls = {
+    all: true,
+    search: true,
+    filters: true,
+    subjectFilter: true,
+    create: true,
+    ...showControls,
+  }
+  const step = pageSize ?? INITIAL_PAGE_SIZE
+  const [visibleCount, setVisibleCount] = useState(initialPageSize ?? step)
+  const shownScripts = visibleScripts.slice(0, visibleCount)
+  const hasMore = visibleScripts.length > visibleCount
 
   return (
     <Box
@@ -56,26 +72,30 @@ export const ScriptsSection = ({
         actions={headerActions}
       />
 
-      {!scriptsUnavailable && showControls?.all && (
+      {!scriptsUnavailable && controls.all && (
         <Box className='ui-cluster items-stretch justify-between gap-3'>
-          {showControls?.search && (
-            <SearchBar
-              inputVal={query}
-              inputOnChange={(event) => setQuery(event.target.value)}
-              className='min-w-[50%]'
-            />
-          )}
+          {controls.search &&
+            (searchQuery !== undefined && searchPath !== undefined ? (
+              <ScriptSearchBar path={searchPath} query={searchQuery} />
+            ) : (
+              <ScriptSearchFilter
+                query={query}
+                onQueryChange={setQuery}
+                searchPath={searchPath}
+              />
+            ))}
 
-          {showControls?.filters && (
+          {searchQuery === undefined && controls.filters && (
             <ScriptFilters
               subject={subject}
               subjects={subjectOptions}
               sort={sort}
               onSubjectChange={setSubject}
               onSortChange={setSort}
+              showSubject={controls.subjectFilter}
             />
           )}
-          {parentSubject && showControls?.create && (
+          {parentSubject && controls.create && (
             <CreateScriptModal subject={parentSubject} />
           )}
         </Box>
@@ -93,8 +113,11 @@ export const ScriptsSection = ({
       )}
 
       {hasMore && (
-        <Button className='button subtle w-full gap-2 py-3 ui-body'>
-          <Text>{ui.scripts.browseAll}</Text> <ChevronDownIcon />
+        <Button
+          onClick={() => setVisibleCount((count) => count + step)}
+          className='button subtle w-full gap-2 py-3 ui-body'
+        >
+          <Text>{ui.scripts.showMore}</Text> <ChevronDownIcon />
         </Button>
       )}
     </Box>

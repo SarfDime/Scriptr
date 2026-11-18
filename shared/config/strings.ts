@@ -236,6 +236,7 @@ export const UI_STRINGS_PACK = {
       mk: 'Скриптите во моментов не може да се вчитаат. Обиди се повторно за момент.',
     },
     browseAll: { en: 'Browse all scripts', mk: 'Прегледај ги сите скрипти' },
+    showMore: { en: 'Show more', mk: 'Прикажи повеќе' },
     showAll: { en: 'Show all', mk: 'Прикажи ги сите' },
     // The study overview's sidebar, under the professors.
     studySidebarTitle: { en: 'Scripts', mk: 'Скрипти' },
@@ -250,6 +251,7 @@ export const UI_STRINGS_PACK = {
     feed: {
       toggleLabel: { en: 'Script feed', mk: 'Тек на скрипти' },
       forYou: { en: 'For you', mk: 'За тебе' },
+      forYouTitle: { en: 'Study scripts', mk: 'Скрипти на смерот' },
       all: { en: 'All scripts', mk: 'Сите скрипти' },
       allTitle: { en: 'All scripts', mk: 'Сите скрипти' },
       allSubtitle: {
@@ -267,6 +269,12 @@ export const UI_STRINGS_PACK = {
         mk: `Нема скрипти во овој смер што одговараат на „${query}“. Пробај со други клучни зборови или провери го правописот.`,
       }),
       clearSearch: { en: 'Clear search', mk: 'Исчисти пребарување' },
+      // The list's own filter only narrows what is already on the page; this
+      // sends the query to the feed so the server searches every script.
+      searchAll: {
+        en: 'Search all scripts',
+        mk: 'Пребарај ги сите скрипти',
+      },
       // The feed is a page of its own beside the study's overview, so it titles
       // itself after its content instead of repeating the study's own title.
       metadataTitle: (studyName: string): LocalizedText => ({
@@ -447,7 +455,7 @@ export const UI_STRINGS_PACK = {
         mk: `Отстрани ${name}`,
       }),
       readingLinkPlaceholder: { en: 'https://...', mk: 'https://...' },
-      addLinkButtonLabel: { en: 'Add link', mk: 'Додај врска' },
+      addLinkButtonLabel: { en: 'Add link', mk: 'Додај линк' },
       progress: {
         title: {
           en: 'Creating your script',
@@ -496,7 +504,10 @@ export const UI_STRINGS_PACK = {
           en: 'Only http:// and https:// links are allowed',
           mk: 'Дозволени се само http:// и https:// врски',
         },
-        tooLong: { en: 'This link is too long', mk: 'Оваа врска е предолга' },
+        tooLong: {
+          en: 'This link exceeds the character limit.',
+          mk: 'Овој линк ја надминува максималната должина.',
+        },
         duplicate: {
           en: 'This link is already in the list',
           mk: 'Оваа врска е веќе на списокот',
@@ -511,6 +522,10 @@ export const UI_STRINGS_PACK = {
           en: 'Script title must be 2 KB or less',
           mk: 'Насловот на скриптата мора да е 2 KB или помалку',
         },
+        titleTooShort: (min: number): LocalizedText => ({
+          en: `Script title must be at least ${min} letters`,
+          mk: `Насловот на скриптата мора да има најмалку ${min} букви`,
+        }),
         descriptionTooLong: {
           en: 'Script description must be 50 KB or less',
           mk: 'Описот на скриптата мора да е 50 KB или помалку',
@@ -518,6 +533,14 @@ export const UI_STRINGS_PACK = {
         unsupportedScript: {
           en: 'Use Latin or Cyrillic letters only. Other languages are not supported yet.',
           mk: 'Користи само латинични или кирилични букви. Други јазици сè уште не се поддржани.',
+        },
+        wrongScriptLatin: {
+          en: 'Use Latin letters in the English field',
+          mk: 'Користи латинични букви во англиското поле',
+        },
+        wrongScriptCyrillic: {
+          en: 'Use Cyrillic letters in the Macedonian field',
+          mk: 'Користи кирилични букви во македонското поле',
         },
         sessionRequired: {
           en: 'Pick an exam session, or the general one',
@@ -1102,7 +1125,6 @@ export const UI_STRINGS_PACK = {
     },
     openNavigation: { en: 'Open navigation', mk: 'Отвори навигација' },
     mainNavigation: { en: 'Main navigation', mk: 'Главна навигација' },
-    studyTip: { en: 'Study tip', mk: 'Совет за учење' },
     /** The academic week beside the header's date. */
     week: (week: number): LocalizedText => ({
       en: `Week ${week}`,

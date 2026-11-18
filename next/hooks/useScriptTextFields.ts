@@ -2,6 +2,7 @@
 
 import {
   DEFAULT_LOCALE,
+  LOCALES,
   type LocaleId,
 } from '@shared/config/localization-constants'
 import { PORTABLE_TEXT_LIMITS } from '@shared/config/portable-text-limits'
@@ -17,7 +18,11 @@ import {
   portableTextJsonByteLength,
   portableTextToPlainText,
 } from '@shared/utils/portable-text.utils'
-import { hasUnsupportedScript } from '@shared/utils/text-language.utils'
+import {
+  countLetters,
+  hasUnsupportedScript,
+  hasWrongScriptForLocale,
+} from '@shared/utils/text-language.utils'
 import { useState } from 'react'
 
 /** The two rich-text fields a script form edits. */
@@ -31,6 +36,28 @@ export type ScriptTextValues = {
 
 const EMPTY: PortableTextValue = []
 
+/** A title's own rules for one language. Its Portable Text shape and byte limit
+ * are checked over the whole map by `isLocalizedScriptTitle`. */
+const titleContentValid = (
+  value: PortableTextValue,
+  locale: LocaleId
+): boolean => {
+  const text = portableTextToPlainText(value)
+  return (
+    countLetters(text) >= PORTABLE_TEXT_LIMITS.scriptTitleMinimumLetters &&
+    !hasUnsupportedScript(text) &&
+    !hasWrongScriptForLocale(text, locale)
+  )
+}
+
+const descriptionContentValid = (
+  value: PortableTextValue,
+  locale: LocaleId
+): boolean => {
+  const text = portableTextToPlainText(value)
+  return !hasUnsupportedScript(text) && !hasWrongScriptForLocale(text, locale)
+}
+
 /**
  * Title/description state for both script forms, one language at a time.
  *
@@ -40,7 +67,9 @@ const EMPTY: PortableTextValue = []
  * language is dropped before the payload is built (`filledLocalizedText`), and
  * the rules the API enforces are mirrored here: **at least one** language for
  * the title, a valid description whenever one is written, each within its byte
- * limit and in a supported script. A description is never required.
+ * limit and in a supported script, every title carrying at least
+ * `PORTABLE_TEXT_LIMITS.scriptTitleMinimumLetters` letters, and every field
+ * using the writing system of its language. A description is never required.
  *
  * The editors themselves are uncontrolled, so a reset is applied by remounting
  * them (see `ScriptDetailsFields`' `resetKey`) rather than by this hook.
@@ -73,28 +102,42 @@ export function useScriptTextFields({
   const descriptionText = portableTextToPlainText(description)
 
   const titleFilledLanguages = filledTextLanguages(titles)
+  const descriptionFilledLanguages = filledTextLanguages(descriptions)
 
   const titleHasContent = titleFilledLanguages.length > 0
-  const descriptionHasContent = filledTextLanguages(descriptions).length > 0
+  const descriptionHasContent = descriptionFilledLanguages.length > 0
 
   // Per-language problems are reported on the language being edited.
   const titleTooLong =
     portableTextJsonByteLength(title) > PORTABLE_TEXT_LIMITS.scriptTitleBytes
+  // An empty tab is not short: another language may already hold the title.
+  const titleTooShort =
+    titleFilledLanguages.includes(language) &&
+    countLetters(titleText) < PORTABLE_TEXT_LIMITS.scriptTitleMinimumLetters
   const titleUnsupportedScript = hasUnsupportedScript(titleText)
+  const titleWrongScript = hasWrongScriptForLocale(titleText, language)
   const descriptionTooLong =
     portableTextJsonByteLength(description) >
     PORTABLE_TEXT_LIMITS.scriptDescriptionBytes
   const descriptionUnsupportedScript = hasUnsupportedScript(descriptionText)
+  const descriptionWrongScript = hasWrongScriptForLocale(
+    descriptionText,
+    language
+  )
 
+  // Every filled language is checked, so a clean tab cannot hide a bad one.
   const titleValid =
     isLocalizedScriptTitle(filledLocalizedText(titles)) &&
-    !titleTooLong &&
-    !titleUnsupportedScript
+    titleFilledLanguages.every((locale) =>
+      titleContentValid(titles[locale] ?? EMPTY, locale)
+    )
   // Optional: an empty description is valid, one that is written has to be.
   const descriptionValid =
     !descriptionHasContent ||
     (isLocalizedScriptDescription(filledLocalizedText(descriptions)) &&
-      !descriptionUnsupportedScript)
+      descriptionFilledLanguages.every((locale) =>
+        descriptionContentValid(descriptions[locale] ?? EMPTY, locale)
+      ))
 
   return {
     language,
@@ -114,9 +157,12 @@ export function useScriptTextFields({
     titleHasContent,
     descriptionHasContent,
     titleTooLong,
+    titleTooShort,
     descriptionTooLong,
     titleUnsupportedScript,
+    titleWrongScript,
     descriptionUnsupportedScript,
+    descriptionWrongScript,
     /** The title holds what the API accepts in at least one language, and a
      * description, if one is written, does too. */
     isValid: titleValid && descriptionValid,
@@ -128,12 +174,29 @@ export function useScriptTextFields({
     titleValid,
     titleInvalid:
       touched.has('title') &&
-      (!titleHasContent || titleTooLong || titleUnsupportedScript),
+      (!titleHasContent ||
+        titleTooShort ||
+        titleTooLong ||
+        titleUnsupportedScript ||
+        titleWrongScript),
     descriptionInvalid:
       touched.has('description') &&
-      (descriptionTooLong || descriptionUnsupportedScript),
-    touchAll: () =>
-      setTouched(new Set<ScriptTextField>(['title', 'description'])),
+      (descriptionTooLong ||
+        descriptionUnsupportedScript ||
+        descriptionWrongScript),
+    touchAll: () => {
+      setTouched(new Set<ScriptTextField>(['title', 'description']))
+      // Point at the offending language rather than only blocking the submit:
+      // the editors show one language at a time.
+      const invalid = LOCALES.find(
+        (locale) =>
+          (titleFilledLanguages.includes(locale) &&
+            !titleContentValid(titles[locale] ?? EMPTY, locale)) ||
+          (descriptionFilledLanguages.includes(locale) &&
+            !descriptionContentValid(descriptions[locale] ?? EMPTY, locale))
+      )
+      if (invalid !== undefined && invalid !== language) setLanguage(invalid)
+    },
     reset: (next: ScriptTextValues) => {
       setTitles(next.title)
       setDescriptions(next.description)
