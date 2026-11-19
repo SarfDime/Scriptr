@@ -24,7 +24,12 @@
   — so prev/next/today, the view switch and opening a day are plain `Link`s. In week view
   `date` sits on the **third** of seven days (`WEEK_VIEW_ANCHOR_OFFSET`), so a day opened
   from the grid never lands on an edge. Bad or repeated parameters fall back to the current
-  month. It reads `searchParams`, so it must never carry `force-static`.
+  month. It reads `searchParams`, so it must never carry `force-static`. A period is an
+  address and every period links to the next, so the crawl space is unbounded: the page is
+  `noindex` with `nofollow` on its period and view links, `next/app/robots.ts` closes
+  `/calendar` in every shape, and `next/next.config.ts` gives the response
+  `Vercel-CDN-Cache-Control` for ten minutes — it is the same for every reader, so a repeat
+  costs no function CPU.
 * **One read per build.** `calendarEventsQuery` collects the ids every attached calendar
   references and returns those events narrowed to six months either side of the build
   (`calendarMarginWindow`) — one cached Sanity read (`loadCalendarEvents`) shared by

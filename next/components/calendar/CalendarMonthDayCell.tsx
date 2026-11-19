@@ -85,6 +85,7 @@ export const CalendarMonthDayCell = async ({ day }: { day: CalendarDay }) => {
       {hasEvents && (
         <NextLink
           href={day.weekHref}
+          rel='nofollow'
           aria-label={strings.dayCellLabel(day.label, day.events.length)}
           className='absolute inset-0 rounded-lg'
         />

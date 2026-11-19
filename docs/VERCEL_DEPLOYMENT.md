@@ -144,6 +144,11 @@ test on `http://lbe.localhost:3000`.
   with `feat:` or `fix:`, so `docs:` and `chore:` deploy nothing. **A squash merge takes
   the PR title as the subject**, so the prefix belongs on the PR title too; otherwise the
   deployment is reported as *Canceled* with no explanation.
+- The web project **denies AI crawlers and scrapers** at the firewall: the managed `AI Bots`
+  rule plus a custom "Block scraper bots" rule for `MJ12bot`, `AhrefsBot` and similar
+  agents. They rendered `/calendar` tens of thousands of times and were most of the Active
+  CPU use; search engines stay allowed. Rules are staged with `vercel firewall rules …` and
+  go live only on `vercel firewall publish`.
 - After changing production variables, redeploy both projects — `NEXT_PUBLIC_API_URL` is
   inlined at build — and expect everyone to sign in once more, since the old cookie was
   scoped to the Vercel API host.

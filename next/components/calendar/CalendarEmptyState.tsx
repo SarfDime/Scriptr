@@ -29,7 +29,7 @@ export const CalendarEmptyState = async ({
       <Text className='max-w-prose leading-relaxed text-fg-muted'>
         {strings.emptyDescription(period)}
       </Text>
-      <NextLink href={todayHref} className='button solid'>
+      <NextLink href={todayHref} rel='nofollow' className='button solid'>
         {strings.emptyAction}
       </NextLink>
     </Card>

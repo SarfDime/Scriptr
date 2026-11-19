@@ -128,15 +128,11 @@ catalog; how that works is
 
 ## SEO
 
-- **Robots [decision]:** `https://scriptr.uk/robots.txt` answers `200` with a
-  content-signals preamble and nothing else — no `User-agent`, `Disallow` or
-  `Sitemap:` line. It is not ours: the repo has never contained a `robots.txt`
-  or `robots.ts`, and the response carries `x-vercel-cache`/`x-vercel-id`, so
-  Vercel serves it. Adding `next/app/robots.ts` would therefore either be
-  shadowed or conflict, so decide at the platform level: submit `/sitemap.xml`
-  in Search Console and Bing first, then only build a route if a crawler
-  directive is genuinely needed (that would mean turning the platform's
-  injection off first).
+- **Robots:** `next/app/robots.ts` owns `/robots.txt` — AI and scraper agents are
+  disallowed site-wide, `/calendar` is disallowed for everyone (study-host and
+  catalog shapes), and `Sitemap:` names `/sitemap.xml`. Verify after the first
+  deploy that our file wins over Vercel's injected content-signals preamble; if it
+  is shadowed, turn the platform's injection off.
 
 ## Code and comments
 

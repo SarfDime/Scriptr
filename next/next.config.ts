@@ -184,6 +184,32 @@ const CATALOG_OWNED_PATHS = [
   '/professor/:path*',
 ]
 
+/**
+ * A calendar's period lives in the URL and every render links to two more, so a
+ * crawler can walk it forever — each step a function invocation. Nothing in the
+ * response is per-reader (notes, the session and preferences are client
+ * islands), so a repeated address is served from the edge; only the rendered
+ * period can be up to ten minutes old, never the data behind it, which is still
+ * read once and invalidated by tag.
+ */
+const CALENDAR_CACHE_HEADERS = [
+  {
+    key: 'Vercel-CDN-Cache-Control',
+    value: 'public, s-maxage=600, stale-while-revalidate=3600',
+  },
+]
+
+/** Both shapes the calendar answers at: a study host before the rewrite, and the
+ * study tree's own path on the catalog host. */
+const CALENDAR_CACHE_ROUTES = [
+  '/calendar',
+  '/study/:siteSlug/calendar',
+  ...NON_DEFAULT_LOCALES.flatMap((locale) => [
+    `/${locale}/calendar`,
+    `/${locale}/study/:siteSlug/calendar`,
+  ]),
+]
+
 // Define base Next.js configuration with TypeScript types
 const nextConfig = {
   poweredByHeader: false,
@@ -212,6 +238,13 @@ const nextConfig = {
     qualities: [65, 85, 91],
   },
   reactCompiler: true,
+
+  async headers() {
+    return CALENDAR_CACHE_ROUTES.map((source) => ({
+      source,
+      headers: CALENDAR_CACHE_HEADERS,
+    }))
+  },
 
   /**
    * One canonical address per study. The catalog path still answers — a link, a

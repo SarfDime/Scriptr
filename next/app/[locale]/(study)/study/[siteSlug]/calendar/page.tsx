@@ -23,6 +23,10 @@ export async function generateMetadata({
   return {
     title: CALENDAR_STRINGS.pageTitle,
     description: CALENDAR_STRINGS.metaDescription,
+    // Every period links to the next one, so the crawlable address space is
+    // unbounded and each step is a render. The page itself is followed so its
+    // subject and professor links still lead a crawler on.
+    robots: { index: false, follow: true },
     alternates: {
       canonical: path,
       languages: languageAlternates(path),

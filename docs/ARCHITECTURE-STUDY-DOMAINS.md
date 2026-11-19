@@ -166,7 +166,8 @@ Attaching and detaching on handle assignment is not automated; it is these three
   `NEXT_PUBLIC_STUDY_HOSTS=true` with `http://lbe.localhost:<port>`.
 - **A study rename breaks its hostname**: `siteSlug` is immutable once the row exists;
   renaming needs a hostname redirect as well as a path one.
-- **`robots.txt` is Vercel's**, so a per-host one needs that injection turned off first.
+- **`robots.txt` is the app's** (`next/app/robots.ts`, one file for every host); Vercel's
+  injected content-signals file only fills a project that serves none.
 - **A study's sitemap is built, not rendered** — see above.
 - **A study's content is built per site, its interaction is not.** The overview and every
   subject are prerendered per study (`generateStaticParams` from `listStudySites()` and

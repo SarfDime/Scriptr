@@ -30,7 +30,8 @@ const PHONE_VIEW = 'col-start-1 row-start-2'
 const PHONE_ACTIONS = 'col-start-2 row-start-2 ml-auto md:ml-0'
 
 /** Plain links throughout: the view and the period live in the URL, so the page
- * stays a Server Component and nothing here needs client state. */
+ * stays a Server Component and nothing here needs client state. `nofollow`
+ * keeps a crawler out of the unbounded chain of periods they form. */
 export const CalendarToolbar = async ({
   view,
   isAtToday,
@@ -54,6 +55,7 @@ export const CalendarToolbar = async ({
       >
         <NextLink
           href={links.monthView}
+          rel='nofollow'
           aria-current={view === 'month' ? 'page' : undefined}
           disabled={view === 'month' ? true : undefined}
           isActive={view === 'month' ? true : undefined}
@@ -67,6 +69,7 @@ export const CalendarToolbar = async ({
         </NextLink>
         <NextLink
           href={links.weekView}
+          rel='nofollow'
           aria-current={view === 'week' ? 'page' : undefined}
           disabled={view === 'week' ? true : undefined}
           isActive={view === 'week' ? true : undefined}
@@ -98,6 +101,7 @@ export const CalendarToolbar = async ({
       <Box className={cn(PHONE_STEPPER, 'ui-cluster flex-nowrap gap-1')}>
         <NextLink
           href={links.previous}
+          rel='nofollow'
           className='button button-sm subtle max-md:p-1.5 md:pl-0'
         >
           <DoubleChevronLeft className={ACTION_ICON_CLASS} />
@@ -107,6 +111,7 @@ export const CalendarToolbar = async ({
           screen: it says "you are here" instead of offering a no-op. */}
         <NextLink
           href={links.today}
+          rel='nofollow'
           isActive={isAtToday}
           disabled={isAtToday}
           className='button button-sm subtle max-md:px-1.5 md:px-0'
@@ -121,6 +126,7 @@ export const CalendarToolbar = async ({
         </NextLink>
         <NextLink
           href={links.next}
+          rel='nofollow'
           className='button button-sm subtle max-md:p-1.5 md:pr-0'
         >
           <span className='max-md:sr-only'>{strings.nextPeriod}</span>
