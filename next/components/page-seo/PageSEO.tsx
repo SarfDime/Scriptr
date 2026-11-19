@@ -1,3 +1,4 @@
+import { BRAND_OG_IMAGE } from '@shared/config/brand'
 import { generatePath } from '@shared/utils/common-utils'
 import type { Metadata } from 'next'
 import { languageAlternates } from '@/lib/localized-metadata'
@@ -66,6 +67,8 @@ export function PageSEO({
   const toAbsolute = (path: string): string =>
     isAbsoluteUrl(path) ? path : new URL(path, baseUrl).toString()
 
+  // A page's own image wins; the shared card is the fallback, never a wrapper
+  // around a CMS image.
   const images = seoImage
     ? [
         {
@@ -75,7 +78,7 @@ export function PageSEO({
           alt: seoImageAlt || siteName,
         },
       ]
-    : undefined
+    : [{ ...BRAND_OG_IMAGE, alt: siteName }]
 
   return {
     title: seoTitle,

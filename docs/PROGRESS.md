@@ -274,10 +274,6 @@ described in
   never uses — carefully, route by route: a wrong revoke fails closed at
   runtime, which is how `PATCH /api/admin/profiles/:id/role` broke when the
   profile grants were narrowed.
-- **Branding:** create the logo, apply it across the app, and use it
-  as the favicon; update the README. Today the tab still carries Next's
-  scaffold favicon and the wordmark in
-  [`NavLogo.tsx`](../next/components/navigation/NavLogo.tsx) is set text.
 - **The `currently_taking` status is accepted but never written [decision]:**
   the only writers of `profile_subjects` store `completed` (the setup sync and
   the academics editor), and nothing reads a stored `currently_taking` row for

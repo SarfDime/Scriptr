@@ -1,7 +1,8 @@
+import { BRAND_COLORS, BRAND_OG_IMAGE } from '@shared/config/brand'
 import { SANITY_CACHE_TAGS } from '@shared/config/cache-tags'
 import { LOCALES, type LocaleId } from '@shared/config/localization-constants'
 import { UI_STRINGS_PACK } from '@shared/config/strings'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { notFound } from 'next/navigation'
 import { NavBar } from '@/components/navigation/Navbar'
 
@@ -43,6 +44,19 @@ const isLocaleId = (value: string): value is LocaleId =>
   LOCALES.includes(value as LocaleId)
 
 /**
+ * The browser chrome follows the brand, not the surface: the mark's own blue on
+ * the light scheme and green on the dark one. The app also offers an explicit
+ * theme toggle, which a `theme-color` media query cannot follow — it tracks the
+ * system preference only.
+ */
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: BRAND_COLORS.light.brand },
+    { media: '(prefers-color-scheme: dark)', color: BRAND_COLORS.dark.brand },
+  ],
+}
+
+/**
  * Site-level metadata, read from the `website` document like every page's own
  * metadata is — so the site name, the fallback description and the keyword list
  * have one source rather than being repeated here. `metadataBase` gives any
@@ -67,6 +81,13 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName,
       title: seo.defaultSeoTitle ?? siteName,
       description: seo.defaultSeoDescription ?? undefined,
+      images: [{ ...BRAND_OG_IMAGE, alt: siteName }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: seo.defaultSeoTitle ?? siteName,
+      description: seo.defaultSeoDescription ?? undefined,
+      images: [{ ...BRAND_OG_IMAGE, alt: siteName }],
     },
   }
 }

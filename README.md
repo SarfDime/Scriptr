@@ -60,6 +60,15 @@ corepack pnpm format             # Biome write (it is the linter)
 corepack pnpm format:unsafe      # also unsafe fixes — review the diff
 ```
 
+## Brand
+
+The mark is two interlocked hexagons whose halves form an S: `shared/brand/mark.svg`,
+plus `mark-bold.svg` for the wordmark and every icon. Path data, literal colours and the
+default social card are in `shared/config/brand.ts`; a test keeps them equal to the SVGs
+and to `next/styles/base/colors*.module.css`. `next/app/icon.svg`, `favicon.ico`,
+`apple-icon.png`, `next/app/manifest.ts` and `next/public/icons/` are the app's icon set,
+`sanity/static/` is the Studio's.
+
 ## Deployment
 
 - `*-s-*` branches run the Sanity workflow: lint, Sanity type-check, Studio build and a

@@ -22,7 +22,7 @@
   --text-occupied-border: rgba(255, 0, 0, 0.5);
   --bg-transparent-light: rgba(255, 255, 255, 0.1);
   --bg-transparent-dark: rgba(0, 0, 0, 0.3);
-  --bg-hover-valid: color-mix(in srgb, #0099ff 20%, transparent);
+  --bg-hover-valid: color-mix(in srgb, var(--color-brand) 20%, transparent);
   --border-transparent: rgba(0, 0, 0, 0.3);
   --border-white-transparent: rgba(255, 255, 255, 0.3);
 
@@ -33,12 +33,12 @@
   --text-muted: #6c757d;
   --text-secondary: #adb5bd;
   --text-primary: #212529;
-  --text-accent: #0099ff;
+  --text-accent: var(--color-brand);
   --border-light: #dee2e6;
   --border-dark: #343a40;
   --border-muted: #ced4da;
   --border-secondary: #adb5bd;
-  --border-primary: #0099ff;
+  --border-primary: var(--color-brand);
   --border-accent: #6c757d;
   --shadow-light: rgba(0, 0, 0, 0.1);
   --shadow-dark: rgba(0, 0, 0, 0.2);

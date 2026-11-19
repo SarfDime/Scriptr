@@ -1,5 +1,6 @@
 'use client'
 
+import { BrandMark } from '@shared/components/brand-mark'
 import {
   createContext,
   use,
@@ -36,8 +37,11 @@ type LoadingContextType = {
 
 const LoadingContext = createContext<LoadingContextType | null>(null)
 
-const LOGO_LETTERS = ['S', 'c', 'r', 'i', 'p', 't', 'r']
-const JUMP_DELAYS = [0.15, 0.42, 0.08, 0.55, 0.25, 0.62, 0.5]
+/** The mark plays the S; the letters that follow it jump in the same order they
+ * did when the first one was a glyph. */
+const LOGO_LETTERS = ['c', 'r', 'i', 'p', 't', 'r']
+const MARK_DELAY = 0.15
+const JUMP_DELAYS = [0.42, 0.08, 0.55, 0.25, 0.62, 0.5]
 const HANG_DELAY = 750
 
 const emptySubscribe = () => () => undefined
@@ -58,6 +62,15 @@ function LoadingContent({
   return (
     <Box className='ui-stack items-center justify-center gap-6 px-6 text-center'>
       <Box className='flex items-baseline text-7xl sm:text-8xl md:text-9xl font-black tracking-tight font-olive'>
+        <Box
+          className={cn(
+            'inline-block select-none text-brand',
+            animated && 'animate-jump'
+          )}
+          style={animated ? { animationDelay: `${MARK_DELAY}s` } : undefined}
+        >
+          <BrandMark className='block h-[1.1em] w-auto' />
+        </Box>
         {LOGO_LETTERS.map((letter, index) => (
           <Box
             key={index}

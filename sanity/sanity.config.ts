@@ -1,6 +1,7 @@
 import './styles/main.css'
 
 import { visionTool } from '@sanity/vision'
+import { BrandMark } from '@shared/components/brand-mark'
 import { ACADEMIC_TYPES, type AcademicEntityType } from '@shared/config/api'
 import {
   SANITY_DATASET,
@@ -30,6 +31,7 @@ import { customStructureTool } from './structure-tool/structure-tool'
 export default defineConfig({
   name: 'scriptr',
   title: 'Scriptr',
+  icon: BrandMark,
 
   projectId: SANITY_PROJECT_ID,
   dataset: SANITY_DATASET,
