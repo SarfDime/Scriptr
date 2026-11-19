@@ -149,6 +149,10 @@ test on `http://lbe.localhost:3000`.
   agents. They rendered `/calendar` tens of thousands of times and were most of the Active
   CPU use; search engines stay allowed. Rules are staged with `vercel firewall rules …` and
   go live only on `vercel firewall publish`.
+- The `scriptr.uk` Cloudflare zone **blocks the same agents first**, with one custom rule in
+  the Free plan's five (`cf rulesets rules create <ruleset-id> -z scriptr.uk --body …`), so
+  they never reach Vercel. Free does not allow the `matches` operator — the rule is a chain
+  of `lower(http.user_agent) contains "…"`. The agent list lives in both places; change both.
 - After changing production variables, redeploy both projects — `NEXT_PUBLIC_API_URL` is
   inlined at build — and expect everyone to sign in once more, since the old cookie was
   scoped to the Vercel API host.
