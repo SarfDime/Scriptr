@@ -1078,6 +1078,7 @@ export const UI_STRINGS_PACK = {
       },
       avatarLabel: { en: 'Profile photo', mk: 'Профилна фотографија' },
       avatarChange: { en: 'Change photo', mk: 'Смени фотографија' },
+      avatarClear: { en: 'Clear selection', mk: 'Отстрани избор' },
       avatarInvalidType: {
         en: 'Choose a JPEG, PNG, or WebP image.',
         mk: 'Избери JPEG, PNG или WebP слика.',
