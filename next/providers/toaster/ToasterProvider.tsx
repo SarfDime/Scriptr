@@ -34,6 +34,7 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
     onClick,
     duration = TOAST_TIMEOUT,
   }: Omit<ToasterType, 'id'>) => {
+    // biome-ignore lint/nursery/useReactCompiler: `addToast` runs from an event handler, not during render.
     const id = Math.random().toString(36).substring(2, 11)
     setToasts((prev) => [
       { id, title, type, description, href, onClick, duration },

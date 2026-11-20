@@ -6,6 +6,7 @@ import { useEffect, useEffectEvent, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useBodyScrollLock } from '@/hooks/useBodyScroll'
 import { useIsomorphicLayoutEffect } from '@/hooks/useIsomorphicLayoutEffect'
+import { useMounted } from '@/hooks/useMounted'
 import { cn, getPlacementClasses } from '@/lib/common-utils'
 import { useUIStrings } from '@/providers/locale/use-strings'
 import { Z_INDEX } from '../../styles/style'
@@ -101,7 +102,7 @@ export function Dialog({
   const ui = useUIStrings()
   const titleId = useId()
   const isCentered = placement === 'center'
-  const [mounted, setMounted] = useState(false)
+  const mounted = useMounted()
   // Gates the `<dialog>`, its backdrop and its children. It outlives the close
   // request by the turn `close()` takes to fire the `close` event, so the
   // dialog can hand focus back and report `onClose` while still in the DOM.
@@ -113,10 +114,6 @@ export function Dialog({
   const isControlled = Boolean(hideTrigger) && !setRef
 
   useBodyScrollLock({ skipCheck, isLocked: isRendered })
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   const requestOpen = () => {
     if (isRendered) return
@@ -141,6 +138,7 @@ export function Dialog({
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: `isRendered` is a rerun trigger, so a caller that flips `isOpen` back on while the close event is still in flight reopens the dialog.
   useEffect(() => {
+    // biome-ignore lint/nursery/useReactCompiler: the `<dialog>` element is the external system here; the effect mirrors `isOpen` onto it.
     syncControlledState()
   }, [isControlled, isOpen, isRendered])
 
@@ -254,7 +252,7 @@ export function Dialog({
             {!hideBackdrop && (
               <div
                 className={cn(
-                  'pointer-events-none fixed inset-0 bg-background-150/80 starting:opacity-0 starting:backdrop-blur-none backdrop-blur-sm transition-opacity duration-350',
+                  'pointer-events-none fixed inset-0 bg-background-150/80 starting:opacity-0 backdrop-blur-sm transition-opacity duration-250',
                   Z_INDEX.DIALOG_BACKDROP
                 )}
               />

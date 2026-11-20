@@ -1,4 +1,5 @@
 ---
+
 name: Chore
 about: Maintenance, tooling, or non-functional work in Scriptr
 title: "[Chore]: "

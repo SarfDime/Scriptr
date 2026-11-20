@@ -1,17 +1,17 @@
 {
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1152.0",
-    "@aws-sdk/s3-request-presigner": "^3.1152.0",
-    "@hono/node-server": "^2.1.5",
+    "@aws-sdk/client-s3": "^3.1172.0",
+    "@aws-sdk/s3-request-presigner": "^3.1172.0",
+    "@hono/node-server": "^2.1.9",
     "@hono/zod-validator": "^0.9.1",
     "@scriptr/shared": "workspace:*",
-    "@supabase/supabase-js": "^2.118.0",
-    "hono": "^4.13.13",
+    "@supabase/supabase-js": "^2.119.2",
+    "hono": "^4.13.19",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
-    "supabase": "^2.121.0",
+    "supabase": "^3.2.0",
     "tsx": "^4.23.15"
   },
   "exports": {
@@ -26,7 +26,7 @@
     "backfill:script-locales": "tsx --env-file=.env scripts/backfill-script-locales.ts",
     "dev": "tsx watch --env-file=.env --import=tsx src/server.ts",
     "admin:totp": "tsx scripts/generate-admin-totp.ts",
-    "gen:types": "supabase gen types typescript --project-id \"$PROJECT_REF\" --schema public > ../shared/types/database.types.ts",
+    "gen:types": "supabase gen types typescript --remote=\"$PROJECT_REF\" --schema public > ../shared/types/database.types.ts",
     "test": "tsx --test \"src/**/*.test.ts\""
   },
   "type": "module"

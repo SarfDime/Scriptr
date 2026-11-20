@@ -5,14 +5,14 @@ Rules a background canvas in `next/` follows. What each canvas draws is the code
 
 ## Where the parts live
 
-| Part | Home |
-| --- | --- |
-| Day/scene model — pure, no DOM | `shared/utils/` (tested beside it with `tsx --test`) |
-| Tunables and defaults | `shared/config/` — the Studio schema and the painters share them |
-| Drawing (sprites, painters, colour helpers) | `next/lib/app-background/` |
-| The component: canvases, effect, clock, stores | `next/components/ui/app-background/` |
-| Occluder masks (what is painted in front) | built in the component, once per layout |
-| Theme colours | `next/styles/base/*.css`, through CSS variables |
+| Part                                           | Home                                                             |
+| ---------------------------------------------- | ---------------------------------------------------------------- |
+| Day/scene model — pure, no DOM                 | `shared/utils/` (tested beside it with `tsx --test`)             |
+| Tunables and defaults                          | `shared/config/` — the Studio schema and the painters share them |
+| Drawing (sprites, painters, colour helpers)    | `next/lib/app-background/`                                       |
+| The component: canvases, effect, clock, stores | `next/components/ui/app-background/`                             |
+| Occluder masks (what is painted in front)      | built in the component, once per layout                          |
+| Theme colours                                  | `next/styles/base/*.css`, through CSS variables                  |
 
 ## Rules
 

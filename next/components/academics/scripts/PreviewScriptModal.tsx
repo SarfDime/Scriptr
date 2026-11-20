@@ -6,7 +6,7 @@ import EyeOpen from '@sanity/icons/EyeOpen'
 import { SCRIPT_STRINGS_PACK } from '@shared/strings/scripts-strings'
 import type { PortableTextValue } from '@shared/types/portable-text.types'
 import type { ScriptFile } from '@shared/types/scripts.types'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { PortableTextContent } from '@/components/typography/PortableTextContent'
@@ -53,11 +53,16 @@ export function PreviewScriptModal({
   const firstPreviewableFile = files.find((file) =>
     Boolean(getPreviewableKind(file.file_type))
   )
-  const [selectedFileId, setSelectedFileId] = useState<string | null>(
-    firstPreviewableFile?.id ?? null
-  )
+  const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
+  // A picked file that is no longer in the list falls back to the first
+  // previewable one, so the selection follows the props without an effect.
+  const pickedFileExists =
+    selectedFileId !== null && files.some((file) => file.id === selectedFileId)
+  const activeFileId = pickedFileExists
+    ? selectedFileId
+    : (firstPreviewableFile?.id ?? null)
   const selectedFile =
-    files.find((file) => file.id === selectedFileId) ?? firstPreviewableFile
+    files.find((file) => file.id === activeFileId) ?? firstPreviewableFile
   const selectedFileKind = selectedFile
     ? getPreviewableKind(selectedFile.file_type)
     : null
@@ -67,18 +72,6 @@ export function PreviewScriptModal({
     setIsFullscreen(false)
     onClose()
   }
-
-  useEffect(() => {
-    if (
-      !isOpen ||
-      (selectedFileId !== null &&
-        files.some((file) => file.id === selectedFileId))
-    ) {
-      return
-    }
-
-    setSelectedFileId(firstPreviewableFile?.id ?? null)
-  }, [files, firstPreviewableFile, isOpen, selectedFileId])
 
   return (
     <Dialog

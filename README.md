@@ -2,13 +2,13 @@
 
 University script-sharing platform, in one pnpm workspace.
 
-| Directory | Responsibility |
-| --- | --- |
-| `hono/` | API, Supabase, auth, R2 file operations |
-| `next/` | Frontend |
-| `sanity/` | Studio and schema tooling |
-| `shared/` | Types, config, strings, utils |
-| `optimizer/` | File optimizer service |
+| Directory    | Responsibility                          |
+| ------------ | --------------------------------------- |
+| `hono/`      | API, Supabase, auth, R2 file operations |
+| `next/`      | Frontend                                |
+| `sanity/`    | Studio and schema tooling               |
+| `shared/`    | Types, config, strings, utils           |
+| `optimizer/` | File optimizer service                  |
 
 Requirements: Node 24+, Corepack with the pinned pnpm, and credentials for Supabase,
 Cloudflare R2 and Sanity.
@@ -26,11 +26,11 @@ declared dependencies. `shared/` stays importable through the `@shared/*` aliase
 
 Each workspace has an `.env.example`:
 
-| Workspace | Copy to | Covers |
-| --- | --- | --- |
-| `hono/` | `hono/.env` | Supabase, R2, sitemap secret, Studio TOTP secret, cache revalidation |
-| `next/` | `next/.env` | API URL, Sanity project, revalidation and webhook secrets |
-| `sanity/` | `sanity/.env` | Studio API URL, preview origin |
+| Workspace | Copy to       | Covers                                                               |
+| --------- | ------------- | -------------------------------------------------------------------- |
+| `hono/`   | `hono/.env`   | Supabase, R2, sitemap secret, Studio TOTP secret, cache revalidation |
+| `next/`   | `next/.env`   | API URL, Sanity project, revalidation and webhook secrets            |
+| `sanity/` | `sanity/.env` | Studio API URL, preview origin                                       |
 
 Values that must match across workspaces:
 

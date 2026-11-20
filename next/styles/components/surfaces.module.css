@@ -371,14 +371,14 @@
  * and the solid fill below as the whole surface. The snow cap is switched off
  * through `--snow-cap-display` in `snow-cap.module.css`. */
 :root[data-simple]
-:is(
-  .ui-above,
-  .ui-above-opaque,
-  .ui-above-nav,
-  .ui-above-header,
-  .ui-above-drawer,
-  .ui-above-reverse
-) {
+  :is(
+    .ui-above,
+    .ui-above-opaque,
+    .ui-above-nav,
+    .ui-above-header,
+    .ui-above-drawer,
+    .ui-above-reverse
+  ) {
   background-image: none;
   /* The ice edge is near-white in light mode and pale blue in dark, which reads
    * as a glow once the fill behind it is flat; the neutral step replaces it. */
@@ -415,7 +415,7 @@
  * chrome classes are not `.ui-above`, and giving them the panel fill would
  * flatten them. */
 :root[data-simple]
-:is(.ui-above-opaque, .ui-above-nav, .ui-above-header, .ui-above-drawer) {
+  :is(.ui-above-opaque, .ui-above-nav, .ui-above-header, .ui-above-drawer) {
   background-color: var(--color-background-225);
 }
 

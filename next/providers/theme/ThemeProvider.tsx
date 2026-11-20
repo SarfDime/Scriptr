@@ -64,6 +64,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     const savedMode = window.localStorage.getItem(storageKey)
     if (isThemeMode(savedMode)) {
+      // biome-ignore lint/nursery/useReactCompiler: the stored preference can only be read in the browser, so it cannot seed a lazy initializer.
       setModeState(savedMode)
       applyMode(savedMode)
     }

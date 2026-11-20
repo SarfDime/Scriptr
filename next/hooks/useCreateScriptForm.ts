@@ -1,7 +1,7 @@
 'use client'
 
 import type { SubmitEvent } from 'react'
-import { useEffect, useEffectEvent, useState } from 'react'
+import { useState } from 'react'
 import { useScriptFilePicker } from '@/hooks/useScriptFilePicker'
 import { useScriptFormLoader } from '@/hooks/useScriptFormLoader'
 import { useScriptReadingLinks } from '@/hooks/useScriptReadingLinks'
@@ -100,17 +100,6 @@ export function useCreateScriptForm({
     resetUpload()
   }
 
-  // An effect event keeps the success handler on the latest closures without
-  // making the effect depend on every setter it touches.
-  const handleSuccess = useEffectEvent((scriptId: string) => {
-    resetForm()
-    onCreated?.(scriptId)
-  })
-
-  useEffect(() => {
-    if (state.status === 'success') handleSuccess(state.scriptId)
-  }, [state])
-
   const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!canSubmit) {
@@ -121,7 +110,7 @@ export function useCreateScriptForm({
       return
     }
 
-    await upload({
+    const scriptId = await upload({
       title: textFields.titlePayload,
       description: textFields.descriptionPayload ?? undefined,
       subjectId,
@@ -131,6 +120,11 @@ export function useCreateScriptForm({
       additionalReading: readingLinks.toPayload(),
       files: files.validFiles.map((entry) => entry.file),
     })
+
+    if (!scriptId) return
+
+    resetForm()
+    onCreated?.(scriptId)
   }
 
   return {

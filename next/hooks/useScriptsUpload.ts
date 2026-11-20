@@ -44,9 +44,15 @@ export function useScriptUpload() {
     { errorTitle: statuses.error }
   )
 
+  /** Resolves with the created script's id, so the caller can react to success
+   * where the upload was started; `null` when it failed or was rejected. */
   const upload = async (input: ScriptUploadInput) => {
     const result = await runProtected(input)
-    if (!result.ok) setState({ status: 'idle' })
+    if (!result.ok) {
+      setState({ status: 'idle' })
+      return null
+    }
+    return result.data
   }
 
   const reset = () => setState({ status: 'idle' })

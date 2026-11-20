@@ -133,8 +133,8 @@ curl -s $BASE/sanity/professors/$PROF1 -H "x-admin-token: $TOKEN" | jq '{faculti
 Two fixed local accounts, so permission boundaries are actually testable in
 later phases: one regular user, one promoted to admin.
 
-| Role    | Email                | Username     | Password       |
-| ------- | -------------------- | ------------ | -------------- |
+| Role    | Email                | Username      | Password       |
+| ------- | -------------------- | ------------- | -------------- |
 | student | `student@test.local` | `localstudent` | `REDACTED_LOCAL_TEST_PASSWORD` |
 | admin   | `admin@test.local`   | `localadmin`   | `REDACTED_LOCAL_TEST_PASSWORD` |
 
@@ -856,7 +856,7 @@ a definition can only be created for an id that already has wording there —
 `script_stack` is a seeded one, so it is the safe id for this walkthrough.
 A definition nobody has earned can be deleted, so teardown is safe.
 
-~~~bash
+```bash
 curl -s $BASE/achievement-definitions | jq .
 
 # Student cannot write — expect 403
@@ -905,7 +905,7 @@ curl -s -b cookies-admin.txt -X DELETE $BASE/achievement-definitions/script_stac
 
 # A definition somebody holds cannot be deleted — expect 409
 curl -s -b cookies-admin.txt -X DELETE $BASE/achievement-definitions/first_upload | jq .
-~~~
+```
 
 ## Phase 10b — Restrictions
 
@@ -1072,11 +1072,11 @@ rm -f cookies-student.txt cookies-admin.txt /tmp/test-script.md /tmp/test-script
 | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `{"error":"Not authenticated"}`                            | Missing `-b cookies-*.txt`, or the session expired or was cleared (access tokens last one week) — log in again                  |
 | `{"error":"Access code required"}` on a catalog route      | No `x-admin-token` sent — run the token exchange in the setup block first                                                       |
-| `{"error":"Access expired. Enter a new code."}`            | The twenty-minute token lapsed, or `ADMIN_TOTP_SECRET` changed since it was issued — exchange a fresh code                     |
-| `{"error":"Admin access code required"}` on `/api/admin/*` | No unlock cookie: run the `/api/admin/access` exchange (or send `x-admin-token`)                                                    |
-| `403` on any `/api/sanity/*` or `/api/admin/*` call        | The request came from another origin, or the matching `SANITY_STUDIO_ORIGIN` / `WEBSITE_ORIGIN` is unset                       |
-| `{"error":"Admin access is not configured"}` (503)         | `ADMIN_TOTP_SECRET` is unset or not base32 in `hono/.env` (restart after setting it)                                           |
-| `{"error":"Forbidden"}` on `GET /sitemap/scripts`          | `x-sitemap-secret` missing or does not match `SITEMAP_SECRET`                                                                  |
+| `{"error":"Access expired. Enter a new code."}`            | The twenty-minute token lapsed, or `ADMIN_TOTP_SECRET` changed since it was issued — exchange a fresh code                      |
+| `{"error":"Admin access code required"}` on `/api/admin/*` | No unlock cookie: run the `/api/admin/access` exchange (or send `x-admin-token`)                                                |
+| `403` on any `/api/sanity/*` or `/api/admin/*` call        | The request came from another origin, or the matching `SANITY_STUDIO_ORIGIN` / `WEBSITE_ORIGIN` is unset                        |
+| `{"error":"Admin access is not configured"}` (503)         | `ADMIN_TOTP_SECRET` is unset or not base32 in `hono/.env` (restart after setting it)                                            |
+| `{"error":"Forbidden"}` on `GET /sitemap/scripts`          | `x-sitemap-secret` missing or does not match `SITEMAP_SECRET`                                                                   |
 | `403` on `GET /profiles`                                   | Admin only — use `cookies-admin.txt`; the listing is not public                                                                 |
 | `403` on a create/update that should work                  | The account is still restricted from Phase 10b — lift it with `DELETE /restrictions/:profileId`                                 |
 | `404 Route not found` on a documented endpoint             | The route file isn't mounted in `hono/src/index.ts`                                                                             |

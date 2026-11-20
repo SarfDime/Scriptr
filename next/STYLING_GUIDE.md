@@ -21,12 +21,12 @@ utilities, and `--ui-lit-edge` stays first in every `box-shadow` stack.
 
 ## Layout
 
-| Class | Use |
-| --- | --- |
-| `ui-container` | Main content region: navbar width and overflow. |
-| `ui-section` | Responsive block padding. |
-| `ui-stack` | Vertical flex; set the gap with a Tailwind `gap-*`. |
-| `ui-cluster` | Wrapping horizontal flex; already centres its items. |
+| Class          | Use                                                  |
+| -------------- | ---------------------------------------------------- |
+| `ui-container` | Main content region: navbar width and overflow.      |
+| `ui-section`   | Responsive block padding.                            |
+| `ui-stack`     | Vertical flex; set the gap with a Tailwind `gap-*`.  |
+| `ui-cluster`   | Wrapping horizontal flex; already centres its items. |
 
 Use semantic HTML (`header`, `nav`, `main`, `section`, `footer`) — there is no `ui-nav` or
 `ui-footer`. Prefer parent `ui-stack`/`ui-cluster` gaps over `mt-*`/`mb-*` between siblings.
@@ -36,18 +36,18 @@ Use semantic HTML (`header`, `nav`, `main`, `section`, `footer`) — there is no
 Size, weight and colour belong to the class; never add `font-*` or `text-<color>` beside a
 `ui-*` class. Muted copy uses `text-fg-muted`, never a raw `grey-*`/`fg-*` step.
 
-| Class | Size | Weight | Colour | Use |
-| --- | --- | --- | --- | --- |
-| `ui-display` | 30→72px | bold | `fg-700` | Large page heading |
-| `ui-heading` | 24→48px | bold | `fg-700` | Section heading |
-| `ui-title` | 16px, 18px `md` | semibold | `fg-700` | Section or card heading |
-| `ui-subtitle` | 14px | normal | `fg-muted` | Supporting copy |
-| `ui-body` | 16px | normal | `fg` | Body copy |
-| `ui-body-strong` | 16px | semibold | `fg` | Entity and person names |
-| `ui-label` | 12px | semibold | `fg-muted` | Field labels |
-| `ui-caption` | 12px | normal | `fg-muted` | Metadata, help text |
-| `ui-nav-caption` | 12px uppercase | normal | `fg-on-chrome` | Nav section caption |
-| `ui-stat` | 24px | medium | `fg-700` | Numeric stat |
+| Class            | Size            | Weight   | Colour         | Use                     |
+| ---------------- | --------------- | -------- | -------------- | ----------------------- |
+| `ui-display`     | 30→72px         | bold     | `fg-700`       | Large page heading      |
+| `ui-heading`     | 24→48px         | bold     | `fg-700`       | Section heading         |
+| `ui-title`       | 16px, 18px `md` | semibold | `fg-700`       | Section or card heading |
+| `ui-subtitle`    | 14px            | normal   | `fg-muted`     | Supporting copy         |
+| `ui-body`        | 16px            | normal   | `fg`           | Body copy               |
+| `ui-body-strong` | 16px            | semibold | `fg`           | Entity and person names |
+| `ui-label`       | 12px            | semibold | `fg-muted`     | Field labels            |
+| `ui-caption`     | 12px            | normal   | `fg-muted`     | Metadata, help text     |
+| `ui-nav-caption` | 12px uppercase  | normal   | `fg-on-chrome` | Nav section caption     |
+| `ui-stat`        | 24px            | medium   | `fg-700`       | Numeric stat            |
 
 Display type is bold with `tracking-tight`; never add `font-black` or
 `tracking-tighter`. The responsive `font-size-*` classes belong to authored rich text
@@ -64,21 +64,21 @@ breath), never a brand colour; change them only in `skeleton.module.css`.
 
 Prefer `Box`, `Card`, `Button`, `Badge`, `Divider`.
 
-| Class | Use |
-| --- | --- |
-| `ui-card`, `ui-card-header`, `ui-card-body`, `ui-card-footer` | Card frame and sections. |
-| `ui-badge` | Badge radius and sizing. |
-| `ui-above` | Translucent panel: 97% fill, sheen, shadow, no blur (ice adds one). Sets no border width — add `border`. |
-| `ui-above-drawer` | Slide-over off the right edge (notification tray): chrome volume, square, border and drop on the left. |
-| `no-gradient` | Drops the sheen, keeps fill/border/shadow. For dense text where the wash competes. |
+| Class                                                                                                | Use                                                                                                       |
+| ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `ui-card`, `ui-card-header`, `ui-card-body`, `ui-card-footer`                                        | Card frame and sections.                                                                                  |
+| `ui-badge`                                                                                           | Badge radius and sizing.                                                                                  |
+| `ui-above`                                                                                           | Translucent panel: 97% fill, sheen, shadow, no blur (ice adds one). Sets no border width — add `border`.  |
+| `ui-above-drawer`                                                                                    | Slide-over off the right edge (notification tray): chrome volume, square, border and drop on the left.    |
+| `no-gradient`                                                                                        | Drops the sheen, keeps fill/border/shadow. For dense text where the wash competes.                        |
 | `ui-sheen-horizontal` (`-inverted`), `ui-sheen-vertical` (`-inverted`), `ui-sheen-diagonal-inverted` | Same band, different edge: top, bottom, left, right, bottom-right. Named for the edge, not the ramp axis. |
-| `ui-divider`, `ui-divider-h`/`-v` | Groove base; the ice ridge (`ice-divider-xs`, 8px; 2px groove in simple mode). |
-| `ui-groove-t/b/l/r` | Turns the element's own border on that side into the iced edge. |
-| `ice-groove-none` | Keeps the ridge off an edge removed with `border-0`. |
-| `ui-loading-overlay`, `-exiting` | The global loading `<dialog>` and its fade-out. |
+| `ui-divider`, `ui-divider-h`/`-v`                                                                    | Groove base; the ice ridge (`ice-divider-xs`, 8px; 2px groove in simple mode).                            |
+| `ui-groove-t/b/l/r`                                                                                  | Turns the element's own border on that side into the iced edge.                                           |
+| `ice-groove-none`                                                                                    | Keeps the ridge off an edge removed with `border-0`.                                                      |
+| `ui-loading-overlay`, `-exiting`                                                                     | The global loading `<dialog>` and its fade-out.                                                           |
 
 ```tsx
-<Card>
+;<Card>
   <Card.Header>Title</Card.Header>
   <Card.Body>Content</Card.Body>
   <Card.Footer>Metadata</Card.Footer>
@@ -278,12 +278,12 @@ it points at `ice-subtle` (`classic-subtle` is kept, commented out, beside it).
 Crisp and directional: a 1px contact line plus a tight drop (blur ≤10px; larger steps use
 negative spread). No zero-offset glows or blur above ~12px.
 
-| Token / class | Use |
-| --- | --- |
-| `shadow-sm` | Cards, avatars, quiet buttons |
-| `shadow-md` (`shadow-mdx`) | `ui-above`, toasts, dropdowns |
-| `shadow-lg` | Dialogs |
-| `shadow-xl` | Select lists, popovers |
+| Token / class                              | Use                            |
+| ------------------------------------------ | ------------------------------ |
+| `shadow-sm`                                | Cards, avatars, quiet buttons  |
+| `shadow-md` (`shadow-mdx`)                 | `ui-above`, toasts, dropdowns  |
+| `shadow-lg`                                | Dialogs                        |
+| `shadow-xl`                                | Select lists, popovers         |
 | `--shadow-button`, `--shadow-button-hover` | Filled buttons at rest / hover |
 
 Tailwind's `shadow-sm/md/lg/xl` are overridden to this scale. `--shadow-strength`

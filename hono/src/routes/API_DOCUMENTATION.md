@@ -7,11 +7,11 @@ check is `GET /api`. Response shapes live in `shared/types/` and are applied at 
 
 ## Access surfaces
 
-| Surface | Needs | Pinned origin |
-| --- | --- | --- |
-| Session routes (the default) | Supabase session cookie | — |
-| `/api/sanity/*` | `x-admin-token`: a TOTP code exchanged at `POST /sanity/access` | `SANITY_STUDIO_ORIGIN` |
-| `/api/admin/*` | the same token **and** an admin session | `WEBSITE_ORIGIN` |
+| Surface                      | Needs                                                           | Pinned origin          |
+| ---------------------------- | --------------------------------------------------------------- | ---------------------- |
+| Session routes (the default) | Supabase session cookie                                         | —                      |
+| `/api/sanity/*`              | `x-admin-token`: a TOTP code exchanged at `POST /sanity/access` | `SANITY_STUDIO_ORIGIN` |
+| `/api/admin/*`               | the same token **and** an admin session                         | `WEBSITE_ORIGIN`       |
 
 - `POST /sanity/access` `{ code }` → `{ token, expiresAt }`, valid twenty minutes. `400` not
   six digits, `401` wrong or reused code, `429` after 5 attempts per IP in 15 minutes,
@@ -38,25 +38,25 @@ check is `GET /api`. Response shapes live in `shared/types/` and are applied at 
 RLS is read-only on these tables and their junctions for every role, admin included;
 `/api/sanity/*` with the service-role client is the only write path.
 
-| Route | Response |
-| --- | --- |
-| `GET /sanity/universities`, `/:id` | Universities with faculties (incl. `r2_bucket_id`) |
-| `GET /sanity/faculties`, `/:id` | Faculties; one faculty with `studies` (each with `subjects`) and professors |
-| `GET /sanity/professors`, `/:id` | Professors; one with subjects, studies, faculties |
-| `GET /sanity/subjects`, `/:id` | Subjects; one with study and professors |
+| Route                              | Response                                                                    |
+| ---------------------------------- | --------------------------------------------------------------------------- |
+| `GET /sanity/universities`, `/:id` | Universities with faculties (incl. `r2_bucket_id`)                          |
+| `GET /sanity/faculties`, `/:id`    | Faculties; one faculty with `studies` (each with `subjects`) and professors |
+| `GET /sanity/professors`, `/:id`   | Professors; one with subjects, studies, faculties                           |
+| `GET /sanity/subjects`, `/:id`     | Subjects; one with study and professors                                     |
 
 Subjects reach faculties only through studies (`subjects.study_id → studies.faculty_id`);
 faculty responses nest subjects under `studies`.
 
 Mutations, all under `/sanity`:
 
-| Entity | Routes |
-| --- | --- |
-| University | `POST /universities` `{ name, sanity_id?, r2_bucket_id? }` (returns the linked row with `existing: true` if the Sanity doc is already linked) · `PATCH /universities/:id` `{ name?, r2_bucket_id? }` · `DELETE` (blocked with `409` while faculties reference it) · `POST /universities/:id/sync` `{ name, r2_bucket_id? }` (`404` if no row) |
-| Faculty | `POST /faculties` `{ name, university_id, sanity_id? }` · `PATCH /faculties/:id` `{ name?, university_id? }` · `DELETE` (`409` if referenced by studies, professor assignments or user selections) · `POST /faculties/:id/sync` |
-| Professor | `POST /professors` `{ name, faculty_ids?, study_ids?, sanity_id? }` · `PATCH /professors/:id` `{ name? }` · `DELETE` (blocked if referenced by subjects, faculties, studies, scripts or comments) · `POST`/`DELETE /professors/:id/{faculties/:facultyId,studies/:studyId}` · `GET /professors/by-sanity/:sanityId` · `POST /professors/:id/sync` |
-| Study | `POST /studies` `{ name, faculty_id, site_slug, sanity_id?, r2_bucket_id? }` · `PATCH /studies/:id` · `DELETE` (blocked if referenced by subjects, professor assignments or enrollments) · `POST /studies/:id/sync` |
-| Subject | `POST /subjects` `{ name, study_id, professor_ids?, sanity_id? }` · `PATCH /subjects/:id` `{ name?, study_id? }` · `DELETE` (blocked if referenced by professor assignments, user statuses or scripts) · `POST`/`DELETE /subjects/:id/professors/:professorId` · `POST /subjects/:id/sync` |
+| Entity     | Routes                                                                                                                                                                                                                                                                                                                                            |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| University | `POST /universities` `{ name, sanity_id?, r2_bucket_id? }` (returns the linked row with `existing: true` if the Sanity doc is already linked) · `PATCH /universities/:id` `{ name?, r2_bucket_id? }` · `DELETE` (blocked with `409` while faculties reference it) · `POST /universities/:id/sync` `{ name, r2_bucket_id? }` (`404` if no row)     |
+| Faculty    | `POST /faculties` `{ name, university_id, sanity_id? }` · `PATCH /faculties/:id` `{ name?, university_id? }` · `DELETE` (`409` if referenced by studies, professor assignments or user selections) · `POST /faculties/:id/sync`                                                                                                                   |
+| Professor  | `POST /professors` `{ name, faculty_ids?, study_ids?, sanity_id? }` · `PATCH /professors/:id` `{ name? }` · `DELETE` (blocked if referenced by subjects, faculties, studies, scripts or comments) · `POST`/`DELETE /professors/:id/{faculties/:facultyId,studies/:studyId}` · `GET /professors/by-sanity/:sanityId` · `POST /professors/:id/sync` |
+| Study      | `POST /studies` `{ name, faculty_id, site_slug, sanity_id?, r2_bucket_id? }` · `PATCH /studies/:id` · `DELETE` (blocked if referenced by subjects, professor assignments or enrollments) · `POST /studies/:id/sync`                                                                                                                               |
+| Subject    | `POST /subjects` `{ name, study_id, professor_ids?, sanity_id? }` · `PATCH /subjects/:id` `{ name?, study_id? }` · `DELETE` (blocked if referenced by professor assignments, user statuses or scripts) · `POST`/`DELETE /subjects/:id/professors/:professorId` · `POST /subjects/:id/sync`                                                        |
 
 - `r2_bucket_id` matches `^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$` (API and a DB CHECK), unique per
   university; studies may also carry one, falling back to the parent university's bucket.
@@ -78,11 +78,11 @@ Read-only lookups for the Studio: `GET /sanity/{universities,faculties,studies,p
 
 ## Uploads
 
-| Route | Notes |
-| --- | --- |
-| `POST /file-ops/upload-urls` | Auth. Step 1. `{ subjectId?, files: [{ name, size }] }`, 1–10 files. Returns `{ success, uploads: [{ stagingKey, url, contentType }] }` — presigned PUTs valid 10 minutes into `staging/{userId}/`. `400` unsupported extension / oversized / too many; `429` at 30 requests per 10 minutes per user. |
-| `POST /file-ops/finalize` | Auth. Step 3. `{ subjectId?, files: [{ stagingKey, name }] }`. Optimizes each file and returns `{ success, files: [{ fileKey, fileType, fileSizeBytes, bucket, fileName }] }`, which `POST /scripts` and `POST /scripts/:id/files` accept as `files`. `fileName` is the original name lowercased, accent-stripped, kebab-cased, extension dropped (`Predavanje 3.PDF` → `predavanje-3`), or `null` when nothing usable remains (Cyrillic-only). All-or-nothing: `400` for a key that is not the caller's, does not exist, or whose bytes do not match the extension; `413` (with `stagingKey` and post-optimization `sizeBytes`) if still over the cap; `429` at 15 per 10 minutes; `503` if the optimizer is configured but unavailable; `500` otherwise. Nothing is left behind. |
-| `GET /file-ops/get-file/*` | Public. `{ url, key }` — a pre-signed download valid one hour for a key recorded in `script_files`, with the bucket resolved from that row (any `?bucket=` is ignored). `?download=1` answers `Content-Disposition: attachment; filename="<file_name>.<file_type>"` (a row without a usable name gets plain `attachment`); otherwise the URL renders inline. |
+| Route                        | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /file-ops/upload-urls` | Auth. Step 1. `{ subjectId?, files: [{ name, size }] }`, 1–10 files. Returns `{ success, uploads: [{ stagingKey, url, contentType }] }` — presigned PUTs valid 10 minutes into `staging/{userId}/`. `400` unsupported extension / oversized / too many; `429` at 30 requests per 10 minutes per user.                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `POST /file-ops/finalize`    | Auth. Step 3. `{ subjectId?, files: [{ stagingKey, name }] }`. Optimizes each file and returns `{ success, files: [{ fileKey, fileType, fileSizeBytes, bucket, fileName }] }`, which `POST /scripts` and `POST /scripts/:id/files` accept as `files`. `fileName` is the original name lowercased, accent-stripped, kebab-cased, extension dropped (`Predavanje 3.PDF` → `predavanje-3`), or `null` when nothing usable remains (Cyrillic-only). All-or-nothing: `400` for a key that is not the caller's, does not exist, or whose bytes do not match the extension; `413` (with `stagingKey` and post-optimization `sizeBytes`) if still over the cap; `429` at 15 per 10 minutes; `503` if the optimizer is configured but unavailable; `500` otherwise. Nothing is left behind. |
+| `GET /file-ops/get-file/*`   | Public. `{ url, key }` — a pre-signed download valid one hour for a key recorded in `script_files`, with the bucket resolved from that row (any `?bucket=` is ignored). `?download=1` answers `Content-Disposition: attachment; filename="<file_name>.<file_type>"` (a row without a usable name gets plain `attachment`); otherwise the URL renders inline.                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
 - Bytes never pass through the API (Vercel caps bodies at 4.5 MB): the browser gets the
   presigned URLs, PUTs each file with the returned `Content-Type` and the declared length
@@ -110,14 +110,14 @@ Read-only lookups for the Studio: `GET /sanity/{universities,faculties,studies,p
 
 Public:
 
-| Route | Notes |
-| --- | --- |
-| `GET /scripts` | **Admin.** One page, newest first: `?limit` (max 50, default 50), `?offset`, optional `?study=<id>` → `{ items, hasMore, totalCount }`. |
-| `GET /scripts/:id` | By **slug or id**. Public and unscoped; `404` only when missing. The slug is minted at creation and never changes. |
-| `GET /scripts/subject/:subjectId`, `/scripts/study/:studyId` | By vote score. |
-| `GET /scripts/top?limit=10`, `/scripts/popular?limit=10` | By votes / downloads; optional `?study=<id>`. |
-| `GET /scripts/search?q=` | Fuzzy over title and description in every language; optional `?study=<id>`. |
-| `POST /scripts/:id/download` | Records a download deduped by account → IP → `x-device-id`. Service-role: `download_events` has no client INSERT policy, and the count goes through the atomic `increment_script_download_count` RPC. An author downloading their own script gets `counted: false` and nothing is recorded; an anonymous self-download still counts. |
+| Route                                                        | Notes                                                                                                                                                                                                                                                                                                                                |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET /scripts`                                               | **Admin.** One page, newest first: `?limit` (max 50, default 50), `?offset`, optional `?study=<id>` → `{ items, hasMore, totalCount }`.                                                                                                                                                                                              |
+| `GET /scripts/:id`                                           | By **slug or id**. Public and unscoped; `404` only when missing. The slug is minted at creation and never changes.                                                                                                                                                                                                                   |
+| `GET /scripts/subject/:subjectId`, `/scripts/study/:studyId` | By vote score.                                                                                                                                                                                                                                                                                                                       |
+| `GET /scripts/top?limit=10`, `/scripts/popular?limit=10`     | By votes / downloads; optional `?study=<id>`.                                                                                                                                                                                                                                                                                        |
+| `GET /scripts/search?q=`                                     | Fuzzy over title and description in every language; optional `?study=<id>`.                                                                                                                                                                                                                                                          |
+| `POST /scripts/:id/download`                                 | Records a download deduped by account → IP → `x-device-id`. Service-role: `download_events` has no client INSERT policy, and the count goes through the atomic `increment_script_download_count` RPC. An author downloading their own script gets `counted: false` and nothing is recorded; an anonymous self-download still counts. |
 
 `?study=` narrows, it never grants: reads are scoped by RLS, and a non-UUID value is `400`
 rather than a silently unscoped read. There is no `?study=` on `/professors` (they are
@@ -126,15 +126,15 @@ university-scoped). Responses exclude `is_flagged`; `files` carry `bucket`; summ
 
 Authenticated:
 
-| Route | Notes |
-| --- | --- |
-| `POST /scripts` | `{ title, description?, subjectId, professorId, examSession?, examYear?, additionalReading?, files? }`. `examSession` is `january`/`june`/`september`/`null`; `examYear` is 2023…current, one lower for a session still ahead this calendar year; `null` year only with a `null` session. Out of range is `400`. `files` is exactly what finalize returned — checked against the caller's scope for this subject (otherwise `400 Invalid upload request`), existence in R2 (`400`) and the cap (`413`) before anything is written, with the size taken from R2 — or omitted/empty for a script without files. `title`/`description` are Portable Text per language (see Notes). Study-scoped: the caller must belong to the subject's study (a `profile_studies` row, a study role, or ownership), else `403` before R2 is touched. `409` for an unknown subject/professor, or a professor not assigned to the subject (checked before the upload). Rejected if restricted. |
-| `GET /scripts/my-scripts` | The caller's scripts. |
-| `PATCH /scripts/:id` | Author or admin. `{ title?, description?, additional_reading?, exam_session?, exam_year? }`; files are immutable. `description: null` clears it; `exam_session/year: null` sets the general options; a year is validated against the session the script ends up with. `400` on invalid text, an unknown session or an out-of-range year. Restriction is enforced in the UPDATE policy, mapped to `403` ("Your account is restricted from editing scripts"). `authenticated` holds column UPDATE on exactly `title`, `description`, `additional_reading`, `exam_session`, `exam_year`, `updated_at`. |
-| `DELETE /scripts/:id` | Author or admin. Not restriction-checked. Removes the rows and best-effort deletes the R2 objects. |
-| `DELETE /scripts/:scriptId/files/:fileId` | Author or admin. `404` if the file is not that script's. Not restriction-checked. Renumbers the remaining `position`s (service-role, because `script_files` has no UPDATE policy; best effort). |
-| `POST /scripts/:id/files` | Author or admin. `{ files: [...] }`, at least one, exactly what finalize returned; appends after the last `position`. Same scope/existence/size checks (`400`/`413`). The INSERT policy requires a non-restricted author → `403` ("Your account is restricted from adding files"). `404` unknown script, `403` neither author nor admin. Every failure deletes the uploaded objects again, only under the caller's own user id. |
-| `GET /scripts/flagged/all` | Admin. |
+| Route                                     | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /scripts`                           | `{ title, description?, subjectId, professorId, examSession?, examYear?, additionalReading?, files? }`. `examSession` is `january`/`june`/`september`/`null`; `examYear` is 2023…current, one lower for a session still ahead this calendar year; `null` year only with a `null` session. Out of range is `400`. `files` is exactly what finalize returned — checked against the caller's scope for this subject (otherwise `400 Invalid upload request`), existence in R2 (`400`) and the cap (`413`) before anything is written, with the size taken from R2 — or omitted/empty for a script without files. `title`/`description` are Portable Text per language (see Notes). Study-scoped: the caller must belong to the subject's study (a `profile_studies` row, a study role, or ownership), else `403` before R2 is touched. `409` for an unknown subject/professor, or a professor not assigned to the subject (checked before the upload). Rejected if restricted. |
+| `GET /scripts/my-scripts`                 | The caller's scripts.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `PATCH /scripts/:id`                      | Author or admin. `{ title?, description?, additional_reading?, exam_session?, exam_year? }`; files are immutable. `description: null` clears it; `exam_session/year: null` sets the general options; a year is validated against the session the script ends up with. `400` on invalid text, an unknown session or an out-of-range year. Restriction is enforced in the UPDATE policy, mapped to `403` ("Your account is restricted from editing scripts"). `authenticated` holds column UPDATE on exactly `title`, `description`, `additional_reading`, `exam_session`, `exam_year`, `updated_at`.                                                                                                                                                                                                                                                                                                                                                                         |
+| `DELETE /scripts/:id`                     | Author or admin. Not restriction-checked. Removes the rows and best-effort deletes the R2 objects.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `DELETE /scripts/:scriptId/files/:fileId` | Author or admin. `404` if the file is not that script's. Not restriction-checked. Renumbers the remaining `position`s (service-role, because `script_files` has no UPDATE policy; best effort).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `POST /scripts/:id/files`                 | Author or admin. `{ files: [...] }`, at least one, exactly what finalize returned; appends after the last `position`. Same scope/existence/size checks (`400`/`413`). The INSERT policy requires a non-restricted author → `403` ("Your account is restricted from adding files"). `404` unknown script, `403` neither author nor admin. Every failure deletes the uploaded objects again, only under the caller's own user id.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `GET /scripts/flagged/all`                | Admin.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ## Comments
 
@@ -156,15 +156,15 @@ With a session, list responses add `reactions_count`, `reactions_by_type`, `like
 
 Authenticated:
 
-| Route | Notes |
-| --- | --- |
-| `POST /comments` | `{ content, professor_id? \| script_id? }` — exactly one target. Inline decorators on normal text blocks only; no blocks, annotations, headings, lists or alignment. ≥3 non-whitespace characters, ≤10 KiB of JSON. 10 per 15 minutes per account, plus 60 per 15 minutes across one study. Study-scoped when the target is a script (`403`; unknown `script_id` is `404`); a professor comment is open to any signed-in account. Rejected if restricted. |
-| `POST /comments/:commentId/replies` | `{ content }`; the target is copied from the parent and enforced by a trigger. Same validation, limits and study rule. |
-| `POST /comments/:commentId/reactions` | `{ reaction_type: 'like'\|'hate'\|'funny'\|'sad'\|'confused' }`, toggled per type. Authors cannot react to their own comment. 15 toggles per minute per account with likes. Rejected if restricted. |
-| `POST /comments/:commentId/like` | Toggle, same author rule and engagement limit. |
-| `PATCH /comments/:id` | Author or admin. `{ content }`, same allow-list, minimum and size. `404` if missing. |
-| `DELETE /comments/:id` | Author or admin. Returns the target's updated `totalCommentCount`, cascade included. |
-| `GET /comments/flagged/all` | Admin, unlocked. Service-role read after the admin check, because public roles cannot select `is_flagged`. |
+| Route                                 | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /comments`                      | `{ content, professor_id? \| script_id? }` — exactly one target. Inline decorators on normal text blocks only; no blocks, annotations, headings, lists or alignment. ≥3 non-whitespace characters, ≤10 KiB of JSON. 10 per 15 minutes per account, plus 60 per 15 minutes across one study. Study-scoped when the target is a script (`403`; unknown `script_id` is `404`); a professor comment is open to any signed-in account. Rejected if restricted. |
+| `POST /comments/:commentId/replies`   | `{ content }`; the target is copied from the parent and enforced by a trigger. Same validation, limits and study rule.                                                                                                                                                                                                                                                                                                                                    |
+| `POST /comments/:commentId/reactions` | `{ reaction_type: 'like'\|'hate'\|'funny'\|'sad'\|'confused' }`, toggled per type. Authors cannot react to their own comment. 15 toggles per minute per account with likes. Rejected if restricted.                                                                                                                                                                                                                                                       |
+| `POST /comments/:commentId/like`      | Toggle, same author rule and engagement limit.                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `PATCH /comments/:id`                 | Author or admin. `{ content }`, same allow-list, minimum and size. `404` if missing.                                                                                                                                                                                                                                                                                                                                                                      |
+| `DELETE /comments/:id`                | Author or admin. Returns the target's updated `totalCommentCount`, cascade included.                                                                                                                                                                                                                                                                                                                                                                      |
+| `GET /comments/flagged/all`           | Admin, unlocked. Service-role read after the admin check, because public roles cannot select `is_flagged`.                                                                                                                                                                                                                                                                                                                                                |
 
 Database errors map to `409` (unique/FK), `403` (permission), `400` (custom Postgres
 exception) and a generic `500`; raw details stay in the logs.
@@ -174,13 +174,13 @@ exception) and a generic `500`; raw details stay in the logs.
 One table for scripts, users and comments (`target_script_id`/`target_user_id`/
 `target_comment_id`, exactly one set).
 
-| Route | Access |
-| --- | --- |
-| `POST /flags` | Any authenticated, non-restricted user. `{ target_type: 'user'\|'script'\|'comment', target_id, reason (≥10 chars) }`. Authors cannot report their own script or comment (`403`); one pending flag per reporter per target (`400`). At five distinct reporters with non-dismissed flags, every owner and the admins/moderators of the target's study get a `flag_threshold` notification (a user flag alerts owners only). |
-| `GET /flags/my-flags` | Own flags. |
-| `DELETE /flags/:id` | Reporter (own) or admin (any). Not restriction-checked. |
-| `GET /flags`, `/flags/pending`, `/flags/status/:status` | Admin (RLS grants SELECT). |
-| `PATCH /flags/:id` | Admin. `{ status: 'pending'\|'reviewed'\|'dismissed' }`; resolving records `reviewed_by`/`reviewed_at`, returning to pending clears them, and dismissing clears `is_flagged` once no pending flag remains. |
+| Route                                                   | Access                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /flags`                                           | Any authenticated, non-restricted user. `{ target_type: 'user'\|'script'\|'comment', target_id, reason (≥10 chars) }`. Authors cannot report their own script or comment (`403`); one pending flag per reporter per target (`400`). At five distinct reporters with non-dismissed flags, every owner and the admins/moderators of the target's study get a `flag_threshold` notification (a user flag alerts owners only). |
+| `GET /flags/my-flags`                                   | Own flags.                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `DELETE /flags/:id`                                     | Reporter (own) or admin (any). Not restriction-checked.                                                                                                                                                                                                                                                                                                                                                                    |
+| `GET /flags`, `/flags/pending`, `/flags/status/:status` | Admin (RLS grants SELECT).                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `PATCH /flags/:id`                                      | Admin. `{ status: 'pending'\|'reviewed'\|'dismissed' }`; resolving records `reviewed_by`/`reviewed_at`, returning to pending clears them, and dismissing clears `is_flagged` once no pending flag remains.                                                                                                                                                                                                                 |
 
 `is_flagged` is written with the service-role client (`authenticated` has no UPDATE grant);
 flagged content stays visible.
@@ -191,15 +191,15 @@ flagged content stays visible.
 `is_restricted()` ignores expired rows. History lives in `profile_restriction_history`, and
 the ladder counts rows not lifted early: two weeks, one calendar month, then permanent.
 
-| Route | Access |
-| --- | --- |
-| `GET /restrictions` | Admin. Active and lapsed rows with `active`. |
-| `GET /restrictions/me` | Any user. Own active restriction or `null`. 15 requests per minute. |
-| `GET /restrictions/lifted` | Admin. Early lifts, newest first, with names. |
-| `GET /restrictions/lookup?username=` \| `?profile_id=` | Admin. Exactly one parameter. Minimal profile, ladder-eligible count, active restriction. |
-| `GET /restrictions/:profileId` | Owner or admin by RLS; anyone else silently gets `null`. |
-| `PUT /restrictions/:profileId` | Admin. `{ reason (3–500 chars) }`. `400` for an admin target (self included). An active row only updates its reason; otherwise it replaces a lapsed row by the ladder and inserts history. |
-| `DELETE /restrictions/:profileId` | Admin. Lifts; an active lift marks the latest history row `lifted_early_at`, a lapsed removal changes nothing. `404` if absent. |
+| Route                                                  | Access                                                                                                                                                                                     |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET /restrictions`                                    | Admin. Active and lapsed rows with `active`.                                                                                                                                               |
+| `GET /restrictions/me`                                 | Any user. Own active restriction or `null`. 15 requests per minute.                                                                                                                        |
+| `GET /restrictions/lifted`                             | Admin. Early lifts, newest first, with names.                                                                                                                                              |
+| `GET /restrictions/lookup?username=` \| `?profile_id=` | Admin. Exactly one parameter. Minimal profile, ladder-eligible count, active restriction.                                                                                                  |
+| `GET /restrictions/:profileId`                         | Owner or admin by RLS; anyone else silently gets `null`.                                                                                                                                   |
+| `PUT /restrictions/:profileId`                         | Admin. `{ reason (3–500 chars) }`. `400` for an admin target (self included). An active row only updates its reason; otherwise it replaces a lapsed row by the ladder and inserts history. |
+| `DELETE /restrictions/:profileId`                      | Admin. Lifts; an active lift marks the latest history row `lifted_early_at`, a lapsed removal changes nothing. `404` if absent.                                                            |
 
 ## Download review
 
@@ -215,11 +215,11 @@ rows, so these use the service-role client after an explicit role check, plus
   and gets `403`, while an owner sees every study. The script drill-down derives the study
   from the script.
 
-| Route | Notes |
-| --- | --- |
-| `GET /download-review/accounts` | Accounts by counted downloads. `sort`: `events`, `scripts`, `ip_addresses`, `devices`, `last_download_at`. `search` on username or full name. |
-| `GET /download-review/scripts` | Scripts by counted downloads. `sort`: `events`, `accounts`, `anonymous`, `ip_addresses`, `devices`, `last_download_at`. `search` on title or slug. |
-| `GET /download-review/events?script_id=` \| `?user_id=` | The events behind one script or account, newest first; `limit` 20 (max 100) with `offset` → `{ events, total, offset, limit }`. |
+| Route                                                   | Notes                                                                                                                                              |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /download-review/accounts`                         | Accounts by counted downloads. `sort`: `events`, `scripts`, `ip_addresses`, `devices`, `last_download_at`. `search` on username or full name.      |
+| `GET /download-review/scripts`                          | Scripts by counted downloads. `sort`: `events`, `accounts`, `anonymous`, `ip_addresses`, `devices`, `last_download_at`. `search` on title or slug. |
+| `GET /download-review/events?script_id=` \| `?user_id=` | The events behind one script or account, newest first; `limit` 20 (max 100) with `offset` → `{ events, total, offset, limit }`.                    |
 
 ## Profiles
 
@@ -251,12 +251,12 @@ errors checked) and are not restriction-checked. Username uniqueness uses the sh
 `isUsernameTaken`, excluding the profile being edited, with `profiles_username_key`
 (`23505`) as the race backstop. Returns `ProfileUpdateResponse`.
 
-| Status | When |
-| --- | --- |
-| `400` | Invalid JSON, invalid username/full name, non-array ids |
-| `403` | RLS violation (`42501`) |
-| `404` | Profile not found |
-| `409` | Username taken (`{ error, field: 'username' }`) or an unknown faculty/study id (`23503`) |
+| Status | When                                                                                     |
+| ------ | ---------------------------------------------------------------------------------------- |
+| `400`  | Invalid JSON, invalid username/full name, non-array ids                                  |
+| `403`  | RLS violation (`42501`)                                                                  |
+| `404`  | Profile not found                                                                        |
+| `409`  | Username taken (`{ error, field: 'username' }`) or an unknown faculty/study id (`23503`) |
 
 The row and both selection lists are written by `sync_profile_selections`, one transaction:
 a bad faculty or study id rolls the username back with it. The function runs as the caller,
@@ -264,10 +264,10 @@ so RLS and the `(username, full_name)` column grant still apply.
 
 Avatars are two calls and the only way `profiles.avatar_url` is written:
 
-| Route | Notes |
-| --- | --- |
-| `POST /profiles/me/avatar/upload-url` | `{ name, size }`. Extension against `AVATAR_FILE_TYPES` (`jpg`, `jpeg`, `png`, `webp`) and size against `AVATAR_MAX_UPLOAD_BYTES` (10 MB) → `{ success, upload: { stagingKey, url, contentType } }`. `400` unsupported/oversized; `429` at 20 requests per 10 minutes across both avatar calls. |
-| `POST /profiles/me/avatar` | `{ stagingKey }`. Runs the image through the optimizer's avatar profile (EXIF-oriented, square crop around the most interesting region, `AVATAR_SIZE_PX` 320, metadata stripped, WebP) into `R2_BUCKET` at `avatars/{userId}.webp`, then stores `${R2_PUBLIC_URL}/avatars/{userId}.webp?v={version}`. `400` for a key that is not the caller's or a non-avatar extension; `413` over `AVATAR_MAX_STORED_BYTES` (200 KB, aiming for 100 KB); `429`; `503` without `R2_PUBLIC_URL` or with the optimizer configured but unavailable (never stored uncropped); `500` otherwise. A rejection leaves the previous avatar and removes only the staged copy. |
+| Route                                 | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /profiles/me/avatar/upload-url` | `{ name, size }`. Extension against `AVATAR_FILE_TYPES` (`jpg`, `jpeg`, `png`, `webp`) and size against `AVATAR_MAX_UPLOAD_BYTES` (10 MB) → `{ success, upload: { stagingKey, url, contentType } }`. `400` unsupported/oversized; `429` at 20 requests per 10 minutes across both avatar calls.                                                                                                                                                                                                                                                                                                                                                       |
+| `POST /profiles/me/avatar`            | `{ stagingKey }`. Runs the image through the optimizer's avatar profile (EXIF-oriented, square crop around the most interesting region, `AVATAR_SIZE_PX` 320, metadata stripped, WebP) into `R2_BUCKET` at `avatars/{userId}.webp`, then stores `${R2_PUBLIC_URL}/avatars/{userId}.webp?v={version}`. `400` for a key that is not the caller's or a non-avatar extension; `413` over `AVATAR_MAX_STORED_BYTES` (200 KB, aiming for 100 KB); `429`; `503` without `R2_PUBLIC_URL` or with the optimizer configured but unavailable (never stored uncropped); `500` otherwise. A rejection leaves the previous avatar and removes only the staged copy. |
 
 Avatars live in the script bucket under `avatars/`, which needs a public domain and exposes
 every object by key (script keys stay random UUIDs, but a leaked one no longer expires).
@@ -302,11 +302,11 @@ the form sends the whole pair.
 
 Own-resource, authenticated, `profile_id = auth.uid()` RLS, session client.
 
-| Resource | List | Get | Add | Remove |
-| --- | --- | --- | --- | --- |
-| Faculties | `GET /profile-faculties` | `/:facultyId` | `POST /:facultyId` (no body) | `DELETE /:facultyId` |
-| Studies | `GET /profile-studies` | `/:studyId` | `POST /:studyId` (no body) | `DELETE /:studyId` |
-| Subjects | `GET /profile-subjects` | `/:subjectId` | `PUT /:subjectId` `{ status }` | `DELETE /:subjectId` |
+| Resource  | List                     | Get           | Add                            | Remove               |
+| --------- | ------------------------ | ------------- | ------------------------------ | -------------------- |
+| Faculties | `GET /profile-faculties` | `/:facultyId` | `POST /:facultyId` (no body)   | `DELETE /:facultyId` |
+| Studies   | `GET /profile-studies`   | `/:studyId`   | `POST /:studyId` (no body)     | `DELETE /:studyId`   |
+| Subjects  | `GET /profile-subjects`  | `/:subjectId` | `PUT /:subjectId` `{ status }` | `DELETE /:subjectId` |
 
 Subjects use `PUT` because the status (`completed` | `currently_taking`) is a value.
 
@@ -315,10 +315,10 @@ Subjects use `PUT` because the status (`completed` | `currently_taking`) is a va
 Local-first notes; these routes are the only place the database is involved. Authenticated,
 own resource, session client.
 
-| Route | Notes |
-| --- | --- |
-| `GET /calendar-notes` | `{ notes }`, tombstones included. One sync. |
-| `POST /calendar-notes/sync` | `{ since, notes }` → `{ notes, syncedAt }` with the merged copy; a stored note newer than the incoming one is kept. |
+| Route                            | Notes                                                                                                                                                 |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /calendar-notes`            | `{ notes }`, tombstones included. One sync.                                                                                                           |
+| `POST /calendar-notes/sync`      | `{ since, notes }` → `{ notes, syncedAt }` with the merged copy; a stored note newer than the incoming one is kept.                                   |
 | `POST /calendar-notes/auto-sync` | Same body and merge, at most once per profile per 7 days: `{ notes, syncedAt, nextAutoSyncAt }`, with `notes` and `syncedAt` null when it is not due. |
 
 - A note carries `studyId` (a `studies.id`): it belongs to the calendar it was written on,
@@ -344,12 +344,12 @@ script), removing is not. Either revalidates the public-profile tags.
 
 ## Votes
 
-| Route | Auth | Notes |
-| --- | --- | --- |
-| `GET /votes`, `/votes/script/:scriptId`, `/votes/user/:userId` | Public | — |
-| `GET /votes/script/:scriptId/stats` | Public | `{ upvotes, score }` |
-| `GET /votes/my-votes`, `/votes/script/:scriptId/my-vote` | Required | — |
-| `POST /votes/:scriptId` | Required | Toggle. Authors cannot vote for their own script but may remove an existing vote; `vote_score` clamps at zero. Runs through the atomic `toggle_vote` RPC (`security definer`, keyed on `auth.uid()`), so it cannot race or take an arbitrary delta. Casting is rejected if restricted and is study-scoped (`403`; unknown script `404`); removing is not. Returns `{ voted, vote_score }`. |
+| Route                                                          | Auth     | Notes                                                                                                                                                                                                                                                                                                                                                                                      |
+| -------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET /votes`, `/votes/script/:scriptId`, `/votes/user/:userId` | Public   | —                                                                                                                                                                                                                                                                                                                                                                                          |
+| `GET /votes/script/:scriptId/stats`                            | Public   | `{ upvotes, score }`                                                                                                                                                                                                                                                                                                                                                                       |
+| `GET /votes/my-votes`, `/votes/script/:scriptId/my-vote`       | Required | —                                                                                                                                                                                                                                                                                                                                                                                          |
+| `POST /votes/:scriptId`                                        | Required | Toggle. Authors cannot vote for their own script but may remove an existing vote; `vote_score` clamps at zero. Runs through the atomic `toggle_vote` RPC (`security definer`, keyed on `auth.uid()`), so it cannot race or take an arbitrary delta. Casting is rejected if restricted and is study-scoped (`403`; unknown script `404`); removing is not. Returns `{ voted, vote_score }`. |
 
 ## Ratings
 
@@ -363,13 +363,13 @@ one rating per user per type per entity, and posting again updates it.
 - `labels` is `{ en?, mk? }`, every present language 2–60 characters and at least one filled
   (`isLocalizedRatingLabel`).
 
-| Route | Auth |
-| --- | --- |
-| `GET /ratings/{professor,subject}/:id` | Public |
-| `GET /ratings/{professor,subject}/:id/stats` | Public — `{ rating_type_id, average, count }[]` |
-| `GET /ratings/{professor,subject}/:id/my-ratings` | Required |
-| `POST /ratings/{professor,subject}/:id` | Required — `{ rating_type_id, score (1–5) }`. Rejected if restricted or if the type does not match the target. Subject ratings are study-scoped (`403`; unknown subject `404`); professor ratings are open. |
-| `DELETE /ratings/{professor,subject}/:id/:ratingTypeId` | Required, not restriction-checked |
+| Route                                                   | Auth                                                                                                                                                                                                        |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /ratings/{professor,subject}/:id`                  | Public                                                                                                                                                                                                      |
+| `GET /ratings/{professor,subject}/:id/stats`            | Public — `{ rating_type_id, average, count }[]`                                                                                                                                                             |
+| `GET /ratings/{professor,subject}/:id/my-ratings`       | Required                                                                                                                                                                                                    |
+| `POST /ratings/{professor,subject}/:id`                 | Required — `{ rating_type_id, score (1–5) }`. Rejected if restricted or if the type does not match the target. Subject ratings are study-scoped (`403`; unknown subject `404`); professor ratings are open. |
+| `DELETE /ratings/{professor,subject}/:id/:ratingTypeId` | Required, not restriction-checked                                                                                                                                                                           |
 
 `POST` errors: `403` restricted, `409` (`23503`) unknown professor/subject, `400` invalid
 body or an unknown/mismatched type (the trigger raises `P0001` before the FK). Stats are
@@ -390,14 +390,14 @@ service role.
 permission key but decides the link (`/study/<site_slug>/scripts/<slug>`) and the tray's
 scope. Account-wide ones leave it null.
 
-| Route | Notes |
-| --- | --- |
-| `GET /notifications` | Own rows, optional `?is_read`; each carries `study: { site_slug }`. |
-| `GET /notifications/unread-count` | `{ count }`. |
-| `PATCH /notifications/read-all` | Marks all read. |
-| `PATCH /notifications/:id` | `{ is_read }`; `400` for a non-boolean, `404` if not the caller's. |
-| `DELETE /notifications/:id` | Deletes one. |
-| `POST /admin/notifications` | Admin, unlocked. `{ title, body?, studyId? }` — see below. |
+| Route                             | Notes                                                               |
+| --------------------------------- | ------------------------------------------------------------------- |
+| `GET /notifications`              | Own rows, optional `?is_read`; each carries `study: { site_slug }`. |
+| `GET /notifications/unread-count` | `{ count }`.                                                        |
+| `PATCH /notifications/read-all`   | Marks all read.                                                     |
+| `PATCH /notifications/:id`        | `{ is_read }`; `400` for a non-boolean, `404` if not the caller's.  |
+| `DELETE /notifications/:id`       | Deletes one.                                                        |
+| `POST /admin/notifications`       | Admin, unlocked. `{ title, body?, studyId? }` — see below.          |
 
 Announcements: `title` 1–200 characters, `body` ≤1000 (the table's CHECK limits), else
 `400`; `413` over the 4 KiB body cap; `429` after ten broadcasts per admin per hour.
@@ -414,12 +414,12 @@ optionally scoped to one study. After a relevant mutation the backend recomputes
 profile's value and awards + notifies (`type: 'achievement_earned'`) for any newly crossed
 threshold — idempotent, service-role, never failing the triggering request.
 
-| Metric | Recomputed after | Credited to |
-| --- | --- | --- |
-| `scripts_uploaded` | `POST /scripts` | The uploader |
-| `comments_posted` | `POST /comments`, `POST /comments/:id/replies` | The author |
-| `total_script_votes` | `POST /votes/:scriptId` (either direction) | The script's author |
-| `total_script_downloads` | `POST /scripts/:id/download` | The script's author (their own download is not counted) |
+| Metric                   | Recomputed after                               | Credited to                                             |
+| ------------------------ | ---------------------------------------------- | ------------------------------------------------------- |
+| `scripts_uploaded`       | `POST /scripts`                                | The uploader                                            |
+| `comments_posted`        | `POST /comments`, `POST /comments/:id/replies` | The author                                              |
+| `total_script_votes`     | `POST /votes/:scriptId` (either direction)     | The script's author                                     |
+| `total_script_downloads` | `POST /scripts/:id/download`                   | The script's author (their own download is not counted) |
 
 A global definition (`study_id` null) counts platform-wide; a study definition counts inside
 its study; a mutation inside a study evaluates both groups, one outside only the global ones.
@@ -465,13 +465,13 @@ The Supabase session cookie from `/api/auth/login` or `/api/auth/callback`; no B
 subjects: [{ subject_id, status }], selected_faculty_ids, selected_study_ids }` — returned
 by login, callback and session alike.
 
-| Route | Auth | Notes |
-| --- | --- | --- |
-| `POST /auth/register` | Public | `{ email, password, username, full_name }`, all required. No academic profile: it is per study and the client writes each stored setup through the study endpoints afterwards (`next/lib/study-setup-sync.ts`). `409` `{ error, field: 'username'\|'email' }` when taken, `400` for a disposable domain, `429` per IP on repeats. The profile row is ensured server-side, not left to the trigger. `emailRedirectTo` is `{origin}/auth/callback`. |
-| `POST /auth/login` | Public | `{ email, password }` → `{ success, user, session }`. `401` bad credentials, `429` after repeated failures per IP. |
-| `POST /auth/callback` | Public | `{ access_token, refresh_token }` from the confirmation redirect (implicit flow, no PKCE; the client reads them from the URL fragment). `400` missing, `401` invalid. Same shape as login. |
-| `POST /auth/logout` | Required | Signs out and clears the cookie. |
-| `GET /auth/session` | Public | `{ user, session }`; refreshes only when the token expires within 60 s, clears invalid sessions, and returns `role` plus `study_roles` for the admin surface. |
+| Route                 | Auth     | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /auth/register` | Public   | `{ email, password, username, full_name }`, all required. No academic profile: it is per study and the client writes each stored setup through the study endpoints afterwards (`next/lib/study-setup-sync.ts`). `409` `{ error, field: 'username'\|'email' }` when taken, `400` for a disposable domain, `429` per IP on repeats. The profile row is ensured server-side, not left to the trigger. `emailRedirectTo` is `{origin}/auth/callback`. |
+| `POST /auth/login`    | Public   | `{ email, password }` → `{ success, user, session }`. `401` bad credentials, `429` after repeated failures per IP.                                                                                                                                                                                                                                                                                                                                |
+| `POST /auth/callback` | Public   | `{ access_token, refresh_token }` from the confirmation redirect (implicit flow, no PKCE; the client reads them from the URL fragment). `400` missing, `401` invalid. Same shape as login.                                                                                                                                                                                                                                                        |
+| `POST /auth/logout`   | Required | Signs out and clears the cookie.                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `GET /auth/session`   | Public   | `{ user, session }`; refreshes only when the token expires within 60 s, clears invalid sessions, and returns `role` plus `study_roles` for the admin surface.                                                                                                                                                                                                                                                                                     |
 
 ## Roles and access control
 

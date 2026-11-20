@@ -1,4 +1,5 @@
 ---
+
 name: Refactor
 about: Propose a code refactor with no behavior change in Scriptr
 title: "[Refactor]: "

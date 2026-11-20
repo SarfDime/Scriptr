@@ -3,19 +3,19 @@
 Rules for changing `next/` live in [`next/AGENTS.md`](../next/AGENTS.md); this file records
 how the frontend is put together.
 
-* **Thin pages.** `page.tsx` awaits params, calls a loader and composes components.
+- **Thin pages.** `page.tsx` awaits params, calls a loader and composes components.
   Fetching, cookies and 404 handling live in `next/lib/<feature>-page.ts`, returning view
   models typed in `next/types/components/` (`ScriptDetailViewModel`, `ProfilePageViewModel`).
   Pure helpers live in `next/lib/<feature>.ts`. Components never fetch.
-* **A `loading.tsx` costs the 404 status:** the segment boundary flushes headers first, so
+- **A `loading.tsx` costs the 404 status:** the segment boundary flushes headers first, so
   `notFound()` streams after them and the route answers `200`. The script detail route has
   none and uses the skeleton as its own Suspense fallback; `/user/[username]` is the same
   case, and `loadPublicProfilePage` makes both decisions before render (own username →
   `/user`; API `404` → `notFound()`). Any other failed read throws to the error boundary;
   only the stats read is contained.
-* **The loading overlay** shows the last task's `message` and optional `hint` from
+- **The loading overlay** shows the last task's `message` and optional `hint` from
   `LoadingTaskDetails`, or the wordmark animation when there is neither.
-* **The root is the catalog.** `/` lists universities, faculties and studies
+- **The root is the catalog.** `/` lists universities, faculties and studies
   (`CatalogHomeContent`, `catalogHomeQuery`); each study links to its own site. No
   subjects, professors or scripts — they belong to a study. Cached until the publish
   webhook invalidates it. The catalog is the apex host only; a study is served from its own
@@ -28,7 +28,7 @@ how the frontend is put together.
   - The catalog page header offers create-account (`/auth?mode=register`) and set-up
     (`/start`); below it the three levels are columns of one surface (`CatalogSection`),
     two columns from `md`, three from `lg`, each a stack of `CatalogCard`s.
-* **Script detail** (`/study/[siteSlug]/scripts/[scriptSlug]`): `ScriptDetailOverview`
+- **Script detail** (`/study/[siteSlug]/scripts/[scriptSlug]`): `ScriptDetailOverview`
   places the info group (`ScriptInfoPanel` + `ScriptAdditionalReading`, with an empty
   state) and `ScriptFilesSection` in a wrapping flex row. Files grow 100 against 1, so the
   first wrap is files dropping below; then the reading panel wraps. Files form an
@@ -36,80 +36,80 @@ how the frontend is put together.
   thumbnail-beside-details from ~28rem. A lone file is capped to its content width unless
   previewable, when it spans the surface and previews inline. `ScriptFileCard` composes
   `ScriptFileThumbnail` and `ScriptFileActions` and owns the preview modal.
-* **The calendar** (a study's `/study/[siteSlug]/calendar`,
+- **The calendar** (a study's `/study/[siteSlug]/calendar`,
   [`ARCHITECTURE-CALENDAR.md`](ARCHITECTURE-CALENDAR.md)) keeps its view in the URL
   (`?view=month|week&date=YYYY-MM-DD`): a Server Component with `Link` controls, no client
   state, never `force-static`. Its one client island is the header alert, which narrows
   the layout's build-time events to the reader's unfinished subjects.
-* **Subject lists share one filter pair.** `useSubjectFilters` + `SubjectFilters` own the
+- **Subject lists share one filter pair.** `useSubjectFilters` + `SubjectFilters` own the
   year and electives state for the explorer, the scripts sidebar and the profile sidebar.
   One year at a time (no "all years"), opening on the first year the list has; electives
   included until toggled off. Only the explorer adds search and sort. Both sidebars scroll
   after four cards (and after four professors).
-* **The navbar scrolls its middle.** A study has its links, its enrolled studies and
+- **The navbar scrolls its middle.** A study has its links, its enrolled studies and
   its favorites between the logo and the account controls; on a laptop they do not all
   fit. The links, studies and favorites share the one scrollable region, so the logo and
   the account controls stay put.
-* **Footer** is a static Server Component (wordmark and copyright, `UI_STRINGS.footer`) on
+- **Footer** is a static Server Component (wordmark and copyright, `UI_STRINGS.footer`) on
   `ui-above`, full width like the header, rendered by `MainLayout` with no request-time
   API. The Sanity `footer` document is unused. `MainLayout` is a flex column and
   `--footer-height` lets full-screen layouts account for it.
-* **Copy and localization.** Collections live in `shared/strings/*` or `UI_STRINGS`; the
+- **Copy and localization.** Collections live in `shared/strings/*` or `UI_STRINGS`; the
   `<AREA>_PACK` export is the source of truth and the historical export
   (`UI_STRINGS`, `CALENDAR_STRINGS`, …) is that collection resolved to `DEFAULT_LOCALE`
   through `getStrings`, which keeps the un-migrated imports (including `hono/`) working.
   Collections are registered in `shared/config/string-packs.ts`, which also derives
   `StringPackPath<P>` and the path aliases. Mechanics and traps: `next/AGENTS.md`.
-* **The chrome is server, the clock is a leaf.** `MainLayout`, `Header`, `PageLayout` and
+- **The chrome is server, the clock is a leaf.** `MainLayout`, `Header`, `PageLayout` and
   `Footer` are Server Components; `HeaderDate` and `FooterCopyright` are the client leaves
   that read the clock, and `NavToggle`, `HeaderActions`, `NavLogo` stay client. A component
   rendered from a client parent (`Footer`, `PageHeader` under `PageLayout`) is itself a
   Client Component and reads copy with the hooks. `auth/callback/page.tsx` is a Server
   Component around `AuthCallbackCard`, which needs `window.location`.
-* **The default language keeps its unprefixed address.** The tree is `app/[locale]` with
+- **The default language keeps its unprefixed address.** The tree is `app/[locale]` with
   `prefixDefault: false`: English at `/university/ukim`, Macedonian under `/mk/…`. A
   `beforeFiles` rewrite serves the unprefixed default out of `[locale]`; `/en/…`, the
   cookie-driven `/` and study-host roots are `next.config.ts` redirects — no proxy, no
   middleware, no request hop. Sitemaps carry one entry per page with
   `alternates.languages`, not one per language.
-* **A stored notification's sentence is rebuilt at read time.** The API writes finished
+- **A stored notification's sentence is rebuilt at read time.** The API writes finished
   English into `notifications.title`/`body` at event time (no reader exists yet);
   `resolveStoredNotificationCopy` (`shared/utils/notification-copy.ts`) rebuilds it from
   `type` and `data`, so older rows follow the reader too. What it cannot rebuild keeps the
   stored text: an `announcement` and an achievement outside the catalogue, plus quoted
   reasons and content titles.
-* **Failures.** A thrown render or data failure lands on a route boundary
+- **Failures.** A thrown render or data failure lands on a route boundary
   (`app/[locale]/error.tsx`, plus the calendar's own), showing generic copy and a retry —
   never `error.message`, which can carry database or stack details. Unknown routes render
   `not-found.tsx`; root and segment versions share `ErrorState` (a `<section>`, because
   `MainLayout` owns the `main` landmark), whose illustration is an inline SVG
   (`AstronautIllustration`) tinted through `--illustration-*` roles. `global-error.tsx`
   catches layout failures where no stylesheet is guaranteed, so it uses inline styles only.
-* **A failed user action is a toast**, not a page: `useToast().addToast` keeps the reader in
+- **A failed user action is a toast**, not a page: `useToast().addToast` keeps the reader in
   place. Only a render-time throw reaches an error boundary.
-* **Only reader-written errors are quoted.** `toUserMessage(error, fallback)`
+- **Only reader-written errors are quoted.** `toUserMessage(error, fallback)`
   (`next/lib/user-facing-error.ts`) keeps the wording of a `UserFacingError`; everything
   else gets the `UI_STRINGS` line. Every `ApiError` is in the second group, since its body
   is written for API callers. The request layer converts one status itself: a `429` becomes
   a `UserFacingError` because every rate-limit body tells the reader what to do. Sign-in is
   the other exception — `SessionProvider` shows a 4xx from `/auth/*` verbatim and generic
   copy for a 5xx.
-* **"Failed" is not "empty".** A loader must not swallow a failed read into an empty list
+- **"Failed" is not "empty".** A loader must not swallow a failed read into an empty list
   when the page would misreport it (a failed profile read must not render `404`; a search
   that never ran must not say "no results"). `apiFetchPublicRead` fallbacks exist only for
   reads a build must survive.
-* **A control carries its own name.** `Button`/`NextLink` require `AccessibleNameProps`;
+- **A control carries its own name.** `Button`/`NextLink` require `AccessibleNameProps`;
   wrappers take `ButtonBaseProps`/`NextLinkBaseProps` or supply a default (`CloseButton`),
   and wrap with `OmitProps`, since `Omit` over a union keeps only shared keys. A button
   whose only child is an element is still a review pass. Toasts announce through one polite
   live region.
-* **The root layout owns only the shell.** Fonts are declared in `next/app/fonts/fonts.ts`
+- **The root layout owns only the shell.** Fonts are declared in `next/app/fonts/fonts.ts`
   and exported as class names; the layout fetches the nav menu and the background and
   skybox config and renders chrome, not the catalog — each study page reads its own study.
   Site metadata comes from `generateMetadata` over the same `website` document every page
   reads, with `metadataBase` from `toOrigin(website.siteUrl)` (falling back to the
   environment origin, then nothing).
-* **Metadata and canonicals come from the route's real address.** `PageSEO` takes
+- **Metadata and canonicals come from the route's real address.** `PageSEO` takes
   `pagePath` — built with `getAcademicPath`: site-relative in the catalog, absolute inside a
   study's site — and turns it into the canonical and Open Graph URL, so it must equal the
   served URL in the reader's language. The same path yields `alternates.languages`
@@ -122,10 +122,10 @@ how the frontend is put together.
   prerendered and never revalidated, so that is one read per deployment. A failed read
   drops its own section rather than publishing an empty one; with `NEXT_PUBLIC_SITE_URL`
   unset the file is empty, with a warning.
-* **Surfaces and dialogs.** Content sits on a translucent outer surface (`ui-above`) with
+- **Surfaces and dialogs.** Content sits on a translucent outer surface (`ui-above`) with
   `ui-above-inside` where text is shown; dialogs follow the same pattern and are styled by
   `next/STYLING_GUIDE.md`. A closed `Dialog` renders nothing at all.
-* **The navbar docks at `xl` (1280px).** Below it the off-canvas drawer gives the content
+- **The navbar docks at `xl` (1280px).** Below it the off-canvas drawer gives the content
   the full width. Breakpoints are custom (`lg` 992px, `xl` 1280px), so CSS (`Header`,
   `Navbar`, `PageLayout`, `ui-container`) and `DESKTOP_QUERY`
   (`next/providers/nav/NavProvider.tsx`) must name the same one. `NavStudies` lists the
@@ -135,7 +135,7 @@ how the frontend is put together.
   `ProfileProvider` holds a `LoadingProvider` task until the profile arrives, so the boot
   veil waits for the nav's studies too. Study logos come from `studyLogosQuery`, a cached
   catalog read keyed by site handle — profile rows carry no image.
-* **`Avatar` sizes its initials from its box.** `InitialsIcon` declares
+- **`Avatar` sizes its initials from its box.** `InitialsIcon` declares
   `[container-type:inline-size]` and the letters are a child at `38cqi`, so one component
   serves a 24px header circle and a 64px profile avatar. The size must stay off the
   container itself (`cqi` would resolve against the next container up). A caller sizes the

@@ -5,22 +5,22 @@ scenery below is laid out around.
 
 ## Files
 
-| File | What it does |
-| --- | --- |
-| `shared/types/skybox.types.ts` | `SkyState`, `SkyKeyframe`, `SkyboxConfig`, the color palette and the Sanity data shapes. |
-| `shared/config/skybox.ts` | Defaults, `SKY_ANCHORS`, `SKY_COLORS`, the color keys and roles, `applySkyColorOverrides`, query param names. |
-| `shared/utils/skybox-model.ts` | `getSkyState(hours, config, toRGB, originalMix, palette)` — the pure day model, no DOM. |
-| `shared/utils/skybox-model.test.ts` | Phase blending, sun and moon paths, picked colors (`tsx --test`). |
-| `sanity/schemas/misc/skybox.ts` | The `skybox` document: day settings, stars and clouds, and one color set per theme. |
-| `next/lib/app-background/skybox-canvas.ts` | Gradient, sun and moon, stars, clouds; `resolveSkyboxPalette` and `withSkyboxDefaults`. |
-| `next/lib/app-background/canvas-primitives.ts` | `TAU`, `WHITE`, the theme colour resolver, `mixRGB`, `luminance`, `addFalloff`. |
-| `next/lib/app-background/mobile-store.ts` | Device-type store (`useSyncExternalStore`). |
-| `next/lib/app-background/skybox-store.ts` | Live `SkyState` for the other canvases (`useSkyState`). |
-| `next/lib/app-background/skybox-sun.ts` | The sun: one disc, one shade, one highlight. |
-| `next/lib/app-background/lens-flare.ts` | Immersive-only flare that follows the pointer. |
-| `next/components/ui/app-background/SkyboxCanvas.tsx` | Canvases, clock, palette crossfade, dev override. |
-| `next/styles/base/sky-colors.module.css` | Every sky colour (light and dark) plus the theme-independent `sky-original-*`. |
-| `next/styles/base/christmas-colors.module.css` | The theme-independent `christmas-original-*` set. |
+| File                                                 | What it does                                                                                                  |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `shared/types/skybox.types.ts`                       | `SkyState`, `SkyKeyframe`, `SkyboxConfig`, the color palette and the Sanity data shapes.                      |
+| `shared/config/skybox.ts`                            | Defaults, `SKY_ANCHORS`, `SKY_COLORS`, the color keys and roles, `applySkyColorOverrides`, query param names. |
+| `shared/utils/skybox-model.ts`                       | `getSkyState(hours, config, toRGB, originalMix, palette)` — the pure day model, no DOM.                       |
+| `shared/utils/skybox-model.test.ts`                  | Phase blending, sun and moon paths, picked colors (`tsx --test`).                                             |
+| `sanity/schemas/misc/skybox.ts`                      | The `skybox` document: day settings, stars and clouds, and one color set per theme.                           |
+| `next/lib/app-background/skybox-canvas.ts`           | Gradient, sun and moon, stars, clouds; `resolveSkyboxPalette` and `withSkyboxDefaults`.                       |
+| `next/lib/app-background/canvas-primitives.ts`       | `TAU`, `WHITE`, the theme colour resolver, `mixRGB`, `luminance`, `addFalloff`.                               |
+| `next/lib/app-background/mobile-store.ts`            | Device-type store (`useSyncExternalStore`).                                                                   |
+| `next/lib/app-background/skybox-store.ts`            | Live `SkyState` for the other canvases (`useSkyState`).                                                       |
+| `next/lib/app-background/skybox-sun.ts`              | The sun: one disc, one shade, one highlight.                                                                  |
+| `next/lib/app-background/lens-flare.ts`              | Immersive-only flare that follows the pointer.                                                                |
+| `next/components/ui/app-background/SkyboxCanvas.tsx` | Canvases, clock, palette crossfade, dev override.                                                             |
+| `next/styles/base/sky-colors.module.css`             | Every sky colour (light and dark) plus the theme-independent `sky-original-*`.                                |
+| `next/styles/base/christmas-colors.module.css`       | The theme-independent `christmas-original-*` set.                                                             |
 
 ## Integration
 
@@ -38,12 +38,12 @@ Santa stay in the visible page. Immersive mode covers the whole viewport, header
 
 ## Settings
 
-| What | Where |
-| --- | --- |
-| Sunrise, sunset, day speed | `skybox` document, `day` group |
-| Sun and moon size, stars, star size, clouds, cloud speed, phone scale | `skybox` document, `sky` group |
-| Full-screen on/off, day length, speed ramp, palette crossfade, night deepening, lens flare | `skybox` document, `immersive mode` group |
-| Colors per theme | `skybox` document, one fieldset per phase plus the stars |
+| What                                                                                       | Where                                                    |
+| ------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
+| Sunrise, sunset, day speed                                                                 | `skybox` document, `day` group                           |
+| Sun and moon size, stars, star size, clouds, cloud speed, phone scale                      | `skybox` document, `sky` group                           |
+| Full-screen on/off, day length, speed ramp, palette crossfade, night deepening, lens flare | `skybox` document, `immersive mode` group                |
+| Colors per theme                                                                           | `skybox` document, one fieldset per phase plus the stars |
 
 A setting left empty falls back to `SKYBOX_DEFAULTS` (`withSkyboxDefaults` ignores the
 `null`s Sanity returns). A color pick is a theme color key that replaces one key of that

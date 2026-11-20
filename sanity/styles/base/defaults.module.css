@@ -46,8 +46,8 @@ body {
     font-size: 18px;
   }
 
-  [data-testid="structure-tool-list-pane"] li *,
-  [data-testid="document-list-pane"] * {
+  [data-testid="document-list-pane"] *,
+  [data-testid="structure-tool-list-pane"] li * {
     font-size: 0.85rem;
 
     svg {
@@ -67,6 +67,7 @@ body {
     width: 12rem !important;
   }
 
+  /* biome-ignore lint/style/noDescendingSpecificity: the rule above narrows the list font only; this one resets the preview's own spacing. */
   [data-testid="default-preview"] * {
     padding: 0 !important;
     margin: 0 !important;

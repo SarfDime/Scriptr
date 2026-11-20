@@ -2,10 +2,10 @@
 
 Two Git-connected Vercel projects in the `Vercel team` team (`team-slug`):
 
-| Project | Project ID | Root | Framework |
-| --- | --- | --- | --- |
-| `scriptr-web` | `REDACTED_VERCEL_PROJECT` | `next` | Next.js |
-| `scriptr-api` | `REDACTED_VERCEL_PROJECT` | `hono` | Node.js |
+| Project       | Project ID                         | Root   | Framework |
+| ------------- | ---------------------------------- | ------ | --------- |
+| `scriptr-web` | `REDACTED_VERCEL_PROJECT` | `next` | Next.js   |
+| `scriptr-api` | `REDACTED_VERCEL_PROJECT` | `hono` | Node.js   |
 
 Both connect to `this repository` and must allow source files outside their root
 directory, because they import the root workspace and `shared/`.
@@ -143,7 +143,7 @@ test on `http://lbe.localhost:3000`.
   allowlist. The Ignored Build Step limits automatic builds to commit subjects starting
   with `feat:` or `fix:`, so `docs:` and `chore:` deploy nothing. **A squash merge takes
   the PR title as the subject**, so the prefix belongs on the PR title too; otherwise the
-  deployment is reported as *Canceled* with no explanation.
+  deployment is reported as _Canceled_ with no explanation.
 - The web project **denies AI crawlers and scrapers** at the firewall: the managed `AI Bots`
   rule plus a custom "Block scraper bots" rule for `MJ12bot`, `AhrefsBot` and similar
   agents. They rendered `/calendar` tens of thousands of times and were most of the Active
@@ -163,16 +163,16 @@ These work only when **both** sides change. Rotate on a schedule and when someon
 access leaves; use a unique random value per environment (`openssl rand -base64 32`), never
 the `.env.example` placeholder.
 
-| Secret | Held by | Order |
-| --- | --- | --- |
-| `REVALIDATE_SECRET` | `scriptr-api`, `scriptr-web` | Both projects, redeploy both, then remove the old value. A mismatch is `401` on `/api/revalidate`. |
-| `OPTIMIZER_SECRET` | `scriptr-api`, Cloud Run (`optimizer-secret`) | New Secret Manager version, deploy the service, then set the API and redeploy. Uploads answer `503` between the two. |
-| `SITEMAP_SECRET` | `scriptr-api`, `scriptr-web` | As `REVALIDATE_SECRET`. A mismatch silently drops script URLs from `/sitemap.xml`. |
-| `ADMIN_TOTP_SECRET` | `scriptr-api` only | Generate, set, re-enrol the `otpauth` URI. Every issued token dies with the restart. |
-| `SANITY_REVALIDATE_SECRET` | `scriptr-web`, the Sanity webhook | Set and redeploy the web project, then update the webhook header. Publishes `401` in between. |
+| Secret                     | Held by                                       | Order                                                                                                                |
+| -------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `REVALIDATE_SECRET`        | `scriptr-api`, `scriptr-web`                  | Both projects, redeploy both, then remove the old value. A mismatch is `401` on `/api/revalidate`.                   |
+| `OPTIMIZER_SECRET`         | `scriptr-api`, Cloud Run (`optimizer-secret`) | New Secret Manager version, deploy the service, then set the API and redeploy. Uploads answer `503` between the two. |
+| `SITEMAP_SECRET`           | `scriptr-api`, `scriptr-web`                  | As `REVALIDATE_SECRET`. A mismatch silently drops script URLs from `/sitemap.xml`.                                   |
+| `ADMIN_TOTP_SECRET`        | `scriptr-api` only                            | Generate, set, re-enrol the `otpauth` URI. Every issued token dies with the restart.                                 |
+| `SANITY_REVALIDATE_SECRET` | `scriptr-web`, the Sanity webhook             | Set and redeploy the web project, then update the webhook header. Publishes `401` in between.                        |
 
 **A Cloud Run version is not `latest` by being enabled:** `latest` is the highest version
-*number*, whatever its state, so disabling a bad version makes the next mount fail with
+_number_, whatever its state, so disabling a bad version makes the next mount fail with
 `FAILED_PRECONDITION`. Recover with a new version holding the good value:
 
 ```bash

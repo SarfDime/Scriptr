@@ -121,7 +121,7 @@ catalog; how that works is
 - **Font weights:** the declarations and the preload links are settled — the
   local families preload nothing, and the unused Bricolage family is gone, so a
   page fetches the five faces it renders instead of 22 files. What is left is
-  trimming the *declared* weights: the fonts file declares 21 faces across
+  trimming the _declared_ weights: the fonts file declares 21 faces across
   `Matter` and `Antique Olive`, and no page uses more than three of each. That
   needs a sweep of the UI's computed font-weights once the design is final,
   because removing a declared weight changes any element that falls back to it.

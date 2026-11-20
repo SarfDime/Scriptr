@@ -145,6 +145,7 @@ export const CalendarNotesProvider = ({
   useEffect(() => {
     if (!userId) return
     adoptLocalCalendarNotes(userId)
+    // biome-ignore lint/nursery/useReactCompiler: the marker lives in the browser, so it is read on mount rather than during render.
     setLastSyncedAt(readCalendarNotesSyncMarker(userId))
   }, [userId])
 
@@ -166,6 +167,7 @@ export const CalendarNotesProvider = ({
   // One pull per login per browser, so the local copy carries whatever was
   // synced from another device without a fetch on every refresh.
   useEffect(() => {
+    // biome-ignore lint/nursery/useReactCompiler: a new profile restarts the pull gate, which no render-time value can express.
     setPullSettled(false)
     if (!userId) return
     if (hasFetchedCalendarNotes(userId)) {

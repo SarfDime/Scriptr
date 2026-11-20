@@ -25,14 +25,14 @@ A study's host is `<siteSlug>.<host of NEXT_PUBLIC_SITE_URL>`
 A study host's paths are rewritten onto `/[locale]/study/[siteSlug]/…` before files are
 served, so the visible URL never changes:
 
-| On `lbe.scriptr.uk` | Served by |
-| --- | --- |
-| `/` | `[locale]/study/[siteSlug]/page.tsx` — the academic overview |
-| `/scripts`, `/scripts/<slug>` | the feed and a script |
-| `/subject/<slug>` | a subject inside the study |
-| `/calendar`, `/academic-setup` | the study's calendar and setup |
-| `/user/<name>` | that person's profile **inside the study** |
-| `/sitemap.xml`, `/sitemap/<id>.xml` | the study's own sitemap |
+| On `lbe.scriptr.uk`                 | Served by                                                    |
+| ----------------------------------- | ------------------------------------------------------------ |
+| `/`                                 | `[locale]/study/[siteSlug]/page.tsx` — the academic overview |
+| `/scripts`, `/scripts/<slug>`       | the feed and a script                                        |
+| `/subject/<slug>`                   | a subject inside the study                                   |
+| `/calendar`, `/academic-setup`      | the study's calendar and setup                               |
+| `/user/<name>`                      | that person's profile **inside the study**                   |
+| `/sitemap.xml`, `/sitemap/<id>.xml` | the study's own sitemap                                      |
 
 Every path is registered twice — unprefixed (the default language, mapping to `/en/study/…`)
 and under a non-default prefix (`/mk/scripts/x` → `/mk/study/[siteSlug]/scripts/x`) — so a

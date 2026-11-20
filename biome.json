@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.6.8/schema.json",
   "assist": {
     "actions": {
       "source": {
@@ -80,7 +80,8 @@
         "noUnusedImports": "error",
         "noUnusedVariables": "error",
         "useExhaustiveDependencies": "warn",
-        "useHookAtTopLevel": "error"
+        "useHookAtTopLevel": "error",
+        "noDuplicateFieldDefinitionNames": "error"
       },
       "a11y": {
         "noNoninteractiveElementInteractions": "error",
@@ -91,9 +92,6 @@
         "useSemanticElements": "warn"
       },
       "nursery": {
-        "noDuplicateFieldDefinitionNames": "error",
-        "noDuplicateSelectors": "off",
-        "noEmptyObjectKeys": "error",
         "useReactCompiler": {
           "level": "on",
           "options": {
@@ -119,7 +117,9 @@
         "noArrayIndexKey": "off",
         "noConsole": "warn",
         "noEmptyBlockStatements": "error",
-        "noUnknownAtRules": "off"
+        "noUnknownAtRules": "off",
+        "noDuplicateSelectors": "off",
+        "noEmptyObjectKeys": "error"
       }
     }
   },
@@ -274,6 +274,16 @@
         }
       },
       "includes": ["next/styles/**/*.css"]
+    },
+    {
+      "includes": ["sanity/**/*"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noComponentHookFactories": "off"
+          }
+        }
+      }
     }
   ],
   "vcs": {

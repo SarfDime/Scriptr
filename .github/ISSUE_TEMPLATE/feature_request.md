@@ -1,4 +1,5 @@
 ---
+
 name: Feature request
 about: Suggest a new feature for Scriptr
 title: "[Feature]: "

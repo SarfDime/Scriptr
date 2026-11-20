@@ -10,6 +10,7 @@ import { Button } from '@/components/common/Button'
 import { NextLink } from '@/components/common/NextLink'
 import { Text } from '@/components/typography/Text'
 import { Badge } from '@/components/ui/Badge'
+import { useMounted } from '@/hooks/useMounted'
 import {
   calendarDayKey,
   currentCalendarDayKey,
@@ -30,18 +31,6 @@ import type {
   CalendarAlertEvent,
   CalendarAlertSubject,
 } from '@/types/components/Calendar.types'
-
-const subscribeToMount = () => () => {
-  // Mounting is a one-way trip; there is nothing to unsubscribe from.
-}
-const getMounted = () => true
-const getServerMounted = () => false
-
-/** `true` only after hydration, so the server render and the first client
- * render are identical — the badge and the preview need `Date.now()`, the
- * session and `localStorage`, none of which the server has. */
-const useMounted = () =>
-  useSyncExternalStore(subscribeToMount, getMounted, getServerMounted)
 
 const isDismissed = (dismissals: CalendarDismissals, eventId: string) =>
   eventId in dismissals

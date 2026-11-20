@@ -109,21 +109,26 @@ type StoredFileUrlState =
   | { status: 'error' }
   | { status: 'ready'; url: string }
 
+const LOADING_FILE_URL: StoredFileUrlState = { status: 'loading' }
+
 /** Resolves a stored file's key to a signed URL. Shared by the full preview
  * (`StoredFilePreviewContent`) and the file-card thumbnails. */
 export function useStoredFileUrl(fileKey: string): StoredFileUrlState {
-  const [state, setState] = useState<StoredFileUrlState>({ status: 'loading' })
+  const [resolved, setResolved] = useState<{
+    fileKey: string
+    state: StoredFileUrlState
+  } | null>(null)
 
   useEffect(() => {
     let cancelled = false
-    setState({ status: 'loading' })
-
     getScriptFileUrl(fileKey)
       .then(({ url }) => {
-        if (!cancelled) setState({ status: 'ready', url })
+        if (!cancelled) {
+          setResolved({ fileKey, state: { status: 'ready', url } })
+        }
       })
       .catch(() => {
-        if (!cancelled) setState({ status: 'error' })
+        if (!cancelled) setResolved({ fileKey, state: { status: 'error' } })
       })
 
     return () => {
@@ -131,7 +136,9 @@ export function useStoredFileUrl(fileKey: string): StoredFileUrlState {
     }
   }, [fileKey])
 
-  return state
+  // A URL belongs to the key it was signed for, so a new key reads as loading
+  // without a state write of its own.
+  return resolved?.fileKey === fileKey ? resolved.state : LOADING_FILE_URL
 }
 
 export function StoredFilePreviewContent({
@@ -169,7 +176,22 @@ type TextFilePreviewState =
   | { status: 'error' }
   | { status: 'ready'; text: string }
 
+const LOADING_TEXT: TextFilePreviewState = { status: 'loading' }
+
 const textFileCache = new Map<string, string>()
+
+/** A cached body wins on first paint; a fetch that already finished for this
+ * key wins over it, because it may hold a newer response. */
+function resolveTextState(
+  cacheKey: string,
+  fetched: { cacheKey: string; state: TextFilePreviewState } | null
+): TextFilePreviewState {
+  if (fetched?.cacheKey === cacheKey) return fetched.state
+  const cachedText = textFileCache.get(cacheKey)
+  return cachedText === undefined
+    ? LOADING_TEXT
+    : { status: 'ready', text: cachedText }
+}
 
 function TextFilePreview({
   url,
@@ -183,21 +205,15 @@ function TextFilePreview({
   fillHeight: boolean
 }) {
   const strings = useStrings(SCRIPT_STRINGS_PACK)
-  const [state, setState] = useState<TextFilePreviewState>({
-    status: 'loading',
-  })
+  const [fetched, setFetched] = useState<{
+    cacheKey: string
+    state: TextFilePreviewState
+  } | null>(null)
 
   useEffect(() => {
-    let cancelled = false
-    const cachedText = textFileCache.get(cacheKey)
-    if (cachedText !== undefined) {
-      setState({ status: 'ready', text: cachedText })
-      return () => {
-        cancelled = true
-      }
-    }
+    if (textFileCache.has(cacheKey)) return undefined
 
-    setState({ status: 'loading' })
+    let cancelled = false
 
     fetch(url)
       .then((response) => {
@@ -206,16 +222,20 @@ function TextFilePreview({
       })
       .then((text) => {
         textFileCache.set(cacheKey, text)
-        if (!cancelled) setState({ status: 'ready', text })
+        if (!cancelled) {
+          setFetched({ cacheKey, state: { status: 'ready', text } })
+        }
       })
       .catch(() => {
-        if (!cancelled) setState({ status: 'error' })
+        if (!cancelled) setFetched({ cacheKey, state: { status: 'error' } })
       })
 
     return () => {
       cancelled = true
     }
   }, [cacheKey, url])
+
+  const state = resolveTextState(cacheKey, fetched)
 
   if (state.status === 'loading') {
     return <LoadingSpinner />

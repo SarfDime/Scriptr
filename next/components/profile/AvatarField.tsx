@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useId, useState } from 'react'
+import { useId } from 'react'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { Text } from '@/components/typography/Text'
 import { Avatar } from '@/components/ui/Avatar'
+import { useObjectUrl } from '@/hooks/useObjectUrl'
 import { cn } from '@/lib/common-utils'
 import { AVATAR_ACCEPT_ATTRIBUTE } from '@/lib/profile-avatar'
 import { useUIStrings } from '@/providers/locale/use-strings'
@@ -29,19 +30,9 @@ export function AvatarField({
   const ui = useUIStrings()
   const inputId = useId()
   const captionId = useId()
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-
-  // The URL is created in the effect, not the change handler, so a remount
-  // (StrictMode, a closed and reopened dialog) never revokes the URL it shows.
-  useEffect(() => {
-    if (!file) {
-      setPreviewUrl(null)
-      return undefined
-    }
-    const url = URL.createObjectURL(file)
-    setPreviewUrl(url)
-    return () => URL.revokeObjectURL(url)
-  }, [file])
+  // The picked photo, previewed until it is uploaded or cleared. The URL is
+  // owned by the hook so a remount never shows a revoked one.
+  const previewUrl = useObjectUrl(file)
 
   const caption = error ?? file?.name ?? null
   const previewSrc = previewUrl ?? avatarUrl
