@@ -28,7 +28,10 @@ Rules a background canvas in `next/` follows. What each canvas draws is the code
    frame cannot show the change (palette, theme). `requestAnimationFrame` already stops in
    a hidden tab.
 5. **Gate resize churn.** A height-only change under a fifth of the viewport is ignored and
-   the bitmap stretches; a real resize defers its layout to the next frame.
+   the bitmap stretches; a real resize defers its layout to the next frame. A canvas can
+   mount before it is laid out (a hidden tab, a window being restored) and measure `0×0`;
+   `layout()` skips that size — the hills divide by the width — and a `ResizeObserver` on
+   the canvas lays it out once it has a real one.
 6. **Do not rebuild the scene for a mode flip.** `immersive` is read from a ref, not from
    the effect's dependencies. When a dependency really changes the drawing (device type,
    DPR cap, layout), carry the clock and state in refs so the re-run continues.

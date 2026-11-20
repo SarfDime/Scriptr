@@ -13,8 +13,10 @@ import { useLoading } from '@/providers/loading/LoadingProvider'
 import { useLocale } from '@/providers/locale/LocaleProvider'
 import { setStoredLocale } from '@/providers/locale/locale-store'
 import { useUIStrings } from '@/providers/locale/use-strings'
+import { Box } from '../common/Box'
 import { NextLink } from '../common/NextLink'
 import { Divider } from '../ui/Divider'
+import { Skeleton } from '../ui/skeleton/Skeleton'
 
 /**
  * Switches the language by navigating to the same page in the other language:
@@ -138,5 +140,25 @@ export function LanguageToggle({ className }: { className?: string }) {
         )
       })}
     </fieldset>
+  )
+}
+
+/**
+ * Reserves the control's box while the route's URL is unknown: a route with a
+ * reader-supplied segment cannot build the other language's address in its
+ * static shell. The control itself replaces this as soon as the URL resolves.
+ */
+export function LanguageToggleFallback({ className }: { className?: string }) {
+  return (
+    <Box
+      className={cn(
+        'ui-above-inside p-1.5 gap-1 flex flex-col w-fit mx-auto',
+        className
+      )}
+      aria-hidden='true'
+    >
+      <Skeleton loading className='h-8 w-20 rounded-lg' />
+      <Skeleton loading className='h-8 w-20 rounded-lg' />
+    </Box>
   )
 }

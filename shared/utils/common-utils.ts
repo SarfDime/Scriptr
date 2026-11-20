@@ -58,10 +58,15 @@ export const generateRandomKey = (): string =>
     : Math.random().toString(36).slice(2)
 
 /** `3 days ago` in the reader's language. A value the parser cannot read
- * answers the collection's `invalidDate`. */
+ * answers the collection's `invalidDate`.
+ *
+ * `now` is the instant the label is relative to. A Client Component must pass
+ * one it got from `useRelativeNow` — the default reads the clock, which is a
+ * prerender error on the server's side of that render. */
 export const formatDate = (
   dateString: string,
-  locale: LocaleId = DEFAULT_LOCALE
+  locale: LocaleId = DEFAULT_LOCALE,
+  now: number = Date.now()
 ): string => {
   const strings = getStrings(TIME_AGO_STRINGS_PACK, locale)
   const parsedDate = new Date(dateString)
@@ -72,7 +77,7 @@ export const formatDate = (
 
   if (Number.isNaN(date.getTime())) return strings.invalidDate
 
-  const diffMs = Date.now() - date.getTime()
+  const diffMs = now - date.getTime()
   const diffMinutes = Math.floor(diffMs / (1000 * 60))
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))

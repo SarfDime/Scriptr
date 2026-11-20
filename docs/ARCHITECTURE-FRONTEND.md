@@ -3,16 +3,34 @@
 Rules for changing `next/` live in [`next/AGENTS.md`](../next/AGENTS.md); this file records
 how the frontend is put together.
 
-- **Thin pages.** `page.tsx` awaits params, calls a loader and composes components.
-  Fetching, cookies and 404 handling live in `next/lib/<feature>-page.ts`, returning view
-  models typed in `next/types/components/` (`ScriptDetailViewModel`, `ProfilePageViewModel`).
-  Pure helpers live in `next/lib/<feature>.ts`. Components never fetch.
-- **A `loading.tsx` costs the 404 status:** the segment boundary flushes headers first, so
-  `notFound()` streams after them and the route answers `200`. The script detail route has
-  none and uses the skeleton as its own Suspense fallback; `/user/[username]` is the same
-  case, and `loadPublicProfilePage` makes both decisions before render (own username →
-  `/user`; API `404` → `notFound()`). Any other failed read throws to the error boundary;
-  only the stats read is contained.
+- **Thin pages.** `page.tsx` either awaits its params or hands the promise to the leaf that
+  needs them, calls a loader and composes components. Fetching, cookies and 404 handling
+  live in `next/lib/<feature>-page.ts`, returning view models typed in
+  `next/types/components/` (`ScriptDetailViewModel`, `ProfilePageViewModel`). Pure helpers
+  live in `next/lib/<feature>.ts`. Components never fetch.
+- **Rendering is Prerendering.** Cache Components is on, so each route ships a static shell
+  and streams its request-time parts. A page keeps its headings, chrome and Sanity content
+  in the shell and resolves `params`, `searchParams`, the session and the clock in a leaf
+  behind `<Suspense>`; the fallback is a sibling of the component that needs it
+  (`ScriptsPageSkeleton` beside the feed, `ProfilePageSkeleton` beside the profile,
+  `AdminPageSkeleton`, `CalendarScreenSkeleton`, `ScriptDetailPageSkeleton`). The study
+  layout enumerates its `siteSlug` values, so the whole study tree is prerendered per study,
+  and it hands the handle down as a promise: the calendar alert and the search scope resolve
+  it in their own boundaries (`components/navigation/StudyChrome.tsx`), so the frame itself
+  never waits for the URL. Only those two leaves are deferred — the bell and the profile
+  link stay in the first hydration pass, because a deferred component that reads a client
+  store hydrates against a store that has already loaded. The catalog detail routes enumerate their params the same way
+  through `createAcademicStaticParams`, and because the page _is_ the URL's entity they
+  await `params` and export `instant = false` rather than split: the entry is prerendered
+  whole and an unknown slug keeps a real `404`.
+- **A reader-supplied address answers a soft 404.** `[username]` and `[scriptSlug]` are not
+  known at build time, so the shell is already sent when `notFound()` runs: the response is
+  `200` carrying the localized 404 and its `noindex`. The study sub-pages
+  (`…/scripts`, `…/calendar`, `…/academic-setup`) answer the same way for an unknown
+  `siteSlug`. Only a param known at prerender — or an entity page that awaits `params`
+  with `instant = false` — keeps the real status. `loadPublicProfilePage` still makes both
+  decisions in one place (own username → `/user`; API `404` → `notFound()`), and any other
+  failed read throws to the error boundary; only the stats read is contained.
 - **The loading overlay** shows the last task's `message` and optional `hint` from
   `LoadingTaskDetails`, or the wordmark animation when there is neither.
 - **The root is the catalog.** `/` lists universities, faculties and studies
@@ -38,14 +56,21 @@ how the frontend is put together.
   `ScriptFileThumbnail` and `ScriptFileActions` and owns the preview modal.
 - **The calendar** (a study's `/study/[siteSlug]/calendar`,
   [`ARCHITECTURE-CALENDAR.md`](ARCHITECTURE-CALENDAR.md)) keeps its view in the URL
-  (`?view=month|week&date=YYYY-MM-DD`): a Server Component with `Link` controls, no client
-  state, never `force-static`. Its one client island is the header alert, which narrows
-  the layout's build-time events to the reader's unfinished subjects.
+  (`?view=month|week&date=YYYY-MM-DD`): a Server Component with `Link` controls and no
+  client state, resolved inside a boundary because the period and "today" are request-time.
+  Its one client island is the header alert, which narrows the layout's prerendered events
+  to the reader's unfinished subjects.
 - **Subject lists share one filter pair.** `useSubjectFilters` + `SubjectFilters` own the
   year and electives state for the explorer, the scripts sidebar and the profile sidebar.
   One year at a time (no "all years"), opening on the first year the list has; electives
   included until toggled off. Only the explorer adds search and sort. Both sidebars scroll
   after four cards (and after four professors).
+- **The client shells read the pathname through one store.** `NavProvider` and
+  `NotificationsProvider` wrap every page, so they cannot sit inside a Suspense boundary;
+  `PathnameScope` (`providers/nav/pathname-scope.tsx`) is that boundary and publishes the
+  pathname for `useCurrentPathname`. `LanguageToggle` needs the address itself, so it does
+  use `usePathname` and has its own fallback (`LanguageToggleFallback`) on routes whose URL
+  is not known at build time.
 - **The navbar scrolls its middle.** A study has its links, its enrolled studies and
   its favorites between the logo and the account controls; on a laptop they do not all
   fit. The links, studies and favorites share the one scrollable region, so the logo and
@@ -61,8 +86,11 @@ how the frontend is put together.
   Collections are registered in `shared/config/string-packs.ts`, which also derives
   `StringPackPath<P>` and the path aliases. Mechanics and traps: `next/AGENTS.md`.
 - **The chrome is server, the clock is a leaf.** `MainLayout`, `Header`, `PageLayout` and
-  `Footer` are Server Components; `HeaderDate` and `FooterCopyright` are the client leaves
-  that read the clock, and `NavToggle`, `HeaderActions`, `NavLogo` stay client. A component
+  `Footer` are Server Components; `HeaderDate` and `FooterCopyright` take the instant the
+  page was prerendered with (`getPrerenderNow`) and replace it with the browser's once
+  mounted, so the shell carries a date instead of a hole. A relative label ("3 days ago")
+  reads its reference instant from `useRelativeNow` (`providers/clock/clock.tsx`), which
+  renders the same one. `NavToggle`, `HeaderActions`, `NavLogo` stay client. A component
   rendered from a client parent (`Footer`, `PageHeader` under `PageLayout`) is itself a
   Client Component and reads copy with the hooks. `auth/callback/page.tsx` is a Server
   Component around `AuthCallbackCard`, which needs `window.location`.
@@ -97,7 +125,9 @@ how the frontend is put together.
 - **"Failed" is not "empty".** A loader must not swallow a failed read into an empty list
   when the page would misreport it (a failed profile read must not render `404`; a search
   that never ran must not say "no results"). `apiFetchPublicRead` fallbacks exist only for
-  reads a build must survive.
+  reads a build must survive. The client session read makes the same split: `getSession`
+  resolving to `null` means the request failed, so `SessionProvider` keeps the session it
+  had; a `200` with `user: null` is what signs the reader out.
 - **A control carries its own name.** `Button`/`NextLink` require `AccessibleNameProps`;
   wrappers take `ButtonBaseProps`/`NextLinkBaseProps` or supply a default (`CloseButton`),
   and wrap with `OmitProps`, since `Omit` over a union keeps only shared keys. A button

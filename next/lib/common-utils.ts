@@ -269,7 +269,4 @@ function isOurAddress(link: string): boolean {
   }
 }
 
-/** Generates a random string */
-const generateRandomString = () => Math.random().toString(36).substring(2, 7)
-
-export { externalLink, generateRandomString }
+export { externalLink }

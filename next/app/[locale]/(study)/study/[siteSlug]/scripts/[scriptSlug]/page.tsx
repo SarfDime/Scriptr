@@ -1,6 +1,8 @@
 import { pickLocalizedPortableText } from '@shared/utils/localized-portable-text'
 import type { Metadata } from 'next'
 import { notFound, permanentRedirect } from 'next/navigation'
+import { Suspense } from 'react'
+import { ScriptDetailPageSkeleton } from '@/components/academics/scripts/detail/ScriptDetailSkeleton'
 import { ScriptDetailView } from '@/components/academics/scripts/detail/ScriptDetailView'
 import { PageSEO } from '@/components/page-seo/PageSEO'
 import { fetchWebsiteSeoSettings } from '@/lib/academic-detail-page'
@@ -49,10 +51,22 @@ export async function generateMetadata({
  * study has a handle. The study is checked against the script's own study
  * rather than trusted from the URL, so a script never renders under a site it
  * does not belong to.
+ *
+ * The slug is reader-supplied, so the page resolves it inside a `<Suspense>`
+ * boundary and the study's chrome is prerendered around it. A missing script
+ * still reaches `notFound()`, after the shell — a soft 404 with `noindex`.
  */
-export default async function StudyScriptPage({
+export default function StudyScriptPage({
   params,
 }: LocalePageProps<ScriptSiteRouteParams>) {
+  return (
+    <Suspense fallback={<ScriptDetailPageSkeleton />}>
+      <ScriptRoute params={params} />
+    </Suspense>
+  )
+}
+
+async function ScriptRoute({ params }: LocalePageProps<ScriptSiteRouteParams>) {
   const { siteSlug, scriptSlug, locale } = await params
   const site = await getStudySiteOrNotFound(siteSlug)
   const script = await loadScriptDetailScript(scriptSlug)

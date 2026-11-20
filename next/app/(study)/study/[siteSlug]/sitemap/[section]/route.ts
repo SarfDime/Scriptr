@@ -17,7 +17,6 @@ import {
  * Like the index beside it, this sits outside `app/[locale]`: a sitemap entry
  * carries both languages, so the address has none.
  */
-export const revalidate = false
 
 const XML_SUFFIX = '.xml'
 

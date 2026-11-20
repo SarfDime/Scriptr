@@ -25,13 +25,16 @@ import type { UniversityDetail } from '@/types/academics/university.types'
  * Rendered at build time and never on a clock: the URL space is fixed by
  * `generateStaticParams` and nothing here reads a request-time API. The publish
  * webhook invalidates the page through its type tags; otherwise it is rebuilt
- * with the next deploy. Pinned so a later edit cannot quietly turn the route
- * dynamic.
+ * with the next deploy. `ensureStatic` pins that: a later edit that reads
+ * request-time data fails the build instead of silently rendering per request.
+ *
+ * `instant` is off because the page is one entry of the URL and nothing else:
+ * awaiting `params` before the first byte prerenders that entry whole and keeps
+ * an unknown slug a real 404, which a boundary around the read would turn into
+ * a streamed 200.
  */
-export const dynamic = 'force-static'
-export const revalidate = false
-
-export const dynamicParams = false
+export const ensureStatic = 'navigation'
+export const instant = false
 
 export const generateStaticParams =
   createAcademicStaticParams<UniversityRouteParams>(

@@ -1,16 +1,15 @@
 import { cn } from '@/lib/common-utils'
-import type { CalendarAlertData } from '@/types/components/Calendar.types'
 import { Box, type BoxProps } from '../common/Box'
 import { Header } from '../navigation/Header'
+import type { StudySiteParams } from '../navigation/StudyChrome'
 import { Footer } from './Footer'
 
 export type MainLayoutProps = BoxProps & {
-  /** Only the study tree passes these: a calendar belongs to a study, and its
-   * layout is the only place that knows which one on the server. */
-  calendarAlert?: CalendarAlertData
-  /** Only the study tree passes this, for the same reason: the header's search
-   * bar searches that study's scripts rather than the catalog. */
-  studySiteSlug?: string | null
+  /** Only the study tree passes this: a calendar belongs to a study and its
+   * search bar searches that study's scripts. It arrives as a promise so this
+   * frame is prerendered before the handle is known; the header resolves the
+   * two parts that need it in their own boundaries. */
+  studySiteParams?: StudySiteParams
 }
 
 /**
@@ -25,8 +24,7 @@ export type MainLayoutProps = BoxProps & {
 export const MainLayout = ({
   children,
   className,
-  calendarAlert,
-  studySiteSlug,
+  studySiteParams,
   ...rest
 }: MainLayoutProps) => {
   return (
@@ -36,7 +34,7 @@ export const MainLayout = ({
       className={cn('ui-container flex flex-col', className)}
       {...rest}
     >
-      <Header calendarAlert={calendarAlert} studySiteSlug={studySiteSlug} />
+      <Header studySiteParams={studySiteParams} />
       {/* The container grows to full width while the navbar is collapsed (so the
           header spans the screen); page content keeps its docked-navbar width
           and is centered. `grow` pushes the footer to the bottom of short pages. */}

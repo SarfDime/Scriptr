@@ -12,17 +12,21 @@ import { HeaderSearch } from './HeaderSearch'
 
 export const HeaderActions = ({
   children,
-  studySiteSlug,
+  searchScope,
 }: {
   children?: React.ReactNode
-  /** Set by a study's layout so the search bar scopes to that study. */
-  studySiteSlug?: string | null
+  /** The search bar for this header: the study-scoped one on a study's site,
+   * already wrapped in its own boundary by the server that knows the handle.
+   * A slot rather than a prop so the bell and the profile stay out of that
+   * boundary — they read client stores, and hydrating them late against an
+   * already-updated store is a mismatch. */
+  searchScope?: React.ReactNode
 }) => {
   const { unreadCount, setTrayOpen } = useNotifications()
   const strings = useStrings(NOTIFICATIONS_STRINGS_PACK)
   return (
     <Box className='ml-auto flex items-center gap-2'>
-      <HeaderSearch studySiteSlug={studySiteSlug} />
+      {searchScope ?? <HeaderSearch />}
       <Button
         onClick={() => setTrayOpen(true)}
         aria-label={strings.openNotifications}

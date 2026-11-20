@@ -1371,6 +1371,11 @@ export const paintChristmasScene = (
   >,
   mobile: boolean
 ): ChristmasScene => {
+  // The hills divide by the width, so a size that is not a positive number would
+  // paint NaN coordinates (and a canvas gradient rejects them). The caller skips
+  // this case; this keeps the guard at the one place that does the maths.
+  if (!(w > 0) || !(h > 0)) return { groups: [], chimneys: [] }
+
   const rng = mulberry32(cfg.seed)
   // Sizes of trees and houses follow the screen, but stay in proportion on tall phones
   const u = clamp(Math.min(w / 1300, h / 760), 0.55, 1.5)

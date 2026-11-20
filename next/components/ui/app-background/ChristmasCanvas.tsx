@@ -416,6 +416,13 @@ export const ChristmasCanvas = ({
     // (no blank frame in between)
     const layout = () => {
       layoutPending = false
+      const nextW = sceneCanvas.clientWidth
+      const nextH = sceneCanvas.clientHeight
+      // A canvas can be mounted before it is laid out (a hidden tab, a window
+      // being restored), and it then measures 0×0. Painting that size divides by
+      // a zero width in the scenery and throws on a non-finite gradient, so the
+      // scene waits for the ResizeObserver below to report a real size.
+      if (!(nextW > 0) || !(nextH > 0)) return
       dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2)
       const rect = sceneCanvas.getBoundingClientRect()
       originX = rect.left
@@ -424,8 +431,8 @@ export const ChristmasCanvas = ({
       // the whole screen in immersive mode.
       const prevW = w
       const prevH = h
-      w = sceneCanvas.clientWidth
-      h = sceneCanvas.clientHeight
+      w = nextW
+      h = nextH
       for (const canvas of [sceneCanvas, immersiveSceneCanvas, effectsCanvas]) {
         if (!canvas) continue
         canvas.width = Math.round(w * dpr)
@@ -1151,6 +1158,20 @@ export const ChristmasCanvas = ({
       attributeFilter: ['class'],
     })
     window.addEventListener('resize', onResize)
+    // Window `resize` does not fire when the canvas is first laid out after a
+    // zero-size mount, and it misses size changes that do not resize the window.
+    const resizeObserver = new ResizeObserver(() => {
+      // No layout has succeeded yet, so there is no frame to protect: lay the
+      // scene out now instead of waiting for a frame a hidden or idle tab may
+      // not run.
+      if (!w || !h) {
+        layout()
+        redrawIfStatic()
+        return
+      }
+      onResize()
+    })
+    resizeObserver.observe(sceneCanvas)
     window.addEventListener('pointerdown', onDeerClick)
     window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('keydown', onImmersiveKey)
@@ -1177,6 +1198,7 @@ export const ChristmasCanvas = ({
 
     return () => {
       window.removeEventListener('resize', onResize)
+      resizeObserver.disconnect()
       window.removeEventListener('pointerdown', onDeerClick)
       window.removeEventListener('pointermove', onPointerMove)
       document.body.style.cursor = ''

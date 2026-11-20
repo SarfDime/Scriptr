@@ -14,8 +14,6 @@ import { websiteDomain } from '@/sanity/env'
  * (`app/(study)/study/[siteSlug]/sitemap.xml`), and that host's `/sitemap.xml`
  * never reaches this file.
  */
-export const dynamic = 'force-static'
-export const revalidate = false
 
 // biome-ignore lint/style/useNamingConvention: Next.js route handlers must be named POST/GET/etc.
 export async function GET() {

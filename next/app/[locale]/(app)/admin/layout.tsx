@@ -1,7 +1,8 @@
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
-import type { ReactNode } from 'react'
+import { type ReactNode, Suspense } from 'react'
 import { AdminAccessGate } from '@/components/admin/AdminAccessGate'
+import { AdminPageSkeleton } from '@/components/admin/AdminPageSkeleton'
 import { isAdminUnlocked } from '@/lib/api/admin-access-api'
 import { getSessionRequired } from '@/lib/api/auth-api'
 
@@ -10,15 +11,21 @@ import { getSessionRequired } from '@/lib/api/auth-api'
  * also requires. An expired cookie shows the code form instead of a page of
  * rejected requests.
  *
- * The unlock check here only covers a full load: a layout is not re-rendered
- * when the browser moves between admin pages, so each page also calls
- * `requireAdminUnlock` (`next/lib/admin-page-guard.ts`) before its loader.
+ * Both read the request, so the gate is a leaf inside a boundary and the admin
+ * shell around it is prerendered. The unlock check here only covers a full load:
+ * a layout is not re-rendered when the browser moves between admin pages, so
+ * each page also calls `requireAdminUnlock` (`next/lib/admin-page-guard.ts`)
+ * before its loader.
  */
-export default async function AdminLayout({
-  children,
-}: {
-  children: ReactNode
-}) {
+export default function AdminLayout({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={<AdminPageSkeleton />}>
+      <AdminGate>{children}</AdminGate>
+    </Suspense>
+  )
+}
+
+async function AdminGate({ children }: { children: ReactNode }) {
   const cookieHeader = (await cookies()).toString()
   const session = await getSessionRequired(cookieHeader)
   const user = session.user

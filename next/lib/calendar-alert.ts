@@ -1,9 +1,12 @@
 import { SANITY_CACHE_TAGS } from '@shared/config/cache-tags'
+import { cache } from 'react'
+import { getStudySiteUrl } from '@/lib/academic-routes'
 import { nextLogs } from '@/lib/logger'
 import { getServerLocale } from '@/lib/server-strings'
 import { fetchSanityData } from '@/sanity/lib/utils'
 import { studyAlertSubjectsQuery } from '@/sanity/queries/academics/study.queries'
 import type {
+  CalendarAlertData,
   CalendarAlertEvent,
   CalendarAlertSubject,
 } from '@/types/components/Calendar.types'
@@ -70,3 +73,24 @@ export const getCalendarAlertSubjects = async (
     return []
   }
 }
+
+/**
+ * Everything the header's alert needs for one study, resolved on the server:
+ * the two reads above plus the study's own calendar address. `cache`-wrapped so
+ * the desktop and mobile alerts share one resolve per render.
+ */
+export const getStudyCalendarAlert = cache(
+  async (siteSlug: string): Promise<CalendarAlertData> => {
+    const [events, subjects, locale] = await Promise.all([
+      getCalendarAlertEvents(siteSlug),
+      getCalendarAlertSubjects(siteSlug),
+      getServerLocale(),
+    ])
+
+    return {
+      events,
+      subjects,
+      calendarHref: `${getStudySiteUrl(siteSlug, locale)}/calendar`,
+    }
+  }
+)

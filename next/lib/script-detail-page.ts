@@ -3,6 +3,7 @@ import { canModerateStudy } from '@shared/utils/api.utils'
 import { pickLocalizedPortableText } from '@shared/utils/localized-portable-text'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
+import { connection } from 'next/server'
 import { getSessionRequired } from '@/lib/api/auth-api'
 import { getScriptComments } from '@/lib/api/comments-api'
 import { getFavorite } from '@/lib/api/favorites-api'
@@ -10,7 +11,6 @@ import { ApiError } from '@/lib/api/next-api'
 import { getScript } from '@/lib/api/scripts-api'
 import { getMyScriptVote, getScriptVoteStats } from '@/lib/api/votes-api'
 import { EMPTY_COMMENT_PAGE } from '@/lib/comments/empty-comment-page'
-import { nextLogs } from '@/lib/logger'
 import { sortFilesByPosition } from '@/lib/script-detail'
 import { getServerLocale } from '@/lib/server-strings'
 import { getSubjectRef } from '@/lib/subject-ref'
@@ -23,10 +23,10 @@ export type ScriptDetailPageData = {
 }
 
 /**
- * The one read that decides whether the page exists. It runs before anything
- * renders so `notFound()` can still produce a real 404 status: the route has
- * no `loading.tsx` on purpose, since a Suspense boundary above the page would
- * flush the response (and its 200) before this answer arrives.
+ * The one read that decides whether the page exists, and the first thing the
+ * page's boundary resolves: the route's URL is reader-supplied, so the shell is
+ * already sent and a missing script answers a soft `404` (`noindex`) rather than
+ * a status.
  *
  * The segment takes a slug or a legacy id: the API resolves both, and the page
  * redirects the id form to the slug, so the address people share and the
@@ -44,34 +44,6 @@ export const loadScriptDetailScript = async (
 }
 
 type ViewerRead<T> = { value: T; failed: boolean }
-
-const getSessionExpiresAt = (sessionCookie: string | undefined) => {
-  if (!sessionCookie) return null
-
-  try {
-    const session: unknown = JSON.parse(sessionCookie)
-    if (
-      typeof session !== 'object' ||
-      session === null ||
-      !('expires_at' in session)
-    ) {
-      return null
-    }
-
-    const expiresAt = session.expires_at
-    if (typeof expiresAt === 'number' && Number.isFinite(expiresAt)) {
-      return expiresAt
-    }
-    if (typeof expiresAt === 'string' && expiresAt.trim()) {
-      const parsedExpiresAt = Number(expiresAt)
-      return Number.isFinite(parsedExpiresAt) ? parsedExpiresAt : null
-    }
-  } catch {
-    return null
-  }
-
-  return null
-}
 
 /** Reads something that depends on who is signed in. No cookie, or a `401`,
  * means the viewer is signed out and `signedOut` is used. Any other failure is
@@ -98,23 +70,18 @@ const readForViewer = async <T>(
 
 /** Loads the rest of the script detail page for an already-resolved script.
  * A failed comments read is contained; a failed viewer-specific read only sets
- * `viewerDataFailed`. */
+ * `viewerDataFailed`.
+ *
+ * Everything here is per reader — the session, their vote, their saves — so the
+ * render waits for the request. The page calls this inside a `<Suspense>`
+ * boundary. */
 export const loadScriptDetailPage = async (
   scriptId: string,
   script: ScriptSummary
 ): Promise<ScriptDetailPageData> => {
-  const cookieStore = await cookies()
-  const cookieHeader = cookieStore.toString()
-  const authCookie = cookieStore.get('sb-auth-token')?.value
-  const sessionExpiresAt = getSessionExpiresAt(authCookie)
-  const secondsUntilExpiry =
-    sessionExpiresAt === null
-      ? null
-      : sessionExpiresAt - Math.floor(Date.now() / 1000)
-  nextLogs({
-    logLevel: 'info',
-    message: `Script detail auth diagnostic: script=${scriptId} incomingAuthCookie=${authCookie !== undefined} sessionExpiresAt=${sessionExpiresAt ?? 'unknown'} secondsUntilExpiry=${secondsUntilExpiry ?? 'unknown'}`,
-  })
+  await connection()
+
+  const cookieHeader = (await cookies()).toString()
 
   const [voteStats, commentsResult, myVote, myFavorite, session, subjectRef] =
     await Promise.all([

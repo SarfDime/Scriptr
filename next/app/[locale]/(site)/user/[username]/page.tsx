@@ -1,15 +1,19 @@
 import { localizedPath } from '@shared/utils/localized-path'
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { ProfilePage } from '@/components/profile/ProfilePage'
+import { ProfilePageSkeleton } from '@/components/profile/ProfilePageSkeleton'
 import { languageAlternates } from '@/lib/localized-metadata'
 import { loadPublicProfilePage } from '@/lib/profile-page'
 import type { LocalePageProps } from '@/types/localization.types'
 
 /**
- * Profile view for any user by username. Server Component: the loader's reads
- * all resolve before this renders, so there is no client-side loading state,
- * and no `loading.tsx` on purpose (see `loadPublicProfilePage`: a Suspense
- * boundary would flush a `200` before a missing profile reaches `notFound()`).
+ * Profile view for any user by username. The username is only known at request
+ * time, so the profile is resolved inside a `<Suspense>` boundary: the shell
+ * around it is prerendered and the page streams in.
+ *
+ * A missing username still reaches `notFound()`, but after the shell has been
+ * sent — the response is a `200` carrying the localized 404 with `noindex`.
  *
  * No sign-in is needed to view it; the loader redirects to `/user` when the
  * username is the viewer's own.
@@ -31,7 +35,17 @@ export async function generateMetadata({
   }
 }
 
-export default async function PublicUserProfilePage({
+export default function PublicUserProfilePage({
+  params,
+}: LocalePageProps<{ username: string }>) {
+  return (
+    <Suspense fallback={<ProfilePageSkeleton />}>
+      <PublicProfile params={params} />
+    </Suspense>
+  )
+}
+
+async function PublicProfile({
   params,
 }: LocalePageProps<{ username: string }>) {
   const { username } = await params

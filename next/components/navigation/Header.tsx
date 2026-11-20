@@ -1,33 +1,46 @@
 import Menu from '@sanity/icons/Menu'
 import { UI_STRINGS_PACK } from '@shared/config/strings'
+import { Suspense } from 'react'
 import { cn } from '@/lib/common-utils'
+import { getPrerenderNow } from '@/lib/prerender-clock'
 import { getServerStrings } from '@/lib/server-strings'
-import type { CalendarAlertData } from '@/types/components/Calendar.types'
 import { Box } from '../common/Box'
-import { CalendarAlert } from './CalendarAlert'
 import { HeaderActions } from './HeaderActions'
 import { HeaderDate } from './HeaderDate'
+import { HeaderSearch } from './HeaderSearch'
 import { NavLogo } from './NavLogo'
 import { NavToggle } from './NavToggle'
+import {
+  StudyCalendarAlert,
+  StudySearch,
+  type StudySiteParams,
+} from './StudyChrome'
 
 /**
- * The header is global chrome: the calendar alert is per study and lives in the
- * study's own frame (`app/(study)/study/[siteSlug]/layout.tsx`), which can read
- * it on the server. The same layout hands down the study's handle so the search
- * bar can search that study's scripts; the header itself never reads a host.
+ * The header is global chrome: the calendar alert is per study and the search
+ * bar searches a study's own scripts. Both get the study's handle from the
+ * study tree's layout (`app/(study)/study/[siteSlug]/layout.tsx`); the header
+ * itself never reads a host.
  *
  * A Server Component: the copy is resolved from the route's language here. The
  * clock is the one thing that cannot be — a server render would freeze the date
  * and the academic week on any prerendered page — so it is the `HeaderDate`
- * client leaf. */
+ * client leaf.
+ *
+ * A study passes its handle as a promise, not a value: the two parts of the
+ * header that need it (the calendar alert and the search scope) are leaves
+ * inside their own boundaries, so the layout above them stays prerenderable.
+ * Only those two leaves are deferred — the notification bell and the profile
+ * link read client stores and must hydrate with the first pass. */
 export const Header = async ({
-  calendarAlert,
-  studySiteSlug,
+  studySiteParams,
 }: {
-  calendarAlert?: CalendarAlertData
-  studySiteSlug?: string | null
+  studySiteParams?: StudySiteParams
 }) => {
-  const strings = await getServerStrings(UI_STRINGS_PACK)
+  const [strings, prerenderNow] = await Promise.all([
+    getServerStrings(UI_STRINGS_PACK),
+    getPrerenderNow(),
+  ])
 
   return (
     <header
@@ -64,25 +77,33 @@ export const Header = async ({
       {/* The calendar sits with the header's own date, not with the account
           actions: it is about the academic calendar those dates come from. */}
       <Box className='ui-cluster min-w-0 gap-2'>
-        <HeaderDate />
-        {calendarAlert && (
-          <CalendarAlert
-            className='hidden lg:flex'
-            events={calendarAlert.events}
-            calendarHref={calendarAlert.calendarHref}
-            subjects={calendarAlert.subjects}
-          />
+        <HeaderDate initialNow={prerenderNow} />
+        {studySiteParams && (
+          <Suspense fallback={null}>
+            <StudyCalendarAlert
+              params={studySiteParams}
+              className='hidden lg:flex'
+            />
+          </Suspense>
         )}
       </Box>
       <NavLogo className='lg:hidden' />
-      <HeaderActions studySiteSlug={studySiteSlug}>
-        {calendarAlert && (
-          <CalendarAlert
-            className='lg:hidden'
-            events={calendarAlert.events}
-            calendarHref={calendarAlert.calendarHref}
-            subjects={calendarAlert.subjects}
-          />
+      <HeaderActions
+        searchScope={
+          studySiteParams && (
+            <Suspense fallback={<HeaderSearch />}>
+              <StudySearch params={studySiteParams} />
+            </Suspense>
+          )
+        }
+      >
+        {studySiteParams && (
+          <Suspense fallback={null}>
+            <StudyCalendarAlert
+              params={studySiteParams}
+              className='lg:hidden'
+            />
+          </Suspense>
         )}
       </HeaderActions>
     </header>

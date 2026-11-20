@@ -356,6 +356,10 @@ export const SkyboxCanvas = ({
       }
     }
     window.addEventListener('resize', onResize)
+    // A canvas can be mounted without a size (a hidden tab, a window being
+    // restored); window `resize` then never fires for the size it gets later.
+    const resizeObserver = new ResizeObserver(onResize)
+    resizeObserver.observe(skyCanvas)
 
     const onPointerMove = (event: PointerEvent) => {
       if (!flare || event.pointerType === 'touch') return
@@ -427,6 +431,7 @@ export const SkyboxCanvas = ({
 
     return () => {
       window.removeEventListener('resize', onResize)
+      resizeObserver.disconnect()
       window.removeEventListener('pointermove', onPointerMove)
       colorScheme.removeEventListener('change', onThemeChange)
       themeObserver.disconnect()

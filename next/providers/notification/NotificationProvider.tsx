@@ -16,7 +16,6 @@ import {
   getSiteSlugFromHost,
   getSiteSlugFromPath,
 } from '@shared/utils/site-paths'
-import { usePathname } from 'next/navigation'
 import {
   createContext,
   useContext,
@@ -54,6 +53,7 @@ import type {
 } from '@/types/notifications.types'
 import { useLocale } from '../locale/LocaleProvider'
 import { useStrings } from '../locale/use-strings'
+import { useCurrentPathname } from '../nav/pathname-scope'
 import { useSession } from '../SessionProvider'
 import { useToast } from '../toaster/ToasterProvider'
 
@@ -165,7 +165,7 @@ export const NotificationsProvider = ({
   const { locale } = useLocale()
   const strings = useStrings(NOTIFICATIONS_STRINGS_PACK)
   const { session } = useSession()
-  const pathname = usePathname()
+  const pathname = useCurrentPathname()
   // On a study site the tray shows that study's notifications and the
   // platform-wide ones; elsewhere it shows everything, so nothing is ever
   // unreachable. A study's own pages are addressed by its host, so the host is

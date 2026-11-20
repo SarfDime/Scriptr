@@ -1,10 +1,14 @@
 import CloseIcon from '@sanity/icons/Close'
 import { UI_STRINGS_PACK } from '@shared/config/strings'
+import { Suspense } from 'react'
 import { cn } from '@/lib/common-utils'
 import { getServerStrings } from '@/lib/server-strings'
 import type { NavBarProps } from '@/types/components/Nav.types'
 import { Box } from '../common/Box'
-import { LanguageToggle } from '../locale/LanguageToggle'
+import {
+  LanguageToggle,
+  LanguageToggleFallback,
+} from '../locale/LanguageToggle'
 import { Divider } from '../ui/Divider'
 import { SimpleModeToggle } from '../ui/SimpleModeToggle'
 import { ThemeToggle } from '../ui/ThemeToggle'
@@ -79,7 +83,11 @@ export const NavBar = async ({ navItems, studyLogos }: NavBarProps) => {
         <Box className='ui-stack shrink-0 gap-3'>
           <Divider />
           <ThemeToggle className='w-full flex-row' />
-          <LanguageToggle className='w-full flex-row' />
+          <Suspense
+            fallback={<LanguageToggleFallback className='w-full flex-row' />}
+          >
+            <LanguageToggle className='w-full flex-row' />
+          </Suspense>
           <Box className='ui-cluster flex-nowrap gap-2'>
             <SimpleModeToggle className='min-w-0 flex-1' />
             <AdminNavLink />

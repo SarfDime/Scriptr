@@ -1,6 +1,8 @@
 import Projects from '@sanity/icons/Projects'
 import { UI_STRINGS_PACK } from '@shared/config/strings'
+import { Suspense } from 'react'
 import { AcademicSetupForm } from '@/components/academics/setup/AcademicSetupForm'
+import { AcademicSetupPageSkeleton } from '@/components/academics/setup/AcademicSetupPageSkeleton'
 import { NextLink } from '@/components/common/NextLink'
 import { PageLayout } from '@/components/layout/PageLayout'
 import { Text } from '@/components/typography/Text'
@@ -44,10 +46,21 @@ export async function generateMetadata({
  *
  * It reads the session, unlike the study's own pages: a member of this study is
  * updating the profile it holds rather than creating one, and the heading, the
- * submit label and the boxes it opens on all differ. The study is still resolved
- * once per request from the tagged cache.
+ * submit label and the boxes it opens on all differ. The session decides every
+ * word on the page, so the page resolves inside a boundary and only the study's
+ * chrome around it is prerendered.
  */
-export default async function AcademicSetupPage({
+export default function AcademicSetupPage({
+  params,
+}: LocalePageProps<StudySiteRouteParams>) {
+  return (
+    <Suspense fallback={<AcademicSetupPageSkeleton />}>
+      <AcademicSetupContent params={params} />
+    </Suspense>
+  )
+}
+
+async function AcademicSetupContent({
   params,
 }: LocalePageProps<StudySiteRouteParams>) {
   const { siteSlug, locale } = await params

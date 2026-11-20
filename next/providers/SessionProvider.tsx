@@ -74,38 +74,39 @@ function getConflictField(error: unknown): RegisterConflictField | undefined {
     : undefined
 }
 
+/** An outage says nothing about whether the visitor is signed in, so an
+ * already-authenticated session is kept; only an unknown one falls back to
+ * signed out. */
+const keepAuthenticated = (previous: SessionState): SessionState =>
+  previous.status === 'authenticated' ? previous : { status: 'unauthenticated' }
+
 /**
  * Module-level (not a closure over component state) so the mount effect
  * below can call it without pulling `refresh` into its dependency array
  * — it only ever receives `setSession`, whose identity React guarantees
  * is stable.
  *
- * `previous` is the state to fall back on when the request itself fails.
+ * `previous` is the state to fall back on when the request itself says
+ * nothing about the visitor.
  */
 async function fetchSession(
   setSession: (state: SessionState) => void,
   previous: SessionState
 ): Promise<SessionState> {
-  try {
-    const result = await getSession()
-    const state: SessionState = result?.user
-      ? { status: 'authenticated', user: result.user }
-      : { status: 'unauthenticated' }
-    setSession(state)
-    return state
-  } catch {
-    // GET /session answers `{ user: null }` for a signed-out visitor, so a
-    // throw means the request failed (network, or the API/auth service is
-    // down) and says nothing about whether the user is signed in. Keep an
-    // already-authenticated session; only an unknown one falls back to
-    // signed out.
-    const state: SessionState =
-      previous.status === 'authenticated'
-        ? previous
-        : { status: 'unauthenticated' }
-    setSession(state)
-    return state
+  // `getSession` resolves to `null` only when the request failed (network,
+  // timeout, or the API/auth service being down); a signed-out visitor is a
+  // normal `200` with `user: null`.
+  const result = await getSession().catch(() => null)
+  let state: SessionState
+  if (result === null) {
+    state = keepAuthenticated(previous)
+  } else if (result.user) {
+    state = { status: 'authenticated', user: result.user }
+  } else {
+    state = { status: 'unauthenticated' }
   }
+  setSession(state)
+  return state
 }
 
 /** Shared by login and loginWithTokens — both call a backend endpoint

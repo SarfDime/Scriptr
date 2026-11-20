@@ -1,6 +1,5 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
 import {
   createContext,
   type ReactNode,
@@ -11,6 +10,7 @@ import {
 } from 'react'
 import { Box } from '@/components/common/Box'
 import { subscribeToStorage } from '@/lib/storage-events'
+import { useCurrentPathname } from './pathname-scope'
 
 type NavContextType = {
   /** Desktop only: the docked navbar is hidden. Persisted across visits. */
@@ -87,7 +87,7 @@ const isDesktop = () => window.matchMedia(DESKTOP_QUERY).matches
  * being a Client Component.
  */
 export function NavProvider({ children }: { children: ReactNode }) {
-  const pathname = usePathname()
+  const pathname = useCurrentPathname()
 
   const collapsed = useSyncExternalStore(
     subscribeCollapsed,
@@ -98,7 +98,9 @@ export function NavProvider({ children }: { children: ReactNode }) {
   // The off-canvas navbar counts as open only on the page it was opened on,
   // so following any link closes it without an effect.
   const [openedOn, setOpenedOn] = useState<string | null>(null)
-  const mobileOpen = openedOn === pathname
+  // Open only on the page it was opened on, so following any link closes it. The
+  // shell has no pathname yet, and nothing can be open there either.
+  const mobileOpen = pathname !== null && openedOn === pathname
 
   useEffect(() => {
     if (!mobileOpen) return undefined

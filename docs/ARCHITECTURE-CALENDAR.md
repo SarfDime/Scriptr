@@ -24,18 +24,20 @@
   — so prev/next/today, the view switch and opening a day are plain `Link`s. In week view
   `date` sits on the **third** of seven days (`WEEK_VIEW_ANCHOR_OFFSET`), so a day opened
   from the grid never lands on an edge. Bad or repeated parameters fall back to the current
-  month. It reads `searchParams`, so it must never carry `force-static`. A period is an
-  address and every period links to the next, so the crawl space is unbounded: the page is
-  `noindex` with `nofollow` on its period and view links, `next/app/robots.ts` closes
-  `/calendar` in every shape, and `next/next.config.ts` gives the response
+  month. It reads `searchParams` and compares against today, so it renders inside a
+  boundary and `loadCalendarPage` calls `connection()` before reading the clock. A period
+  is an address and every period links to the next, so the crawl space is unbounded: the
+  page is `noindex` with `nofollow` on its period and view links, `next/app/robots.ts`
+  closes `/calendar` in every shape, and `next/next.config.ts` gives the response
   `Vercel-CDN-Cache-Control` for ten minutes — it is the same for every reader, so a repeat
   costs no function CPU.
 - **One read per build.** `calendarEventsQuery` collects the ids every attached calendar
   references and returns those events narrowed to six months either side of the build
-  (`calendarMarginWindow`) — one cached Sanity read (`loadCalendarEvents`) shared by
-  `/calendar` and the header alert. The page filters in memory, so navigating costs no
-  Sanity traffic. Each event projects its subject (name, `dbId`, path slugs) and professors,
-  using the same `coalesce(slug.current, _id)` fallback as `subjectPathQuery`.
+  (`calendarMarginWindow`, cached with `use cache`) — one cached Sanity read
+  (`loadCalendarEvents`) shared by `/calendar` and the header alert. The page filters in
+  memory, so navigating costs no Sanity traffic. Each event projects its subject (name,
+  `dbId`, path slugs) and professors, using the same `coalesce(slug.current, _id)` fallback
+  as `subjectPathQuery`.
 - **Outside the year, the page says so.** `CalendarDataNotice` names the covered range when
   the visible period reaches past the events, and an empty calendar document gets its own
   message. No extra read, no error.

@@ -39,15 +39,51 @@ Repo rules: [`../AGENTS.md`](../AGENTS.md). Architecture:
 
 ## Caching and rendering
 
-- A build-time-only route declares `export const dynamic = 'force-static'` and
-  `export const revalidate = false` beside `generateStaticParams`. Never on a route
-  that reads `searchParams`, `cookies()` or `headers()` — `force-static` makes those
-  return empty instead of failing. Client Components cannot carry segment config.
-- No time-based revalidation: `cachedPublicRead`, `cachedUnlessPersonalized` and
+Cache Components is on: every route ships a prerendered shell and its request-time
+parts stream into it. `dynamic`, `revalidate`, `fetchCache` and `dynamicParams` are
+build errors — do not add them.
+
+- **Request data goes in a leaf inside `<Suspense>`**: `params`, `searchParams`,
+  `cookies()`, `headers()`, the session, a clock or a random value. Headings, chrome
+  and Sanity content stay in the shell; the leaf that resolves the URL renders last.
+  Awaiting `params` at the top of a page ties its shell to one URL, so a route with
+  reader-supplied params (`[username]`, `[scriptSlug]`) awaits them inside a boundary.
+- **A route that must stay fully prerendered** exports
+  `ensureStatic = 'navigation'` beside `generateStaticParams`. Never on a route that
+  reads `searchParams`, `cookies()` or `headers()`. Client Components cannot carry
+  segment config.
+- **A page whose whole content is the URL's entity** (university, faculty, professor,
+  study overview, subject) exports `instant = false`: it awaits `params` before the first
+  byte, which keeps its prerendered document complete and an unknown slug a real `404`.
+  `instant` only turns off instant-navigation validation; it does not change what is
+  prerendered.
+- **A clock or `Math.random` in a render fails the prerender.** Read it on the client
+  (`useMounted`, or `useRelativeNow` for a relative label) or cache it
+  (`getPrerenderNow`). `connection()` marks a request-time read that must be explicit,
+  such as the calendar's "today".
+- **`use cache` is for a value no request decides** — the clock the shell was built
+  with, the calendar's window. Give it a `cacheLife`, a `cacheTag` when a mutation must
+  reach it, and read the language through `next/root-params` (part of the cache key) or
+  take it as an argument. Never read `cookies()`/`headers()` inside it.
+- No time-based revalidation of data: `cachedPublicRead`, `cachedUnlessPersonalized` and
   `fetchSanityData` pass `revalidate: false`. A Hono mutation that changes a cached
   read calls `revalidateCacheTags` with tags from `shared/config/cache-tags.ts`.
 - `revalidateTag()` needs a `cacheLife` profile; `/api/revalidate` keeps
   `revalidateTag(tag, { expire: 0 })` so a mutation never serves stale data.
+- **A client shell above the page cannot suspend**, so it reads the pathname with
+  `useCurrentPathname` (`providers/nav/pathname-scope.tsx`), never `usePathname`.
+- **A layout hands params down as a promise** and lets the parts that need them resolve
+  inside a boundary — the study tree's alert and search scope do
+  (`components/navigation/StudyChrome.tsx`). Awaiting them in the layout ties every page
+  below to one URL. Keep the boundary to that leaf: a component that reads a client store
+  (the session, notifications) inside a deferred boundary hydrates against a store that has
+  already loaded, and mismatches the HTML the server sent.
+- **A `notFound()` after the shell has been sent answers `200`** with the localized 404
+  and its `noindex`. Only a param known at prerender keeps the real status.
+- **`apiFetch` rethrows Next's own errors before treating a failure as an outage.** A
+  prerender or navigation that bails out aborts the in-flight request, and
+  `unstable_rethrow` (first line of the `catch`) is what keeps that bailout visible
+  instead of logging an API failure.
 - `next/image`: 16-era defaults (async decoding, `fetchPriority: auto`,
   `qualities`/`minimumCacheTTL`/`imageSizes` in `next.config.ts`).
 

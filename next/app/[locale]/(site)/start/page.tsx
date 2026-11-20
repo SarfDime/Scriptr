@@ -19,7 +19,7 @@ import type { LocalePageProps } from '@/types/localization.types'
  *
  * Cached until the publish webhook invalidates it, like the rest of the catalog.
  */
-export const revalidate = false
+export const ensureStatic = 'navigation'
 
 export async function generateMetadata({ params }: LocalePageProps) {
   const path = '/start'

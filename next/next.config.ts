@@ -238,6 +238,17 @@ const nextConfig = {
     qualities: [65, 85, 91],
   },
   reactCompiler: true,
+  /**
+   * Component- and function-level caching with Partial Prerendering: every route
+   * ships a static shell and only its request-time parts stream in. Uncached
+   * data is dynamic, so `use cache` (with `cacheLife`/`cacheTag`) marks what may
+   * be prerendered; see `next/AGENTS.md`.
+   *
+   * `partialPrefetching` prefetches one App Shell per route instead of one per
+   * link — the destination's URL-specific content resolves after the click.
+   */
+  cacheComponents: true,
+  partialPrefetching: true,
 
   async headers() {
     return CALENDAR_CACHE_ROUTES.map((source) => ({

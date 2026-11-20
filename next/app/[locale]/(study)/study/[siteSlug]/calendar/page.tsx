@@ -1,6 +1,8 @@
 import { CALENDAR_STRINGS_PACK } from '@shared/strings/calendar-strings'
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { CalendarScreen } from '@/components/calendar/CalendarScreen'
+import { CalendarScreenSkeleton } from '@/components/calendar/CalendarScreenSkeleton'
 import { getStudySiteUrl } from '@/lib/academic-routes'
 import {
   type CalendarSearchParams,
@@ -34,20 +36,37 @@ export async function generateMetadata({
   }
 }
 
-/** A calendar belongs to a study, so it is served inside that study's site and
+/**
+ * A calendar belongs to a study, so it is served inside that study's site and
  * nowhere else. Thin: the loader validates `?view`/`?date`, reads the visible
- * window from that study's calendars and hands back a view model. No segment
- * config — the page reads `searchParams`, so it must stay dynamic. */
-export default async function StudyCalendarPage({
+ * window from that study's calendars and hands back a view model.
+ *
+ * The period is in the URL and the grid is relative to today, so the whole
+ * screen is request-time; the study's chrome above it is prerendered.
+ */
+export default function StudyCalendarPage({
   params,
   searchParams,
 }: LocalePageProps<{ siteSlug: string }> & {
   searchParams: Promise<CalendarSearchParams>
 }) {
-  const { siteSlug } = await params
+  return (
+    <Suspense fallback={<CalendarScreenSkeleton />}>
+      <CalendarPeriod params={params} searchParams={searchParams} />
+    </Suspense>
+  )
+}
+
+async function CalendarPeriod({
+  params,
+  searchParams,
+}: LocalePageProps<{ siteSlug: string }> & {
+  searchParams: Promise<CalendarSearchParams>
+}) {
+  const [{ siteSlug }, period] = await Promise.all([params, searchParams])
   await getStudySiteOrNotFound(siteSlug)
 
-  const viewModel = await loadCalendarPage(siteSlug, await searchParams)
+  const viewModel = await loadCalendarPage(siteSlug, period)
 
   return <CalendarScreen {...viewModel} />
 }

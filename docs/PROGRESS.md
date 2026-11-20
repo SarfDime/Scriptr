@@ -116,8 +116,25 @@ catalog; how that works is
   largest single item when the rasterizer is software (~6 ms of the ~13 ms draw
   in headless Firefox at DPR 2), so a dirty-region clear is the next lever if a
   software-composited browser ever struggles again.
-- **Cache Components:** investigate the `use cache` directive and partial
-  prerendering.
+- **Cache Components, what is left.**
+  - A slug that matches nothing answers `200` with the localized 404 and `noindex` on
+    the study sub-pages (`…/scripts`, `…/calendar`, `…/academic-setup`),
+    `/user/[username]` and `…/scripts/[scriptSlug]`. The catalog's entity pages
+    (`/university/[universitySlug]`, the faculty, professor, study and subject pages)
+    keep the real `404`: they await `params` and export `instant = false` instead of
+    splitting. A real status for the rest needs a fast existence check in `proxy.ts`;
+    not worth a request per page until a crawler complains.
+  - `LanguageToggle` cannot build the other language's address in the shell of a
+    route whose URL is unknown, so those routes show its placeholder until the
+    address resolves. A same-page switch that needs no address (client-only
+    `router.push`) would close that hole.
+  - `next dev` reports a `Date.now()` insight for
+    `/study/[siteSlug]/scripts/[scriptSlug]` during its metadata pass; the build
+    is clean. Trace it before adding a suppression — nothing in the route reads
+    the clock.
+  - The admin gate resolves `params`/`cookies` above its boundary, so an admin
+    shell is per request rather than generic. Correct for a gated surface;
+    revisit only if the first paint of `/admin` feels slow.
 - **Font weights:** the declarations and the preload links are settled — the
   local families preload nothing, and the unused Bricolage family is gone, so a
   page fetches the five faces it renders instead of 22 files. What is left is

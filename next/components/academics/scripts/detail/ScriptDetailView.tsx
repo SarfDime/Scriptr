@@ -8,10 +8,9 @@ import { PageLayout } from '@/components/layout/PageLayout'
 
 /**
  * One script's page, shared by the catalog URL and the study site. The
- * existence check has already run by the time this renders (so a missing script
- * answers a real `404` — see `ScriptDetailSkeleton` on why the route has no
- * `loading.tsx`), and the rest of the screen streams behind a Suspense boundary
- * that falls back to `ScriptDetailSkeleton`.
+ * existence check has already run by the time this renders, and the rest of the
+ * screen streams behind a Suspense boundary that falls back to
+ * `ScriptDetailSkeleton`.
  */
 export const ScriptDetailView = ({
   script,

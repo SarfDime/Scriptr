@@ -40,7 +40,8 @@ export const createAcademicMetadata = <
    * Returning `null` means the route does not exist.
    */
   resolveQueryParams?: (
-    params: TParams
+    params: TParams,
+    locale: LocaleId
   ) => Promise<Record<string, string> | null>
   /**
    * The page's own address, built from the route params with `getAcademicPath`:
@@ -71,7 +72,7 @@ export const createAcademicMetadata = <
     const strings = await getServerStrings(UI_STRINGS_PACK, locale)
     const ownSlug = getOwnSlug(routeParams)
     const queryParams = resolveQueryParams
-      ? await resolveQueryParams(routeParams)
+      ? await resolveQueryParams(routeParams, locale)
       : routeParams
 
     const [detail, websiteSettings] = await Promise.all([

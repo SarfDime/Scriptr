@@ -2,9 +2,11 @@ import 'server-only'
 
 import { SITEMAP_SECRET_HEADER } from '@shared/config/access'
 import { apiRoutes } from '@shared/config/api-routes'
+import { SCRIPT_CACHE_TAGS } from '@shared/config/cache-tags'
 import type { ScriptSitemapEntry } from '@shared/types/scripts.types'
+import { cacheLife, cacheTag } from 'next/cache'
 import { nextLogs } from '@/lib/logger'
-import { apiFetch } from './next-api'
+import { apiFetchRequired } from './next-api'
 
 /**
  * The one place in `next/` that holds the sitemap route's secret.
@@ -26,10 +28,12 @@ const SITEMAP_SECRET = process.env.SITEMAP_SECRET ?? ''
  * The catalog sitemap is prerendered at build time (see
  * `lib/sitemap-entries.ts`) and each study host's on its first request (see
  * `lib/study-sitemap.ts`), so this runs about once per deployment — which is why
- * the route's daily limit can be as low as it is.
+ * the route's daily limit can be as low as it is. Cached for the same reason: a
+ * route handler that reads it uncached cannot be prerendered.
  *
  * `null` when the read fails or the secret is missing — the sitemap then leaves
- * its script section out rather than publishing an empty one.
+ * its script section out rather than publishing an empty one. The read itself
+ * throws on failure so that a failed one is not cached as an empty sitemap.
  */
 export const getScriptSitemapEntries = async () => {
   if (!SITEMAP_SECRET) {
@@ -42,10 +46,7 @@ export const getScriptSitemapEntries = async () => {
   }
 
   try {
-    return await apiFetch<Array<ScriptSitemapEntry>>(
-      apiRoutes.sitemap.scripts,
-      { headers: { [SITEMAP_SECRET_HEADER]: SITEMAP_SECRET } }
-    )
+    return await readScriptSitemap()
   } catch (error) {
     nextLogs({
       message: 'The script sitemap entries could not be read.',
@@ -54,4 +55,17 @@ export const getScriptSitemapEntries = async () => {
     })
     return null
   }
+}
+
+const readScriptSitemap = async () => {
+  'use cache'
+  cacheLife('max')
+  // A script mutation expires the list, so a deleted script stops being
+  // published on the next crawl instead of waiting for a deploy.
+  cacheTag(SCRIPT_CACHE_TAGS.list())
+
+  return apiFetchRequired<Array<ScriptSitemapEntry>>(
+    apiRoutes.sitemap.scripts,
+    { headers: { [SITEMAP_SECRET_HEADER]: SITEMAP_SECRET } }
+  )
 }

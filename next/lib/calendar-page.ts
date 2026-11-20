@@ -5,6 +5,7 @@ import {
   type CalendarView,
 } from '@shared/config/calendar'
 import type { LocaleId } from '@shared/config/localization-constants'
+import { connection } from 'next/server'
 import type {
   CalendarDay,
   CalendarEventRecord,
@@ -150,6 +151,10 @@ const groupEventsByDay = (
  * no Sanity read. The period may fall outside what the calendar holds; that is
  * reported through `dataRange` / `isOutsideData` rather than by looking empty.
  *
+ * The screen is relative to today — the period falls back to the current one and
+ * every day is compared against it — so the render waits for the request before
+ * reading the clock. The page calls this inside a `<Suspense>` boundary.
+ *
  * A failed read is thrown, not swallowed: the route's error boundary reports
  * "could not load" rather than an empty calendar that reads as "no events".
  */
@@ -157,6 +162,8 @@ export const loadCalendarPage = async (
   siteSlug: string,
   params: CalendarSearchParams
 ): Promise<CalendarPageViewModel> => {
+  await connection()
+
   const locale = await getServerLocale()
   const view = parseCalendarView(single(params[CALENDAR_VIEW_PARAM]))
   const todayKey = calendarDayKey(Date.now())

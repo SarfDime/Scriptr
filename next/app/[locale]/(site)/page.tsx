@@ -22,7 +22,7 @@ import type { LocalePageProps } from '@/types/localization.types'
  * Cached until the publish webhook invalidates it, like the rest of the catalog.
  * A failed read renders the empty states rather than an error page.
  */
-export const revalidate = false
+export const ensureStatic = 'navigation'
 
 /** The root is one page in two languages, so each names the other. Everything
  * else — title, description, Open Graph — comes from the root layout. */

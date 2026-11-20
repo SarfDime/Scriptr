@@ -1,5 +1,6 @@
 import type { QueryApiEndpointType } from '@shared/types/api.types'
 import { generatePath } from '@shared/utils/common-utils'
+import { unstable_rethrow } from 'next/navigation'
 import { API_URL } from '@/config/env'
 import { nextLogs } from '@/lib/logger'
 import { UserFacingError } from '@/lib/user-facing-error'
@@ -107,6 +108,11 @@ const performApiFetch = async <T>(
 
     return { success: true, data: (await response.json()) as T }
   } catch (error) {
+    // A prerender that has to bail out (an uncached fetch on a route that must be
+    // static, or a navigation pass finishing early) aborts this request and Next
+    // reports it as one of its own errors. Catching it here would log an API
+    // outage and hide the bailout from the render.
+    unstable_rethrow(error)
     nextLogs({
       message: `API request failed or is unavailable for ${path}.`,
       logLevel: 'warn',

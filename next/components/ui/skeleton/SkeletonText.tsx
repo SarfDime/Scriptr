@@ -1,4 +1,4 @@
-import { cn, generateRandomString } from '../../../lib/common-utils'
+import { cn } from '../../../lib/common-utils'
 import type { SkeletonTextProps } from '../../../types/components/Skeleton.types'
 import { Box } from '../../common/Box'
 
@@ -11,7 +11,8 @@ export function SkeletonText({
     <Box {...rest} className={cn('flex flex-col gap-2', className)}>
       {Array.from({ length: noOfLines }).map((_, index) => (
         <Box
-          key={`${generateRandomString()}-skeleton-text`}
+          // A skeleton line has no identity of its own: the position is the key.
+          key={`skeleton-text-${index}`}
           className={cn('h-4 animate-pulse rounded', {
             'max-w-[80%]': index === noOfLines - 1,
           })}

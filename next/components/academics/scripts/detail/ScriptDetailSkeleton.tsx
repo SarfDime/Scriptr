@@ -1,12 +1,11 @@
 import { Box } from '@/components/common/Box'
+import { PageLayout } from '@/components/layout/PageLayout'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 import { SkeletonCircle } from '@/components/ui/skeleton/SkeletonCircle'
 import { SkeletonText } from '@/components/ui/skeleton/SkeletonText'
 
 /** Placeholder for everything under the script title while the detail body
- * loads. Used as the page's Suspense fallback, which keeps the route free of a
- * `loading.tsx` — a segment-level boundary would flush the response before the
- * existence check and every missing script would answer `200`. */
+ * loads. */
 export function ScriptDetailSkeleton() {
   return (
     <Box className='ui-stack gap-6'>
@@ -28,5 +27,16 @@ export function ScriptDetailSkeleton() {
         <Skeleton loading className='h-24 w-full' />
       </Box>
     </Box>
+  )
+}
+
+/** The whole script page before its slug resolves: the page's heading plus the
+ * detail body's own placeholder, in the layout the real page uses. */
+export function ScriptDetailPageSkeleton() {
+  return (
+    <PageLayout aria-busy='true'>
+      <SkeletonText noOfLines={1} className='w-2/5' />
+      <ScriptDetailSkeleton />
+    </PageLayout>
   )
 }

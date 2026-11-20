@@ -11,6 +11,7 @@ import { Card } from '@/components/ui/Card'
 import { getAcademicPath } from '@/lib/academic-routes'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
+import { useRelativeNow } from '@/providers/clock/clock'
 import { useLocale } from '@/providers/locale/LocaleProvider'
 import { useUIStrings } from '@/providers/locale/use-strings'
 import type { ScriptCardProps } from '@/types/components/Scripts.types'
@@ -27,6 +28,7 @@ export const ScriptCard = ({
 }: ScriptCardProps) => {
   const { locale } = useLocale()
   const ui = useUIStrings()
+  const relativeNow = useRelativeNow()
   const color = getColorPalette({ type: 'seed', value: script.id })
 
   return (
@@ -69,7 +71,7 @@ export const ScriptCard = ({
           </Text>
           <Text className='ui-caption'>
             {script.author} •{' '}
-            {formatDate(script.updatedAt.toISOString(), locale)}
+            {formatDate(script.updatedAt.toISOString(), locale, relativeNow)}
           </Text>
         </Box>
       </NextLink>

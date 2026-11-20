@@ -2,6 +2,7 @@
 
 import { formatWeekdayDayMonth } from '@shared/utils/date-format.utils'
 import { Text } from '@/components/typography/Text'
+import { useMounted } from '@/hooks/useMounted'
 import { useLocale } from '@/providers/locale/LocaleProvider'
 import { useUIStrings } from '@/providers/locale/use-strings'
 
@@ -29,19 +30,19 @@ const getAcademicWeek = (date: Date): number => {
  * The names come from the shared date tables rather than `Intl`: a browser
  * without Macedonian data fell back to English here, inside an otherwise
  * Macedonian header.
+ *
+ * The shell renders `initialNow`, the clock taken when the page was
+ * prerendered; the browser replaces it with the real one as soon as it mounts,
+ * so an old page never carries its own build date into a later visit.
  */
-export const HeaderDate = () => {
+export const HeaderDate = ({ initialNow }: { initialNow: string }) => {
   const { locale } = useLocale()
   const strings = useUIStrings()
-  const now = new Date()
+  const mounted = useMounted()
+  const now = mounted ? new Date() : new Date(initialNow)
 
   return (
-    /* Suppressed: the label is "now", so a render that straddles midnight
-       legitimately differs between the server and the client. */
-    <Text
-      className='ui-caption hidden lg:block capitalize'
-      suppressHydrationWarning
-    >
+    <Text className='ui-caption hidden lg:block capitalize'>
       {formatWeekdayDayMonth(now, locale)}{' '}
       <span className='mx-2 text-grey-400'>/</span>{' '}
       {strings.navigation.week(getAcademicWeek(now))}

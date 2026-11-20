@@ -28,9 +28,14 @@ const SIDEBAR_SCRIPT_LIMIT = 7
  * Built once per study that owns a site, and held until the publish webhook
  * invalidates it: editorial content, no clock. A study added between two deploys
  * is not in the list, so it renders on demand instead of 404ing.
+ *
+ * `instant` is off because the page is one entry of the URL and nothing else:
+ * awaiting `params` before the first byte prerenders that entry whole and keeps
+ * an unknown slug a real 404, which a boundary around the read would turn into
+ * a streamed 200.
  */
-export const dynamic = 'force-static'
-export const revalidate = false
+export const ensureStatic = 'navigation'
+export const instant = false
 
 export const generateStaticParams = async (): Promise<
   Array<StudySiteRouteParams>
@@ -41,8 +46,8 @@ export const generateMetadata = createAcademicMetadata<
   StudySiteRouteParams
 >({
   query: studyDetailQuery,
-  resolveQueryParams: async ({ siteSlug }) => {
-    const site = await getStudySite(siteSlug)
+  resolveQueryParams: async ({ siteSlug }, locale) => {
+    const site = await getStudySite(siteSlug, locale)
     if (!site) return null
     return {
       universitySlug: site.universitySlug,

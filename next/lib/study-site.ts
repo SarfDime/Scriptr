@@ -1,4 +1,5 @@
 import { SANITY_CACHE_TAGS } from '@shared/config/cache-tags'
+import type { LocaleId } from '@shared/config/localization-constants'
 import type { StudySiteQueryResult } from '@shared/types/sanity.types'
 import { notFound } from 'next/navigation'
 import { cache } from 'react'
@@ -20,16 +21,19 @@ export type StudySite = NonNullable<StudySiteQueryResult>
  * Resolves a study from its site handle. `cache`-wrapped so the layout and the
  * page below it share one read per request.
  *
+ * `locale` is passed by a caller that already holds it — `generateMetadata` may
+ * not read the route's root parameter, which counts as request-time data there.
+ *
  * A `null` result is a real "no such study" (the handle is unknown or the study
  * was never given one). A Sanity failure throws instead, so an outage shows an
  * error rather than pretending the site does not exist.
  */
 export const getStudySite = cache(
-  async (siteSlug: string): Promise<StudySite | null> =>
+  async (siteSlug: string, locale?: LocaleId): Promise<StudySite | null> =>
     fetchSanityData<StudySiteQueryResult>({
       query: studySiteQuery,
       params: { siteSlug },
-      locale: await getServerLocale(),
+      locale: locale ?? (await getServerLocale()),
       fetchOrigin: `study-site-${siteSlug}`,
       tags: [SANITY_CACHE_TAGS.study],
     })

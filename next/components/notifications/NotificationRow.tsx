@@ -10,6 +10,7 @@ import { NextLink } from '@/components/common/NextLink'
 import { Text } from '@/components/typography/Text'
 import { cn } from '@/lib/common-utils'
 import { studyUrlFromPath } from '@/lib/study-origin'
+import { useRelativeNow } from '@/providers/clock/clock'
 import { useLocale } from '@/providers/locale/LocaleProvider'
 import { useStrings } from '@/providers/locale/use-strings'
 import { useNotifications } from '@/providers/notification/NotificationProvider'
@@ -28,6 +29,7 @@ export const NotificationRow = ({
 }) => {
   const { locale } = useLocale()
   const strings = useStrings(NOTIFICATIONS_STRINGS_PACK)
+  const relativeNow = useRelativeNow()
   const { dismiss, markRead } = useNotifications()
   const palette = NOTIFICATION_PALETTE[notification.type ?? 'info']
 
@@ -81,7 +83,7 @@ export const NotificationRow = ({
 
       <Box className='ui-cluster justify-between'>
         <Text className='ui-small-label tracking-[.15rem]'>
-          {formatDate(notification.createdAt, locale)}
+          {formatDate(notification.createdAt, locale, relativeNow)}
         </Text>
         {notification.action?.kind === 'link' && notification.action.href && (
           <NextLink

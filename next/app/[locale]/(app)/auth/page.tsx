@@ -6,11 +6,10 @@ import { cn } from '@/lib/common-utils'
 /**
  * A static shell: the card below is a client component and this page reads no
  * request-time API. Pinned so a later edit cannot quietly turn the route
- * dynamic — remove these two lines if it ever needs `cookies()`, `headers()`
- * or search params.
+ * dynamic — drop this line if it ever needs `cookies()`, `headers()` or search
+ * params.
  */
-export const dynamic = 'force-static'
-export const revalidate = false
+export const ensureStatic = 'navigation'
 
 export default function AuthPage() {
   return (

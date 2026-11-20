@@ -10,8 +10,6 @@ import { SITEMAP_CONTENT_TYPE, toSitemapUrlsetXml } from '@/lib/sitemap-xml'
  * route because `/sitemap.xml` belongs to the index (`app/sitemap.xml`), and
  * Next refuses to serve both a route and a metadata file at one path.
  */
-export const dynamic = 'force-static'
-export const revalidate = false
 
 const XML_SUFFIX = '.xml'
 

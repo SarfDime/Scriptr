@@ -52,7 +52,7 @@ const describeWhen = (
 
 type CalendarAlertProps = {
   className?: string
-  /** The study's events, read on the server by the study layout. */
+  /** The study's events, read on the server for the header leaf. */
   events: Array<CalendarAlertEvent>
   /** That study's `/calendar`. */
   calendarHref: string
@@ -87,7 +87,9 @@ export const CalendarAlert = ({
 
   const user = session.status === 'authenticated' ? session.user : null
 
-  const todayKey = currentCalendarDayKey()
+  // Read after mounting only: the alert is about "coming up now", and a clock
+  // read during the prerender is an unstable value.
+  const todayKey = mounted ? currentCalendarDayKey() : null
   // The study's subjects minus the ones this reader has finished: the session
   // carries the reader's own statuses, the server the study's subject list.
   const uncompletedSubjectDbIds = user
@@ -103,9 +105,11 @@ export const CalendarAlert = ({
       )
     : null
 
-  const matching = events.filter((event) =>
-    matchesCalendarAlert(event, todayKey, uncompletedSubjectDbIds)
-  )
+  const matching = todayKey
+    ? events.filter((event) =>
+        matchesCalendarAlert(event, todayKey, uncompletedSubjectDbIds)
+      )
+    : []
   const pending = matching.filter((event) => !isDismissed(dismissals, event.id))
   const next = pending[0]
   // The badge counts everything that matches: dismissing hides the preview, not
@@ -117,6 +121,7 @@ export const CalendarAlert = ({
     : undefined
   const previewLabel =
     next &&
+    todayKey &&
     (subjectName
       ? strings.alert.subjectEvent(
           strings.eventType[next.type],

@@ -64,9 +64,9 @@ export const loadMyProfilePage = async (): Promise<ProfilePageViewModel> => {
 /**
  * Loads everything the public profile page (`/user/[username]`) renders.
  *
- * Two decisions are made here, before any component renders, so they can still
- * produce a real response status (the route has no `loading.tsx` on purpose: a
- * Suspense boundary above the page would flush a `200` before `notFound()`):
+ * The username is only known at request time, so the page resolves this inside
+ * a `<Suspense>` boundary and both decisions below run after the shell has been
+ * sent — the page answers `200` either way:
  *
  * - A signed-in viewer opening their own username is redirected to `/user`, the
  *   editable view (except in a study's own view, where that would drop the

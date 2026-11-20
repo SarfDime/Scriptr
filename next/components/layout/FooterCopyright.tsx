@@ -1,15 +1,21 @@
 'use client'
 
+import { useMounted } from '@/hooks/useMounted'
 import { useUIStrings } from '@/providers/locale/use-strings'
 
 /**
- * The footer's copyright line, with the year read at render time so a prerendered
- * page does not carry the build year for a year. A client leaf for exactly that
- * reason — the copy around it is resolved once on the server, and the footer
- * itself stays a Server Component.
+ * The footer's copyright line. The shell carries the year the page was
+ * prerendered in (`initialNow`); the browser reads its own year once mounted, so
+ * a prerendered page does not carry the build year into the next one. A client
+ * leaf for exactly that reason — the rest of the footer stays a Server
+ * Component.
  */
-export const FooterCopyright = () => {
+export const FooterCopyright = ({ initialNow }: { initialNow: string }) => {
   const ui = useUIStrings()
+  const mounted = useMounted()
+  const year = mounted
+    ? new Date().getFullYear()
+    : new Date(initialNow).getFullYear()
 
-  return <>{ui.footer.copyright(new Date().getFullYear())}</>
+  return <>{ui.footer.copyright(year)}</>
 }
