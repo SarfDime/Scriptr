@@ -140,6 +140,9 @@ test on `http://lbe.localhost:3000`.
   the Git page; the REST API cannot set it). `main`, `staging` and `main-sanity` are
   disabled by name as well as by the `**` fallback, so a web release never starts an API
   build and a Sanity-only push deploys nothing.
+- Reconnecting the Git repository (`vercel git connect`) resets both projects' production
+  branch to `main`. Set `scriptr-api` back to `main-api` in **Settings → Environments →
+  Production → Branch Tracking**; neither the CLI nor the REST API can change it.
 - A branch can still be previewed with `vercel` from `hono/` or `next/`, which bypasses the
   allowlist. The Ignored Build Step limits automatic builds to commit subjects starting
   with `feat:` or `fix:`, so `docs:` and `chore:` deploy nothing. **A squash merge takes
