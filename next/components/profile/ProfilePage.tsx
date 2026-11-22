@@ -73,7 +73,7 @@ export const ProfilePage = async ({
         actions: isOwner ? (
           <Box className='ui-cluster gap-2 ui-above p-2.5 rounded-2xl'>
             <PreferencesButton />
-            <Divider orientation='vertical' className='h-4' />
+            <Divider orientation='vertical' />
             <EditProfileButton profile={profile} />
             <NextLink
               href={
