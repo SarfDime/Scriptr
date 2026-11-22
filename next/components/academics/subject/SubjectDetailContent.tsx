@@ -1,9 +1,7 @@
 import { UI_STRINGS_PACK } from '@shared/config/strings'
 import { ScriptsSection } from '@/components/academics/scripts/ScriptsSection'
 import { SubjectHighlightsCard } from '@/components/academics/subject/SubjectHighlightsCard'
-import { SubjectOverviewCard } from '@/components/academics/subject/SubjectOverviewCard'
 import { BackLink } from '@/components/common/BackLink'
-import { Box } from '@/components/common/Box'
 import { PageLayout } from '@/components/layout/PageLayout'
 import { RatingsSection } from '@/components/ratings/RatingsSection'
 import { getAcademicPath } from '@/lib/academic-routes'
@@ -69,10 +67,7 @@ export const SubjectDetailContent = async ({
           </>
         ),
       }}
-    >
-      {/* Hero: overview + highlights */}
-      <Box className='grid gap-4 lg:grid-cols-[1.35fr_0.65fr]'>
-        <SubjectOverviewCard {...subject} />
+      sidebar={
         <SubjectHighlightsCard {...subject}>
           {subject.dbId ? (
             <RatingsSection
@@ -82,8 +77,8 @@ export const SubjectDetailContent = async ({
             />
           ) : null}
         </SubjectHighlightsCard>
-      </Box>
-
+      }
+    >
       <ScriptsSection
         scripts={scripts}
         scriptsUnavailable={subjectScripts === null}

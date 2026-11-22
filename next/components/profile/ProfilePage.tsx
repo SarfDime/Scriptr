@@ -127,6 +127,7 @@ export const ProfilePage = async ({
         subtitle={ui.scripts.favoritesSectionSubtitle}
         pageSize={2}
         initialPageSize={4}
+        id='favorites'
       />
     </PageLayout>
   )

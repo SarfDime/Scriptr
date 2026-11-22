@@ -37,49 +37,52 @@ export function CommentsHeader({
         titleVariant='title'
         titleProps={{ id: headingId }}
         actions={
-          !isComposing && (
-            <Button
-              onClick={handleWriteClick}
-              className='button solid button-sm'
-            >
-              {strings.composer.openButton}
-            </Button>
-          )
+          <Box
+            className='ui-cluster gap-2'
+            role='group'
+            aria-label={strings.general.sortComments}
+          >
+            {commentCount > 0 && (
+              <>
+                <Button
+                  type='button'
+                  className={cn(
+                    'button button-sm',
+                    sort === 'newest' ? 'solid' : 'subtle'
+                  )}
+                  aria-pressed={sort === 'newest'}
+                  isActive={sort === 'newest'}
+                  onClick={() => setSort('newest')}
+                >
+                  {strings.general.newest}
+                </Button>
+                <Button
+                  type='button'
+                  className={cn(
+                    'button button-sm',
+                    sort === 'top' ? 'solid' : 'subtle'
+                  )}
+                  aria-pressed={sort === 'top'}
+                  isActive={sort === 'top'}
+                  onClick={() => setSort('top')}
+                >
+                  {strings.general.top}
+                </Button>
+                <Divider orientation='vertical' />
+              </>
+            )}
+            {!isComposing && (
+              <Button
+                onClick={handleWriteClick}
+                className='button solid button-sm'
+              >
+                {strings.composer.openButton}
+              </Button>
+            )}
+          </Box>
         }
       />
-      {commentCount > 0 && (
-        <Box
-          className='ui-cluster gap-2'
-          role='group'
-          aria-label={strings.general.sortComments}
-        >
-          <Button
-            type='button'
-            className={cn(
-              'button button-sm',
-              sort === 'newest' ? 'solid' : 'subtle'
-            )}
-            aria-pressed={sort === 'newest'}
-            isActive={sort === 'newest'}
-            onClick={() => setSort('newest')}
-          >
-            {strings.general.newest}
-          </Button>
-          <Button
-            type='button'
-            className={cn(
-              'button button-sm',
-              sort === 'top' ? 'solid' : 'subtle'
-            )}
-            aria-pressed={sort === 'top'}
-            isActive={sort === 'top'}
-            onClick={() => setSort('top')}
-          >
-            {strings.general.top}
-          </Button>
-          <Divider className='mt-3' colorScheme='dark' />
-        </Box>
-      )}
+      {commentCount > 0 && <Divider className='mt-3' colorScheme='dark' />}
     </Box>
   )
 }

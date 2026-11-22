@@ -67,7 +67,7 @@ export function ScriptFileCard({
     <ScriptPanel
       as='div'
       className={cn(
-        'min-w-0 overflow-hidden',
+        'min-w-0 overflow-hidden h-full',
         isWide && '@container',
         showsInlinePreview && 'flex'
       )}

@@ -1,6 +1,7 @@
 import { UI_STRINGS_PACK } from '@shared/config/strings'
 import { Box } from '@/components/common/Box'
 import { SectionHeader } from '@/components/common/SectionHeader'
+import { ShowMoreList } from '@/components/common/ShowMoreList'
 import { Text } from '@/components/typography/Text'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
@@ -8,10 +9,7 @@ import { getServerStrings } from '@/lib/server-strings'
 import type { ProfessorsSectionProps } from '@/types/academics/professor.types'
 import { AdministrationCard } from '../AdministrationCard'
 
-/** Four cards (68px each) plus the gaps between them: a faculty can list
- * dozens of professors, and past four the list scrolls instead of burying the
- * rest of the sidebar. The count badge says how many there are in total. */
-const LIST_MAX_HEIGHT = 'max-h-[18.5rem]'
+const LIST_MAX_HEIGHT = 'max-h-[20.5rem]'
 
 export const ProfessorsSection = async ({
   professors,
@@ -27,7 +25,9 @@ export const ProfessorsSection = async ({
       />
 
       {professorList.length > 0 ? (
-        <Box className={cn('ui-stack gap-2 overflow-y-auto', LIST_MAX_HEIGHT)}>
+        <ShowMoreList
+          className={cn('ui-stack gap-2 overflow-y-auto', LIST_MAX_HEIGHT)}
+        >
           {professorList.map((professor) => {
             const color = getColorPalette({
               type: 'seed',
@@ -42,7 +42,7 @@ export const ProfessorsSection = async ({
               />
             )
           })}
-        </Box>
+        </ShowMoreList>
       ) : (
         <Text className='ui-caption ui-above-inside'>
           {strings.academics.noProfessorsAssigned}

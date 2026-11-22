@@ -17,18 +17,19 @@ export const ProfessorAffiliationsCard = async ({
   if (!faculties?.length) return null
 
   return (
-    <Box className='ui-stack gap-4 ui-above'>
+    <Box className='ui-stack gap-4'>
       <SectionHeader
         as='h3'
         title={ui.academics.professor.affiliatedFaculties}
+        titleVariant='modern'
       />
-      <Box className='ui-stack gap-2'>
+      <Box className='ui-stack gap-2 ui-above-inside'>
         {faculties.map((faculty) => {
           const universitySlug = faculty.university?.slug
           if (!universitySlug || !faculty.slug) return null
 
           return (
-            <Box key={faculty._id} className='ui-stack gap-0.5 ui-above-inside'>
+            <Box key={faculty._id} className='ui-stack gap-0.5 '>
               <NextLink
                 href={getAcademicPath(
                   {
@@ -38,7 +39,7 @@ export const ProfessorAffiliationsCard = async ({
                   },
                   locale
                 )}
-                className='ui-body-strong text-brand hover:underline'
+                className='ui-body-strong text-brand hover:underline grow'
               >
                 {faculty.name}
               </NextLink>

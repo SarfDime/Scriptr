@@ -59,7 +59,7 @@ export const NavFavorites = () => {
 
       {favorites.length > MAX_FAVORITES && (
         <NextLink
-          href={catalogUrl('/user', locale)}
+          href={catalogUrl('/user#favorites', locale)}
           className='button ghost button-sm w-full my-1'
         >
           {strings.navigation.favoritesShowAll}

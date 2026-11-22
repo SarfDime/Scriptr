@@ -6,6 +6,9 @@ import { FlagsQueue } from '@/components/admin/FlagsQueue'
 import { loadAdminFlagsPage } from '@/lib/admin-flags-page'
 import { requireAdminUnlock } from '@/lib/admin-page-guard'
 
+/** Anonymous validation hits the gate's 404, so this page has no instant UI to assert. */
+export const instant = false
+
 export default function AdminFlagsPage() {
   return (
     <Suspense fallback={<AdminPageSkeleton />}>

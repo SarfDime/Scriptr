@@ -4,11 +4,10 @@ import Calendar from '@sanity/icons/Calendar'
 import CheckmarkCircle from '@sanity/icons/CheckmarkCircle'
 import Circle from '@sanity/icons/Circle'
 import Sort from '@sanity/icons/Sort'
-import User from '@sanity/icons/User'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { Select } from '@/components/ui/select/Select'
-import type { SubjectSortOption } from '@/hooks/useSubjectExplorer'
+import type { SubjectSortOption } from '@/hooks/useSubjectSort'
 import { getColorPalette } from '@/lib/color-pallette-gen'
 import { cn } from '@/lib/common-utils'
 import { useUIStrings } from '@/providers/locale/use-strings'
@@ -26,12 +25,38 @@ export type SubjectFiltersProps = {
   includeElectives: boolean
   onYearChange: (year: number) => void
   onIncludeElectivesChange: (include: boolean) => void
-  /** Explorer lists sort; the sidebars deliberately do not. */
   sort?: SubjectSortFilter
+  /** The sidebar that moves this toggle into its header turns it off here. */
+  showElectives?: boolean
   className?: string
 }
 
 const TRIGGER_CLASS = cn('ghost min-w-36 border-grey-300')
+
+export type SubjectElectivesToggleProps = {
+  includeElectives: boolean
+  onChange: (include: boolean) => void
+}
+
+/** The electives state as one toggle, for a header or a filter row. */
+export const SubjectElectivesToggle = ({
+  includeElectives,
+  onChange,
+}: SubjectElectivesToggleProps) => {
+  const ui = useUIStrings()
+
+  return (
+    <Button
+      aria-pressed={includeElectives}
+      onClick={() => onChange(!includeElectives)}
+      isActive={includeElectives}
+      className='button button-sm w-fit min-h-0 ui-cluster gap-1 justify-center subtle'
+    >
+      {includeElectives ? <CheckmarkCircle /> : <Circle />}
+      {ui.subjects.filters.electives}
+    </Button>
+  )
+}
 
 /**
  * The year/electives controls every subject list shares. Pair it with
@@ -44,6 +69,7 @@ export const SubjectFilters = ({
   onYearChange,
   onIncludeElectivesChange,
   sort,
+  showElectives = true,
   className,
 }: SubjectFiltersProps) => {
   const ui = useUIStrings()
@@ -74,16 +100,10 @@ export const SubjectFilters = ({
       icon: <Calendar className={iconClass} />,
     },
     {
-      id: 'sort-name',
-      label: ui.subjects.filters.sortBySubject,
-      value: 'Subject A-Z',
+      id: 'sort-title',
+      label: ui.subjects.filters.sortByTitle,
+      value: 'Title A-Z',
       icon: <Sort className={iconClass} />,
-    },
-    {
-      id: 'sort-professor',
-      label: ui.subjects.filters.sortByProfessor,
-      value: 'Professor A-Z',
-      icon: <User className={iconClass} />,
     },
   ]
 
@@ -128,10 +148,7 @@ export const SubjectFilters = ({
             className: TRIGGER_CLASS,
           }}
           icon={
-            sort.value === 'Professor A-Z' ? (
-              <User className={iconClass} />
-              // biome-ignore lint/style/noNestedTernary: <Simple>
-            ) : sort.value === 'Subject A-Z' ? (
+            sort.value === 'Title A-Z' ? (
               <Sort className={iconClass} />
             ) : (
               <Calendar className={iconClass} />
@@ -140,17 +157,12 @@ export const SubjectFilters = ({
         />
       )}
 
-      <Button
-        aria-pressed={includeElectives}
-        onClick={() => onIncludeElectivesChange(!includeElectives)}
-        isActive={includeElectives}
-        className={cn(
-          'button button-sm w-fit min-h-0 ui-cluster gap-1 justify-center subtle'
-        )}
-      >
-        {includeElectives ? <CheckmarkCircle /> : <Circle />}
-        {ui.subjects.filters.electives}
-      </Button>
+      {showElectives && (
+        <SubjectElectivesToggle
+          includeElectives={includeElectives}
+          onChange={onIncludeElectivesChange}
+        />
+      )}
     </Box>
   )
 }

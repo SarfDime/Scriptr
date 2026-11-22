@@ -41,9 +41,6 @@ export const NavStudies = ({ studyLogos }: { studyLogos?: NavStudyLogos }) => {
       aria-label={strings.navigation.studies}
       className='ui-stack gap-1'
     >
-      <Text className='ui-nav-caption px-2.5'>
-        {strings.navigation.studies}
-      </Text>
       {studies.map((study) => {
         const logo = study.site_slug ? studyLogos?.[study.site_slug] : undefined
 

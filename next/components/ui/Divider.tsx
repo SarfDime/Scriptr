@@ -19,7 +19,7 @@ export function Divider({
   const orientationStyles =
     orientation === 'horizontal'
       ? 'ui-divider-h w-full'
-      : 'ui-divider-v h-full min-h-4'
+      : 'ui-divider-v self-stretch min-h-4'
   // A dashed line cannot come out of the groove gradient, so it falls back to a
   // border — which has to beat the width/background the groove sets.
   const variantStyles =

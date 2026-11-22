@@ -78,7 +78,7 @@ export function CommentSection({
           titleProps={{ id: 'comments-heading' }}
         />
         <Box className='ui-cluster gap-3' role='alert'>
-          <Text className='ui-subtitle'>
+          <Text className='ui-label-modern'>
             {strings.general.loadCommentsError}
           </Text>
           <Button

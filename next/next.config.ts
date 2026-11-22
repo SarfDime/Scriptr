@@ -210,6 +210,19 @@ const CALENDAR_CACHE_ROUTES = [
   ]),
 ]
 
+/** Admin is private and gated twice; keep it out of indexes even if a crawler
+ * reaches the gate. The layout's metadata says the same in the document. */
+const ADMIN_ROBOTS_HEADERS = [
+  { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+]
+
+/** Both shapes admin answers at: the unprefixed catalog paths and every
+ * language prefix. `:path*` also covers `/admin` itself. */
+const ADMIN_ROBOTS_ROUTES = [
+  '/admin/:path*',
+  ...NON_DEFAULT_LOCALES.map((locale) => `/${locale}/admin/:path*`),
+]
+
 // Define base Next.js configuration with TypeScript types
 const nextConfig = {
   poweredByHeader: false,
@@ -251,10 +264,16 @@ const nextConfig = {
   partialPrefetching: true,
 
   async headers() {
-    return CALENDAR_CACHE_ROUTES.map((source) => ({
-      source,
-      headers: CALENDAR_CACHE_HEADERS,
-    }))
+    return [
+      ...CALENDAR_CACHE_ROUTES.map((source) => ({
+        source,
+        headers: CALENDAR_CACHE_HEADERS,
+      })),
+      ...ADMIN_ROBOTS_ROUTES.map((source) => ({
+        source,
+        headers: ADMIN_ROBOTS_HEADERS,
+      })),
+    ]
   },
 
   /**

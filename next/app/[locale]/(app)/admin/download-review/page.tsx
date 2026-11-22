@@ -6,6 +6,9 @@ import { DownloadReviewPanel } from '@/components/admin/DownloadReviewPanel'
 import { loadAdminDownloadReviewPage } from '@/lib/admin-download-review-page'
 import { requireAdminUnlock } from '@/lib/admin-page-guard'
 
+/** Anonymous validation hits the gate's 404, so this page has no instant UI to assert. */
+export const instant = false
+
 export default function AdminDownloadReviewPage() {
   return (
     <Suspense fallback={<AdminPageSkeleton />}>

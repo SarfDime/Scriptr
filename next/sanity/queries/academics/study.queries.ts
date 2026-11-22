@@ -29,7 +29,6 @@ dbId,
 "siteSlug": siteSlug.current,
 ${localizedProjection('name', 'localizedName')},
 studentCount,
-"picture": sanityImage::full(picture),
 "logo": sanityImage::full(logo),
 assistant->{
   _id,
@@ -93,8 +92,8 @@ ${sanityFunctionQueries}
 export const studyStaticParamsQuery = groq`
 *[_type == "study" && !(_id in path("drafts.**")) && dbId != null] {
   "studySlug": coalesce(slug.current, _id),
-  "facultySlug": coalesce(faculty->slug.current, faculty->_id),
-  "universitySlug": coalesce(faculty->university->slug.current, faculty->university->_id),
+  "facultySlug": coalesce(faculty->slug.current, faculty._id),
+  "universitySlug": coalesce(faculty->university->slug.current, faculty->university._id),
   "siteSlug": siteSlug.current
 }
 `

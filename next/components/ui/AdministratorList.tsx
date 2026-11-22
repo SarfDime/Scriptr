@@ -4,10 +4,13 @@ import { DetailLink } from '@/components/ui/DetailLink'
 import { Person } from '@/components/ui/Person'
 import { cn } from '@/lib/common-utils'
 import type { AdministratorListProps } from '@/types/components/OverviewCard.types'
+import { Divider } from './Divider'
 
 export const AdministratorList = ({
   administrators,
   layout = 'person',
+  dividerAfter,
+  dividerProps,
   detailLinkProps,
   personProps,
   className,
@@ -22,7 +25,6 @@ export const AdministratorList = ({
           {layout === 'detailLink' && admin.href && (
             <DetailLink
               {...detailLinkProps}
-              key={admin._id}
               href={admin.href}
               label={admin.title}
               value={admin.name}
@@ -30,6 +32,9 @@ export const AdministratorList = ({
           )}
           {layout === 'person' && (
             <Person title={admin.title} name={admin.name} {...personProps} />
+          )}
+          {index === dividerAfter && index < administrators.length - 1 && (
+            <Divider {...dividerProps} aria-hidden='true' />
           )}
         </Fragment>
       ))}

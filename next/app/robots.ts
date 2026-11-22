@@ -18,6 +18,11 @@ const CALENDAR_PATHS = [
   '/mk/study/*/calendar',
 ]
 
+/** Private surfaces: admin has its own session + TOTP gate, so a crawler has
+ * nothing to index and its links only lead deeper in. `/admin` also covers
+ * every nested admin path. */
+const ADMIN_PATHS = ['/admin', '/mk/admin']
+
 const AI_AND_SCRAPER_AGENTS = [
   'ClaudeBot',
   'Claude-Web',
@@ -52,7 +57,11 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       { userAgent: AI_AND_SCRAPER_AGENTS, disallow: '/' },
-      { userAgent: '*', allow: '/', disallow: CALENDAR_PATHS },
+      {
+        userAgent: '*',
+        allow: '/',
+        disallow: [...CALENDAR_PATHS, ...ADMIN_PATHS],
+      },
     ],
     ...(sitemap ? { sitemap } : {}),
   }

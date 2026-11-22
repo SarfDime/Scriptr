@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import type { BoxProps, BoxPropsWithoutChildren } from '@/components/common/Box'
 import type { NextImageProps } from '@/components/common/NextImage'
 import type { DetailLinkProps } from '@/components/ui/DetailLink'
+import type { DividerProps } from '@/components/ui/Divider'
 import type { PersonProps } from '@/components/ui/Person'
 import type { ComponentColorPalettes } from './ColorPalettes.types'
 import type { PersonSummary } from './Person.types'
@@ -23,6 +24,11 @@ type OverviewCardActionProps = {
 type AdministratorListProps = {
   administrators: Array<PersonSummary>
   layout?: 'person' | 'detailLink'
+  /** Draws a divider after this index, so a caller can separate groups such as
+   * the subject's institution from its professors. */
+  dividerAfter?: number
+  /** Styling for that divider — a palette class with `cp-divider` colours it. */
+  dividerProps?: Omit<DividerProps, 'orientation'>
   detailLinkProps?: Omit<DetailLinkProps, 'href'>
   personProps?: PersonProps
 } & BoxPropsWithoutChildren

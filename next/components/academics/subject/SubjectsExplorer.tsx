@@ -5,7 +5,6 @@ import { Box } from '@/components/common/Box'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { SearchBar } from '@/components/typography/SearchBar'
 import { Text } from '@/components/typography/Text'
-import { Divider } from '@/components/ui/Divider'
 import { useSubjectExplorer } from '@/hooks/useSubjectExplorer'
 import { useUIStrings } from '@/providers/locale/use-strings'
 import type { MinimalSubject } from '@/types/academics/subject.types'
@@ -58,7 +57,6 @@ export const SubjectsExplorer = ({ subjects }: SubjectsExplorerProps) => {
           }}
           className='min-w-[50%]'
         />
-        <Divider className='' />
       </Box>
 
       {visibleSubjects.length > 0 ? (

@@ -21,7 +21,7 @@ export type SectionHeaderProps = {
   as?: TitleProps['as']
   /** `title` (default) for an ordinary section, `heading` for a section that
    * leads a page and needs to sit just under the page title. */
-  titleVariant?: 'title' | 'heading' | 'subHeading'
+  titleVariant?: 'title' | 'heading' | 'subHeading' | 'modern'
   /** `start` (default) keeps the title row left-aligned; `center` centres the
    * title, count and subtitle, for sections whose content is centred. */
   align?: 'start' | 'center'

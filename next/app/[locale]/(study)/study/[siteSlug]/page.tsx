@@ -2,9 +2,7 @@ import { StudyDetailContent } from '@/components/academics/study/StudyDetailCont
 import { fetchAcademicDetailOrNotFound } from '@/lib/academic-detail-page'
 import { createAcademicMetadata } from '@/lib/academic-metadata'
 import { getStudySiteUrl } from '@/lib/academic-routes'
-import { getTopScripts } from '@/lib/api/scripts-api'
 import { ACADEMIC_PAGE_TAGS } from '@/lib/sanity-tags'
-import { toScriptSummaryDetails } from '@/lib/script-display'
 import {
   getStudySite,
   getStudySiteOrNotFound,
@@ -14,10 +12,6 @@ import { studyDetailQuery } from '@/sanity/queries/academics/study.queries'
 import type { StudySiteRouteParams } from '@/types/academics/academics.types'
 import type { StudyDetail } from '@/types/academics/study.types'
 import type { LocalePageProps } from '@/types/localization.types'
-
-/** How many of the study's top scripts the sidebar lists. The full list is the
- * feed; this is a taste of it. */
-const SIDEBAR_SCRIPT_LIMIT = 7
 
 /**
  * A study site's root: its academic overview — what it is, its subjects and its
@@ -68,33 +62,19 @@ export const generateMetadata = createAcademicMetadata<
 export default async function StudySitePage({
   params,
 }: LocalePageProps<StudySiteRouteParams>) {
-  const { siteSlug, locale } = await params
+  const { siteSlug } = await params
   const site = await getStudySiteOrNotFound(siteSlug)
 
-  const [study, topScripts] = await Promise.all([
-    fetchAcademicDetailOrNotFound<StudyDetail>({
-      query: studyDetailQuery,
-      params: {
-        universitySlug: site.universitySlug,
-        facultySlug: site.facultySlug,
-        studySlug: site.studySlug,
-      },
-      fetchOrigin: `study-site-detail-${siteSlug}`,
-      tags: ACADEMIC_PAGE_TAGS.study,
-    }),
-    // The sidebar's top scripts are a study-scoped, cache-tagged read: a script
-    // mutation revalidates this page with the tag, so it needs no clock.
-    site.dbId
-      ? getTopScripts(SIDEBAR_SCRIPT_LIMIT, site.dbId)
-      : Promise.resolve(null),
-  ])
+  const study = await fetchAcademicDetailOrNotFound<StudyDetail>({
+    query: studyDetailQuery,
+    params: {
+      universitySlug: site.universitySlug,
+      facultySlug: site.facultySlug,
+      studySlug: site.studySlug,
+    },
+    fetchOrigin: `study-site-detail-${siteSlug}`,
+    tags: ACADEMIC_PAGE_TAGS.study,
+  })
 
-  return (
-    <StudyDetailContent
-      study={study}
-      fallback={site}
-      scripts={toScriptSummaryDetails(topScripts ?? [], locale)}
-      scriptsUnavailable={topScripts === null}
-    />
-  )
+  return <StudyDetailContent study={study} fallback={site} />
 }

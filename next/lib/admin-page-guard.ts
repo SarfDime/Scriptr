@@ -1,5 +1,6 @@
 import 'server-only'
 import { cookies } from 'next/headers'
+import { connection } from 'next/server'
 import { isAdminUnlocked } from './api/admin-access-api'
 
 /**
@@ -15,6 +16,8 @@ import { isAdminUnlocked } from './api/admin-access-api'
  * and renders `AdminAccessGate` when it returns `null`.
  */
 export const requireAdminUnlock = async (): Promise<string | null> => {
+  await connection()
+
   const cookieHeader = (await cookies()).toString()
   return (await isAdminUnlocked(cookieHeader)) ? cookieHeader : null
 }

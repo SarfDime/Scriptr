@@ -6,6 +6,9 @@ import { RestrictionsPanel } from '@/components/admin/RestrictionsPanel'
 import { requireAdminUnlock } from '@/lib/admin-page-guard'
 import { loadAdminRestrictionsPage } from '@/lib/admin-restrictions-page'
 
+/** Anonymous validation hits the gate's 404, so this page has no instant UI to assert. */
+export const instant = false
+
 export default function AdminRestrictionsPage() {
   return (
     <Suspense fallback={<AdminPageSkeleton />}>

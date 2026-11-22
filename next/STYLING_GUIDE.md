@@ -57,8 +57,9 @@ Display type is bold with `tracking-tight`; never add `font-black` or
 `as` (default `h2`), `titleProps`, `subtitleProps`, `iconProps`, `badgeProps`, `className`.
 Subtitles render as `ui-subtitle`, never `ui-caption`.
 
-**Skeletons** are a neutral wash (5–9% of the foreground over the background, 1.8s
-breath), never a brand colour; change them only in `skeleton.module.css`.
+**Skeletons** are a neutral wash (5–9% of the foreground over `background-225`, or a
+lifted step of `--ice-base` on ice, 1.8s breath), never a brand colour; change them only in
+`skeleton.module.css`.
 
 ## Surfaces
 
@@ -123,8 +124,9 @@ override; use `ScriptPanel` or a plain `Box`.
   re-add it without a different compositing approach.
 - **Simple mode** (`:root[data-simple]`) drops every ice effect with no component change:
   no fracture/streak/ramp imagery or ice box-shadow, `--ice-edge` gives way to
-  `background-300` (70% on the inner layer), chrome becomes the opaque neutral fill, snow
-  caps and frost switch off, and dividers and grooves fall back to plain lines.
+  `background-300` (70% on the inner layer), panels become one flat fill (`ui-above-opaque`
+  matches `ui-above`), the chrome stays one step lighter, snow caps and frost switch off,
+  and dividers and grooves fall back to plain lines.
 - **Chrome edges:** `ui-above-nav` uses `--shadow-edge-right`, `ui-above-header`
   `--shadow-edge-bottom`, `ui-above-drawer` `--shadow-drawer` on the left (the only chrome
   overlapping the page).
@@ -142,7 +144,9 @@ other. `ui-divider` and the `--divider-line` channel stay put.
 - Ridge art is per theme (`--ice-divider-front/back`, `-v` for vertical); a data URI
   cannot read a custom property, so a new theme needs its own art pair. The vertical art is
   a lit filament, not the horizontal ridge turned sideways: a strip a few pixels wide turns
-  the icicles into full-width barbs.
+  the icicles into full-width barbs. A vertical divider takes its height from the flex line
+  (`align-self: stretch`), not `height: 100%`, which Chromium resolved to the minimum inside
+  an auto-height row.
 - Geometry comes from tokens (`--ice-divider-w/-h`, `-mb/-mi`, `-art/-size/-position/
   -repeat`), which is how simple mode turns the ridge into a 2px groove without
   out-ranking a utility.
@@ -157,8 +161,10 @@ other. `ui-divider` and the `--divider-line` channel stay put.
 - `--divider-lip: transparent` collapses the groove to one crisp line.
 - `ui-groove-*` needs no extra element, but the element must have no background image and
   no shadow (the lip replaces `box-shadow`). Its ridge takes `--divider-tint` through a
-  masked copy in a pseudo-element, so `cp-border` colours the cut and the art: a card
-  footer's palette edge on hover is one colour, not a coloured line under an ice ridge.
+  masked copy in `::after`, so `cp-border` colours the cut and the art: a card footer's
+  palette edge on hover is one colour, not a coloured line under an ice ridge. The bottom
+  groove draws its art in `::before` so it can mirror it — the ridge bar sits on the edge
+  with the lip instead of a groove-height above it.
 - **`outline` is reserved for the focus ring** (2px brand at 2px offset, global
   `:focus-visible`). Never draw a border or hairline with it.
 

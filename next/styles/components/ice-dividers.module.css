@@ -129,11 +129,14 @@
     100% calc(var(--ice-h, 0.75rem) * 10), 100% calc(var(--ice-h, 0.75rem) * 15);
   --ice-divider-position: 0 0, 0 37%;
   --ice-divider-repeat: repeat-y, repeat-y;
-  /* Simple mode sets `--ice-v-w` to a hairline; the height is always full. */
+  /* Simple mode sets `--ice-v-w` to a hairline. Height comes from the flex
+   * line (`align-self`), not `height: 100%`: a percentage against an auto-height
+   * parent resolved to the 1rem minimum in Chromium, while Firefox stretched. */
   --ice-divider-w: var(--ice-v-w, var(--ice-h, 0.75rem));
-  --ice-divider-h: 100%;
+  --ice-divider-h: auto;
   --ice-divider-mb: 0;
   --ice-divider-mi: 0.5rem;
+  align-self: stretch;
 }
 
 /* Numeric / arbitrary sizes: ice-divider-4 = 1rem, ice-divider-[1.25rem] */
@@ -258,16 +261,30 @@
   --ice-groove-size: calc(var(--ice-groove-h, 0.5rem) * 10)
     var(--ice-groove-h, 0.5rem);
   position: relative;
-  background-image: var(--ice-groove-paint, var(--ice-divider-art-h));
-  background-repeat: repeat-x;
-  background-position: 0 100%;
-  background-size: calc(var(--ice-groove-h, 0.5rem) * 10)
-    var(--ice-groove-h, 0.5rem);
+  /* A background cannot be mirrored, so the bottom edge draws its art in
+   * `::before`. Mirrored, the ridge bar sits on the edge where the lip shadow
+   * is, with the icicles pointing back into the surface; unmirrored, the bar
+   * sat a groove-height above the shadow and the two read as separate lines. */
+  background-image: none;
   box-shadow: inset 0 -1px 0 var(--divider-lip);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    height: var(--ice-groove-h, 0.5rem);
+    pointer-events: none;
+    background-image: var(--ice-groove-paint, var(--ice-divider-art-h));
+    background-repeat: var(--ice-groove-repeat);
+    background-position: 0 0;
+    background-size: var(--ice-groove-size);
+    transform: scaleY(-1);
+  }
 
   &::after {
     @apply ice-groove-tint;
     height: var(--ice-groove-h, 0.5rem);
+    transform: scaleY(-1);
   }
 }
 

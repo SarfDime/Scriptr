@@ -101,25 +101,24 @@ export default async function ProfessorDetailPage({
         ),
       }}
       sidebar={
-        <>
-          <ProfessorContactCard
-            office={professor.office}
-            telephone={professor.telephone}
-            email={professor.email}
-            website={professor.website}
-            picture={professor.picture}
-            name={professor.name}
-          >
-            {professor.dbId ? (
-              <RatingsSection
-                key={`ratings-${professor.dbId}`}
-                targetType='professor'
-                targetId={professor.dbId}
-              />
-            ) : null}
-          </ProfessorContactCard>
+        <ProfessorContactCard
+          office={professor.office}
+          telephone={professor.telephone}
+          email={professor.email}
+          website={professor.website}
+          picture={professor.picture}
+          name={professor.name}
+        >
+          {professor.dbId ? (
+            <RatingsSection
+              key={`ratings-${professor.dbId}`}
+              targetType='professor'
+              targetId={professor.dbId}
+            />
+          ) : null}
+          <Divider />
           <ProfessorAffiliationsCard faculties={professor.faculties} />
-        </>
+        </ProfessorContactCard>
       }
     >
       <SubjectsExplorer

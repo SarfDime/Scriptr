@@ -6,6 +6,9 @@ import { UsersPanel } from '@/components/admin/UsersPanel'
 import { requireAdminUnlock } from '@/lib/admin-page-guard'
 import { loadAdminUsersPage } from '@/lib/admin-users-page'
 
+/** Anonymous validation hits the gate's 404, so this page has no instant UI to assert. */
+export const instant = false
+
 export default function AdminUsersPage() {
   return (
     <Suspense fallback={<AdminPageSkeleton />}>

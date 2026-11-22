@@ -6,6 +6,9 @@ import { AdminPageSkeleton } from '@/components/admin/AdminPageSkeleton'
 import { loadAdminAchievementDefinitionsPage } from '@/lib/admin-achievement-definitions-page'
 import { requireAdminUnlock } from '@/lib/admin-page-guard'
 
+/** Anonymous validation hits the gate's 404, so this page has no instant UI to assert. */
+export const instant = false
+
 export default function AdminAchievementDefinitionsPage() {
   return (
     <Suspense fallback={<AdminPageSkeleton />}>

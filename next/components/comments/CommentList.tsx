@@ -24,7 +24,7 @@ export function CommentList() {
   } = useCommentsState()
 
   if (comments.length === 0 && !isLoadingComments && !commentsError) {
-    return <Text className='ui-subtitle'>{strings.general.emptyState}</Text>
+    return <Text className='ui-label-modern'>{strings.general.emptyState}</Text>
   }
 
   return (

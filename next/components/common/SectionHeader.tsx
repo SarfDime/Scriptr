@@ -38,6 +38,7 @@ export const SectionHeader = ({
     title: 'ui-title',
     heading: 'ui-heading',
     subHeading: 'ui-subheading',
+    modern: 'ui-title-modern',
   }
 
   return (

@@ -410,12 +410,14 @@
     var(--shadow-above-inside);
 }
 
-/* The chrome is opaque in both materials, so simple mode keeps it opaque but
- * moves it off the ice tint. It is named separately from the panels below: the
- * chrome classes are not `.ui-above`, and giving them the panel fill would
- * flatten them. */
-:root[data-simple]
-  :is(.ui-above-opaque, .ui-above-nav, .ui-above-header, .ui-above-drawer) {
+/* An opaque panel takes the same flat fill as the translucent ones, so the two
+ * do not read as separate materials in simple mode. */
+:root[data-simple] .ui-above-opaque {
+  background-color: var(--color-background-250);
+}
+
+/* The chrome stays one step lighter than the panels, as it does over the ice. */
+:root[data-simple] :is(.ui-above-nav, .ui-above-header, .ui-above-drawer) {
   background-color: var(--color-background-225);
 }
 

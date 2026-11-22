@@ -63,8 +63,10 @@ how the frontend is put together.
 - **Subject lists share one filter pair.** `useSubjectFilters` + `SubjectFilters` own the
   year and electives state for the explorer, the scripts sidebar and the profile sidebar.
   One year at a time (no "all years"), opening on the first year the list has; electives
-  included until toggled off. Only the explorer adds search and sort. Both sidebars scroll
-  after four cards (and after four professors).
+  included until toggled off. `useSubjectSort` adds sort to the explorer, the scripts
+  sidebar and the profile sidebar; the explorer alone adds search. The scripts sidebar
+  puts the electives toggle in its header and keeps sort in the filter row. Both sidebars
+  and the professors list show four and reveal the rest through `ShowMoreList`.
 - **The client shells read the pathname through one store.** `NavProvider` and
   `NotificationsProvider` wrap every page, so they cannot sit inside a Suspense boundary;
   `PathnameScope` (`providers/nav/pathname-scope.tsx`) is that boundary and publishes the

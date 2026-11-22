@@ -106,7 +106,8 @@ build errors — do not add them.
   admin page starts with
   `const cookie = await requireAdminUnlock(); if (!cookie) return <AdminAccessGate />`
   and passes that cookie to its loader. Keep admin pages under `/admin`; never read the
-  token in a component.
+  token in a component. The surface is `noindex, nofollow` (layout metadata and
+  `X-Robots-Tag`), disallowed in `app/robots.ts`, and absent from the sitemaps.
 
 ## UI
 

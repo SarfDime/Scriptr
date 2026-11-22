@@ -54,6 +54,7 @@ export const PageLayout = ({
           <PageHeader
             greeting={header.greeting}
             title={header.title}
+            icon={header.icon}
             subtitle={header.subtitle}
           >
             <Box className='ui-cluster gap-2.5'>{header.actions}</Box>

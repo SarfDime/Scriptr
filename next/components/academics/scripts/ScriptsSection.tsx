@@ -117,7 +117,7 @@ export const ScriptsSection = ({
           onClick={() => setVisibleCount((count) => count + step)}
           className='button subtle w-full gap-2 py-3 ui-body'
         >
-          <Text>{ui.scripts.showMore}</Text> <ChevronDownIcon />
+          <Text>{ui.general.showMore}</Text> <ChevronDownIcon />
         </Button>
       )}
     </Box>

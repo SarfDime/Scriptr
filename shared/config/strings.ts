@@ -99,6 +99,7 @@ export const UI_STRINGS_PACK = {
       mk: 'Податоците не се достапни',
     },
     loading: { en: 'Loading', mk: 'Се вчитува' },
+    showMore: { en: 'Show more', mk: 'Прикажи повеќе' },
     /** What Santa calls from the sleigh when it passes. */
     hoHoHo: { en: 'Ho ho ho!', mk: 'Хо хо хо!' },
     /** Names the language switch in the navbar. */
@@ -236,7 +237,6 @@ export const UI_STRINGS_PACK = {
       mk: 'Скриптите во моментов не може да се вчитаат. Обиди се повторно за момент.',
     },
     browseAll: { en: 'Browse all scripts', mk: 'Прегледај ги сите скрипти' },
-    showMore: { en: 'Show more', mk: 'Прикажи повеќе' },
     showAll: { en: 'Show all', mk: 'Прикажи ги сите' },
     // The study overview's sidebar, under the professors.
     studySidebarTitle: { en: 'Scripts', mk: 'Скрипти' },
@@ -365,6 +365,10 @@ export const UI_STRINGS_PACK = {
       viewComments: (title: string): LocalizedText => ({
         en: `View comments on ${title}`,
         mk: `Прикажи ги коментарите на ${title}`,
+      }),
+      downloadCount: (count: number): LocalizedText => ({
+        en: `${count} ${count === 1 ? 'download' : 'downloads'}`,
+        mk: mkCount(count, 'преземање', 'преземања'),
       }),
     },
     detail: {
@@ -680,8 +684,7 @@ export const UI_STRINGS_PACK = {
         en: 'Semester (desc)',
         mk: 'Семестар (desc)',
       },
-      sortBySubject: { en: 'Sort by name', mk: 'Подреди по име' },
-      sortByProfessor: { en: 'Sort by professor', mk: 'Подреди по професор' },
+      sortByTitle: { en: 'Title A-Z', mk: 'Наслов A-Z' },
       filterByYear: { en: 'Filter by year', mk: 'Филтрирај по година' },
       sortSubjects: { en: 'Sort subjects', mk: 'Подреди предмети' },
     },

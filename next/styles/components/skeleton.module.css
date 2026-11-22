@@ -4,23 +4,47 @@
  * the theme) and breathes between two close steps.
  */
 @layer skeleton {
+  /* The wash sits on the surface it stands in for, not the page: panels and
+   * cards are `background-225` (the old page-100 base read as a different
+   * material in light mode and nearly vanished on a card in dark). */
+  :root {
+    --skeleton-fill-low: color-mix(
+      in srgb,
+      var(--color-fg-1000) 5%,
+      var(--color-background-225)
+    );
+    --skeleton-fill-high: color-mix(
+      in srgb,
+      var(--color-fg-1000) 9%,
+      var(--color-background-225)
+    );
+  }
+
+  /* Ice is a blue slab, so its wash is a lifted step of that fill rather than
+   * grey paint over it. `--ice-lit` flips with the theme, so the step lightens
+   * the dark slab too. */
+  :root[data-surface="ice"]:not([data-simple]) {
+    --skeleton-fill-low: color-mix(
+      in oklab,
+      rgb(var(--ice-base)) 90%,
+      rgb(var(--ice-lit)) 10%
+    );
+    --skeleton-fill-high: color-mix(
+      in oklab,
+      rgb(var(--ice-base)) 78%,
+      rgb(var(--ice-lit)) 22%
+    );
+  }
+
   @theme {
     --animate-pulse: pulse 1.8s ease-in-out infinite;
     @keyframes pulse {
       0%,
       100% {
-        background-color: color-mix(
-          in srgb,
-          var(--color-fg-1000) 5%,
-          var(--color-background-100)
-        );
+        background-color: var(--skeleton-fill-low);
       }
       50% {
-        background-color: color-mix(
-          in srgb,
-          var(--color-fg-1000) 9%,
-          var(--color-background-100)
-        );
+        background-color: var(--skeleton-fill-high);
       }
     }
   }

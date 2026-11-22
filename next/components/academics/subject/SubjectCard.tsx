@@ -29,9 +29,6 @@ export const SubjectCard = ({
   const facultySlug = study?.faculty?.slug ?? ''
   const studySlug = study?.slug ?? ''
 
-  const universityName = study?.faculty?.university?.name
-  const facultyName = study?.faculty?.name
-
   const href = getAcademicPath(
     {
       type: 'subject',
@@ -53,11 +50,6 @@ export const SubjectCard = ({
       subtitle={
         firstProfessor?.name
           ? `${firstProfessor.name}${restProfessors.length > 0 ? ` +${restProfessors.length} more` : ''}`
-          : undefined
-      }
-      caption={
-        universityName || facultyName
-          ? [universityName, facultyName].filter(Boolean).join(' • ')
           : undefined
       }
       headerAside={code && <AcademicBadge type='code' value={code} />}

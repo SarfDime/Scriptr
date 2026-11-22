@@ -68,7 +68,7 @@ export function RatingsSection({ targetType, targetId }: RatingTarget) {
        * the heading when the card is too narrow for both, so neither line costs
        * the rows below any height of their own. */}
       <Box className='ui-cluster justify-between gap-x-3 gap-y-1'>
-        <Text id={headingId} className='ui-label'>
+        <Text id={headingId} className='ui-title-modern'>
           {strings.title}
         </Text>
         {catalog.status === 'loaded' && catalog.types.length > 0 && (

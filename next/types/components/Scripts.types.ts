@@ -37,6 +37,7 @@ type BaseScript = ScriptId &
     subject: string
     tag?: string
     files?: Array<ScriptFile>
+    downloads: number
   }
 
 type BaseScriptAction = ScriptMeta & {
@@ -126,6 +127,7 @@ export type ScriptActionsProps = ScriptMeta &
     likeButtonProps?: ScriptLikeButtonProps
     commentsLinkProps?: ScriptCommentsLinkProps
     previewButtonProps?: ScriptPreviewButtonProps
+    children?: ReactNode
   }
 
 // -----------------------------------------------------------------------------

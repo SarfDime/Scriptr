@@ -2,7 +2,6 @@ import { UI_STRINGS_PACK } from '@shared/config/strings'
 import { SCRIPT_STRINGS_PACK } from '@shared/strings/scripts-strings'
 import type { ScriptFile } from '@shared/types/scripts.types'
 import { ScriptFileCard } from '@/components/academics/scripts/ScriptFileCard'
-import { ScriptSurface } from '@/components/academics/scripts/ScriptSurface'
 import { Box } from '@/components/common/Box'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { Text } from '@/components/typography/Text'
@@ -36,8 +35,12 @@ export async function ScriptFilesSection({
     Boolean(getPreviewableKind(soleFile.file_type))
 
   return (
-    <ScriptSurface className='ui-stack min-w-0 grow-100 basis-[24rem] gap-3'>
-      <SectionHeader title={strings.files.title} count={files.length} />
+    <Box className='ui-above ui-stack min-w-0 grow-100 basis-[24rem] gap-3 p-3'>
+      <SectionHeader
+        title={strings.files.title}
+        titleVariant='modern'
+        count={files.length}
+      />
       {files.length === 0 ? (
         <Text className='ui-subtitle'>
           {ui.scripts.actions.noFilesAttached}
@@ -57,7 +60,7 @@ export async function ScriptFilesSection({
         // would wrap.
         <Box
           className={cn(
-            'ui-card-grid items-start [--grid-min:18rem]',
+            'ui-card-grid items-start [--grid-min:18rem] h-full',
             files.length === 1 && !previewsSoleFile && 'max-w-152'
           )}
         >
@@ -73,6 +76,6 @@ export async function ScriptFilesSection({
           ))}
         </Box>
       )}
-    </ScriptSurface>
+    </Box>
   )
 }

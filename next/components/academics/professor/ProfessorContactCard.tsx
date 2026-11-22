@@ -80,7 +80,7 @@ export const ProfessorContactCard = async ({
         </Box>
       </Box>
 
-      <Divider colorScheme='light' />
+      <Divider />
       {children}
     </Box>
   )

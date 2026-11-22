@@ -146,10 +146,11 @@ catalog; how that works is
 ## SEO
 
 - **Robots:** `next/app/robots.ts` owns `/robots.txt` — AI and scraper agents are
-  disallowed site-wide, `/calendar` is disallowed for everyone (study-host and
-  catalog shapes), and `Sitemap:` names `/sitemap.xml`. Verify after the first
-  deploy that our file wins over Vercel's injected content-signals preamble; if it
-  is shadowed, turn the platform's injection off.
+  disallowed site-wide, `/calendar` and `/admin` are disallowed for everyone (both
+  language shapes). Admin also answers `noindex, nofollow` (layout metadata and
+  `X-Robots-Tag`) and is absent from every sitemap. `Sitemap:` names `/sitemap.xml`.
+  Verify after the first deploy that our file wins over Vercel's injected
+  content-signals preamble; if it is shadowed, turn the platform's injection off.
 
 ## Code and comments
 

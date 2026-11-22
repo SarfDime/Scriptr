@@ -1,8 +1,6 @@
 import Folder from '@sanity/icons/Folder'
 import { UI_STRINGS_PACK } from '@shared/config/strings'
 import { ProfessorsSection } from '@/components/academics/professor/ProfessorsSection'
-import { ScriptsSection } from '@/components/academics/scripts/ScriptsSection'
-import { StudyOverviewCard } from '@/components/academics/study/StudyOverviewCard'
 import { SubjectsExplorer } from '@/components/academics/subject/SubjectsExplorer'
 import { BackLink } from '@/components/common/BackLink'
 import { NextLink } from '@/components/common/NextLink'
@@ -11,17 +9,11 @@ import { getAcademicPath, getStudyFeedPath } from '@/lib/academic-routes'
 import { getServerLocale, getServerStrings } from '@/lib/server-strings'
 import { catalogUrl } from '@/lib/study-origin'
 import type { StudyDetail } from '@/types/academics/study.types'
-import type { ScriptDetail } from '@/types/components/Scripts.types'
 
 export type StudyDetailContentProps = {
   study: StudyDetail
   /** Slugs to fall back on when a parent document's own are missing. */
   fallback: { universitySlug: string; facultySlug: string }
-  /** The study's top scripts, for the sidebar beside the professors. */
-  scripts: Array<ScriptDetail>
-  /** `true` when the script read failed, so the sidebar does not claim there
-   * are none. */
-  scriptsUnavailable?: boolean
 }
 
 /**
@@ -33,8 +25,6 @@ export type StudyDetailContentProps = {
 export const StudyDetailContent = async ({
   study,
   fallback,
-  scripts,
-  scriptsUnavailable,
 }: StudyDetailContentProps) => {
   const locale = await getServerLocale()
   const ui = await getServerStrings(UI_STRINGS_PACK)
@@ -43,6 +33,7 @@ export const StudyDetailContent = async ({
       header={{
         greeting: study.faculty?.name ?? ui.academics.entity.faculty,
         title: study.name,
+        icon: study.logo,
         actions: (
           <>
             <NextLink
@@ -91,35 +82,8 @@ export const StudyDetailContent = async ({
           </>
         ),
       }}
-      sidebar={
-        <>
-          <ProfessorsSection professors={study.professors} />
-          <ScriptsSection
-            scripts={scripts}
-            scriptsUnavailable={scriptsUnavailable}
-            title={ui.scripts.studySidebarTitle}
-            subtitle={ui.scripts.studySidebarSubtitle}
-            emptyMessage={ui.scripts.studySidebarEmpty}
-            showControls={{
-              all: true,
-              search: true,
-              filters: false,
-              create: false,
-            }}
-            headerActions={
-              <NextLink
-                href={getStudyFeedPath(study.siteSlug, locale)}
-                className='button button-sm subtle'
-              >
-                {ui.scripts.showAll}
-              </NextLink>
-            }
-          />
-        </>
-      }
+      sidebar={<ProfessorsSection professors={study.professors} />}
     >
-      <StudyOverviewCard study={study} />
-
       <SubjectsExplorer subjects={study.subjects ?? []} />
     </PageLayout>
   )

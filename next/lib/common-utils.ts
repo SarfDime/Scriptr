@@ -75,7 +75,7 @@ export const getDraftMode = async (
 export const convertToPlainText = ({
   value,
 }: {
-  value?: PortableTextValue
+  value?: PortableTextValue | string
 }) => {
   if (!value) return ''
 

@@ -16,7 +16,6 @@ import { StudySubjectsPanel } from '@/components/academics/subject/StudySubjects
 import { Box } from '@/components/common/Box'
 import { NextLink } from '@/components/common/NextLink'
 import { PageLayout } from '@/components/layout/PageLayout'
-import { Divider } from '@/components/ui/Divider'
 import { createAcademicMetadata } from '@/lib/academic-metadata'
 import { getStudyFeedPath, getStudySiteUrl } from '@/lib/academic-routes'
 import { getSession } from '@/lib/api/auth-api'
@@ -136,7 +135,6 @@ async function StudyScriptsFrame({
     >
       {site.dbId && <StudySetupGate siteSlug={siteSlug} studyId={site.dbId} />}
 
-      <Divider />
       <Suspense fallback={<ScriptsListSkeleton />}>
         <StudyScriptsFeed
           site={site}

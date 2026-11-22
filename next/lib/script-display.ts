@@ -41,6 +41,7 @@ export const toScriptDetail = (
   updatedAt: new Date(script.updated_at),
   likes: script.vote_score,
   comments: script.comments[0]?.count ?? 0,
+  downloads: script.download_count,
   files: script.files,
 })
 
@@ -67,5 +68,6 @@ export const toScriptSummaryDetails = (
     updatedAt: new Date(script.updated_at),
     likes: script.vote_score,
     comments: script.comments[0]?.count ?? 0,
+    downloads: script.download_count,
     files: script.files,
   }))
