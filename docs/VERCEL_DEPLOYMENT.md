@@ -1,13 +1,13 @@
 # Vercel Deployment
 
-Two Git-connected Vercel projects in the `Vercel team` team (`team-slug`):
+Two Git-connected Vercel projects, named `scriptr-web` and `scriptr-api` below:
 
-| Project       | Project ID                         | Root   | Framework |
-| ------------- | ---------------------------------- | ------ | --------- |
-| `scriptr-web` | `REDACTED_VERCEL_PROJECT` | `next` | Next.js   |
-| `scriptr-api` | `REDACTED_VERCEL_PROJECT` | `hono` | Node.js   |
+| Project       | Root   | Framework |
+| ------------- | ------ | --------- |
+| `scriptr-web` | `next` | Next.js   |
+| `scriptr-api` | `hono` | Node.js   |
 
-Both connect to `this repository` and must allow source files outside their root
+Both connect to this repository and must allow source files outside their root
 directory, because they import the root workspace and `shared/`.
 
 Production: web `https://scriptr.uk`, API `https://api.scriptr.uk`, API health
@@ -72,15 +72,15 @@ From [`hono/.env.example`](../hono/.env.example); in Production:
 - `COOKIE_DOMAIN=.scriptr.uk` so the API cookie reaches the web host.
 - `CORS_ORIGINS` is the only allowlist in production (localhost dev ports are added only
   when `NODE_ENV` is not `production`), so it must list:
-  `https://scriptr.uk`, `*.scriptr.uk`, `https://scriptr-web.vercel.app`,
-  `https://scriptr-web-ivory.vercel.app`, `https://scriptr-web-team-slug.vercel.app`,
-  `https://scriptr-web-git-main-team-slug.vercel.app`,
-  `https://scriptr-web-git-staging-team-slug.vercel.app`,
+  `https://scriptr.uk`, `*.scriptr.uk`, and the web project's Vercel aliases —
+  `https://<web-project>.vercel.app`, `https://<web-project>-<team>.vercel.app`,
+  `https://<web-project>-git-main-<team>.vercel.app`,
+  `https://<web-project>-git-staging-<team>.vercel.app` — plus
   `https://scriptr.sanity.studio`. Without the Studio entry every sync/delete action fails
   its preflight (`Reason: CORS request did not succeed`); a later `403` means
   `ADMIN_TOTP_SECRET` is missing on the API.
 - `NEXT_REVALIDATE_URL` must be the web project's **Vercel alias**,
-  `https://scriptr-web-team-slug.vercel.app/api/revalidate`, not the public hostname:
+  `https://<web-project>-<team>.vercel.app/api/revalidate`, not the public hostname:
   Cloudflare does not pass the API's server-to-server request through to Vercel, so the
   webhook silently never runs and mutations leave the cache stale.
 - `WEB_PROTECTION_BYPASS_SECRET` is how that alias is reachable at all: Vercel

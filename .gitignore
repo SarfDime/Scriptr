@@ -24,6 +24,13 @@ build/
 *.pem
 cookies-*.txt
 
+# Supabase CLI link state: project ref and organisation id
+supabase/.temp/
+**/supabase/.temp/
+
+# Agent session state
+.github/copilot-memories.jsonl
+
 # Generated files and caches
 *.tsbuildinfo
 coverage/

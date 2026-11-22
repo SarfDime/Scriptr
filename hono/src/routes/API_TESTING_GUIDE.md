@@ -130,18 +130,25 @@ curl -s $BASE/sanity/professors/$PROF1 -H "x-admin-token: $TOKEN" | jq '{faculti
 
 ## Phase 2 — Accounts
 
-Two fixed local accounts, so permission boundaries are actually testable in
-later phases: one regular user, one promoted to admin.
+Two throwaway local accounts, so permission boundaries are actually testable
+in later phases: one regular user, one promoted to admin. They exist only in
+the local Supabase stack, and the password is generated per run rather than
+stored in this guide.
 
-| Role    | Email                | Username      | Password       |
-| ------- | -------------------- | ------------- | -------------- |
-| student | `student@test.local` | `localstudent` | `REDACTED_LOCAL_TEST_PASSWORD` |
-| admin   | `admin@test.local`   | `localadmin`   | `REDACTED_LOCAL_TEST_PASSWORD` |
+| Role    | Email             | Username            | Password        |
+| ------- | ----------------- | ------------------- | --------------- |
+| student | `$STUDENT_EMAIL`  | `$STUDENT_USERNAME` | `$TEST_PASSWORD` |
+| admin   | `$ADMIN_EMAIL`    | `$ADMIN_USERNAME`   | `$TEST_PASSWORD` |
 
-Both are local-only (`@test.local`); the password is deliberately trivial.
-It has to satisfy `validateNewPassword` — 8+ characters with a lowercase,
-an uppercase, a digit and a symbol — which is why the older `REDACTED_LOCAL_TEST_PASSWORD`
-examples no longer register.
+```bash
+# Local-only identities. The password satisfies `validateNewPassword`:
+# 8+ characters with a lowercase, an uppercase, a digit and a symbol.
+STUDENT_EMAIL='student@test.local'
+STUDENT_USERNAME='localstudent'
+ADMIN_EMAIL='admin@test.local'
+ADMIN_USERNAME='localadmin'
+TEST_PASSWORD="Local1_$(openssl rand -hex 8)"
+```
 
 Registration takes only `email`, `password`, `username` and `full_name`;
 academic selections are set separately in Phase 3.
@@ -150,24 +157,24 @@ academic selections are set separately in Phase 3.
 # Create the two accounts. Once they exist this answers 409 for each — that is
 # expected, so on a re-run skip to the login block below.
 curl -s -c cookies-student.txt -X POST $BASE/auth/register -H "Content-Type: application/json" \
-  -d '{"email":"student@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"localstudent","full_name":"Test Student"}'
+  -d "{\"email\":\"$STUDENT_EMAIL\",\"password\":\"$TEST_PASSWORD\",\"username\":\"$STUDENT_USERNAME\",\"full_name\":\"Test Student\"}"
 curl -s -c cookies-admin.txt -X POST $BASE/auth/register -H "Content-Type: application/json" \
-  -d '{"email":"admin@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"localadmin","full_name":"Test Admin"}'
+  -d "{\"email\":\"$ADMIN_EMAIL\",\"password\":\"$TEST_PASSWORD\",\"username\":\"$ADMIN_USERNAME\",\"full_name\":\"Test Admin\"}"
 
 # Missing a required field — expect 400
 curl -s -X POST $BASE/auth/register -H "Content-Type: application/json" \
-  -d '{"email":"incomplete@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD"}' | jq .
+  -d "{\"email\":\"incomplete@test.local\",\"password\":\"$TEST_PASSWORD\"}" | jq .
 
 # Duplicate username (409, field: username) and duplicate email (409, field:
 # email) — each needs a different email so the other field is what collides
 curl -s -X POST $BASE/auth/register -H "Content-Type: application/json" \
-  -d '{"email":"other@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"localstudent","full_name":"Duplicate User"}' | jq .
+  -d "{\"email\":\"other@test.local\",\"password\":\"$TEST_PASSWORD\",\"username\":\"$STUDENT_USERNAME\",\"full_name\":\"Duplicate User\"}" | jq .
 curl -s -X POST $BASE/auth/register -H "Content-Type: application/json" \
-  -d '{"email":"student@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"otherstudent","full_name":"Other Student"}' | jq .
+  -d "{\"email\":\"$STUDENT_EMAIL\",\"password\":\"$TEST_PASSWORD\",\"username\":\"otherstudent\",\"full_name\":\"Other Student\"}" | jq .
 
 # Disposable-email rejection — expect 400
 curl -s -X POST $BASE/auth/register -H "Content-Type: application/json" \
-  -d '{"email":"test@mailinator.com","password":"REDACTED_LOCAL_TEST_PASSWORD","username":"disposableuser","full_name":"Disposable User"}' | jq .
+  -d "{\"email\":\"test@mailinator.com\",\"password\":\"$TEST_PASSWORD\",\"username\":\"disposableuser\",\"full_name\":\"Disposable User\"}" | jq .
 ```
 
 > Local Supabase only demands email confirmation when the running stack
@@ -194,13 +201,13 @@ curl -s -X POST $BASE/auth/register -H "Content-Type: application/json" \
 ```bash
 # Login returns the app-shaped session user (id, email, username, role, subjects, ...)
 curl -s -c cookies-student.txt -X POST $BASE/auth/login -H "Content-Type: application/json" \
-  -d '{"email":"student@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD"}' | jq '{success, user: (.user | {id, email, username, role})}'
+  -d "{\"email\":\"$STUDENT_EMAIL\",\"password\":\"$TEST_PASSWORD\"}" | jq '{success, user: (.user | {id, email, username, role})}'
 curl -s -c cookies-admin.txt -X POST $BASE/auth/login -H "Content-Type: application/json" \
-  -d '{"email":"admin@test.local","password":"REDACTED_LOCAL_TEST_PASSWORD"}' | jq '{success, user: (.user | {id, email, username, role})}'
+  -d "{\"email\":\"$ADMIN_EMAIL\",\"password\":\"$TEST_PASSWORD\"}" | jq '{success, user: (.user | {id, email, username, role})}'
 
 # Bad credentials — expect 401
 curl -s -X POST $BASE/auth/login -H "Content-Type: application/json" \
-  -d '{"email":"student@test.local","password":"WrongPass123!"}' | jq .
+  -d "{\"email\":\"$STUDENT_EMAIL\",\"password\":\"WrongPass123!\"}" | jq .
 
 STUDENT=$(curl -s -b cookies-student.txt $BASE/auth/session | jq -r '.user.id')
 ADMIN=$(curl -s -b cookies-admin.txt $BASE/auth/session | jq -r '.user.id')
@@ -236,7 +243,7 @@ answers `429`:
 ```bash
 for i in $(seq 1 11); do curl -s -o /tmp/auth-rate-limit.json -w '%{http_code}\n' \
   -X POST $BASE/auth/login -H 'Content-Type: application/json' \
-  -d '{"email":"student@test.local","password":"WrongPass123!"}'; done | tail -n 3
+  -d "{\"email\":\"$STUDENT_EMAIL\",\"password\":\"WrongPass123!\"}"; done | tail -n 3
 ```
 
 `GET /auth/session` refreshes a valid session only when its access token
@@ -269,7 +276,7 @@ curl -s -b cookies-student.txt $BASE/notifications | jq '.[0] | {type, title}'
 # ends the account. Not run here — later phases still use these users:
 # curl -s -b cookies-admin.txt -X DELETE $BASE/profiles/$STUDENT | jq .
 curl -s -b cookies-student.txt $BASE/profiles/me | jq '{id, username, role}'
-curl -s $BASE/profiles/username/localstudent | jq '{id, username}'
+curl -s $BASE/profiles/username/$STUDENT_USERNAME | jq '{id, username}'
 curl -s $BASE/profiles/$STUDENT/stats | jq .
 ```
 
@@ -279,7 +286,7 @@ Every profile payload carries `achievements` with each definition's `rarity`
 ```bash
 curl -s -b cookies-student.txt $BASE/profiles/me \
   | jq '.achievements[] | {achievement_id, earned_at, rarity: .achievement.rarity}'
-curl -s $BASE/profiles/username/localstudent | jq '.achievements | length'
+curl -s $BASE/profiles/username/$STUDENT_USERNAME | jq '.achievements | length'
 curl -s $BASE/profiles/$STUDENT | jq '[.achievements[].achievement.rarity] | unique'
 ```
 
@@ -292,7 +299,7 @@ than exposing the underlying database message; a missing profile returns
 Public profiles include `favorite_scripts` for anonymous viewers too:
 
 ```bash
-curl -s $BASE/profiles/username/localstudent | jq '.favorite_scripts | length'
+curl -s $BASE/profiles/username/$STUDENT_USERNAME | jq '.favorite_scripts | length'
 ```
 
 Editing the signed-in profile (`username` is always required; the response is
@@ -301,12 +308,12 @@ Editing the signed-in profile (`username` is always required; the response is
 ```bash
 curl -s -b cookies-student.txt -X PATCH $BASE/profiles/me \
   -H "Content-Type: application/json" \
-  -d '{"username":"localstudent","full_name":" Test Student "}' \
+  -d "{\"username\":\"$STUDENT_USERNAME\",\"full_name\":\" Test Student \"}" \
   | jq '.profile | {username, full_name}'   # full_name comes back trimmed
 
 # 409 + field: username when another account already has the username
 curl -s -o /dev/null -w '%{http_code}\n' -b cookies-student.txt -X PATCH $BASE/profiles/me \
-  -H "Content-Type: application/json" -d '{"username":"localadmin"}'
+  -H "Content-Type: application/json" -d "{\"username\":\"$ADMIN_USERNAME\"}"
 
 # 400 for a missing username, a bad body, or a non-array selection list
 curl -s -b cookies-student.txt -X PATCH $BASE/profiles/me \
@@ -316,8 +323,8 @@ curl -s -b cookies-student.txt -X PATCH $BASE/profiles/me \
 # The bad id also rolls the username back: read it after the 409 and it is unchanged.
 curl -s -b cookies-student.txt -X PATCH $BASE/profiles/me \
   -H "Content-Type: application/json" \
-  -d '{"username":"localstudent","full_name":"Rolled back","selected_faculty_ids":["00000000-0000-0000-0000-000000000000"]}' | jq .
-curl -s $BASE/profiles/username/localstudent | jq '.full_name'
+  -d "{\"username\":\"$STUDENT_USERNAME\",\"full_name\":\"Rolled back\",\"selected_faculty_ids\":[\"00000000-0000-0000-0000-000000000000\"]}" | jq .
+curl -s $BASE/profiles/username/$STUDENT_USERNAME | jq '.full_name'
 ```
 
 Changing the avatar is two calls, like a script file upload. It needs
@@ -896,7 +903,7 @@ curl -s -b cookies-admin.txt -X PATCH $BASE/achievement-definitions/script_stack
 curl -s -b cookies-admin.txt -X PATCH $BASE/achievement-definitions/script_stack \
   -H "Content-Type: application/json" \
   -d '{"rarity":"legendary","threshold":2}' | jq '.achievement_definition | {rarity, threshold}'
-curl -s $BASE/profiles/username/localstudent \
+curl -s $BASE/profiles/username/$STUDENT_USERNAME \
   | jq '.achievements[] | select(.achievement_id == "script_stack") | .achievement.rarity'
 
 # Delete it (nobody has earned it), then expect 404
@@ -1033,7 +1040,7 @@ curl -s -b cookies-student.txt -X DELETE $BASE/profile-faculties/$FAC | jq .
 curl -s -b cookies-student.txt -X DELETE $BASE/profiles/me | jq .
 curl -s -b cookies-admin.txt -X DELETE $BASE/profiles/me | jq .
 
-# Without this the `student@test.local` / `admin@test.local` emails stay taken,
+# Without this the test emails stay taken,
 # so the next Phase 2 run registers nothing and `409`s instead
 curl -s -X DELETE "$SUPABASE_URL/auth/v1/sanity/users/$STUDENT" \
   -H "apikey: $SERVICE_KEY" -H "Authorization: Bearer $SERVICE_KEY"

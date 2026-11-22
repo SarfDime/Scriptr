@@ -95,7 +95,7 @@ On Apple Silicon add `--platform linux/amd64` — Cloud Run needs amd64.
 
 ## Deploying to Cloud Run
 
-Deployed as `optimizer` in `REDACTED_GCP_PROJECT` / `europe-west2`.
+Deployed as `optimizer` in the GCP project and region below.
 
 ```bash
 PROJECT=<gcp-project>; REGION=europe-west2; REPO=scriptr

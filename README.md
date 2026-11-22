@@ -100,3 +100,11 @@ The Studio lives at https://scriptr.sanity.studio.
 - [Studio setup](sanity/README.md)
 - [Deployment](docs/VERCEL_DEPLOYMENT.md)
 - [Agent rules](AGENTS.md)
+
+## Use and contributions
+
+© 2026 Sarf Dime. All rights reserved.
+
+This repository is published for transparency only. No license is granted: you may not
+copy, modify, distribute or reuse the code, and external contributions are not accepted.
+Report a security issue privately as described in [SECURITY.md](SECURITY.md).
