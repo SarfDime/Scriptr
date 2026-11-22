@@ -39,9 +39,14 @@ jobs:
         run: corepack pnpm lint && corepack pnpm check-types:sanity
 
       - name: Build Sanity Studio
+        env:
+          SANITY_STUDIO_PROJECT_ID: ${{ vars.SANITY_STUDIO_PROJECT_ID }}
+          SANITY_STUDIO_DATASET: ${{ vars.SANITY_STUDIO_DATASET }}
         run: corepack pnpm build:sanity
 
       - name: Validate GraphQL schema without deploying
         env:
           SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
+          SANITY_STUDIO_PROJECT_ID: ${{ vars.SANITY_STUDIO_PROJECT_ID }}
+          SANITY_STUDIO_DATASET: ${{ vars.SANITY_STUDIO_DATASET }}
         run: corepack pnpm --filter scriptr-sanity run deploy-graphql:dry

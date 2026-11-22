@@ -15,9 +15,15 @@ corepack pnpm dev:sanity
 `sanity/.env`, from `.env.example`:
 
 ```env
+SANITY_STUDIO_PROJECT_ID=your-sanity-project-id
+SANITY_STUDIO_DATASET=production
+SANITY_STUDIO_APP_ID=your-studio-app-id
 SANITY_STUDIO_PREVIEW_ORIGIN=http://localhost:3000
 SANITY_STUDIO_API_URL=http://localhost:8787
 ```
+
+`SANITY_STUDIO_PROJECT_ID` is required. `SANITY_STUDIO_APP_ID` is only read by
+`sanity deploy`; `SANITY_STUDIO_DATASET` defaults to `production`.
 
 No API secret goes here: Vite inlines every `SANITY_STUDIO_*` value into the public
 bundle. `sanity build`/`deploy` load `sanity/.env.production` on top of `.env`, which is

@@ -3,10 +3,6 @@ import './styles/main.css'
 import { visionTool } from '@sanity/vision'
 import { BrandMark } from '@shared/components/brand-mark'
 import { ACADEMIC_TYPES, type AcademicEntityType } from '@shared/config/api'
-import {
-  SANITY_DATASET,
-  SANITY_PROJECT_ID,
-} from '@shared/config/sanity-constants'
 import { defineConfig } from 'sanity'
 import { presentationTool } from 'sanity/presentation'
 import { structureTool } from 'sanity/structure'
@@ -24,6 +20,7 @@ import {
 import { CustomDuplicateAction } from './actions/customDuplicate'
 import { CustomToolMenu } from './components/CustomToolMenu'
 import { defaultDocumentNode } from './defaultDocumentNode'
+import { sanityDataset, sanityProjectId } from './env'
 import { PortableTextPlugins } from './schemas/portable-text/plugins/plugins'
 import { schemaTypes } from './schemaTypes'
 import { customStructureTool } from './structure-tool/structure-tool'
@@ -33,8 +30,8 @@ export default defineConfig({
   title: 'Scriptr',
   icon: BrandMark,
 
-  projectId: SANITY_PROJECT_ID,
-  dataset: SANITY_DATASET,
+  projectId: sanityProjectId,
+  dataset: sanityDataset,
 
   reactStrictMode: true,
   babel: { reactCompiler: true },

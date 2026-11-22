@@ -1,16 +1,13 @@
-import {
-  SANITY_DATASET,
-  SANITY_PROJECT_ID,
-} from '@shared/config/sanity-constants'
 import { defineCliConfig } from 'sanity/cli'
+import { sanityAppId, sanityDataset, sanityProjectId } from './env'
 
 export default defineCliConfig({
   api: {
-    projectId: process.env.SANITY_STUDIO_PROJECT_ID ?? SANITY_PROJECT_ID,
-    dataset: process.env.SANITY_STUDIO_DATASET ?? SANITY_DATASET,
+    projectId: sanityProjectId,
+    dataset: sanityDataset,
   },
   deployment: {
-    appId: 'REDACTED_SANITY_APP_ID',
+    ...(sanityAppId ? { appId: sanityAppId } : {}),
     /**
      * Enable auto-updates for studios.
      * Learn more at https://www.sanity.io/docs/studio/latest-version-of-sanity#k47faf43faf56

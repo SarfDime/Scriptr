@@ -1,8 +1,5 @@
-import {
-  SANITY_DATASET,
-  SANITY_PROJECT_ID,
-} from '@shared/config/sanity-constants'
 import type { PortableTextBlock } from 'sanity'
+import { sanityDataset, sanityProjectId } from '../../env'
 import type { LocalizedHeaderPreviewProps } from '../../types/common.types'
 
 /**
@@ -139,5 +136,5 @@ export function convertImageIdToUrl(imageId?: string) {
     lastDashIndex
   )}.${assetId.substring(lastDashIndex + 1)}`
 
-  return `https://cdn.sanity.io/images/${SANITY_PROJECT_ID}/${SANITY_DATASET}/${formattedAssetId}`
+  return `https://cdn.sanity.io/images/${sanityProjectId}/${sanityDataset}/${formattedAssetId}`
 }

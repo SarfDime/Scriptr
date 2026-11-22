@@ -110,7 +110,8 @@ From [`hono/.env.example`](../hono/.env.example); in Production:
   waits up to 120 s. Keep the project on Fluid compute (default for projects created after
   2025-04-23, 300 s per function on every plan); a lower limit fails the request.
 
-The hosted Studio builds with `SANITY_STUDIO_API_URL=https://api.scriptr.uk`. In Supabase
+The hosted Studio builds with `SANITY_STUDIO_PROJECT_ID`, `SANITY_STUDIO_APP_ID` and
+`SANITY_STUDIO_API_URL=https://api.scriptr.uk`. In Supabase
 Auth, the Site URL is `https://scriptr.uk` and `https://scriptr.uk/auth/callback` is an
 allowed redirect URL.
 

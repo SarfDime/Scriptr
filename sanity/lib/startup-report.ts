@@ -15,6 +15,21 @@ import {
  */
 const ENV_REQUIREMENTS: Array<EnvVarRequirement> = [
   {
+    name: 'SANITY_STUDIO_PROJECT_ID',
+    required: true,
+    purpose: 'the Studio cannot load a dataset without it',
+  },
+  {
+    name: 'SANITY_STUDIO_DATASET',
+    required: false,
+    purpose: 'defaults to production',
+  },
+  {
+    name: 'SANITY_STUDIO_APP_ID',
+    required: false,
+    purpose: '`sanity deploy` cannot update the hosted Studio without it',
+  },
+  {
     name: 'SANITY_STUDIO_API_URL',
     required: false,
     purpose:
