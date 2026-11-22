@@ -61,7 +61,7 @@ export const ScriptCard = ({
           </Box>
 
           <Box className='ui-stack min-w-0 grow gap-1'>
-            <PortableTextContent className='ui-title group-hover:cp-text'>
+            <PortableTextContent className='ui-title group-hover:cp-text [&>*]:line-clamp-1'>
               {script.title}
             </PortableTextContent>
             <Text className='ui-caption'>
