@@ -1,7 +1,6 @@
 import { createClient } from 'next-sanity'
 import {
   sanityApiVersion,
-  sanityAuthToken,
   sanityDataset,
   sanityProjectId,
   studioURL,
@@ -80,6 +79,5 @@ export const prodClient = createClient({
   dataset: sanityDataset,
   apiVersion: sanityApiVersion,
   perspective: 'published',
-  token: sanityAuthToken,
   useCdn: true,
 })
