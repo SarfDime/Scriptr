@@ -5,9 +5,10 @@ import User from '@sanity/icons/User'
 import { canWriteInStudy } from '@shared/utils/api.utils'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { SubjectCard } from '@/components/academics/subject/SubjectCard'
+import { AcademicBadge } from '@/components/academics/AcademicBadge'
 import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
+import { Text } from '@/components/typography/Text'
 import { Divider } from '@/components/ui/Divider'
 import { Field } from '@/components/ui/field/Field'
 import { Select } from '@/components/ui/select/Select'
@@ -133,7 +134,26 @@ export function CreateScriptModal({
             label={ui.scripts.uploadModal.subjectLabel}
             labelProps={SCRIPT_FIELD_LABEL_PROPS}
           >
-            <SubjectCard {...subject} />
+            {/* A value, not a card: no link, no hover, and no professor line —
+                the picker beside it owns that. */}
+            <Box className='ui-cluster flex-wrap items-center gap-2 ui-above-inside px-3 py-2'>
+              <Text className='ui-body-strong min-w-0 truncate'>
+                {subject.name}
+              </Text>
+              {subject.code && (
+                <AcademicBadge type='code' value={subject.code} />
+              )}
+              {subject.year > 0 && (
+                <AcademicBadge type='year' value={subject.year} />
+              )}
+              {subject.credits > 0 && (
+                <AcademicBadge type='credits' value={subject.credits} />
+              )}
+              {subject.elective && <AcademicBadge type='elective' />}
+              {subject.semester > 0 && (
+                <AcademicBadge type='semester' value={subject.semester} />
+              )}
+            </Box>
             <Divider className='my-2' />
             <ReadingLinksField
               {...form.readingLinks.fieldProps}
