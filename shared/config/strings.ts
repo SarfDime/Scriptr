@@ -47,7 +47,7 @@ export const UI_STRINGS_PACK = {
     },
     studySetupRequiredAction: {
       en: 'Complete setup',
-      mk: 'Постави го поставувањето',
+      mk: 'Постави го профилот',
     },
     studySetupRequiredDismiss: { en: 'Not now', mk: 'Не сега' },
     tryAgain: { en: 'Please try again.', mk: 'Обиди се повторно.' },
