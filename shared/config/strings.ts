@@ -66,7 +66,7 @@ export const UI_STRINGS_PACK = {
     },
     year: (year: number): LocalizedText => ({
       en: `Year ${year}`,
-      mk: `${year} година`,
+      mk: `Година ${year} `,
     }),
     unexpectedError: { en: 'Something went wrong', mk: 'Нешто тргна наопаку' },
     apiUnavailable: {

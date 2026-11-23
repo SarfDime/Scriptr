@@ -136,8 +136,8 @@ export function CreateScriptModal({
           >
             {/* A value, not a card: no link, no hover, and no professor line —
                 the picker beside it owns that. */}
-            <Box className='ui-cluster flex-wrap items-center gap-2 ui-above-inside px-3 py-2'>
-              <Text className='ui-body-strong min-w-0 truncate'>
+            <Box className='ui-cluster flex-wrap items-center gap-2 ui-above-inside px-2 py-2'>
+              <Text className='ui-body-strong wrap-break-word'>
                 {subject.name}
               </Text>
               {subject.code && (
