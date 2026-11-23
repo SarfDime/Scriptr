@@ -135,10 +135,10 @@ in later phases: one regular user, one promoted to admin. They exist only in
 the local Supabase stack, and the password is generated per run rather than
 stored in this guide.
 
-| Role    | Email             | Username            | Password        |
-| ------- | ----------------- | ------------------- | --------------- |
-| student | `$STUDENT_EMAIL`  | `$STUDENT_USERNAME` | `$TEST_PASSWORD` |
-| admin   | `$ADMIN_EMAIL`    | `$ADMIN_USERNAME`   | `$TEST_PASSWORD` |
+| Role    | Email            | Username            | Password         |
+| ------- | ---------------- | ------------------- | ---------------- |
+| student | `$STUDENT_EMAIL` | `$STUDENT_USERNAME` | `$TEST_PASSWORD` |
+| admin   | `$ADMIN_EMAIL`   | `$ADMIN_USERNAME`   | `$TEST_PASSWORD` |
 
 ```bash
 # Local-only identities. The password satisfies `validateNewPassword`:
