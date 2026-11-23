@@ -20,7 +20,7 @@ import {
 import { requireOwner } from '../lib/require-admin'
 import {
   canWriteInStudy,
-  STUDY_WRITE_DENIED_MESSAGE,
+  STUDY_WRITE_DENIED_BODY,
   studyIdForSubject,
 } from '../lib/study-access'
 import { authMiddleware, createSupabaseClient } from '../lib/supabase'
@@ -399,7 +399,7 @@ ratings.post('/subject/:subjectId', authMiddleware, async (c) => {
   const studyId = await studyIdForSubject(supabase, subjectId)
   if (!studyId) return c.json({ error: 'Subject not found' }, 404)
   if (!(await canWriteInStudy(supabase, user.id, studyId))) {
-    return c.json({ error: STUDY_WRITE_DENIED_MESSAGE }, 403)
+    return c.json(STUDY_WRITE_DENIED_BODY, 403)
   }
 
   const { rating_type_id, score } = await readJsonBody(c)

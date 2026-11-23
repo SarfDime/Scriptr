@@ -98,6 +98,7 @@ export default async function SubjectSitePage({
     <SubjectDetailContent
       subject={subject}
       studyPath={getStudySiteUrl(siteSlug, locale)}
+      studyId={site.dbId}
       fallback={site}
     />
   )

@@ -52,10 +52,7 @@ import {
 } from '../lib/require-admin'
 import { verifyReportedFiles } from '../lib/script-files'
 import { isOwnUploadKey } from '../lib/storage-scope'
-import {
-  canWriteInStudy,
-  STUDY_WRITE_DENIED_MESSAGE,
-} from '../lib/study-access'
+import { canWriteInStudy, STUDY_WRITE_DENIED_BODY } from '../lib/study-access'
 import {
   authMiddleware,
   createInternalSupabaseClient,
@@ -734,7 +731,7 @@ scripts.post(
     // Resolved before the file check so a caller with no relationship to the
     // study is turned away without an R2 round trip.
     if (!(await canWriteInStudy(supabase, user.id, subject.study_id))) {
-      return c.json({ error: STUDY_WRITE_DENIED_MESSAGE }, 403)
+      return c.json(STUDY_WRITE_DENIED_BODY, 403)
     }
 
     // `scripts_subject_professor_fkey` requires the pair, and the mirrored

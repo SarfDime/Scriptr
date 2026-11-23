@@ -1,6 +1,37 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { validateSiteSlug } from './api.utils'
+import { canWriteInStudy, validateSiteSlug } from './api.utils'
+
+const student = {
+  role: 'student' as const,
+  study_roles: [],
+  selected_study_ids: ['study-1'],
+}
+
+test('lets an enrolled student write in their study', () => {
+  assert.equal(canWriteInStudy(student, 'study-1'), true)
+  assert.equal(canWriteInStudy(student, 'study-2'), false)
+})
+
+test('lets a study moderator and the owner write in a study they are not enrolled in', () => {
+  assert.equal(
+    canWriteInStudy(
+      {
+        ...student,
+        study_roles: [{ study_id: 'study-2', role: 'moderator' }],
+      },
+      'study-2'
+    ),
+    true
+  )
+  assert.equal(canWriteInStudy({ ...student, role: 'owner' }, 'study-2'), true)
+})
+
+test('denies a signed-out visitor and a missing study', () => {
+  assert.equal(canWriteInStudy(null, 'study-1'), false)
+  assert.equal(canWriteInStudy(undefined, 'study-1'), false)
+  assert.equal(canWriteInStudy(student, null), false)
+})
 
 test('accepts a plain handle', () => {
   assert.equal(validateSiteSlug('lbe'), null)

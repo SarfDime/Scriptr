@@ -2,6 +2,7 @@
 
 import AddCircle from '@sanity/icons/AddCircle'
 import User from '@sanity/icons/User'
+import { canWriteInStudy } from '@shared/utils/api.utils'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { SubjectCard } from '@/components/academics/subject/SubjectCard'
@@ -13,6 +14,8 @@ import { Select } from '@/components/ui/select/Select'
 import { useCreateScriptForm } from '@/hooks/useCreateScriptForm'
 import { useRequireSignIn } from '@/hooks/useRequireSignIn'
 import { useUIStrings } from '@/providers/locale/use-strings'
+import { useSession } from '@/providers/SessionProvider'
+import { useStudySetupModal } from '@/providers/StudySetupModalProvider'
 import type { MinimalSubject } from '@/types/academics/subject.types'
 import { ScriptDetailsFields } from './form/ScriptDetailsFields'
 import { ScriptFormDialog } from './form/ScriptFormDialog'
@@ -26,6 +29,9 @@ import { ScriptFilesInput } from './ScriptFilesInput'
 
 export type CreateScriptModalProps = {
   subject: MinimalSubject
+  /** The study's database id: writing in it needs a profile for it, and a
+   * reader without one is sent to setup before the form opens. */
+  studyId?: string | null
   onCreated?: (scriptId: string) => void
   triggerLabel?: string
 }
@@ -37,12 +43,15 @@ export type CreateScriptModalProps = {
  */
 export function CreateScriptModal({
   subject,
+  studyId,
   onCreated,
   triggerLabel,
 }: CreateScriptModalProps) {
   const ui = useUIStrings()
   const router = useRouter()
   const requireSignIn = useRequireSignIn()
+  const { session } = useSession()
+  const { openStudySetupModal } = useStudySetupModal()
   const [isOpen, setIsOpen] = useState(false)
   // Bumped on clear and after a successful upload, remounting the uncontrolled
   // editors and pickers so they start from the reset values.
@@ -63,6 +72,22 @@ export function CreateScriptModal({
     setFormKey((current) => current + 1)
   }
 
+  // The API refuses a script in a study the reader has no profile for, and
+  // that refusal only surfaces after the files are uploaded — so it is checked
+  // on the way in. A session still loading is left to the server.
+  const handleOpen = () => {
+    if (!requireSignIn()) return
+    if (
+      studyId &&
+      session.status === 'authenticated' &&
+      !canWriteInStudy(session.user, studyId)
+    ) {
+      openStudySetupModal(subject.study?.siteSlug)
+      return
+    }
+    setIsOpen(true)
+  }
+
   // Only a linked professor can be assigned, so "has one" means "has a
   // selectable one" — with every professor unlinked the field says so instead of
   // looking filled in.
@@ -78,9 +103,7 @@ export function CreateScriptModal({
   return (
     <>
       <Button
-        onClick={() => {
-          if (requireSignIn()) setIsOpen(true)
-        }}
+        onClick={handleOpen}
         className='button solid button-sm h-10 gap-1 md:grow-0 grow'
       >
         <AddCircle />

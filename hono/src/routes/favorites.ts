@@ -4,10 +4,7 @@ import type { FavoriteScriptRecord } from '../../../shared/types/profile.types'
 import { revalidateCacheTags } from '../lib/cache-revalidate'
 import { databaseErrorResponse, requiredParam } from '../lib/request'
 import { studyIdForScript } from '../lib/require-admin'
-import {
-  canWriteInStudy,
-  STUDY_WRITE_DENIED_MESSAGE,
-} from '../lib/study-access'
+import { canWriteInStudy, STUDY_WRITE_DENIED_BODY } from '../lib/study-access'
 import {
   authMiddleware,
   createInternalSupabaseClient,
@@ -63,7 +60,7 @@ favorites.post('/:scriptId', async (c) => {
   const studyId = await studyIdForScript(sessionClient, scriptId)
   if (!studyId) return c.json({ error: 'Script not found' }, 404)
   if (!(await canWriteInStudy(sessionClient, user.id, studyId))) {
-    return c.json({ error: STUDY_WRITE_DENIED_MESSAGE }, 403)
+    return c.json(STUDY_WRITE_DENIED_BODY, 403)
   }
 
   const supabase = createInternalSupabaseClient(c)

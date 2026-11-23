@@ -11,6 +11,7 @@ import { PathnameScope } from '@/providers/nav/pathname-scope'
 import { NotificationsProvider } from '@/providers/notification/NotificationProvider'
 import { ProfileProvider } from '@/providers/ProfileProvider'
 import { SessionProvider } from '@/providers/SessionProvider'
+import { StudySetupModalProvider } from '@/providers/StudySetupModalProvider'
 import { ThemeProvider } from '@/providers/theme/ThemeProvider'
 import { ToastProvider } from '@/providers/toaster/ToasterProvider'
 
@@ -36,7 +37,11 @@ export function Providers({
                   <NotificationsProvider>
                     <CalendarNotesProvider>
                       <PathnameScope />
-                      <AuthModalProvider>{children}</AuthModalProvider>
+                      <AuthModalProvider>
+                        <StudySetupModalProvider>
+                          {children}
+                        </StudySetupModalProvider>
+                      </AuthModalProvider>
                       <RestrictedActionModal />
                     </CalendarNotesProvider>
                   </NotificationsProvider>

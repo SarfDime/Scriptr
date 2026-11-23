@@ -13,10 +13,6 @@ import type {
 } from '@shared/types/profile-preferences.types'
 import type { MyRestriction } from '@shared/types/restrictions.types'
 import {
-  getSiteSlugFromHost,
-  getSiteSlugFromPath,
-} from '@shared/utils/site-paths'
-import {
   createContext,
   useContext,
   useEffect,
@@ -25,6 +21,7 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react'
+import { useCurrentStudySiteSlug } from '@/hooks/useCurrentStudySiteSlug'
 import {
   readCachedPreferences,
   readCachedRestriction,
@@ -45,7 +42,6 @@ import {
   subscribeToLocalNotifications,
   writeLocalNotifications,
 } from '@/lib/notifications-storage'
-import { studySiteHost } from '@/lib/study-origin'
 import type {
   AppNotification,
   NotificationsContextValue,
@@ -53,7 +49,6 @@ import type {
 } from '@/types/notifications.types'
 import { useLocale } from '../locale/LocaleProvider'
 import { useStrings } from '../locale/use-strings'
-import { useCurrentPathname } from '../nav/pathname-scope'
 import { useSession } from '../SessionProvider'
 import { useToast } from '../toaster/ToasterProvider'
 
@@ -126,17 +121,6 @@ const sortNotifications = (items: Array<AppNotification>) =>
 /** Opening the tray repeatedly refetches at most this often. */
 const TRAY_REFRESH_MIN_INTERVAL_MS = 15_000
 
-/**
- * The browser's host, read through `useSyncExternalStore` so hydration starts
- * from the server's empty value and settles on the real host afterwards — the
- * host cannot change without a page load, so there is nothing to subscribe to.
- */
-const subscribeToHost = () => () => {
-  // The host cannot change without a page load, so there is nothing to watch.
-}
-const readBrowserHost = () => window.location.host
-const readServerHost = () => ''
-
 export const NotificationsProvider = ({
   children,
 }: {
@@ -165,19 +149,10 @@ export const NotificationsProvider = ({
   const { locale } = useLocale()
   const strings = useStrings(NOTIFICATIONS_STRINGS_PACK)
   const { session } = useSession()
-  const pathname = useCurrentPathname()
   // On a study site the tray shows that study's notifications and the
   // platform-wide ones; elsewhere it shows everything, so nothing is ever
-  // unreachable. A study's own pages are addressed by its host, so the host is
-  // what names the study there; the path still works for the catalog form.
-  const browserHost = useSyncExternalStore(
-    subscribeToHost,
-    readBrowserHost,
-    readServerHost
-  )
-  const studySiteSlug =
-    getSiteSlugFromPath(pathname ?? '') ??
-    getSiteSlugFromHost(browserHost, studySiteHost())
+  // unreachable.
+  const studySiteSlug = useCurrentStudySiteSlug()
   const lastTrayRefreshRef = useRef(0)
   const currentUserId =
     session.status === 'authenticated' ? session.user.id : null

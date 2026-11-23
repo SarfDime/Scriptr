@@ -14,6 +14,8 @@ export type SubjectDetailContentProps = {
   subject: SubjectDetail
   /** The study's page: its site when it has a handle, else its nested URL. */
   studyPath: string
+  /** The study's database id, which a create needs the reader to belong to. */
+  studyId?: string | null
   /** Slugs to fall back on when the document's own are missing. */
   fallback: {
     universitySlug: string
@@ -30,6 +32,7 @@ export type SubjectDetailContentProps = {
 export const SubjectDetailContent = async ({
   subject,
   studyPath,
+  studyId,
   fallback,
 }: SubjectDetailContentProps) => {
   const ui = await getServerStrings(UI_STRINGS_PACK)
@@ -83,6 +86,7 @@ export const SubjectDetailContent = async ({
         scripts={scripts}
         scriptsUnavailable={subjectScripts === null}
         parentSubject={subject}
+        parentSubjectStudyId={studyId}
         showControls={{ subjectFilter: false }}
       />
     </PageLayout>

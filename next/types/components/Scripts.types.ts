@@ -145,6 +145,8 @@ export type ScriptsSectionProps = {
   title?: string
   subtitle?: string
   parentSubject?: SubjectDetail
+  /** The study's database id, for the create form's membership check. */
+  parentSubjectStudyId?: string | null
   /** Each control is on unless the caller turns it off. A short list that only
    * shows the study's own scripts (the study overview's sidebar) has nothing to
    * search or filter. */
