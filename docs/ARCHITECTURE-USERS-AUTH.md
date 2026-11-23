@@ -35,7 +35,14 @@
   route from inside a study to the catalog picker); **Edit academics** opens the newest
   study's setup (`getStudySetupUrl`). No onboarding modal, no global editor; registration
   carries no academic profile. `useSubjectCompletion` is shared with the form; copy is
-  `UI_STRINGS.onboarding`. Signup still generates a notification.
+  `UI_STRINGS.onboarding`. Signup still generates a notification. Saving asks for
+  confirmation first: what is ticked is recorded as completed.
+- Writing inside a study needs a profile there, so that refusal is not a restriction: the
+  API answers `403 { code: 'study_join_required' }` and the client opens
+  `StudySetupModalProvider`'s prompt (its button is `getStudySetupUrl` for the study on
+  screen) instead of the restriction notice (`useProtectedAction`). The create-script
+  button runs the same check (`canWriteInStudy`) before opening its form, so the reader is
+  not sent through an upload the API would refuse.
 
 ## Roles and restrictions
 

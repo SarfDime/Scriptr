@@ -1,10 +1,14 @@
+import { STUDY_JOIN_REQUIRED_CODE } from '../../../shared/config/api'
 import { isOwner } from '../../../shared/utils/api.utils'
 import type { createSupabaseClient } from './supabase'
 
 /** The `403` body every study-scoped write returns, so a student who has not
- * joined the study gets one message wherever they hit the wall. */
-export const STUDY_WRITE_DENIED_MESSAGE =
-  'Join this study before contributing to it'
+ * joined the study gets one message wherever they hit the wall. The `code` is
+ * what the client reads to offer setup instead of the restriction notice. */
+export const STUDY_WRITE_DENIED_BODY = {
+  error: 'Join this study before contributing to it',
+  code: STUDY_JOIN_REQUIRED_CODE,
+} as const
 
 /**
  * Whether the caller may write inside one study. Writing means creating content

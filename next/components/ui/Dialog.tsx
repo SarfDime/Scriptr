@@ -8,8 +8,8 @@ import { useBodyScrollLock } from '@/hooks/useBodyScroll'
 import { useIsomorphicLayoutEffect } from '@/hooks/useIsomorphicLayoutEffect'
 import { useMounted } from '@/hooks/useMounted'
 import { cn, getPlacementClasses } from '@/lib/common-utils'
+import { useLoading } from '@/providers/loading/LoadingProvider'
 import { useUIStrings } from '@/providers/locale/use-strings'
-import { Z_INDEX } from '../../styles/style'
 import type { ComponentPlacement } from '../../types/component.types'
 import { Box, type BoxProps } from '../common/Box'
 import { Button, type ButtonProps } from '../common/Button'
@@ -73,7 +73,10 @@ export type DialogProps = {
  *
  * Opening mounts the element and then calls `showModal()`, which keeps it in
  * the top layer with the browser's focus trap. Closing goes through `close()`,
- * so focus returns to whatever was focused when it opened.
+ * so focus returns to whatever was focused when it opened. The veil behind it is
+ * the dialog's own `::backdrop`, and opening waits while the global loading
+ * overlay is up — the overlay is a modal too, so stacking the two would show a
+ * dialog on top of a screen that says the page is not ready.
  */
 export function Dialog({
   title,
@@ -107,6 +110,9 @@ export function Dialog({
   // request by the turn `close()` takes to fire the `close` event, so the
   // dialog can hand focus back and report `onClose` while still in the DOM.
   const [isRendered, setIsRendered] = useState(false)
+  // Set while this dialog waits for the loading overlay to leave (see
+  // `requestOpen`); it opens once the overlay is gone.
+  const [isWaitingForLoader, setIsWaitingForLoader] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const triggerRef = useRef<HTMLElement | null>(null)
   // `hideTrigger` + `isOpen` means the caller owns the open state; a `setRef`
@@ -115,8 +121,18 @@ export function Dialog({
 
   useBodyScrollLock({ skipCheck, isLocked: isRendered })
 
+  const { isOverlayVisible } = useLoading()
+
   const requestOpen = () => {
     if (isRendered) return
+    // The loader owns the screen while it is up: both are top-layer modals, so
+    // whichever opens last paints over the other, and an action that just
+    // failed under the loader would surface on top of it. Wait it out.
+    if (isOverlayVisible) {
+      setIsWaitingForLoader(true)
+      return
+    }
+    setIsWaitingForLoader(false)
     triggerRef.current =
       document.activeElement instanceof HTMLElement
         ? document.activeElement
@@ -132,9 +148,25 @@ export function Dialog({
 
   const syncControlledState = useEffectEvent(() => {
     if (!isControlled) return
-    if (isOpen) requestOpen()
-    else requestClose()
+    if (isOpen) {
+      requestOpen()
+      return
+    }
+    // A caller that closes it while it waits cancels the wait too.
+    setIsWaitingForLoader(false)
+    requestClose()
   })
+
+  const openWhenLoaderLeaves = useEffectEvent(() => {
+    if (!isWaitingForLoader || isOverlayVisible) return
+    requestOpen()
+  })
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: both values are rerun triggers — the wait clears when the overlay leaves — while the event already reads them.
+  useEffect(() => {
+    // biome-ignore lint/nursery/useReactCompiler: the loading overlay is the external system here.
+    openWhenLoaderLeaves()
+  }, [isWaitingForLoader, isOverlayVisible])
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: `isRendered` is a rerun trigger, so a caller that flips `isOpen` back on while the close event is still in flight reopens the dialog.
   useEffect(() => {
@@ -249,15 +281,6 @@ export function Dialog({
         isRendered &&
         createPortal(
           <>
-            {!hideBackdrop && (
-              <div
-                className={cn(
-                  'pointer-events-none fixed inset-0 bg-background-150/80 starting:opacity-0 backdrop-blur-sm transition-opacity duration-250',
-                  Z_INDEX.DIALOG_BACKDROP
-                )}
-              />
-            )}
-
             {/* Dialog */}
             <dialog
               ref={dialogRef}
@@ -275,6 +298,11 @@ export function Dialog({
                 isCentered
                   ? CENTERED_DIALOG_CLASS
                   : 'dialog fixed top-[10%] w-full md:w-fit md:min-w-2xl',
+                // The veil is the dialog's own `::backdrop`, so it shares the
+                // top layer with the dialog: a separate element is painted
+                // under any dialog that opened earlier.
+                !hideBackdrop &&
+                  'backdrop:bg-background-150/80 backdrop:backdrop-blur-xs backdrop:starting:opacity-70 backdrop:transition-opacity backdrop:duration-300',
                 getPlacementClasses({ placement, offsetX, offsetY }),
                 dialogProps?.className
               )}

@@ -39,36 +39,36 @@
 }
 
 @utility ui-subtitle {
-  @apply text-sm text-fg-muted;
+  @apply text-sm text-fg-400;
 }
 
 @utility ui-body {
-  @apply text-base text-fg;
+  @apply text-lg text-fg-450;
 }
 
 /* Entity and person names inside body-sized content. */
 @utility ui-body-strong {
-  @apply text-base font-semibold text-fg;
+  @apply text-lg font-semibold text-fg-450;
 }
 
 @utility ui-label {
-  @apply text-sm font-semibold text-fg-muted;
+  @apply text-sm font-semibold text-fg-400;
 }
 
 @utility ui-label-modern {
-  @apply text-[.6rem] md:text-xs uppercase tracking-[.125rem] text-fg-muted;
+  @apply text-[.6rem] md:text-xs uppercase tracking-[.125rem] text-fg-400;
 }
 
 @utility ui-small-label {
-  @apply text-[0.65rem] uppercase tracking-[.1rem] text-fg-muted;
+  @apply text-[0.65rem] uppercase tracking-[.1rem] text-fg-400;
 }
 
 @utility ui-caption {
-  @apply text-xs text-fg-muted;
+  @apply text-xs text-fg-400;
 }
 
 @utility ui-large-caption {
-  @apply text-sm text-fg-muted;
+  @apply text-sm text-fg-400;
 }
 
 /* Nav section captions sit on the chrome, not the page, so they take the

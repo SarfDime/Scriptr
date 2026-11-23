@@ -24,6 +24,7 @@ export const ScriptsSection = ({
   title,
   className,
   parentSubject,
+  parentSubjectStudyId,
   scriptsUnavailable = false,
   showControls,
   searchPath,
@@ -96,7 +97,10 @@ export const ScriptsSection = ({
             />
           )}
           {parentSubject && controls.create && (
-            <CreateScriptModal subject={parentSubject} />
+            <CreateScriptModal
+              subject={parentSubject}
+              studyId={parentSubjectStudyId}
+            />
           )}
         </Box>
       )}

@@ -59,18 +59,19 @@ export const ConfirmAction = ({
           hideTrigger
           isOpen={isOpen}
           onClose={() => setIsOpen(false)}
-          dialogProps={{ className: 'md:min-w-md' }}
+          dialogProps={{ className: 'md:min-w-md md:w-md' }}
         >
-          <Box className='ui-stack gap-4 p-5'>
+          <Box className='ui-stack gap-4 px-4 pt-4'>
             <Text className='ui-body'>{description}</Text>
             <DialogFooter
-              size='sm'
+              size='md'
               secondaryLabel={cancelLabel ?? ui.general.cancel}
               onSecondary={() => setIsOpen(false)}
               primaryLabel={confirmLabel ?? ui.general.confirm}
               primaryType='button'
               onPrimary={handleConfirm}
               destructive={destructive}
+              className='py-4'
             />
           </Box>
         </Dialog>

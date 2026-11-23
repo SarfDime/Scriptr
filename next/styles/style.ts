@@ -1,6 +1,5 @@
 const Z_INDEX = {
   TOASTER: 'z-101',
-  DIALOG_BACKDROP: 'z-100',
   NAV_BAR: 'z-99',
   FEEDBACK: 'z-98',
   POPOVER: 'z-30',

@@ -38,10 +38,7 @@ import { honoLog } from '../lib/logger'
 import { notifyProfileBestEffort } from '../lib/notifications'
 import { requiredParam } from '../lib/request'
 import { requireStudyRole, studyIdForScript } from '../lib/require-admin'
-import {
-  canWriteInStudy,
-  STUDY_WRITE_DENIED_MESSAGE,
-} from '../lib/study-access'
+import { canWriteInStudy, STUDY_WRITE_DENIED_BODY } from '../lib/study-access'
 import {
   authMiddleware,
   createInternalSupabaseClient,
@@ -945,7 +942,7 @@ comments.post('/:commentId/replies', authMiddleware, async (c) => {
     parentComment.script_id &&
     !(await canWriteInStudy(supabase, user.id, studyId))
   ) {
-    return c.json({ error: STUDY_WRITE_DENIED_MESSAGE }, 403)
+    return c.json(STUDY_WRITE_DENIED_BODY, 403)
   }
 
   if (isCommentRateLimited(user.id, 'reply', studyId)) {
@@ -1189,7 +1186,7 @@ comments.post('/', authMiddleware, async (c) => {
     return c.json({ error: 'Script not found' }, 404)
   }
   if (script_id && !(await canWriteInStudy(supabase, user.id, studyId))) {
-    return c.json({ error: STUDY_WRITE_DENIED_MESSAGE }, 403)
+    return c.json(STUDY_WRITE_DENIED_BODY, 403)
   }
 
   if (isCommentRateLimited(user.id, 'comment', studyId)) {

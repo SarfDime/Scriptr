@@ -496,8 +496,10 @@ by login, callback and session alike.
 - **Writes are study-scoped**: creating a script, commenting on or replying to one, voting,
   rating a subject and favoriting all resolve the target's `study_id` and require
   `profile_studies` membership, a study role or ownership (`../lib/study-access.ts`), else
-  `403` "Join this study before contributing to it". Professor comments and professor
-  ratings carry no study. This check is in the route, not in RLS.
+  `403 { error: "Join this study before contributing to it", code: "study_join_required" }`
+  — the client uses `code` to offer study setup, so it never shows a membership refusal as
+  an account restriction. Professor comments and professor ratings carry no study. This
+  check is in the route, not in RLS.
 - The flag queue accepts `?study=<id>`; a flag without a study appears only unfiltered.
 
 ## Errors

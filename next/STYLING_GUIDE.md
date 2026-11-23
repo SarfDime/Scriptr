@@ -238,6 +238,8 @@ element left in layout.
   (default bar with a bottom border) and on your content (`p-5`). Override only what
   differs, through `dialogProps.className`, `headerProps.className`,
   `titleProps.className`. Side trays (`placement='left' | 'right'`) get none of these.
+  The veil is the dialog's `::backdrop` (`backdrop:` utilities), never a sibling element:
+  only the top layer paints over a dialog that is already open.
 
 ## Buttons
 

@@ -37,6 +37,19 @@ export const UI_STRINGS_PACK = {
       mk: 'Не можеш да го направиш ова затоа што твојата сметка е ограничена.',
     },
     restrictedModalClose: { en: 'Close', mk: 'Затвори' },
+    studySetupRequiredTitle: {
+      en: 'Finish your study setup',
+      mk: 'Доврши го поставувањето на смерот',
+    },
+    studySetupRequiredBody: {
+      en: 'You can add and react to content only in a study you have set up. Complete your academic profile for this study to continue.',
+      mk: 'Можеш да додаваш и да реагираш на содржини само во смер што си го поставил. Постави го академскиот профил за овој смер за да продолжиш.',
+    },
+    studySetupRequiredAction: {
+      en: 'Complete setup',
+      mk: 'Постави го поставувањето',
+    },
+    studySetupRequiredDismiss: { en: 'Not now', mk: 'Не сега' },
     tryAgain: { en: 'Please try again.', mk: 'Обиди се повторно.' },
     errors: {
       description: {
@@ -962,6 +975,16 @@ export const UI_STRINGS_PACK = {
       setupAnother: {
         en: 'Set up another study',
         mk: 'Постави друг смер',
+      },
+      /** Asked before the profile is saved, so nobody records a subject they are
+       * still taking as completed. */
+      confirmTitle: {
+        en: 'Only subjects you have completed',
+        mk: 'Само завршени предмети',
+      },
+      confirmBody: {
+        en: 'Every marked subject is considered completed, so leave out anything you are still taking.',
+        mk: 'Секој означен предмет се води како положен. Затоа изостави ги тие кои сè уште ги слушаш.',
       },
       skip: { en: 'Skip for now', mk: 'Прескокни засега' },
       resume: { en: 'Finish setting up', mk: 'Доврши го поставувањето' },

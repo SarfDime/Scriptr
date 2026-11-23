@@ -80,6 +80,28 @@ function canModerateStudy(
   return user.study_roles.some((assignment) => assignment.study_id === studyId)
 }
 
+/**
+ * Whether this viewer may write inside one study: enrolled in it, holding a role
+ * on it, or the owner. Mirrors the API's study-write rule
+ * (`hono/src/lib/study-access.ts`), so the UI can send a reader to setup instead
+ * of letting an upload be rejected.
+ */
+function canWriteInStudy(
+  user:
+    | {
+        role: UserRole
+        study_roles: Array<StudyRoleAssignment>
+        selected_study_ids: Array<string>
+      }
+    | null
+    | undefined,
+  studyId: string | null | undefined
+): boolean {
+  if (!user || !studyId) return false
+  if (canModerateStudy(user, studyId)) return true
+  return user.selected_study_ids.includes(studyId)
+}
+
 function validateUsername(username: unknown): string | null {
   if (typeof username !== 'string') {
     return 'Username is required'
@@ -278,6 +300,7 @@ const apiUrl = (path: ApiEndpoint, base: string = 'http://localhost:8787') => {
 export {
   apiUrl,
   canModerateStudy,
+  canWriteInStudy,
   getDatabaseAcademicEndpoints,
   getFileExtension,
   getMaxUploadBytes,

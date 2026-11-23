@@ -6,6 +6,7 @@ import { Box } from '@/components/common/Box'
 import { Button } from '@/components/common/Button'
 import { OnboardingSubjectsStep } from '@/components/onboarding/OnboardingSubjectsStep'
 import { Text } from '@/components/typography/Text'
+import { ConfirmAction } from '@/components/ui/ConfirmAction'
 import { Divider } from '@/components/ui/Divider'
 import { useSubjectCompletion } from '@/hooks/onboarding/useSubjectCompletion'
 import { getStudyFeedPath } from '@/lib/academic-routes'
@@ -220,6 +221,10 @@ export const AcademicSetupForm = ({
     router.refresh()
   }
 
+  const submitLabel = hasProfile
+    ? ui.onboarding.academicSetup.saveChanges
+    : ui.onboarding.academicSetup.submit
+
   return (
     <Box className='ui-stack ui-above'>
       <OnboardingSubjectsStep
@@ -254,16 +259,23 @@ export const AcademicSetupForm = ({
         >
           {ui.onboarding.academicSetup.skip}
         </Button>
-        <Button
-          className='button solid w-full min-h-11 sm:w-auto sm:min-h-0'
-          isLoading={isSaving}
-          disabled={isSaving || subjects.length === 0}
-          onClick={save}
-        >
-          {hasProfile
-            ? ui.onboarding.academicSetup.saveChanges
-            : ui.onboarding.academicSetup.submit}
-        </Button>
+        <ConfirmAction
+          title={ui.onboarding.academicSetup.confirmTitle}
+          description={ui.onboarding.academicSetup.confirmBody}
+          confirmLabel={submitLabel}
+          destructive={false}
+          onConfirm={save}
+          trigger={(openConfirm) => (
+            <Button
+              className='button solid w-full min-h-11 sm:w-auto sm:min-h-0'
+              isLoading={isSaving}
+              disabled={isSaving || subjects.length === 0}
+              onClick={openConfirm}
+            >
+              {submitLabel}
+            </Button>
+          )}
+        />
       </Box>
     </Box>
   )
