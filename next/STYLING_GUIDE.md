@@ -159,17 +159,19 @@ other. `ui-divider` and the `--divider-line` channel stay put.
 - A `dashed` divider is a border: `Divider` switches the ridge off with `bg-none!` and
   `[--ice-divider-tint-a:0]`.
 - `--divider-lip: transparent` collapses the groove to one crisp line.
-- The art is stretched to the band, so at a fractional device height Chromium copies the
-  tile's leading row to its far edge — a hairline a band away from the ridge — once the
-  paint lands in a compositing ancestor's texture. `ice-divider` and `ice-groove-b::before`
-  keep their own layer (`will-change: transform`) so the tile rasterizes at whole device
-  pixels instead; a groove painting its art straight onto the element has no such layer.
-- `ui-groove-*` needs no extra element, but the element must have no background image and
-  no shadow (the lip replaces `box-shadow`). Its ridge takes `--divider-tint` through a
+- The art is stretched to the band, so at a fractional device height Chromium lands the
+  tile's leading row again on its far edge — a hairline a band away from the ridge — once
+  the paint sits in a compositing ancestor's texture. `ice-divider` and every
+  `ice-groove-*::before` keep their own layer (`will-change: transform`), which rasterizes
+  the tile at whole device pixels; that is also why the art is never an element's own
+  background.
+- `ui-groove-*` needs no extra element, but the element must carry no shadow of its own
+  (the lip replaces `box-shadow`). Art and tint both live in pseudo-elements, so the
+  element keeps whatever background it has. Its ridge takes `--divider-tint` through a
   masked copy in `::after`, so `cp-border` colours the cut and the art: a card footer's
   palette edge on hover is one colour, not a coloured line under an ice ridge. The bottom
-  groove draws its art in `::before` so it can mirror it — the ridge bar sits on the edge
-  with the lip instead of a groove-height above it.
+  groove mirrors its art — the ridge bar sits on the edge with the lip instead of a
+  groove-height above it.
 - **`outline` is reserved for the focus ring** (2px brand at 2px offset, global
   `:focus-visible`). Never draw a border or hairline with it.
 

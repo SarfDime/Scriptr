@@ -213,18 +213,39 @@
  * One per side, so an element that already draws a separator with a border gets
  * the treatment without becoming a `Divider`.
  *
- * The ridge is a `background-image`, so it paints behind the element's content
- * and needs no extra element or stacking context. Two consequences: the element
- * must not rely on its own background image, and only elements that carry no
- * shadow of their own should use it — the lip below replaces `box-shadow`.
- * Simple mode sets `--ice-groove-paint: none`, leaving the lip exactly as it
- * was.
+ * All four sides run the same construction — the art in `::before` and a tinted
+ * copy of its silhouette in `::after` over the same band — rather than painting
+ * the art as the element's own background: the band is one tile tall, so the
+ * element's paint cannot be given a layer of its own without promoting the text
+ * with it (see `ice-divider` for why the art needs one). The band sits inside
+ * the padding each call site already gives that edge, so it clears the content.
+ *
+ * Consequences: the element may keep its own background image, but only
+ * elements that carry no shadow of their own should use a groove — the lip
+ * replaces `box-shadow`. Simple mode sets `--ice-groove-paint: none`, leaving
+ * the lip exactly as it was.
  *
  * The ridge takes `--divider-tint` the way a `Divider` does, so `cp-border` and
- * `cp-divider` colour the art and not only the cut: a copy of the art masked to
- * its own silhouette, laid over the band the art occupies. Each side gives that
- * copy its geometry through `--ice-groove-*`, and simple mode sets
- * `--ice-groove-tint-a: 0` so it goes with the art. */
+ * `cp-divider` colour the art and not only the cut. Each side gives both the
+ * art and its tinted copy their geometry through `--ice-groove-*`, and simple
+ * mode sets `--ice-groove-tint-a: 0` so it goes with the art. */
+
+@utility ice-groove-art {
+  content: "";
+  position: absolute;
+  inset: var(--ice-groove-inset);
+  pointer-events: none;
+  background-image: var(
+    --ice-groove-paint,
+    var(--ice-groove-art, var(--ice-divider-art-h))
+  );
+  background-repeat: var(--ice-groove-repeat);
+  background-position: 0 0;
+  background-size: var(--ice-groove-size);
+  /* See `ice-divider`: the tile wraps its leading row onto its far edge unless
+   * it is rasterized on a layer of its own. */
+  will-change: transform;
+}
 
 @utility ice-groove-tint {
   content: "";
@@ -246,12 +267,12 @@
   --ice-groove-size: calc(var(--ice-groove-h, 0.5rem) * 10)
     var(--ice-groove-h, 0.5rem);
   position: relative;
-  background-image: var(--ice-groove-paint, var(--ice-divider-art-h));
-  background-repeat: repeat-x;
-  background-position: 0 0;
-  background-size: calc(var(--ice-groove-h, 0.5rem) * 10)
-    var(--ice-groove-h, 0.5rem);
   box-shadow: inset 0 1px 0 var(--divider-lip);
+
+  &::before {
+    @apply ice-groove-art;
+    height: var(--ice-groove-h, 0.5rem);
+  }
 
   &::after {
     @apply ice-groove-tint;
@@ -266,26 +287,15 @@
   --ice-groove-size: calc(var(--ice-groove-h, 0.5rem) * 10)
     var(--ice-groove-h, 0.5rem);
   position: relative;
-  /* A background cannot be mirrored, so the bottom edge draws its art in
+  box-shadow: inset 0 -1px 0 var(--divider-lip);
+
+  /* A background cannot be mirrored, so the bottom edge mirrors its art in
    * `::before`. Mirrored, the ridge bar sits on the edge where the lip shadow
    * is, with the icicles pointing back into the surface; unmirrored, the bar
    * sat a groove-height above the shadow and the two read as separate lines. */
-  background-image: none;
-  box-shadow: inset 0 -1px 0 var(--divider-lip);
-
   &::before {
-    content: "";
-    position: absolute;
-    inset: auto 0 0 0;
+    @apply ice-groove-art;
     height: var(--ice-groove-h, 0.5rem);
-    pointer-events: none;
-    background-image: var(--ice-groove-paint, var(--ice-divider-art-h));
-    background-repeat: var(--ice-groove-repeat);
-    background-position: 0 0;
-    background-size: var(--ice-groove-size);
-    /* See `ice-divider`: the mirrored tile wraps its leading row to the far
-     * edge unless it is rasterized on a layer of its own. */
-    will-change: transform;
     transform: scaleY(-1);
   }
 
@@ -304,12 +314,12 @@
   --ice-groove-size: var(--ice-groove-h, 0.5rem)
     calc(var(--ice-groove-h, 0.5rem) * 10);
   position: relative;
-  background-image: var(--ice-groove-paint, var(--ice-divider-art-v));
-  background-repeat: repeat-y;
-  background-position: 0 0;
-  background-size: var(--ice-groove-h, 0.5rem)
-    calc(var(--ice-groove-h, 0.5rem) * 10);
   box-shadow: inset 1px 0 0 var(--divider-lip);
+
+  &::before {
+    @apply ice-groove-art;
+    width: var(--ice-groove-h, 0.5rem);
+  }
 
   &::after {
     @apply ice-groove-tint;
@@ -325,12 +335,12 @@
   --ice-groove-size: var(--ice-groove-h, 0.5rem)
     calc(var(--ice-groove-h, 0.5rem) * 10);
   position: relative;
-  background-image: var(--ice-groove-paint, var(--ice-divider-art-v));
-  background-repeat: repeat-y;
-  background-position: 100% 0;
-  background-size: var(--ice-groove-h, 0.5rem)
-    calc(var(--ice-groove-h, 0.5rem) * 10);
   box-shadow: inset -1px 0 0 var(--divider-lip);
+
+  &::before {
+    @apply ice-groove-art;
+    width: var(--ice-groove-h, 0.5rem);
+  }
 
   &::after {
     @apply ice-groove-tint;
