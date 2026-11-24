@@ -103,5 +103,6 @@
   webhook targets the web project's Vercel alias, because Cloudflare does not forward the
   API's server-to-server request to `scriptr.uk`; that alias is behind Vercel
   Authentication, so the call carries the project's protection-bypass token.
-- A study's feed composes the signed-in curated list from shared cached per-subject reads.
+- A study's feed composes the signed-in curated list from shared cached per-subject reads;
+  that list is currently behind `CURATED_FEED_ENABLED` in the scripts page.
   Search and "my scripts" are never cached.

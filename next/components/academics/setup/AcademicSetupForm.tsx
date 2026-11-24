@@ -236,17 +236,19 @@ export const AcademicSetupForm = ({
         onCompleteSubject={completion.completeSubject}
         onUncompleteSubject={completion.uncompleteSubject}
       />
-
+      <Text className='ui-label-modern'>
+        {ui.onboarding.academicSetup.optionalNote}
+      </Text>
       <Divider />
 
       {!isSignedIn && (
-        <Text className='ui-caption'>
+        <Text className='ui-label'>
           {ui.onboarding.academicSetup.guestNote}
         </Text>
       )}
 
       {hasError && (
-        <Text className='ui-caption' role='alert'>
+        <Text className='ui-label' role='alert'>
           {ui.onboarding.saveFailed}
         </Text>
       )}

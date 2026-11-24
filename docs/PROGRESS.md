@@ -43,6 +43,10 @@ catalog; how that works is
 
 ### Content and presentation
 
+- **The study feed's curated mode is switched off [temporary].**
+  `CURATED_FEED_ENABLED` in the scripts page is `false`, so the feed always lists
+  every script and the sidebar every subject. The switch, the per-subject read and
+  the copy stay, so turning curation back on is that flag.
 - **A 404's initial HTML is Next's error shell [deferred, upstream].** With
   `[locale]` as the root layout, `notFound()` answers the first response with
   `<html id="__next_error__">` and an empty body; the localized page arrives in

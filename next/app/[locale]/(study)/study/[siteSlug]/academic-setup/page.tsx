@@ -3,6 +3,7 @@ import { UI_STRINGS_PACK } from '@shared/config/strings'
 import { Suspense } from 'react'
 import { AcademicSetupForm } from '@/components/academics/setup/AcademicSetupForm'
 import { AcademicSetupPageSkeleton } from '@/components/academics/setup/AcademicSetupPageSkeleton'
+import { StudyEnrollPrompt } from '@/components/academics/setup/StudyEnrollPrompt'
 import { NextLink } from '@/components/common/NextLink'
 import { PageLayout } from '@/components/layout/PageLayout'
 import { Text } from '@/components/typography/Text'
@@ -132,17 +133,24 @@ async function AcademicSetupContent({
       }}
     >
       {site.dbId ? (
-        <AcademicSetupForm
-          siteSlug={siteSlug}
-          studySanityId={site._id}
-          studyId={site.dbId}
-          studyName={site.name}
-          subjects={subjects}
-          hasProfile={hasProfile}
-          accountCompletedSubjectIds={subjects.flatMap((subject) =>
-            completedDbIds.has(subject.dbId) ? [subject._id] : []
-          )}
-        />
+        <>
+          <StudyEnrollPrompt
+            studyId={site.dbId}
+            studyName={site.name}
+            enrollmentRequired={Boolean(viewer && !hasProfile)}
+          />
+          <AcademicSetupForm
+            siteSlug={siteSlug}
+            studySanityId={site._id}
+            studyId={site.dbId}
+            studyName={site.name}
+            subjects={subjects}
+            hasProfile={hasProfile}
+            accountCompletedSubjectIds={subjects.flatMap((subject) =>
+              completedDbIds.has(subject.dbId) ? [subject._id] : []
+            )}
+          />
+        </>
       ) : (
         <Text className='ui-caption'>
           {UI_STRINGS.onboarding.academicSetup.notSynced}
