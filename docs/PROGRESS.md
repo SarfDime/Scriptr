@@ -134,9 +134,11 @@ catalog; how that works is
     address resolves. A same-page switch that needs no address (client-only
     `router.push`) would close that hole.
   - `next dev` reports a `Date.now()` insight for
-    `/study/[siteSlug]/scripts/[scriptSlug]` during its metadata pass; the build
-    is clean. Trace it before adding a suppression — nothing in the route reads
-    the clock.
+    `/study/[siteSlug]/scripts/[scriptSlug]` on every soft 404; the build is clean.
+    Traced: no app code reads the clock. The read is Next's own, in the dev warm
+    render that validates the route — `prepareAppPageRender` calls `Date.now()` and
+    the boundary's `notFound()` aborts that render, so the call is reported against
+    the route. Nothing to fix here; re-test when the warm render stops collecting it.
   - The admin gate resolves `params`/`cookies` above its boundary, so an admin
     shell is per request rather than generic. Correct for a gated surface;
     revisit only if the first paint of `/admin` feels slow.
