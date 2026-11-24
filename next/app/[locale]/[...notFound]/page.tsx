@@ -17,3 +17,7 @@ import { notFound } from 'next/navigation'
 export default function NotFoundCatchAll(): never {
   notFound()
 }
+
+/** Throwing is the whole render, so `next dev`'s instant-UI validation can only
+ * ever see the 404 it raises. */
+export const instant = false
