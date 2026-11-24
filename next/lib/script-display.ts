@@ -4,6 +4,20 @@ import type { ScriptSummary } from '@shared/types/scripts.types'
 import { pickLocalizedPortableText } from '@shared/utils/localized-portable-text'
 import type { ScriptDetail } from '@/types/components/Scripts.types'
 
+/** Localized subject names by Sanity id, for the cards in one list. See
+ * `getScriptSubjectNames`. */
+export type SubjectNameMap = ReadonlyMap<string, string>
+
+/** The name from Sanity when the list resolved one, else the single name the
+ * script row carries. */
+const resolveSubjectName = (
+  subject: { name: string; sanity_id?: string | null } | null,
+  subjectNames?: SubjectNameMap
+): string =>
+  (subject?.sanity_id && subjectNames?.get(subject.sanity_id)) ||
+  subject?.name ||
+  ''
+
 /**
  * Turns a profile's embedded scripts (PROFILE_SCRIPT_FIELDS in
  * hono/src/routes/profiles.ts) into the shape ScriptsSection/ScriptCard
@@ -23,10 +37,14 @@ import type { ScriptDetail } from '@/types/components/Scripts.types'
  * comment for why neither is obtainable via a simple join today. Both are
  * optional on ScriptDetail, and every other script-list endpoint in this
  * app already omits them for the same reason.
+ *
+ * `subjectNames` carries the localized names the caller resolved from Sanity;
+ * without it the card falls back to the row's single Postgres name.
  */
 export const toScriptDetail = (
   script: ProfileScriptSummary,
-  locale: LocaleId
+  locale: LocaleId,
+  subjectNames?: SubjectNameMap
 ): ScriptDetail => ({
   id: script.id,
   slug: script.slug,
@@ -36,7 +54,7 @@ export const toScriptDetail = (
   title: pickLocalizedPortableText(script.title, locale) ?? [],
   description:
     pickLocalizedPortableText(script.description, locale) ?? undefined,
-  subject: script.subject?.name ?? '',
+  subject: resolveSubjectName(script.subject, subjectNames),
   author: script.author?.full_name || script.author?.username || '',
   updatedAt: new Date(script.updated_at),
   likes: script.vote_score,
@@ -47,14 +65,16 @@ export const toScriptDetail = (
 
 export const toScriptDetails = (
   scripts: Array<ProfileScriptSummary>,
-  locale: LocaleId
+  locale: LocaleId,
+  subjectNames?: SubjectNameMap
 ): Array<ScriptDetail> =>
-  scripts.map((script) => toScriptDetail(script, locale))
+  scripts.map((script) => toScriptDetail(script, locale, subjectNames))
 
 /** Adapts the shared scripts-list response for the interactive script section. */
 export const toScriptSummaryDetails = (
   scripts: Array<ScriptSummary>,
-  locale: LocaleId
+  locale: LocaleId,
+  subjectNames?: SubjectNameMap
 ): Array<ScriptDetail> =>
   scripts.map((script) => ({
     id: script.id,
@@ -63,7 +83,7 @@ export const toScriptSummaryDetails = (
     title: pickLocalizedPortableText(script.title, locale) ?? [],
     description:
       pickLocalizedPortableText(script.description, locale) ?? undefined,
-    subject: script.subject?.name ?? '',
+    subject: resolveSubjectName(script.subject, subjectNames),
     author: script.author?.full_name || script.author?.username || '',
     updatedAt: new Date(script.updated_at),
     likes: script.vote_score,

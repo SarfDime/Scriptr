@@ -4,6 +4,11 @@
 
 - One subject per script; faculty, study and university are derived, never stored.
   The professor is chosen explicitly and validated against `subject_professors`.
+- A script's subject and professor **names** are read from Sanity, not from the Postgres
+  rows: `subjects.name` and `professors.name` are single strings frozen when the rows were
+  linked. The detail page resolves both in one subject read by the script's
+  `subject.sanity_id` / `professor_id` (`getSubjectRef`); script lists resolve every
+  distinct subject in one batch (`getScriptSubjectNames`).
 - `title` and `description` are Portable Text **per language** — `jsonb`
   `{ en?, mk?: … }`, title needs at least one language, description may be absent, any
   subset; title ≤2KB per language, description ≤50KB. The API returns them as stored and

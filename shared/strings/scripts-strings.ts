@@ -56,6 +56,7 @@ export const SCRIPT_STRINGS_PACK = {
     uploadedBy: { en: 'Uploaded by', mk: 'Објавена од' },
     deletedUser: { en: 'Deleted user', mk: 'Избришан корисник' },
     subject: { en: 'Subject', mk: 'Предмет' },
+    professor: { en: 'Professor', mk: 'Професор' },
     examSession: { en: 'Exam session', mk: 'Испитна сесија' },
     /** `year` is null when the session's year was not recorded (a script
      * saved before years existed). */

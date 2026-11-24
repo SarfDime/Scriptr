@@ -42,6 +42,7 @@ import {
   getStudySiteOrNotFound,
   type StudySite,
 } from '@/lib/study-site'
+import { getScriptSubjectNames } from '@/lib/subject-ref'
 import { studySeoQuery } from '@/sanity/queries/academics/study.queries'
 import type { StudySiteRouteParams } from '@/types/academics/academics.types'
 import type { LocalePageProps } from '@/types/localization.types'
@@ -208,7 +209,14 @@ async function StudyScriptsFeed({
   } else {
     feedScripts = await getTopScripts(undefined, studyId)
   }
-  const scripts = toScriptSummaryDetails(feedScripts ?? [], locale)
+  const subjectNames = await getScriptSubjectNames(
+    (feedScripts ?? []).map((script) => script.subject?.sanity_id)
+  )
+  const scripts = toScriptSummaryDetails(
+    feedScripts ?? [],
+    locale,
+    subjectNames
+  )
 
   const feedPath = getStudyFeedPath(siteSlug, locale)
   // Where the page's own search bar submits: a path on this site, so the study

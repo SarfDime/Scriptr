@@ -137,6 +137,20 @@ export const subjectPathQuery = groq`
   "universitySlug": coalesce(study->faculty->university->slug.current, study->faculty->university->_id),
   "siteSlug": study->siteSlug.current,
   ${localizedProjection('name', 'localizedName')},
+  professors[]->{
+    dbId,
+    "slug": slug.current,
+    ${localizedProjection('name', 'localizedName')},
+  },
+}
+`
+
+/** Localized names for a set of subjects, keyed by Sanity id — the subject line
+ * on script cards, which otherwise carries the single Postgres name. */
+export const subjectNamesByIdsQuery = groq`
+*[_type == "subject" && _id in $subjectIds] {
+  _id,
+  ${localizedProjection('name', 'localizedName')},
 }
 `
 

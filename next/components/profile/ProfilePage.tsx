@@ -17,6 +17,7 @@ import { getDisplayName } from '@/lib/profile-display'
 import { toScriptDetails } from '@/lib/script-display'
 import { getServerLocale, getServerStrings } from '@/lib/server-strings'
 import { catalogUrl } from '@/lib/study-origin'
+import { getScriptSubjectNames } from '@/lib/subject-ref'
 import type { ProfilePageProps } from '@/types/components/ProfilePage.types'
 
 /**
@@ -43,6 +44,13 @@ export const ProfilePage = async ({
   isOwner = false,
 }: ProfilePageProps) => {
   const locale = await getServerLocale()
+  // One read of the subject names both script lists use; the row's own name is
+  // frozen in Postgres and does not follow a language switch.
+  const subjectNames = await getScriptSubjectNames(
+    [...profile.scripts, ...profile.favorite_scripts].map(
+      (script) => script.subject?.sanity_id
+    )
+  )
   const ui = await getServerStrings(UI_STRINGS_PACK, locale)
   const displayName = getDisplayName(profile)
   const username = profile.username
@@ -115,14 +123,18 @@ export const ProfilePage = async ({
         }
       />
       <ScriptsSection
-        scripts={toScriptDetails(profile.scripts, locale)}
+        scripts={toScriptDetails(profile.scripts, locale, subjectNames)}
         title={ui.scripts.authoredSectionTitle}
         subtitle={ui.scripts.authoredSectionSubtitle}
         pageSize={2}
         initialPageSize={4}
       />
       <ScriptsSection
-        scripts={toScriptDetails(profile.favorite_scripts, locale)}
+        scripts={toScriptDetails(
+          profile.favorite_scripts,
+          locale,
+          subjectNames
+        )}
         title={ui.scripts.favoritesSectionTitle}
         subtitle={ui.scripts.favoritesSectionSubtitle}
         pageSize={2}
