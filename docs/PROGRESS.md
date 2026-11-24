@@ -117,9 +117,9 @@ catalog; how that works is
   work is a mask built once per layout. A reporter's Firefox at 2016×1059, DPR 0.95 now
   shows ~50–60 fps with `draw` at 1.3–2.3 ms (`?canvasStats=1`), down from a
   frame that dropped badly. What is left: the two full-canvas `clearRect`s (the
-  effects layer and the snow layer in front of the page) are the largest single
-  item when the rasterizer is software (~6 ms of the ~13 ms draw in headless
-  Firefox at DPR 2), so a dirty-region clear is the next lever if a
+  effects layer and the front layer with Santa and the near snow) are the largest
+  single item when the rasterizer is software (~6 ms of the ~13 ms draw in
+  headless Firefox at DPR 2), so a dirty-region clear is the next lever if a
   software-composited browser ever struggles again.
 - **Cache Components, what is left.**
   - A slug that matches nothing answers `200` with the localized 404 and `noindex` on
@@ -134,9 +134,11 @@ catalog; how that works is
     address resolves. A same-page switch that needs no address (client-only
     `router.push`) would close that hole.
   - `next dev` reports a `Date.now()` insight for
-    `/study/[siteSlug]/scripts/[scriptSlug]` during its metadata pass; the build
-    is clean. Trace it before adding a suppression — nothing in the route reads
-    the clock.
+    `/study/[siteSlug]/scripts/[scriptSlug]` on every soft 404; the build is clean.
+    Traced: no app code reads the clock. The read is Next's own, in the dev warm
+    render that validates the route — `prepareAppPageRender` calls `Date.now()` and
+    the boundary's `notFound()` aborts that render, so the call is reported against
+    the route. Nothing to fix here; re-test when the warm render stops collecting it.
   - The admin gate resolves `params`/`cookies` above its boundary, so an admin
     shell is per request rather than generic. Correct for a gated surface;
     revisit only if the first paint of `/admin` feels slow.

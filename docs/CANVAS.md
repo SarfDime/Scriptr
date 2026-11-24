@@ -49,9 +49,10 @@ Rules a background canvas in `next/` follows. What each canvas draws is the code
     (`--header-height`, `--background-height` in `globals.css`) and take the whole
     viewport in immersive mode. Measure the canvas (`clientWidth`/`clientHeight`), never
     `window.inner*`, and subtract the canvas origin before hit-testing a pointer. One
-    layer sits in front of the page instead of behind it — the snow, at `Z_INDEX.SNOW`:
-    above the content, below the header, feedback, navbar and toasts, and under the top
-    layer (dialogs, the loading screen).
+    layer sits in front of the page instead of behind it — Santa and the nearer snow,
+    at `Z_INDEX.FRONT_LAYER`: above the content, below the header, feedback, navbar
+    and toasts, and under the top layer (dialogs, the loading screen). The farthest
+    snow stays behind the content with the scenery.
 
 ## Starting a new one
 

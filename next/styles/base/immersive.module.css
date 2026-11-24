@@ -7,16 +7,16 @@
 
 @layer utilities {
   /* Full-screen mode paints over the header too, so the canvases leave the
-     viewport below it and take the whole screen back. The snow layer is the
+     viewport below it and take the whole screen back. The front layer is the
      exception: it is already in front of the page, and only takes the size. */
-  html.is-immersive #app-background canvas:not([data-snow-front]) {
+  html.is-immersive #app-background canvas:not([data-front-layer]) {
     z-index: 40;
     pointer-events: auto;
     top: 0;
     height: 100dvh;
   }
 
-  html.is-immersive #app-background canvas[data-snow-front] {
+  html.is-immersive #app-background canvas[data-front-layer] {
     top: 0;
     height: 100dvh;
   }
