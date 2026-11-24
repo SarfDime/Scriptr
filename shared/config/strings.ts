@@ -1008,6 +1008,33 @@ export const UI_STRINGS_PACK = {
         en: 'This study is not linked to the database yet, so setup is unavailable.',
         mk: 'Овој смер сè уште не е поврзан со базата, па поставувањето е недостапно.',
       },
+      /** Asked before a signed-in visitor sets up a study their account does not
+       * hold: the profile this page writes belongs to the study. */
+      enrollTitle: {
+        en: 'Enroll in this study first',
+        mk: 'Прво запиши се на овој смер',
+      },
+      enrollBody: (studyName: string): LocalizedText => ({
+        en: `You are not enrolled in ${studyName} yet. Enroll to continue with its subject setup.`,
+        mk: `Сè уште не си запишан на ${studyName}. Запиши се за да продолжиш со поставување на предметите.`,
+      }),
+      enrollConfirm: {
+        en: 'Enroll and continue',
+        mk: 'Запиши се и продолжи',
+      },
+      enrollDecline: {
+        en: 'No, go to homepage',
+        mk: 'Не, оди на почетната',
+      },
+      enrollFailed: {
+        en: 'We could not enroll you in this study. Please try again.',
+        mk: 'Не можевме да те запишеме на овој смер. Обиди се повторно.',
+      },
+      /** Above the form's actions: completion is not required to continue. */
+      optionalNote: {
+        en: 'Marking subjects is optional — you can leave this empty and add them later from your profile.',
+        mk: 'Означувањето предмети не е задолжително — можеш да го оставиш празно и да ги додадеш подоцна од профилот.',
+      },
     },
     account: {
       title: { en: 'Save your progress', mk: 'Зачувај го напредокот' },

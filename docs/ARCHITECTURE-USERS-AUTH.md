@@ -24,6 +24,10 @@
   years and subjects only. A study the reader already belongs to stays selectable but
   cannot be continued into — Continue is disabled and the note links to that study's setup
   (`studyPickerQuery` carries `dbId` to match `selected_study_ids`).
+- A signed-in visitor who reaches that page without the study in their account is asked to
+  enroll first: yes adds `profile_studies` and leaves them on the form, no returns to the
+  homepage. The dialog cannot be dismissed without an answer. Marking subjects is
+  optional — the form saves an empty selection.
 - A signed-in reader's answers persist to `profile_studies`/`profile_subjects`; a guest's
   live in `lib/study-setup-storage.ts` keyed by study id, and `lib/study-setup-sync.ts`
   applies them after register or sign-in.

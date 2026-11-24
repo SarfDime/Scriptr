@@ -26,8 +26,8 @@ import {
   searchScripts,
 } from '@/lib/api/scripts-api'
 import {
+  getAllSubjectsForStudies,
   getIncompleteSubjectIdsForStudies,
-  getIncompleteSubjectsForStudies,
 } from '@/lib/profile-subjects'
 import { ACADEMIC_PAGE_TAGS } from '@/lib/sanity-tags'
 import { toScriptSummaryDetails } from '@/lib/script-display'
@@ -50,6 +50,11 @@ import type { LocalePageProps } from '@/types/localization.types'
  * every script in the study. Kept in the URL so the page decides server-side
  * which list to render — no client state, no double fetch. */
 const ALL_SCRIPTS_PARAM = 'all'
+
+/** The curated feed is off for now: the page lists every script and every
+ * subject in the study. The switch and the per-subject read stay, so this flag
+ * is all turning it back on takes. */
+const CURATED_FEED_ENABLED: boolean = false
 
 type StudySeoDetail = NonNullable<WithResolvedSanityData<StudySeoQueryResult>>
 
@@ -79,17 +84,16 @@ export const generateMetadata = createAcademicMetadata<
 })
 
 /**
- * A study's content surface: the scripts its students share, curated to the
- * reader's unfinished subjects, with their subjects beside it. The study's root
- * is its academic overview, so this is the sub-page a reader goes to once they
- * know what the study is — a cold visitor is not dropped straight into a feed
- * they have to set up to read.
+ * A study's content surface: every script its students share, with the study's
+ * subjects beside it. The study's root is its academic overview, so this is the
+ * sub-page a reader goes to once they know what the study is — a cold visitor
+ * is not dropped straight into a feed they have to set up to read.
  *
  * Two parts, because they resolve at different times. The page frame is the
  * study's own — its name, its faculty, the way back to the overview, and the
  * setup gate — and is prerendered per study. The feed below it is read for the
- * reader (the audience is the session: a guest sees the study's top scripts,
- * a member their unfinished subjects) and streams in.
+ * reader (the audience is the session: a guest sees the study's top scripts, a
+ * member the same list plus their subjects) and streams in.
  *
  * `?q=` turns it into this study's search results: the study's own header bar
  * submits here, because `/search` in the catalog is the catalog's — universities
@@ -175,20 +179,26 @@ async function StudyScriptsFeed({
   const studyId = site.dbId
 
   // Everything below is this study's: its own subjects, its own scripts.
+  // The incomplete ids only feed the curated branch, so with curation off they
+  // are not read at all.
   const [subjects, incompleteSubjectIds] =
     user && studyId
       ? await Promise.all([
-          getIncompleteSubjectsForStudies([studyId], user.subjects),
-          getIncompleteSubjectIdsForStudies([studyId], user.subjects),
+          getAllSubjectsForStudies([studyId]),
+          CURATED_FEED_ENABLED
+            ? getIncompleteSubjectIdsForStudies([studyId], user.subjects)
+            : [],
         ])
       : [[], []]
 
-  // Curated by default: the reader's unfinished subjects in this study. The
+  // With curation on, the reader's unfinished subjects in this study; the
   // study's top scripts are the fallback and the explicit choice behind the
   // switch, so a guest — or someone with nothing left to take — still lands on
   // something to read. A search is neither: the API matches the query against
   // every script in the study.
-  const isCurated = !showAllScripts && incompleteSubjectIds.length > 0
+  const usesCuratedFeed =
+    CURATED_FEED_ENABLED && incompleteSubjectIds.length > 0
+  const isCurated = !showAllScripts && usesCuratedFeed
 
   let feedScripts: Array<ScriptSummary> | null
   if (searching) {
@@ -216,7 +226,7 @@ async function StudyScriptsFeed({
   if (searching) {
     feedTitle = UI_STRINGS.scripts.feed.searchTitle(searchQuery)
     emptyMessage = UI_STRINGS.scripts.feed.searchEmpty(searchQuery)
-  } else if (showAllScripts) {
+  } else if (showAllScripts || !CURATED_FEED_ENABLED) {
     feedTitle = UI_STRINGS.scripts.feed.allTitle
     feedSubtitle = UI_STRINGS.scripts.feed.allSubtitle
   } else {
@@ -230,7 +240,7 @@ async function StudyScriptsFeed({
         {UI_STRINGS.scripts.feed.clearSearch}
       </NextLink>
     )
-  } else if (user && incompleteSubjectIds.length > 0) {
+  } else if (user && usesCuratedFeed) {
     // Only worth offering when there is a curated feed to switch away from; a
     // guest (or someone with nothing left to take) has one list.
     headerActions = (

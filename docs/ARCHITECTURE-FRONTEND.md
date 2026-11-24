@@ -40,9 +40,11 @@ how the frontend is put together.
   hostname by a `next.config.ts` rewrite onto `/study/[siteSlug]/…`
   ([`ARCHITECTURE-STUDY-DOMAINS.md`](ARCHITECTURE-STUDY-DOMAINS.md)).
   - A study's root `/study/[siteSlug]` is the **academic overview** (overview card,
-    subjects, professors); its **content surface** is `…/scripts`, curated to the reader's
-    unfinished subjects, with `?scripts=all` for the study's top scripts and a sidebar of
-    unfinished subjects. The setup gate hangs off the feed.
+    subjects, professors); its **content surface** is `…/scripts`, every script in the
+    study with a sidebar of all its subjects. The curated feed (the reader's unfinished
+    subjects, `?scripts=all` for the study's top scripts, the switch between them) is
+    built but switched off by `CURATED_FEED_ENABLED` in that page. The setup gate hangs
+    off the feed.
   - The catalog page header offers create-account (`/auth?mode=register`) and set-up
     (`/start`); below it the three levels are columns of one surface (`CatalogSection`),
     two columns from `md`, three from `lg`, each a stack of `CatalogCard`s.

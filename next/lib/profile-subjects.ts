@@ -63,6 +63,17 @@ export async function getCompletedSubjectsForStudies(
   return fetchSubjects(subjectIds, 'profile-subject')
 }
 
+/** Every subject that belongs to the given studies, whether completed or not. */
+export async function getAllSubjectsForStudies(
+  studyIds: Array<string>
+): Promise<Array<SubjectById>> {
+  if (studyIds.length === 0) return []
+
+  const catalog = await getOnboardingCatalog()
+
+  return fetchSubjects(studySubjectDbIds(catalog, studyIds), 'study-subject')
+}
+
 /**
  * Ids of the subjects of the given studies that aren't completed — the pure
  * derivation lives in `study-subjects.ts` so the browser can run it too.
