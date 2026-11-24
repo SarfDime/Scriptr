@@ -59,11 +59,12 @@ import { Z_INDEX } from '@/styles/style'
 //  - the immersive scene canvas holds the same scenery in the immersive palette, and is
 //    only painted when that palette is actually shown; switching to it is a fade;
 //  - the effects canvas is cleared and redrawn every frame with the cheap moving
-//    parts: chimney smoke, the twinkling lights of the decorated trees, the sleigh
-//    and the sparkle bursts a clicked reindeer leaves behind;
-//  - the snow canvas holds only the flakes, and is the one layer in front of the page
-//    instead of behind it: they fall over the content (below the header and the
-//    chrome, which keep their own stacking).
+//    parts behind the page: chimney smoke, the twinkling lights of the decorated
+//    trees and the farthest snow;
+//  - the front canvas holds Santa (the sleigh, its sparkle trail, the speech bubble,
+//    the sparkle bursts a clicked reindeer leaves behind) and the nearer flakes, and
+//    is the one layer in front of the page instead of behind it: they pass over the
+//    content (below the header and the chrome, which keep their own stacking).
 //
 // What keeps a frame cheap. Measure with `?canvasStats=1` before changing any of it:
 //  - a glow or a puff of smoke with scenery in front of it is erased from the effects
@@ -111,10 +112,33 @@ const ignoreFullscreenError = () => undefined
 
 // Three depths of snow, far to near: nearer flakes are bigger, brighter and faster.
 // `radius` is the length of each arm of the snowflake, `line` its stroke width.
+// The farthest layer falls behind the page, with the scenery, so the content reads
+// as sitting in the snowfall; the other two pass in front of it with Santa.
 const SNOW_LAYERS = [
-  { share: 0.5, radius: 1.8, line: 0.8, alpha: 0.6, speed: 0.45 },
-  { share: 0.35, radius: 2.8, line: 1.1, alpha: 0.8, speed: 0.8 },
-  { share: 0.15, radius: 4.2, line: 1.5, alpha: 0.95, speed: 1.3 },
+  {
+    share: 0.5,
+    radius: 1.8,
+    line: 0.8,
+    alpha: 0.6,
+    speed: 0.45,
+    depth: 'back',
+  },
+  {
+    share: 0.35,
+    radius: 2.8,
+    line: 1.1,
+    alpha: 0.8,
+    speed: 0.8,
+    depth: 'front',
+  },
+  {
+    share: 0.15,
+    radius: 4.2,
+    line: 1.5,
+    alpha: 0.95,
+    speed: 1.3,
+    depth: 'front',
+  },
 ] as const
 
 /** How long the scenery takes to crossfade into its immersive colors, matching the sky. */
@@ -164,7 +188,7 @@ export const ChristmasCanvas = ({
   // The same scenery painted in the immersive palette, faded in over the themed one.
   const immersiveSceneRef = useRef<HTMLCanvasElement>(null)
   const effectsRef = useRef<HTMLCanvasElement>(null)
-  const snowRef = useRef<HTMLCanvasElement>(null)
+  const frontRef = useRef<HTMLCanvasElement>(null)
   const immersive = useImmersive()
   const ui = useUIStrings()
   const hoHoHo = ui.general.hoHoHo
@@ -178,12 +202,12 @@ export const ChristmasCanvas = ({
     const sceneCanvas = sceneRef.current
     const immersiveSceneCanvas = immersiveSceneRef.current
     const effectsCanvas = effectsRef.current
-    const snowCanvas = snowRef.current
+    const frontCanvas = frontRef.current
     const sceneCtx = sceneCanvas?.getContext('2d')
     const immersiveSceneCtx = immersiveSceneCanvas?.getContext('2d')
     const fx = effectsCanvas?.getContext('2d')
-    const snowCtx = snowCanvas?.getContext('2d')
-    if (!sceneCanvas || !sceneCtx || !effectsCanvas || !fx || !snowCtx) return
+    const frontCtx = frontCanvas?.getContext('2d')
+    if (!sceneCanvas || !sceneCtx || !effectsCanvas || !fx || !frontCtx) return
 
     const cfg: ChristmasCanvasConfig = {
       ...withChristmasDefaults(sanityData),
@@ -271,6 +295,15 @@ export const ChristmasCanvas = ({
       spec,
       flakes: [] as Array<SnowFlake>,
     }))
+    type SnowLayer = (typeof snow)[number]
+    // Split once, not per frame: which flakes are drawn behind the page and which in
+    // front is a property of the depth.
+    const snowBehind: Array<SnowLayer> = snow.filter(
+      (layer) => layer.spec.depth === 'back'
+    )
+    const snowInFront: Array<SnowLayer> = snow.filter(
+      (layer) => layer.spec.depth === 'front'
+    )
 
     const newFlake = (): SnowFlake => ({
       x: Math.random() * w,
@@ -444,7 +477,7 @@ export const ChristmasCanvas = ({
         sceneCanvas,
         immersiveSceneCanvas,
         effectsCanvas,
-        snowCanvas,
+        frontCanvas,
       ]) {
         if (!canvas) continue
         canvas.width = Math.round(w * dpr)
@@ -453,7 +486,7 @@ export const ChristmasCanvas = ({
       sceneCtx.setTransform(dpr, 0, 0, dpr, 0, 0)
       immersiveSceneCtx?.setTransform(dpr, 0, 0, dpr, 0, 0)
       fx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      snowCtx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      frontCtx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
       if (prevW && prevH) {
         for (const layer of snow) {
@@ -663,7 +696,12 @@ export const ChristmasCanvas = ({
       return callBubble
     }
 
-    const drawSantaCall = (t: number, headX: number, headY: number) => {
+    const drawSantaCall = (
+      ctx: CanvasRenderingContext2D,
+      t: number,
+      headX: number,
+      headY: number
+    ) => {
       const fade =
         smoothstep01((t - CALL_FROM) / 0.08) *
         (1 - smoothstep01((t - CALL_TO) / 0.08))
@@ -688,39 +726,39 @@ export const ChristmasCanvas = ({
 
       const cx = boxX + boxW / 2
       const cy = boxY + boxH / 2
-      fx.save()
-      fx.globalAlpha = fade
+      ctx.save()
+      ctx.globalAlpha = fade
       // A slow tilt keeps the bubble from looking stamped onto the picture.
-      fx.translate(cx, cy)
-      fx.rotate(Math.sin(clock * 0.0016) * 0.04)
-      fx.translate(-cx, -cy)
+      ctx.translate(cx, cy)
+      ctx.rotate(Math.sin(clock * 0.0016) * 0.04)
+      ctx.translate(-cx, -cy)
 
       // The tail is the only part that changes: its base slides along the box so
       // the point stays on Santa's head. Its third edge is the box's own border.
       const tailLeft = tailBase - radius * 0.35
       const tailRight = tailBase + radius * 0.35
-      fx.beginPath()
-      fx.moveTo(tailRight, boxY + boxH)
-      fx.lineTo(headX, headY)
-      fx.lineTo(tailLeft, boxY + boxH)
-      fx.closePath()
-      fx.fillStyle = rgba(WHITE)
-      fx.fill()
-      fx.lineJoin = 'round'
-      fx.lineWidth = Math.max(2, size * 0.13)
-      fx.strokeStyle = rgba(colors.santa.body)
-      fx.beginPath()
-      fx.moveTo(tailRight, boxY + boxH)
-      fx.lineTo(headX, headY)
-      fx.lineTo(tailLeft, boxY + boxH)
-      fx.stroke()
+      ctx.beginPath()
+      ctx.moveTo(tailRight, boxY + boxH)
+      ctx.lineTo(headX, headY)
+      ctx.lineTo(tailLeft, boxY + boxH)
+      ctx.closePath()
+      ctx.fillStyle = rgba(WHITE)
+      ctx.fill()
+      ctx.lineJoin = 'round'
+      ctx.lineWidth = Math.max(2, size * 0.13)
+      ctx.strokeStyle = rgba(colors.santa.body)
+      ctx.beginPath()
+      ctx.moveTo(tailRight, boxY + boxH)
+      ctx.lineTo(headX, headY)
+      ctx.lineTo(tailLeft, boxY + boxH)
+      ctx.stroke()
 
       // Last, so the box sits on the tail's seam.
-      fx.drawImage(bubble.canvas, boxX, boxY, boxW, boxH)
-      fx.restore()
+      ctx.drawImage(bubble.canvas, boxX, boxY, boxW, boxH)
+      ctx.restore()
     }
 
-    const drawSanta = (ms: number) => {
+    const drawSanta = (ctx: CanvasRenderingContext2D, ms: number) => {
       if (!look().sleigh) return
       if (!flight.active) {
         deerHits.fill(null)
@@ -770,51 +808,51 @@ export const ChristmasCanvas = ({
       const { colors } = active
       // One fill per brightness step rather than one per sparkle: every fill and
       // every alpha change is its own draw, and 32 of them per frame added up.
-      fx.fillStyle = rgba(colors.sparkle)
+      ctx.fillStyle = rgba(colors.sparkle)
       for (let step = SPARKLE_ALPHA_STEPS; step >= 1; step--) {
         const low = (step - 1) / SPARKLE_ALPHA_STEPS
         const high = step / SPARKLE_ALPHA_STEPS
         let drew = false
-        fx.beginPath()
+        ctx.beginPath()
         for (const spark of sparkles) {
           if (spark.life <= low || spark.life > high) continue
           const r = spark.size * spark.life
           // A move before the arc, or the previous sparkle would be joined to it.
-          fx.moveTo(spark.x + r, spark.y)
-          fx.arc(spark.x, spark.y, r, 0, TAU)
+          ctx.moveTo(spark.x + r, spark.y)
+          ctx.arc(spark.x, spark.y, r, 0, TAU)
           drew = true
         }
         if (!drew) continue
-        fx.globalAlpha = (low + high) / 2
-        fx.fill()
+        ctx.globalAlpha = (low + high) / 2
+        ctx.fill()
       }
-      fx.globalAlpha = 1
+      ctx.globalAlpha = 1
 
       // The team is drawn in its own units (SLEIGH_SIZE), centered on the flight path
       const scale = sleighWidth / SLEIGH_SIZE.width
       const cos = Math.cos(angle)
       const sin = Math.sin(angle)
-      fx.save()
-      fx.translate(x, y)
-      fx.rotate(angle)
-      if (flight.dir < 0) fx.scale(-1, 1) // the team faces right
-      fx.scale(scale, scale)
-      fx.translate(-SLEIGH_SIZE.width / 2, -SLEIGH_SIZE.height / 2)
+      ctx.save()
+      ctx.translate(x, y)
+      ctx.rotate(angle)
+      if (flight.dir < 0) ctx.scale(-1, 1) // the team faces right
+      ctx.scale(scale, scale)
+      ctx.translate(-SLEIGH_SIZE.width / 2, -SLEIGH_SIZE.height / 2)
 
       // The sleigh bobs and tilts on its own, around its middle
       const sleighBob = Math.sin(clock * 0.0032 + flight.bob) * 1.8
       const sleighTilt = Math.sin(clock * 0.0027 + flight.bob * 1.7) * 0.035
-      fx.save()
-      fx.translate(55, 50 + sleighBob)
-      fx.rotate(sleighTilt)
-      fx.drawImage(
+      ctx.save()
+      ctx.translate(55, 50 + sleighBob)
+      ctx.rotate(sleighTilt)
+      ctx.drawImage(
         active.sleigh as HTMLCanvasElement,
         -55,
         -50,
         SLEIGH_PART_WIDTH,
         SLEIGH_SIZE.height
       )
-      fx.restore()
+      ctx.restore()
       const handY =
         SLEIGH_HAND.y + sleighBob + (SLEIGH_HAND.x - 55) * sleighTilt
 
@@ -826,16 +864,16 @@ export const ChristmasCanvas = ({
       }
 
       // Reins from Santa's hand and the harness between the reindeer follow all the bobbing
-      fx.strokeStyle = rgba(colors.santa.trim)
-      fx.lineWidth = 1
-      fx.beginPath()
-      fx.moveTo(SLEIGH_HAND.x, handY)
-      fx.lineTo(reindeerX(0) - 14, reindeerY(0) + bobOf(0) - 2)
+      ctx.strokeStyle = rgba(colors.santa.trim)
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.moveTo(SLEIGH_HAND.x, handY)
+      ctx.lineTo(reindeerX(0) - 14, reindeerY(0) + bobOf(0) - 2)
       for (let i = 0; i < REINDEER_COUNT - 1; i++) {
-        fx.moveTo(reindeerX(i) + 14, reindeerY(i) + bobOf(i) - 2)
-        fx.lineTo(reindeerX(i + 1) - 14, reindeerY(i + 1) + bobOf(i + 1) - 2)
+        ctx.moveTo(reindeerX(i) + 14, reindeerY(i) + bobOf(i) - 2)
+        ctx.lineTo(reindeerX(i + 1) - 14, reindeerY(i + 1) + bobOf(i + 1) - 2)
       }
-      fx.stroke()
+      ctx.stroke()
 
       // Each reindeer gallops, bobs and tilts on its own; the lead one's nose flashes
       const flash = 0.5 + 0.5 * Math.sin(clock * NOSE_FLASH_RATE)
@@ -844,13 +882,13 @@ export const ChristmasCanvas = ({
         const pokeAge = clock - (deerPokedAt[i] ?? Number.NEGATIVE_INFINITY)
         const poke = pokeAge >= 0 && pokeAge < POKE_MS ? pokeAge / POKE_MS : 0
 
-        fx.save()
-        fx.translate(reindeerX(i), reindeerY(i) + bobOf(i))
-        fx.rotate(
+        ctx.save()
+        ctx.translate(reindeerX(i), reindeerY(i) + bobOf(i))
+        ctx.rotate(
           Math.sin(clock * motion.bobRate * 0.8 + motion.bobPhase + 1) * 0.04
         )
         paintReindeer(
-          fx,
+          ctx,
           0,
           0,
           clock * motion.gallopRate + motion.phase,
@@ -871,9 +909,9 @@ export const ChristmasCanvas = ({
           y: y + mirroredDeerX * sin + localDeerY * cos,
           r: DEER_HIT_RADIUS * scale,
         }
-        fx.restore()
+        ctx.restore()
       }
-      fx.restore()
+      ctx.restore()
 
       // Santa's head in screen coordinates: the sprite's local (58, 14) put through
       // the same translate, mirror, scale and rotate as the team.
@@ -882,11 +920,11 @@ export const ChristmasCanvas = ({
       const mirroredX = flight.dir < 0 ? -localX : localX
       const headX = x + mirroredX * Math.cos(angle) - localY * Math.sin(angle)
       const headY = y + mirroredX * Math.sin(angle) + localY * Math.cos(angle)
-      drawSantaCall(t, headX, headY)
+      drawSantaCall(ctx, t, headX, headY)
     }
 
     /** The flat sparkle bursts a clicked reindeer left behind, fading out. */
-    const drawPokes = () => {
+    const drawPokes = (ctx: CanvasRenderingContext2D) => {
       if (pokeBursts.length === 0) return
       const rgb = look().colors.sparkle
       for (let i = pokeBursts.length - 1; i >= 0; i--) {
@@ -897,20 +935,24 @@ export const ChristmasCanvas = ({
           pokeBursts.splice(i, 1)
           continue
         }
-        paintPokeBurst(fx, burst.x, burst.y, POKE_BURST_SIZE, t, rgb)
+        paintPokeBurst(ctx, burst.x, burst.y, POKE_BURST_SIZE, t, rgb)
       }
     }
 
     // Each flake is three crossed lines (a six-armed snowflake) that slowly turns
-    const drawSnow = (now: number, dt: number, wind: number) => {
+    const drawSnow = (
+      ctx: CanvasRenderingContext2D,
+      layers: Array<SnowLayer>,
+      now: number,
+      dt: number,
+      wind: number
+    ) => {
       if (!cfg.enableSnow) return
-      // Nothing else paints on this layer, so a frame starts from an empty one.
-      snowCtx.clearRect(0, 0, w, h)
-      snowCtx.lineCap = 'round'
-      snowCtx.strokeStyle = rgba(look().colors.snowfall)
-      for (const { spec, flakes } of snow) {
+      ctx.lineCap = 'round'
+      ctx.strokeStyle = rgba(look().colors.snowfall)
+      for (const { spec, flakes } of layers) {
         const r = spec.radius
-        snowCtx.beginPath()
+        ctx.beginPath()
         for (const flake of flakes) {
           if (dt > 0) {
             flake.y += spec.speed * flake.speed * cfg.snowSpeed * dt
@@ -933,22 +975,23 @@ export const ChristmasCanvas = ({
           const s2 = s1 * 0.5 + c1 * 0.866
           const c3 = -c1 * 0.5 - s1 * 0.866
           const s3 = -s1 * 0.5 + c1 * 0.866
-          snowCtx.moveTo(flake.x - c1, flake.y - s1)
-          snowCtx.lineTo(flake.x + c1, flake.y + s1)
-          snowCtx.moveTo(flake.x - c2, flake.y - s2)
-          snowCtx.lineTo(flake.x + c2, flake.y + s2)
-          snowCtx.moveTo(flake.x - c3, flake.y - s3)
-          snowCtx.lineTo(flake.x + c3, flake.y + s3)
+          ctx.moveTo(flake.x - c1, flake.y - s1)
+          ctx.lineTo(flake.x + c1, flake.y + s1)
+          ctx.moveTo(flake.x - c2, flake.y - s2)
+          ctx.lineTo(flake.x + c2, flake.y + s2)
+          ctx.moveTo(flake.x - c3, flake.y - s3)
+          ctx.lineTo(flake.x + c3, flake.y + s3)
         }
-        snowCtx.lineWidth = spec.line
-        snowCtx.globalAlpha = spec.alpha
-        snowCtx.stroke()
+        ctx.lineWidth = spec.line
+        ctx.globalAlpha = spec.alpha
+        ctx.stroke()
       }
-      snowCtx.globalAlpha = 1
+      ctx.globalAlpha = 1
     }
 
-    // Back to front: glows, smoke, Santa, then the flakes on the layer above the page.
-    // `dt` is in frames at 60fps, so speeds match on 60/120/144Hz screens.
+    // Back to front: the farthest snow with the scenery and the smoke, then Santa and
+    // the nearer flakes on the layer in front of the page. `dt` is in frames at 60fps,
+    // so speeds match on 60/120/144Hz screens.
     const draw = (now: number, dt: number) => {
       if (!scene) return
       // Narrowed once: the timers below hand it to a closure.
@@ -961,15 +1004,23 @@ export const ChristmasCanvas = ({
       fx.globalAlpha = 1
       fx.globalCompositeOperation = 'source-over'
       fx.clearRect(0, 0, w, h)
+      frontCtx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      frontCtx.globalAlpha = 1
+      frontCtx.globalCompositeOperation = 'source-over'
+      frontCtx.clearRect(0, 0, w, h)
 
       // One gentle gust that comes and goes, shared by the smoke and the snow
       const wind = Math.sin(now * 0.00021) * 0.35 + 0.15
 
       timed('glows', () => drawGlows(now, painted))
       timed('smoke', () => drawSmoke(now, wind, painted))
-      if (cfg.enableSanta && !reducedMotion) timed('santa', () => drawSanta(ms))
-      drawPokes()
-      timed('snow', () => drawSnow(now, dt, wind))
+      if (cfg.enableSanta && !reducedMotion)
+        timed('santa', () => drawSanta(frontCtx, ms))
+      drawPokes(frontCtx)
+      timed('snow', () => {
+        drawSnow(fx, snowBehind, now, dt, wind)
+        drawSnow(frontCtx, snowInFront, now, dt, wind)
+      })
 
       if (stats) {
         stats.frames += 1
@@ -1250,13 +1301,13 @@ export const ChristmasCanvas = ({
         aria-hidden
         className='pointer-events-none fixed inset-x-0 top-(--header-height) z-[-1] h-(--background-height) w-full'
       />
-      {/* The flakes alone, on the one layer in front of the page: above the content
-          but below the header, feedback, navbar and toasts. */}
+      {/* Santa and the flakes together, on the one layer in front of the page: above
+          the content but below the header, feedback, navbar and toasts. */}
       <canvas
-        ref={snowRef}
+        ref={frontRef}
         aria-hidden
-        data-snow-front
-        className={`pointer-events-none fixed inset-x-0 top-(--header-height) ${Z_INDEX.SNOW} h-(--background-height) w-full`}
+        data-front-layer
+        className={`pointer-events-none fixed inset-x-0 top-(--header-height) ${Z_INDEX.FRONT_LAYER} h-(--background-height) w-full`}
       />
     </>
   )
