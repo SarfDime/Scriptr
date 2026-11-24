@@ -31,6 +31,8 @@ export async function ScriptInfoPanel({
     viewerDataFailed,
     subjectHref,
     subjectName,
+    professorName,
+    professorHref,
   } = detail
 
   return (
@@ -52,6 +54,8 @@ export async function ScriptInfoPanel({
         script={script}
         subjectHref={subjectHref}
         subjectName={subjectName}
+        professorName={professorName}
+        professorHref={professorHref}
       />
       {canManage && (
         <ScriptManageActions

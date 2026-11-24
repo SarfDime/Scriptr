@@ -80,7 +80,7 @@ export const getMyProfile = (cookie?: string) =>
  * field whose type changed (`scripts.title` is a `{ en, mk }` map). A cached
  * body outlives a deploy, and the profile page reads it as if it were current.
  */
-const PROFILE_PAYLOAD_VERSION = 3
+const PROFILE_PAYLOAD_VERSION = 5
 
 /**
  * Public — no auth, no cookie forwarding needed (the response is the same

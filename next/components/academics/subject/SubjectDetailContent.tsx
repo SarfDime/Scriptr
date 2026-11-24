@@ -41,7 +41,14 @@ export const SubjectDetailContent = async ({
   const subjectScripts = subject.dbId
     ? await getScriptsBySubject(subject.dbId)
     : []
-  const scripts = toScriptSummaryDetails(subjectScripts ?? [], locale)
+  // Every card here is the same subject, whose localized name the page already
+  // holds — no need to read it back from Sanity.
+  const subjectNames = new Map([[subject._id, subject.name]])
+  const scripts = toScriptSummaryDetails(
+    subjectScripts ?? [],
+    locale,
+    subjectNames
+  )
 
   return (
     <PageLayout

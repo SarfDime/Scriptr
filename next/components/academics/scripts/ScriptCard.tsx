@@ -60,8 +60,8 @@ export const ScriptCard = ({
             <DocumentTextIcon />
           </Box>
 
-          <Box className='ui-stack min-w-0 grow gap-1'>
-            <PortableTextContent className='ui-title group-hover:cp-text [&>*]:line-clamp-1'>
+          <Box className='ui-stack min-w-0 grow gap-0'>
+            <PortableTextContent className='ui-title group-hover:cp-text *:line-clamp-1'>
               {script.title}
             </PortableTextContent>
             <Text className='ui-caption'>

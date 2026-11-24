@@ -103,7 +103,7 @@ export const loadScriptDetailPage = async (
       // Resolves the subject's real slug chain and its localized name from
       // Sanity; `null` (plain text, and the name the API already carries) if
       // anything is missing or Sanity is unavailable.
-      getSubjectRef(script.subject?.sanity_id ?? null),
+      getSubjectRef(script.subject?.sanity_id ?? null, script.professor_id),
     ])
 
   const viewerDataFailed = myVote.failed || myFavorite.failed || session.failed
@@ -137,6 +137,11 @@ export const loadScriptDetailPage = async (
       /** The subject's name in this reader's language; `null` falls back to
        *  the single name the API carries. */
       subjectName: subjectRef?.name ?? null,
+      /** The chosen professor's name in this reader's language, matched from
+       *  the same subject read. */
+      professorName: subjectRef?.professorName ?? null,
+      /** The professor's catalog page; `null` renders the name as plain text. */
+      professorHref: subjectRef?.professorHref ?? null,
     },
     comments: commentsResult.comments,
     commentsUnavailable: commentsResult.unavailable,

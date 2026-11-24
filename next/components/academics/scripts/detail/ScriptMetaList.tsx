@@ -15,13 +15,20 @@ export type ScriptMetaListProps = {
    *  single name — the one the row was linked with — so it is only a fallback
    *  for a Sanity read that failed. */
   subjectName: string | null
+  /** The chosen professor's localized name; absent when the script has none. */
+  professorName: string | null
+  /** `null` renders the professor as plain text. */
+  professorHref: string | null
 }
 
-/** Subject, exam session/year and download count; absent fields are skipped. */
+/** Subject, professor, exam session/year and download count; absent fields are
+ * skipped. */
 export async function ScriptMetaList({
   script,
   subjectHref,
   subjectName,
+  professorName,
+  professorHref,
 }: ScriptMetaListProps) {
   const strings = await getServerStrings(SCRIPT_STRINGS_PACK)
   const name = subjectName ?? script.subject?.name
@@ -36,6 +43,17 @@ export async function ScriptMetaList({
             </NextLink>
           ) : (
             name
+          )}
+        </ScriptDetailItem>
+      )}
+      {professorName && (
+        <ScriptDetailItem label={strings.info.professor}>
+          {professorHref ? (
+            <NextLink href={professorHref} className='hover:text-brand'>
+              {professorName}
+            </NextLink>
+          ) : (
+            professorName
           )}
         </ScriptDetailItem>
       )}

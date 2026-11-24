@@ -41,4 +41,9 @@ export type ScriptDetailViewModel = {
   /** The subject's localized name from Sanity; `null` when it could not be
    *  read, and the component falls back to `script.subject.name`. */
   subjectName: string | null
+  /** The professor chosen on the script, localized. `null` when the script has
+   *  none or the subject no longer lists them. */
+  professorName: string | null
+  /** The professor's catalog page; `null` renders the name as plain text. */
+  professorHref: string | null
 }

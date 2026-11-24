@@ -228,6 +228,9 @@ the frontend and invalidated by the profile/selection/favorite/script/vote tags.
 
 Authenticated: `GET`/`PATCH`/`DELETE /profiles/me`.
 
+Every script embedded in a profile carries `subject: { name, sanity_id }`; the frontend
+uses the Sanity id to read the subject's localized name (`PROFILE_SCRIPT_FIELDS`).
+
 `GET /profiles` is **admin only** — the user manager's listing. `limit` 1–100 (20),
 `offset`, `search` (username or full name, case-insensitive; reserved `or` grammar
 characters are replaced and `ilike` wildcards stripped so a term can only narrow),

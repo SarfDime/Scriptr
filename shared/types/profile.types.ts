@@ -97,7 +97,7 @@ export type ProfileScriptSummary = {
   download_count: number
   created_at: string
   updated_at: string
-  subject: { name: string } | null
+  subject: { name: string; sanity_id: string | null } | null
   author: { username: string; full_name: string | null } | null
   comments: Array<{ count: number }>
   files: Array<ScriptFile>

@@ -114,7 +114,7 @@ const PROFILE_ACADEMIC_SELECT =
  * whoever wrote it, not the profile being viewed.
  */
 const PROFILE_SCRIPT_FIELDS =
-  'id, slug, title, description, vote_score, download_count, created_at, updated_at, study:studies(site_slug), subject:subjects(name), author:profiles!author_id(username, full_name), files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, file_name, created_at)'
+  'id, slug, title, description, vote_score, download_count, created_at, updated_at, study:studies(site_slug), subject:subjects(name, sanity_id), author:profiles!author_id(username, full_name), files:script_files(id, file_url, file_type, file_size_bytes, bucket, position, file_name, created_at)'
 
 /**
  * `scripts!author_id`, not a bare `scripts` — script_favorites has FKs to
