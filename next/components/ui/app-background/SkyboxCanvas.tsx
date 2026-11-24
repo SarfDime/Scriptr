@@ -107,9 +107,11 @@ export const SkyboxCanvas = ({
   // snapping back to the hour it mounted at.
   const clockRef = useRef(0)
   const hoursRef = useRef<number | null>(null)
-  // The clock value immersive mode started at, or -1 while it is off: the speed ramp
-  // is measured from the flip, not from the mount.
+  // The clock value immersive mode started at, and the hour it was showing, both -1
+  // while it is off: the speed ramp is measured from the flip, not from the mount, and
+  // a pinned review time resumes at that hour.
   const immersiveSinceRef = useRef(-1)
+  const immersiveEntryHoursRef = useRef(-1)
   const pinnedRef = useRef<string | null>(null)
   // Repaints the single still frame under `prefers-reduced-motion`, where there is
   // no loop to notice an immersive flip.
@@ -155,12 +157,12 @@ export const SkyboxCanvas = ({
       immersiveSinceRef.current = -1
     }
     pinnedRef.current = pinnedKey
-    let hours =
-      hoursRef.current ??
-      (() => {
-        const now = new Date()
-        return now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600
-      })()
+    // The visitor's clock, used for the first frame and again when a sweep ends.
+    const wallClockHours = () => {
+      const now = new Date()
+      return now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600
+    }
+    let hours = hoursRef.current ?? wallClockHours()
     hoursRef.current = hours
 
     let toRGB = createSkyColorResolver()
@@ -204,7 +206,10 @@ export const SkyboxCanvas = ({
     const advanceHours = (delta: number) => {
       let speedNow = speed
       if (immersiveRef.current) {
-        if (immersiveSinceRef.current < 0) immersiveSinceRef.current = clock
+        if (immersiveSinceRef.current < 0) {
+          immersiveSinceRef.current = clock
+          immersiveEntryHoursRef.current = hours
+        }
         const rampProgress =
           rampMs > 0
             ? Math.min(1, (clock - immersiveSinceRef.current) / rampMs)
@@ -212,6 +217,14 @@ export const SkyboxCanvas = ({
         const ease = rampProgress * rampProgress * (3 - 2 * rampProgress)
         speedNow = speed + (immersiveSpeed - speed) * ease
       } else {
+        // Full screen is a detour from the day: leaving it puts the sky back at the
+        // visitor's clock, not at the hour the sweep reached. A pinned review time
+        // resumes where the review had got to instead.
+        if (immersiveSinceRef.current >= 0) {
+          hours =
+            pinned === null ? wallClockHours() : immersiveEntryHoursRef.current
+          hoursRef.current = hours
+        }
         immersiveSinceRef.current = -1
       }
       hours = (hours + (delta * speedNow) / 3_600_000) % 24
@@ -338,16 +351,9 @@ export const SkyboxCanvas = ({
     colorScheme.addEventListener('change', onThemeChange)
 
     const onResize = () => {
-      // A phone's URL bar sliding changes the height a little: the picture just
-      // stretches, and repainting the gradient and re-laying the stars for it would
-      // only make the sky jump. Immersive keeps tracking exactly.
-      if (
-        !immersiveRef.current &&
-        skyCanvas.clientWidth === w &&
-        Math.abs(skyCanvas.clientHeight - h) < h * 0.2
-      ) {
-        return
-      }
+      // Every size change re-lays the sky. Holding the bitmap and letting the box
+      // stretch it would keep a small height change cheap, but the sun and the moon
+      // are circles, and a stretched one reads as a bug.
       // Deferred to the next frame, so a drag-resize coalesces into one layout.
       if (reducedMotion) {
         layout()

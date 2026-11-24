@@ -61,7 +61,9 @@ Both canvases crossfade to their own palette once the reader enters the full-scr
 - **Controls:** `immersiveEnabled` gates the four-reindeer click on the scenery,
   `immersiveDayMinutes` and `immersiveRampSeconds` set the sweep and its ease-in, and
   `immersiveFlare` turns the pointer flare off. Inside full-screen a reindeer click is
-  cosmetic only: it hops and sparkles, and never asks for full-screen again.
+  cosmetic only: it hops and sparkles, and never asks for full-screen again. Leaving full
+  screen returns the sky to the visitor's clock, or resumes a pinned `skyTime` where the
+  review had reached.
 - **Scenery:** a second scene canvas painted with `resolveImmersiveChristmasColors()`
   (ignores theme and Sanity colours), painted lazily and faded in over the themed scene, so
   a switch costs no per-frame paint. Glows, smoke, snow and sleigh sprites follow the active
@@ -85,8 +87,9 @@ Both canvases crossfade to their own palette once the reader enters the full-scr
   gradient is the expensive part; raise `SKY_REPAINT_MS` if a slow device struggles.
 - Stars and clouds share the effects canvas at 15 fps outside immersive mode; immersive and
   the crossfade keep the full cap.
-- A height-only resize under 20% of the viewport is ignored and the picture stretches (as
-  in the Christmas canvas): the gradient has no straight edge and the sun is small.
+- Any size change re-lays the sky: holding the bitmap and letting the box stretch it would
+  be cheaper, but the sun and the moon are circles. The scenery canvases still ignore a
+  height-only change under a fifth of the viewport.
 - `immersive` is not an effect dependency — the loop reads it from a ref, so a mode flip
   never rebuilds the scene or resets the hour under the crossfade.
 - The light theme's night, dusk, dawn and sunset are pale pastels (a dark sky sat at ~1.2:1
