@@ -159,6 +159,11 @@ other. `ui-divider` and the `--divider-line` channel stay put.
 - A `dashed` divider is a border: `Divider` switches the ridge off with `bg-none!` and
   `[--ice-divider-tint-a:0]`.
 - `--divider-lip: transparent` collapses the groove to one crisp line.
+- The art is stretched to the band, so at a fractional device height Chromium copies the
+  tile's leading row to its far edge — a hairline a band away from the ridge — once the
+  paint lands in a compositing ancestor's texture. `ice-divider` and `ice-groove-b::before`
+  keep their own layer (`will-change: transform`) so the tile rasterizes at whole device
+  pixels instead; a groove painting its art straight onto the element has no such layer.
 - `ui-groove-*` needs no extra element, but the element must have no background image and
   no shadow (the lip replaces `box-shadow`). Its ridge takes `--divider-tint` through a
   masked copy in `::after`, so `cp-border` colours the cut and the art: a card footer's

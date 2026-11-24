@@ -96,6 +96,11 @@
   background-position: var(--ice-divider-position);
   background-size: var(--ice-divider-size);
   background-image: var(--ice-divider-paint, var(--ice-divider-art));
+  /* Chromium copies a stretched tile's leading row to its far edge when the
+   * tile lands on a fractional device height inside a compositing ancestor's
+   * texture, which reads as a hairline one band away from the ridge. Its own
+   * layer is rasterized at whole device pixels and has no edge to wrap. */
+  will-change: transform;
 
   /* A tinted copy of the silhouette, over the art. It paints the tint itself
    * rather than only its hue: under `color` blending the dark icicles kept
@@ -278,6 +283,9 @@
     background-repeat: var(--ice-groove-repeat);
     background-position: 0 0;
     background-size: var(--ice-groove-size);
+    /* See `ice-divider`: the mirrored tile wraps its leading row to the far
+     * edge unless it is rasterized on a layer of its own. */
+    will-change: transform;
     transform: scaleY(-1);
   }
 
