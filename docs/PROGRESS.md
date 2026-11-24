@@ -116,9 +116,10 @@ catalog; how that works is
   with the scenery, so it costs nothing per frame), and the remaining per-spot
   work is a mask built once per layout. A reporter's Firefox at 2016×1059, DPR 0.95 now
   shows ~50–60 fps with `draw` at 1.3–2.3 ms (`?canvasStats=1`), down from a
-  frame that dropped badly. What is left: the full-canvas `clearRect` is the
-  largest single item when the rasterizer is software (~6 ms of the ~13 ms draw
-  in headless Firefox at DPR 2), so a dirty-region clear is the next lever if a
+  frame that dropped badly. What is left: the two full-canvas `clearRect`s (the
+  effects layer and the snow layer in front of the page) are the largest single
+  item when the rasterizer is software (~6 ms of the ~13 ms draw in headless
+  Firefox at DPR 2), so a dirty-region clear is the next lever if a
   software-composited browser ever struggles again.
 - **Cache Components, what is left.**
   - A slug that matches nothing answers `200` with the localized 404 and `noindex` on

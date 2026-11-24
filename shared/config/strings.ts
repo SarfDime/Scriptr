@@ -167,18 +167,18 @@ export const UI_STRINGS_PACK = {
     },
     title: {
       en: 'Your study, all in one place.',
-      mk: 'Твојата студија, сè на едно место.',
+      mk: 'Твојата студија, се на едно место.',
     },
     subtitle: {
       en: 'Every university, faculty and study on Scriptr — with the scripts its students share, the subjects they take and the professors who teach them.',
-      mk: 'Секој универзитет, факултет и студија на Scriptr — со скриптите што ги делат студентите, предметите што ги слушаат и професорите што ги предаваат.',
+      mk: 'Секој универзитет, факултет и смер на Scriptr — со скриптите што ги делат студентите, предметите што ги слушаат и професорите што ги предаваат.',
     },
     createAccount: { en: 'Create account', mk: 'Создај сметка' },
     setUpStudies: { en: 'Set up studies', mk: 'Постави студии' },
     universitiesTitle: { en: 'Universities', mk: 'Универзитети' },
     universitiesSubtitle: {
       en: 'The institutions behind every faculty and study.',
-      mk: 'Институциите зад секој факултет и студија.',
+      mk: 'Институциите зад секој факултет и смер.',
     },
     facultiesTitle: { en: 'Faculties', mk: 'Факултети' },
     facultiesSubtitle: {
@@ -188,7 +188,7 @@ export const UI_STRINGS_PACK = {
     studiesTitle: { en: 'Studies', mk: 'Студии' },
     studiesSubtitle: {
       en: 'Open a study to reach its subjects, professors and scripts.',
-      mk: 'Отвори студија за да стигнеш до нејзините предмети, професори и скрипти.',
+      mk: 'Отвори смер за да стигнеш до неговите предмети, професори и скрипти.',
     },
     facultyCount: (count: number): LocalizedText => ({
       en: `${count} ${count === 1 ? 'faculty' : 'faculties'}`,
@@ -198,7 +198,7 @@ export const UI_STRINGS_PACK = {
       en: `${studies} ${studies === 1 ? 'Study' : 'Studies'} • ${professors} ${
         professors === 1 ? 'Professor' : 'Professors'
       }`,
-      mk: `${studies} ${studies === 1 ? 'студија' : 'студии'} • ${professors} ${
+      mk: `${studies} ${studies === 1 ? 'Смер' : 'Смера'} • ${professors} ${
         professors === 1 ? 'професор' : 'професори'
       }`,
     }),
@@ -259,7 +259,7 @@ export const UI_STRINGS_PACK = {
     },
     studySidebarEmpty: {
       en: 'This study has no scripts yet.',
-      mk: 'Овој смер сè уште нема скрипти.',
+      mk: 'Овој смер се уште нема скрипти.',
     },
     feed: {
       toggleLabel: { en: 'Script feed', mk: 'Тек на скрипти' },
@@ -335,7 +335,7 @@ export const UI_STRINGS_PACK = {
       },
       loadFailed: {
         en: 'Search is unavailable right now. Try again in a moment — your query is still in the box above.',
-        mk: 'Пребарувањето во моментов е недостапно. Обиди се повторно за момент — твоето барање е сè уште во полето горе.',
+        mk: 'Пребарувањето во моментов е недостапно. Обиди се повторно за момент — твоето барање е се уште во полето горе.',
       },
       noResults: (query: string): LocalizedText => ({
         en: `No catalog entries match “${query}”. Try different keywords or check the spelling.`,
@@ -549,7 +549,7 @@ export const UI_STRINGS_PACK = {
         },
         unsupportedScript: {
           en: 'Use Latin or Cyrillic letters only. Other languages are not supported yet.',
-          mk: 'Користи само латинични или кирилични букви. Други јазици сè уште не се поддржани.',
+          mk: 'Користи само латинични или кирилични букви. Други јазици се уште не се поддржани.',
         },
         wrongScriptLatin: {
           en: 'Use Latin letters in the English field',
@@ -569,7 +569,7 @@ export const UI_STRINGS_PACK = {
         },
         professorsUnavailable: {
           en: "This subject's professors are not linked yet, so none can be chosen",
-          mk: 'Професорите на овој предмет сè уште не се поврзани, па не може да се избере ниту еден',
+          mk: 'Професорите на овој предмет се уште не се поврзани, па не може да се избере ниту еден',
         },
         filesInvalid: {
           en: 'Remove or replace the files with errors',
@@ -674,7 +674,7 @@ export const UI_STRINGS_PACK = {
     },
     noSubjects: {
       en: 'No subjects are available for this study yet.',
-      mk: 'Овој смер сè уште нема предмети.',
+      mk: 'Овој смер се уште нема предмети.',
     },
     noMatchingSubjects: {
       en: 'No subjects match those filters.',
@@ -706,15 +706,15 @@ export const UI_STRINGS_PACK = {
     studiesTitle: { en: 'Studies', mk: 'Смерови' },
     noStudies: {
       en: 'No studies are available for this faculty yet.',
-      mk: 'Овој факултет сè уште нема смерови.',
+      mk: 'Овој факултет се уште нема смерови.',
     },
     noFaculties: {
       en: 'No faculties are listed for this university yet.',
-      mk: 'Овој универзитет сè уште нема наведени факултети.',
+      mk: 'Овој универзитет се уште нема наведени факултети.',
     },
     noProfessorCourses: {
       en: 'No courses are listed for this professor yet.',
-      mk: 'Овој професор сè уште нема наведени предмети.',
+      mk: 'Овој професор се уште нема наведени предмети.',
     },
     studyImageAlt: {
       en: 'Study image',
@@ -871,7 +871,7 @@ export const UI_STRINGS_PACK = {
     noOptions: { en: 'No options available yet.', mk: 'Сè уште нема опции.' },
     noSubjects: {
       en: 'No subjects found for this study yet.',
-      mk: 'Овој смер сè уште нема предмети.',
+      mk: 'Овој смер се уште нема предмети.',
     },
     subjectsTitle: {
       en: 'Which years have you finished?',
@@ -984,7 +984,7 @@ export const UI_STRINGS_PACK = {
       },
       confirmBody: {
         en: 'Every marked subject is considered completed, so leave out anything you are still taking.',
-        mk: 'Секој означен предмет се води како положен. Затоа изостави ги тие кои сè уште ги слушаш.',
+        mk: 'Секој означен предмет се води како положен. Затоа изостави ги тие кои се уште ги слушаш.',
       },
       skip: { en: 'Skip for now', mk: 'Прескокни засега' },
       resume: { en: 'Finish setting up', mk: 'Доврши го поставувањето' },
@@ -1002,11 +1002,11 @@ export const UI_STRINGS_PACK = {
       },
       noSubjects: {
         en: 'This study has no subjects synced to the database yet.',
-        mk: 'Овој смер сè уште нема предмети синхронизирани со базата.',
+        mk: 'Овој смер се уште нема предмети синхронизирани со базата.',
       },
       notSynced: {
         en: 'This study is not linked to the database yet, so setup is unavailable.',
-        mk: 'Овој смер сè уште не е поврзан со базата, па поставувањето е недостапно.',
+        mk: 'Овој смер се уште не е поврзан со базата, па поставувањето е недостапно.',
       },
       /** Asked before a signed-in visitor sets up a study their account does not
        * hold: the profile this page writes belongs to the study. */
@@ -1082,7 +1082,7 @@ export const UI_STRINGS_PACK = {
       },
       currentlyTakingSubtitle: {
         en: 'Subjects still in progress.',
-        mk: 'Предмети што сè уште ги слушаш.',
+        mk: 'Предмети што се уште ги слушаш.',
       },
       completedEmpty: {
         en: 'No completed subjects yet.',
@@ -1142,7 +1142,7 @@ export const UI_STRINGS_PACK = {
       }),
       avatarUploadUnavailable: {
         en: 'Photo upload is not available yet.',
-        mk: 'Прикачувањето фотографија сè уште не е достапно.',
+        mk: 'Прикачувањето фотографија се уште не е достапно.',
       },
     },
   },

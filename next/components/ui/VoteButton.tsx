@@ -117,7 +117,7 @@ export function VoteButton({
     >
       <Heart className={cn(voted && 'fill-rose-pink')} />
       <Text>{label}</Text>
-      <Divider orientation='vertical' className='h-4 mx-1' />
+      <Divider orientation='vertical' />
       <Text>{count}</Text>
     </Button>
   )

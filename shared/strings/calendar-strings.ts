@@ -68,7 +68,7 @@ export const CALENDAR_STRINGS_PACK = {
   },
   metaDescription: {
     en: 'The academic calendar for every subject, faculty and study: exams, preliminary exams, reminders and announcements.',
-    mk: 'Академскиот календар за секој предмет, факултет и студија: испити, колоквиуми, потсетници и соопштенија.',
+    mk: 'Академскиот календар за секој предмет, факултет и смер: испити, колоквиуми, потсетници и соопштенија.',
   },
 
   eventType: {

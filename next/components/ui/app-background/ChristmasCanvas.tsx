@@ -45,6 +45,7 @@ import {
   subscribeToMobile,
 } from '@/lib/app-background/mobile-store'
 import { useUIStrings } from '@/providers/locale/use-strings'
+import { Z_INDEX } from '@/styles/style'
 
 // Procedurally drawn Christmas scenery: flat, layered vector hills, striped pines,
 // snow-capped mountains and a snowy village (some of it with Christmas lights), with
@@ -52,14 +53,17 @@ import { useUIStrings } from '@/providers/locale/use-strings'
 // the canvases are transparent above the mountains, so the shared skybox sits behind
 // them.
 //
-// Three canvases keep the per-frame work small:
+// Four canvases keep the per-frame work small:
 //  - the scene canvas holds the still scenery (lib/app-background/christmas-canvas.ts),
 //    painted once and again only when the screen size or the theme changes;
 //  - the immersive scene canvas holds the same scenery in the immersive palette, and is
 //    only painted when that palette is actually shown; switching to it is a fade;
 //  - the effects canvas is cleared and redrawn every frame with the cheap moving
-//    parts: snow, chimney smoke, the twinkling lights of the decorated trees, the
-//    sleigh and the sparkle bursts a clicked reindeer leaves behind.
+//    parts: chimney smoke, the twinkling lights of the decorated trees, the sleigh
+//    and the sparkle bursts a clicked reindeer leaves behind;
+//  - the snow canvas holds only the flakes, and is the one layer in front of the page
+//    instead of behind it: they fall over the content (below the header and the
+//    chrome, which keep their own stacking).
 //
 // What keeps a frame cheap. Measure with `?canvasStats=1` before changing any of it:
 //  - a glow or a puff of smoke with scenery in front of it is erased from the effects
@@ -160,6 +164,7 @@ export const ChristmasCanvas = ({
   // The same scenery painted in the immersive palette, faded in over the themed one.
   const immersiveSceneRef = useRef<HTMLCanvasElement>(null)
   const effectsRef = useRef<HTMLCanvasElement>(null)
+  const snowRef = useRef<HTMLCanvasElement>(null)
   const immersive = useImmersive()
   const ui = useUIStrings()
   const hoHoHo = ui.general.hoHoHo
@@ -173,10 +178,12 @@ export const ChristmasCanvas = ({
     const sceneCanvas = sceneRef.current
     const immersiveSceneCanvas = immersiveSceneRef.current
     const effectsCanvas = effectsRef.current
+    const snowCanvas = snowRef.current
     const sceneCtx = sceneCanvas?.getContext('2d')
     const immersiveSceneCtx = immersiveSceneCanvas?.getContext('2d')
     const fx = effectsCanvas?.getContext('2d')
-    if (!sceneCanvas || !sceneCtx || !effectsCanvas || !fx) return
+    const snowCtx = snowCanvas?.getContext('2d')
+    if (!sceneCanvas || !sceneCtx || !effectsCanvas || !fx || !snowCtx) return
 
     const cfg: ChristmasCanvasConfig = {
       ...withChristmasDefaults(sanityData),
@@ -433,7 +440,12 @@ export const ChristmasCanvas = ({
       const prevH = h
       w = nextW
       h = nextH
-      for (const canvas of [sceneCanvas, immersiveSceneCanvas, effectsCanvas]) {
+      for (const canvas of [
+        sceneCanvas,
+        immersiveSceneCanvas,
+        effectsCanvas,
+        snowCanvas,
+      ]) {
         if (!canvas) continue
         canvas.width = Math.round(w * dpr)
         canvas.height = Math.round(h * dpr)
@@ -441,6 +453,7 @@ export const ChristmasCanvas = ({
       sceneCtx.setTransform(dpr, 0, 0, dpr, 0, 0)
       immersiveSceneCtx?.setTransform(dpr, 0, 0, dpr, 0, 0)
       fx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      snowCtx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
       if (prevW && prevH) {
         for (const layer of snow) {
@@ -891,11 +904,13 @@ export const ChristmasCanvas = ({
     // Each flake is three crossed lines (a six-armed snowflake) that slowly turns
     const drawSnow = (now: number, dt: number, wind: number) => {
       if (!cfg.enableSnow) return
-      fx.lineCap = 'round'
-      fx.strokeStyle = rgba(look().colors.snowfall)
+      // Nothing else paints on this layer, so a frame starts from an empty one.
+      snowCtx.clearRect(0, 0, w, h)
+      snowCtx.lineCap = 'round'
+      snowCtx.strokeStyle = rgba(look().colors.snowfall)
       for (const { spec, flakes } of snow) {
         const r = spec.radius
-        fx.beginPath()
+        snowCtx.beginPath()
         for (const flake of flakes) {
           if (dt > 0) {
             flake.y += spec.speed * flake.speed * cfg.snowSpeed * dt
@@ -918,21 +933,21 @@ export const ChristmasCanvas = ({
           const s2 = s1 * 0.5 + c1 * 0.866
           const c3 = -c1 * 0.5 - s1 * 0.866
           const s3 = -s1 * 0.5 + c1 * 0.866
-          fx.moveTo(flake.x - c1, flake.y - s1)
-          fx.lineTo(flake.x + c1, flake.y + s1)
-          fx.moveTo(flake.x - c2, flake.y - s2)
-          fx.lineTo(flake.x + c2, flake.y + s2)
-          fx.moveTo(flake.x - c3, flake.y - s3)
-          fx.lineTo(flake.x + c3, flake.y + s3)
+          snowCtx.moveTo(flake.x - c1, flake.y - s1)
+          snowCtx.lineTo(flake.x + c1, flake.y + s1)
+          snowCtx.moveTo(flake.x - c2, flake.y - s2)
+          snowCtx.lineTo(flake.x + c2, flake.y + s2)
+          snowCtx.moveTo(flake.x - c3, flake.y - s3)
+          snowCtx.lineTo(flake.x + c3, flake.y + s3)
         }
-        fx.lineWidth = spec.line
-        fx.globalAlpha = spec.alpha
-        fx.stroke()
+        snowCtx.lineWidth = spec.line
+        snowCtx.globalAlpha = spec.alpha
+        snowCtx.stroke()
       }
-      fx.globalAlpha = 1
+      snowCtx.globalAlpha = 1
     }
 
-    // Back to front: glows, smoke, Santa, then the snow in front of it all.
+    // Back to front: glows, smoke, Santa, then the flakes on the layer above the page.
     // `dt` is in frames at 60fps, so speeds match on 60/120/144Hz screens.
     const draw = (now: number, dt: number) => {
       if (!scene) return
@@ -1234,6 +1249,14 @@ export const ChristmasCanvas = ({
         ref={effectsRef}
         aria-hidden
         className='pointer-events-none fixed inset-x-0 top-(--header-height) z-[-1] h-(--background-height) w-full'
+      />
+      {/* The flakes alone, on the one layer in front of the page: above the content
+          but below the header, feedback, navbar and toasts. */}
+      <canvas
+        ref={snowRef}
+        aria-hidden
+        data-snow-front
+        className={`pointer-events-none fixed inset-x-0 top-(--header-height) ${Z_INDEX.SNOW} h-(--background-height) w-full`}
       />
     </>
   )

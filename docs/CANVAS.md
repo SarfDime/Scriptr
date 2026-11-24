@@ -48,7 +48,10 @@ Rules a background canvas in `next/` follows. What each canvas draws is the code
 11. **Paint the page, not the window.** The canvases begin below the sticky header
     (`--header-height`, `--background-height` in `globals.css`) and take the whole
     viewport in immersive mode. Measure the canvas (`clientWidth`/`clientHeight`), never
-    `window.inner*`, and subtract the canvas origin before hit-testing a pointer.
+    `window.inner*`, and subtract the canvas origin before hit-testing a pointer. One
+    layer sits in front of the page instead of behind it — the snow, at `Z_INDEX.SNOW`:
+    above the content, below the header, feedback, navbar and toasts, and under the top
+    layer (dialogs, the loading screen).
 
 ## Starting a new one
 

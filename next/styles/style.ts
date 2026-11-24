@@ -2,6 +2,8 @@ const Z_INDEX = {
   TOASTER: 'z-101',
   NAV_BAR: 'z-99',
   FEEDBACK: 'z-98',
+  /** In front of the page content, below the chrome above it: the falling snow. */
+  SNOW: 'z-97',
   POPOVER: 'z-30',
   INFO_BANNER: 'z-22',
   CTA_CARD: 'z-21',
